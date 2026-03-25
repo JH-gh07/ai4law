@@ -97,12 +97,12 @@ app_streamlit/
 
 | Task ID | 任务 | 交付物 | 依赖 | 预估 | 状态 |
 |---|---|---|---|---|---|
-| DGN-01 | 决策树配置文件定义 | `backend/modules/diagnosis/decision_tree.json` | 无 | 0.5d | TODO |
-| DGN-02 | 决策树执行器实现 | `backend/modules/diagnosis/service.py` | DGN-01 | 1d | TODO |
-| DGN-03 | 诊断 API 路由 | `backend/modules/diagnosis/router.py` | DGN-02 | 0.5d | TODO |
-| DGN-04 | 诊断报告渲染 | `backend/modules/diagnosis/report_renderer.py` | DGN-02 | 0.5d | TODO |
-| DGN-05 | Streamlit 诊断页 | `app_streamlit/pages/diagnosis.py` | DGN-03 | 0.5d | TODO |
-| DGN-06 | 诊断模块测试 | `backend/modules/diagnosis/tests/*` | DGN-03 | 0.5d | TODO |
+| DGN-01 | 决策树配置文件定义 | `backend/modules/diagnosis/decision_tree.json` | 无 | 0.5d | DONE |
+| DGN-02 | 决策树执行器实现 | `backend/modules/diagnosis/service.py` | DGN-01 | 1d | DONE |
+| DGN-03 | 诊断 API 路由 | `backend/modules/diagnosis/router.py` | DGN-02 | 0.5d | DONE |
+| DGN-04 | 诊断报告渲染 | `backend/modules/diagnosis/report_renderer.py` | DGN-02 | 0.5d | DONE |
+| DGN-05 | Streamlit 诊断页 | `app_streamlit/pages/1_Diagnosis.py` | DGN-03 | 0.5d | DONE |
+| DGN-06 | 诊断模块测试 | `backend/modules/diagnosis/tests/*` | DGN-03 | 0.5d | DONE |
 
 验收：
 1. 固定输入输出一致
@@ -112,16 +112,16 @@ app_streamlit/
 
 | Task ID | 任务 | 交付物 | 依赖 | 预估 | 状态 |
 |---|---|---|---|---|---|
-| ASM-01 | 任务模型与状态机 | `backend/modules/assessment/task_state.py` | 无 | 0.5d | TODO |
-| ASM-02 | 文件解析接入 | `backend/common/storage/file_parser.py` | 无 | 1d | TODO |
-| ASM-03 | 企业画像抽取 | `backend/modules/assessment/profile_extractor.py` | ASM-02 | 1d | TODO |
-| ASM-04 | 检索调用封装 | `backend/modules/assessment/retriever.py` | RAG-01 | 1d | TODO |
-| ASM-05 | 章节生成器 | `backend/modules/assessment/chapter_generator.py` | LLM-01, ASM-04 | 1d | TODO |
-| ASM-06 | 一致性校验器 | `backend/modules/assessment/consistency_checker.py` | ASM-05 | 0.5d | TODO |
-| ASM-07 | 报告渲染器 | `backend/modules/assessment/report_renderer.py` | RDR-01 | 0.5d | TODO |
-| ASM-08 | Assessment API | `backend/modules/assessment/router.py` | ASM-01~07 | 0.5d | TODO |
-| ASM-09 | Streamlit 页面 | `app_streamlit/pages/assessment.py` | ASM-08 | 0.5d | TODO |
-| ASM-10 | 模块测试 | `backend/modules/assessment/tests/*` | ASM-08 | 1d | TODO |
+| ASM-01 | 任务模型与状态机 | `backend/modules/assessment/task_state.py` | 无 | 0.5d | DONE |
+| ASM-02 | 文件解析接入 | `backend/common/storage/file_parser.py` | 无 | 1d | DONE |
+| ASM-03 | 企业画像抽取 | `backend/modules/assessment/profile_extractor.py` | ASM-02 | 1d | DONE |
+| ASM-04 | 检索调用封装 | `backend/modules/assessment/retriever.py` | RAG-01 | 1d | DONE |
+| ASM-05 | 章节生成器 | `backend/modules/assessment/chapter_generator.py` | LLM-01, ASM-04 | 1d | DONE |
+| ASM-06 | 一致性校验器 | `backend/modules/assessment/consistency_checker.py` | ASM-05 | 0.5d | DONE |
+| ASM-07 | 报告渲染器 | `backend/modules/assessment/report_renderer.py` | RDR-01 | 0.5d | DONE |
+| ASM-08 | Assessment API | `backend/modules/assessment/router.py` | ASM-01~07 | 0.5d | DONE |
+| ASM-09 | Streamlit 页面 | `app_streamlit/pages/2_Assessment.py` | ASM-08 | 0.5d | DONE |
+| ASM-10 | 模块测试 | `backend/modules/assessment/tests/*` | ASM-08 | 1d | DONE |
 
 验收：
 1. 生成《数据出境风险自评估报告》docx
@@ -131,12 +131,12 @@ app_streamlit/
 
 | Task ID | 任务 | 交付物 | 依赖 | 预估 | 状态 |
 |---|---|---|---|---|---|
-| SCC-01 | SCC 输入/输出 Schema | `ai_engine/schemas/scc/*` | 无 | 0.5d | TODO |
-| SCC-02 | SCC Prompt 模板 | `ai_engine/prompts/scc/*` | 无 | 0.5d | TODO |
-| SCC-03 | SCC 服务实现 | `backend/modules/scc/service.py` | ASM 通用链路 | 1d | TODO |
-| SCC-04 | SCC API | `backend/modules/scc/router.py` | SCC-03 | 0.5d | TODO |
-| SCC-05 | Streamlit 页面 | `app_streamlit/pages/scc.py` | SCC-04 | 0.5d | TODO |
-| SCC-06 | 模块测试 | `backend/modules/scc/tests/*` | SCC-04 | 0.5d | TODO |
+| SCC-01 | SCC 输入/输出 Schema | `ai_engine/schemas/scc/*` | 无 | 0.5d | DONE |
+| SCC-02 | SCC Prompt 模板 | `ai_engine/prompts/scc/*` | 无 | 0.5d | DONE |
+| SCC-03 | SCC 服务实现 | `backend/modules/scc/service.py` | ASM 通用链路 | 1d | DONE |
+| SCC-04 | SCC API | `backend/modules/scc/router.py` | SCC-03 | 0.5d | DONE |
+| SCC-05 | Streamlit 页面 | `app_streamlit/pages/3_SCC_PIPIA.py` | SCC-04 | 0.5d | DONE |
+| SCC-06 | 模块测试 | `backend/modules/scc/tests/*` | SCC-04 | 0.5d | DONE |
 
 验收：
 1. 可生成《PIPIA 报告》docx
@@ -176,12 +176,12 @@ app_streamlit/
 
 | Task ID | 任务 | 交付物 | 依赖 | 预估 | 状态 |
 |---|---|---|---|---|---|
-| RAG-01 | RAG 最小链路 | `backend/common/rag/*` | 无 | 1.5d | TODO |
-| LLM-01 | LLM 适配层 | `backend/common/llm/adapter.py` | 无 | 1d | TODO |
-| SCH-01 | Schema 校验器 | `backend/common/schema/validator.py` | 无 | 0.5d | TODO |
-| RSK-01 | 风险分级与门控 | `backend/common/risk/*` | SCH-01 | 1d | TODO |
-| RDR-01 | 统一渲染器 | `backend/common/render/*` | SCH-01 | 1d | TODO |
-| OBS-01 | 日志与追踪 | `backend/common/observability/*` | 无 | 0.5d | TODO |
+| RAG-01 | RAG 最小链路 | `backend/common/rag/*` | 无 | 1.5d | DONE |
+| LLM-01 | LLM 适配层 | `backend/common/llm/adapter.py` | 无 | 1d | DONE |
+| SCH-01 | Schema 校验器 | `backend/common/schema/validator.py` | 无 | 0.5d | DONE |
+| RSK-01 | 风险分级与门控 | `backend/common/risk/*` | SCH-01 | 1d | DONE |
+| RDR-01 | 统一渲染器 | `backend/common/render/*` | SCH-01 | 1d | DONE |
+| OBS-01 | 日志与追踪 | `backend/common/observability/*` | 无 | 0.5d | DONE |
 
 ---
 
