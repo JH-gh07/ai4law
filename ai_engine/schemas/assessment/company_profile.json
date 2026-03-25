@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CompanyProfile",
+  "type": "object",
+  "properties": {
+    "company_name": {"type": "string"},
+    "industry": {"type": "string"},
+    "is_ciio": {"type": "boolean"},
+    "contains_important_data": {"type": "boolean"},
+    "pii_count": {"type": "integer", "minimum": 0},
+    "spi_count": {"type": "integer", "minimum": 0},
+    "transfer_purpose": {"type": "string"},
+    "receiver_country": {"type": "string"}
+  },
+  "required": [
+    "company_name", "industry", "is_ciio", "contains_important_data",
+    "pii_count", "spi_count", "transfer_purpose", "receiver_country"
+  ]
+}

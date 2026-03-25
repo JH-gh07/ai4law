@@ -1,0 +1,3 @@
+Generate chapter content for data export security assessment report.
+Input: company profile + regulation hits.
+Output: structured paragraph with explicit risk level and citations.
