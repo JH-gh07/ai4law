@@ -267,3 +267,54 @@ Task 从 DOING -> DONE 必须同时满足：
 
 1. 在不改动后端契约的前提下，逐步从 Streamlit 迁移到 Next.js
 2. 迁移顺序：Diagnosis -> Assessment/SCC -> Review -> General
+
+---
+
+## 11. Git 存档规则（强制）
+
+为保证可追溯、可回滚、可协作，v0 开发阶段每次开发必须进行 Git 存档。
+
+### 11.1 触发时机
+
+满足任一条件必须提交一次：
+1. 完成 1 个 Task ID 并达到 DONE
+2. 一个功能点可独立演示或独立测试通过
+3. 当日开发结束（即使任务未完成，也要提交 WIP）
+
+### 11.2 提交粒度
+
+1. 一次提交只对应一个模块或一个共用底座任务
+2. 不允许把多个无关模块改动混在同一个提交
+3. 文档变更需与对应代码提交同批或紧随其后提交
+
+### 11.3 提交信息规范
+
+推荐格式：
+`<type>(<scope>): <summary> [<TaskID>]`
+
+示例：
+1. `feat(diagnosis): add rule engine and result schema [DGN-02]`
+2. `feat(assessment): add chapter generator and validator [ASM-05]`
+3. `docs(plan): update task status and progress log [ASM-05]`
+
+类型建议：
+1. `feat`：新增能力
+2. `fix`：缺陷修复
+3. `refactor`：重构
+4. `test`：测试
+5. `docs`：文档
+6. `chore`：杂项
+
+### 11.4 推送规则
+
+1. 每日至少推送一次到远程分支
+2. 里程碑完成（M1/M2/M3/M4）后必须立即推送
+3. 推送失败要在 `doc/progress.md` 记录失败原因和重试结果
+
+### 11.5 存档核对清单
+
+每次提交前检查：
+1. `git status` 仅包含本任务相关文件
+2. 对应测试命令已执行并记录结果
+3. `doc/progress.md` 已登记 Task ID 与产出路径
+4. 提交后已执行 `git push`
