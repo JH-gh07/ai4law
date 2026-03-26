@@ -5,6 +5,13 @@ Generate PIPIA report for SCC/certification route.
 
 ## Endpoint
 - `POST /api/v1/scc/generate`
+- `POST /api/v1/scc/generate_async`
+- `GET /api/v1/scc/tasks/{task_id}`
+- `POST /api/v1/scc/tasks/{task_id}/retry`
+
+输出：
+- `report_path`：docx 文件路径
+- `output_files.markdown`：md 文件路径
 
 ## Example
 ```bash

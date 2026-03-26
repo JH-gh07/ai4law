@@ -17,6 +17,7 @@ def test_scc_generate_report() -> None:
 
     result = service.generate_report(payload)
 
-    assert result.report_path.endswith("_pipia_report.md")
+    assert result.report_path.endswith("_pipia_report.docx")
+    assert result.output_files["markdown"].endswith("_pipia_report.md")
     assert len(result.chapters) == 6
     assert any("No SCC draft provided" in issue for issue in result.consistency_issues)

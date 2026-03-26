@@ -33,6 +33,27 @@ class SCCChapter(BaseModel):
 
 class SCCResult(BaseModel):
     report_path: str
+    output_files: dict[str, str] = Field(default_factory=dict)
     profile: SCCProfile
     chapters: list[SCCChapter]
     consistency_issues: list[str]
+
+
+class SCCAsyncAccepted(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
+
+
+class SCCAsyncStatus(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
+    created_at: str
+    updated_at: str
+    error: str | None = None
+    result: SCCResult | None = None

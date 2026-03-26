@@ -2,10 +2,18 @@ from pathlib import Path
 
 from backend.common.llm.adapter import LLMAdapter
 from backend.common.rag.retriever import retrieve_regulations
-from backend.common.render.report import render_markdown_report
+from backend.common.render.report import render_docx_report, render_markdown_report
 from backend.common.risk.scoring import risk_level
 from backend.common.storage.file_parser import FileParser
-from backend.modules.scc.schema import SCCChapter, SCCProfile, SCCRequest, SCCResult
+from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.modules.scc.schema import (
+    SCCAsyncAccepted,
+    SCCAsyncStatus,
+    SCCChapter,
+    SCCProfile,
+    SCCRequest,
+    SCCResult,
+)
 
 
 SCC_CHAPTERS = [
@@ -22,6 +30,7 @@ class SCCService:
     def __init__(self) -> None:
         self.llm = LLMAdapter()
         self.parser = FileParser()
+        self.tasks = InMemoryTaskManager(module="scc")
 
     def _build_profile(self, payload: SCCRequest) -> SCCProfile:
         notes: list[str] = []
@@ -93,12 +102,54 @@ class SCCService:
         for chapter in chapters:
             sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
 
-        output = Path("outputs/scc") / f"{payload.company_name}_pipia_report.md"
-        render_markdown_report(output, "个人信息保护影响评估报告（PIPIA, v0）", sections)
+        md_output = Path("outputs/scc") / f"{payload.company_name}_pipia_report.md"
+        docx_output = Path("outputs/scc") / f"{payload.company_name}_pipia_report.docx"
+        render_markdown_report(md_output, "个人信息保护影响评估报告（PIPIA, v0）", sections)
+        render_docx_report(docx_output, "个人信息保护影响评估报告（PIPIA, v0）", sections)
 
         return SCCResult(
-            report_path=str(output),
+            report_path=str(docx_output),
+            output_files={"markdown": str(md_output), "docx": str(docx_output)},
             profile=profile,
             chapters=chapters,
             consistency_issues=issues,
+        )
+
+    def submit_async(self, payload: SCCRequest) -> SCCAsyncAccepted:
+        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        return self._snapshot_to_accepted(snapshot)
+
+    def get_async_status(self, task_id: str) -> SCCAsyncStatus:
+        snapshot = self.tasks.get_or_raise(task_id)
+        return self._snapshot_to_status(snapshot)
+
+    def retry_async(self, task_id: str) -> SCCAsyncStatus:
+        snapshot = self.tasks.retry(task_id)
+        return self._snapshot_to_status(snapshot)
+
+    @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> SCCAsyncAccepted:
+        return SCCAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> SCCAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = SCCResult.model_validate(snapshot.result)
+        return SCCAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
         )

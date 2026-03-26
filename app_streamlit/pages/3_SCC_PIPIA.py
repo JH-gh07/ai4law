@@ -1,6 +1,8 @@
+import time
+
 import streamlit as st
 
-from app_streamlit.services.client import post_json
+from app_streamlit.services.client import get_json, post_json
 
 st.title("模块3：SCC / PIPIA 报告")
 
@@ -12,6 +14,7 @@ with st.form("scc_form"):
     pii_count = st.number_input("普通个人信息量", min_value=0, value=200000)
     spi_count = st.number_input("敏感个人信息量", min_value=0, value=800)
     has_scc_draft = st.checkbox("是否已有 SCC 草案", value=False)
+    use_async = st.checkbox("异步生成（推荐）", value=True)
     submit = st.form_submit_button("生成 PIPIA 报告")
 
 if submit:
@@ -26,7 +29,23 @@ if submit:
         "uploaded_files": [],
     }
     try:
-        data = post_json("/scc/generate", payload)
+        if use_async:
+            accepted = post_json("/scc/generate_async", payload)
+            task_id = accepted["task_id"]
+            with st.spinner(f"任务 {task_id} 执行中..."):
+                data = None
+                for _ in range(120):
+                    status = get_json(f"/scc/tasks/{task_id}")
+                    if status["state"] == "COMPLETED":
+                        data = status["result"]
+                        break
+                    if status["state"] == "FAILED":
+                        raise RuntimeError(status.get("error") or "task failed")
+                    time.sleep(0.5)
+                if data is None:
+                    raise TimeoutError("scc async timeout")
+        else:
+            data = post_json("/scc/generate", payload)
         st.success("PIPIA 报告生成完成")
         st.code(data["report_path"])
         st.write(f"一致性问题数：{len(data['consistency_issues'])}")
