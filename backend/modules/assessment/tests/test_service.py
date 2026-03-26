@@ -20,4 +20,5 @@ def test_assessment_generate_report() -> None:
 
     assert result.state == "COMPLETED"
     assert len(result.chapters) == 8
-    assert result.report_path.endswith("_security_assessment_report.md")
+    assert result.report_path.endswith("_security_assessment_report.docx")
+    assert result.output_files["markdown"].endswith("_security_assessment_report.md")

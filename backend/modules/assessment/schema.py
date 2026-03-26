@@ -46,7 +46,28 @@ class AssessmentResult(BaseModel):
     task_id: str
     state: AssessmentTaskState
     report_path: str
+    output_files: dict[str, str] = Field(default_factory=dict)
     profile: CompanyProfile
     regulations: list[RegulationHit]
     chapters: list[ChapterContent]
     consistency_issues: list[str]
+
+
+class AssessmentAsyncAccepted(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
+
+
+class AssessmentAsyncStatus(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
+    created_at: str
+    updated_at: str
+    error: str | None = None
+    result: AssessmentResult | None = None

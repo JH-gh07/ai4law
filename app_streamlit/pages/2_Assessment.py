@@ -1,6 +1,8 @@
+import time
+
 import streamlit as st
 
-from app_streamlit.services.client import post_json
+from app_streamlit.services.client import get_json, post_json
 
 st.title("模块2：安全评估报告")
 
@@ -13,6 +15,7 @@ with st.form("assessment_form"):
     spi_count = st.number_input("敏感个人信息量", min_value=0, value=500)
     purpose = st.text_input("出境目的", value="跨境客服")
     country = st.text_input("接收方国家", value="Singapore")
+    use_async = st.checkbox("异步生成（推荐）", value=True)
     submit = st.form_submit_button("生成自评估报告")
 
 if submit:
@@ -28,7 +31,23 @@ if submit:
         "uploaded_files": [],
     }
     try:
-        data = post_json("/assessment/generate", payload)
+        if use_async:
+            accepted = post_json("/assessment/generate_async", payload)
+            task_id = accepted["task_id"]
+            with st.spinner(f"任务 {task_id} 执行中..."):
+                data = None
+                for _ in range(120):
+                    status = get_json(f"/assessment/tasks/{task_id}")
+                    if status["state"] == "COMPLETED":
+                        data = status["result"]
+                        break
+                    if status["state"] == "FAILED":
+                        raise RuntimeError(status.get("error") or "task failed")
+                    time.sleep(0.5)
+                if data is None:
+                    raise TimeoutError("assessment async timeout")
+        else:
+            data = post_json("/assessment/generate", payload)
         st.success("报告生成完成")
         st.code(data["report_path"])
         st.write(f"一致性问题数：{len(data['consistency_issues'])}")

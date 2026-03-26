@@ -5,6 +5,13 @@ Generate v0 security assessment report with traceable intermediate structures.
 
 ## Endpoint
 - `POST /api/v1/assessment/generate`
+- `POST /api/v1/assessment/generate_async`
+- `GET /api/v1/assessment/tasks/{task_id}`
+- `POST /api/v1/assessment/tasks/{task_id}/retry`
+
+输出：
+- `report_path`：docx 文件路径
+- `output_files.markdown`：md 文件路径
 
 ## Example
 ```bash

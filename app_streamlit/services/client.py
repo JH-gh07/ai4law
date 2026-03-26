@@ -9,3 +9,9 @@ def post_json(path: str, payload: dict) -> dict:
     response = requests.post(f"{BASE_URL}{path}", json=payload, timeout=60)
     response.raise_for_status()
     return response.json()
+
+
+def get_json(path: str) -> dict:
+    response = requests.get(f"{BASE_URL}{path}", timeout=60)
+    response.raise_for_status()
+    return response.json()
