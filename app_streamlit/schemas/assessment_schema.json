@@ -1,0 +1,52 @@
+{
+  "title": "安全评估路径",
+  "steps": [
+    {
+      "title": "企业基本信息",
+      "fields": [
+        {"name": "company_name", "label": "企业名称", "type": "text", "default": "示例科技"},
+        {"name": "industry", "label": "行业", "type": "text", "default": "电商"},
+        {"name": "receiver_country", "label": "接收方国家", "type": "text", "default": "Singapore"}
+      ]
+    },
+    {
+      "title": "数据出境特征",
+      "fields": [
+        {"name": "is_ciio", "label": "是否 CIIO", "type": "checkbox", "default": false},
+        {
+          "name": "contains_important_data",
+          "label": "是否涉及重要数据",
+          "type": "checkbox",
+          "default": false
+        },
+        {
+          "name": "pii_count",
+          "label": "普通个人信息量",
+          "type": "number",
+          "min": 0,
+          "step": 1000,
+          "default": 300000
+        },
+        {
+          "name": "spi_count",
+          "label": "敏感个人信息量",
+          "type": "number",
+          "min": 0,
+          "step": 100,
+          "default": 500
+        }
+      ]
+    },
+    {
+      "title": "传输目的与材料",
+      "fields": [
+        {
+          "name": "transfer_purpose",
+          "label": "出境目的",
+          "type": "textarea",
+          "default": "跨境客服与集团统一风控"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "title": "文档智能审查",
+  "steps": [
+    {
+      "title": "审查基本信息",
+      "fields": [
+        {"name": "company_name", "label": "企业名称", "type": "text", "default": "示例科技"},
+        {
+          "name": "review_notes",
+          "label": "补充说明",
+          "type": "textarea",
+          "default": "请重点检查接收方义务、个人权利和删除条款。"
+        }
+      ]
+    }
+  ]
+}

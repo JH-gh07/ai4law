@@ -1,0 +1,35 @@
+{
+  "title": "通用服务",
+  "steps": [
+    {
+      "title": "服务类型",
+      "fields": [
+        {
+          "name": "doc_type",
+          "label": "文书类型",
+          "type": "select",
+          "options": ["tia", "due_diligence", "memo", "gap_list"],
+          "default": "tia"
+        },
+        {"name": "company_name", "label": "企业名称", "type": "text", "default": "示例科技"}
+      ]
+    },
+    {
+      "title": "业务场景",
+      "fields": [
+        {
+          "name": "transfer_purpose",
+          "label": "业务目的",
+          "type": "textarea",
+          "default": "跨境客服与集团风控协同"
+        },
+        {
+          "name": "receiver_country",
+          "label": "接收方国家",
+          "type": "text",
+          "default": "Singapore"
+        }
+      ]
+    }
+  ]
+}

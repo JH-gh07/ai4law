@@ -1,0 +1,46 @@
+{
+  "title": "合规路径诊断",
+  "questions": [
+    {
+      "name": "q1_is_ciio",
+      "label": "Q1 是否为关键信息基础设施运营者（CIIO）？",
+      "type": "select",
+      "options": ["yes", "no", "unknown"],
+      "default": "no",
+      "help": "CIIO 通常需走安全评估路径。"
+    },
+    {
+      "name": "q2_has_important_data",
+      "label": "Q2 出境数据是否包含重要数据？",
+      "type": "select",
+      "options": ["yes", "no", "unknown"],
+      "default": "no",
+      "help": "包含重要数据通常触发安全评估。"
+    },
+    {
+      "name": "q3_pii_count",
+      "label": "Q3 累计向境外提供的普通个人信息数量",
+      "type": "number",
+      "min": 0,
+      "step": 1000,
+      "default": 200000,
+      "help": "100万及以上通常需安全评估。"
+    },
+    {
+      "name": "q4_spi_count",
+      "label": "Q4 累计向境外提供的敏感个人信息数量",
+      "type": "number",
+      "min": 0,
+      "step": 100,
+      "default": 500,
+      "help": "1万及以上通常需安全评估。"
+    },
+    {
+      "name": "q5_purpose",
+      "label": "Q5 出境的主要目的",
+      "type": "text",
+      "default": "集团统一客户管理",
+      "help": "用于报告中的必要性说明。"
+    }
+  ]
+}
