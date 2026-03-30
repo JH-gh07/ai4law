@@ -1,0 +1,7 @@
+.pytest_cache/
+.vendor313/
+ai4law_backend.egg-info/
+storage/
+__pycache__/
+*.pyc
+.env
