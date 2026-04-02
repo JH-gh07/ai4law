@@ -13,11 +13,11 @@ render_hero(
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    render_kpi_card("已上线模块", "5", "诊断 / 评估 / SCC / 通用 / 审查")
+    render_kpi_card("已上线模块", "7", "2.2 / 2.3 / 3.2 / 3.3 / 3.4 / 4.1 / 4.2")
 with col2:
-    render_kpi_card("已支持报告输出", "5类", "diagnosis/assessment/scc/general/review")
+    render_kpi_card("已支持报告输出", "7类", "assessment / pipia / bcr / dpia / tia / cn-flow / cpra")
 with col3:
-    render_kpi_card("后端地址", "127.0.0.1:8000", "/api/v1")
+    render_kpi_card("后端地址", "127.0.0.1:8000", "/api/v0 + /api/v1")
 
 open_section("法域科普", "面向跨境数据流动的监管框架概览。")
 st.markdown(

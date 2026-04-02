@@ -6,6 +6,7 @@ cd "$ROOT_DIR"
 
 bash scripts/qa_v0_smoke.sh
 bash scripts/qa_v0_baseline.sh
+bash scripts/frontend_v0_linkage_check.sh
 
 mkdir -p dist
 STAMP="$(date +%Y%m%d_%H%M%S)"

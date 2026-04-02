@@ -7,6 +7,25 @@ from app_streamlit.components.risk_badge import render_risk_badge
 from app_streamlit.services.knowledge import resolve_citation
 
 
+def _mime_by_suffix(file_path: Path) -> str:
+    suffix = file_path.suffix.lower()
+    if suffix == ".docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if suffix == ".md":
+        return "text/markdown"
+    if suffix == ".pdf":
+        return "application/pdf"
+    if suffix == ".xlsx":
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if suffix == ".zip":
+        return "application/zip"
+    if suffix == ".json":
+        return "application/json"
+    if suffix == ".csv":
+        return "text/csv"
+    return "application/octet-stream"
+
+
 def render_chapter_preview(
     chapters: Iterable[dict],
     sources: list[dict[str, str]] | None = None,
@@ -45,11 +64,7 @@ def render_report_download(output_files: dict[str, str]) -> None:
         if not file_path.exists():
             st.warning(f"{label} 文件不存在：{path}")
             continue
-        mime = (
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            if file_path.suffix.lower() == ".docx"
-            else "text/markdown"
-        )
+        mime = _mime_by_suffix(file_path)
         with open(file_path, "rb") as fp:
             st.download_button(
                 label=f"下载 {label} ({file_path.name})",

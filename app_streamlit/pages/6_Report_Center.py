@@ -17,7 +17,7 @@ if not records:
 module_options = sorted({r["module"] for r in records})
 open_section("报告筛选")
 selected_modules = st.multiselect("按模块过滤", options=module_options, default=module_options)
-selected_ext = st.radio("文件类型", options=["all", ".md", ".docx"], horizontal=True)
+selected_ext = st.radio("文件类型", options=["all", ".md", ".docx", ".pdf", ".xlsx", ".zip"], horizontal=True)
 
 filtered = [
     r
@@ -45,22 +45,31 @@ st.code(selected["path"])
 
 file_path = Path(selected["path"])
 with open(file_path, "rb") as fp:
+    suffix = file_path.suffix.lower()
+    if suffix == ".docx":
+        mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif suffix == ".md":
+        mime = "text/markdown"
+    elif suffix == ".pdf":
+        mime = "application/pdf"
+    elif suffix == ".xlsx":
+        mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif suffix == ".zip":
+        mime = "application/zip"
+    else:
+        mime = "application/octet-stream"
     st.download_button(
         label="下载该文件",
         data=fp.read(),
         file_name=file_path.name,
-        mime=(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            if file_path.suffix.lower() == ".docx"
-            else "text/markdown"
-        ),
+        mime=mime,
     )
 
 if selected["ext"] == ".md":
     with st.expander("Markdown 预览", expanded=True):
         render_markdown_file(selected["path"])
 else:
-    st.info("docx 暂不做在线渲染，可直接下载查看。")
+    st.info("当前类型暂不做在线渲染，可直接下载查看。")
 
 st.markdown("### 引用联动查询")
 sources = load_sources_index()
