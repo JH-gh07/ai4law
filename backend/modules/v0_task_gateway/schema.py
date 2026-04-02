@@ -13,8 +13,8 @@ class APIEnvelope(BaseModel):
 
 
 class V0TaskCreateRequest(BaseModel):
-    module_code: Literal["2.2", "2.3", "3.3", "3.4"] = Field(
-        description="v0 currently supports 2.2/2.3/3.3/3.4"
+    module_code: Literal["2.2", "2.3", "3.2", "3.3", "3.4"] = Field(
+        description="v0 currently supports 2.2/2.3/3.2/3.3/3.4"
     )
     session_id: str = Field(min_length=1)
     input_payload: dict[str, Any] = Field(default_factory=dict)
@@ -69,6 +69,10 @@ class V0TaskAuditData(BaseModel):
     status: str
     stage: str
     summary: str
+    input_digest: str | None = None
+    rule_hits: list[str] = Field(default_factory=list)
+    retrieval_sources: list[str] = Field(default_factory=list)
+    consistency_issues: list[str] = Field(default_factory=list)
     citations: list[str] = Field(default_factory=list)
     model_version: str = "v0-local"
     template_version: str = "v0"

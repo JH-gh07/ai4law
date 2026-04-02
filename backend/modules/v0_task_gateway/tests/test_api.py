@@ -130,6 +130,13 @@ def test_v0_task_gateway_pipia_flow() -> None:
     assert "docx" in file_types
     assert "zip" in file_types
 
+    audit = client.get(f"/api/v0/tasks/{task_id}/audit")
+    assert audit.status_code == 200
+    audit_data = audit.json()["data"]
+    assert isinstance(audit_data["input_digest"], str)
+    assert isinstance(audit_data["rule_hits"], list)
+    assert isinstance(audit_data["retrieval_sources"], list)
+
 
 def test_v0_task_gateway_dpia_flow() -> None:
     created = client.post(
@@ -171,6 +178,63 @@ def test_v0_task_gateway_dpia_flow() -> None:
         time.sleep(0.05)
     else:
         raise AssertionError("v0 gateway dpia task timeout")
+
+    artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
+    assert artifacts.status_code == 200
+    items = artifacts.json()["data"]["artifacts"]
+    assert items
+    file_types = {item["file_type"] for item in items}
+    assert "docx" in file_types
+    assert "zip" in file_types
+
+
+def test_v0_task_gateway_bcr_flow() -> None:
+    created = client.post(
+        "/api/v0/tasks",
+        json={
+            "module_code": "3.2",
+            "session_id": "sess-v0-bcr",
+            "input_payload": {
+                "company_name": "V0BCRCo",
+                "review_items": [
+                    {
+                        "code": "3.2-C1",
+                        "title": "结构完整性",
+                        "score": "partial",
+                        "finding": "章节覆盖不完整",
+                        "legal_basis": "GDPR 第47条",
+                        "recommendation": "补齐约束力与权利章节",
+                        "evidence": "BCR-v1 第3章",
+                    },
+                    {
+                        "code": "3.2-C2",
+                        "title": "集团内部约束力",
+                        "score": "compliant",
+                        "finding": "已覆盖",
+                        "legal_basis": "GDPR 第47条",
+                        "recommendation": "保持",
+                        "evidence": "BCR-v1 第4章",
+                    },
+                ],
+                "attachments": [],
+            },
+            "attachment_ids": [],
+        },
+    )
+    assert created.status_code == 200
+    task_id = created.json()["data"]["task_id"]
+
+    for _ in range(60):
+        status = client.get(f"/api/v0/tasks/{task_id}")
+        assert status.status_code == 200
+        payload = status.json()["data"]
+        if payload["status"] == "COMPLETED":
+            break
+        if payload["status"] == "FAILED":
+            raise AssertionError(payload)
+        time.sleep(0.05)
+    else:
+        raise AssertionError("v0 gateway bcr task timeout")
 
     artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
     assert artifacts.status_code == 200

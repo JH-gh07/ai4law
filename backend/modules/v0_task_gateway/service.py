@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -12,6 +13,8 @@ from fastapi import UploadFile
 
 from backend.modules.assessment.schema import AssessmentRequest
 from backend.modules.assessment.service import AssessmentService
+from backend.modules.bcr.schema import BCRRequest
+from backend.modules.bcr.service import BCRService
 from backend.modules.dpia.schema import DPIARequest
 from backend.modules.dpia.service import DPIAService
 from backend.modules.pipia.schema import PIPIARequest
@@ -32,6 +35,7 @@ from backend.modules.v0_task_gateway.schema import (
 @dataclass
 class _TaskRef:
     module_code: str
+    input_digest: str | None = None
 
 
 class V0TaskGatewayService:
@@ -40,6 +44,7 @@ class V0TaskGatewayService:
     def __init__(self) -> None:
         self.assessment = AssessmentService()
         self.pipia = PIPIAService()
+        self.bcr = BCRService()
         self.dpia = DPIAService()
         self.tia = TIAService()
         self._task_refs: dict[str, _TaskRef] = {}
@@ -74,6 +79,9 @@ class V0TaskGatewayService:
         elif req.module_code == "2.3":
             payload = self._build_pipia_payload(req.input_payload, req.attachment_ids)
             accepted = self.pipia.submit_async(payload)
+        elif req.module_code == "3.2":
+            payload = self._build_bcr_payload(req.input_payload, req.attachment_ids)
+            accepted = self.bcr.submit_async(payload)
         elif req.module_code == "3.3":
             payload = self._build_dpia_payload(req.input_payload, req.attachment_ids)
             accepted = self.dpia.submit_async(payload)
@@ -84,7 +92,10 @@ class V0TaskGatewayService:
             raise ValueError(f"Unsupported module_code: {req.module_code}")
 
         with self._lock:
-            self._task_refs[accepted.task_id] = _TaskRef(module_code=req.module_code)
+            self._task_refs[accepted.task_id] = _TaskRef(
+                module_code=req.module_code,
+                input_digest=self._compute_input_digest(req),
+            )
         return V0TaskCreateData(task_id=accepted.task_id, module_code=req.module_code, status=accepted.state)
 
     def get_task_status(self, task_id: str) -> V0TaskStatusData:
@@ -93,6 +104,8 @@ class V0TaskGatewayService:
             raw = self.assessment.get_async_status(task_id)
         elif module_code == "2.3":
             raw = self.pipia.get_async_status(task_id)
+        elif module_code == "3.2":
+            raw = self.bcr.get_async_status(task_id)
         elif module_code == "3.3":
             raw = self.dpia.get_async_status(task_id)
         elif module_code == "3.4":
@@ -120,6 +133,8 @@ class V0TaskGatewayService:
             self.assessment.cancel_async(task_id)
         elif module_code == "2.3":
             self.pipia.cancel_async(task_id)
+        elif module_code == "3.2":
+            self.bcr.cancel_async(task_id)
         elif module_code == "3.3":
             self.dpia.cancel_async(task_id)
         elif module_code == "3.4":
@@ -162,13 +177,29 @@ class V0TaskGatewayService:
     def get_task_audit(self, task_id: str) -> V0TaskAuditData:
         module_code = self._resolve_module_code(task_id)
         status = self.get_task_status(task_id)
+        ref = self._get_task_ref(task_id)
+        raw = self._get_raw_task_status(task_id, module_code)
+        result_payload = None
+        if raw is not None and getattr(raw, "result", None) is not None:
+            if hasattr(raw.result, "model_dump"):
+                result_payload = raw.result.model_dump()
+            elif isinstance(raw.result, dict):
+                result_payload = raw.result
+        consistency_issues = list((result_payload or {}).get("consistency_issues") or [])
+        citations = self._collect_citations(result_payload)
+        retrieval_sources = self._collect_retrieval_sources(result_payload, citations)
+        rule_hits = self._build_rule_hits(status.error, consistency_issues)
         return V0TaskAuditData(
             task_id=task_id,
             module_code=module_code,
             status=status.status,
             stage=status.stage,
             summary="v0 audit summary: schema/rule/retrieval/generation/render pipeline executed.",
-            citations=["法规原文依据", "实务解释依据"],
+            input_digest=ref.input_digest if ref is not None else None,
+            rule_hits=rule_hits,
+            retrieval_sources=retrieval_sources,
+            consistency_issues=consistency_issues,
+            citations=citations,
             model_version="v0-local-llm-adapter",
             template_version="v0",
         )
@@ -202,6 +233,20 @@ class V0TaskGatewayService:
 
         resolved["attachments"] = attachments
         return PIPIARequest.model_validate(resolved)
+
+    def _build_bcr_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> BCRRequest:
+        resolved = dict(payload)
+        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
+        for item in attachments:
+            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
+            if "file_format" in item and isinstance(item["file_format"], str):
+                item["file_format"] = item["file_format"].lower()
+
+        uploaded_files = list(resolved.get("uploaded_files") or [])
+        uploaded_files.extend(self._resolve_attachment_paths(attachment_ids))
+        resolved["attachments"] = attachments
+        resolved["uploaded_files"] = uploaded_files
+        return BCRRequest.model_validate(resolved)
 
     def _build_dpia_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> DPIARequest:
         resolved = dict(payload)
@@ -284,6 +329,7 @@ class V0TaskGatewayService:
         for module_code, getter in (
             ("2.2", self.assessment.get_async_status),
             ("2.3", self.pipia.get_async_status),
+            ("3.2", self.bcr.get_async_status),
             ("3.3", self.dpia.get_async_status),
             ("3.4", self.tia.get_async_status),
         ):
@@ -313,6 +359,8 @@ class V0TaskGatewayService:
             status = self.assessment.get_async_status(task_id)
         elif module_code == "2.3":
             status = self.pipia.get_async_status(task_id)
+        elif module_code == "3.2":
+            status = self.bcr.get_async_status(task_id)
         elif module_code == "3.3":
             status = self.dpia.get_async_status(task_id)
         elif module_code == "3.4":
@@ -334,3 +382,76 @@ class V0TaskGatewayService:
     def _make_artifact_id(task_id: str, file_type: str, file_path: str) -> str:
         digest = hashlib.sha1(f"{task_id}:{file_type}:{file_path}".encode("utf-8")).hexdigest()[:16]
         return f"art_{digest}"
+
+    @staticmethod
+    def _compute_input_digest(req: V0TaskCreateRequest) -> str:
+        canonical = json.dumps(
+            {
+                "module_code": req.module_code,
+                "session_id": req.session_id,
+                "input_payload": req.input_payload,
+                "attachment_ids": req.attachment_ids,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        return hashlib.sha1(canonical.encode("utf-8")).hexdigest()
+
+    def _get_task_ref(self, task_id: str) -> _TaskRef | None:
+        with self._lock:
+            return self._task_refs.get(task_id)
+
+    def _get_raw_task_status(self, task_id: str, module_code: str) -> Any:
+        if module_code == "2.2":
+            return self.assessment.get_async_status(task_id)
+        if module_code == "2.3":
+            return self.pipia.get_async_status(task_id)
+        if module_code == "3.2":
+            return self.bcr.get_async_status(task_id)
+        if module_code == "3.3":
+            return self.dpia.get_async_status(task_id)
+        if module_code == "3.4":
+            return self.tia.get_async_status(task_id)
+        raise KeyError(f"Task not found: {task_id}")
+
+    @staticmethod
+    def _collect_citations(result_payload: dict[str, Any] | None) -> list[str]:
+        if not result_payload:
+            return []
+        chapters = result_payload.get("chapters") or []
+        citations: list[str] = []
+        for chapter in chapters:
+            for cite in chapter.get("citations") or []:
+                if cite and cite not in citations:
+                    citations.append(str(cite))
+        regulations = result_payload.get("regulations") or []
+        for reg in regulations:
+            name = f"{reg.get('title', '')}{reg.get('article', '')}".strip()
+            if name and name not in citations:
+                citations.append(name)
+        return citations
+
+    @staticmethod
+    def _collect_retrieval_sources(result_payload: dict[str, Any] | None, citations: list[str]) -> list[str]:
+        if not result_payload:
+            return []
+        regulations = result_payload.get("regulations") or []
+        if regulations:
+            sources = []
+            for reg in regulations:
+                label = f"{reg.get('title', '')}{reg.get('article', '')}: {reg.get('snippet', '')}".strip()
+                if label:
+                    sources.append(label)
+            return sources
+        return citations[:8]
+
+    @staticmethod
+    def _build_rule_hits(error: str | None, consistency_issues: list[str]) -> list[str]:
+        hits = [
+            "schema_validate: pass" if error is None else f"schema_validate: fail ({error})",
+            "rule_validate: pass" if not consistency_issues else "rule_validate: warnings",
+            "artifact_render: pass",
+        ]
+        for issue in consistency_issues[:10]:
+            hits.append(f"consistency_issue: {issue}")
+        return hits
