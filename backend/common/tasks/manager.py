@@ -99,10 +99,23 @@ class InMemoryTaskManager:
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
+    def cancel(self, task_id: str) -> TaskSnapshot:
+        with self._lock:
+            record = self._tasks.get(task_id)
+            if record is None:
+                raise KeyError(f"Task not found: {task_id}")
+            if record.state in {"COMPLETED", "FAILED", "CANCELED"}:
+                return self._snapshot(record)
+            record.state = "CANCELED"
+            record.updated_at = _utc_now_iso()
+        return self.get_or_raise(task_id)
+
     def _execute(self, task_id: str) -> None:
         with self._lock:
             record = self._tasks.get(task_id)
             if record is None:
+                return
+            if record.state == "CANCELED":
                 return
             record.state = "RUNNING"
             record.attempts += 1
@@ -121,6 +134,8 @@ class InMemoryTaskManager:
                 current = self._tasks.get(task_id)
                 if current is None:
                     return
+                if current.state == "CANCELED":
+                    return
                 current.state = "COMPLETED"
                 current.updated_at = _utc_now_iso()
                 current.error = None
@@ -129,6 +144,8 @@ class InMemoryTaskManager:
             with self._lock:
                 current = self._tasks.get(task_id)
                 if current is None:
+                    return
+                if current.state == "CANCELED":
                     return
                 current.state = "FAILED"
                 current.updated_at = _utc_now_iso()

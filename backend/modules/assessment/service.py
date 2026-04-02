@@ -56,6 +56,10 @@ class AssessmentService:
         snapshot = self.tasks.retry(task_id)
         return self._snapshot_to_status(snapshot)
 
+    def cancel_async(self, task_id: str) -> AssessmentAsyncStatus:
+        snapshot = self.tasks.cancel(task_id)
+        return self._snapshot_to_status(snapshot)
+
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> AssessmentAsyncAccepted:
         return AssessmentAsyncAccepted(
