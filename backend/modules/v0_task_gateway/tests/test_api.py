@@ -292,3 +292,119 @@ def test_v0_task_gateway_tia_flow() -> None:
     file_types = {item["file_type"] for item in items}
     assert "docx" in file_types
     assert "zip" in file_types
+
+
+def test_v0_task_gateway_cn_flow_flow() -> None:
+    created = client.post(
+        "/api/v0/tasks",
+        json={
+            "module_code": "4.1",
+            "session_id": "sess-v0-cn-flow",
+            "input_payload": {
+                "company_name": "V0CNFlowCo",
+                "transfer_purpose": "全球客服与风控",
+                "data_categories": ["账户信息", "设备信息"],
+                "sensitive_data_flags": ["生物识别"],
+                "recipient_entities": [
+                    {
+                        "entity_name": "US ServiceCo",
+                        "country_region": "United States",
+                        "entity_role": "processor",
+                        "is_restricted_party": False,
+                    }
+                ],
+                "transfer_chain": "CN -> US processor -> subprocessor",
+                "attachments": [
+                    {
+                        "file_role": "data_inventory",
+                        "file_name": "data.csv",
+                        "file_format": "csv",
+                        "storage_uri": "storage://uploads/data.csv",
+                    },
+                    {
+                        "file_role": "entity_inventory",
+                        "file_name": "entity.csv",
+                        "file_format": "csv",
+                        "storage_uri": "storage://uploads/entity.csv",
+                    },
+                ],
+            },
+            "attachment_ids": [],
+        },
+    )
+    assert created.status_code == 200
+    task_id = created.json()["data"]["task_id"]
+
+    for _ in range(60):
+        status = client.get(f"/api/v0/tasks/{task_id}")
+        assert status.status_code == 200
+        payload = status.json()["data"]
+        if payload["status"] == "COMPLETED":
+            break
+        if payload["status"] == "FAILED":
+            raise AssertionError(payload)
+        time.sleep(0.05)
+    else:
+        raise AssertionError("v0 gateway cn-flow task timeout")
+
+    artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
+    assert artifacts.status_code == 200
+    items = artifacts.json()["data"]["artifacts"]
+    assert items
+    file_types = {item["file_type"] for item in items}
+    assert "docx" in file_types
+    assert "pdf" in file_types
+    assert "xlsx" in file_types
+    assert "zip" in file_types
+
+
+def test_v0_task_gateway_cpra_flow() -> None:
+    created = client.post(
+        "/api/v0/tasks",
+        json={
+            "module_code": "4.2",
+            "session_id": "sess-v0-cpra",
+            "input_payload": {
+                "company_name": "V0CPRACo",
+                "business_model": "SaaS",
+                "data_lifecycle": "收集-处理-存储-删除",
+                "notice_and_consent": "隐私告知缺失",
+                "consumer_rights_process": "目前仅邮箱接收",
+                "opt_out_and_sale_sharing": "存在共享但无opt-out",
+                "vendor_management": "供应商管理未体现DPA",
+                "attachments": [
+                    {
+                        "file_role": "privacy_policy",
+                        "file_name": "policy.url",
+                        "file_format": "url",
+                        "storage_uri": "https://example.com/privacy",
+                    }
+                ],
+            },
+            "attachment_ids": [],
+        },
+    )
+    assert created.status_code == 200
+    task_id = created.json()["data"]["task_id"]
+
+    for _ in range(60):
+        status = client.get(f"/api/v0/tasks/{task_id}")
+        assert status.status_code == 200
+        payload = status.json()["data"]
+        if payload["status"] == "COMPLETED":
+            break
+        if payload["status"] == "FAILED":
+            raise AssertionError(payload)
+        time.sleep(0.05)
+    else:
+        raise AssertionError("v0 gateway cpra task timeout")
+
+    artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
+    assert artifacts.status_code == 200
+    items = artifacts.json()["data"]["artifacts"]
+    assert items
+    file_types = {item["file_type"] for item in items}
+    assert "docx" in file_types
+    assert "pdf" in file_types
+    assert "xlsx" in file_types
+    assert "zip" in file_types

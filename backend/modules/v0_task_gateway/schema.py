@@ -13,8 +13,8 @@ class APIEnvelope(BaseModel):
 
 
 class V0TaskCreateRequest(BaseModel):
-    module_code: Literal["2.2", "2.3", "3.2", "3.3", "3.4"] = Field(
-        description="v0 currently supports 2.2/2.3/3.2/3.3/3.4"
+    module_code: Literal["2.2", "2.3", "3.2", "3.3", "3.4", "4.1", "4.2"] = Field(
+        description="v0 currently supports 2.2/2.3/3.2/3.3/3.4/4.1/4.2"
     )
     session_id: str = Field(min_length=1)
     input_payload: dict[str, Any] = Field(default_factory=dict)

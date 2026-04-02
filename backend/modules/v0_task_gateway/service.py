@@ -15,6 +15,10 @@ from backend.modules.assessment.schema import AssessmentRequest
 from backend.modules.assessment.service import AssessmentService
 from backend.modules.bcr.schema import BCRRequest
 from backend.modules.bcr.service import BCRService
+from backend.modules.cn_flow.schema import CNFlowRequest
+from backend.modules.cn_flow.service import CNFlowService
+from backend.modules.cpra.schema import CPRARequest
+from backend.modules.cpra.service import CPRAService
 from backend.modules.dpia.schema import DPIARequest
 from backend.modules.dpia.service import DPIAService
 from backend.modules.pipia.schema import PIPIARequest
@@ -47,6 +51,8 @@ class V0TaskGatewayService:
         self.bcr = BCRService()
         self.dpia = DPIAService()
         self.tia = TIAService()
+        self.cn_flow = CNFlowService()
+        self.cpra = CPRAService()
         self._task_refs: dict[str, _TaskRef] = {}
         self._artifact_index: dict[str, Path] = {}
         self._file_index: dict[str, Path] = {}
@@ -88,6 +94,12 @@ class V0TaskGatewayService:
         elif req.module_code == "3.4":
             payload = self._build_tia_payload(req.input_payload, req.attachment_ids)
             accepted = self.tia.submit_async(payload)
+        elif req.module_code == "4.1":
+            payload = self._build_cn_flow_payload(req.input_payload, req.attachment_ids)
+            accepted = self.cn_flow.submit_async(payload)
+        elif req.module_code == "4.2":
+            payload = self._build_cpra_payload(req.input_payload, req.attachment_ids)
+            accepted = self.cpra.submit_async(payload)
         else:
             raise ValueError(f"Unsupported module_code: {req.module_code}")
 
@@ -110,6 +122,10 @@ class V0TaskGatewayService:
             raw = self.dpia.get_async_status(task_id)
         elif module_code == "3.4":
             raw = self.tia.get_async_status(task_id)
+        elif module_code == "4.1":
+            raw = self.cn_flow.get_async_status(task_id)
+        elif module_code == "4.2":
+            raw = self.cpra.get_async_status(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
 
@@ -139,6 +155,10 @@ class V0TaskGatewayService:
             self.dpia.cancel_async(task_id)
         elif module_code == "3.4":
             self.tia.cancel_async(task_id)
+        elif module_code == "4.1":
+            self.cn_flow.cancel_async(task_id)
+        elif module_code == "4.2":
+            self.cpra.cancel_async(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
         return self.get_task_status(task_id)
@@ -292,6 +312,52 @@ class V0TaskGatewayService:
         resolved["attachments"] = attachments
         return TIARequest.model_validate(resolved)
 
+    def _build_cn_flow_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> CNFlowRequest:
+        resolved = dict(payload)
+        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
+        for item in attachments:
+            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
+            if "file_format" in item and isinstance(item["file_format"], str):
+                item["file_format"] = item["file_format"].lower()
+
+        for file_path_str in self._resolve_attachment_paths(attachment_ids):
+            file_path = Path(file_path_str)
+            suffix = file_path.suffix.lower().lstrip(".")
+            attachments.append(
+                {
+                    "file_role": "supporting_material",
+                    "file_name": file_path.name,
+                    "file_format": self._normalize_file_format(suffix, {"xlsx", "csv", "docx", "pdf"}, "csv"),
+                    "storage_uri": str(file_path),
+                }
+            )
+        resolved["attachments"] = attachments
+        return CNFlowRequest.model_validate(resolved)
+
+    def _build_cpra_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> CPRARequest:
+        resolved = dict(payload)
+        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
+        for item in attachments:
+            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
+            if "file_format" in item and isinstance(item["file_format"], str):
+                item["file_format"] = item["file_format"].lower()
+
+        for file_path_str in self._resolve_attachment_paths(attachment_ids):
+            file_path = Path(file_path_str)
+            suffix = file_path.suffix.lower().lstrip(".")
+            attachments.append(
+                {
+                    "file_role": "other",
+                    "file_name": file_path.name,
+                    "file_format": self._normalize_file_format(
+                        suffix, {"docx", "pdf", "url", "xlsx", "csv"}, "pdf"
+                    ),
+                    "storage_uri": str(file_path),
+                }
+            )
+        resolved["attachments"] = attachments
+        return CPRARequest.model_validate(resolved)
+
     def _resolve_attachment_paths(self, attachment_ids: list[str]) -> list[str]:
         paths: list[str] = []
         with self._lock:
@@ -332,6 +398,8 @@ class V0TaskGatewayService:
             ("3.2", self.bcr.get_async_status),
             ("3.3", self.dpia.get_async_status),
             ("3.4", self.tia.get_async_status),
+            ("4.1", self.cn_flow.get_async_status),
+            ("4.2", self.cpra.get_async_status),
         ):
             try:
                 getter(task_id)
@@ -365,6 +433,10 @@ class V0TaskGatewayService:
             status = self.dpia.get_async_status(task_id)
         elif module_code == "3.4":
             status = self.tia.get_async_status(task_id)
+        elif module_code == "4.1":
+            status = self.cn_flow.get_async_status(task_id)
+        elif module_code == "4.2":
+            status = self.cpra.get_async_status(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
         if status.result is None:
@@ -412,6 +484,10 @@ class V0TaskGatewayService:
             return self.dpia.get_async_status(task_id)
         if module_code == "3.4":
             return self.tia.get_async_status(task_id)
+        if module_code == "4.1":
+            return self.cn_flow.get_async_status(task_id)
+        if module_code == "4.2":
+            return self.cpra.get_async_status(task_id)
         raise KeyError(f"Task not found: {task_id}")
 
     @staticmethod
