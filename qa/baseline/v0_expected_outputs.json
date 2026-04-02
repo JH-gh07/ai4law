@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-04-02T15:09:32.596459",
+  "dataset": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/qa/baseline/v0_sample_dataset.json",
+  "cases": [
+    {
+      "module_code": "2.2",
+      "name": "assessment",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "zip"
+      ],
+      "markdown_sha256": "57f1e2ff2fc6028eb66cc76fa5eb1cbfb7250671c4e701e297f6426bfe570baf"
+    },
+    {
+      "module_code": "2.3",
+      "name": "pipia",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "zip"
+      ],
+      "markdown_sha256": "bf9ac787ec26d7efd9c7792ac31ea5939daec2bb2069cf9aac100cd4ab97da41"
+    },
+    {
+      "module_code": "3.2",
+      "name": "bcr",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "zip"
+      ],
+      "markdown_sha256": "7ae0cc993d9472d2cc8cc72cff53db7febcd0827887d2eb78248519830d7337e"
+    },
+    {
+      "module_code": "3.3",
+      "name": "dpia",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "zip"
+      ],
+      "markdown_sha256": "2611208646cf76413f6545f9cefb49ecb2660af47eaaa0bf3e4c5e367ba6d7d7"
+    },
+    {
+      "module_code": "3.4",
+      "name": "tia",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "zip"
+      ],
+      "markdown_sha256": "70bbf5efb26236b8245eaf9a26f3d69d18e87cfdaf66640fd05aa0d4bcd8ff53"
+    },
+    {
+      "module_code": "4.1",
+      "name": "cn_flow",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "pdf",
+        "xlsx",
+        "zip"
+      ],
+      "markdown_sha256": "b7b13d00c4f990c5115812e95ff44f23ce8bb991c1cea1ac2e447a42a8d1aa56"
+    },
+    {
+      "module_code": "4.2",
+      "name": "cpra",
+      "artifact_types": [
+        "docx",
+        "markdown",
+        "pdf",
+        "xlsx",
+        "zip"
+      ],
+      "markdown_sha256": "36743d9b6a1faa865bcd6cc9d0f411f31e0063eb92113b75311375d7e3d6eaba"
+    }
+  ]
+}

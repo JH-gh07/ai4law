@@ -27,5 +27,6 @@ bash scripts/demo_v0.sh
 
 ## 4. 发布前检查
 1. 当前分支测试通过：`bash scripts/qa_v0_smoke.sh`
-2. 计划文档状态同步：`doc/v2/plan.md`
-3. Git 存档完成（至少 1 条 commit）
+2. 基准对比通过：`bash scripts/qa_v0_baseline.sh`
+3. 计划文档状态同步：`doc/v2/plan.md`
+4. Git 存档完成（至少 1 条 commit）

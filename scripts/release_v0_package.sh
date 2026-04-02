@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 bash scripts/qa_v0_smoke.sh
+bash scripts/qa_v0_baseline.sh
 
 mkdir -p dist
 STAMP="$(date +%Y%m%d_%H%M%S)"
@@ -26,4 +27,3 @@ cp scripts/qa_v0_smoke.sh "$REL_DIR/"
 
 tar -czf "${REL_DIR}.tar.gz" -C dist "$(basename "$REL_DIR")"
 echo "[release] package generated: ${REL_DIR}.tar.gz"
-
