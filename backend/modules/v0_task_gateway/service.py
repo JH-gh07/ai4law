@@ -12,8 +12,12 @@ from fastapi import UploadFile
 
 from backend.modules.assessment.schema import AssessmentRequest
 from backend.modules.assessment.service import AssessmentService
+from backend.modules.dpia.schema import DPIARequest
+from backend.modules.dpia.service import DPIAService
 from backend.modules.pipia.schema import PIPIARequest
 from backend.modules.pipia.service import PIPIAService
+from backend.modules.tia.schema import TIARequest
+from backend.modules.tia.service import TIAService
 from backend.modules.v0_task_gateway.schema import (
     V0ArtifactItem,
     V0TaskArtifactsData,
@@ -36,6 +40,8 @@ class V0TaskGatewayService:
     def __init__(self) -> None:
         self.assessment = AssessmentService()
         self.pipia = PIPIAService()
+        self.dpia = DPIAService()
+        self.tia = TIAService()
         self._task_refs: dict[str, _TaskRef] = {}
         self._artifact_index: dict[str, Path] = {}
         self._file_index: dict[str, Path] = {}
@@ -68,6 +74,12 @@ class V0TaskGatewayService:
         elif req.module_code == "2.3":
             payload = self._build_pipia_payload(req.input_payload, req.attachment_ids)
             accepted = self.pipia.submit_async(payload)
+        elif req.module_code == "3.3":
+            payload = self._build_dpia_payload(req.input_payload, req.attachment_ids)
+            accepted = self.dpia.submit_async(payload)
+        elif req.module_code == "3.4":
+            payload = self._build_tia_payload(req.input_payload, req.attachment_ids)
+            accepted = self.tia.submit_async(payload)
         else:
             raise ValueError(f"Unsupported module_code: {req.module_code}")
 
@@ -81,6 +93,10 @@ class V0TaskGatewayService:
             raw = self.assessment.get_async_status(task_id)
         elif module_code == "2.3":
             raw = self.pipia.get_async_status(task_id)
+        elif module_code == "3.3":
+            raw = self.dpia.get_async_status(task_id)
+        elif module_code == "3.4":
+            raw = self.tia.get_async_status(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
 
@@ -104,6 +120,10 @@ class V0TaskGatewayService:
             self.assessment.cancel_async(task_id)
         elif module_code == "2.3":
             self.pipia.cancel_async(task_id)
+        elif module_code == "3.3":
+            self.dpia.cancel_async(task_id)
+        elif module_code == "3.4":
+            self.tia.cancel_async(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
         return self.get_task_status(task_id)
@@ -183,6 +203,50 @@ class V0TaskGatewayService:
         resolved["attachments"] = attachments
         return PIPIARequest.model_validate(resolved)
 
+    def _build_dpia_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> DPIARequest:
+        resolved = dict(payload)
+        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
+        for item in attachments:
+            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
+            if "file_format" in item and isinstance(item["file_format"], str):
+                item["file_format"] = item["file_format"].lower()
+
+        for file_path_str in self._resolve_attachment_paths(attachment_ids):
+            file_path = Path(file_path_str)
+            suffix = file_path.suffix.lower().lstrip(".")
+            attachments.append(
+                {
+                    "file_role": "other",
+                    "file_name": file_path.name,
+                    "file_format": self._normalize_file_format(suffix, {"docx", "pdf", "png", "jpg"}, "pdf"),
+                    "storage_uri": str(file_path),
+                }
+            )
+        resolved["attachments"] = attachments
+        return DPIARequest.model_validate(resolved)
+
+    def _build_tia_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> TIARequest:
+        resolved = dict(payload)
+        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
+        for item in attachments:
+            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
+            if "file_format" in item and isinstance(item["file_format"], str):
+                item["file_format"] = item["file_format"].lower()
+
+        for file_path_str in self._resolve_attachment_paths(attachment_ids):
+            file_path = Path(file_path_str)
+            suffix = file_path.suffix.lower().lstrip(".")
+            attachments.append(
+                {
+                    "file_role": "other",
+                    "file_name": file_path.name,
+                    "file_format": self._normalize_file_format(suffix, {"docx", "pdf"}, "pdf"),
+                    "storage_uri": str(file_path),
+                }
+            )
+        resolved["attachments"] = attachments
+        return TIARequest.model_validate(resolved)
+
     def _resolve_attachment_paths(self, attachment_ids: list[str]) -> list[str]:
         paths: list[str] = []
         with self._lock:
@@ -220,6 +284,8 @@ class V0TaskGatewayService:
         for module_code, getter in (
             ("2.2", self.assessment.get_async_status),
             ("2.3", self.pipia.get_async_status),
+            ("3.3", self.dpia.get_async_status),
+            ("3.4", self.tia.get_async_status),
         ):
             try:
                 getter(task_id)
@@ -247,11 +313,22 @@ class V0TaskGatewayService:
             status = self.assessment.get_async_status(task_id)
         elif module_code == "2.3":
             status = self.pipia.get_async_status(task_id)
+        elif module_code == "3.3":
+            status = self.dpia.get_async_status(task_id)
+        elif module_code == "3.4":
+            status = self.tia.get_async_status(task_id)
         else:
             raise KeyError(f"Task not found: {task_id}")
         if status.result is None:
             return {}
         return dict(status.result.output_files)
+
+    @staticmethod
+    def _normalize_file_format(raw: str, allowed: set[str], fallback: str) -> str:
+        value = (raw or "").lower().strip()
+        if value in allowed:
+            return value
+        return fallback
 
     @staticmethod
     def _make_artifact_id(task_id: str, file_type: str, file_path: str) -> str:

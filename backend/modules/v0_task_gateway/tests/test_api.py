@@ -129,3 +129,102 @@ def test_v0_task_gateway_pipia_flow() -> None:
     file_types = {item["file_type"] for item in items}
     assert "docx" in file_types
     assert "zip" in file_types
+
+
+def test_v0_task_gateway_dpia_flow() -> None:
+    created = client.post(
+        "/api/v0/tasks",
+        json={
+            "module_code": "3.3",
+            "session_id": "sess-v0-dpia",
+            "input_payload": {
+                "project_name": "EU用户行为分析系统",
+                "processing_description": "收集用户行为日志并用于推荐优化",
+                "purpose_and_necessity": "保障服务可用性并优化推荐准确率",
+                "lawful_basis": "合法利益+合同履行",
+                "risk_assessment": "存在画像偏差与过度处理风险",
+                "mitigation_measures": "去标识化、最小化、访问控制、审计",
+                "residual_risk": "中风险，可接受并持续监控",
+                "attachments": [
+                    {
+                        "file_role": "data_flow_diagram",
+                        "file_name": "flow.pdf",
+                        "file_format": "pdf",
+                        "storage_uri": "storage://uploads/flow.pdf",
+                    }
+                ],
+            },
+            "attachment_ids": [],
+        },
+    )
+    assert created.status_code == 200
+    task_id = created.json()["data"]["task_id"]
+
+    for _ in range(60):
+        status = client.get(f"/api/v0/tasks/{task_id}")
+        assert status.status_code == 200
+        payload = status.json()["data"]
+        if payload["status"] == "COMPLETED":
+            break
+        if payload["status"] == "FAILED":
+            raise AssertionError(payload)
+        time.sleep(0.05)
+    else:
+        raise AssertionError("v0 gateway dpia task timeout")
+
+    artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
+    assert artifacts.status_code == 200
+    items = artifacts.json()["data"]["artifacts"]
+    assert items
+    file_types = {item["file_type"] for item in items}
+    assert "docx" in file_types
+    assert "zip" in file_types
+
+
+def test_v0_task_gateway_tia_flow() -> None:
+    created = client.post(
+        "/api/v0/tasks",
+        json={
+            "module_code": "3.4",
+            "session_id": "sess-v0-tia",
+            "input_payload": {
+                "transfer_tool": "scc",
+                "data_exporter_profile": "EU Exporter A",
+                "data_importer_profile": "US Importer B",
+                "third_country_assessment": "存在政府访问风险",
+                "supplementary_measures": "端到端加密、严格密钥管理、访问透明报告",
+                "final_conclusion": "在补充措施生效前提下SCC可传输",
+                "attachments": [
+                    {
+                        "file_role": "transfer_agreement",
+                        "file_name": "agreement.pdf",
+                        "file_format": "pdf",
+                        "storage_uri": "storage://uploads/agreement.pdf",
+                    }
+                ],
+            },
+            "attachment_ids": [],
+        },
+    )
+    assert created.status_code == 200
+    task_id = created.json()["data"]["task_id"]
+
+    for _ in range(60):
+        status = client.get(f"/api/v0/tasks/{task_id}")
+        assert status.status_code == 200
+        payload = status.json()["data"]
+        if payload["status"] == "COMPLETED":
+            break
+        if payload["status"] == "FAILED":
+            raise AssertionError(payload)
+        time.sleep(0.05)
+    else:
+        raise AssertionError("v0 gateway tia task timeout")
+
+    artifacts = client.get(f"/api/v0/tasks/{task_id}/artifacts")
+    assert artifacts.status_code == 200
+    items = artifacts.json()["data"]["artifacts"]
+    assert items
+    file_types = {item["file_type"] for item in items}
+    assert "docx" in file_types
+    assert "zip" in file_types
