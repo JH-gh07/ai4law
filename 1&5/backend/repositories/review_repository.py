@@ -5,8 +5,8 @@ from backend.models.review import ReviewTaskModel, UploadedFileModel
 
 
 class ReviewRepository:
-    def create_task(self, db: Session) -> ReviewTaskModel:
-        record = ReviewTaskModel()
+    def create_task(self, db: Session, **fields) -> ReviewTaskModel:
+        record = ReviewTaskModel(**fields)
         db.add(record)
         db.commit()
         db.refresh(record)

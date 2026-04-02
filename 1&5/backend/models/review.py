@@ -13,8 +13,15 @@ class ReviewTaskModel(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     status: Mapped[str] = mapped_column(String(32), default="CREATED")
     progress: Mapped[int] = mapped_column(default=0)
+    review_mode: Mapped[str] = mapped_column(String(32), default="REPORT")
+    contract_type: Mapped[str] = mapped_column(String(64), default="GENERAL_CONTRACT")
+    review_stance: Mapped[str] = mapped_column(String(32), default="PARTY_A")
+    custom_rule_text: Mapped[str] = mapped_column(Text, default="")
+    custom_rule_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    workspace_json: Mapped[str] = mapped_column(Text, default="{}")
     summary_json: Mapped[str] = mapped_column(Text, default="{}")
     issues_json: Mapped[str] = mapped_column(Text, default="[]")
+    diff_json: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -1,19 +1,25 @@
-from backend.schemas.review import AggregatedReview
+from backend.schemas.review import ReviewReport
 
 
 class ReviewReportRenderer:
-    def build_sections(self, review: AggregatedReview) -> list[tuple[str, list[str]]]:
+    def build_sections(self, report: ReviewReport) -> list[tuple[str, list[str]]]:
         sections: list[tuple[str, list[str]]] = [
-            ("文件概要与总体评级", [review.summary, f"总体合规评级：{review.overall_rating}"]),
-            ("优先整改建议", review.priority_actions),
+            (report.title, []),
+            ("文件概要", report.file_overview),
+            ("审查依据", report.legal_basis),
+            ("总体合规评级", [report.overall_rating, report.executive_summary]),
+            ("优先整改建议", report.priority_actions),
         ]
         issue_lines: list[str] = []
-        for issue in review.issues:
+        for issue in report.issues:
             issue_lines.append(
-                f"[{issue.severity.value}] {issue.title} | 条款类型：{issue.clause_type.value} | "
-                f"问题类型：{issue.problem_type} | 原文摘录：{issue.original_excerpt} | "
-                f"风险分析：{issue.risk_analysis} | 法规依据：{'；'.join(issue.citation_sources)} | "
+                f"[{issue.severity.value}] {issue.title}\n"
+                f"定位：{issue.position.section_path or issue.position.clause_number or issue.clause_id}\n"
+                f"原文引用：{issue.original_excerpt}\n"
+                f"问题类型：{issue.problem_type}\n"
+                f"风险分析：{issue.risk_analysis}\n"
+                f"法规依据：{'；'.join(issue.citation_sources)}\n"
                 f"修改建议：{issue.recommendation}"
             )
-        sections.append(("逐条问题清单", issue_lines or ["未发现明显问题。"]))
+        sections.append(("条款级审查发现", issue_lines or ["未发现明显问题。"]))
         return sections
