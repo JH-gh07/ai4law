@@ -67,7 +67,7 @@ task_id:
 |---|---|---|---|---|
 | T-BASE-01 | 统一任务引擎（create/status/cancel/artifacts） | P0 | done | A-BASE-01 |
 | T-BASE-02 | 文件上传与附件管理 | P0 | done | A-BASE-02 |
-| T-BASE-03 | schema 校验与规则执行框架 | P0 | in_progress | A-BASE-03 |
+| T-BASE-03 | schema 校验与规则执行框架 | P0 | done | A-BASE-03 |
 | T-BASE-04 | 模板渲染服务（docx/pdf/xlsx/zip） | P0 | done | A-BASE-04 |
 | T-BASE-05 | 审计日志（规则命中/检索来源/模型版本） | P0 | done | A-BASE-05 |
 
@@ -85,16 +85,16 @@ task_id:
 ### 4.3 测试与发布（P0）
 | task_id | 任务 | priority | status | acceptance_id |
 |---|---|---|---|---|
-| T-QA-01 | 模块冒烟测试与回归清单 | P0 | todo | A-QA-01 |
+| T-QA-01 | 模块冒烟测试与回归清单 | P0 | done | A-QA-01 |
 | T-QA-02 | 样例数据集与基准输出对比 | P0 | todo | A-QA-02 |
-| T-REL-01 | v0 打包发布与演示脚本 | P0 | todo | A-REL-01 |
+| T-REL-01 | v0 打包发布与演示脚本 | P0 | done | A-REL-01 |
 
 ### 4.4 当前进度看板（实时）
 | task_id | module | owner | priority | status | start_date | due_date | acceptance_id | evidence_path | blocked_reason | last_update |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T-BASE-01 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-01 | `outputs/acceptance/A-BASE-01/` |  | 2026-04-02 |
 | T-BASE-02 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-02 | `outputs/acceptance/A-BASE-01/` |  | 2026-04-02 |
-| T-BASE-03 | BASE | codex | P0 | in_progress | 2026-04-02 | 2026-04-03 | A-BASE-03 | `outputs/acceptance/A-BASE-01/` | 多模块规则项尚未统一化 | 2026-04-02 |
+| T-BASE-03 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-03 | `outputs/acceptance/A-BASE-03/` |  | 2026-04-02 |
 | T-BASE-04 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-04 | `outputs/acceptance/A-BASE-04/` |  | 2026-04-02 |
 | T-BASE-05 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-05 | `outputs/acceptance/A-BASE-05/` |  | 2026-04-02 |
 | T-22-01 | 2.2 | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-22-01 | `outputs/acceptance/A-22-01/` |  | 2026-04-02 |
@@ -104,6 +104,8 @@ task_id:
 | T-32-01 | 3.2 | codex | P1 | done | 2026-04-02 | 2026-04-02 | A-32-01 | `outputs/acceptance/A-32-01/` |  | 2026-04-02 |
 | T-41-01 | 4.1 | codex | P1 | done | 2026-04-02 | 2026-04-02 | A-41-01 | `outputs/acceptance/A-41-01/` |  | 2026-04-02 |
 | T-42-01 | 4.2 | codex | P1 | done | 2026-04-02 | 2026-04-02 | A-42-01 | `outputs/acceptance/A-42-01/` |  | 2026-04-02 |
+| T-QA-01 | QA | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-QA-01 | `outputs/acceptance/A-QA-01/` |  | 2026-04-02 |
+| T-REL-01 | REL | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-REL-01 | `outputs/acceptance/A-REL-01/` |  | 2026-04-02 |
 
 ## 5. 模块级验收标准（DoD）
 
@@ -147,6 +149,6 @@ task_id:
 
 ## 8. 当前行动（下一步）
 
-1. 推进 `T-BASE-03`：统一规则命中结构（rule_id/hit/evidence）并覆盖全部模块。  
-2. 完成 `T-QA-01`：模块冒烟测试与回归清单。  
-3. 完成 `T-REL-01`：v0 打包发布与演示脚本。  
+1. 完成 `T-QA-02`：补齐样例数据集与基准输出对比。  
+2. 增补前端联调验收清单（模块入口、跳转、下载链路）。  
+3. 准备远程仓库发布与演示材料归档。  

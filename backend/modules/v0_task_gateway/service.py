@@ -522,12 +522,20 @@ class V0TaskGatewayService:
         return citations[:8]
 
     @staticmethod
-    def _build_rule_hits(error: str | None, consistency_issues: list[str]) -> list[str]:
-        hits = [
-            "schema_validate: pass" if error is None else f"schema_validate: fail ({error})",
-            "rule_validate: pass" if not consistency_issues else "rule_validate: warnings",
-            "artifact_render: pass",
+    def _build_rule_hits(error: str | None, consistency_issues: list[str]) -> list[dict[str, str]]:
+        hits: list[dict[str, str]] = [
+            {
+                "rule_id": "schema_validate",
+                "hit": "pass" if error is None else "fail",
+                "evidence": "pydantic validation passed" if error is None else error,
+            },
+            {
+                "rule_id": "rule_validate",
+                "hit": "pass" if not consistency_issues else "warn",
+                "evidence": "no consistency issues" if not consistency_issues else "consistency issues detected",
+            },
+            {"rule_id": "artifact_render", "hit": "pass", "evidence": "artifacts generated and indexed"},
         ]
         for issue in consistency_issues[:10]:
-            hits.append(f"consistency_issue: {issue}")
+            hits.append({"rule_id": "consistency_issue", "hit": "warn", "evidence": issue})
         return hits

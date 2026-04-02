@@ -63,6 +63,12 @@ class V0UploadedFileData(BaseModel):
     uploaded_at: datetime
 
 
+class V0RuleHit(BaseModel):
+    rule_id: str
+    hit: Literal["pass", "warn", "fail"]
+    evidence: str
+
+
 class V0TaskAuditData(BaseModel):
     task_id: str
     module_code: str
@@ -70,7 +76,7 @@ class V0TaskAuditData(BaseModel):
     stage: str
     summary: str
     input_digest: str | None = None
-    rule_hits: list[str] = Field(default_factory=list)
+    rule_hits: list[V0RuleHit] = Field(default_factory=list)
     retrieval_sources: list[str] = Field(default_factory=list)
     consistency_issues: list[str] = Field(default_factory=list)
     citations: list[str] = Field(default_factory=list)

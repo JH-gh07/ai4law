@@ -135,6 +135,7 @@ def test_v0_task_gateway_pipia_flow() -> None:
     audit_data = audit.json()["data"]
     assert isinstance(audit_data["input_digest"], str)
     assert isinstance(audit_data["rule_hits"], list)
+    assert {"rule_id", "hit", "evidence"} <= set(audit_data["rule_hits"][0].keys())
     assert isinstance(audit_data["retrieval_sources"], list)
 
 
