@@ -31,6 +31,62 @@ DEFAULT_SCORE_FLOOR_BY_MODE = {
     "lexical": 2,
 }
 
+JURISDICTION_STRONG_HINTS: dict[str, tuple[str, ...]] = {
+    "cn": (
+        "数据出境",
+        "网信",
+        "个人信息保护法",
+        "数据安全法",
+        "网络安全法",
+        "标准合同",
+        "个人信息出境",
+        "pipia",
+    ),
+    "eu": (
+        "gdpr",
+        "edpb",
+        "bcr",
+        "dpia",
+        "transfer impact assessment",
+        "tia",
+        "article 35",
+        "article 47",
+    ),
+    "us": (
+        "cpra",
+        "ccpa",
+        "california",
+        "eo 14117",
+        "covered person",
+        "restricted transactions",
+    ),
+}
+
+PATH_STRONG_HINTS: dict[str, tuple[str, ...]] = {
+    "scc": ("标准合同", "scc", "pipia"),
+    "assessment": ("安全评估", "security assessment"),
+    "bcr": ("bcr", "约束性公司规则"),
+    "dpia": ("dpia", "data protection impact assessment", "article 35"),
+    "tia": ("tia", "transfer impact assessment", "edpb"),
+    "cpra": ("cpra", "ccpa", "california"),
+    "cn_flow": ("cn flow", "中国数据流转", "回流", "本地化"),
+}
+
+OFF_TOPIC_HINTS: tuple[str, ...] = (
+    "火锅",
+    "天气",
+    "python",
+    "docker",
+    "mysql",
+    "nginx",
+    "laptop",
+    "battery",
+    "steak",
+    "cake",
+    "macbook",
+    "爬虫",
+)
+
 
 LEGACY_DB = [
     RegulationDoc(
@@ -155,6 +211,41 @@ def _split_paths(raw_path: str) -> set[str]:
 def _priority_weight(priority: str) -> int:
     mapping = {"P0": 3, "P1": 2, "P2": 1}
     return mapping.get(priority or "", 0)
+
+
+def _contains_any_hint(query_l: str, hints: tuple[str, ...]) -> bool:
+    for hint in hints:
+        if hint.lower() in query_l:
+            return True
+    return False
+
+
+def _is_off_topic_query(query: str) -> bool:
+    query_l = query.lower()
+    return _contains_any_hint(query_l, OFF_TOPIC_HINTS)
+
+
+def _is_jurisdiction_mismatch(query: str, jurisdiction: Optional[str]) -> bool:
+    if not jurisdiction:
+        return False
+    query_l = query.lower()
+    matched: set[str] = set()
+    for j, hints in JURISDICTION_STRONG_HINTS.items():
+        if _contains_any_hint(query_l, hints):
+            matched.add(j)
+    if not matched:
+        return False
+    return jurisdiction.lower() not in matched
+
+
+def _is_path_mismatch(query: str, path: Optional[str]) -> bool:
+    if not path or path in {"all", "diagnosis", "general", "review"}:
+        return False
+    query_l = query.lower()
+    matched_paths = {p for p, hints in PATH_STRONG_HINTS.items() if _contains_any_hint(query_l, hints)}
+    if not matched_paths:
+        return False
+    return path not in matched_paths
 
 
 @lru_cache(maxsize=1)
@@ -293,6 +384,13 @@ def retrieve_regulations(
     mode: str = "hybrid",
     score_floor: Optional[int] = None,
 ) -> list[RegulationDoc]:
+    if _is_off_topic_query(query):
+        return []
+    if _is_jurisdiction_mismatch(query, jurisdiction):
+        return []
+    if _is_path_mismatch(query, path):
+        return []
+
     docs = _load_normalized_docs() or LEGACY_DB
     effective_floor = score_floor
     if effective_floor is None:

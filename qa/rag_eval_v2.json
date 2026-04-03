@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-03T11:43:29",
+  "generated_at": "2026-04-03T12:43:29",
   "top_k": 5,
   "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
   "modes": {
     "vector": {
       "mode": "vector",
-      "generated_at": "2026-04-03T11:43:22",
+      "generated_at": "2026-04-03T12:43:19",
       "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
       "top_k": 5,
       "score_floor": 4,
@@ -20,7 +20,7 @@
         "positive_avg_citation_valid_ratio": 0.9000000000000051,
         "positive_title_leak_rate": 0.0625,
         "negative_queries": 60,
-        "negative_safe_reject_rate": 0.31666666666666665
+        "negative_safe_reject_rate": 0.8833333333333333
       },
       "module_stats": {
         "diagnosis": {
@@ -30,7 +30,7 @@
           "positive_mrr": 0.5340277777777778,
           "positive_precision_at_k": 0.2666666666666668,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "assessment": {
           "positive_queries": 24,
@@ -39,7 +39,7 @@
           "positive_mrr": 0.5694444444444444,
           "positive_precision_at_k": 0.21666666666666676,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.16666666666666666
+          "negative_safe_reject_rate": 0.8333333333333334
         },
         "scc": {
           "positive_queries": 24,
@@ -48,7 +48,7 @@
           "positive_mrr": 0.5590277777777778,
           "positive_precision_at_k": 0.36666666666666664,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.16666666666666666
+          "negative_safe_reject_rate": 0.8333333333333334
         },
         "review": {
           "positive_queries": 24,
@@ -57,7 +57,7 @@
           "positive_mrr": 0.6159722222222223,
           "positive_precision_at_k": 0.45,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 0.8333333333333334
         },
         "general": {
           "positive_queries": 24,
@@ -66,7 +66,7 @@
           "positive_mrr": 0.5416666666666666,
           "positive_precision_at_k": 0.4583333333333333,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.16666666666666666
+          "negative_safe_reject_rate": 0.6666666666666666
         },
         "bcr": {
           "positive_queries": 24,
@@ -75,7 +75,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5000000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "dpia": {
           "positive_queries": 24,
@@ -84,7 +84,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5500000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "tia": {
           "positive_queries": 24,
@@ -93,7 +93,7 @@
           "positive_mrr": 0.8541666666666666,
           "positive_precision_at_k": 0.5000000000000001,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.5
+          "negative_safe_reject_rate": 1.0
         },
         "cn_flow": {
           "positive_queries": 24,
@@ -102,7 +102,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.5
+          "negative_safe_reject_rate": 0.8333333333333334
         },
         "cpra": {
           "positive_queries": 24,
@@ -111,7 +111,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 0.8333333333333334
         }
       },
       "split_stats": {
@@ -119,13 +119,13 @@
           "positive_queries": 200,
           "positive_recall_at_k": 0.885,
           "negative_queries": 40,
-          "negative_safe_reject_rate": 0.2
+          "negative_safe_reject_rate": 0.875
         },
         "holdout": {
           "positive_queries": 40,
           "positive_recall_at_k": 0.9,
           "negative_queries": 20,
-          "negative_safe_reject_rate": 0.55
+          "negative_safe_reject_rate": 0.9
         }
       },
       "difficulty_stats": {
@@ -891,21 +891,9 @@
           "label_type": "negative",
           "query": "加州CPRA下的消费者删除权是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "中华人民共和国个人信息保护法第七十条",
-            "中华人民共和国网络安全法（2025修正）第四十五条",
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第四十七条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0026",
@@ -915,21 +903,9 @@
           "label_type": "negative",
           "query": "GDPR第47条BCR审批要求有哪些",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第十一条",
-            "中华人民共和国网络安全法（2025修正）第二十四条",
-            "中华人民共和国网络安全法（2025修正）第五十六条",
-            "中华人民共和国数据安全法第四十四条",
-            "中华人民共和国个人信息保护法第三十六条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0027",
@@ -951,21 +927,9 @@
           "label_type": "negative",
           "query": "美国EO 14117限制交易定义是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落10",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0029",
@@ -975,21 +939,9 @@
           "label_type": "negative",
           "query": "请解释EDPB 01/2020 Step 3",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0030",
@@ -1749,21 +1701,9 @@
           "label_type": "negative",
           "query": "GDPR DPIA触发条件是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-REG-006",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "促进和规范数据跨境流动规定（发布页）段落7",
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第三十八条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第二十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0056",
@@ -1773,21 +1713,9 @@
           "label_type": "negative",
           "query": "CPRA敏感个人信息限制使用怎么做",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "中华人民共和国个人信息保护法第十条",
-            "中华人民共和国网络安全法（2025修正）第四十四条",
-            "中华人民共和国网络安全法（2025修正）第四十六条",
-            "中华人民共和国数据安全法第三十八条",
-            "中华人民共和国个人信息保护法第四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0057",
@@ -1797,21 +1725,9 @@
           "label_type": "negative",
           "query": "美国覆盖人员covered person定义是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第二十三条",
-            "中华人民共和国网络安全法（2025修正）第四十七条",
-            "中华人民共和国网络安全法（2025修正）第五十六条",
-            "中华人民共和国网络安全法（2025修正）第二十七条",
-            "中华人民共和国网络安全法（2025修正）第四十条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0058",
@@ -1851,17 +1767,9 @@
           "label_type": "negative",
           "query": "今天上海天气如何",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-QA-012",
-            "CN-QA-012",
-            "CN-QA-013"
-          ],
-          "top_titles": [
-            "数据出境安全管理政策问答（2025年4月）第十九条",
-            "数据出境安全管理政策问答（2025年4月）第六十二条",
-            "数据出境安全管理政策问答（2025年5月）第二十九条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0061",
@@ -2615,21 +2523,9 @@
           "label_type": "negative",
           "query": "GDPR第35条DPIA要素",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-REG-006",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第七条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0086",
@@ -2639,21 +2535,9 @@
           "label_type": "negative",
           "query": "美国EO14117 restricted transactions定义",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0087",
@@ -2663,21 +2547,9 @@
           "label_type": "negative",
           "query": "CPRA right to know说明",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-GUIDE-010"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "个人信息出境标准合同备案指南（第二版）第三条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0088",
@@ -2703,19 +2575,9 @@
           "label_type": "negative",
           "query": "BCR审查要点有哪些",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-REG-008",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002"
-          ],
-          "top_titles": [
-            "网络数据安全管理条例第十三条",
-            "中华人民共和国网络安全法（2025修正）第二十三条",
-            "中华人民共和国网络安全法（2025修正）第三十七条",
-            "中华人民共和国数据安全法第二十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0090",
@@ -3469,21 +3331,9 @@
           "label_type": "negative",
           "query": "EDPB Step 1内容是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-LAW-003",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第五十六条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0116",
@@ -3493,21 +3343,9 @@
           "label_type": "negative",
           "query": "美国covered person怎么判定",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0117",
@@ -3517,21 +3355,9 @@
           "label_type": "negative",
           "query": "CPRA删除权时限是多少",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-REG-008"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "网络数据安全管理条例第二十三条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0118",
@@ -4328,21 +4154,9 @@
           "label_type": "negative",
           "query": "GDPR Article 47 BCR requirements",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "促进和规范数据跨境流动规定（发布页）段落10"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0146",
@@ -4352,21 +4166,9 @@
           "label_type": "negative",
           "query": "EO 14117 section 202.214 text",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0147",
@@ -4376,21 +4178,9 @@
           "label_type": "negative",
           "query": "CPRA sensitive personal information definition",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0148",
@@ -5142,19 +4932,9 @@
           "label_type": "negative",
           "query": "CPRA right to know details",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0177",
@@ -5164,19 +4944,9 @@
           "label_type": "negative",
           "query": "EO 14117 restricted transactions",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 47"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0178",
@@ -5186,19 +4956,9 @@
           "label_type": "negative",
           "query": "recipe for chocolate cake",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 47",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0179",
@@ -5208,19 +4968,9 @@
           "label_type": "negative",
           "query": "python list comprehension tutorial",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0180",
@@ -5935,19 +5685,9 @@
           "label_type": "negative",
           "query": "CPRA sensitive personal information",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0207",
@@ -5957,19 +5697,9 @@
           "label_type": "negative",
           "query": "EO 14117 covered person definition",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0208",
@@ -5979,19 +5709,9 @@
           "label_type": "negative",
           "query": "how to tune mysql",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0209",
@@ -6001,19 +5721,9 @@
           "label_type": "negative",
           "query": "best laptop under 1000",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0210",
@@ -6725,19 +6435,9 @@
           "label_type": "negative",
           "query": "美国CPRA right to limit",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0237",
@@ -6747,19 +6447,9 @@
           "label_type": "negative",
           "query": "EO 14117 Sec. 202.214 meaning",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0238",
@@ -6769,19 +6459,9 @@
           "label_type": "negative",
           "query": "how to use docker compose",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0239",
@@ -7487,19 +7167,9 @@
           "label_type": "negative",
           "query": "GDPR Article 35 DPIA requirements",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "California CPRA/CCPASection 1798.121"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0266",
@@ -7543,19 +7213,9 @@
           "label_type": "negative",
           "query": "how to configure nginx",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "California CPRA/CCPASection 1798.121",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0269",
@@ -8283,19 +7943,9 @@
           "label_type": "negative",
           "query": "GDPR Article 47 BCR",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0297",
@@ -8317,19 +7967,9 @@
           "label_type": "negative",
           "query": "how to cook steak",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-FED-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0299",
@@ -8339,19 +7979,9 @@
           "label_type": "negative",
           "query": "macbook battery cycle count",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0300",
@@ -8369,7 +7999,7 @@
     },
     "hybrid": {
       "mode": "hybrid",
-      "generated_at": "2026-04-03T11:43:29",
+      "generated_at": "2026-04-03T12:43:29",
       "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
       "top_k": 5,
       "score_floor": 2,
@@ -8384,7 +8014,7 @@
         "positive_avg_citation_valid_ratio": 0.8858333333333381,
         "positive_title_leak_rate": 0.0625,
         "negative_queries": 60,
-        "negative_safe_reject_rate": 0.45
+        "negative_safe_reject_rate": 0.9666666666666667
       },
       "module_stats": {
         "diagnosis": {
@@ -8394,7 +8024,7 @@
           "positive_mrr": 0.2993055555555556,
           "positive_precision_at_k": 0.1666666666666667,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "assessment": {
           "positive_queries": 24,
@@ -8403,7 +8033,7 @@
           "positive_mrr": 0.6284722222222222,
           "positive_precision_at_k": 0.27500000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.6666666666666666
+          "negative_safe_reject_rate": 1.0
         },
         "scc": {
           "positive_queries": 24,
@@ -8412,7 +8042,7 @@
           "positive_mrr": 0.5763888888888888,
           "positive_precision_at_k": 0.3583333333333334,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "review": {
           "positive_queries": 24,
@@ -8421,7 +8051,7 @@
           "positive_mrr": 0.5118055555555555,
           "positive_precision_at_k": 0.4166666666666667,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.6666666666666666
+          "negative_safe_reject_rate": 1.0
         },
         "general": {
           "positive_queries": 24,
@@ -8430,7 +8060,7 @@
           "positive_mrr": 0.563888888888889,
           "positive_precision_at_k": 0.41666666666666646,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.5
+          "negative_safe_reject_rate": 1.0
         },
         "bcr": {
           "positive_queries": 24,
@@ -8439,7 +8069,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5000000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "dpia": {
           "positive_queries": 24,
@@ -8448,7 +8078,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5500000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 1.0
         },
         "tia": {
           "positive_queries": 24,
@@ -8457,7 +8087,7 @@
           "positive_mrr": 0.8541666666666666,
           "positive_precision_at_k": 0.5000000000000001,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.5
+          "negative_safe_reject_rate": 1.0
         },
         "cn_flow": {
           "positive_queries": 24,
@@ -8466,7 +8096,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.5
+          "negative_safe_reject_rate": 0.8333333333333334
         },
         "cpra": {
           "positive_queries": 24,
@@ -8475,7 +8105,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.3333333333333333
+          "negative_safe_reject_rate": 0.8333333333333334
         }
       },
       "split_stats": {
@@ -8483,13 +8113,13 @@
           "positive_queries": 200,
           "positive_recall_at_k": 0.855,
           "negative_queries": 40,
-          "negative_safe_reject_rate": 0.35
+          "negative_safe_reject_rate": 0.975
         },
         "holdout": {
           "positive_queries": 40,
           "positive_recall_at_k": 0.85,
           "negative_queries": 20,
-          "negative_safe_reject_rate": 0.65
+          "negative_safe_reject_rate": 0.95
         }
       },
       "difficulty_stats": {
@@ -9255,21 +8885,9 @@
           "label_type": "negative",
           "query": "加州CPRA下的消费者删除权是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "中华人民共和国个人信息保护法第七十条",
-            "中华人民共和国网络安全法（2025修正）第四十五条",
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第四十七条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0026",
@@ -9279,17 +8897,9 @@
           "label_type": "negative",
           "query": "GDPR第47条BCR审批要求有哪些",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-003",
-            "CN-REG-008"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第四十七条",
-            "中华人民共和国个人信息保护法第四十七条",
-            "网络数据安全管理条例第四十七条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0027",
@@ -9311,21 +8921,9 @@
           "label_type": "negative",
           "query": "美国EO 14117限制交易定义是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落10",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0029",
@@ -9335,21 +8933,9 @@
           "label_type": "negative",
           "query": "请解释EDPB 01/2020 Step 3",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0030",
@@ -10109,13 +9695,9 @@
           "label_type": "negative",
           "query": "GDPR DPIA触发条件是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "促进和规范数据跨境流动规定（发布页）段落7"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0056",
@@ -10125,21 +9707,9 @@
           "label_type": "negative",
           "query": "CPRA敏感个人信息限制使用怎么做",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003"
-          ],
-          "top_titles": [
-            "中华人民共和国个人信息保护法第十条",
-            "中华人民共和国网络安全法（2025修正）第四十四条",
-            "中华人民共和国网络安全法（2025修正）第四十六条",
-            "中华人民共和国数据安全法第三十八条",
-            "中华人民共和国个人信息保护法第四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0057",
@@ -10941,21 +10511,9 @@
           "label_type": "negative",
           "query": "GDPR第35条DPIA要素",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-008",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第三十五条",
-            "中华人民共和国数据安全法第三十五条",
-            "中华人民共和国个人信息保护法第三十五条",
-            "网络数据安全管理条例第三十五条",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0086",
@@ -10965,21 +10523,9 @@
           "label_type": "negative",
           "query": "美国EO14117 restricted transactions定义",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-005",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "个人信息出境标准合同办法段落8",
-            "促进和规范数据跨境流动规定（发布页）段落10"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0087",
@@ -10989,21 +10535,9 @@
           "label_type": "negative",
           "query": "CPRA right to know说明",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-GUIDE-010"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "个人信息出境标准合同备案指南（第二版）第三条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0088",
@@ -11025,13 +10559,9 @@
           "label_type": "negative",
           "query": "BCR审查要点有哪些",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-REG-008"
-          ],
-          "top_titles": [
-            "网络数据安全管理条例第十三条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0090",
@@ -11785,21 +11315,9 @@
           "label_type": "negative",
           "query": "EDPB Step 1内容是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-LAW-003",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第五十六条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0116",
@@ -11821,21 +11339,9 @@
           "label_type": "negative",
           "query": "CPRA删除权时限是多少",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007",
-            "CN-REG-008"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "网络数据安全管理条例第二十三条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0118",
@@ -12584,19 +12090,9 @@
           "label_type": "negative",
           "query": "GDPR Article 47 BCR requirements",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0146",
@@ -12606,21 +12102,9 @@
           "label_type": "negative",
           "query": "EO 14117 section 202.214 text",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-006"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落10",
-            "促进和规范数据跨境流动规定（发布页）段落11"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0147",
@@ -12630,21 +12114,9 @@
           "label_type": "negative",
           "query": "CPRA sensitive personal information definition",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-REG-006",
-            "CN-REG-007"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第八十一条",
-            "中华人民共和国数据安全法第五十五条",
-            "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（发布页）段落11",
-            "促进和规范数据跨境流动规定（全文页）第十四条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0148",
@@ -13380,19 +12852,9 @@
           "label_type": "negative",
           "query": "CPRA right to know details",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0177",
@@ -13402,19 +12864,9 @@
           "label_type": "negative",
           "query": "EO 14117 restricted transactions",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 47"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0178",
@@ -13424,19 +12876,9 @@
           "label_type": "negative",
           "query": "recipe for chocolate cake",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0179",
@@ -13446,19 +12888,9 @@
           "label_type": "negative",
           "query": "python list comprehension tutorial",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0180",
@@ -14173,19 +13605,9 @@
           "label_type": "negative",
           "query": "CPRA sensitive personal information",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0207",
@@ -14195,19 +13617,9 @@
           "label_type": "negative",
           "query": "EO 14117 covered person definition",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-LAW-001"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0208",
@@ -14217,19 +13629,9 @@
           "label_type": "negative",
           "query": "how to tune mysql",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 47",
-            "GDPR (EU) 2016/679Article 35",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0209",
@@ -14239,19 +13641,9 @@
           "label_type": "negative",
           "query": "best laptop under 1000",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0210",
@@ -14963,19 +14355,9 @@
           "label_type": "negative",
           "query": "美国CPRA right to limit",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 3",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0237",
@@ -14985,19 +14367,9 @@
           "label_type": "negative",
           "query": "EO 14117 Sec. 202.214 meaning",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0238",
@@ -15007,19 +14379,9 @@
           "label_type": "negative",
           "query": "how to use docker compose",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-GUIDE-002",
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "EDPB Recommendations 01/2020Step 1",
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0239",
@@ -15725,19 +15087,9 @@
           "label_type": "negative",
           "query": "GDPR Article 35 DPIA requirements",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0266",
@@ -15781,19 +15133,9 @@
           "label_type": "negative",
           "query": "how to configure nginx",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "California CPRA/CCPASection 1798.121",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0269",
@@ -16521,19 +15863,9 @@
           "label_type": "negative",
           "query": "GDPR Article 47 BCR",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0297",
@@ -16555,19 +15887,9 @@
           "label_type": "negative",
           "query": "how to cook steak",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0299",
@@ -16577,19 +15899,9 @@
           "label_type": "negative",
           "query": "macbook battery cycle count",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-CA-001",
-            "US-CA-001",
-            "US-FED-001",
-            "US-FED-001"
-          ],
-          "top_titles": [
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0300",
