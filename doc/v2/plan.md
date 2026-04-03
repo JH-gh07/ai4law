@@ -1,6 +1,6 @@
 # AI4Law v2 开发计划（执行版）
 
-更新时间：`2026-04-02`  
+更新时间：`2026-04-03`  
 适用范围：`2.2 / 2.3 / 3.2 / 3.3 / 3.4 / 4.1 / 4.2` 与公共底座
 
 ## 1. 目标与约束
@@ -87,6 +87,9 @@ task_id:
 |---|---|---|---|---|
 | T-QA-01 | 模块冒烟测试与回归清单 | P0 | done | A-QA-01 |
 | T-QA-02 | 样例数据集与基准输出对比 | P0 | done | A-QA-02 |
+| T-QA-03 | RAG v1 基线评测（按法域/路径过滤） | P0 | done | A-QA-03 |
+| T-QA-04 | RAG v1 双模式对比（vector/hybrid）+ EU/US基准样本 | P0 | done | A-QA-04 |
+| T-QA-05 | RAG v1 EU/US法规入库后回归评测 | P0 | done | A-QA-05 |
 | T-REL-01 | v0 打包发布与演示脚本 | P0 | done | A-REL-01 |
 
 ### 4.4 当前进度看板（实时）
@@ -106,6 +109,9 @@ task_id:
 | T-42-01 | 4.2 | codex | P1 | done | 2026-04-02 | 2026-04-02 | A-42-01 | `outputs/acceptance/A-42-01/` |  | 2026-04-02 |
 | T-QA-01 | QA | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-QA-01 | `outputs/acceptance/A-QA-01/` |  | 2026-04-02 |
 | T-QA-02 | QA | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-QA-02 | `outputs/acceptance/A-QA-02/` |  | 2026-04-02 |
+| T-QA-03 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-03 | `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` |  | 2026-04-03 |
+| T-QA-04 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-04 | `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` + `doc/knowledge/index/practice_cases.csv` |  | 2026-04-03 |
+| T-QA-05 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-05 | `doc/knowledge/normalized/regulation_articles.jsonl` + `doc/knowledge/index/sources.csv` + `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` |  | 2026-04-03 |
 | T-REL-01 | REL | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-REL-01 | `outputs/acceptance/A-REL-01/` |  | 2026-04-02 |
 
 ## 5. 模块级验收标准（DoD）

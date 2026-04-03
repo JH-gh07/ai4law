@@ -35,7 +35,12 @@ class CNFlowService:
     def generate_report(self, payload: CNFlowRequest) -> CNFlowResult:
         risk_items = self._build_risk_items(payload)
         risk_level = self._resolve_overall_level(risk_items)
-        regs = retrieve_regulations("EO 14117 US China data flow restricted transactions", top_k=4)
+        regs = retrieve_regulations(
+            "EO 14117 US China data flow restricted transactions",
+            top_k=4,
+            jurisdiction="us",
+            path="all",
+        )
         citations = [f"{item.title}{item.article}" for item in regs]
         attachment_notes = self._extract_attachment_notes(payload)
         chapters = self._generate_chapters(payload, risk_level, risk_items, citations)
@@ -254,4 +259,3 @@ class CNFlowService:
             error=snapshot.error,
             result=result,
         )
-

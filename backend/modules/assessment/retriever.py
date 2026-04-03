@@ -13,7 +13,12 @@ class AssessmentRetriever:
                 "important data" if profile.contains_important_data else "personal information",
             ]
         )
-        docs = retrieve_regulations(query, top_k=top_k)
+        docs = retrieve_regulations(
+            query,
+            top_k=top_k,
+            jurisdiction="cn",
+            path="assessment",
+        )
         return [
             RegulationHit(
                 source_id=doc.id,

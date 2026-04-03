@@ -38,6 +38,8 @@ class TIAService:
         regs = retrieve_regulations(
             f"TIA EDPB transfer tool {payload.transfer_tool} third country law assessment",
             top_k=4,
+            jurisdiction="eu",
+            path="all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
         attachment_notes = self._extract_attachment_notes(payload)
@@ -171,4 +173,3 @@ class TIAService:
             error=snapshot.error,
             result=result,
         )
-

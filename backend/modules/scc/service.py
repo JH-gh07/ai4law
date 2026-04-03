@@ -62,6 +62,8 @@ class SCCService:
         regs = retrieve_regulations(
             f"standard contract PIPIA {profile.transfer_purpose} {profile.receiver_country}",
             top_k=4,
+            jurisdiction="cn",
+            path="scc",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
 

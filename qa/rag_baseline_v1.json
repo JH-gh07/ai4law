@@ -1,0 +1,656 @@
+{
+  "generated_at": "2026-04-03T10:50:20",
+  "top_k": 5,
+  "modes": {
+    "vector": {
+      "mode": "vector",
+      "generated_at": "2026-04-03T10:50:19",
+      "top_k": 5,
+      "summary": {
+        "queries": 17,
+        "recall_at_k": 1.0,
+        "top1_citation_correct_rate": 1.0,
+        "citation_correct_rate": 1.0
+      },
+      "module_stats": {
+        "diagnosis": {
+          "queries": 2,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "assessment": {
+          "queries": 4,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "scc": {
+          "queries": 3,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "review": {
+          "queries": 2,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "general": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "dpia": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "bcr": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "tia": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "cn_flow": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "cpra": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        }
+      },
+      "details": [
+        {
+          "case_id": "CN-CASE-001",
+          "module": "diagnosis",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-001",
+          "module": "assessment",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-001",
+          "module": "scc",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-002",
+          "module": "assessment",
+          "query": "拜耳（中国）通过数据跨境绿色通道（安全评估案例）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条",
+            "促进和规范数据跨境流动规定（全文页）第六条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-003",
+          "module": "assessment",
+          "query": "北京数据跨境流动便利化2.0阶段性统计与实践",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "促进和规范数据跨境流动规定（发布页）段落1",
+            "促进和规范数据跨境流动规定（发布页）段落2",
+            "促进和规范数据跨境流动规定（发布页）段落3"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-003",
+          "module": "scc",
+          "query": "北京数据跨境流动便利化2.0阶段性统计与实践",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "促进和规范数据跨境流动规定（发布页）段落1",
+            "促进和规范数据跨境流动规定（发布页）段落2",
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "促进和规范数据跨境流动规定（发布页）段落4"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-004",
+          "module": "scc",
+          "query": "汽车OTA场景标准合同备案实践（示例）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第六条",
+            "促进和规范数据跨境流动规定（发布页）段落6",
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-005",
+          "module": "review",
+          "query": "广州互联网法院判决住客个人信息跨境传输/共享案件",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条",
+            "中华人民共和国网络安全法（2025修正）第七十八条",
+            "中华人民共和国个人信息保护法第四条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-005",
+          "module": "general",
+          "query": "广州互联网法院判决住客个人信息跨境传输/共享案件",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条",
+            "中华人民共和国网络安全法（2025修正）第七十八条",
+            "中华人民共和国个人信息保护法第四条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-006",
+          "module": "review",
+          "query": "广州互联网法院个人信息保护典型案例集",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国个人信息保护法第七十条",
+            "中华人民共和国网络安全法（2025修正）第四十二条",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-007",
+          "module": "assessment",
+          "query": "数据出境安全管理政策问答（含通过数量等统计口径）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "数据出境安全管理政策问答（2025年5月）第二十九条",
+            "数据出境安全管理政策问答（2025年5月）第三十七条",
+            "数据出境安全管理政策问答（2025年4月）第六条",
+            "数据出境安全管理政策问答（2025年4月）第十九条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-007",
+          "module": "diagnosis",
+          "query": "数据出境安全管理政策问答（含通过数量等统计口径）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "网络数据安全管理条例第三十四条",
+            "中华人民共和国数据安全法第三十一条",
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "网络数据安全管理条例第三十八条",
+            "促进和规范数据跨境流动规定（发布页）段落5"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-001",
+          "module": "dpia",
+          "query": "GDPR Article 35 data protection impact assessment requirements",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "GDPR (EU) 2016/679Article 35",
+            "GDPR (EU) 2016/679Article 47",
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-002",
+          "module": "bcr",
+          "query": "GDPR Article 47 binding corporate rules requirements",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "GDPR (EU) 2016/679Article 47",
+            "GDPR (EU) 2016/679Article 35",
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-003",
+          "module": "tia",
+          "query": "EDPB Recommendations 01/2020 transfer impact assessment supplementary measures",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3",
+            "GDPR (EU) 2016/679Article 35",
+            "GDPR (EU) 2016/679Article 47"
+          ]
+        },
+        {
+          "case_id": "US-CASE-001",
+          "module": "cn_flow",
+          "query": "EO 14117 restricted transactions sensitive personal data countries of concern",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
+            "California CPRA/CCPASection 1798.121",
+            "California CPRA/CCPASection 1798.100"
+          ]
+        },
+        {
+          "case_id": "US-CASE-002",
+          "module": "cpra",
+          "query": "CPRA right to limit use of sensitive personal information and consumer rights",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "California CPRA/CCPASection 1798.121",
+            "California CPRA/CCPASection 1798.100",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
+          ]
+        }
+      ]
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "generated_at": "2026-04-03T10:50:20",
+      "top_k": 5,
+      "summary": {
+        "queries": 17,
+        "recall_at_k": 1.0,
+        "top1_citation_correct_rate": 1.0,
+        "citation_correct_rate": 1.0
+      },
+      "module_stats": {
+        "diagnosis": {
+          "queries": 2,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "assessment": {
+          "queries": 4,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "scc": {
+          "queries": 3,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "review": {
+          "queries": 2,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "general": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "dpia": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "bcr": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "tia": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "cn_flow": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        },
+        "cpra": {
+          "queries": 1,
+          "recall_at_k": 1.0,
+          "top1_citation_correct_rate": 1.0,
+          "avg_topk_citation_correct_ratio": 1.0
+        }
+      },
+      "details": [
+        {
+          "case_id": "CN-CASE-001",
+          "module": "diagnosis",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-001",
+          "module": "assessment",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-001",
+          "module": "scc",
+          "query": "北京落地全国首个数据出境安全评估和首个标准合同合规出境案例",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落5",
+            "促进和规范数据跨境流动规定（全文页）第一条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-002",
+          "module": "assessment",
+          "query": "拜耳（中国）通过数据跨境绿色通道（安全评估案例）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "促进和规范数据跨境流动规定（全文页）第三条",
+            "促进和规范数据跨境流动规定（全文页）第四条",
+            "促进和规范数据跨境流动规定（全文页）第五条",
+            "促进和规范数据跨境流动规定（全文页）第六条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-003",
+          "module": "assessment",
+          "query": "北京数据跨境流动便利化2.0阶段性统计与实践",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "中华人民共和国网络安全法（2025修正）第三十九条",
+            "中华人民共和国数据安全法第十一条",
+            "数据出境安全评估办法段落2"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-003",
+          "module": "scc",
+          "query": "北京数据跨境流动便利化2.0阶段性统计与实践",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "中华人民共和国网络安全法（2025修正）第三十九条",
+            "中华人民共和国数据安全法第十一条",
+            "促进和规范数据跨境流动规定（发布页）段落1",
+            "促进和规范数据跨境流动规定（发布页）段落2"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-004",
+          "module": "scc",
+          "query": "汽车OTA场景标准合同备案实践（示例）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（全文页）第六条",
+            "促进和规范数据跨境流动规定（发布页）段落6",
+            "中华人民共和国个人信息保护法第四十条",
+            "中华人民共和国个人信息保护法第六十二条",
+            "个人信息出境标准合同办法段落1"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-005",
+          "module": "review",
+          "query": "广州互联网法院判决住客个人信息跨境传输/共享案件",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条",
+            "中华人民共和国网络安全法（2025修正）第七十八条",
+            "中华人民共和国个人信息保护法第四条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-005",
+          "module": "general",
+          "query": "广州互联网法院判决住客个人信息跨境传输/共享案件",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条",
+            "中华人民共和国网络安全法（2025修正）第七十八条",
+            "中华人民共和国个人信息保护法第四条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-006",
+          "module": "review",
+          "query": "广州互联网法院个人信息保护典型案例集",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "促进和规范数据跨境流动规定（发布页）段落3",
+            "中华人民共和国个人信息保护法第七十条",
+            "中华人民共和国网络安全法（2025修正）第四十二条",
+            "中华人民共和国网络安全法（2025修正）第四十四条",
+            "中华人民共和国网络安全法（2025修正）第四十六条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-007",
+          "module": "assessment",
+          "query": "数据出境安全管理政策问答（含通过数量等统计口径）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "数据出境安全管理政策问答（2025年4月）第六十二条",
+            "数据出境安全管理政策问答（2025年5月）第二十九条",
+            "数据出境安全管理政策问答（2025年4月）第六条",
+            "数据出境安全管理政策问答（2025年4月）第十九条",
+            "数据出境安全管理政策问答（2025年5月）第二十一条"
+          ]
+        },
+        {
+          "case_id": "CN-CASE-007",
+          "module": "diagnosis",
+          "query": "数据出境安全管理政策问答（含通过数量等统计口径）",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "中华人民共和国数据安全法第三十一条",
+            "促进和规范数据跨境流动规定（全文页）第七条",
+            "网络数据安全管理条例第三十四条",
+            "网络数据安全管理条例第三十八条",
+            "促进和规范数据跨境流动规定（发布页）段落5"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-001",
+          "module": "dpia",
+          "query": "GDPR Article 35 data protection impact assessment requirements",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "GDPR (EU) 2016/679Article 35",
+            "GDPR (EU) 2016/679Article 47",
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-002",
+          "module": "bcr",
+          "query": "GDPR Article 47 binding corporate rules requirements",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "GDPR (EU) 2016/679Article 47",
+            "GDPR (EU) 2016/679Article 35",
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3"
+          ]
+        },
+        {
+          "case_id": "EU-CASE-003",
+          "module": "tia",
+          "query": "EDPB Recommendations 01/2020 transfer impact assessment supplementary measures",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "EDPB Recommendations 01/2020Step 1",
+            "EDPB Recommendations 01/2020Step 3",
+            "GDPR (EU) 2016/679Article 35",
+            "GDPR (EU) 2016/679Article 47"
+          ]
+        },
+        {
+          "case_id": "US-CASE-001",
+          "module": "cn_flow",
+          "query": "EO 14117 restricted transactions sensitive personal data countries of concern",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
+            "California CPRA/CCPASection 1798.121",
+            "California CPRA/CCPASection 1798.100"
+          ]
+        },
+        {
+          "case_id": "US-CASE-002",
+          "module": "cpra",
+          "query": "CPRA right to limit use of sensitive personal information and consumer rights",
+          "hit": true,
+          "top1_citation_correct": true,
+          "topk_citation_correct_ratio": 1.0,
+          "top_titles": [
+            "California CPRA/CCPASection 1798.121",
+            "California CPRA/CCPASection 1798.100",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
+            "U.S. DOJ Rule implementing EO 14117Sec. 202.214"
+          ]
+        }
+      ]
+    }
+  }
+}

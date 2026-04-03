@@ -46,6 +46,8 @@ class PIPIAService:
         regs = retrieve_regulations(
             f"PIPIA standard contract certification {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
             top_k=4,
+            jurisdiction="cn",
+            path="scc" if payload.route_type == "scc_filing" else "all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
         attachment_notes = self._extract_attachment_notes(payload)
@@ -178,4 +180,3 @@ class PIPIAService:
             error=snapshot.error,
             result=result,
         )
-

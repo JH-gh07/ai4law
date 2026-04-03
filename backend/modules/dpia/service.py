@@ -36,7 +36,12 @@ class DPIAService:
 
     def generate_report(self, payload: DPIARequest) -> DPIAResult:
         level = self._resolve_risk_level(payload.residual_risk, payload.risk_assessment)
-        regs = retrieve_regulations(f"DPIA GDPR Article35 {payload.lawful_basis}", top_k=4)
+        regs = retrieve_regulations(
+            f"DPIA GDPR Article35 {payload.lawful_basis}",
+            top_k=4,
+            jurisdiction="eu",
+            path="all",
+        )
         citations = [f"{item.title}{item.article}" for item in regs]
         attachment_notes = self._extract_attachment_notes(payload)
 
@@ -169,4 +174,3 @@ class DPIAService:
             error=snapshot.error,
             result=result,
         )
-

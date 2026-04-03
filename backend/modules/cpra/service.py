@@ -37,7 +37,12 @@ class CPRAService:
     def generate_report(self, payload: CPRARequest) -> CPRAResult:
         gap_items = self._build_gap_items(payload)
         risk_level = self._resolve_overall_level(gap_items)
-        regs = retrieve_regulations("CPRA CCPA consumer rights sale sharing SPI", top_k=4)
+        regs = retrieve_regulations(
+            "CPRA CCPA consumer rights sale sharing SPI",
+            top_k=4,
+            jurisdiction="us",
+            path="all",
+        )
         citations = [f"{item.title}{item.article}" for item in regs]
         attachment_notes = self._extract_attachment_notes(payload)
         chapters = self._generate_chapters(payload, risk_level, gap_items, citations)
@@ -264,4 +269,3 @@ class CPRAService:
             error=snapshot.error,
             result=result,
         )
-

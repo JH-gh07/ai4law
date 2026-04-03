@@ -1,4 +1,11 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+from typing import Optional
 
 
 @dataclass
@@ -7,53 +14,305 @@ class RegulationDoc:
     title: str
     article: str
     content: str
+    jurisdiction: str = ""
+    path: str = ""
+    doc_type: str = ""
+    source_url: str = ""
+    snapshot_path: str = ""
+    usage_priority: str = "P1"
+    keywords: tuple[str, ...] = field(default_factory=tuple)
 
 
-REGULATION_DB = [
+ROOT = Path(__file__).resolve().parents[3]
+NORMALIZED_JSONL = ROOT / "doc/knowledge/normalized/regulation_articles.jsonl"
+
+
+LEGACY_DB = [
     RegulationDoc(
         id="pipl-40",
         title="个人信息保护法",
         article="第40条",
         content="关键信息基础设施运营者和处理个人信息达到国家网信部门规定数量的处理者，应当通过国家网信部门组织的安全评估。",
+        jurisdiction="cn",
+        path="assessment",
+        doc_type="law",
+        usage_priority="P0",
     ),
     RegulationDoc(
         id="dsl-21",
         title="数据安全法",
         article="第21条",
         content="国家建立数据分类分级保护制度，对重要数据实行重点保护。",
+        jurisdiction="cn",
+        path="all",
+        doc_type="law",
+        usage_priority="P0",
     ),
     RegulationDoc(
         id="scc-measures-7",
         title="个人信息出境标准合同办法",
         article="第7条",
         content="个人信息处理者向境外提供个人信息前，应开展个人信息保护影响评估。",
+        jurisdiction="cn",
+        path="scc",
+        doc_type="administrative_regulation",
+        usage_priority="P0",
     ),
     RegulationDoc(
         id="security-assessment-measures-4",
         title="数据出境安全评估办法",
         article="第4条",
         content="数据处理者向境外提供重要数据或者达到个人信息数量门槛的，应当申报数据出境安全评估。",
+        jurisdiction="cn",
+        path="assessment",
+        doc_type="administrative_regulation",
+        usage_priority="P0",
     ),
     RegulationDoc(
         id="gbt-46068",
         title="GB/T 46068-2025",
         article="通则",
         content="规定个人信息跨境处理活动的认证框架与要求。",
+        jurisdiction="cn",
+        path="scc",
+        doc_type="guide",
+        usage_priority="P1",
     ),
 ]
 
 
-def retrieve_regulations(query: str, top_k: int = 8) -> list[RegulationDoc]:
-    keywords = {token.strip().lower() for token in query.split() if token.strip()}
+def _normalize(text: str) -> str:
+    lowered = (text or "").lower()
+    lowered = lowered.replace("（", "(").replace("）", ")")
+    return re.sub(r"\s+", "", lowered)
+
+
+def _char_bigrams(text: str) -> set[str]:
+    value = _normalize(text)
+    if len(value) < 2:
+        return set()
+    return {value[idx : idx + 2] for idx in range(len(value) - 1)}
+
+
+def _extract_law_hint(query: str) -> str:
+    value = query.strip()
+    value = re.sub(r"第[一二三四五六七八九十百千万零〇0-9]{1,10}条", "", value)
+    value = re.sub(r"[：:，,。；;（）()\\[\\]\\s]", "", value)
+    return value
+
+
+def _extract_article_hint(query: str) -> Optional[str]:
+    match = re.search(r"第[一二三四五六七八九十百千万零〇0-9]{1,10}条", query)
+    if not match:
+        return None
+    return match.group(0)
+
+
+def _cn_num_to_int(value: str) -> Optional[int]:
+    value = value.strip()
+    if not value:
+        return None
+    if value.isdigit():
+        return int(value)
+
+    chars = value.replace("零", "〇")
+    num_map = {"〇": 0, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+
+    if chars == "十":
+        return 10
+    if "十" in chars:
+        left, right = chars.split("十", 1)
+        tens = num_map.get(left, 1 if left == "" else -1)
+        ones = num_map.get(right, 0 if right == "" else -1)
+        if tens < 0 or ones < 0:
+            return None
+        return tens * 10 + ones
+
+    total = 0
+    for ch in chars:
+        if ch not in num_map:
+            return None
+        total = total * 10 + num_map[ch]
+    return total
+
+
+def _article_number(article_ref: str) -> Optional[int]:
+    match = re.search(r"第([一二三四五六七八九十百千万零〇0-9]{1,10})条", article_ref)
+    if not match:
+        return None
+    return _cn_num_to_int(match.group(1))
+
+
+def _split_paths(raw_path: str) -> set[str]:
+    return {part.strip() for part in raw_path.split("|") if part.strip()}
+
+
+def _priority_weight(priority: str) -> int:
+    mapping = {"P0": 3, "P1": 2, "P2": 1}
+    return mapping.get(priority or "", 0)
+
+
+@lru_cache(maxsize=1)
+def _load_normalized_docs() -> list[RegulationDoc]:
+    if not NORMALIZED_JSONL.exists():
+        return []
+
+    docs: list[RegulationDoc] = []
+    with NORMALIZED_JSONL.open("r", encoding="utf-8") as fp:
+        for line in fp:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            docs.append(
+                RegulationDoc(
+                    id=str(row.get("article_id", "")),
+                    title=str(row.get("law_name", "")),
+                    article=str(row.get("article_ref", "通则")),
+                    content=str(row.get("content", "")),
+                    jurisdiction=str(row.get("jurisdiction", "")),
+                    path=str(row.get("path", "")),
+                    doc_type=str(row.get("doc_type", "")),
+                    source_url=str(row.get("source_url", "")),
+                    snapshot_path=str(row.get("snapshot_path", "")),
+                    usage_priority=str(row.get("usage_priority", "P1")),
+                    keywords=tuple(str(k) for k in row.get("keywords", []) if str(k).strip()),
+                )
+            )
+    return docs
+
+
+def _lexical_score(query: str, doc: RegulationDoc) -> int:
+    query_n = _normalize(query)
+    if not query_n:
+        return 0
+
+    title_n = _normalize(doc.title)
+    article_n = _normalize(doc.article)
+    content_n = _normalize(doc.content)
+
+    score = 0
+
+    law_hint = _extract_law_hint(query)
+    article_hint = _extract_article_hint(query)
+
+    if law_hint:
+        law_hint_n = _normalize(law_hint)
+        if law_hint_n and law_hint_n in title_n:
+            score += 30
+        elif law_hint_n:
+            score -= 8
+
+    if article_hint:
+        expected_no = _article_number(article_hint)
+        doc_no = _article_number(doc.article)
+        if expected_no is not None and doc_no is not None:
+            if expected_no == doc_no:
+                score += 18
+            else:
+                score -= 5
+
+    if title_n and title_n in query_n:
+        score += 14
+    if article_n and article_n in query_n:
+        score += 4
+    if query_n and query_n in content_n:
+        score += 8
+
+    return score
+
+
+def _semantic_score(query: str, doc: RegulationDoc) -> int:
+    query_n = _normalize(query)
+    if not query_n:
+        return 0
+
+    query_pairs = _char_bigrams(query_n)
+    doc_pairs = _char_bigrams(f"{doc.title}{doc.article}{doc.content[:800]}")
+    overlap = len(query_pairs & doc_pairs)
+
+    score = min(overlap, 20)
+
+    if doc.keywords:
+        keyword_overlap = sum(1 for kw in doc.keywords if _normalize(kw) and _normalize(kw) in query_n)
+        score += min(keyword_overlap * 2, 10)
+
+    return score
+
+
+def _score_doc(query: str, doc: RegulationDoc, mode: str = "hybrid") -> int:
+    lexical = _lexical_score(query, doc)
+    semantic = _semantic_score(query, doc)
+
+    if mode == "vector":
+        base = semantic
+    elif mode == "lexical":
+        base = lexical
+    else:
+        # Weighted merge for production default.
+        base = int(semantic * 0.65 + lexical * 0.35)
+
+    return base + _priority_weight(doc.usage_priority)
+
+
+def _passes_filter(
+    doc: RegulationDoc,
+    jurisdiction: Optional[str],
+    path: Optional[str],
+    doc_type: Optional[str],
+) -> bool:
+    if jurisdiction and doc.jurisdiction and _normalize(doc.jurisdiction) != _normalize(jurisdiction):
+        return False
+
+    if path:
+        doc_paths = _split_paths(doc.path)
+        if doc_paths and "all" not in doc_paths and path not in doc_paths:
+            return False
+
+    if doc_type and doc.doc_type and _normalize(doc_type) not in _normalize(doc.doc_type):
+        return False
+
+    return True
+
+
+def retrieve_regulations(
+    query: str,
+    top_k: int = 8,
+    jurisdiction: Optional[str] = None,
+    path: Optional[str] = None,
+    doc_type: Optional[str] = None,
+    mode: str = "hybrid",
+) -> list[RegulationDoc]:
+    docs = _load_normalized_docs() or LEGACY_DB
+
     scored: list[tuple[int, RegulationDoc]] = []
-    for doc in REGULATION_DB:
-        corpus = f"{doc.title} {doc.article} {doc.content}".lower()
-        score = sum(1 for kw in keywords if kw in corpus)
+    for doc in docs:
+        if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type):
+            continue
+        score = _score_doc(query, doc, mode=mode)
         if score > 0:
             scored.append((score, doc))
 
     if not scored:
-        return REGULATION_DB[:top_k]
+        fallback = [doc for doc in docs if _passes_filter(doc, jurisdiction, path, doc_type)]
+        return fallback[:top_k] if fallback else []
 
-    scored.sort(key=lambda item: item[0], reverse=True)
-    return [item[1] for item in scored[:top_k]]
+    scored.sort(key=lambda item: (item[0], _priority_weight(item[1].usage_priority)), reverse=True)
+
+    deduped: list[RegulationDoc] = []
+    seen_titles: set[str] = set()
+    for _, doc in scored:
+        title_key = _normalize(doc.title)
+        identity_key = f"{title_key}:{_normalize(doc.article)}"
+        if identity_key in seen_titles:
+            continue
+        seen_titles.add(identity_key)
+        deduped.append(doc)
+        if len(deduped) >= top_k:
+            break
+
+    return deduped

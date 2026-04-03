@@ -45,7 +45,12 @@ class BCRService:
         issues = self._check_consistency(payload)
         attachment_notes = self._extract_attachment_notes(payload)
 
-        regs = retrieve_regulations("GDPR BCR Article 47 onward transfer liability", top_k=4)
+        regs = retrieve_regulations(
+            "GDPR BCR Article 47 onward transfer liability",
+            top_k=4,
+            jurisdiction="eu",
+            path="all",
+        )
         citations = [f"{item.title}{item.article}" for item in regs]
         chapters = self._generate_chapters(payload, rating, problems, citations)
         outputs = self._render(payload, rating, problems, chapters, attachment_notes)
@@ -231,4 +236,3 @@ class BCRService:
             error=snapshot.error,
             result=result,
         )
-
