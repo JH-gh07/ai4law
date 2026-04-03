@@ -91,6 +91,7 @@ task_id:
 | T-QA-03 | RAG v1 基线评测（按法域/路径过滤） | P0 | done | A-QA-03 |
 | T-QA-04 | RAG v1 双模式对比（vector/hybrid）+ EU/US基准样本 | P0 | done | A-QA-04 |
 | T-QA-05 | RAG v1 EU/US法规入库后回归评测 | P0 | done | A-QA-05 |
+| T-QA-06 | RAG v2 增强评测（300 queries + 正负例 + 模块拆分） | P0 | done | A-QA-06 |
 | T-REL-01 | v0 打包发布与演示脚本 | P0 | done | A-REL-01 |
 
 ### 4.4 当前进度看板（实时）
@@ -114,6 +115,7 @@ task_id:
 | T-QA-03 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-03 | `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` |  | 2026-04-03 |
 | T-QA-04 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-04 | `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` + `doc/knowledge/index/practice_cases.csv` |  | 2026-04-03 |
 | T-QA-05 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-05 | `doc/knowledge/normalized/regulation_articles.jsonl` + `doc/knowledge/index/sources.csv` + `qa/rag_baseline_v1.json` + `doc/v2/qa-rag-v1.md` |  | 2026-04-03 |
+| T-QA-06 | QA | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-QA-06 | `doc/knowledge/evaluation/rag_eval_v2_queries.csv` + `qa/rag_eval_v2.json` + `doc/v2/qa-rag-v2.md` + `scripts/qa_rag_eval_v2.py` |  | 2026-04-03 |
 | T-REL-01 | REL | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-REL-01 | `outputs/acceptance/A-REL-01/` |  | 2026-04-02 |
 
 ## 5. 模块级验收标准（DoD）
@@ -158,6 +160,6 @@ task_id:
 
 ## 8. 当前行动（下一步）
 
-1. 准备远程仓库发布与演示材料归档。  
-2. 根据评审反馈补充 `v1` 迭代项（检索与规则精度）。  
+1. 基于 `T-QA-06` 优化 OOD/跨法域负例拒答（当前 SafeReject=0.000）。  
+2. 准备远程仓库发布与演示材料归档。  
 3. 按比赛节点维护样例基准并滚动更新验收证据。  
