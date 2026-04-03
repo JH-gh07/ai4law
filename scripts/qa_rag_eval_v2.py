@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
 from backend.common.rag.retriever import DEFAULT_SCORE_FLOOR_BY_MODE, RegulationDoc, retrieve_regulations
 
 DATASET_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_queries.csv"
+EXTRA_NEGATIVE_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_hard_negatives.csv"
 SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
 OUT_JSON = ROOT / "qa/rag_eval_v2.json"
 OUT_MD = ROOT / "doc/v2/qa-rag-v2.md"
@@ -89,6 +90,23 @@ def _load_rows() -> list[QueryRow]:
                     expected_empty=(row.get("expected_empty", "no").strip().lower() == "yes"),
                 )
             )
+    if EXTRA_NEGATIVE_CSV.exists():
+        with EXTRA_NEGATIVE_CSV.open("r", encoding="utf-8", newline="") as fp:
+            for row in csv.DictReader(fp):
+                rows.append(
+                    QueryRow(
+                        query_id=row["query_id"],
+                        module=row["module"],
+                        split=row["split"],
+                        difficulty=row["difficulty"],
+                        label_type=row["label_type"],
+                        query=row["query"],
+                        gold_source_ids=_split_pipe(row.get("gold_source_ids", "")),
+                        expected_jurisdiction=row.get("expected_jurisdiction", ""),
+                        expected_path=row.get("expected_path", ""),
+                        expected_empty=(row.get("expected_empty", "no").strip().lower() == "yes"),
+                    )
+                )
     return rows
 
 
@@ -304,6 +322,7 @@ def run_eval(top_k: int = 5, mode: str = "hybrid") -> dict:
         "mode": mode,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "dataset": str(DATASET_CSV.relative_to(ROOT)),
+        "extra_negative_dataset": str(EXTRA_NEGATIVE_CSV.relative_to(ROOT)) if EXTRA_NEGATIVE_CSV.exists() else "",
         "top_k": top_k,
         "score_floor": DEFAULT_SCORE_FLOOR_BY_MODE.get(mode, 1),
         "summary": summary,
@@ -330,6 +349,8 @@ def _render_md(report: dict) -> str:
     lines.append("")
     lines.append(f"生成时间：{report['generated_at']}")
     lines.append(f"数据集：`{report['dataset']}`")
+    if report.get("extra_negative_dataset"):
+        lines.append(f"扩展负例集：`{report['extra_negative_dataset']}`")
     lines.append(f"Top-K：{report['top_k']}")
     lines.append(
         "检索拒答阈值："
