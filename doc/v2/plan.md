@@ -70,6 +70,7 @@ task_id:
 | T-BASE-03 | schema 校验与规则执行框架 | P0 | done | A-BASE-03 |
 | T-BASE-04 | 模板渲染服务（docx/pdf/xlsx/zip） | P0 | done | A-BASE-04 |
 | T-BASE-05 | 审计日志（规则命中/检索来源/模型版本） | P0 | done | A-BASE-05 |
+| T-KB-01 | EU/US法规真实摘录入库（替换stub） | P0 | done | A-KB-01 |
 
 ### 4.2 模块开发（P0/P1）
 | task_id | 模块 | 任务 | priority | status | acceptance_id |
@@ -100,6 +101,7 @@ task_id:
 | T-BASE-03 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-03 | `outputs/acceptance/A-BASE-03/` |  | 2026-04-02 |
 | T-BASE-04 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-04 | `outputs/acceptance/A-BASE-04/` |  | 2026-04-02 |
 | T-BASE-05 | BASE | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-BASE-05 | `outputs/acceptance/A-BASE-05/` |  | 2026-04-02 |
+| T-KB-01 | KB | codex | P0 | done | 2026-04-03 | 2026-04-03 | A-KB-01 | `doc/knowledge/raw/eu_regulations/*_excerpts.md` + `doc/knowledge/raw/us_regulations/*_excerpts.md` + `doc/knowledge/normalized/regulation_articles.jsonl` |  | 2026-04-03 |
 | T-22-01 | 2.2 | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-22-01 | `outputs/acceptance/A-22-01/` |  | 2026-04-02 |
 | T-23-01 | 2.3 | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-23-01 | `outputs/acceptance/A-23-01/` |  | 2026-04-02 |
 | T-33-01 | 3.3 | codex | P0 | done | 2026-04-02 | 2026-04-02 | A-33-01 | `outputs/acceptance/A-33-01/` |  | 2026-04-02 |
