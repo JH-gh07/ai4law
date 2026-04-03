@@ -25,6 +25,11 @@ class RegulationDoc:
 
 ROOT = Path(__file__).resolve().parents[3]
 NORMALIZED_JSONL = ROOT / "doc/knowledge/normalized/regulation_articles.jsonl"
+DEFAULT_SCORE_FLOOR_BY_MODE = {
+    "vector": 4,
+    "hybrid": 2,
+    "lexical": 2,
+}
 
 
 LEGACY_DB = [
@@ -286,20 +291,24 @@ def retrieve_regulations(
     path: Optional[str] = None,
     doc_type: Optional[str] = None,
     mode: str = "hybrid",
+    score_floor: Optional[int] = None,
 ) -> list[RegulationDoc]:
     docs = _load_normalized_docs() or LEGACY_DB
+    effective_floor = score_floor
+    if effective_floor is None:
+        effective_floor = DEFAULT_SCORE_FLOOR_BY_MODE.get(mode, 1)
 
     scored: list[tuple[int, RegulationDoc]] = []
     for doc in docs:
         if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type):
             continue
         score = _score_doc(query, doc, mode=mode)
-        if score > 0:
+        if score >= effective_floor:
             scored.append((score, doc))
 
     if not scored:
-        fallback = [doc for doc in docs if _passes_filter(doc, jurisdiction, path, doc_type)]
-        return fallback[:top_k] if fallback else []
+        # Return empty on weak/OOD queries to avoid fabricated citations.
+        return []
 
     scored.sort(key=lambda item: (item[0], _priority_weight(item[1].usage_priority)), reverse=True)
 

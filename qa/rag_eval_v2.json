@@ -1,13 +1,14 @@
 {
-  "generated_at": "2026-04-03T11:28:27",
+  "generated_at": "2026-04-03T11:43:29",
   "top_k": 5,
   "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
   "modes": {
     "vector": {
       "mode": "vector",
-      "generated_at": "2026-04-03T11:28:18",
+      "generated_at": "2026-04-03T11:43:22",
       "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
       "top_k": 5,
+      "score_floor": 4,
       "summary": {
         "positive_queries": 240,
         "positive_recall_at_k": 0.8875,
@@ -19,7 +20,7 @@
         "positive_avg_citation_valid_ratio": 0.9000000000000051,
         "positive_title_leak_rate": 0.0625,
         "negative_queries": 60,
-        "negative_safe_reject_rate": 0.0
+        "negative_safe_reject_rate": 0.31666666666666665
       },
       "module_stats": {
         "diagnosis": {
@@ -29,7 +30,7 @@
           "positive_mrr": 0.5340277777777778,
           "positive_precision_at_k": 0.2666666666666668,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "assessment": {
           "positive_queries": 24,
@@ -38,7 +39,7 @@
           "positive_mrr": 0.5694444444444444,
           "positive_precision_at_k": 0.21666666666666676,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.16666666666666666
         },
         "scc": {
           "positive_queries": 24,
@@ -47,7 +48,7 @@
           "positive_mrr": 0.5590277777777778,
           "positive_precision_at_k": 0.36666666666666664,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.16666666666666666
         },
         "review": {
           "positive_queries": 24,
@@ -56,7 +57,7 @@
           "positive_mrr": 0.6159722222222223,
           "positive_precision_at_k": 0.45,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "general": {
           "positive_queries": 24,
@@ -65,7 +66,7 @@
           "positive_mrr": 0.5416666666666666,
           "positive_precision_at_k": 0.4583333333333333,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.16666666666666666
         },
         "bcr": {
           "positive_queries": 24,
@@ -74,7 +75,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5000000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "dpia": {
           "positive_queries": 24,
@@ -83,7 +84,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5500000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "tia": {
           "positive_queries": 24,
@@ -92,7 +93,7 @@
           "positive_mrr": 0.8541666666666666,
           "positive_precision_at_k": 0.5000000000000001,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.5
         },
         "cn_flow": {
           "positive_queries": 24,
@@ -101,7 +102,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.5
         },
         "cpra": {
           "positive_queries": 24,
@@ -110,7 +111,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         }
       },
       "split_stats": {
@@ -118,13 +119,13 @@
           "positive_queries": 200,
           "positive_recall_at_k": 0.885,
           "negative_queries": 40,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.2
         },
         "holdout": {
           "positive_queries": 40,
           "positive_recall_at_k": 0.9,
           "negative_queries": 20,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.55
         }
       },
       "difficulty_stats": {
@@ -938,21 +939,9 @@
           "label_type": "negative",
           "query": "帮我推荐北京火锅店",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0028",
@@ -1010,21 +999,9 @@
           "label_type": "negative",
           "query": "如何写Python爬虫",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0031",
@@ -1847,17 +1824,11 @@
           "safe_reject": false,
           "hit_sources": [
             "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-LAW-003"
           ],
           "top_titles": [
             "中华人民共和国数据安全法第三条",
-            "中华人民共和国个人信息保护法第二十条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条"
+            "中华人民共和国个人信息保护法第二十条"
           ]
         },
         {
@@ -1868,21 +1839,9 @@
           "label_type": "negative",
           "query": "BCR和SCC有什么区别",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0060",
@@ -1896,16 +1855,12 @@
           "hit_sources": [
             "CN-QA-012",
             "CN-QA-012",
-            "CN-QA-013",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-QA-013"
           ],
           "top_titles": [
             "数据出境安全管理政策问答（2025年4月）第十九条",
             "数据出境安全管理政策问答（2025年4月）第六十二条",
-            "数据出境安全管理政策问答（2025年5月）第二十九条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条"
+            "数据出境安全管理政策问答（2025年5月）第二十九条"
           ]
         },
         {
@@ -2734,18 +2689,10 @@
           "expected_empty": true,
           "safe_reject": false,
           "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-LAW-003"
           ],
           "top_titles": [
-            "中华人民共和国个人信息保护法第二十条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条"
+            "中华人民共和国个人信息保护法第二十条"
           ]
         },
         {
@@ -2761,15 +2708,13 @@
             "CN-REG-008",
             "CN-LAW-001",
             "CN-LAW-001",
-            "CN-LAW-002",
-            "CN-LAW-001"
+            "CN-LAW-002"
           ],
           "top_titles": [
             "网络数据安全管理条例第十三条",
             "中华人民共和国网络安全法（2025修正）第二十三条",
             "中华人民共和国网络安全法（2025修正）第三十七条",
-            "中华人民共和国数据安全法第二十四条",
-            "中华人民共和国网络安全法（2025修正）第一条"
+            "中华人民共和国数据安全法第二十四条"
           ]
         },
         {
@@ -2780,21 +2725,9 @@
           "label_type": "negative",
           "query": "北京地铁几点停运",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0091",
@@ -3613,15 +3546,13 @@
             "CN-LAW-001",
             "CN-LAW-001",
             "CN-LAW-003",
-            "CN-LAW-003",
-            "CN-LAW-001"
+            "CN-LAW-003"
           ],
           "top_titles": [
             "中华人民共和国网络安全法（2025修正）第五十条",
             "中华人民共和国网络安全法（2025修正）第二十六条",
             "中华人民共和国个人信息保护法第十七条",
-            "中华人民共和国个人信息保护法第十八条",
-            "中华人民共和国网络安全法（2025修正）第一条"
+            "中华人民共和国个人信息保护法第十八条"
           ]
         },
         {
@@ -3632,21 +3563,9 @@
           "label_type": "negative",
           "query": "今天美元汇率",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0120",
@@ -3656,21 +3575,9 @@
           "label_type": "negative",
           "query": "如何做意大利面",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0121",
@@ -4493,21 +4400,9 @@
           "label_type": "negative",
           "query": "帮我写一封求职邮件",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0149",
@@ -4519,18 +4414,10 @@
           "expected_empty": true,
           "safe_reject": false,
           "hit_sources": [
-            "CN-REG-007",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-REG-007"
           ],
           "top_titles": [
-            "促进和规范数据跨境流动规定（全文页）第五条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条"
+            "促进和规范数据跨境流动规定（全文页）第五条"
           ]
         },
         {
@@ -5243,19 +5130,9 @@
           "label_type": "negative",
           "query": "中国标准合同备案需要什么材料",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0176",
@@ -5353,19 +5230,9 @@
           "label_type": "negative",
           "query": "北京住房公积金比例",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0181",
@@ -6056,19 +5923,9 @@
           "label_type": "negative",
           "query": "中国数据出境安全评估申报指南",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0206",
@@ -6166,19 +6023,9 @@
           "label_type": "negative",
           "query": "深圳地铁线路图",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0211",
@@ -6866,19 +6713,9 @@
           "label_type": "negative",
           "query": "中国标准合同办法第七条是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0236",
@@ -6954,19 +6791,9 @@
           "label_type": "negative",
           "query": "法国旅游攻略",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0240",
@@ -6976,19 +6803,9 @@
           "label_type": "negative",
           "query": "高考志愿填报建议",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0241",
@@ -7714,19 +7531,9 @@
           "label_type": "negative",
           "query": "中国数据出境安全评估办法",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0268",
@@ -7758,19 +7565,9 @@
           "label_type": "negative",
           "query": "日本签证办理流程",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0270",
@@ -7780,19 +7577,9 @@
           "label_type": "negative",
           "query": "双色球号码推荐",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0271",
@@ -8518,19 +8305,9 @@
           "label_type": "negative",
           "query": "中国个人信息保护法跨境规则",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0298",
@@ -8584,27 +8361,18 @@
           "label_type": "negative",
           "query": "杭州周末去哪玩",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         }
       ]
     },
     "hybrid": {
       "mode": "hybrid",
-      "generated_at": "2026-04-03T11:28:27",
+      "generated_at": "2026-04-03T11:43:29",
       "dataset": "doc/knowledge/evaluation/rag_eval_v2_queries.csv",
       "top_k": 5,
+      "score_floor": 2,
       "summary": {
         "positive_queries": 240,
         "positive_recall_at_k": 0.8541666666666666,
@@ -8612,11 +8380,11 @@
         "positive_precision_at_k": 0.3983333333333345,
         "positive_mrr": 0.7434027777777779,
         "positive_ndcg_at_k": 0.7026092581067177,
-        "positive_top1_citation_valid_rate": 1.0,
-        "positive_avg_citation_valid_ratio": 0.9000000000000051,
+        "positive_top1_citation_valid_rate": 0.9916666666666667,
+        "positive_avg_citation_valid_ratio": 0.8858333333333381,
         "positive_title_leak_rate": 0.0625,
         "negative_queries": 60,
-        "negative_safe_reject_rate": 0.0
+        "negative_safe_reject_rate": 0.45
       },
       "module_stats": {
         "diagnosis": {
@@ -8626,7 +8394,7 @@
           "positive_mrr": 0.2993055555555556,
           "positive_precision_at_k": 0.1666666666666667,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "assessment": {
           "positive_queries": 24,
@@ -8635,7 +8403,7 @@
           "positive_mrr": 0.6284722222222222,
           "positive_precision_at_k": 0.27500000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.6666666666666666
         },
         "scc": {
           "positive_queries": 24,
@@ -8644,7 +8412,7 @@
           "positive_mrr": 0.5763888888888888,
           "positive_precision_at_k": 0.3583333333333334,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "review": {
           "positive_queries": 24,
@@ -8653,7 +8421,7 @@
           "positive_mrr": 0.5118055555555555,
           "positive_precision_at_k": 0.4166666666666667,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.6666666666666666
         },
         "general": {
           "positive_queries": 24,
@@ -8662,7 +8430,7 @@
           "positive_mrr": 0.563888888888889,
           "positive_precision_at_k": 0.41666666666666646,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.5
         },
         "bcr": {
           "positive_queries": 24,
@@ -8671,7 +8439,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5000000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "dpia": {
           "positive_queries": 24,
@@ -8680,7 +8448,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.5500000000000002,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         },
         "tia": {
           "positive_queries": 24,
@@ -8689,7 +8457,7 @@
           "positive_mrr": 0.8541666666666666,
           "positive_precision_at_k": 0.5000000000000001,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.5
         },
         "cn_flow": {
           "positive_queries": 24,
@@ -8698,7 +8466,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.5
         },
         "cpra": {
           "positive_queries": 24,
@@ -8707,7 +8475,7 @@
           "positive_mrr": 1.0,
           "positive_precision_at_k": 0.40000000000000013,
           "negative_queries": 6,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.3333333333333333
         }
       },
       "split_stats": {
@@ -8715,13 +8483,13 @@
           "positive_queries": 200,
           "positive_recall_at_k": 0.855,
           "negative_queries": 40,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.35
         },
         "holdout": {
           "positive_queries": 40,
           "positive_recall_at_k": 0.85,
           "negative_queries": 20,
-          "negative_safe_reject_rate": 0.0
+          "negative_safe_reject_rate": 0.65
         }
       },
       "difficulty_stats": {
@@ -9515,16 +9283,12 @@
           "hit_sources": [
             "CN-LAW-001",
             "CN-LAW-003",
-            "CN-REG-008",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-REG-008"
           ],
           "top_titles": [
             "中华人民共和国网络安全法（2025修正）第四十七条",
             "中华人民共和国个人信息保护法第四十七条",
-            "网络数据安全管理条例第四十七条",
-            "中华人民共和国网络安全法（2025修正）第十一条",
-            "中华人民共和国网络安全法（2025修正）第二十四条"
+            "网络数据安全管理条例第四十七条"
           ]
         },
         {
@@ -9535,21 +9299,9 @@
           "label_type": "negative",
           "query": "帮我推荐北京火锅店",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0028",
@@ -9607,21 +9359,9 @@
           "label_type": "negative",
           "query": "如何写Python爬虫",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0031",
@@ -10371,18 +10111,10 @@
           "expected_empty": true,
           "safe_reject": false,
           "hit_sources": [
-            "CN-REG-006",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-REG-006"
           ],
           "top_titles": [
-            "促进和规范数据跨境流动规定（发布页）段落7",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条"
+            "促进和规范数据跨境流动规定（发布页）段落7"
           ]
         },
         {
@@ -10417,21 +10149,9 @@
           "label_type": "negative",
           "query": "美国覆盖人员covered person定义是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0058",
@@ -10441,21 +10161,9 @@
           "label_type": "negative",
           "query": "推荐一个好用的IDE",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0059",
@@ -10465,21 +10173,9 @@
           "label_type": "negative",
           "query": "BCR和SCC有什么区别",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0060",
@@ -10489,21 +10185,9 @@
           "label_type": "negative",
           "query": "今天上海天气如何",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0061",
@@ -11329,21 +11013,9 @@
           "label_type": "negative",
           "query": "请写一个冒泡排序",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0089",
@@ -11355,18 +11027,10 @@
           "expected_empty": true,
           "safe_reject": false,
           "hit_sources": [
-            "CN-REG-008",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-REG-008"
           ],
           "top_titles": [
-            "网络数据安全管理条例第十三条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条"
+            "网络数据安全管理条例第十三条"
           ]
         },
         {
@@ -11377,21 +11041,9 @@
           "label_type": "negative",
           "query": "北京地铁几点停运",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0091",
@@ -12157,21 +11809,9 @@
           "label_type": "negative",
           "query": "美国covered person怎么判定",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0117",
@@ -12205,21 +11845,9 @@
           "label_type": "negative",
           "query": "推荐一款机械键盘",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0119",
@@ -12229,21 +11857,9 @@
           "label_type": "negative",
           "query": "今天美元汇率",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0120",
@@ -12253,21 +11869,9 @@
           "label_type": "negative",
           "query": "如何做意大利面",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0121",
@@ -12374,9 +11978,7 @@
           "hit_sources": [
             "CN-LAW-002",
             "CN-LAW-002",
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-LAW-003"
           ],
           "hit": true,
           "top1_correct": true,
@@ -12386,9 +11988,7 @@
           "top_titles": [
             "中华人民共和国数据安全法第九条",
             "中华人民共和国数据安全法第十八条",
-            "中华人民共和国个人信息保护法第十一条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条"
+            "中华人民共和国个人信息保护法第十一条"
           ]
         },
         {
@@ -12740,25 +12340,13 @@
             "CN-REG-005",
             "CN-REG-007"
           ],
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
+          "hit_sources": [],
           "hit": false,
           "top1_correct": false,
           "precision_at_k": 0.0,
           "mrr": 0.0,
           "ndcg_at_k": 0.0,
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "top_titles": []
         },
         {
           "query_id": "Q0137",
@@ -12808,8 +12396,7 @@
             "CN-REG-006",
             "CN-REG-007",
             "CN-REG-007",
-            "CN-REG-007",
-            "CN-LAW-001"
+            "CN-REG-007"
           ],
           "hit": true,
           "top1_correct": false,
@@ -12820,8 +12407,7 @@
             "促进和规范数据跨境流动规定（发布页）段落4",
             "促进和规范数据跨境流动规定（全文页）第二条",
             "促进和规范数据跨境流动规定（全文页）第六条",
-            "促进和规范数据跨境流动规定（全文页）第九条",
-            "中华人民共和国网络安全法（2025修正）第一条"
+            "促进和规范数据跨境流动规定（全文页）第九条"
           ]
         },
         {
@@ -12835,25 +12421,13 @@
             "CN-LAW-003",
             "CN-REG-007"
           ],
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
+          "hit_sources": [],
           "hit": false,
           "top1_correct": false,
           "precision_at_k": 0.0,
           "mrr": 0.0,
           "ndcg_at_k": 0.0,
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "top_titles": []
         },
         {
           "query_id": "Q0140",
@@ -12898,11 +12472,7 @@
             "CN-REG-007"
           ],
           "hit_sources": [
-            "CN-LAW-003",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
+            "CN-LAW-003"
           ],
           "hit": true,
           "top1_correct": true,
@@ -12910,11 +12480,7 @@
           "mrr": 1.0,
           "ndcg_at_k": 0.6131471927654584,
           "top_titles": [
-            "中华人民共和国个人信息保护法第六十四条",
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条"
+            "中华人民共和国个人信息保护法第六十四条"
           ]
         },
         {
@@ -13023,15 +12589,13 @@
             "CN-LAW-001",
             "CN-LAW-002",
             "CN-LAW-003",
-            "CN-REG-007",
-            "CN-LAW-001"
+            "CN-REG-007"
           ],
           "top_titles": [
             "中华人民共和国网络安全法（2025修正）第八十一条",
             "中华人民共和国数据安全法第五十五条",
             "中华人民共和国个人信息保护法第七十四条",
-            "促进和规范数据跨境流动规定（全文页）第十四条",
-            "中华人民共和国网络安全法（2025修正）第一条"
+            "促进和规范数据跨境流动规定（全文页）第十四条"
           ]
         },
         {
@@ -13090,21 +12654,9 @@
           "label_type": "negative",
           "query": "帮我写一封求职邮件",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0149",
@@ -13114,21 +12666,9 @@
           "label_type": "negative",
           "query": "东京机票多少钱",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0150",
@@ -13138,21 +12678,9 @@
           "label_type": "negative",
           "query": "如何安装nodejs",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001",
-            "CN-LAW-001"
-          ],
-          "top_titles": [
-            "中华人民共和国网络安全法（2025修正）第一条",
-            "中华人民共和国网络安全法（2025修正）第二条",
-            "中华人民共和国网络安全法（2025修正）第三条",
-            "中华人民共和国网络安全法（2025修正）第四条",
-            "中华人民共和国网络安全法（2025修正）第五条"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0151",
@@ -13840,19 +13368,9 @@
           "label_type": "negative",
           "query": "中国标准合同备案需要什么材料",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0176",
@@ -13950,19 +13468,9 @@
           "label_type": "negative",
           "query": "北京住房公积金比例",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0181",
@@ -14653,19 +14161,9 @@
           "label_type": "negative",
           "query": "中国数据出境安全评估申报指南",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0206",
@@ -14763,19 +14261,9 @@
           "label_type": "negative",
           "query": "深圳地铁线路图",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0211",
@@ -15463,19 +14951,9 @@
           "label_type": "negative",
           "query": "中国标准合同办法第七条是什么",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0236",
@@ -15551,19 +15029,9 @@
           "label_type": "negative",
           "query": "法国旅游攻略",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0240",
@@ -15573,19 +15041,9 @@
           "label_type": "negative",
           "query": "高考志愿填报建议",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "EU-LAW-001",
-            "EU-LAW-001",
-            "EU-GUIDE-002",
-            "EU-GUIDE-002"
-          ],
-          "top_titles": [
-            "GDPR (EU) 2016/679Article 35",
-            "GDPR (EU) 2016/679Article 47",
-            "EDPB Recommendations 01/2020Step 1",
-            "EDPB Recommendations 01/2020Step 3"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0241",
@@ -16311,19 +15769,9 @@
           "label_type": "negative",
           "query": "中国数据出境安全评估办法",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0268",
@@ -16355,19 +15803,9 @@
           "label_type": "negative",
           "query": "日本签证办理流程",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0270",
@@ -16377,19 +15815,9 @@
           "label_type": "negative",
           "query": "双色球号码推荐",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0271",
@@ -17115,19 +16543,9 @@
           "label_type": "negative",
           "query": "中国个人信息保护法跨境规则",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         },
         {
           "query_id": "Q0298",
@@ -17181,19 +16599,9 @@
           "label_type": "negative",
           "query": "杭州周末去哪玩",
           "expected_empty": true,
-          "safe_reject": false,
-          "hit_sources": [
-            "US-FED-001",
-            "US-FED-001",
-            "US-CA-001",
-            "US-CA-001"
-          ],
-          "top_titles": [
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.211",
-            "U.S. DOJ Rule implementing EO 14117Sec. 202.214",
-            "California CPRA/CCPASection 1798.121",
-            "California CPRA/CCPASection 1798.100"
-          ]
+          "safe_reject": true,
+          "hit_sources": [],
+          "top_titles": []
         }
       ]
     }

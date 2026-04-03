@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.common.rag.retriever import RegulationDoc, retrieve_regulations
+from backend.common.rag.retriever import DEFAULT_SCORE_FLOOR_BY_MODE, RegulationDoc, retrieve_regulations
 
 DATASET_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_queries.csv"
 SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
@@ -305,6 +305,7 @@ def run_eval(top_k: int = 5, mode: str = "hybrid") -> dict:
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "dataset": str(DATASET_CSV.relative_to(ROOT)),
         "top_k": top_k,
+        "score_floor": DEFAULT_SCORE_FLOOR_BY_MODE.get(mode, 1),
         "summary": summary,
         "module_stats": module_stats,
         "split_stats": split_stats,
@@ -330,6 +331,12 @@ def _render_md(report: dict) -> str:
     lines.append(f"生成时间：{report['generated_at']}")
     lines.append(f"数据集：`{report['dataset']}`")
     lines.append(f"Top-K：{report['top_k']}")
+    lines.append(
+        "检索拒答阈值："
+        + ", ".join(
+            f"`{mode}`={report['modes'][mode].get('score_floor', 1)}" for mode in EVAL_MODES
+        )
+    )
     lines.append("")
 
     lines.append("## 总体对比")
