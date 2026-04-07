@@ -1,0 +1,23 @@
+{
+  "title": "4.2 加州隐私合规（CPRA）",
+  "steps": [
+    {
+      "title": "业务与生命周期",
+      "fields": [
+        {"name": "company_name", "label": "企业名称", "type": "text", "default": "示例企业"},
+        {"name": "business_model", "label": "业务模型", "type": "text", "default": "SaaS"},
+        {"name": "data_lifecycle", "label": "数据生命周期", "type": "textarea", "default": "收集-处理-存储-删除"},
+        {"name": "notice_and_consent", "label": "告知与同意机制", "type": "textarea", "default": "隐私告知缺失"}
+      ]
+    },
+    {
+      "title": "消费者权利与供应商管理",
+      "fields": [
+        {"name": "consumer_rights_process", "label": "消费者权利流程", "type": "textarea", "default": "目前仅邮箱接收"},
+        {"name": "opt_out_and_sale_sharing", "label": "退出销售/共享机制", "type": "textarea", "default": "存在共享但无opt-out"},
+        {"name": "vendor_management", "label": "供应商管理", "type": "textarea", "default": "供应商管理未体现DPA"},
+        {"name": "attachment_role", "label": "附件角色", "type": "select", "options": ["privacy_policy", "rights_sop", "data_map", "vendor_list", "other"], "default": "privacy_policy"}
+      ]
+    }
+  ]
+}

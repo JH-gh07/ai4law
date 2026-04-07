@@ -3,9 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from backend.common.llm.adapter import LLMAdapter
+from backend.common.llm.client import LLMClient
+from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
-from backend.common.render.report import render_docx_report, render_markdown_report
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.tia.schema import (
@@ -16,6 +22,8 @@ from backend.modules.tia.schema import (
     TIAResult,
 )
 
+TEMPLATE_PATH = Path("doc/v2/assets/templates/3.4_tia_template_v0.docx")
+TEMPLATE_MD = Path("doc/v2/assets/templates/3.4_tia_template_v0.md")
 
 TIA_CHAPTERS = [
     "跨境传输场景与角色识别",
@@ -28,8 +36,11 @@ TIA_CHAPTERS = [
 
 
 class TIAService:
-    def __init__(self) -> None:
-        self.llm = LLMAdapter()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
+        self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="tia")
 
@@ -42,27 +53,35 @@ class TIAService:
             path="all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
+        reg_snippet = "\n".join(
+            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+            for item in regs
+        ) or "（暂无检索到相关法条）"
         attachment_notes = self._extract_attachment_notes(payload)
+
+        context_block = (
+            f"【传输信息】\n"
+            f"- 传输工具：{payload.transfer_tool}\n"
+            f"- 数据出口方：{payload.data_exporter_profile}\n"
+            f"- 数据进口方：{payload.data_importer_profile}\n"
+            f"- 第三国法律评估：{payload.third_country_assessment}\n"
+            f"- 补充措施：{payload.supplementary_measures}\n"
+            f"- 最终结论：{payload.final_conclusion}\n"
+            f"- 风险等级：{level}\n"
+            f"\n【法规参考】\n{reg_snippet}\n"
+        )
 
         chapters: list[TIAChapter] = []
         for idx, title in enumerate(TIA_CHAPTERS, start=1):
-            summary = self.llm.summarize(
-                title=title,
-                bullet_points=[
-                    f"传输工具：{payload.transfer_tool}",
-                    f"出口方：{payload.data_exporter_profile}",
-                    f"进口方：{payload.data_importer_profile}",
-                    f"第三国评估：{payload.third_country_assessment}",
-                    f"补充措施：{payload.supplementary_measures}",
-                    f"结论：{payload.final_conclusion}",
-                    f"风险等级：{level}",
-                ],
-            )
+            if self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "tia", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(
                 TIAChapter(
                     chapter_no=idx,
                     title=title,
-                    content=summary.text,
+                    content=content,
                     citations=citations,
                     risk_level=level,
                 )
@@ -128,24 +147,35 @@ class TIAService:
         return issues
 
     def _render(self, payload: TIARequest, chapters: list[TIAChapter], attachment_notes: list[str]) -> dict[str, str]:
-        sections: list[tuple[str, str]] = [
-            ("传输基础信息", f"transfer_tool: {payload.transfer_tool}"),
-            ("输入摘要", payload.model_dump_json(indent=2)),
-            ("附件解析摘要", "\n".join(f"- {item}" for item in attachment_notes) or "- 无"),
-        ]
-        for chapter in chapters:
-            sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
-
         output_dir = Path("outputs/tia")
-        md_output = output_dir / f"{payload.transfer_tool}_tia_report.md"
-        docx_output = output_dir / f"{payload.transfer_tool}_tia_report.docx"
-        zip_output = output_dir / f"{payload.transfer_tool}_tia_output_bundle.zip"
-        render_markdown_report(md_output, "TIA Draft Report (v0)", sections)
-        render_docx_report(docx_output, "TIA Draft Report (v0)", sections)
+        date_stamp = format_date_stamp()
+        base_name = safe_filename(f"{payload.data_exporter_profile}_{payload.transfer_tool}_TIA")
+        md_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.md"
+        docx_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.docx"
+        zip_output = output_dir / f"{base_name}_输出包_草案_{date_stamp}.zip"
+        mapping = _build_template_mapping(payload, chapters)
+        render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
         return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+
+
+def _build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> dict[str, str]:
+    def pick(no: int) -> str:
+        for chapter in chapters:
+            if chapter.chapter_no == no:
+                return chapter.content
+        return ""
+
+    return {
+        "transfer_context": pick(1) or f"{payload.data_exporter_profile} -> {payload.data_importer_profile}",
+        "transfer_tool": pick(2) or payload.transfer_tool,
+        "third_country_analysis": pick(3) or payload.third_country_assessment,
+        "supplementary_measures": pick(4) or payload.supplementary_measures,
+        "final_assessment": "\n".join(filter(None, [pick(5), pick(6), payload.final_conclusion])),
+    }
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> TIAAsyncAccepted:

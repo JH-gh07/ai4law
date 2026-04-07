@@ -1,5 +1,9 @@
-import uuid
+from __future__ import annotations
 
+import uuid
+from typing import TYPE_CHECKING
+
+from backend.common.quality.alignment import check_cn_alignment
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.assessment.chapter_generator import AssessmentChapterGenerator
 from backend.modules.assessment.consistency_checker import ConsistencyChecker
@@ -13,13 +17,26 @@ from backend.modules.assessment.schema import (
     AssessmentResult,
 )
 from backend.modules.assessment.task_state import AssessmentTaskState
+from backend.modules.diagnosis.schema import DiagnosisAnswers, ReceiverType, TransferScenario, YesNoUnknown
+from backend.modules.diagnosis.service import DiagnosisService
+
+if TYPE_CHECKING:
+    from backend.common.llm.client import LLMClient
+    from backend.services.legal_api_service import DeliLegalService
 
 
 class AssessmentService:
-    def __init__(self) -> None:
+    def __init__(self, llm_client: LLMClient | None = None, legal_api_service: DeliLegalService | None = None) -> None:
+        from backend.core.settings import get_settings
+        if llm_client is None:
+            from backend.common.llm.client import LLMClient as _LLMClient
+            llm_client = _LLMClient(get_settings())
+        if legal_api_service is None:
+            from backend.services.legal_api_service import DeliLegalService as _DeliLegalService
+            legal_api_service = _DeliLegalService(get_settings())
         self.extractor = ProfileExtractor()
-        self.retriever = AssessmentRetriever()
-        self.generator = AssessmentChapterGenerator()
+        self.retriever = AssessmentRetriever(legal_service=legal_api_service)
+        self.generator = AssessmentChapterGenerator(llm_client=llm_client)
         self.checker = ConsistencyChecker()
         self.renderer = AssessmentReportRenderer()
         self.tasks = InMemoryTaskManager(module="assessment")
@@ -28,10 +45,45 @@ class AssessmentService:
         task_id = str(uuid.uuid4())
 
         profile = self.extractor.extract(payload)
+        diagnosis = DiagnosisService().evaluate(
+            DiagnosisAnswers(
+                q1_is_ciio=YesNoUnknown.YES if payload.is_ciio else YesNoUnknown.NO,
+                q2_has_important_data=YesNoUnknown.YES if payload.contains_important_data else YesNoUnknown.NO,
+                q3_pii_count=payload.pii_count,
+                q4_spi_count=payload.spi_count,
+                q6_scenario=TransferScenario.OTHER,
+                q7_receiver_type=ReceiverType.THIRD_PARTY,
+                q8_purpose=payload.transfer_purpose,
+            )
+        )
+        path_warning = None
+        if diagnosis.recommended_path != "security_assessment":
+            path_warning = (
+                f"诊断推荐路径为 {diagnosis.recommended_path}：{diagnosis.rationale}"
+            )
         regulations = self.retriever.search(profile)
         chapters = self.generator.generate(profile, regulations)
         issues = self.checker.check(profile, chapters)
-        outputs = self.renderer.render(payload.company_name, profile, regulations, chapters)
+        alignment_issues = check_cn_alignment(
+            "\n".join(chapter.content for chapter in chapters),
+            industry=profile.industry,
+            is_ciio=profile.is_ciio,
+            contains_important_data=profile.contains_important_data,
+            receiver_country=profile.receiver_country,
+        )
+        if alignment_issues:
+            issues.extend(alignment_issues)
+        if path_warning:
+            issues.append(path_warning)
+        alignment_warning = "；".join(alignment_issues) if alignment_issues else None
+        outputs = self.renderer.render(
+            payload.company_name,
+            profile,
+            regulations,
+            chapters,
+            path_warning=path_warning,
+            alignment_warning=alignment_warning,
+        )
 
         return AssessmentResult(
             task_id=task_id,

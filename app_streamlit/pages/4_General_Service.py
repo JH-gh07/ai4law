@@ -9,8 +9,8 @@ from app_streamlit.theme import apply_theme, open_section, render_hero
 
 SCHEMA_PATH = "app_streamlit/schemas/general_schema.json"
 
-apply_theme()
-render_hero("模块4：通用服务", "快速生成 TIA、尽调、备忘录与整改清单。", kicker="General Service")
+apply_theme("cn")
+render_hero("2.4 通用服务", "快速生成 TIA、尽调、备忘录与整改清单。", kicker="CN 2.4")
 
 open_section("服务配置")
 submitted, values = render_schema_multistep_form("general", SCHEMA_PATH)

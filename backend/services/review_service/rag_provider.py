@@ -17,9 +17,9 @@ class LocalRegulationKnowledgeBase:
             config = dict(self.rulebook[clause_type.value])
         else:
             config = {
-                "display_name": "其他条款",
+                "display_name": "Other Clause",
                 "required_groups": [],
-                "citations": ["《个人信息保护法》相关规定"],
+                "citations": ["Personal Information Protection Law and related rules"],
             }
 
         rag_citations: list[str] = []
@@ -30,6 +30,7 @@ class LocalRegulationKnowledgeBase:
                 jurisdiction="cn",
                 path="review",
                 mode="hybrid",
+                legal_service=self.legal_api_service,
             )
             rag_citations = [
                 f"{item.title}{item.article}".strip()
@@ -37,19 +38,27 @@ class LocalRegulationKnowledgeBase:
                 if item.title or item.article
             ]
 
+        citations = list(config.get("citations", []))
+        if rag_citations:
+            citations = list(dict.fromkeys([*citations, *rag_citations]))
+
         if self.legal_api_service and self.legal_api_service.enabled and clause_text:
             hits = self.legal_api_service.search_cases(clause_text[:80], size=2)
             if hits:
                 external_citations = [
-                    f"{item['source']}：{item['title']}"
+                    f"{item['source']}: {item['title']}"
                     for item in hits
                 ]
-                config["citations"] = list(
-                    dict.fromkeys([*config.get("citations", []), *rag_citations, *external_citations])
+                citations = list(dict.fromkeys([*citations, *external_citations]))
+            elif self.legal_api_service.last_error:
+                citations = list(
+                    dict.fromkeys(
+                        [
+                            *citations,
+                            f"DeliLegal API failed: {self.legal_api_service.last_error}",
+                        ]
+                    )
                 )
-                return config
 
-        if rag_citations:
-            config["citations"] = list(dict.fromkeys([*config.get("citations", []), *rag_citations]))
-
+        config["citations"] = citations
         return config

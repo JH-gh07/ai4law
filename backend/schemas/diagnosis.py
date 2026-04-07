@@ -23,12 +23,30 @@ class DiagnosisSessionStatus(str, Enum):
     COMPLETED = "COMPLETED"
 
 
+class TransferScenario(str, Enum):
+    """出境场景类型（对应《促进和规范数据跨境流动规定》豁免情形）"""
+    CONTRACT_PERFORMANCE = "contract_performance"   # 履行合同/向消费者提供服务
+    HR_MANAGEMENT = "hr_management"                 # 跨国公司内部人力资源管理
+    EMERGENCY = "emergency"                         # 紧急情况保护自然人生命健康财产
+    LEGAL_DUTY = "legal_duty"                       # 履行法定职责或法定义务
+    OTHER = "other"                                 # 其他商业目的
+
+
+class ReceiverType(str, Enum):
+    INTRA_GROUP = "intra_group"    # 集团内部关联公司
+    THIRD_PARTY = "third_party"    # 独立第三方
+
+
 class DiagnosisAnswerSet(BaseModel):
     is_ciio: TriState
     contains_important_data: TriState
     personal_info_count: int = Field(ge=0)
     sensitive_personal_info_count: int = Field(ge=0)
     transfer_purpose: str | None = None
+    # V2 新增字段
+    no_personal_info: TriState = TriState.NO
+    transfer_scenario: TransferScenario = TransferScenario.OTHER
+    receiver_type: ReceiverType = ReceiverType.THIRD_PARTY
 
 
 class DiagnosisCitation(BaseModel):

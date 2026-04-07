@@ -1,25 +1,12 @@
 import streamlit as st
 
-from app_streamlit.theme import apply_theme, open_section, render_hero
+from app_streamlit.theme import apply_theme, render_hero
 
-apply_theme()
-render_hero("中国大陆→境外 服务面板", "选择模块后进入可执行流程。", kicker="Jurisdiction CN")
+apply_theme("home")
+render_hero("模块总览（已并入左侧导航）", "旧版模块总览页面已停用，请在左侧“模块总览”展开法域并进入三级功能。", kicker="Navigator Update")
 
-cards = [
-    ("1_Diagnosis", "模块1：合规路径诊断", "2分钟问答，输出建议路径与法律依据。"),
-    ("2_Assessment", "模块2：安全评估路径", "生成风险自评估报告草案（docx/md）。"),
-    ("3_SCC_PIPIA", "模块3：认证/标准合同路径", "生成 PIPIA 报告草案（docx/md）。"),
-    ("4_General_Service", "模块4：通用服务", "生成 TIA/尽调/备忘录/整改清单。"),
-    ("5_Document_Review", "模块5：文档智能审查", "审查合同或规则文本，输出问题清单与建议。"),
-    ("7_Knowledge_Center", "知识库中心", "浏览法规与案例索引，验证报告引用来源链。"),
-]
+st.info("当前导航结构：一级（首页/模块总览/报告中心/知识库中心）-> 二级（法域）-> 三级（具体模块）。")
 
-open_section("模块入口")
-for file_key, title, desc in cards:
-    with st.container(border=True):
-        st.markdown(f"#### {title}")
-        st.caption(desc)
-        if hasattr(st, "page_link"):
-            st.page_link(f"pages/{file_key}.py", label="进入模块")
-
-st.info("说明：当前为 Streamlit 快速对齐版，重点验证流程闭环与可交付报告。")
+# LEGACY NOTE:
+# 旧版模块总览页面（大卡片 + 子功能目录 + 公共能力）已按需求停用，不再在前端展示，也不再作为主导航入口生效。
+# 如需回看旧实现，请使用 Git 历史版本，不在运行时加载旧版逻辑。

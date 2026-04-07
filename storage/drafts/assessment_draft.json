@@ -1,0 +1,12 @@
+{
+  "assessment__receiver_country": "Singapore",
+  "assessment__pii_count": 300000,
+  "assessment__is_ciio": false,
+  "assessment__company_name": "示例科技",
+  "assessment__contains_important_data": false,
+  "assessment__transfer_purpose": "不知道",
+  "assessment__step": 2,
+  "assessment__spi_count": 500,
+  "assessment__industry": "电商",
+  "assessment__use_async": true
+}

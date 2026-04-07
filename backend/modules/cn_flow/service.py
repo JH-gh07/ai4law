@@ -2,10 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from backend.common.llm.adapter import LLMAdapter
+from backend.common.llm.client import LLMClient
+from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
-from backend.common.render.report import render_docx_report, render_markdown_report
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
+from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.cn_flow.schema import (
@@ -17,6 +24,9 @@ from backend.modules.cn_flow.schema import (
     CNFlowRiskItem,
 )
 
+TEMPLATE_PATH = Path("doc/v2/assets/templates/4.1_cn_flow_compliance_template_v0.docx")
+TEMPLATE_MD = Path("doc/v2/assets/templates/4.1_cn_flow_compliance_template_v0.md")
+
 
 CN_FLOW_CHAPTERS = [
     "场景定义与适用范围",
@@ -27,8 +37,11 @@ CN_FLOW_CHAPTERS = [
 
 
 class CNFlowService:
-    def __init__(self) -> None:
-        self.llm = LLMAdapter()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
+        self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="cn_flow")
 
@@ -42,8 +55,12 @@ class CNFlowService:
             path="all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
+        reg_snippet = "\n".join(
+            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+            for item in regs
+        ) or "（暂无检索到相关法条）"
         attachment_notes = self._extract_attachment_notes(payload)
-        chapters = self._generate_chapters(payload, risk_level, risk_items, citations)
+        chapters = self._generate_chapters(payload, risk_level, risk_items, citations, reg_snippet)
         issues = self._check_consistency(payload, risk_items)
         outputs = self._render(payload, chapters, risk_items, attachment_notes)
         return CNFlowResult(
@@ -147,26 +164,30 @@ class CNFlowService:
         level: str,
         risk_items: list[CNFlowRiskItem],
         citations: list[str],
+        reg_snippet: str,
     ) -> list[CNFlowChapter]:
         items_summary = "；".join(f"{item.risk_id}-{item.title}" for item in risk_items)
+        context_block = (
+            f"【企业信息】\n"
+            f"- 企业名称：{payload.company_name}\n"
+            f"- 传输目的：{payload.transfer_purpose}\n"
+            f"- 数据类别：{', '.join(payload.data_categories)}\n"
+            f"- 传输链路：{payload.transfer_chain}\n"
+            f"- 风险概要：{items_summary}\n"
+            f"- 风险等级：{level}\n"
+            f"\n【法规参考】\n{reg_snippet}\n"
+        )
         chapters: list[CNFlowChapter] = []
         for idx, title in enumerate(CN_FLOW_CHAPTERS, start=1):
-            summary = self.llm.summarize(
-                title=title,
-                bullet_points=[
-                    f"企业：{payload.company_name}",
-                    f"传输目的：{payload.transfer_purpose}",
-                    f"数据类别：{', '.join(payload.data_categories)}",
-                    f"链路：{payload.transfer_chain}",
-                    f"风险概要：{items_summary}",
-                    f"风险等级：{level}",
-                ],
-            )
+            if self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "cn_flow", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(
                 CNFlowChapter(
                     chapter_no=idx,
                     title=title,
-                    content=summary.text,
+                    content=content,
                     citations=citations,
                     risk_level=level,
                 )
@@ -201,16 +222,18 @@ class CNFlowService:
             sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
 
         output_dir = Path("outputs/cn_flow")
-        base = payload.company_name
-        md_output = output_dir / f"{base}_cn_flow_compliance_report.md"
-        docx_output = output_dir / f"{base}_cn_flow_compliance_report.docx"
-        pdf_output = output_dir / f"{base}_cn_flow_compliance_report.pdf"
-        xlsx_output = output_dir / f"{base}_cn_flow_risk_list.xlsx"
-        zip_output = output_dir / f"{base}_cn_flow_output_bundle.zip"
+        date_stamp = format_date_stamp()
+        base = safe_filename(payload.company_name)
+        md_output = output_dir / f"{base}_14117_风险评估结论报告_草案_{date_stamp}.md"
+        docx_output = output_dir / f"{base}_14117_风险评估结论报告_草案_{date_stamp}.docx"
+        pdf_output = output_dir / f"{base}_14117_风险评估结论报告_草案_{date_stamp}.pdf"
+        xlsx_output = output_dir / f"{base}_14117_风险清单_草案_{date_stamp}.xlsx"
+        zip_output = output_dir / f"{base}_14117_输出包_草案_{date_stamp}.zip"
 
-        render_markdown_report(md_output, "对华数据流动合规报告（v0）", sections)
-        render_docx_report(docx_output, "对华数据流动合规报告（v0）", sections)
-        render_pdf_report(pdf_output, "对华数据流动合规报告（v0）", sections)
+        mapping = _build_template_mapping(payload, chapters, risk_items)
+        render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        render_pdf_report(pdf_output, "对华数据流动合规报告（草案）", sections)
         headers = ["risk_id", "risk_level", "title", "basis", "recommendation", "affected_entities"]
         rows = [
             [
@@ -232,6 +255,96 @@ class CNFlowService:
             "xlsx": str(xlsx_output),
             "zip": str(zip_output),
         }
+
+
+def _build_template_mapping(
+    payload: CNFlowRequest,
+    chapters: list[CNFlowChapter],
+    risk_items: list[CNFlowRiskItem],
+) -> dict[str, str]:
+    def pick(no: int) -> str:
+        for chapter in chapters:
+            if chapter.chapter_no == no:
+                return chapter.content
+        return ""
+
+    def overall_level(items: list[CNFlowRiskItem]) -> str:
+        levels = {item.risk_level for item in items}
+        if "HIGH" in levels:
+            return "HIGH"
+        if "MEDIUM" in levels:
+            return "MEDIUM"
+        return "LOW"
+
+    level = overall_level(risk_items)
+    color_map = {
+        "HIGH": "红灯（禁止/高度受限）",
+        "MEDIUM": "黄灯（受限需措施）",
+        "LOW": "绿灯（低风险放行）",
+    }
+    high_entities = [e.entity_name for e in payload.recipient_entities if e.is_restricted_party]
+    citations: list[str] = []
+    for chapter in chapters:
+        if chapter.citations:
+            citations = chapter.citations
+            break
+
+    matrix = _build_risk_matrix(payload, level)
+    rating_block = "\n".join(
+        [
+            f"总体结论：{color_map.get(level, level)}",
+            "",
+            "高风险实体清单：",
+            "- " + ("\n- ".join(high_entities) if high_entities else "未发现受限实体"),
+            "",
+            "风险矩阵（实体 x 数据类别）：",
+            matrix,
+        ]
+    )
+    rating_block = attach_citations(rating_block, citations)
+
+    entity_screening = "\n".join(
+        f"- {entity.entity_name} | {entity.country_region} | {entity.entity_role} | 受限主体={entity.is_restricted_party}"
+        for entity in payload.recipient_entities
+    )
+
+    return {
+        "business_overview": attach_citations(
+            summarize_for_slot(pick(1), max_sentences=3, max_chars=360),
+            citations,
+        ),
+        "data_inventory_analysis": attach_citations(
+            summarize_for_slot(pick(2), max_sentences=3, max_chars=360),
+            citations,
+        ),
+        "entity_screening": entity_screening or "未提供实体清单。",
+        "risk_rating": rating_block,
+        "mitigation_and_actions": attach_citations(
+            summarize_for_slot(pick(4), max_sentences=3, max_chars=360),
+            citations,
+        ),
+    }
+
+
+def _build_risk_matrix(payload: CNFlowRequest, level: str) -> str:
+    categories = payload.data_categories + payload.sensitive_data_flags
+    headers = ["实体/数据"] + categories
+    rows = []
+    for entity in payload.recipient_entities:
+        row = [entity.entity_name]
+        for cat in categories:
+            if cat in payload.sensitive_data_flags:
+                row.append("HIGH" if level == "HIGH" else "MEDIUM")
+            else:
+                row.append("MEDIUM" if level in {"HIGH", "MEDIUM"} else "LOW")
+        rows.append(row)
+
+    def as_row(cells: list[str]) -> str:
+        return "| " + " | ".join(cells) + " |"
+
+    lines = [as_row(headers), as_row(["---"] * len(headers))]
+    lines.extend(as_row(row) for row in rows)
+    return "\n".join(lines)
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CNFlowAsyncAccepted:

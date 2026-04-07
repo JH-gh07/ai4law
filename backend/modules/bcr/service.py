@@ -3,9 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from backend.common.llm.adapter import LLMAdapter
+from backend.common.llm.client import LLMClient
+from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
-from backend.common.render.report import render_docx_report, render_markdown_report
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.bcr.schema import (
@@ -17,6 +23,9 @@ from backend.modules.bcr.schema import (
     BCRResult,
     BCRScore,
 )
+
+TEMPLATE_PATH = Path("doc/v2/assets/templates/3.2_bcr_review_template_v0.docx")
+TEMPLATE_MD = Path("doc/v2/assets/templates/3.2_bcr_review_template_v0.md")
 
 
 BCR_REQUIRED_CODES = {
@@ -34,8 +43,11 @@ BCR_REQUIRED_CODES = {
 
 
 class BCRService:
-    def __init__(self) -> None:
-        self.llm = LLMAdapter()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
+        self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="bcr")
 
@@ -52,6 +64,10 @@ class BCRService:
             path="all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
+        reg_snippet = "\n".join(
+            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+            for item in regs
+        ) or "（暂无检索到相关法条）"
         chapters = self._generate_chapters(payload, rating, problems, citations)
         outputs = self._render(payload, rating, problems, chapters, attachment_notes)
         return BCRResult(
@@ -147,40 +163,35 @@ class BCRService:
         problems: list[BCRProblem],
         citations: list[str],
     ) -> list[BCRChapter]:
-        summary = self.llm.summarize(
-            title="报告摘要",
-            bullet_points=[
-                f"公司：{payload.company_name}",
-                f"审查项总数：{len(payload.review_items)}",
-                f"问题数：{len(problems)}",
-                f"综合评级：{rating}",
-            ],
-        ).text
         detail_lines = [
             f"{item.code} | {item.title} | 风险={item.risk_level} | 问题={item.finding} | 建议={item.recommendation}"
             for item in problems
         ]
         detail_content = "\n".join(detail_lines) if detail_lines else "未发现高/中风险问题。"
-        priority_content = self.llm.summarize(
-            title="风险优先级与整改路径",
-            bullet_points=[
-                "HIGH: 立即整改并复审",
-                "MEDIUM: 版本内修订并补证据",
-                "LOW: 保持监控并定期抽查",
-            ],
-        ).text
-        return [
-            BCRChapter(chapter_no=1, title="报告摘要", content=summary, citations=citations, risk_level=rating),
-            BCRChapter(chapter_no=2, title="合规评级", content=f"综合评级：{rating}", citations=citations, risk_level=rating),
-            BCRChapter(chapter_no=3, title="详细审查结果", content=detail_content, citations=citations, risk_level=rating),
-            BCRChapter(
-                chapter_no=4,
-                title="风险优先级与整改建议",
-                content=priority_content,
-                citations=citations,
-                risk_level=rating,
-            ),
-        ]
+
+        context_block = (
+            f"【审查信息】\n"
+            f"- 公司名称：{payload.company_name}\n"
+            f"- 审查项总数：{len(payload.review_items)}\n"
+            f"- 问题数：{len(problems)}\n"
+            f"- 综合评级：{rating}\n"
+            f"- 问题清单：{detail_content[:400]}\n"
+            f"\n【法规参考】\n{reg_snippet}\n"
+        )
+
+        BCR_CHAPTERS = ["报告摘要", "合规评级", "详细审查结果", "风险优先级与整改建议"]
+        chapters: list[BCRChapter] = []
+        for idx, title in enumerate(BCR_CHAPTERS, start=1):
+            if title == "合规评级":
+                content = f"综合评级：{rating}"
+            elif title == "详细审查结果":
+                content = detail_content
+            elif self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "bcr", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
+            chapters.append(BCRChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=rating))
+        return chapters
 
     def _render(
         self,
@@ -190,25 +201,59 @@ class BCRService:
         chapters: list[BCRChapter],
         attachment_notes: list[str],
     ) -> dict[str, str]:
-        sections: list[tuple[str, str]] = [
-            ("审查对象", f"company_name: {payload.company_name}"),
-            ("综合评级", rating),
-            ("问题清单", "\n".join(f"- {item.code}: {item.finding}" for item in problems) or "- 无"),
-            ("附件解析摘要", "\n".join(f"- {item}" for item in attachment_notes) or "- 无"),
-        ]
-        for chapter in chapters:
-            sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
-
         output_dir = Path("outputs/bcr")
-        md_output = output_dir / f"{payload.company_name}_bcr_review_report.md"
-        docx_output = output_dir / f"{payload.company_name}_bcr_review_report.docx"
-        zip_output = output_dir / f"{payload.company_name}_bcr_output_bundle.zip"
-        render_markdown_report(md_output, "BCR-C 合规审查报告（v0）", sections)
-        render_docx_report(docx_output, "BCR-C 合规审查报告（v0）", sections)
+        date_stamp = format_date_stamp()
+        safe_company = safe_filename(payload.company_name)
+        md_output = output_dir / f"{safe_company}_BCR-C_合规审查报告_草案_{date_stamp}.md"
+        docx_output = output_dir / f"{safe_company}_BCR-C_合规审查报告_草案_{date_stamp}.docx"
+        zip_output = output_dir / f"{safe_company}_BCR-C_输出包_草案_{date_stamp}.zip"
+        mapping = _build_template_mapping(payload, rating, problems, chapters, date_stamp)
+        render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
         return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+
+
+def _build_template_mapping(
+    payload: BCRRequest,
+    rating: str,
+    problems: list[BCRProblem],
+    chapters: list[BCRChapter],
+    date_stamp: str,
+) -> dict[str, str]:
+    def join_items(items: list[BCRProblem]) -> str:
+        if not items:
+            return "无"
+        return "; ".join(f"{item.code}-{item.title}" for item in items)
+
+    def chapter_text(no: int) -> str:
+        for chapter in chapters:
+            if chapter.chapter_no == no:
+                return chapter.content
+        return ""
+
+    high = [p for p in problems if p.risk_level == "HIGH"]
+    medium = [p for p in problems if p.risk_level == "MEDIUM"]
+    low = [p for p in problems if p.risk_level == "LOW"]
+    detailed = "\n".join(
+        f"{p.code} | {p.title} | 风险={p.risk_level} | 问题={p.finding} | 建议={p.recommendation}"
+        for p in problems
+    ) or "无"
+
+    return {
+        "bcr_subject": payload.company_name,
+        "review_scope": "EDPB BCR-C 核心要素",
+        "review_date": date_stamp,
+        "overall_rating": rating,
+        "key_findings": join_items(problems),
+        "detailed_findings": detailed,
+        "high_risk_items": join_items(high),
+        "medium_risk_items": join_items(medium),
+        "low_risk_items": join_items(low),
+        "remediation_roadmap": chapter_text(4) or "按风险优先级制定整改路线。",
+    }
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> BCRAsyncAccepted:
