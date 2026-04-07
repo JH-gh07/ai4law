@@ -9,8 +9,8 @@ from app_streamlit.theme import apply_theme, open_section, render_hero
 
 SCHEMA_PATH = "app_streamlit/schemas/review_schema.json"
 
-apply_theme()
-render_hero("模块5：文档智能审查", "上传合同或制度文本，输出条款级问题与修订建议。", kicker="Document Review")
+apply_theme("cn")
+render_hero("2.5 文档专项智能审查", "上传合同或制度文本，输出条款级问题与修订建议。", kicker="CN 2.5")
 
 open_section("审查输入")
 submitted, values = render_schema_multistep_form("review", SCHEMA_PATH)

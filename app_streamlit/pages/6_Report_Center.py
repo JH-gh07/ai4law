@@ -2,11 +2,12 @@ from pathlib import Path
 
 import streamlit as st
 
+from app_streamlit.components.legal_basis import build_legal_basis_models, render_legal_basis_summary
 from app_streamlit.components.report_preview import render_markdown_file
-from app_streamlit.services.knowledge import get_report_records, load_sources_index, resolve_citation
+from app_streamlit.services.knowledge import get_report_records, load_sources_index
 from app_streamlit.theme import apply_theme, open_section, render_hero
 
-apply_theme()
+apply_theme("report")
 render_hero("报告中心", "集中查看各模块输出，支持下载与引用追溯。", kicker="Report Center")
 
 records = get_report_records(output_root="outputs")
@@ -78,12 +79,10 @@ citation_query = st.text_input(
     value="个人信息保护法第40条",
 )
 if citation_query.strip():
-    matched = resolve_citation(citation_query, sources=sources)
-    if matched is None:
-        st.warning("未匹配到知识库条目。")
-    else:
-        st.success(f"已匹配：{matched.get('title', '-')}")
-        if matched.get("url"):
-            st.link_button("打开匹配来源链接", matched["url"])
-        st.caption(f"来源机构：{matched.get('source_org', '-')}")
-        st.caption(f"本地快照：{matched.get('snapshot_path', '-')}")
+    query_models = build_legal_basis_models([citation_query], sources=sources)
+    render_legal_basis_summary(
+        query_models,
+        title="引用匹配摘要",
+        max_items=1,
+        key_prefix="report_center_citation_query",
+    )

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from app_streamlit.components.legal_basis import build_legal_basis_models, render_legal_basis_summary
 from app_streamlit.services.knowledge import (
     load_practice_cases,
     load_sources_index,
@@ -10,7 +11,7 @@ from app_streamlit.services.knowledge import (
 )
 from app_streamlit.theme import apply_theme, render_hero
 
-apply_theme()
+apply_theme("knowledge")
 render_hero("知识库中心", "浏览法规与案例索引，验证报告引用的可追溯性。", kicker="Knowledge Base")
 
 sources = load_sources_index()
@@ -132,17 +133,20 @@ with tab2:
 with tab3:
     citation_query = st.text_input("输入引用文本", value="数据出境安全评估办法第4条")
     if citation_query.strip():
+        query_models = build_legal_basis_models([citation_query], sources=sources)
+        render_legal_basis_summary(
+            query_models,
+            title="引用匹配摘要",
+            max_items=1,
+            key_prefix="knowledge_center_citation_query",
+        )
+
         matched = resolve_citation(citation_query, sources=sources)
-        if matched is None:
-            st.warning("未匹配到知识库条目。")
-        else:
-            st.success("匹配成功")
+        if matched:
+            st.markdown("#### 结构化匹配详情")
             st.write(f"source_id：{matched.get('source_id', '-')}")
-            st.write(f"标题：{matched.get('title', '-')}")
             st.write(f"层级：{matched.get('layer', '-')}")
             st.write(f"路径：{matched.get('path', '-')}")
-            if matched.get("url"):
-                st.link_button("打开法规来源", matched["url"])
             snapshot_path = matched.get("snapshot_path", "")
             st.caption(f"快照路径：{snapshot_path}")
             if snapshot_path and Path(snapshot_path).exists():

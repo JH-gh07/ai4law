@@ -1,0 +1,3 @@
+release_time: 2026-04-02 14:52:24
+git_commit: c982d0f
+python: Python 3.11.15

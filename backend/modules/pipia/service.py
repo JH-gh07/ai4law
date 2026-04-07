@@ -3,9 +3,17 @@ from __future__ import annotations
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from backend.common.llm.adapter import LLMAdapter
+from backend.common.llm.client import LLMClient
+from backend.common.quality.alignment import check_cn_alignment
+from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
-from backend.common.render.report import render_docx_report, render_markdown_report
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
+from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.risk.scoring import risk_level
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
@@ -17,6 +25,9 @@ from backend.modules.pipia.schema import (
     PIPIAResult,
 )
 
+
+TEMPLATE_PATH = Path("doc/v2/assets/templates/2.3_pipia_template_v0.docx")
+TEMPLATE_MD = Path("doc/v2/assets/templates/2.3_pipia_template_v0.md")
 
 PIPIA_CHAPTERS = [
     "处理者与出境活动基础信息",
@@ -30,8 +41,11 @@ PIPIA_CHAPTERS = [
 
 
 class PIPIAService:
-    def __init__(self) -> None:
-        self.llm = LLMAdapter()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
+        self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="pipia")
 
@@ -50,34 +64,50 @@ class PIPIAService:
             path="scc" if payload.route_type == "scc_filing" else "all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
+        reg_snippet = "\n".join(
+            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+            for item in regs
+        ) or "（暂无检索到相关法条）"
         attachment_notes = self._extract_attachment_notes(payload)
+
+        context_block = (
+            f"【企业信息】\n"
+            f"- 企业名称：{profile.company_name}\n"
+            f"- 合规路径：{payload.route_type}\n"
+            f"- 境外接收方：{payload.transfer_context.recipient_name}（{payload.transfer_context.recipient_country_region}）\n"
+            f"- 出境目的：{payload.transfer_context.purpose}\n"
+            f"- 法定基础：{payload.transfer_context.legal_basis}\n"
+            f"- 个人信息规模：{profile.outbound_pi_count:,}人\n"
+            f"- 敏感个人信息规模：{profile.outbound_spi_count:,}人\n"
+            f"- 风险等级：{level}\n"
+            f"\n【法规参考】\n{reg_snippet}\n"
+        )
 
         chapters: list[PIPIAChapter] = []
         for idx, title in enumerate(PIPIA_CHAPTERS, start=1):
-            summary = self.llm.summarize(
-                title=title,
-                bullet_points=[
-                    f"路径类型：{payload.route_type}",
-                    f"企业：{profile.company_name}",
-                    f"境外接收方：{payload.transfer_context.recipient_name}（{payload.transfer_context.recipient_country_region}）",
-                    f"出境目的：{payload.transfer_context.purpose}",
-                    f"法定基础：{payload.transfer_context.legal_basis}",
-                    f"PI规模：{profile.outbound_pi_count}，SPI规模：{profile.outbound_spi_count}",
-                    f"风险等级：{level}",
-                ],
-            )
+            if self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "pipia", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(
                 PIPIAChapter(
                     chapter_no=idx,
                     title=title,
-                    content=summary.text,
+                    content=content,
                     citations=citations,
                     risk_level=level,
                 )
             )
 
         issues = self._check_consistency(payload, level)
-        outputs = self._render(payload, chapters, attachment_notes)
+        alignment_issues = check_cn_alignment(
+            "\n".join(chapter.content for chapter in chapters),
+            industry=payload.company_profile.industry,
+            receiver_country=payload.transfer_context.recipient_country_region,
+        )
+        if alignment_issues:
+            issues.extend(alignment_issues)
+        outputs = self._render(payload, chapters, attachment_notes, alignment_warning="；".join(alignment_issues) if alignment_issues else None)
         return PIPIAResult(
             report_path=outputs["docx"],
             output_files=outputs,
@@ -132,27 +162,76 @@ class PIPIAService:
             issues.append("Current profile falls into HIGH risk; recommend legal manual review before filing.")
         return issues
 
-    def _render(self, payload: PIPIARequest, chapters: list[PIPIAChapter], attachment_notes: list[str]) -> dict[str, str]:
+    def _render(
+        self,
+        payload: PIPIARequest,
+        chapters: list[PIPIAChapter],
+        attachment_notes: list[str],
+        alignment_warning: str | None = None,
+    ) -> dict[str, str]:
         company_name = payload.company_profile.company_name
-        sections: list[tuple[str, str]] = [
-            ("路径信息", f"route_type: {payload.route_type}"),
-            ("企业基础信息", payload.company_profile.model_dump_json(indent=2)),
-            ("出境上下文", payload.transfer_context.model_dump_json(indent=2)),
-            ("附件解析摘要", "\n".join(f"- {item}" for item in attachment_notes) or "- 无"),
-        ]
-        for chapter in chapters:
-            sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
-
         output_dir = Path("outputs/pipia")
-        md_output = output_dir / f"{company_name}_pipia_report.md"
-        docx_output = output_dir / f"{company_name}_pipia_report.docx"
-        zip_output = output_dir / f"{company_name}_pipia_output_bundle.zip"
-        render_markdown_report(md_output, "个人信息保护影响评估报告（PIPIA, v0）", sections)
-        render_docx_report(docx_output, "个人信息保护影响评估报告（PIPIA, v0）", sections)
+        date_stamp = format_date_stamp()
+        safe_company = safe_filename(company_name)
+        md_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.md"
+        docx_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.docx"
+        zip_output = output_dir / f"{safe_company}_PIPIA_输出包_草案_{date_stamp}.zip"
+        mapping = _build_template_mapping(payload, chapters, date_stamp, alignment_warning=alignment_warning)
+        render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
         return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+
+
+def _build_template_mapping(
+    payload: PIPIARequest,
+    chapters: list[PIPIAChapter],
+    date_stamp: str,
+    alignment_warning: str | None = None,
+) -> dict[str, str]:
+    def pick(title: str) -> str:
+        for chapter in chapters:
+            if chapter.title == title:
+                return chapter.content
+        return ""
+
+    scope = payload.personal_info_scope
+    risk_level = "HIGH" if scope.subject_volume >= 1_000_000 or len(scope.spi_categories) > 0 else "LOW"
+    citations: list[str] = []
+    for chapter in chapters:
+        if chapter.citations:
+            citations = chapter.citations
+            break
+
+    necessity = summarize_for_slot(pick("处理者与出境活动基础信息"), max_sentences=2, max_chars=260)
+    risk_list = summarize_for_slot(pick("个人信息主体权益影响评估"), max_sentences=2, max_chars=260)
+    controls = summarize_for_slot(pick("技术与组织措施有效性评估"), max_sentences=2, max_chars=260)
+    remediation = summarize_for_slot(pick("事件响应与整改计划"), max_sentences=2, max_chars=260)
+    conclusion = summarize_for_slot(pick("PIPIA 结论与备案建议"), max_sentences=2, max_chars=260)
+    if alignment_warning:
+        conclusion = f"【输入对齐告警】{alignment_warning}\n{conclusion}".strip()
+
+    return {
+        "company_name": payload.company_profile.company_name,
+        "processing_activity_name": "个人信息出境处理活动（PIPIA）",
+        "assessment_date": date_stamp,
+        "processing_purpose": payload.transfer_context.purpose,
+        "processing_method": "跨境传输并由境外接收方处理。",
+        "processing_scope": f"涉及{scope.subject_volume:,}人，含敏感信息{len(scope.spi_categories)}类",
+        "legal_basis": payload.transfer_context.legal_basis,
+        "necessity_analysis": attach_citations(necessity, citations),
+        "pi_categories": "、".join(scope.pi_categories),
+        "spi_categories": "、".join(scope.spi_categories) or "无",
+        "subject_volume": f"{scope.subject_volume:,}人",
+        "risk_list": attach_citations(risk_list, citations),
+        "risk_level": risk_level,
+        "current_controls": attach_citations(controls, citations),
+        "additional_controls": attach_citations(remediation, citations),
+        "improvement_plan": attach_citations(remediation, citations),
+        "final_conclusion": attach_citations(conclusion, citations),
+    }
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> PIPIAAsyncAccepted:

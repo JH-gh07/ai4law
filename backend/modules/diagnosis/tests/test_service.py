@@ -9,7 +9,7 @@ def test_diagnosis_security_assessment_by_pii_threshold() -> None:
         q2_has_important_data=YesNoUnknown.NO,
         q3_pii_count=1_100_000,
         q4_spi_count=200,
-        q5_purpose="marketing analytics",
+        q8_purpose="marketing analytics",
     )
 
     result = service.evaluate(answers)
@@ -23,7 +23,7 @@ def test_diagnosis_scc_path() -> None:
         q2_has_important_data=YesNoUnknown.NO,
         q3_pii_count=50_000,
         q4_spi_count=200,
-        q5_purpose="customer support",
+        q8_purpose="customer support",
     )
 
     result = service.evaluate(answers)

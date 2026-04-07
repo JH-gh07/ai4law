@@ -1,0 +1,35 @@
+{
+  "transfer_purpose": "全球风控联动",
+  "data_categories": [
+    "身份信息",
+    "设备信息",
+    "交易记录"
+  ],
+  "sensitive_data_flags": [
+    "地理位置",
+    "生物识别(否)"
+  ],
+  "recipient_entities": [
+    {
+      "entity_name": "CN Entity A",
+      "country_region": "中国",
+      "entity_role": "affiliate",
+      "is_restricted_party": false
+    }
+  ],
+  "transfer_chain": "US -> CN -> US",
+  "attachments": [
+    {
+      "file_role": "data_inventory",
+      "file_name": "data_inventory.xlsx",
+      "file_format": "xlsx",
+      "storage_uri": "storage://uploads/data_inventory.xlsx"
+    },
+    {
+      "file_role": "entity_inventory",
+      "file_name": "entity_inventory.csv",
+      "file_format": "csv",
+      "storage_uri": "storage://uploads/entity_inventory.csv"
+    }
+  ]
+}

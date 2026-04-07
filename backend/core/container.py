@@ -1,3 +1,4 @@
+from backend.common.llm.client import LLMClient
 from backend.core.db import build_engine, build_session_factory
 from backend.core.settings import Settings
 from backend.services.diagnosis_service import DiagnosisService
@@ -22,11 +23,14 @@ class AppContainer:
         self.websocket_manager = WebSocketManager()
         self.task_dispatcher = build_task_dispatcher(settings.task_mode)
 
+        self.llm_client = LLMClient(settings)
         self.file_service = FileService(settings)
         self.report_service = ReportService(settings)
         self.session_service = SessionService()
         self.legal_api_service = DeliLegalService(settings)
-        self.diagnosis_service = DiagnosisService(self.report_service, self.session_service, self.legal_api_service)
+        self.diagnosis_service = DiagnosisService(
+            self.report_service, self.session_service, self.legal_api_service, self.llm_client
+        )
         self.review_service = ReviewService(
             file_service=self.file_service,
             report_service=self.report_service,
@@ -34,4 +38,5 @@ class AppContainer:
             websocket_manager=self.websocket_manager,
             session_factory=self.session_factory,
             legal_api_service=self.legal_api_service,
+            llm_client=self.llm_client,
         )

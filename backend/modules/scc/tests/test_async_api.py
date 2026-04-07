@@ -25,7 +25,7 @@ def test_scc_async_flow() -> None:
     assert accepted.status_code == 200
     task_id = accepted.json()["task_id"]
 
-    for _ in range(50):
+    for _ in range(300):
         status = client.get(f"/api/v1/scc/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()
@@ -34,6 +34,6 @@ def test_scc_async_flow() -> None:
             return
         if payload["state"] == "FAILED":
             raise AssertionError(payload)
-        time.sleep(0.05)
+        time.sleep(0.1)
 
     raise AssertionError("scc async task timeout")

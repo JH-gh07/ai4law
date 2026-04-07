@@ -14,8 +14,8 @@ from app_streamlit.theme import apply_theme, open_section, render_hero
 SCHEMA_PATH = "app_streamlit/schemas/assessment_schema.json"
 DRAFT_PATH = Path("storage/drafts/assessment_draft.json")
 
-apply_theme()
-render_hero("模块2：安全评估路径", "多步表单与异步任务，输出风险自评估报告。", kicker="Assessment")
+apply_theme("cn")
+render_hero("2.2 安全评估路径", "多步表单与异步任务，输出风险自评估报告。", kicker="CN 2.2")
 sources = load_sources_index()
 
 DRAFT_PATH.parent.mkdir(parents=True, exist_ok=True)

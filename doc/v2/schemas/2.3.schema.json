@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Module 2.3 Input Schema",
+  "type": "object",
+  "required": [
+    "route_type",
+    "company_profile",
+    "transfer_context",
+    "personal_info_scope",
+    "rights_protection",
+    "emergency_plan",
+    "attachments"
+  ],
+  "properties": {
+    "route_type": {
+      "type": "string",
+      "enum": [
+        "certification",
+        "scc_filing"
+      ]
+    },
+    "company_profile": {
+      "type": "object",
+      "required": [
+        "company_name",
+        "company_uscc",
+        "is_ciio",
+        "processing_person_count",
+        "outbound_pi_count",
+        "outbound_spi_count"
+      ],
+      "properties": {
+        "company_name": {
+          "type": "string"
+        },
+        "company_uscc": {
+          "type": "string"
+        },
+        "is_ciio": {
+          "type": "boolean"
+        },
+        "processing_person_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outbound_pi_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outbound_spi_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "industry": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "transfer_context": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "recipient_name",
+        "recipient_country_region",
+        "legal_basis"
+      ],
+      "properties": {
+        "purpose": {
+          "type": "string"
+        },
+        "recipient_name": {
+          "type": "string"
+        },
+        "recipient_country_region": {
+          "type": "string"
+        },
+        "legal_basis": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "personal_info_scope": {
+      "type": "object",
+      "required": [
+        "pi_categories",
+        "spi_categories",
+        "subject_volume"
+      ],
+      "properties": {
+        "pi_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "spi_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subject_volume": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "rights_protection": {
+      "type": "object",
+      "required": [
+        "notice_mechanism",
+        "consent_mechanism",
+        "dsar_channel",
+        "retention_policy"
+      ],
+      "properties": {
+        "notice_mechanism": {
+          "type": "string"
+        },
+        "consent_mechanism": {
+          "type": "string"
+        },
+        "dsar_channel": {
+          "type": "string"
+        },
+        "retention_policy": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "emergency_plan": {
+      "type": "object",
+      "required": [
+        "incident_response_sla_hours",
+        "escalation_path"
+      ],
+      "properties": {
+        "incident_response_sla_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 168
+        },
+        "escalation_path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "attachments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": [
+              "file_role",
+              "file_name",
+              "file_format",
+              "storage_uri"
+            ],
+            "properties": {
+              "file_role": {
+                "type": "string"
+              },
+              "file_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "file_format": {
+                "type": "string"
+              },
+              "storage_uri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "checksum_sha256": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ],
+        "properties": {
+          "file_role": {
+            "type": "string",
+            "enum": [
+              "scc_contract",
+              "certification_material",
+              "internal_policy",
+              "supporting_evidence"
+            ]
+          },
+          "file_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file_format": {
+            "type": "string",
+            "enum": [
+              "doc",
+              "docx",
+              "pdf"
+            ]
+          },
+          "storage_uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checksum_sha256": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

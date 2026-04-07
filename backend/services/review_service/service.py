@@ -16,6 +16,7 @@ from backend.schemas.review import (
     ReviewTaskStatusResponse,
     UploadedFileResponse,
 )
+from backend.common.llm.client import LLMClient
 from backend.services.file_service import FileService
 from backend.services.legal_api_service import DeliLegalService
 from backend.services.report_service import ReportService
@@ -28,7 +29,7 @@ from backend.services.review_service.review_report_renderer import ReviewReportR
 
 
 class ReviewService:
-    def __init__(self, file_service: FileService, report_service: ReportService, task_dispatcher, websocket_manager, session_factory, legal_api_service: DeliLegalService) -> None:
+    def __init__(self, file_service: FileService, report_service: ReportService, task_dispatcher, websocket_manager, session_factory, legal_api_service: DeliLegalService, llm_client: LLMClient | None = None) -> None:
         self.repository = ReviewRepository()
         self.file_service = file_service
         self.report_service = report_service
@@ -38,7 +39,7 @@ class ReviewService:
         self.segmenter = ClauseSegmenter()
         self.classifier = ClauseClassifier()
         self.knowledge_base = LocalRegulationKnowledgeBase(legal_api_service)
-        self.reviewer = ClauseReviewer(self.knowledge_base)
+        self.reviewer = ClauseReviewer(self.knowledge_base, llm_client=llm_client)
         self.aggregator = ReviewAggregator()
         self.renderer = ReviewReportRenderer()
 

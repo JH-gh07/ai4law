@@ -2,10 +2,33 @@ from __future__ import annotations
 
 import json
 import re
+import os
+from datetime import datetime
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from backend.services.legal_api_service import DeliLegalService
+
+_default_legal_service: object = None
+_default_legal_service_loaded: bool = False
+
+
+def _get_default_legal_service() -> object:
+    """Return a lazily-created DeliLegalService singleton, or None if unavailable."""
+    global _default_legal_service, _default_legal_service_loaded
+    if _default_legal_service_loaded:
+        return _default_legal_service
+    _default_legal_service_loaded = True
+    try:
+        from backend.core.settings import get_settings
+        from backend.services.legal_api_service import DeliLegalService
+        _default_legal_service = DeliLegalService(get_settings())
+    except Exception:
+        _default_legal_service = None
+    return _default_legal_service
 
 
 @dataclass
@@ -25,6 +48,9 @@ class RegulationDoc:
 
 ROOT = Path(__file__).resolve().parents[3]
 NORMALIZED_JSONL = ROOT / "doc/knowledge/normalized/regulation_articles.jsonl"
+RAG_LOG_DIR_ENV = "AI4LAW_RAG_LOG_DIR"
+RAG_LOG_ENABLE_ENV = "AI4LAW_RAG_LOG"
+DEFAULT_RAG_LOG_DIR = ROOT / "outputs/qa"
 DEFAULT_SCORE_FLOOR_BY_MODE = {
     "vector": 4,
     "hybrid": 2,
@@ -195,6 +221,26 @@ def _cn_num_to_int(value: str) -> Optional[int]:
             return None
         total = total * 10 + num_map[ch]
     return total
+
+
+def _rewrite_query(query: str, jurisdiction: Optional[str], path: Optional[str]) -> str:
+    """Append strong hints to improve lexical match for sparse CN queries."""
+    value = query or ""
+    additions: list[str] = []
+
+    if jurisdiction:
+        for hint in JURISDICTION_STRONG_HINTS.get(jurisdiction, ()):
+            if hint.lower() not in value.lower():
+                additions.append(hint)
+
+    if path:
+        for hint in PATH_STRONG_HINTS.get(path, ()):
+            if hint.lower() not in value.lower():
+                additions.append(hint)
+
+    if not additions:
+        return value
+    return f"{value} {' '.join(additions)}"
 
 
 def _article_number(article_ref: str) -> Optional[int]:
@@ -383,12 +429,15 @@ def retrieve_regulations(
     doc_type: Optional[str] = None,
     mode: str = "hybrid",
     score_floor: Optional[int] = None,
+    legal_service: Optional["DeliLegalService"] = None,
+    min_local: int = 3,
 ) -> list[RegulationDoc]:
-    if _is_off_topic_query(query):
+    rewritten_query = _rewrite_query(query, jurisdiction, path)
+    if _is_off_topic_query(rewritten_query):
         return []
-    if _is_jurisdiction_mismatch(query, jurisdiction):
+    if _is_jurisdiction_mismatch(rewritten_query, jurisdiction):
         return []
-    if _is_path_mismatch(query, path):
+    if _is_path_mismatch(rewritten_query, path):
         return []
 
     docs = _load_normalized_docs() or LEGACY_DB
@@ -400,13 +449,9 @@ def retrieve_regulations(
     for doc in docs:
         if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type):
             continue
-        score = _score_doc(query, doc, mode=mode)
+        score = _score_doc(rewritten_query, doc, mode=mode)
         if score >= effective_floor:
             scored.append((score, doc))
-
-    if not scored:
-        # Return empty on weak/OOD queries to avoid fabricated citations.
-        return []
 
     scored.sort(key=lambda item: (item[0], _priority_weight(item[1].usage_priority)), reverse=True)
 
@@ -422,4 +467,102 @@ def retrieve_regulations(
         if len(deduped) >= top_k:
             break
 
+    # Supplement with DeliLegal law search when local results are sparse
+    effective_legal_service = legal_service if legal_service is not None else _get_default_legal_service()
+    if effective_legal_service and effective_legal_service.enabled and len(deduped) < min_local:
+        needed = top_k - len(deduped)
+        existing_titles = {_normalize(d.title) for d in deduped}
+        remote_hits = effective_legal_service.search_laws(query, size=needed + 2)
+        for hit in remote_hits:
+            title = hit.get("title", "")
+            if _normalize(title) in existing_titles:
+                continue
+            deduped.append(
+                RegulationDoc(
+                    id=f"delilegal-{_normalize(title)[:20]}",
+                    title=title,
+                    article="",
+                    content=hit.get("summary", ""),
+                    jurisdiction=jurisdiction or "",
+                    path=path or "all",
+                    doc_type="external",
+                    usage_priority="P2",
+                )
+            )
+            existing_titles.add(_normalize(title))
+            if len(deduped) >= top_k:
+                break
+
+    _log_rag_hits(
+        query=query,
+        rewritten_query=rewritten_query,
+        jurisdiction=jurisdiction,
+        path=path,
+        doc_type=doc_type,
+        mode=mode,
+        score_floor=effective_floor,
+        top_k=top_k,
+        results=deduped,
+    )
+
     return deduped
+
+
+def _log_rag_hits(
+    query: str,
+    rewritten_query: str,
+    jurisdiction: Optional[str],
+    path: Optional[str],
+    doc_type: Optional[str],
+    mode: str,
+    score_floor: Optional[int],
+    top_k: int,
+    results: list[RegulationDoc],
+) -> None:
+    enabled_flag = os.getenv(RAG_LOG_ENABLE_ENV, "").strip().lower()
+    log_dir_value = os.getenv(RAG_LOG_DIR_ENV, "").strip()
+    if enabled_flag not in {"1", "true", "yes"} and not log_dir_value:
+        return
+
+    log_dir = Path(log_dir_value) if log_dir_value else DEFAULT_RAG_LOG_DIR
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = log_dir / f"rag_hits_{timestamp}.jsonl"
+
+    payload = {
+        "ts": datetime.now().isoformat(),
+        "query": query,
+        "rewritten_query": rewritten_query,
+        "jurisdiction": jurisdiction,
+        "path": path,
+        "doc_type": doc_type,
+        "mode": mode,
+        "score_floor": score_floor,
+        "top_k": top_k,
+        "hit_count": len(results),
+        "hits": [
+            {
+                "id": doc.id,
+                "title": doc.title,
+                "article": doc.article,
+                "content": doc.content[:200],
+                "jurisdiction": doc.jurisdiction,
+                "path": doc.path,
+                "doc_type": doc.doc_type,
+                "source_url": doc.source_url,
+                "snapshot_path": doc.snapshot_path,
+                "usage_priority": doc.usage_priority,
+                "score": _score_doc(rewritten_query, doc, mode=mode),
+            }
+            for doc in results
+        ],
+    }
+    try:
+        with log_path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except OSError:
+        return

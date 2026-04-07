@@ -28,4 +28,13 @@ class LocalRegulationKnowledgeBase:
                     f"{item['source']}：{item['title']}" for item in hits
                 ]
                 config["citations"] = list(dict.fromkeys([*config.get("citations", []), *external_citations]))
+            elif self.legal_api_service.last_error:
+                config["citations"] = list(
+                    dict.fromkeys(
+                        [
+                            *config.get("citations", []),
+                            f"得理API调用失败：{self.legal_api_service.last_error}",
+                        ]
+                    )
+                )
         return config

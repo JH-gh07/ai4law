@@ -17,6 +17,8 @@
 - 已补齐基础法层（网安法、数安法、个保法、网数条例）
 - 已收集官方公开实践案例与统计口径（北京公开平台 + CAC 口径）
 - 已形成“案例如何用于评测”的执行方法
+- 已生成条文级规范化文件：`normalized/regulation_articles.jsonl`（由 `scripts/build_regulation_articles.py` 构建）
+- 已替换后端基础检索器为“从 normalized 读取”的真实检索链路（不再依赖仅 5 条硬编码示例）
 
 ## 3. 使用原则
 
@@ -27,6 +29,6 @@
 
 ## 4. 下一步
 
-1. 将 `sources.csv` 逐步转为 `normalized/RegulationArticle` 条文级 JSON。
-2. 对 `practice_cases.csv` 做“可评测字段标注”（期望命中条文、风险点、建议结论）。
-3. 接入现有 RAG 管线做首轮基线评测（Recall@K / 引用正确率 / 漏报率）。
+1. 对 `practice_cases.csv` 做“可评测字段标注”（期望命中条文、风险点、建议结论）。
+2. 做首轮检索基线评测（Recall@K / 引用正确率 / 漏报率）。
+3. 将检索升级为“混合检索 + rerank”（当前仍为轻量规则检索）。

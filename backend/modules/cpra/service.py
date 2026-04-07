@@ -2,10 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from backend.common.llm.adapter import LLMAdapter
+from backend.common.llm.client import LLMClient
+from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
-from backend.common.render.report import render_docx_report, render_markdown_report
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.cpra.schema import (
@@ -16,6 +22,9 @@ from backend.modules.cpra.schema import (
     CPRARequest,
     CPRAResult,
 )
+
+TEMPLATE_PATH = Path("doc/v2/assets/templates/4.2_cpra_panorama_template_v0.docx")
+TEMPLATE_MD = Path("doc/v2/assets/templates/4.2_cpra_panorama_template_v0.md")
 
 
 CPRA_CHAPTERS = [
@@ -29,8 +38,11 @@ CPRA_CHAPTERS = [
 
 
 class CPRAService:
-    def __init__(self) -> None:
-        self.llm = LLMAdapter()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
+        self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="cpra")
 
@@ -44,8 +56,12 @@ class CPRAService:
             path="all",
         )
         citations = [f"{item.title}{item.article}" for item in regs]
+        reg_snippet = "\n".join(
+            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+            for item in regs
+        ) or "（暂无检索到相关法条）"
         attachment_notes = self._extract_attachment_notes(payload)
-        chapters = self._generate_chapters(payload, risk_level, gap_items, citations)
+        chapters = self._generate_chapters(payload, risk_level, gap_items, citations, reg_snippet)
         issues = self._check_consistency(payload, gap_items)
         outputs = self._render(payload, chapters, gap_items, attachment_notes)
         return CPRAResult(
@@ -167,25 +183,29 @@ class CPRAService:
         level: str,
         gap_items: list[CPRAGapItem],
         citations: list[str],
+        reg_snippet: str,
     ) -> list[CPRAChapter]:
         gap_summary = "；".join(f"{item.domain}:{item.gap}" for item in gap_items)
+        context_block = (
+            f"【企业信息】\n"
+            f"- 企业名称：{payload.company_name}\n"
+            f"- 业务模型：{payload.business_model}\n"
+            f"- 数据生命周期：{payload.data_lifecycle}\n"
+            f"- 合规差距摘要：{gap_summary}\n"
+            f"- 风险等级：{level}\n"
+            f"\n【法规参考】\n{reg_snippet}\n"
+        )
         chapters: list[CPRAChapter] = []
         for idx, title in enumerate(CPRA_CHAPTERS, start=1):
-            summary = self.llm.summarize(
-                title=title,
-                bullet_points=[
-                    f"企业：{payload.company_name}",
-                    f"业务模型：{payload.business_model}",
-                    f"数据生命周期：{payload.data_lifecycle}",
-                    f"差距摘要：{gap_summary}",
-                    f"风险等级：{level}",
-                ],
-            )
+            if self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "cpra", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(
                 CPRAChapter(
                     chapter_no=idx,
                     title=title,
-                    content=summary.text,
+                    content=content,
                     citations=citations,
                     risk_level=level,
                 )
@@ -218,16 +238,18 @@ class CPRAService:
             sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
 
         output_dir = Path("outputs/cpra")
-        base = payload.company_name
-        md_output = output_dir / f"{base}_cpra_panorama_report.md"
-        docx_output = output_dir / f"{base}_cpra_panorama_report.docx"
-        pdf_output = output_dir / f"{base}_cpra_panorama_report.pdf"
-        xlsx_output = output_dir / f"{base}_cpra_roadmap.xlsx"
-        zip_output = output_dir / f"{base}_cpra_output_bundle.zip"
+        date_stamp = format_date_stamp()
+        base = safe_filename(payload.company_name)
+        md_output = output_dir / f"{base}_CPRA_合规全景报告_草案_{date_stamp}.md"
+        docx_output = output_dir / f"{base}_CPRA_合规全景报告_草案_{date_stamp}.docx"
+        pdf_output = output_dir / f"{base}_CPRA_合规全景报告_草案_{date_stamp}.pdf"
+        xlsx_output = output_dir / f"{base}_CPRA_整改路线图_草案_{date_stamp}.xlsx"
+        zip_output = output_dir / f"{base}_CPRA_输出包_草案_{date_stamp}.zip"
 
-        render_markdown_report(md_output, "加州CPRA合规全景报告（v0）", sections)
-        render_docx_report(docx_output, "加州CPRA合规全景报告（v0）", sections)
-        render_pdf_report(pdf_output, "加州CPRA合规全景报告（v0）", sections)
+        mapping = _build_template_mapping(payload, chapters, gap_items, date_stamp)
+        render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        render_pdf_report(pdf_output, "加州CPRA合规全景报告（草案）", sections)
         headers = ["domain", "risk_level", "gap", "legal_basis", "recommendation", "phase"]
         rows = [
             [item.domain, item.risk_level, item.gap, item.legal_basis, item.recommendation, item.phase]
@@ -242,6 +264,28 @@ class CPRAService:
             "xlsx": str(xlsx_output),
             "zip": str(zip_output),
         }
+
+
+def _build_template_mapping(
+    payload: CPRARequest,
+    chapters: list[CPRAChapter],
+    gap_items: list[CPRAGapItem],
+    date_stamp: str,
+) -> dict[str, str]:
+    def pick(no: int) -> str:
+        for chapter in chapters:
+            if chapter.chapter_no == no:
+                return chapter.content
+        return ""
+
+    gap_summary = "; ".join(f"{item.domain}: {item.gap}" for item in gap_items) or "暂无"
+    return {
+        "current_state": pick(2) or "企业业务与数据处理现状概述。",
+        "cpra_mapping": pick(3) or "依据CPRA条款进行映射分析。",
+        "gaps_and_risks": pick(4) or gap_summary,
+        "remediation_roadmap": pick(6) or "按优先级制定整改路线图。",
+        "final_conclusion": pick(1) or f"评估日期：{date_stamp}。",
+    }
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CPRAAsyncAccepted:

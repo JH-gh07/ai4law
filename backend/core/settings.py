@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +16,23 @@ class Settings(BaseSettings):
     delilegal_app_id: str | None = None
     delilegal_secret: str | None = None
 
-    model_config = SettingsConfigDict(env_prefix="AI4LAW_", extra="ignore")
+    # 腾讯混元 LLM — 兼容无 AI4LAW_ 前缀的环境变量
+    tencent_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("TENCENT_API_KEY", "AI4LAW_TENCENT_API_KEY"),
+    )
+    tencent_api_url: str = Field(
+        default="https://api.hunyuan.cloud.tencent.com/v1",
+        validation_alias=AliasChoices("TENCENT_API_URL", "AI4LAW_TENCENT_API_URL"),
+    )
+    llm_model: str = "hunyuan-turbos-latest"
+
+    model_config = SettingsConfigDict(
+        env_prefix="AI4LAW_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     @property
     def upload_dir(self) -> Path:
