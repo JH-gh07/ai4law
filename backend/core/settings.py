@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     delilegal_base_url: str = "https://openapi.delilegal.com"
     delilegal_app_id: str | None = None
     delilegal_secret: str | None = None
+    rag_source_jsonl: Path = Path("doc/knowledge/normalized/regulation_articles.jsonl")
+    rag_index_path: Path = Path("storage/rag/regulation_index_v2.json")
+    rag_embedding_dimension: int = 384
+    rag_candidate_pool_size: int = 24
+    rag_rerank_candidate_count: int = 12
+    rag_auto_build_index: bool = True
 
     model_config = SettingsConfigDict(env_prefix="AI4LAW_", extra="ignore")
 

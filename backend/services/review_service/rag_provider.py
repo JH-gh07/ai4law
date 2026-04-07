@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from backend.common.rag.retriever import retrieve_regulations
 from backend.schemas.review import ClauseType
 from backend.services.legal_api_service import DeliLegalService
 
@@ -21,11 +22,34 @@ class LocalRegulationKnowledgeBase:
                 "citations": ["《个人信息保护法》相关规定"],
             }
 
+        rag_citations: list[str] = []
+        if clause_text:
+            rag_hits = retrieve_regulations(
+                query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
+                top_k=3,
+                jurisdiction="cn",
+                path="review",
+                mode="hybrid",
+            )
+            rag_citations = [
+                f"{item.title}{item.article}".strip()
+                for item in rag_hits
+                if item.title or item.article
+            ]
+
         if self.legal_api_service and self.legal_api_service.enabled and clause_text:
             hits = self.legal_api_service.search_cases(clause_text[:80], size=2)
             if hits:
                 external_citations = [
-                    f"{item['source']}：{item['title']}" for item in hits
+                    f"{item['source']}：{item['title']}"
+                    for item in hits
                 ]
-                config["citations"] = list(dict.fromkeys([*config.get("citations", []), *external_citations]))
+                config["citations"] = list(
+                    dict.fromkeys([*config.get("citations", []), *rag_citations, *external_citations])
+                )
+                return config
+
+        if rag_citations:
+            config["citations"] = list(dict.fromkeys([*config.get("citations", []), *rag_citations]))
+
         return config
