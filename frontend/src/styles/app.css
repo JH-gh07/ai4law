@@ -2075,6 +2075,16 @@
   gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
+  border: 1px solid var(--ws-pane-border);
+  border-radius: 14px;
+  background: rgba(240, 248, 255, 0.78);
+  padding: 0.65rem 0.72rem;
+}
+
+.stage-preset-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .stage-layout-actions {
@@ -2835,6 +2845,26 @@
   padding: 0.7rem;
   display: grid;
   gap: 0.55rem;
+}
+
+.workflow-progress-text {
+  color: #4f7098;
+  font-size: 0.79rem;
+}
+
+.workflow-progress-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(165, 194, 228, 0.4);
+  overflow: hidden;
+}
+
+.workflow-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2b63af, #4e8fda);
 }
 
 .workspace-style-cn_diagnosis {
