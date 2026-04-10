@@ -1162,19 +1162,6 @@
   display: block;
 }
 
-.tasks-saved-item p {
-  margin: 0.18rem 0 0;
-  color: #55799f;
-  font-size: 0.8rem;
-}
-
-.tasks-enter-hint {
-  justify-self: end;
-  color: #2f5a88;
-  font-size: 0.76rem;
-  letter-spacing: 0.05em;
-}
-
 .tasks-filter-tabs {
   display: flex;
   gap: 0.38rem;
