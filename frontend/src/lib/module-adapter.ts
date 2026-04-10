@@ -19,6 +19,15 @@ export type ModuleRunResponse = {
   runMode: RunMode;
 };
 
+export type UploadedTaskFile = {
+  fileId: string;
+  fileName: string;
+  mime: string;
+  size: number;
+  path: string;
+  uploadedAt: string;
+};
+
 const MODULES: ModuleDefinition[] = [
   {
     key: "diagnosis",
@@ -142,6 +151,46 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
     throw new Error(parseErrorMessage(data));
   }
   return data;
+}
+
+export async function uploadTaskFile(file: File): Promise<UploadedTaskFile> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/v0/files/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data: unknown = await response.json();
+  if (!response.ok) {
+    throw new Error(parseErrorMessage(data));
+  }
+
+  if (!isRecord(data) || !isRecord(data.data)) {
+    throw new Error("Upload API returned invalid payload");
+  }
+
+  const payload = data.data;
+  if (
+    typeof payload.file_id !== "string" ||
+    typeof payload.file_name !== "string" ||
+    typeof payload.mime !== "string" ||
+    typeof payload.size !== "number" ||
+    typeof payload.path !== "string" ||
+    typeof payload.uploaded_at !== "string"
+  ) {
+    throw new Error("Upload API payload missing required fields");
+  }
+
+  return {
+    fileId: payload.file_id,
+    fileName: payload.file_name,
+    mime: payload.mime,
+    size: payload.size,
+    path: payload.path,
+    uploadedAt: payload.uploaded_at
+  };
 }
 
 function parseAsyncTaskId(data: unknown): string {

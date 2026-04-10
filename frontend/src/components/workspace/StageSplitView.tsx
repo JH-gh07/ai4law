@@ -21,12 +21,53 @@ type TimelineEvent = {
   detail: string;
 };
 
+type PreviewChapter = {
+  chapterNo?: number;
+  title: string;
+  content: string;
+  riskLevel?: string;
+  citations: string[];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toString = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+
+const readChapters = (response: unknown): PreviewChapter[] => {
+  if (!isRecord(response) || !Array.isArray(response.chapters)) return [];
+  return response.chapters
+    .filter(isRecord)
+    .map((item) => ({
+      chapterNo: typeof item.chapter_no === "number" ? item.chapter_no : undefined,
+      title: toString(item.title) ?? "未命名章节",
+      content: toString(item.content) ?? "",
+      riskLevel: toString(item.risk_level),
+      citations: Array.isArray(item.citations)
+        ? item.citations.filter((citation): citation is string => typeof citation === "string")
+        : []
+    }));
+};
+
+const readRegulations = (response: unknown): Array<{ title: string; article?: string; snippet?: string }> => {
+  if (!isRecord(response) || !Array.isArray(response.regulations)) return [];
+  return response.regulations
+    .filter(isRecord)
+    .map((item) => ({
+      title: toString(item.title) ?? "Regulation",
+      article: toString(item.article),
+      snippet: toString(item.snippet)
+    }));
+};
+
 export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitViewProps) {
   const { t } = useLang();
   const { state, dispatch } = useAppStore();
 
   const panelState = state.panelState;
   const insight = extractInsight(latestRun?.response);
+  const previewChapters = useMemo(() => readChapters(latestRun?.response), [latestRun?.response]);
+  const previewRegulations = useMemo(() => readRegulations(latestRun?.response), [latestRun?.response]);
 
   const evidence = useMemo(
     () => state.evidenceHits.filter((item) => item.taskSpaceId === taskSpace.id).slice(0, 30),
@@ -131,7 +172,7 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
 
   const renderPlugin = (plugin: StagePluginKey) => {
     if (plugin === "run") {
-      return <ModuleRunPanel onRunDone={onRunDone} />;
+      return <ModuleRunPanel onRunDone={onRunDone} taskSpace={taskSpace} />;
     }
 
     if (plugin === "preview") {
@@ -139,14 +180,68 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
         <section className="plugin-view">
           <div className="runner-title">{t("resultPanel")}</div>
           {latestRun ? (
-            <div className="preview-meta">
-              <p>{t("fieldModule")}: {latestRun.module.toUpperCase()}</p>
-              <p>{t("fieldStatus")}: {latestRun.success ? t("statusSuccess") : t("statusFailed")}</p>
-              {insight.reportPath ? <p>{t("fieldReport")}: <code>{insight.reportPath}</code></p> : null}
-              {insight.riskLevel ? <p>{t("fieldRisk")}: {insight.riskLevel}</p> : null}
-              {insight.recommendedPath ? <p>{t("fieldPath")}: {insight.recommendedPath}</p> : null}
-              {latestRun.error ? <p>{t("fieldError")}: {latestRun.error}</p> : null}
-            </div>
+            <>
+              <div className="preview-meta">
+                <p>{t("fieldModule")}: {latestRun.module.toUpperCase()}</p>
+                <p>{t("fieldStatus")}: {latestRun.success ? t("statusSuccess") : t("statusFailed")}</p>
+                {insight.reportPath ? <p>{t("fieldReport")}: <code>{insight.reportPath}</code></p> : null}
+                {insight.riskLevel ? <p>{t("fieldRisk")}: {insight.riskLevel}</p> : null}
+                {insight.recommendedPath ? <p>{t("fieldPath")}: {insight.recommendedPath}</p> : null}
+                {latestRun.error ? <p>{t("fieldError")}: {latestRun.error}</p> : null}
+              </div>
+
+              {Object.entries(insight.outputFiles).length > 0 ? (
+                <section className="preview-output-files">
+                  <div className="runner-title">Output Files</div>
+                  {Object.entries(insight.outputFiles).map(([kind, path]) => (
+                    <article key={`${kind}-${path}`} className="preview-output-item">
+                      <strong>{kind}</strong>
+                      <code>{path}</code>
+                    </article>
+                  ))}
+                </section>
+              ) : null}
+
+              {previewChapters.length > 0 ? (
+                <section className="preview-chapter-list">
+                  <div className="runner-title">Chapters</div>
+                  {previewChapters.map((chapter, index) => (
+                    <article key={`${chapter.chapterNo ?? index}-${chapter.title}`} className="preview-chapter-card">
+                      <header>
+                        <strong>
+                          {chapter.chapterNo ? `第${chapter.chapterNo}章` : `章节 ${index + 1}`} · {chapter.title}
+                        </strong>
+                        {chapter.riskLevel ? (
+                          <span className={`preview-risk-badge level-${chapter.riskLevel.toLowerCase()}`}>
+                            {chapter.riskLevel}
+                          </span>
+                        ) : null}
+                      </header>
+                      {chapter.content ? <p>{chapter.content}</p> : <p className="resource-empty">该章节暂无内容。</p>}
+                      {chapter.citations.length > 0 ? (
+                        <div className="preview-citation-row">
+                          {chapter.citations.map((citation) => (
+                            <code key={citation}>{citation}</code>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </section>
+              ) : null}
+
+              {previewRegulations.length > 0 ? (
+                <section className="preview-regulation-list">
+                  <div className="runner-title">Regulation Hits</div>
+                  {previewRegulations.map((item, index) => (
+                    <article key={`${item.title}-${item.article ?? ""}-${index}`} className="preview-regulation-item">
+                      <strong>{item.title}{item.article ? ` · ${item.article}` : ""}</strong>
+                      {item.snippet ? <p>{item.snippet}</p> : null}
+                    </article>
+                  ))}
+                </section>
+              ) : null}
+            </>
           ) : (
             <p className="resource-empty">{t("previewEmpty")}</p>
           )}
