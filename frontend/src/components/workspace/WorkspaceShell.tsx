@@ -2,13 +2,6 @@ import { useMemo } from "react";
 import { useAppStore } from "../../lib/app-store";
 import type { ModuleRun, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
-import {
-  findTaskTemplate,
-  getTaskTemplateInputHint,
-  getTaskTemplateOutputHint,
-  getTaskTemplateSubtitle,
-  getTaskTemplateTitle
-} from "../../lib/task-templates";
 import { extractArtifacts, extractConsistencyIssues, extractEvidenceHits } from "../../lib/workspace";
 import { AssistantPanel } from "./AssistantPanel";
 import { ResourcePanel } from "./ResourcePanel";
@@ -20,9 +13,8 @@ type WorkspaceShellProps = {
 };
 
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const { state, dispatch } = useAppStore();
-  const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -93,21 +85,48 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   return (
     <section className={`workspace-shell workspace-style-${taskSpace.workspaceStyle}`}>
-      <header className="workspace-header">
-        <div className="workspace-header-main">
-          <div className="workspace-kicker">{t("activeTask")}</div>
-          <h2 className="workspace-header-title">{taskSpace.name}</h2>
-          {taskTemplate ? <p className="workspace-header-subtitle">{getTaskTemplateSubtitle(taskTemplate, lang)}</p> : null}
+      <header className="workspace-header workspace-header-compact">
+        <div className="workspace-header-left">
+          <div className="workspace-header-title-row">
+            <span className="workspace-kicker">{t("activeTask")}</span>
+            <strong className="workspace-inline-title">{taskSpace.name}</strong>
+          </div>
           <div className="workspace-chip-row">
             <span className="workspace-data-chip">{taskSpace.jurisdiction}</span>
             <span className="workspace-data-chip">{taskSpace.mode.toUpperCase()}</span>
             <span className="workspace-data-chip">{taskSpace.module.toUpperCase()}</span>
-            <span className="workspace-data-chip">{t("tasksStatRuns")}: {taskRuns.length}</span>
-            <span className="workspace-data-chip">{t("copilotContextIssues")}: {taskIssues.length}</span>
-            <span className="workspace-data-chip">{t("copilotContextEvidence")}: {taskEvidence.length}</span>
-            <span className="workspace-data-chip">{t("copilotContextArtifacts")}: {taskArtifacts.length}</span>
+            {state.panelState.topOpen ? (
+              <>
+                <span className="workspace-data-chip">{t("tasksStatRuns")}: {taskRuns.length}</span>
+                <span className="workspace-data-chip">{t("copilotContextIssues")}: {taskIssues.length}</span>
+                <span className="workspace-data-chip">{t("copilotContextEvidence")}: {taskEvidence.length}</span>
+                <span className="workspace-data-chip">{t("copilotContextArtifacts")}: {taskArtifacts.length}</span>
+              </>
+            ) : null}
           </div>
         </div>
+
+        <div className="workspace-header-tabs">
+          <button
+            className={`tab-btn ${state.panelState.primaryPlugin === "run" ? "active" : ""}`}
+            onClick={() => dispatch({ type: "set_panel_state", payload: { primaryPlugin: "run" } })}
+          >
+            {t("pluginRun")}
+          </button>
+          <button
+            className={`tab-btn ${state.panelState.primaryPlugin === "preview" ? "active" : ""}`}
+            onClick={() => dispatch({ type: "set_panel_state", payload: { primaryPlugin: "preview" } })}
+          >
+            {t("pluginPreview")}
+          </button>
+          <button
+            className={`tab-btn ${state.panelState.primaryPlugin === "evidence" ? "active" : ""}`}
+            onClick={() => dispatch({ type: "set_panel_state", payload: { primaryPlugin: "evidence" } })}
+          >
+            {t("pluginEvidence")}
+          </button>
+        </div>
+
         <div className="workspace-header-actions">
           <button className="pill-btn" onClick={renameTask}>{t("tasksRenameAction")}</button>
           <button
@@ -130,18 +149,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           </button>
         </div>
       </header>
-
-      {state.panelState.topOpen && taskTemplate ? (
-        <section className="workspace-brief">
-          <strong>{getTaskTemplateTitle(taskTemplate, lang)}</strong>
-          <p>{getTaskTemplateSubtitle(taskTemplate, lang)}</p>
-          <div className="workspace-brief-row">
-            <span>{getTaskTemplateInputHint(taskTemplate, lang)}</span>
-            <span>{getTaskTemplateOutputHint(taskTemplate, lang)}</span>
-            <span>{t("workspaceUpdatedAt")}: {new Date(taskSpace.updatedAt).toLocaleString()}</span>
-          </div>
-        </section>
-      ) : null}
 
       <div className={panelClass}>
         {state.panelState.leftOpen ? <ResourcePanel taskSpace={taskSpace} /> : null}
