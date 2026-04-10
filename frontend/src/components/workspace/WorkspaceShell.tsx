@@ -68,6 +68,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const readString = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+const toFileName = (value: string): string => {
+  const normalized = value.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  return chunks[chunks.length - 1] || value;
+};
 
 const readResponseChapters = (response: unknown): ResponseChapter[] => {
   if (!isRecord(response) || !Array.isArray(response.chapters)) return [];
@@ -151,7 +156,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     if (taskArtifacts.length > 0) {
       lines.push("");
       lines.push(`[artifact] total=${taskArtifacts.length}`);
-      taskArtifacts.slice(0, 8).forEach((item) => lines.push(`  - ${item.kind}: ${item.path}`));
+      taskArtifacts.slice(0, 8).forEach((item) => lines.push(`  - ${item.kind}: ${toFileName(item.path)}`));
     }
 
     return lines.join("\n");
@@ -412,7 +417,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               taskArtifacts.map((artifact) => (
                 <article key={artifact.id} className="workspace-doc-item">
                   <strong>{artifact.kind.toUpperCase()}</strong>
-                  <code>{artifact.path}</code>
+                  <span>{toFileName(artifact.path)}</span>
                 </article>
               ))
             ) : (
@@ -466,7 +471,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             {reportArtifacts.map((artifact) => (
               <article key={artifact.id} className="workspace-report-item">
                 <strong>{artifact.kind.toUpperCase()}</strong>
-                <code>{artifact.path}</code>
+                <span>{toFileName(artifact.path)}</span>
               </article>
             ))}
           </section>

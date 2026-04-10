@@ -2573,7 +2573,9 @@
 }
 
 .workspace-doc-item code,
-.workspace-report-item code {
+.workspace-report-item code,
+.workspace-doc-item span,
+.workspace-report-item span {
   white-space: break-spaces;
   overflow-wrap: anywhere;
   color: #365f89;
@@ -3211,7 +3213,7 @@
   flex-wrap: wrap;
 }
 
-.preview-citation-row code {
+.preview-citation-chip {
   border: 1px solid rgba(87, 122, 176, 0.28);
   border-radius: 999px;
   padding: 0.14rem 0.48rem;
