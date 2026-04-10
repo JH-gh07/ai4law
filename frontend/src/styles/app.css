@@ -1803,6 +1803,9 @@
   padding: 1rem clamp(14px, 2.6vw, 34px) 1.2rem;
   display: grid;
   gap: 0.85rem;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: calc(100vh - 88px);
+  overflow: hidden;
 }
 
 .workspace-shell .pane {
@@ -1937,6 +1940,9 @@
 .workspace-grid {
   display: grid;
   gap: 0.75rem;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .workspace-grid.left-open.right-open {
@@ -1966,19 +1972,26 @@
 .resource-pane,
 .assistant-pane,
 .center-pane {
-  min-height: 620px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .resource-pane {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
   gap: 0.72rem;
 }
 
 .assistant-pane {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 0.72rem;
+}
+
+.center-pane {
+  display: grid;
+  min-height: 0;
 }
 
 .assistant-copilot-pane {
@@ -1995,10 +2008,11 @@
 }
 
 .resource-scroll {
-  max-height: 220px;
+  max-height: none;
   overflow: auto;
   display: grid;
   gap: 0.5rem;
+  min-height: 0;
 }
 
 .resource-item {
@@ -2067,6 +2081,9 @@
 .stage-split {
   display: grid;
   gap: 0.72rem;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .stage-toolbar {
@@ -2096,6 +2113,8 @@
 .stage-shell {
   display: grid;
   gap: 0.72rem;
+  min-height: 0;
+  height: 100%;
 }
 
 .stage-shell.layout-split {
@@ -2113,7 +2132,10 @@
   padding: 0.72rem;
   display: grid;
   gap: 0.65rem;
+  grid-template-rows: auto minmax(0, 1fr);
   align-content: start;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .run-panel-template-hint {
@@ -2154,7 +2176,13 @@
 }
 
 .plugin-view {
-  min-height: 220px;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.plugin-view-run {
+  padding-right: 0.15rem;
 }
 
 .schema-wizard {
@@ -2523,6 +2551,35 @@
   justify-content: space-between;
 }
 
+.assistant-view-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.assistant-mode-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.62rem;
+}
+
+.assistant-mode-shell .assistant-section {
+  margin: 0;
+}
+
+.assistant-stream-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+.assistant-status-stream {
+  min-height: 0;
+  overflow: auto;
+}
+
 .assistant-online-dot {
   display: inline-flex;
   align-items: center;
@@ -2637,10 +2694,15 @@
   border-radius: 14px;
   background: rgba(247, 252, 255, 0.88);
   padding: 0.62rem;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.42rem;
 }
 
 .assistant-copilot-stream {
-  max-height: 330px;
+  max-height: none;
+  min-height: 0;
 }
 
 .assistant-copilot-msg {
@@ -2770,6 +2832,14 @@
   gap: 0.4rem;
 }
 
+.resource-scroll-stack {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.15rem;
+  display: grid;
+  gap: 0.62rem;
+}
+
 .resource-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2796,7 +2866,7 @@
 }
 
 .resource-task-switch-list {
-  max-height: 180px;
+  max-height: 170px;
 }
 
 .resource-task-switch {
@@ -2827,6 +2897,14 @@
 
 .object-tree-scroll {
   max-height: 260px;
+}
+
+.resource-runs-scroll {
+  max-height: 160px;
+}
+
+.resource-artifacts-scroll {
+  max-height: 200px;
 }
 
 .object-tree-module {

@@ -112,76 +112,78 @@ export function ResourcePanel({ taskSpace }: ResourcePanelProps) {
         </article>
       </section>
 
-      <section className="resource-section">
-        <h4>{t("objectTreeTitle")}</h4>
-        <div className="resource-scroll object-tree-scroll">
-          <article className="resource-item object-tree-root">
-            <strong>{t("treeTaskNode")}: {taskSpace.name}</strong>
-          </article>
-          {moduleNodes.map(([module, info]) => {
-            const moduleRuns = runs.filter((item) => item.module === module).slice(0, 3);
-            const moduleArtifacts = filteredArtifacts.filter((item) => item.module === module).slice(0, 3);
-            return (
-              <article key={module} className="resource-item object-tree-module">
-                <strong>{t("treeModuleNode")}: {module.toUpperCase()}</strong>
-                <span>{info.success ? t("statusSuccess") : t("statusFailed")}</span>
-                <div className="object-tree-children">
-                  {moduleRuns.map((run) => (
-                    <code key={run.id}>{t("treeRunNode")}: {run.id.slice(0, 12)}</code>
-                  ))}
-                  {moduleArtifacts.map((artifact) => (
-                    <code key={artifact.id}>{t("treeArtifactNode")}: {artifact.kind}</code>
-                  ))}
-                </div>
-              </article>
-            );
-          })}
-          {moduleNodes.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
-        </div>
-      </section>
+      <div className="resource-scroll-stack">
+        <section className="resource-section">
+          <h4>{t("objectTreeTitle")}</h4>
+          <div className="resource-scroll object-tree-scroll">
+            <article className="resource-item object-tree-root">
+              <strong>{t("treeTaskNode")}: {taskSpace.name}</strong>
+            </article>
+            {moduleNodes.map(([module, info]) => {
+              const moduleRuns = runs.filter((item) => item.module === module).slice(0, 3);
+              const moduleArtifacts = filteredArtifacts.filter((item) => item.module === module).slice(0, 3);
+              return (
+                <article key={module} className="resource-item object-tree-module">
+                  <strong>{t("treeModuleNode")}: {module.toUpperCase()}</strong>
+                  <span>{info.success ? t("statusSuccess") : t("statusFailed")}</span>
+                  <div className="object-tree-children">
+                    {moduleRuns.map((run) => (
+                      <code key={run.id}>{t("treeRunNode")}: {run.id.slice(0, 12)}</code>
+                    ))}
+                    {moduleArtifacts.map((artifact) => (
+                      <code key={artifact.id}>{t("treeArtifactNode")}: {artifact.kind}</code>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+            {moduleNodes.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
+          </div>
+        </section>
 
-      <section className="resource-section">
-        <h4>{t("tasksSavedListTitle")}</h4>
-        <div className="resource-scroll resource-task-switch-list">
-          {recentTaskSpaces.map((item) => (
-            <button
-              key={item.id}
-              className={`resource-task-switch ${item.id === taskSpace.id ? "active" : ""}`}
-              onClick={() => navigate(`/workspace/${item.id}`)}
-            >
-              <strong>{item.name}</strong>
-              <span>{item.jurisdiction} · {item.module.toUpperCase()}</span>
-            </button>
-          ))}
-          {recentTaskSpaces.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
-        </div>
-      </section>
+        <section className="resource-section">
+          <h4>{t("tasksSavedListTitle")}</h4>
+          <div className="resource-scroll resource-task-switch-list">
+            {recentTaskSpaces.map((item) => (
+              <button
+                key={item.id}
+                className={`resource-task-switch ${item.id === taskSpace.id ? "active" : ""}`}
+                onClick={() => navigate(`/workspace/${item.id}`)}
+              >
+                <strong>{item.name}</strong>
+                <span>{item.jurisdiction} · {item.module.toUpperCase()}</span>
+              </button>
+            ))}
+            {recentTaskSpaces.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
+          </div>
+        </section>
 
-      <section className="resource-section">
-        <h4>{t("recentRuns")}</h4>
-        <div className="resource-scroll">
-          {runs.slice(0, 10).map((run) => (
-            <div key={run.id} className="resource-item">
-              <strong>{run.module.toUpperCase()}</strong>
-              <span>{run.success ? t("statusSuccess").toUpperCase() : t("statusFailed").toUpperCase()}</span>
-            </div>
-          ))}
-          {runs.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
-        </div>
-      </section>
+        <section className="resource-section">
+          <h4>{t("recentRuns")}</h4>
+          <div className="resource-scroll resource-runs-scroll">
+            {runs.slice(0, 10).map((run) => (
+              <div key={run.id} className="resource-item">
+                <strong>{run.module.toUpperCase()}</strong>
+                <span>{run.success ? t("statusSuccess").toUpperCase() : t("statusFailed").toUpperCase()}</span>
+              </div>
+            ))}
+            {runs.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
+          </div>
+        </section>
 
-      <section className="resource-section">
-        <h4>{t("artifactsTitle")}</h4>
-        <div className="resource-scroll">
-          {filteredArtifacts.slice(0, 20).map((artifact) => (
-            <div key={artifact.id} className="resource-item">
-              <strong>{artifact.kind}</strong>
-              <code>{artifact.path}</code>
-            </div>
-          ))}
-          {filteredArtifacts.length === 0 ? <p className="resource-empty">{t("noArtifacts")}</p> : null}
-        </div>
-      </section>
+        <section className="resource-section">
+          <h4>{t("artifactsTitle")}</h4>
+          <div className="resource-scroll resource-artifacts-scroll">
+            {filteredArtifacts.slice(0, 20).map((artifact) => (
+              <div key={artifact.id} className="resource-item">
+                <strong>{artifact.kind}</strong>
+                <code>{artifact.path}</code>
+              </div>
+            ))}
+            {filteredArtifacts.length === 0 ? <p className="resource-empty">{t("noArtifacts")}</p> : null}
+          </div>
+        </section>
+      </div>
     </aside>
   );
 }

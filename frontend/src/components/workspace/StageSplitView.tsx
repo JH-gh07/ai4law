@@ -216,7 +216,11 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
 
   const renderPlugin = (plugin: StagePluginKey) => {
     if (plugin === "run") {
-      return <ModuleRunPanel onRunDone={onRunDone} taskSpace={taskSpace} />;
+      return (
+        <section className="plugin-view plugin-view-run">
+          <ModuleRunPanel onRunDone={onRunDone} taskSpace={taskSpace} />
+        </section>
+      );
     }
 
     if (plugin === "preview") {

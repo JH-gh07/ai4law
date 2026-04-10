@@ -30,6 +30,7 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
   const navigate = useNavigate();
   const { state } = useAppStore();
   const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
+  const [viewMode, setViewMode] = useState<"status" | "copilot">("status");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -234,94 +235,124 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
   return (
     <aside className="pane assistant-pane assistant-copilot-pane" data-guide="workspace-right">
       <div className="pane-title">{t("copilotPaneTitle")}</div>
+      <div className="assistant-view-switch">
+        <button
+          className={`tab-btn ${viewMode === "status" ? "active" : ""}`}
+          onClick={() => setViewMode("status")}
+        >
+          {t("assistantStatus")}
+        </button>
+        <button
+          className={`tab-btn ${viewMode === "copilot" ? "active" : ""}`}
+          onClick={() => setViewMode("copilot")}
+        >
+          Copilot
+        </button>
+      </div>
 
-      <section className="assistant-section assistant-status">
-        <h4>{t("assistantStatus")}</h4>
-        <span className="assistant-online-dot">{t("copilotOnline")}</span>
-      </section>
+      {viewMode === "status" ? (
+        <section className="assistant-mode-shell">
+          <section className="assistant-section assistant-status">
+            <h4>{t("assistantStatus")}</h4>
+            <span className="assistant-online-dot">{t("copilotOnline")}</span>
+          </section>
 
-      <section className="assistant-section assistant-flow-card">
-        <h4>{t("copilotContextTitle")}</h4>
-        <div className="assistant-flow-row">
-          <strong>{t("copilotContextTask")}</strong>
-          <span>{taskTemplate ? getTaskTemplateTitle(taskTemplate, lang) : taskSpace.name}</span>
-        </div>
-        <div className="assistant-flow-row">
-          <strong>{t("assistantCurrentStep")}</strong>
-          <span>{currentStep ? `${stepLabelMap[currentStep.key]} · ${statusLabelMap[currentStep.status]}` : t("workflowPending")}</span>
-        </div>
-        <div className="assistant-flow-row">
-          <strong>{t("assistantBlocker")}</strong>
-          <span>{currentStep?.reason ?? t("assistantNoBlocker")}</span>
-        </div>
-        <div className="assistant-flow-row">
-          <strong>{t("assistantNextAction")}</strong>
-          <span>{nextActionText}</span>
-        </div>
-        <div className="assistant-flow-row assistant-flow-row-compact">
-          <strong>{t("copilotContextRuns")}</strong>
-          <span>{runs.length} · {t("copilotContextIssues")}: {issues.length} · {t("copilotContextEvidence")}: {evidenceCount}</span>
-        </div>
-        <div className="assistant-flow-list">
-          {statusEvents.map((event) => (
-            <article key={event.id} className="assistant-flow-item">
-              <strong>{event.label}</strong>
-              <p>{event.detail}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+          <section className="assistant-section assistant-flow-card">
+            <h4>{t("copilotContextTitle")}</h4>
+            <div className="assistant-flow-row">
+              <strong>{t("copilotContextTask")}</strong>
+              <span>{taskTemplate ? getTaskTemplateTitle(taskTemplate, lang) : taskSpace.name}</span>
+            </div>
+            <div className="assistant-flow-row">
+              <strong>{t("assistantCurrentStep")}</strong>
+              <span>{currentStep ? `${stepLabelMap[currentStep.key]} · ${statusLabelMap[currentStep.status]}` : t("workflowPending")}</span>
+            </div>
+            <div className="assistant-flow-row">
+              <strong>{t("assistantBlocker")}</strong>
+              <span>{currentStep?.reason ?? t("assistantNoBlocker")}</span>
+            </div>
+            <div className="assistant-flow-row">
+              <strong>{t("assistantNextAction")}</strong>
+              <span>{nextActionText}</span>
+            </div>
+            <div className="assistant-flow-row assistant-flow-row-compact">
+              <strong>{t("copilotContextRuns")}</strong>
+              <span>{runs.length} · {t("copilotContextIssues")}: {issues.length} · {t("copilotContextEvidence")}: {evidenceCount}</span>
+            </div>
+          </section>
 
-      <section className="assistant-section">
-        <h4>{t("copilotServicesTitle")}</h4>
-        <div className="assistant-actions-grid assistant-copilot-actions">
-          <button className="pill-btn" onClick={() => runServiceAction("due_diligence")}>{t("copilotServiceDueDiligence")}</button>
-          <button className="pill-btn" onClick={() => runServiceAction("memo")}>{t("copilotServiceMemo")}</button>
-          <button className="pill-btn" onClick={() => runServiceAction("remediation")}>{t("copilotServiceRemediation")}</button>
-          <button className="pill-btn" onClick={() => runServiceAction("reports")}>{t("copilotServiceOpenReports")}</button>
-          <button className="pill-btn" onClick={() => runServiceAction("evidence")}>{t("copilotServiceOpenEvidence")}</button>
-        </div>
-      </section>
+          <section className="assistant-section assistant-stream-shell">
+            <h4>{t("assistantStatus")}</h4>
+            <div className="assistant-flow-list assistant-status-stream">
+              {statusEvents.map((event) => (
+                <article key={event.id} className="assistant-flow-item">
+                  <strong>{event.label}</strong>
+                  <p>{event.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
-      <section className="assistant-section assistant-copilot-suggestions">
-        <h4>{t("copilotSuggestionTitle")}</h4>
-        <div className="assistant-copilot-suggestion-list">
-          {suggestions.map((item) => (
-            <article key={item} className="assistant-copilot-suggestion-item">{item}</article>
-          ))}
-        </div>
-      </section>
+          <section className="assistant-section">
+            <h4>{t("copilotServicesTitle")}</h4>
+            <div className="assistant-actions-grid assistant-copilot-actions">
+              <button className="pill-btn" onClick={() => runServiceAction("reports")}>{t("copilotServiceOpenReports")}</button>
+              <button className="pill-btn" onClick={() => runServiceAction("evidence")}>{t("copilotServiceOpenEvidence")}</button>
+            </div>
+          </section>
+        </section>
+      ) : (
+        <section className="assistant-mode-shell">
+          <section className="assistant-section assistant-copilot-suggestions">
+            <h4>{t("copilotSuggestionTitle")}</h4>
+            <div className="assistant-copilot-suggestion-list">
+              {suggestions.map((item) => (
+                <article key={item} className="assistant-copilot-suggestion-item">{item}</article>
+              ))}
+            </div>
+          </section>
 
-      <section className="assistant-section assistant-copilot-chat">
-        <h4>{t("copilotChatTitle")}</h4>
-        <div className="assistant-stream assistant-copilot-stream">
-          {messages.map((item) => (
-            <article key={item.id} className={`assistant-msg assistant-copilot-msg ${item.role}`}>
-              <small>{new Date(item.createdAt).toLocaleString()}</small>
-              <p>{item.text}</p>
-            </article>
-          ))}
-          {messages.length === 0 ? <p className="assistant-msg">{t("copilotNoMessages")}</p> : null}
-        </div>
-      </section>
+          <section className="assistant-section">
+            <h4>{t("copilotServicesTitle")}</h4>
+            <div className="assistant-actions-grid assistant-copilot-actions">
+              <button className="pill-btn" onClick={() => runServiceAction("due_diligence")}>{t("copilotServiceDueDiligence")}</button>
+              <button className="pill-btn" onClick={() => runServiceAction("memo")}>{t("copilotServiceMemo")}</button>
+              <button className="pill-btn" onClick={() => runServiceAction("remediation")}>{t("copilotServiceRemediation")}</button>
+            </div>
+          </section>
 
-      <section className="assistant-section">
-        <div className="assistant-command assistant-copilot-command">
-          <input
-            className="resource-search"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder={t("copilotInputPlaceholder")}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                submitPrompt();
-              }
-            }}
-          />
-          <button className="pill-btn-primary" onClick={() => submitPrompt()}>{t("copilotSend")}</button>
-        </div>
-      </section>
+          <section className="assistant-section assistant-copilot-chat">
+            <h4>{t("copilotChatTitle")}</h4>
+            <div className="assistant-stream assistant-copilot-stream">
+              {messages.map((item) => (
+                <article key={item.id} className={`assistant-msg assistant-copilot-msg ${item.role}`}>
+                  <small>{new Date(item.createdAt).toLocaleString()}</small>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+              {messages.length === 0 ? <p className="assistant-msg">{t("copilotNoMessages")}</p> : null}
+            </div>
+          </section>
+
+          <section className="assistant-section">
+            <div className="assistant-command assistant-copilot-command">
+              <input
+                className="resource-search"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder={t("copilotInputPlaceholder")}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitPrompt();
+                  }
+                }}
+              />
+              <button className="pill-btn-primary" onClick={() => submitPrompt()}>{t("copilotSend")}</button>
+            </div>
+          </section>
+        </section>
+      )}
     </aside>
   );
 }
