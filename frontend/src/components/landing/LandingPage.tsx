@@ -1,4 +1,7 @@
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { OpenQuestModal } from "../modals/OpenQuestModal";
+import { useAppStore } from "../../lib/app-store";
 import { useLang } from "../../lib/language";
 
 type LandingPageProps = {
@@ -7,6 +10,16 @@ type LandingPageProps = {
 
 export function LandingPage({ onStart }: LandingPageProps) {
   const { t } = useLang();
+  const navigate = useNavigate();
+  const { state } = useAppStore();
+  const [questOpen, setQuestOpen] = useState(false);
+  const [questQuery, setQuestQuery] = useState("");
+
+  const recentTasks = useMemo(
+    () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)),
+    [state.taskSpaces]
+  );
+
   const scenes = [
     { tag: t("storyScene1Tag"), title: t("storyScene1Title"), desc: t("storyScene1Desc"), metric: "Route Gate" },
     { tag: t("storyScene2Tag"), title: t("storyScene2Title"), desc: t("storyScene2Desc"), metric: "Evidence Bind" },
@@ -25,7 +38,9 @@ export function LandingPage({ onStart }: LandingPageProps) {
 
             <div className="landing-actions reveal reveal-5" data-guide="home-start">
               <button className="pill-btn-primary" onClick={onStart}>{t("startCta")}</button>
-              <Link className="pill-btn" to="/tasks">{t("secondaryCta")}</Link>
+              <button className="pill-btn quest-open-btn" onClick={() => setQuestOpen(true)}>
+                {t("openQuestCta")}
+              </button>
             </div>
           </div>
 
@@ -98,6 +113,24 @@ export function LandingPage({ onStart }: LandingPageProps) {
           </article>
         ))}
       </section>
+
+      {questOpen ? (
+        <OpenQuestModal
+          tasks={recentTasks}
+          runs={state.moduleRuns}
+          query={questQuery}
+          onQueryChange={setQuestQuery}
+          onClose={() => {
+            setQuestOpen(false);
+            setQuestQuery("");
+          }}
+          onOpenTask={(taskId) => {
+            setQuestOpen(false);
+            setQuestQuery("");
+            navigate(`/workspace/${taskId}`);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
