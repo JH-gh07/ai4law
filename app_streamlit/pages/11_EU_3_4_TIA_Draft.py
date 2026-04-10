@@ -1,3 +1,13 @@
+import sys
+from pathlib import Path
+
+for _parent in Path(__file__).resolve().parents:
+    if (_parent / "app_streamlit").exists():
+        _root = str(_parent)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        break
+
 import time
 from pathlib import Path
 
