@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { TopNav } from "./components/common/TopNav";
 import { CreateWorkspaceModal } from "./components/modals/CreateWorkspaceModal";
@@ -16,6 +16,8 @@ import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
 import { ReportCenterPage } from "./pages/ReportCenterPage";
 import { TaskSpacesPage } from "./pages/TaskSpacesPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+
+const SuperDesign002Page = lazy(() => import("./pages/SuperDesign002Page").then((mod) => ({ default: mod.SuperDesign002Page })));
 
 function AppShell() {
   const QUICK_START_DISMISSED_KEY = "ai4law_quick_start_dismissed_v1";
@@ -91,6 +93,14 @@ function AppShell() {
           <Route path="/reports" element={<ReportCenterPage />} />
           <Route path="/evidence" element={<EvidenceCenterPage />} />
           <Route path="/docs" element={<DocsPlaceholderPage />} />
+          <Route
+            path="/superdesign/002"
+            element={
+              <Suspense fallback={<section className="page-shell">Loading SuperDesign component...</section>}>
+                <SuperDesign002Page />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
