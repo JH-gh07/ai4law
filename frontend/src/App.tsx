@@ -8,6 +8,7 @@ import { OnboardingOverlay } from "./components/onboarding/OnboardingOverlay";
 import type { Jurisdiction, LaunchMode } from "./lib/domain";
 import { AppStoreProvider, useAppStore } from "./lib/app-store";
 import { LanguageProvider } from "./lib/language";
+import { findTaskTemplate, getDefaultTaskTemplate } from "./lib/task-templates";
 import { DocsPlaceholderPage } from "./pages/DocsPlaceholderPage";
 import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
@@ -21,6 +22,7 @@ function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, dispatch } = useAppStore();
+  const isWorkspaceRoute = location.pathname.startsWith("/workspace");
 
   const [modeModalOpen, setModeModalOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<LaunchMode | null>(null);
@@ -39,9 +41,15 @@ function AppShell() {
     }
   };
 
-  const createTask = (params: { mode: LaunchMode; name: string; jurisdiction: Jurisdiction }) => {
+  const createTask = (params: {
+    mode: LaunchMode;
+    name: string;
+    jurisdiction: Jurisdiction;
+    taskTemplateId: string;
+  }) => {
     const id = `task-${Date.now()}`;
     const now = new Date().toISOString();
+    const taskTemplate = findTaskTemplate(params.taskTemplateId) ?? getDefaultTaskTemplate(params.jurisdiction);
 
     dispatch({
       type: "create_task_space",
@@ -50,6 +58,9 @@ function AppShell() {
         name: params.name,
         mode: params.mode,
         jurisdiction: params.jurisdiction,
+        taskTemplateId: taskTemplate.id,
+        module: taskTemplate.module,
+        workspaceStyle: taskTemplate.workspaceStyle,
         createdAt: now,
         updatedAt: now
       }
@@ -70,11 +81,11 @@ function AppShell() {
         onReplayGuide={() => dispatch({ type: "set_onboarding", payload: { active: true, stepIndex: 0 } })}
       />
 
-      <main className="app-main">
+      <main className={`app-main ${isWorkspaceRoute ? "workspace-main" : ""}`}>
         <Routes>
           <Route path="/" element={<HomePage onStart={startFlow} />} />
           <Route path="/jurisdictions/:code" element={<JurisdictionHubPage onStart={startFlow} />} />
-          <Route path="/tasks" element={<TaskSpacesPage onStart={startFlow} />} />
+          <Route path="/tasks" element={<TaskSpacesPage onStart={startFlow} onQuickCreate={createTask} />} />
           <Route path="/workspace" element={<WorkspacePage />} />
           <Route path="/workspace/:taskId" element={<WorkspacePage />} />
           <Route path="/reports" element={<ReportCenterPage />} />

@@ -10,9 +10,10 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
   const { lang, setLang, t } = useLang();
   const location = useLocation();
   const onHome = location.pathname === "/";
+  const onWorkspace = location.pathname.startsWith("/workspace");
 
   return (
-    <header className={`global-nav-wrap ${onHome ? "is-home" : ""}`}>
+    <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
         <div className="global-brand">
           <span className="global-brand-logo">§</span>
@@ -43,8 +44,8 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
         <div className="global-actions">
           <Link to="/docs" className="global-chip">{t("navDocs")}</Link>
           <button className="global-chip" onClick={onReplayGuide}>{t("onboardingReplay")}</button>
-          <button className="global-chip">{t("navHelp")}</button>
-          <Link to="/docs" className="global-chip">{t("navSettings")}</Link>
+          {!onWorkspace ? <button className="global-chip global-chip-optional">{t("navHelp")}</button> : null}
+          {!onWorkspace ? <Link to="/docs" className="global-chip global-chip-optional">{t("navSettings")}</Link> : null}
           <button className={`lang-btn ${lang === "zh" ? "active" : ""}`} onClick={() => setLang("zh")}>中</button>
           <button className={`lang-btn ${lang === "en" ? "active" : ""}`} onClick={() => setLang("en")}>EN</button>
           <button className="pill-btn-primary" onClick={onStart}>{t("navStart")}</button>
