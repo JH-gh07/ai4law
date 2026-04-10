@@ -26,15 +26,6 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
           <NavLink to="/" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
             {t("navHome")}
           </NavLink>
-          <NavLink to="/jurisdictions/cn" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
-            {t("navCN")}
-          </NavLink>
-          <NavLink to="/jurisdictions/eu" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
-            {t("navEU")}
-          </NavLink>
-          <NavLink to="/jurisdictions/us" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
-            {t("navUS")}
-          </NavLink>
           <NavLink to="/tasks" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
             {t("navTasks")}
           </NavLink>

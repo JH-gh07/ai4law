@@ -29,30 +29,6 @@ export function TaskSpacesPage({ onStart }: TaskSpacesPageProps) {
   const [jurisdiction, setJurisdiction] = useState<"ALL" | Jurisdiction>("ALL");
   const [savedTaskIds, setSavedTaskIds] = useState<string[]>(readSavedTaskIds);
 
-  const jurisdictionCards = [
-    {
-      code: "CN",
-      title: "中国数据出境",
-      desc: "围绕三路径要求进行路径判断、材料准备与报告交付。",
-      tags: ["路径诊断", "安全评估", "PIPIA", "文档审查"],
-      to: "/jurisdictions/cn"
-    },
-    {
-      code: "EU",
-      title: "欧盟数据跨境传输",
-      desc: "围绕 SCC / BCR 与 DPIA / TIA 提供传输工具与风险评估支持。",
-      tags: ["SCC", "BCR", "DPIA", "TIA"],
-      to: "/jurisdictions/eu"
-    },
-    {
-      code: "US",
-      title: "美国（加州）数据出境",
-      desc: "覆盖 14117 风险结论与 CPRA 治理检查双线合规场景。",
-      tags: ["14117", "CPRA", "风险矩阵", "治理检查"],
-      to: "/jurisdictions/us"
-    }
-  ] as const;
-
   const cnTasks = [
     {
       title: "合规路径诊断",
@@ -256,32 +232,8 @@ export function TaskSpacesPage({ onStart }: TaskSpacesPageProps) {
 
       <section className="tasks-section">
         <div className="tasks-section-head">
-          <h3>法域科普与入口</h3>
-          <p>先判断属于哪个法域，再进入该法域工作台选择具体任务。</p>
-        </div>
-        <div className="tasks-jurisdiction-grid">
-          {jurisdictionCards.map((card) => (
-            <article key={card.code} className="tasks-jurisdiction-card">
-              <div className="tasks-jurisdiction-head">
-                <strong>{card.title}</strong>
-                <span>{card.code}</span>
-              </div>
-              <p>{card.desc}</p>
-              <div className="tasks-tag-list">
-                {card.tags.map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-              </div>
-              <Link className="pill-btn" to={card.to}>查看详情</Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="tasks-section">
-        <div className="tasks-section-head">
           <h3>法域差异化编排</h3>
-          <p>按中国/欧盟/美国分别组织任务入口，避免统一模板硬套。</p>
+          <p>以该区块作为唯一法域分流入口，直接进入对应工作区。</p>
         </div>
         <div className="tasks-diff-grid">
           <article className="tasks-diff-panel tasks-diff-cn">
