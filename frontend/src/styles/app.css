@@ -597,6 +597,214 @@
   align-items: center;
 }
 
+.tasks-hub-hero {
+  border-radius: 24px;
+}
+
+.tasks-hub-kicker {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.24em;
+  color: #9bc0e9;
+  text-transform: uppercase;
+}
+
+.tasks-hub-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tasks-ia-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.tasks-ia-strip span {
+  border: 1px solid rgba(116, 154, 209, 0.24);
+  border-radius: 12px;
+  background: rgba(250, 253, 255, 0.88);
+  color: #2d527d;
+  padding: 0.44rem 0.6rem;
+  text-align: center;
+  font-size: 0.84rem;
+}
+
+.tasks-section {
+  border: 1px solid rgba(122, 158, 213, 0.24);
+  border-radius: 20px;
+  background: rgba(251, 254, 255, 0.9);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.72rem;
+}
+
+.tasks-section-head h3 {
+  margin: 0;
+  color: #17385d;
+  font-family: "Noto Serif SC", serif;
+  font-size: 1.26rem;
+}
+
+.tasks-section-head p {
+  margin: 0.32rem 0 0;
+  color: #45668f;
+  line-height: 1.66;
+}
+
+.tasks-jurisdiction-grid {
+  display: grid;
+  gap: 0.72rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tasks-jurisdiction-card {
+  border: 1px solid rgba(119, 158, 215, 0.24);
+  border-radius: 16px;
+  background: rgba(246, 252, 255, 0.9);
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.tasks-jurisdiction-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tasks-jurisdiction-head strong {
+  color: #14355a;
+}
+
+.tasks-jurisdiction-head span {
+  border: 1px solid rgba(85, 126, 185, 0.25);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  color: #2f557f;
+  font-size: 0.74rem;
+}
+
+.tasks-jurisdiction-card p {
+  margin: 0;
+  color: #365a83;
+  line-height: 1.58;
+}
+
+.tasks-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.34rem;
+}
+
+.tasks-tag-list span {
+  border: 1px solid rgba(94, 136, 196, 0.24);
+  border-radius: 999px;
+  padding: 0.14rem 0.5rem;
+  color: #3d5f87;
+  background: rgba(239, 247, 255, 0.84);
+  font-size: 0.75rem;
+}
+
+.tasks-service-grid {
+  display: grid;
+  gap: 0.72rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tasks-service-card {
+  border: 1px solid rgba(116, 157, 214, 0.25);
+  border-radius: 16px;
+  background: rgba(249, 253, 255, 0.92);
+  padding: 0.78rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.tasks-service-card h4 {
+  margin: 0;
+  color: #173a61;
+}
+
+.tasks-service-card p {
+  margin: 0;
+  color: #355a84;
+  line-height: 1.58;
+}
+
+.tasks-service-meta {
+  color: #2f567f;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.tasks-service-card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #355a84;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.tasks-capability-section {
+  background: linear-gradient(180deg, rgba(248, 252, 255, 0.92), rgba(242, 248, 255, 0.92));
+}
+
+.tasks-capability-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.tasks-capability-strip span {
+  border: 1px solid rgba(111, 151, 209, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2e537d;
+  font-size: 0.84rem;
+  text-align: center;
+  padding: 0.44rem 0.5rem;
+}
+
+.tasks-deliverable-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.tasks-deliverable-card {
+  border: 1px solid rgba(118, 156, 214, 0.24);
+  border-radius: 14px;
+  background: rgba(251, 254, 255, 0.9);
+  padding: 0.58rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tasks-doc-thumb {
+  height: 72px;
+  border-radius: 10px;
+  border: 1px solid rgba(116, 157, 214, 0.2);
+  background:
+    linear-gradient(180deg, rgba(242, 249, 255, 0.95), rgba(236, 246, 255, 0.95)),
+    repeating-linear-gradient(180deg, rgba(86, 127, 187, 0.09), rgba(86, 127, 187, 0.09) 1px, transparent 1px, transparent 12px);
+}
+
+.tasks-deliverable-card strong {
+  color: #1b4067;
+  font-size: 0.9rem;
+}
+
+.tasks-deliverable-card p {
+  margin: 0;
+  color: #3d628b;
+  font-size: 0.82rem;
+  line-height: 1.52;
+}
+
 .tasks-hero h2 {
   margin: 0;
   color: #e7f3ff;
@@ -1909,6 +2117,23 @@
     grid-template-columns: 1fr;
   }
 
+  .tasks-ia-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tasks-jurisdiction-grid,
+  .tasks-service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-capability-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tasks-deliverable-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .tasks-controls {
     grid-template-columns: 1fr;
   }
@@ -1974,6 +2199,12 @@
 
 @media (max-width: 768px) {
   .tasks-hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-ia-strip,
+  .tasks-capability-strip,
+  .tasks-deliverable-grid {
     grid-template-columns: 1fr;
   }
 
