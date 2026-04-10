@@ -27,6 +27,46 @@ type ModuleRunPanelProps = {
   taskSpace: TaskSpace;
 };
 
+type DiagnosisSelectValue =
+  | "yes"
+  | "no"
+  | "unknown"
+  | "contract_performance"
+  | "hr_management"
+  | "emergency"
+  | "legal_duty"
+  | "other"
+  | "intra_group"
+  | "third_party";
+
+type DiagnosisFieldType = "text" | "textarea" | "number" | "select";
+
+type DiagnosisFieldConfig = {
+  name: keyof DiagnosisFormValues;
+  label: string;
+  type: DiagnosisFieldType;
+  options?: Array<{ value: DiagnosisSelectValue; label: string }>;
+  min?: number;
+  step?: number;
+};
+
+type DiagnosisStepConfig = {
+  title: string;
+  fields: DiagnosisFieldConfig[];
+};
+
+type DiagnosisFormValues = {
+  company_name: string;
+  q5_no_personal_info: "yes" | "no" | "unknown";
+  q6_scenario: "contract_performance" | "hr_management" | "emergency" | "legal_duty" | "other";
+  q7_receiver_type: "intra_group" | "third_party";
+  q1_is_ciio: "yes" | "no" | "unknown";
+  q2_has_important_data: "yes" | "no" | "unknown";
+  q3_pii_count: number;
+  q4_spi_count: number;
+  q8_purpose: string;
+};
+
 type AssessmentFieldType = "text" | "textarea" | "number" | "checkbox";
 
 type AssessmentFieldConfig = {
@@ -99,6 +139,79 @@ type PipiaFormValues = {
 };
 
 const JURISDICTIONS = ["CN", "EU", "US"] as const;
+
+const DIAGNOSIS_STEPS: DiagnosisStepConfig[] = [
+  {
+    title: "基础识别",
+    fields: [
+      { name: "company_name", label: "企业名称", type: "text" },
+      {
+        name: "q5_no_personal_info",
+        label: "Q1 本次出境数据是否完全不含个人信息和重要数据？",
+        type: "select",
+        options: [
+          { value: "no", label: "否（含个人信息或重要数据）" },
+          { value: "yes", label: "是（纯业务/技术数据）" },
+          { value: "unknown", label: "不确定" }
+        ]
+      },
+      {
+        name: "q6_scenario",
+        label: "Q2 本次数据出境的主要业务场景",
+        type: "select",
+        options: [
+          { value: "other", label: "其他商业目的" },
+          { value: "contract_performance", label: "履行合同 / 向消费者提供服务" },
+          { value: "hr_management", label: "跨国公司内部人力资源管理" },
+          { value: "emergency", label: "紧急情况保护自然人生命、健康或财产安全" },
+          { value: "legal_duty", label: "依法履行法定职责或法定义务" }
+        ]
+      },
+      {
+        name: "q7_receiver_type",
+        label: "Q3 境外数据接收方类型",
+        type: "select",
+        options: [
+          { value: "third_party", label: "独立第三方（合作伙伴 / 服务商）" },
+          { value: "intra_group", label: "集团内部关联公司" }
+        ]
+      }
+    ]
+  },
+  {
+    title: "强制路径触发项",
+    fields: [
+      {
+        name: "q1_is_ciio",
+        label: "Q4 是否为关键信息基础设施运营者（CIIO）？",
+        type: "select",
+        options: [
+          { value: "no", label: "否" },
+          { value: "yes", label: "是" },
+          { value: "unknown", label: "不确定" }
+        ]
+      },
+      {
+        name: "q2_has_important_data",
+        label: "Q5 出境数据是否包含重要数据？",
+        type: "select",
+        options: [
+          { value: "no", label: "否" },
+          { value: "yes", label: "是" },
+          { value: "unknown", label: "不确定" }
+        ]
+      },
+      { name: "q3_pii_count", label: "Q6 近12个月累计向境外提供个人信息的人数", type: "number", min: 0, step: 1000 },
+      { name: "q4_spi_count", label: "Q7 近12个月累计向境外提供敏感个人信息的人数", type: "number", min: 0, step: 100 }
+    ]
+  },
+  {
+    title: "补充说明",
+    fields: [
+      { name: "q8_purpose", label: "Q8 出境目的简述（可选）", type: "textarea" }
+    ]
+  }
+];
 
 const ASSESSMENT_STEPS: AssessmentStepConfig[] = [
   {
@@ -228,6 +341,34 @@ const createDefaultAssessmentValues = (): AssessmentFormValues => {
   };
 };
 
+const createDefaultDiagnosisValues = (): DiagnosisFormValues => {
+  const demo = asRecord(getDefaultPayload("diagnosis"));
+  const answers = asRecord(demo.answers);
+  return {
+    company_name: toString(demo.company_name, ""),
+    q5_no_personal_info:
+      answers.q5_no_personal_info === "yes" || answers.q5_no_personal_info === "unknown"
+        ? answers.q5_no_personal_info
+        : "no",
+    q6_scenario:
+      answers.q6_scenario === "contract_performance" ||
+      answers.q6_scenario === "hr_management" ||
+      answers.q6_scenario === "emergency" ||
+      answers.q6_scenario === "legal_duty"
+        ? answers.q6_scenario
+        : "other",
+    q7_receiver_type: answers.q7_receiver_type === "intra_group" ? "intra_group" : "third_party",
+    q1_is_ciio: answers.q1_is_ciio === "yes" || answers.q1_is_ciio === "unknown" ? answers.q1_is_ciio : "no",
+    q2_has_important_data:
+      answers.q2_has_important_data === "yes" || answers.q2_has_important_data === "unknown"
+        ? answers.q2_has_important_data
+        : "no",
+    q3_pii_count: toNumber(answers.q3_pii_count, 0),
+    q4_spi_count: toNumber(answers.q4_spi_count, 0),
+    q8_purpose: toString(answers.q8_purpose, "")
+  };
+};
+
 const createDefaultPipiaValues = (): PipiaFormValues => {
   const demo = asRecord(getDefaultPayload("pipia"));
   const companyProfile = asRecord(demo.company_profile);
@@ -291,6 +432,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [responseText, setResponseText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
+  const [diagnosisValues, setDiagnosisValues] = useState<DiagnosisFormValues>(createDefaultDiagnosisValues);
   const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
   const [assessmentValues, setAssessmentValues] = useState<AssessmentFormValues>(createDefaultAssessmentValues);
   const [assessmentFiles, setAssessmentFiles] = useState<File[]>([]);
@@ -327,6 +470,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setPayloadText(JSON.stringify(getDefaultPayload(moduleKey), null, 2));
     setResponseText("");
     setError(null);
+    if (moduleKey === "diagnosis") {
+      setDiagnosisStepIndex(0);
+      setDiagnosisValues(createDefaultDiagnosisValues());
+    }
     if (moduleKey === "assessment") {
       setAssessmentStepIndex(0);
       setAssessmentValues(createDefaultAssessmentValues());
@@ -341,8 +488,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   const definition = findModule(moduleKey);
   const allowAsync = hasAsync(definition);
+  const isDiagnosisModule = moduleKey === "diagnosis";
   const isAssessmentModule = moduleKey === "assessment";
   const isPipiaModule = moduleKey === "pipia";
+
+  const updateDiagnosisValue = <K extends keyof DiagnosisFormValues>(name: K, value: DiagnosisFormValues[K]) => {
+    setDiagnosisValues((prev) => ({ ...prev, [name]: value }));
+  };
 
   const updateAssessmentValue = <K extends keyof AssessmentFormValues>(name: K, value: AssessmentFormValues[K]) => {
     setAssessmentValues((prev) => ({ ...prev, [name]: value }));
@@ -437,10 +589,26 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
+  const buildDiagnosisPayload = (): unknown => ({
+    company_name: diagnosisValues.company_name,
+    answers: {
+      q1_is_ciio: diagnosisValues.q1_is_ciio,
+      q2_has_important_data: diagnosisValues.q2_has_important_data,
+      q3_pii_count: diagnosisValues.q3_pii_count,
+      q4_spi_count: diagnosisValues.q4_spi_count,
+      q5_no_personal_info: diagnosisValues.q5_no_personal_info,
+      q6_scenario: diagnosisValues.q6_scenario,
+      q7_receiver_type: diagnosisValues.q7_receiver_type,
+      q8_purpose: diagnosisValues.q8_purpose
+    }
+  });
+
   const execute = async () => {
     let requestPayload: unknown;
     try {
-      if (isAssessmentModule) {
+      if (isDiagnosisModule) {
+        requestPayload = buildDiagnosisPayload();
+      } else if (isAssessmentModule) {
         requestPayload = await buildAssessmentPayload();
       } else if (isPipiaModule) {
         requestPayload = await buildPipiaPayload();
@@ -453,7 +621,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       onRunDone({
         module: moduleKey,
         runMode,
-        request: isAssessmentModule ? assessmentValues : isPipiaModule ? pipiaValues : payloadText,
+        request: isDiagnosisModule
+          ? diagnosisValues
+          : isAssessmentModule
+            ? assessmentValues
+            : isPipiaModule
+              ? pipiaValues
+              : payloadText,
         success: false,
         error: message
       });
@@ -485,6 +659,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   const currentAssessmentStep = ASSESSMENT_STEPS[assessmentStepIndex];
   const assessmentProgress = Math.round(((assessmentStepIndex + 1) / ASSESSMENT_STEPS.length) * 100);
+  const currentDiagnosisStep = DIAGNOSIS_STEPS[diagnosisStepIndex];
+  const diagnosisProgress = Math.round(((diagnosisStepIndex + 1) / DIAGNOSIS_STEPS.length) * 100);
   const currentPipiaStep = PIPIA_STEPS[pipiaStepIndex];
   const pipiaProgress = Math.round(((pipiaStepIndex + 1) / PIPIA_STEPS.length) * 100);
 
@@ -551,7 +727,110 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         </div>
       )}
 
-      {isAssessmentModule ? (
+      {isDiagnosisModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">Diagnosis Wizard</div>
+            <span>{diagnosisProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {DIAGNOSIS_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === diagnosisStepIndex ? "active" : ""}`}
+                onClick={() => setDiagnosisStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentDiagnosisStep.title}</div>
+          <div className="schema-field-grid">
+            {currentDiagnosisStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <input
+                      value={String(diagnosisValues[field.name])}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{field.label}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(diagnosisValues[field.name])}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(diagnosisValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updateDiagnosisValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+
+              return (
+                <label key={String(field.name)} className="field-wrap">
+                  <span>{field.label}</span>
+                  <select
+                    value={String(diagnosisValues[field.name])}
+                    onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                  >
+                    {(field.options ?? []).map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDiagnosisStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={diagnosisStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDiagnosisStepIndex((prev) => Math.min(DIAGNOSIS_STEPS.length - 1, prev + 1))}
+              disabled={diagnosisStepIndex === DIAGNOSIS_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </section>
+      ) : isAssessmentModule ? (
         <section className="schema-wizard">
           <div className="schema-wizard-head">
             <div className="runner-title">Assessment Wizard</div>
