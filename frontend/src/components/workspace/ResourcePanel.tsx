@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
@@ -9,6 +10,7 @@ type ResourcePanelProps = {
 
 export function ResourcePanel({ taskSpace }: ResourcePanelProps) {
   const { t } = useLang();
+  const navigate = useNavigate();
   const { state } = useAppStore();
   const [keyword, setKeyword] = useState("");
   const [failedOnly, setFailedOnly] = useState(false);
@@ -34,6 +36,19 @@ export function ResourcePanel({ taskSpace }: ResourcePanelProps) {
   const relatedIssues = useMemo(
     () => state.issues.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.issues, taskSpace.id]
+  );
+  const failedRunCount = useMemo(() => runs.filter((item) => !item.success).length, [runs]);
+  const highIssueCount = useMemo(
+    () => relatedIssues.filter((item) => item.severity === "high").length,
+    [relatedIssues]
+  );
+  const relatedEvidenceCount = useMemo(
+    () => state.evidenceHits.filter((item) => item.taskSpaceId === taskSpace.id).length,
+    [state.evidenceHits, taskSpace.id]
+  );
+  const recentTaskSpaces = useMemo(
+    () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)).slice(0, 8),
+    [state.taskSpaces]
   );
 
   const latestRunByModule = useMemo(() => {
@@ -78,6 +93,25 @@ export function ResourcePanel({ taskSpace }: ResourcePanelProps) {
         <button className={`tab-btn ${artifactOnly ? "active" : ""}`} onClick={() => setArtifactOnly((v) => !v)}>{t("filterArtifactOnly")}</button>
       </div>
 
+      <section className="resource-summary-grid">
+        <article className="resource-summary-item">
+          <strong>{runs.length}</strong>
+          <span>{t("tasksStatRuns")}</span>
+        </article>
+        <article className="resource-summary-item">
+          <strong>{failedRunCount}</strong>
+          <span>{t("filterFailedOnly")}</span>
+        </article>
+        <article className="resource-summary-item">
+          <strong>{highIssueCount}</strong>
+          <span>{t("filterHighOnly")}</span>
+        </article>
+        <article className="resource-summary-item">
+          <strong>{relatedEvidenceCount}</strong>
+          <span>{t("copilotContextEvidence")}</span>
+        </article>
+      </section>
+
       <section className="resource-section">
         <h4>{t("objectTreeTitle")}</h4>
         <div className="resource-scroll object-tree-scroll">
@@ -103,6 +137,23 @@ export function ResourcePanel({ taskSpace }: ResourcePanelProps) {
             );
           })}
           {moduleNodes.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
+        </div>
+      </section>
+
+      <section className="resource-section">
+        <h4>{t("tasksSavedListTitle")}</h4>
+        <div className="resource-scroll resource-task-switch-list">
+          {recentTaskSpaces.map((item) => (
+            <button
+              key={item.id}
+              className={`resource-task-switch ${item.id === taskSpace.id ? "active" : ""}`}
+              onClick={() => navigate(`/workspace/${item.id}`)}
+            >
+              <strong>{item.name}</strong>
+              <span>{item.jurisdiction} · {item.module.toUpperCase()}</span>
+            </button>
+          ))}
+          {recentTaskSpaces.length === 0 ? <p className="resource-empty">{t("noRunsYet")}</p> : null}
         </div>
       </section>
 
