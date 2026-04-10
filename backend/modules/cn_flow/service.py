@@ -91,6 +91,33 @@ class CNFlowService:
         return self._snapshot_to_status(snapshot)
 
     @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CNFlowAsyncAccepted:
+        return CNFlowAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> CNFlowAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = CNFlowResult.model_validate(snapshot.result)
+        return CNFlowAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
+
+    @staticmethod
     def _resolve_overall_level(items: list[CNFlowRiskItem]) -> str:
         levels = {item.risk_level for item in items}
         if "HIGH" in levels:
@@ -345,30 +372,3 @@ def _build_risk_matrix(payload: CNFlowRequest, level: str) -> str:
     lines = [as_row(headers), as_row(["---"] * len(headers))]
     lines.extend(as_row(row) for row in rows)
     return "\n".join(lines)
-
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CNFlowAsyncAccepted:
-        return CNFlowAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
-
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> CNFlowAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = CNFlowResult.model_validate(snapshot.result)
-        return CNFlowAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )

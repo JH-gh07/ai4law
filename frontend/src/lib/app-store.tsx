@@ -8,6 +8,7 @@ import type {
   PanelState,
   TaskSpace
 } from "./domain";
+import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
 
 const STORAGE_KEY = "ai4law_app_state_v1";
 
@@ -23,6 +24,7 @@ type AppState = {
 
 type Action =
   | { type: "create_task_space"; payload: TaskSpace }
+  | { type: "rename_task_space"; payload: { id: string; name: string; updatedAt: string } }
   | { type: "touch_task_space"; payload: { id: string; updatedAt: string } }
   | { type: "append_run"; payload: ModuleRun }
   | { type: "append_artifacts"; payload: OutputArtifact[] }
@@ -41,6 +43,8 @@ const initialState: AppState = {
   panelState: {
     leftOpen: true,
     rightOpen: true,
+    leftWidth: 260,
+    rightWidth: 300,
     topOpen: true,
     focusMode: "split",
     stageLayout: "split",
@@ -62,6 +66,61 @@ const AppStoreContext = createContext<{
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+function normalizePanelState(raw: unknown): PanelState {
+  if (!isRecord(raw)) {
+    return initialState.panelState;
+  }
+
+  const merged: PanelState = { ...initialState.panelState, ...(raw as Partial<PanelState>) };
+  return {
+    ...merged,
+    leftWidth: clamp(
+      typeof merged.leftWidth === "number" ? merged.leftWidth : initialState.panelState.leftWidth,
+      220,
+      520
+    ),
+    rightWidth: clamp(
+      typeof merged.rightWidth === "number" ? merged.rightWidth : initialState.panelState.rightWidth,
+      260,
+      560
+    )
+  };
+}
+
+function normalizeTaskSpace(raw: unknown): TaskSpace | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string") return null;
+  if (typeof raw.name !== "string") return null;
+  if (raw.mode !== "rapid" && raw.mode !== "draft" && raw.mode !== "matrix") return null;
+  if (raw.jurisdiction !== "CN" && raw.jurisdiction !== "EU" && raw.jurisdiction !== "US") return null;
+  if (typeof raw.createdAt !== "string" || typeof raw.updatedAt !== "string") return null;
+
+  const rawTemplateId = typeof raw.taskTemplateId === "string" ? raw.taskTemplateId : "";
+  const template = findTaskTemplate(rawTemplateId) ?? getDefaultTaskTemplate(raw.jurisdiction);
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    mode: raw.mode,
+    jurisdiction: raw.jurisdiction,
+    taskTemplateId: template.id,
+    module: template.module,
+    workspaceStyle: template.workspaceStyle,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt
+  };
+}
+
+const ensureTaskSpaces = (value: unknown): TaskSpace[] => {
+  if (!Array.isArray(value)) return [];
+  const normalized = value
+    .map((item) => normalizeTaskSpace(item))
+    .filter((item): item is TaskSpace => !!item);
+  return normalized;
+};
+
 function loadState(): AppState {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return initialState;
@@ -71,7 +130,8 @@ function loadState(): AppState {
     return {
       ...initialState,
       ...parsed,
-      panelState: { ...initialState.panelState, ...(isRecord(parsed.panelState) ? parsed.panelState : {}) },
+      taskSpaces: ensureTaskSpaces(parsed.taskSpaces),
+      panelState: normalizePanelState(parsed.panelState),
       onboarding: { ...initialState.onboarding, ...(isRecord(parsed.onboarding) ? parsed.onboarding : {}) }
     } as AppState;
   } catch {
@@ -87,6 +147,15 @@ function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case "create_task_space":
       return { ...state, taskSpaces: [action.payload, ...state.taskSpaces] };
+    case "rename_task_space":
+      return {
+        ...state,
+        taskSpaces: state.taskSpaces.map((task) =>
+          task.id === action.payload.id
+            ? { ...task, name: action.payload.name, updatedAt: action.payload.updatedAt }
+            : task
+        )
+      };
     case "touch_task_space":
       return {
         ...state,

@@ -1,0 +1,145 @@
+#### （1）现行法律法规的适用范围和主要规定
+
+##### 《中华人民共和国个人信息保护法.pdf》
+
+**个人信息定义：**个人信息是以电子或者其他方式记录的与已识别或者可识别的自然人有关的各种信息，不包括匿名化处理后的信息。
+
+**个人信息处理活动的基本原则与合法性基础：**根据第五条至第九条，处理个人信息必须遵循合法、正当、必要、诚信、公开、透明、质量保证及责任明确等原则。其中，第六条的“目的明确”和“最小必要”原则（即处理应具有明确合理的目的，并采取对个人权益影响最小的方式）是评估任何数据处理活动合规性的起点。第十三条则列明了七大合法性基础，其中“取得个人同意”是最常见的一种，但履行合同、法定义务、应对紧急情况等也均可作为合法依据。这些原则和基础是您产品进行合规逻辑判断和风险扫描时必须内置的底层规则。
+
+**个人信息跨境提供专章（第三章）规制：**①第三十八条规定了数据出境的四条路径：通过国家网信部门的安全评估、经专业机构进行个人信息保护认证、按照国家网信部门的标准合同与境外接收方订立合同，以及其他法定条件。②第四十条进一步明确，关键信息基础设施运营者和处理个人信息达到规定数量的处理者，必须将境内收集和产生的个人信息存储在境内，确需出境的应通过安全评估。此条款是判断企业是否必须走“安全评估”路径的关键法律标准。③第三十九条**强调了“告知”与“单独同意”的强制性**，即无论选择哪条出境路径，都必须向个人告知境外接收方的详细信息，并就此事项取得个人的专门同意。
+
+**个人信息处理者（即企业）设定了体系化的合规义务与管理要求：**第五十五条规定，在向境外提供个人信息等特定场景下，必须事前进行个人信息保护影响评估，且报告需至少保存三年。第五十一条则要求企业根据风险采取分类管理、加密、培训、制定应急预案等一系列安全措施，这可以转化为您产品“安全能力自查清单”的检查项。此外，第五十二条要求达到一定规模的企业指定个人信息保护负责人，这明确了企业内部的合规责任主体。
+
+**法律责任：**第六十六条规定，对违法处理个人信息或未履行保护义务的，监管部门可责令改正、给予警告、没收违法所得，并处最高五千万元或上一年度营业额百分之五的罚款，情节严重的还可责令停业整顿、吊销许可。对直接负责人员也可处以高额罚款和从业禁止。
+
+##### 《中华人民共和国数据安全法.pdf》
+
+**数据定义：**是指任何以电子或者其他方式对信息的记录。
+
+**数据分类分级保护制度：**第二十一条明确规定，国家根据数据在经济社会发展中的重要程度，以及一旦遭篡改、破坏、泄露或者非法获取、非法利用所造成的危害程度，对数据实行分类分级保护。其中：①关系国家安全、国民经济命脉等数据被定义为“国家核心数据”，实行更严格的管理。该条款要求各地区、各部门确定本地区、本行业的重要数据具体目录。这一规定直接对应您产品中“数据资产识别与分类”功能，企业必须借助专业工具或服务，才能准确判断自身处理的数据是否属于“重要数据”，这是后续一切合规动作（如定期风险评估、出境管理）的前提。
+
+**CIIO与重要数据：**第三十一条规定，关键信息基础设施的运营者（CIIO）在境内运营中收集和产生的重要数据出境，适用《网络安全法》的规定；而其他数据处理者的重要数据出境安全管理办法，由国家网信部门会同有关部门制定。同时，第三十六条确立了数据出境的主权原则，规定非经中国主管机关批准，任何组织或个人不得向外国司法或执法机构提供存储于中国境内的数据。
+
+**数据处理者必须履行的数据安全保护义务：**第二十七条规定，开展数据处理活动应当建立健全全流程数据安全管理制度，采取技术措施和其他必要措施保障数据安全。第三十条更进一步要求，重要数据的处理者应当按规定定期开展风险评估，并向主管部门报送报告。这些持续性、制度化的要求，正是您产品可以为企业提供自动化辅助的地方，例如通过清单化和问卷引导，帮助企业建立制度框架、生成标准化的风险评估报告草案，从而将抽象的法定义务转化为可执行、可检查、可留痕的具体动作。
+
+**法律责任：**第四十五条规定了对不履行数据安全保护义务行为的处罚，最高可处以二百万元罚款并责令停业整顿。而第四十六条则专门针对违法向境外提供重要数据的行为，设定了十万元以上一千万元以下的罚款区间。
+
+##### 《中华人民共和国网络安全法.pdf》
+
+**关键信息基础设施的特殊保护要求：**第三十三条将关键信息基础设施定义为一旦遭到破坏或数据泄露，可能严重危害国家安全、国计民生、公共利益的重要行业和领域设施。第三十九条明确规定，此类运营者在境内运营中收集和产生的个人信息和重要数据应当在境内存储；确需向境外提供的，必须按照国家网信部门制定的办法进行安全评估。
+
+**个人信息的处理活动专门规范：**第四十三条要求网络运营者收集、使用个人信息必须遵循合法、正当、必要的原则，公开规则、明示目的，并**经被收集者同意**。第四十四条进一步要求采取技术措施保障个人信息安全，并在发生泄露等风险时立即补救和报告。这些规定与《个人信息保护法》相衔接，构成了数据生命周期管理的合规基础。
+
+##### 《促进和规范数据跨境流动规定.pdf》
+
+**Q：将中国的数据传导域外有哪些法律路径？**
+
+**A：**
+
+- **①数据出境安全评估**
+- **②个人信息出境认证**
+- **③个人信息出境标准合同备案**
+
+**顺序：**理论上，如果不属于需要安全评估的情形，那么在实施个人信息出境时，既可选择个人信息保护认证途径，也可选择标准合同途径。具体如何选择并不强制，由数据出境方根据实际情况自行决定。
+
+##### 《数据出境安全评估申报指南（第三版）.docx》（2025.06.27）
+
+**Q：在我国，什么是出境？**
+
+**A：**
+
+**根据网信办于2026年1月发布《数据出境安全评估申报指南（第三版）》****https://www.szaicx.com/page142?article_id=19415**
+
+下面三种行为属于数据出境行为：
+
+- 数据处理者将在境内运营中收集和产生的数据传输至境外；
+- 数据处理者收集和产生的数据存储在境内，境外的机构、组织或者个人可以查询、调取、下载、导出；
+- 符合《个人信息保护法》第三条第二款情形，在境外处理境内自然人个人信息等其他数据处理活动。
+
+##### 《个人信息出境认证办法.pdf》（2025年10月17日）
+
+##### 《个人信息出境标准合同备案指南（第二版）.docx》（2024年3月22日）
+
+#### （2）数据跨境传输的流程/工具
+
+##### 路径一：数据出境安全评估
+
+###### **适用条件**
+
+**《数据出境安全评估办法》**所称数据出境活动主要包括：**一是数据处理者将在境内运营中收集和产生的数据传输、存储至境外。二是数据处理者收集和产生的数据存储在境内，境外的机构、组织或者个人可以访问或者调用。**
+
+2024年，《规范和促进数据跨境流动规定》明确了两种应当申报数据出境安全评估的条件：**一是关键信息基础设施运营者向境外提供个人信息或者重要数据。二是关键信息基础设施运营者以外的数据处理者向境外提供重要数据，或者自当年1月1日起累计向境外提供100万人以上个人信息（不含敏感个人信息）或者1万人以上敏感个人信息。**
+
+###### **有效期**
+
+《规范和促进数据跨境流动规定》将通过数据出境安全评估结果的有效期由《数据出境安全评估办法》中规定的2年延长至3年，自评估结果出具之日起计算。同时，增加数据处理者可以申请延长评估结果有效期的规定。有效期届满，需要继续开展数据出境活动且未发生需要重新申报数据出境安全评估情形的，数据处理者可以在有效期届满前60个工作日内通过所在地省级网信部门向国家网信部门提出延长评估结果有效期申请。经国家网信部门批准，可以延长评估结果有效期3年。
+
+###### **办理途径**
+
+登录数据出境申报系统，网址：https://sjcj.cac.gov.cn。
+
+关键信息基础设施运营者或者其他不适合通过数据出境申报系统申报数据出境安全评估的，采用线下方式通过所在地省级网信部门向国家网信部门申报数据出境安全评估。
+
+
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=Zjk0Mzk2NDM0NDZhMGQ2NjIxM2RhNjFmNTMwOTA5MjNfMHRuN0xiQmFsVXgxbnZaaFNHSko2djBsWEN2dmFTeWJfVG9rZW46SmdNc2IzZFdjb1hlOEh4RHhJWmM4RHZHblJoXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+
+
+
+
+逐步上传填写方式：
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=OThkZjA4ODBiY2VmMmI0NWQ2ZDUyZjZmMjUzZTczNzRfSVZ4SmNYblYxZ0hxTFNtNnlLNkJXM29Ld3E4ZmpvY2pfVG9rZW46SHV0NGIzcDZab1U5ajd4UmRjTmNadDlkbjNnXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=MTE2YzNjYTc3ZjZlYmE2NDk2Mjc5MGQ2YjQ3YWI2NzZfMXBGcEpjeldGZUl5ZlF1bmE0YnNRbW5YOFdyckFqaGpfVG9rZW46UzM2Z2JManRFb0FiMzh4QW1wSmNOcXBtblM4XzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=MDAzMDIzM2NiODM5Y2QzYzdmZjhlOWIzYTFhOThjNTRfcHdxcktxU01ZR0NPeU5oUGR3cXRsTnJIVDdKR1VMTWRfVG9rZW46SVY1YWJ3WlN3b3lYa0J4Z3N1dWN5b1lrbnhlXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=MjBiZTIxZTZkN2YyNjZmN2I2NWNmNjhiNDM3MDc2ZWFfVHE4alF0UHBiVnVOcldLR01rNkJiOUhON3hiWlo4R3JfVG9rZW46TlVxaGJiSlBob1JZcGF4T2hja2NlNVQ4bm9lXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=ZWNmNTYxZjZkNWUyMDBmYmM0N2IwMTMyNjQwZjIwMDRfQ204MllzZGc1Smppd2NScHNxSDgxaGNBTWVLN05iQWpfVG9rZW46WkhhbmJGd1M4b0hRY014cGRCVWNZbmpYblZlXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=MzFjYjhmOThkNDZiMjQ4NWNiNTliNTE4MTdmMzYwNWVfMWRnUjFFQUtaZW9uVWloNnJUcnBuZmRLcUdPMXZCSFhfVG9rZW46TDd0OWI2bWlSb0RFYXZ4WlMzWGNhQnZpbnBlXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=ODM1NzczNjNjZmQ2OTMzZWRiMzQ1NmJkN2E2OTY4MDVfSjF6SloyQ3ZiSVNydW5IbHpNenpadWZycjBBN0RtNUpfVG9rZW46WVZVV2JnU1Npb05QeEZ4VVNoZ2NhT0tBbnlkXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=YWFiMWZkYzE0YmNlY2NkMjc3ZjAzMTJjZGMyNzlkMzNfMnp6Z3JZTjI1VWltcUF6Q2RwVDJhVVdabUo2bkZXOFpfVG9rZW46UTFWMGJPUURmb2pCdUh4T3ZvMWMyWDVqbkhkXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+批量上传方式以下材料：
+
+统一社会信用代码证件（例图）
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=YzlhODQzNmJiOWI1ZTI2OWQ5ZTdhMzY2OTI2M2ZlMjBfQXp1U1NDbWFXN1JSckNVcGh2VlBycllZVDh3eW5DOGVfVG9rZW46RDg1c2J5Q0gyb0FueVN4ZElGVGNQYlc2bk9jXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+法定代表人身份证件、经办人身份证件（例图）
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=MmM0N2M0NGMzYWFjYjg3YWVlY2JiMjExYjM5NmY1YTJfSFJWV1N5eFZXUWRodkM2NFlvQnlNWkpqRHVycVl2b09fVG9rZW46UWR1OGJQaU5Db2FyUWF4OGlWZmNyRXBjbnFiXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+经办人授权委托书（例图）
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=OWNjNTdlYzgwOTU4YTUzNGJmYTA2YzM1NDk5YzFlYWFfOUlhc0Z3b0NWNDlCWFRxdG03bjFsNFd0ZUI2T3pQNFJfVG9rZW46Q1kydmJPMUl2b1R4TEx4VG9GeWNYUjd3bnFnXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+数据出境安全评估申报表（模板）
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=ZGJkZmVhNDJhOTc3OWEyOGYxOTdkN2RiNjNhYTNmMzlfQW9aQnhtSmdMajZyQXhJTEk5QVdIU1pwenJYaHhkemhfVG9rZW46QWw3YWJVcWV0b2F4dFF4MlR3UGM3RURybkNlXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=NjdlNGUzZTM1ZDQ5NTM2MDA3YTI5NGFiNDBhZjU4MDRfSkdXR0tOWDd6VklOakVvUG9BeXpYbDk5czFJMjlJdm1fVG9rZW46VXdJRmJ0ak5rb2I3Vkh4ZGVzOWMzTnR4bnZ0XzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+数据出境相关合同或者其他具有法律效力的文件
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=NmM3ZDUwYzMwYjk2M2E5MDQyMDQ1NDZkYzc4YTc1MzVfenBvbGtneEJPcWNVMWNxTURZYWdIajFOajJzRVpjNnJfVG9rZW46Ukw0TmJVeXJOb3RRNFJ4QkVQVGN1Sk9vbnRkXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+**数据出境风险自评估报告扫描件（这是我们可以重点参与的环节）**
+
+[Docx][/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/doc/v2/addition/数据出境风险自评估报告（模板）.docx]
+
+**预评估**
+
+组织北京、天津、上海、江苏、浙江、广东等6地省级网信办试点开展数据出境安全预评估，央地协同提升安全评估效率。【来源：《[《促进和规范数据跨境流动规定》实施一周年 数据出境安全管理工作取得积极成效](https://mp.weixin.qq.com/s/z-r9bj7ReZAzT0aP6V4TiQ)》】
+
+例如北京：正式提交申报材料前，企业可将申报材料提交至北京市数据跨境便利化服务平台进行线上预审核。平台地址：https://sjcj.bjcert.org.cn。
+
+![img](https://icnoqb1pw39k.feishu.cn/space/api/box/stream/download/asynccode/?code=NGVlOWRkYjdlNGY3ZGNkOGQ4MmQ0MmZiZjI3NGZlOTNfSERYQkxMOE44Y2JaTEZtMFRlSEt2U0NTWnNjQ3dKYUZfVG9rZW46S25Dc2JQczFYb3VraU14OVFGdWNNNklKbjVkXzE3NzU3NTg4ODM6MTc3NTc2MjQ4M19WNA)
+
+我们在这个路径中，可以做的是：助力企业起草**数据出境风险自评估报告**

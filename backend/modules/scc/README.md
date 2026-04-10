@@ -1,7 +1,7 @@
 # SCC Module
 
 ## Purpose
-Generate PIPIA report for SCC/certification route.
+Generate SCC clause-level compliance review report.
 
 ## Endpoint
 - `POST /api/v1/scc/generate`
@@ -12,6 +12,7 @@ Generate PIPIA report for SCC/certification route.
 输出：
 - `report_path`：docx 文件路径
 - `output_files.markdown`：md 文件路径
+- 文件命名：`[企业]_SCC_合规审查报告_草案_[日期].docx/.md`
 
 ## Example
 ```bash

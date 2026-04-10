@@ -22,6 +22,12 @@ type StatusEvent = {
   detail: string;
 };
 
+const toFileName = (value: string): string => {
+  const normalized = value.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  return chunks[chunks.length - 1] || value;
+};
+
 export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
   const { t, lang } = useLang();
   const { state } = useAppStore();
@@ -118,7 +124,7 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
       events.unshift({
         id: "artifact-total",
         label: `${t("timelineArtifact")} · ${artifacts.length}`,
-        detail: artifacts[0]?.path ?? t("workflowNoReason")
+        detail: artifacts[0]?.path ? toFileName(artifacts[0].path) : t("workflowNoReason")
       });
     }
 

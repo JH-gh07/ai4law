@@ -12,6 +12,7 @@ class AssessmentRequest(BaseModel):
     spi_count: int = Field(default=0, ge=0)
     transfer_purpose: str = Field(min_length=2)
     receiver_country: str = Field(min_length=2)
+    force_override_path: bool = False
     uploaded_files: list[str] = Field(default_factory=list)
 
 

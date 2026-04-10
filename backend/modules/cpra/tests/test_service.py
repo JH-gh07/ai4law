@@ -25,8 +25,8 @@ def test_cpra_generate_report() -> None:
     )
 
     result = service.generate_report(payload)
-    assert result.report_path.endswith("_cpra_panorama_report.docx")
+    assert result.report_path.endswith(".docx")
+    assert "_CPRA_合规全景报告_草案_" in result.report_path
     assert result.output_files["pdf"].endswith(".pdf")
     assert result.output_files["xlsx"].endswith(".xlsx")
     assert result.gap_items
-

@@ -56,11 +56,7 @@ class AssessmentService:
                 q8_purpose=payload.transfer_purpose,
             )
         )
-        path_warning = None
-        if diagnosis.recommended_path != "security_assessment":
-            path_warning = (
-                f"诊断推荐路径为 {diagnosis.recommended_path}：{diagnosis.rationale}"
-            )
+        path_warning = self._validate_path(payload, diagnosis.recommended_path, diagnosis.rationale)
         regulations = self.retriever.search(profile)
         chapters = self.generator.generate(profile, regulations)
         issues = self.checker.check(profile, chapters)
@@ -97,6 +93,18 @@ class AssessmentService:
         )
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:
+        diagnosis = DiagnosisService().evaluate(
+            DiagnosisAnswers(
+                q1_is_ciio=YesNoUnknown.YES if payload.is_ciio else YesNoUnknown.NO,
+                q2_has_important_data=YesNoUnknown.YES if payload.contains_important_data else YesNoUnknown.NO,
+                q3_pii_count=payload.pii_count,
+                q4_spi_count=payload.spi_count,
+                q6_scenario=TransferScenario.OTHER,
+                q7_receiver_type=ReceiverType.THIRD_PARTY,
+                q8_purpose=payload.transfer_purpose,
+            )
+        )
+        self._validate_path(payload, diagnosis.recommended_path, diagnosis.rationale)
         snapshot = self.tasks.submit(lambda: self.generate_report(payload))
         return self._snapshot_to_accepted(snapshot)
 
@@ -138,3 +146,14 @@ class AssessmentService:
             error=snapshot.error,
             result=result,
         )
+
+    @staticmethod
+    def _validate_path(payload: AssessmentRequest, recommended_path: str, rationale: str) -> str | None:
+        if recommended_path == "security_assessment":
+            return None
+        warning = f"诊断推荐路径为 {recommended_path}：{rationale}"
+        if not payload.force_override_path:
+            raise ValueError(
+                f"Path mismatch: {warning}。如需继续生成安全评估报告，请设置 force_override_path=true。"
+            )
+        return warning

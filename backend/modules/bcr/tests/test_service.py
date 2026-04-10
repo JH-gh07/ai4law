@@ -32,8 +32,9 @@ def test_bcr_generate_report() -> None:
     )
 
     result = service.generate_report(payload)
-    assert result.report_path.endswith("_bcr_review_report.docx")
-    assert result.output_files["zip"].endswith("_bcr_output_bundle.zip")
+    assert result.report_path.endswith(".docx")
+    assert "_BCR-C_合规审查报告_草案_" in result.report_path
+    assert result.output_files["zip"].endswith(".zip")
+    assert "_BCR-C_输出包_草案_" in result.output_files["zip"]
     assert result.rating in {"部分缺失", "高风险", "基本合规"}
     assert len(result.chapters) == 4
-

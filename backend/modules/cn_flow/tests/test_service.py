@@ -37,9 +37,9 @@ def test_cn_flow_generate_report() -> None:
     )
 
     result = service.generate_report(payload)
-    assert result.report_path.endswith("_cn_flow_compliance_report.docx")
+    assert result.report_path.endswith(".docx")
+    assert "_14117_风险评估结论报告_草案_" in result.report_path
     assert result.output_files["pdf"].endswith(".pdf")
     assert result.output_files["xlsx"].endswith(".xlsx")
     assert result.output_files["zip"].endswith(".zip")
     assert result.risk_items
-

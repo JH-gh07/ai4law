@@ -68,7 +68,7 @@ class BCRService:
             f"- {item.title}{item.article}：{(item.content or '')[:120]}"
             for item in regs
         ) or "（暂无检索到相关法条）"
-        chapters = self._generate_chapters(payload, rating, problems, citations)
+        chapters = self._generate_chapters(payload, rating, problems, citations, reg_snippet)
         outputs = self._render(payload, rating, problems, chapters, attachment_notes)
         return BCRResult(
             report_path=outputs["docx"],
@@ -96,6 +96,33 @@ class BCRService:
     def cancel_async(self, task_id: str) -> BCRAsyncStatus:
         snapshot = self.tasks.cancel(task_id)
         return self._snapshot_to_status(snapshot)
+
+    @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> BCRAsyncAccepted:
+        return BCRAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> BCRAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = BCRResult.model_validate(snapshot.result)
+        return BCRAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
 
     @staticmethod
     def _score_to_risk(score: BCRScore) -> str:
@@ -162,6 +189,7 @@ class BCRService:
         rating: str,
         problems: list[BCRProblem],
         citations: list[str],
+        reg_snippet: str,
     ) -> list[BCRChapter]:
         detail_lines = [
             f"{item.code} | {item.title} | 风险={item.risk_level} | 问题={item.finding} | 建议={item.recommendation}"
@@ -254,30 +282,3 @@ def _build_template_mapping(
         "low_risk_items": join_items(low),
         "remediation_roadmap": chapter_text(4) or "按风险优先级制定整改路线。",
     }
-
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> BCRAsyncAccepted:
-        return BCRAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
-
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> BCRAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = BCRResult.model_validate(snapshot.result)
-        return BCRAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )

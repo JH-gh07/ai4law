@@ -115,6 +115,33 @@ class TIAService:
         snapshot = self.tasks.cancel(task_id)
         return self._snapshot_to_status(snapshot)
 
+    @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> TIAAsyncAccepted:
+        return TIAAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> TIAAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = TIAResult.model_validate(snapshot.result)
+        return TIAAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
+
     def _extract_attachment_notes(self, payload: TIARequest) -> list[str]:
         notes: list[str] = []
         for item in payload.attachments:
@@ -176,30 +203,3 @@ def _build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> 
         "supplementary_measures": pick(4) or payload.supplementary_measures,
         "final_assessment": "\n".join(filter(None, [pick(5), pick(6), payload.final_conclusion])),
     }
-
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> TIAAsyncAccepted:
-        return TIAAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
-
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> TIAAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = TIAResult.model_validate(snapshot.result)
-        return TIAAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )

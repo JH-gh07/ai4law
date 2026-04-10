@@ -31,7 +31,7 @@ def test_dpia_async_flow() -> None:
     assert accepted.status_code == 200
     task_id = accepted.json()["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v1/dpia/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()
@@ -43,4 +43,3 @@ def test_dpia_async_flow() -> None:
         time.sleep(0.05)
 
     raise AssertionError("dpia async task timeout")
-

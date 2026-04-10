@@ -20,6 +20,7 @@ def test_assessment_async_flow() -> None:
             "spi_count": 500,
             "transfer_purpose": "support",
             "receiver_country": "Singapore",
+            "force_override_path": True,
             "uploaded_files": [],
         },
     )

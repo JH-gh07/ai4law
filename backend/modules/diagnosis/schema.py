@@ -65,4 +65,7 @@ class DiagnosisReportRequest(BaseModel):
 
 class DiagnosisReportResponse(BaseModel):
     report_path: str
+    html_report_path: str
+    pdf_report_path: str
+    output_files: dict[str, str] = Field(default_factory=dict)
     result: DiagnosisResult

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ModuleRun, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
+import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
 
 type OpenQuestModalProps = {
   tasks: TaskSpace[];
@@ -46,7 +47,8 @@ export function OpenQuestModal({
     if (!token) return sorted;
     return sorted.filter((task) => {
       const latest = latestRunByTask.get(task.id);
-      const text = `${task.name} ${task.id} ${task.mode} ${task.jurisdiction} ${latest?.module ?? ""}`.toLowerCase();
+      const template = findTaskTemplate(task.taskTemplateId);
+      const text = `${task.name} ${task.id} ${task.mode} ${task.jurisdiction} ${task.module} ${latest?.module ?? ""} ${template?.title.zh ?? ""} ${template?.title.en ?? ""}`.toLowerCase();
       return text.includes(token);
     });
   }, [latestRunByTask, query, tasks]);
@@ -91,6 +93,7 @@ export function OpenQuestModal({
             ) : (
               filtered.map((task, index) => {
                 const latest = latestRunByTask.get(task.id);
+                const template = findTaskTemplate(task.taskTemplateId);
                 return (
                   <article key={task.id} className="quest-item-card">
                     <div className="quest-item-row">
@@ -112,6 +115,8 @@ export function OpenQuestModal({
                       <span>{String(index + 1).padStart(3, "0")}</span>
                       <span>{toModeLabel(task.mode)}</span>
                       <span>{task.jurisdiction}</span>
+                      <span>{task.module.toUpperCase()}</span>
+                      {template ? <span>{getTaskTemplateTitle(template, lang)}</span> : null}
                     </div>
 
                     <button className="pill-btn" onClick={() => onOpenTask(task.id)}>

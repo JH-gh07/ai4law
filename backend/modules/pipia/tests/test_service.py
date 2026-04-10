@@ -55,9 +55,10 @@ def test_pipia_generate_report(tmp_path: Path) -> None:
 
     result = service.generate_report(payload)
 
-    assert result.report_path.endswith("_pipia_report.docx")
-    assert result.output_files["zip"].endswith("_pipia_output_bundle.zip")
+    assert result.report_path.endswith(".docx")
+    assert "_PIPIA_报告_草案_" in result.report_path
+    assert result.output_files["zip"].endswith(".zip")
+    assert "_PIPIA_输出包_草案_" in result.output_files["zip"]
     assert len(result.chapters) == 7
     assert result.route_type == "scc_filing"
     assert result.consistency_issues == []
-

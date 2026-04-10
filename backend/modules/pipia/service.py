@@ -107,7 +107,16 @@ class PIPIAService:
         )
         if alignment_issues:
             issues.extend(alignment_issues)
-        outputs = self._render(payload, chapters, attachment_notes, alignment_warning="；".join(alignment_issues) if alignment_issues else None)
+        risk_conflicts = _find_risk_conflicts(chapters, level)
+        if risk_conflicts:
+            issues.extend(risk_conflicts)
+        outputs = self._render(
+            payload,
+            chapters,
+            attachment_notes,
+            overall_risk_level=level,
+            alignment_warning="；".join(alignment_issues) if alignment_issues else None,
+        )
         return PIPIAResult(
             report_path=outputs["docx"],
             output_files=outputs,
@@ -133,6 +142,33 @@ class PIPIAService:
     def cancel_async(self, task_id: str) -> PIPIAAsyncStatus:
         snapshot = self.tasks.cancel(task_id)
         return self._snapshot_to_status(snapshot)
+
+    @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> PIPIAAsyncAccepted:
+        return PIPIAAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> PIPIAAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = PIPIAResult.model_validate(snapshot.result)
+        return PIPIAAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
 
     def _extract_attachment_notes(self, payload: PIPIARequest) -> list[str]:
         notes: list[str] = []
@@ -167,6 +203,7 @@ class PIPIAService:
         payload: PIPIARequest,
         chapters: list[PIPIAChapter],
         attachment_notes: list[str],
+        overall_risk_level: str,
         alignment_warning: str | None = None,
     ) -> dict[str, str]:
         company_name = payload.company_profile.company_name
@@ -176,7 +213,13 @@ class PIPIAService:
         md_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.md"
         docx_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.docx"
         zip_output = output_dir / f"{safe_company}_PIPIA_输出包_草案_{date_stamp}.zip"
-        mapping = _build_template_mapping(payload, chapters, date_stamp, alignment_warning=alignment_warning)
+        mapping = _build_template_mapping(
+            payload,
+            chapters,
+            date_stamp,
+            overall_risk_level=overall_risk_level,
+            alignment_warning=alignment_warning,
+        )
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
@@ -189,6 +232,7 @@ def _build_template_mapping(
     payload: PIPIARequest,
     chapters: list[PIPIAChapter],
     date_stamp: str,
+    overall_risk_level: str,
     alignment_warning: str | None = None,
 ) -> dict[str, str]:
     def pick(title: str) -> str:
@@ -198,7 +242,6 @@ def _build_template_mapping(
         return ""
 
     scope = payload.personal_info_scope
-    risk_level = "HIGH" if scope.subject_volume >= 1_000_000 or len(scope.spi_categories) > 0 else "LOW"
     citations: list[str] = []
     for chapter in chapters:
         if chapter.citations:
@@ -210,6 +253,8 @@ def _build_template_mapping(
     controls = summarize_for_slot(pick("技术与组织措施有效性评估"), max_sentences=2, max_chars=260)
     remediation = summarize_for_slot(pick("事件响应与整改计划"), max_sentences=2, max_chars=260)
     conclusion = summarize_for_slot(pick("PIPIA 结论与备案建议"), max_sentences=2, max_chars=260)
+    conclusion = _normalize_risk_label(conclusion, overall_risk_level)
+    conclusion = f"综合风险等级：{overall_risk_level}。{conclusion}".strip()
     if alignment_warning:
         conclusion = f"【输入对齐告警】{alignment_warning}\n{conclusion}".strip()
 
@@ -226,36 +271,28 @@ def _build_template_mapping(
         "spi_categories": "、".join(scope.spi_categories) or "无",
         "subject_volume": f"{scope.subject_volume:,}人",
         "risk_list": attach_citations(risk_list, citations),
-        "risk_level": risk_level,
+        "risk_level": overall_risk_level,
         "current_controls": attach_citations(controls, citations),
         "additional_controls": attach_citations(remediation, citations),
         "improvement_plan": attach_citations(remediation, citations),
         "final_conclusion": attach_citations(conclusion, citations),
     }
 
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> PIPIAAsyncAccepted:
-        return PIPIAAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
 
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> PIPIAAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = PIPIAResult.model_validate(snapshot.result)
-        return PIPIAAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )
+def _find_risk_conflicts(chapters: list[PIPIAChapter], overall_risk_level: str) -> list[str]:
+    opposite_tokens = ("LOW", "低风险") if overall_risk_level == "HIGH" else ("HIGH", "高风险")
+    conflicts: list[str] = []
+    for chapter in chapters:
+        if any(token in chapter.content for token in opposite_tokens):
+            conflicts.append(
+                f"Chapter '{chapter.title}' contains risk label inconsistent with overall risk level {overall_risk_level}."
+            )
+    return conflicts
+
+
+def _normalize_risk_label(text: str, overall_risk_level: str) -> str:
+    if overall_risk_level == "HIGH":
+        return text.replace("LOW", "HIGH").replace("低风险", "高风险")
+    if overall_risk_level == "LOW":
+        return text.replace("HIGH", "LOW").replace("高风险", "低风险")
+    return text

@@ -26,8 +26,9 @@ def test_dpia_generate_report() -> None:
 
     result = service.generate_report(payload)
 
-    assert result.report_path.endswith("_dpia_report.docx")
-    assert result.output_files["zip"].endswith("_dpia_output_bundle.zip")
+    assert result.report_path.endswith(".docx")
+    assert "_DPIA_报告_草案_" in result.report_path
+    assert result.output_files["zip"].endswith(".zip")
+    assert "_DPIA_输出包_草案_" in result.output_files["zip"]
     assert len(result.chapters) == 7
     assert result.risk_level == "MEDIUM"
-

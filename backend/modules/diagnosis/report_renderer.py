@@ -1,7 +1,9 @@
+from html import escape
 from pathlib import Path
 
+from backend.common.render.artifacts import render_pdf_report
 from backend.common.llm.client import LLMClient
-from backend.common.render.report import render_markdown_report
+from backend.common.render.report import safe_filename
 from backend.modules.diagnosis.schema import DiagnosisAnswers, DiagnosisResult
 
 
@@ -96,7 +98,7 @@ class DiagnosisReportRenderer:
             llm_client = LLMClient(get_settings())
         self.llm_client = llm_client
 
-    def render(self, company_name: str, answers: DiagnosisAnswers, result: DiagnosisResult) -> Path:
+    def render(self, company_name: str, answers: DiagnosisAnswers, result: DiagnosisResult) -> dict[str, Path]:
         path_cn = _PATH_LABEL.get(result.recommended_path, result.recommended_path)
         if self.llm_client and self.llm_client.enabled:
             ai_summary = self.llm_client.chat(
@@ -119,5 +121,45 @@ class DiagnosisReportRenderer:
             ("AI 摘要", ai_summary),
             ("机器可读附录", _format_json_appendix(answers, result)),
         ]
-        output = Path("outputs/diagnosis") / f"{company_name}_diagnosis_report.md"
-        return render_markdown_report(output, "合规路径诊断报告", sections)
+
+        safe_company = safe_filename(company_name)
+        output_dir = Path("outputs/diagnosis")
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        html_output = output_dir / f"{safe_company}_diagnosis_report.html"
+        pdf_output = output_dir / f"{safe_company}_diagnosis_report.pdf"
+
+        html_output.write_text(self._build_html_doc("合规路径诊断报告", sections), encoding="utf-8")
+        render_pdf_report(pdf_output, "合规路径诊断报告", sections)
+        return {"html": html_output, "pdf": pdf_output}
+
+    @staticmethod
+    def _build_html_doc(title: str, sections: list[tuple[str, str]]) -> str:
+        blocks: list[str] = []
+        for header, content in sections:
+            blocks.append(
+                "<section>"
+                f"<h2>{escape(header)}</h2>"
+                f"<pre>{escape(content or '')}</pre>"
+                "</section>"
+            )
+        body = "\n".join(blocks)
+        return (
+            "<!doctype html>"
+            "<html lang=\"zh-CN\">"
+            "<head>"
+            "<meta charset=\"utf-8\" />"
+            f"<title>{escape(title)}</title>"
+            "<style>"
+            "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:960px;margin:28px auto;padding:0 16px;line-height:1.6;}"
+            "h1{font-size:28px;margin:0 0 18px 0;}"
+            "h2{font-size:20px;margin:22px 0 10px 0;}"
+            "pre{white-space:pre-wrap;background:#f6f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:12px;}"
+            "</style>"
+            "</head>"
+            "<body>"
+            f"<h1>{escape(title)}</h1>"
+            f"{body}"
+            "</body>"
+            "</html>"
+        )

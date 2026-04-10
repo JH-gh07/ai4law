@@ -14,12 +14,18 @@ service = AssessmentService()
 
 @router.post("/assessment/generate", response_model=AssessmentResult)
 def generate_assessment(payload: AssessmentRequest) -> AssessmentResult:
-    return service.generate_report(payload)
+    try:
+        return service.generate_report(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/assessment/generate_async", response_model=AssessmentAsyncAccepted)
 def generate_assessment_async(payload: AssessmentRequest) -> AssessmentAsyncAccepted:
-    return service.submit_async(payload)
+    try:
+        return service.submit_async(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/assessment/tasks/{task_id}", response_model=AssessmentAsyncStatus)

@@ -117,6 +117,33 @@ class DPIAService:
         snapshot = self.tasks.cancel(task_id)
         return self._snapshot_to_status(snapshot)
 
+    @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> DPIAAsyncAccepted:
+        return DPIAAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> DPIAAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = DPIAResult.model_validate(snapshot.result)
+        return DPIAAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
+
     def _extract_attachment_notes(self, payload: DPIARequest) -> list[str]:
         notes: list[str] = []
         for item in payload.attachments:
@@ -178,30 +205,3 @@ def _build_template_mapping(payload: DPIARequest, chapters: list[DPIAChapter]) -
         "mitigation_measures": pick(5) or payload.mitigation_measures,
         "residual_risk_and_signoff": "\n".join(filter(None, [pick(6), pick(7), payload.residual_risk])),
     }
-
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> DPIAAsyncAccepted:
-        return DPIAAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
-
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> DPIAAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = DPIAResult.model_validate(snapshot.result)
-        return DPIAAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )

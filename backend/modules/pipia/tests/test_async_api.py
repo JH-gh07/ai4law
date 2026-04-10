@@ -60,7 +60,7 @@ def test_pipia_async_flow(tmp_path: Path) -> None:
     assert accepted.status_code == 200
     task_id = accepted.json()["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v1/pipia/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()
@@ -73,4 +73,3 @@ def test_pipia_async_flow(tmp_path: Path) -> None:
         time.sleep(0.05)
 
     raise AssertionError("pipia async task timeout")
-

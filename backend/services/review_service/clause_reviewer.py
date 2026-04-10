@@ -102,10 +102,10 @@ class ClauseReviewer:
                         severity=severity,
                         title=f"缺少关键信息：{missing_label}",
                         problem_type="MISSING_REQUIREMENT",
-                        risk_analysis=f"当前条款未清晰体现"{missing_label}"，可能导致该类合规义务表达不完整。",
+                        risk_analysis=f"当前条款未清晰体现“{missing_label}”，可能导致该类合规义务表达不完整。",
                         original_excerpt=text[:240],
                         citation_sources=config.get("citations", []),
-                        recommendation=f"建议补充与"{missing_label}"相关的明确约定，并结合实际业务补全责任边界与操作路径。",
+                        recommendation=f"建议补充与“{missing_label}”相关的明确约定，并结合实际业务补全责任边界与操作路径。",
                         position=clause.position,
                     )
                 )

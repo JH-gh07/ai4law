@@ -92,6 +92,33 @@ class CPRAService:
         return self._snapshot_to_status(snapshot)
 
     @staticmethod
+    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CPRAAsyncAccepted:
+        return CPRAAsyncAccepted(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+        )
+
+    @staticmethod
+    def _snapshot_to_status(snapshot: TaskSnapshot) -> CPRAAsyncStatus:
+        result = None
+        if snapshot.result is not None:
+            result = CPRAResult.model_validate(snapshot.result)
+        return CPRAAsyncStatus(
+            task_id=snapshot.task_id,
+            module=snapshot.module,
+            state=snapshot.state,
+            attempts=snapshot.attempts,
+            max_attempts=snapshot.max_attempts,
+            created_at=snapshot.created_at,
+            updated_at=snapshot.updated_at,
+            error=snapshot.error,
+            result=result,
+        )
+
+    @staticmethod
     def _resolve_overall_level(items: list[CPRAGapItem]) -> str:
         levels = {item.risk_level for item in items}
         if "HIGH" in levels:
@@ -286,30 +313,3 @@ def _build_template_mapping(
         "remediation_roadmap": pick(6) or "按优先级制定整改路线图。",
         "final_conclusion": pick(1) or f"评估日期：{date_stamp}。",
     }
-
-    @staticmethod
-    def _snapshot_to_accepted(snapshot: TaskSnapshot) -> CPRAAsyncAccepted:
-        return CPRAAsyncAccepted(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-        )
-
-    @staticmethod
-    def _snapshot_to_status(snapshot: TaskSnapshot) -> CPRAAsyncStatus:
-        result = None
-        if snapshot.result is not None:
-            result = CPRAResult.model_validate(snapshot.result)
-        return CPRAAsyncStatus(
-            task_id=snapshot.task_id,
-            module=snapshot.module,
-            state=snapshot.state,
-            attempts=snapshot.attempts,
-            max_attempts=snapshot.max_attempts,
-            created_at=snapshot.created_at,
-            updated_at=snapshot.updated_at,
-            error=snapshot.error,
-            result=result,
-        )

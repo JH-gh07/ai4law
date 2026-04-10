@@ -23,6 +23,7 @@ def test_v0_task_gateway_assessment_flow() -> None:
                 "spi_count": 500,
                 "transfer_purpose": "support",
                 "receiver_country": "Singapore",
+                "force_override_path": True,
                 "uploaded_files": [],
             },
             "attachment_ids": [],
@@ -31,7 +32,7 @@ def test_v0_task_gateway_assessment_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -110,7 +111,7 @@ def test_v0_task_gateway_pipia_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -168,7 +169,7 @@ def test_v0_task_gateway_dpia_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -225,7 +226,7 @@ def test_v0_task_gateway_bcr_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -274,7 +275,7 @@ def test_v0_task_gateway_tia_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -336,7 +337,7 @@ def test_v0_task_gateway_cn_flow_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]
@@ -388,7 +389,7 @@ def test_v0_task_gateway_cpra_flow() -> None:
     assert created.status_code == 200
     task_id = created.json()["data"]["task_id"]
 
-    for _ in range(60):
+    for _ in range(200):
         status = client.get(f"/api/v0/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()["data"]

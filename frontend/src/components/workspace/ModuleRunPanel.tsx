@@ -10,6 +10,7 @@ import {
 } from "../../lib/module-adapter";
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
+import { extractInsight } from "../../lib/workspace";
 
 export type RunOutput = {
   module: ModuleKey;
@@ -25,6 +26,14 @@ export type RunOutput = {
 type ModuleRunPanelProps = {
   onRunDone: (output: RunOutput) => void;
   taskSpace: TaskSpace;
+};
+
+type UserFacingResult = {
+  headline: string;
+  chips: string[];
+  deliverables: string[];
+  highlights: string[];
+  nextSteps: string[];
 };
 
 type DiagnosisSelectValue =
@@ -423,13 +432,128 @@ const readDefaultPipiaAttachment = (): { path: string; role: PipiaAttachmentRole
   };
 };
 
+const readStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+const RECOMMENDED_PATH_LABEL: Record<string, { zh: string; en: string }> = {
+  security_assessment: { zh: "安全评估路径", en: "Security Assessment Path" },
+  scc_or_certification: { zh: "标准合同备案/认证路径", en: "SCC Filing / Certification Path" },
+  exemption: { zh: "豁免路径", en: "Exemption Path" }
+};
+
+const ROUTE_TYPE_LABEL: Record<string, { zh: string; en: string }> = {
+  scc_filing: { zh: "标准合同备案", en: "SCC Filing" },
+  certification: { zh: "认证路径", en: "Certification Path" }
+};
+
+const toFileName = (value: string): string => {
+  const name = basenameFromPath(value);
+  return name || value;
+};
+
+const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacingResult => {
+  const copy = lang === "zh"
+    ? {
+      noHeadline: "已完成运行并生成可用结果",
+      pathPrefix: "建议路径",
+      routePrefix: "建议流程",
+      reportDone: "文档草案已生成",
+      riskPrefix: "风险等级",
+      issuePrefix: "一致性提醒",
+      chapterPrefix: "章节生成",
+      regPrefix: "法规命中",
+      filesPrefix: "交付文件",
+      defaultStep1: "先查看本页“关键结果”，确认路径和风险等级是否符合预期。",
+      defaultStep2: "再进入结果面板和报告中心进行内容复核与交付。"
+    }
+    : {
+      noHeadline: "Run completed with user-ready results",
+      pathPrefix: "Suggested Path",
+      routePrefix: "Suggested Workflow",
+      reportDone: "Draft documents generated",
+      riskPrefix: "Risk Level",
+      issuePrefix: "Consistency Alerts",
+      chapterPrefix: "Chapters",
+      regPrefix: "Regulation Hits",
+      filesPrefix: "Deliverables",
+      defaultStep1: "Review key outcomes on this panel and confirm path/risk alignment.",
+      defaultStep2: "Then continue to result panel and report center for final review."
+    };
+
+  const insight = extractInsight(response);
+  const responseRecord = asRecord(response);
+  const resultRecord = asRecord(responseRecord.result);
+
+  const recommendedPathRaw = toString(responseRecord.recommended_path) || toString(resultRecord.recommended_path);
+  const recommendedPathLabel = recommendedPathRaw
+    ? (RECOMMENDED_PATH_LABEL[recommendedPathRaw]?.[lang] ?? recommendedPathRaw)
+    : "";
+
+  const routeTypeRaw = toString(responseRecord.route_type);
+  const routeTypeLabel = routeTypeRaw ? (ROUTE_TYPE_LABEL[routeTypeRaw]?.[lang] ?? routeTypeRaw) : "";
+
+  const riskLevel = insight.riskLevel || toString(responseRecord.risk_level) || toString(resultRecord.risk_level);
+  const rationale = toString(resultRecord.rationale);
+  const legalBasis = readStringArray(resultRecord.legal_basis);
+  const actionItems = readStringArray(resultRecord.action_items);
+
+  const chapters = Array.isArray(responseRecord.chapters) ? responseRecord.chapters.filter(asRecord) : [];
+  const regulations = Array.isArray(responseRecord.regulations) ? responseRecord.regulations.filter(asRecord) : [];
+
+  const deliverableNames = Array.from(
+    new Set(
+      [insight.reportPath, ...Object.values(insight.outputFiles)]
+        .filter((item): item is string => typeof item === "string" && item.length > 0)
+        .map((item) => toFileName(item))
+    )
+  );
+
+  let headline = copy.noHeadline;
+  if (recommendedPathLabel) {
+    headline = `${copy.pathPrefix}：${recommendedPathLabel}`;
+  } else if (routeTypeLabel) {
+    headline = `${copy.routePrefix}：${routeTypeLabel}`;
+  } else if (deliverableNames.length > 0) {
+    headline = copy.reportDone;
+  }
+
+  const chips: string[] = [];
+  if (riskLevel) chips.push(`${copy.riskPrefix}：${riskLevel}`);
+  if (insight.consistencyIssues.length > 0) chips.push(`${copy.issuePrefix}：${insight.consistencyIssues.length}`);
+  if (chapters.length > 0) chips.push(`${copy.chapterPrefix}：${chapters.length}`);
+  if (regulations.length > 0) chips.push(`${copy.regPrefix}：${regulations.length}`);
+  if (deliverableNames.length > 0) chips.push(`${copy.filesPrefix}：${deliverableNames.length}`);
+
+  const highlights: string[] = [];
+  if (rationale) highlights.push(rationale);
+  if (legalBasis.length > 0) highlights.push(legalBasis.slice(0, 3).join("；"));
+  if (insight.consistencyIssues.length > 0) highlights.push(...insight.consistencyIssues.slice(0, 3));
+  if (highlights.length === 0 && regulations.length > 0) {
+    const topTitles = regulations
+      .map((item) => toString(item.title))
+      .filter((item): item is string => typeof item === "string" && item.length > 0)
+      .slice(0, 3);
+    if (topTitles.length > 0) highlights.push(topTitles.join("；"));
+  }
+
+  const nextSteps = actionItems.length > 0 ? actionItems.slice(0, 4) : [copy.defaultStep1, copy.defaultStep2];
+
+  return {
+    headline,
+    chips,
+    deliverables: deliverableNames,
+    highlights,
+    nextSteps
+  };
+};
+
 export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
   const [moduleKey, setModuleKey] = useState<ModuleKey>(taskSpace.module);
   const [runMode, setRunMode] = useState<RunMode>("sync");
   const [payloadText, setPayloadText] = useState("");
-  const [responseText, setResponseText] = useState("");
+  const [responseData, setResponseData] = useState<unknown>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
@@ -468,7 +592,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   useEffect(() => {
     setPayloadText(JSON.stringify(getDefaultPayload(moduleKey), null, 2));
-    setResponseText("");
+    setResponseData(undefined);
     setError(null);
     if (moduleKey === "diagnosis") {
       setDiagnosisStepIndex(0);
@@ -638,7 +762,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setError(null);
     try {
       const result = await runModule(definition, requestPayload, allowAsync ? runMode : "sync");
-      setResponseText(JSON.stringify(result.response, null, 2));
+      setResponseData(result.response);
       onRunDone({
         module: moduleKey,
         runMode: result.runMode,
@@ -650,6 +774,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       });
     } catch (runErr) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
+      setResponseData(undefined);
       setError(message);
       onRunDone({ module: moduleKey, runMode, request: requestPayload, success: false, error: message });
     } finally {
@@ -663,6 +788,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const diagnosisProgress = Math.round(((diagnosisStepIndex + 1) / DIAGNOSIS_STEPS.length) * 100);
   const currentPipiaStep = PIPIA_STEPS[pipiaStepIndex];
   const pipiaProgress = Math.round(((pipiaStepIndex + 1) / PIPIA_STEPS.length) * 100);
+  const userFacingResult = useMemo(
+    () => buildUserFacingResult(responseData, lang),
+    [lang, responseData]
+  );
 
   return (
     <section className="run-panel" data-guide="stage-run">
@@ -1099,7 +1228,53 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       )}
 
       <div className="runner-title mt-3">{t("responseLabel")}</div>
-      <textarea className="runner-textarea" value={responseText} readOnly placeholder={t("runResultPlaceholder")} />
+      {responseData ? (
+        <section className="runner-user-result">
+          <article className="runner-user-headline">
+            <strong>{userFacingResult.headline}</strong>
+            {userFacingResult.chips.length > 0 ? (
+              <div className="runner-user-chip-row">
+                {userFacingResult.chips.map((chip) => (
+                  <span key={chip} className="runner-user-chip">{chip}</span>
+                ))}
+              </div>
+            ) : null}
+          </article>
+
+          {userFacingResult.deliverables.length > 0 ? (
+            <article className="runner-user-block">
+              <h4>{lang === "zh" ? "已生成文件" : "Generated Files"}</h4>
+              <ul>
+                {userFacingResult.deliverables.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+
+          {userFacingResult.highlights.length > 0 ? (
+            <article className="runner-user-block">
+              <h4>{lang === "zh" ? "关键结果" : "Key Findings"}</h4>
+              <ul>
+                {userFacingResult.highlights.map((item, index) => (
+                  <li key={`${item}-${index}`}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+
+          <article className="runner-user-block">
+            <h4>{lang === "zh" ? "建议下一步" : "Recommended Next Steps"}</h4>
+            <ul>
+              {userFacingResult.nextSteps.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        </section>
+      ) : (
+        <div className="runner-empty-card">{t("runResultPlaceholder")}</div>
+      )}
 
       {error ? <div className="runner-error">{error}</div> : null}
     </section>

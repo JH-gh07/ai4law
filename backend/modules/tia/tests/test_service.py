@@ -25,8 +25,9 @@ def test_tia_generate_report() -> None:
 
     result = service.generate_report(payload)
 
-    assert result.report_path.endswith("_tia_report.docx")
-    assert result.output_files["zip"].endswith("_tia_output_bundle.zip")
+    assert result.report_path.endswith(".docx")
+    assert "_TIA_报告_草案_" in result.report_path
+    assert result.output_files["zip"].endswith(".zip")
+    assert "_TIA_输出包_草案_" in result.output_files["zip"]
     assert len(result.chapters) == 6
     assert result.transfer_tool == "scc"
-

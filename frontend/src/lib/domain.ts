@@ -15,11 +15,26 @@ export type ModuleKey =
 
 export type RunMode = "sync" | "async";
 
+export type WorkspaceStyleKey =
+  | "cn_diagnosis"
+  | "cn_assessment"
+  | "cn_pipia"
+  | "cn_document_review"
+  | "eu_scc"
+  | "eu_bcr"
+  | "eu_dpia"
+  | "eu_tia"
+  | "us_14117"
+  | "us_cpra";
+
 export type TaskSpace = {
   id: string;
   name: string;
   mode: LaunchMode;
   jurisdiction: Jurisdiction;
+  taskTemplateId: string;
+  module: ModuleKey;
+  workspaceStyle: WorkspaceStyleKey;
   createdAt: string;
   updatedAt: string;
 };
@@ -70,6 +85,8 @@ export type ConsistencyIssue = {
 export type PanelState = {
   leftOpen: boolean;
   rightOpen: boolean;
+  leftWidth: number;
+  rightWidth: number;
   topOpen: boolean;
   focusMode: "split" | "run" | "preview";
   stageLayout: "split" | "single";
