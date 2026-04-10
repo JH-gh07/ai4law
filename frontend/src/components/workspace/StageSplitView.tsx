@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useAppStore } from "../../lib/app-store";
-import type { ModuleRun, TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
+import type { ModuleRun, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
-import { deriveWorkflowSteps } from "../../lib/workflow";
 import { extractInsight } from "../../lib/workspace";
 import { ModuleRunPanel, type RunOutput } from "./ModuleRunPanel";
 
@@ -89,23 +88,6 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
     [state.moduleRuns, taskSpace.id]
   );
 
-  const workflowSteps = useMemo(
-    () => deriveWorkflowSteps(taskSpace, latestRun, state.artifacts, state.evidenceHits, state.issues),
-    [latestRun, state.artifacts, state.evidenceHits, state.issues, taskSpace]
-  );
-
-  const activeStep = useMemo(
-    () => workflowSteps.find((step) => step.status !== "done") ?? workflowSteps[workflowSteps.length - 1],
-    [workflowSteps]
-  );
-  const activeStepIndex = useMemo(
-    () => workflowSteps.findIndex((step) => step.key === activeStep?.key),
-    [activeStep?.key, workflowSteps]
-  );
-  const workflowProgress = useMemo(() => {
-    if (workflowSteps.length === 0 || activeStepIndex < 0) return 0;
-    return ((activeStepIndex + 1) / workflowSteps.length) * 100;
-  }, [activeStepIndex, workflowSteps.length]);
 
   const timeline = useMemo<TimelineEvent[]>(() => {
     const runEvents = runs.map((run) => ({
@@ -146,21 +128,6 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
     preview: t("pluginPreview"),
     evidence: t("pluginEvidence"),
     timeline: t("pluginTimeline")
-  };
-
-  const workflowLabels: Record<WorkflowStepKey, string> = {
-    input_validation: t("workflowInputValidation"),
-    execution: t("workflowExecution"),
-    evidence_binding: t("workflowEvidence"),
-    consistency_check: t("workflowConsistency"),
-    report_export: t("workflowExport")
-  };
-
-  const workflowStatusLabel: Record<WorkflowStepStatus, string> = {
-    pending: t("workflowPending"),
-    running: t("workflowRunning"),
-    blocked: t("workflowBlocked"),
-    done: t("workflowDone")
   };
 
   const setLayout = (layout: "split" | "single") => {
@@ -335,32 +302,6 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
 
   return (
     <section className="stage-split" data-guide="workspace-center">
-      <section className="workflow-strip">
-        <header className="workflow-strip-head">
-          <div>
-            <div className="pane-title">{t("workflowTitle")}</div>
-            <div className="workflow-progress-text">
-              {t("workflowProgress")} {Math.max(activeStepIndex + 1, 0)} / {workflowSteps.length}
-            </div>
-          </div>
-          <div className={`workflow-status-pill ${activeStep?.status ?? "pending"}`}>
-            {activeStep ? `${workflowLabels[activeStep.key]} · ${workflowStatusLabel[activeStep.status]}` : t("workflowPending")}
-          </div>
-        </header>
-        <div className="workflow-progress-track">
-          <span style={{ width: `${workflowProgress}%` }} />
-        </div>
-        <div className="workflow-step-grid">
-          {workflowSteps.map((step) => (
-            <article key={step.key} className={`workflow-step-card ${step.status}`}>
-              <strong>{workflowLabels[step.key]}</strong>
-              <span>{workflowStatusLabel[step.status]}</span>
-              <p>{step.reason ?? t("workflowNoReason")}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <div className="stage-toolbar">
         <div className="pane-title">{t("centerTitle")}</div>
         <div className="stage-preset-tabs">

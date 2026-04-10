@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
@@ -17,8 +16,6 @@ type ChatMessage = {
   text: string;
 };
 
-type ServiceAction = "due_diligence" | "memo" | "remediation" | "reports" | "evidence";
-
 type StatusEvent = {
   id: string;
   label: string;
@@ -27,7 +24,6 @@ type StatusEvent = {
 
 export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
   const { t, lang } = useLang();
-  const navigate = useNavigate();
   const { state } = useAppStore();
   const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
   const [viewMode, setViewMode] = useState<"status" | "copilot">("status");
@@ -85,30 +81,6 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
     blocked: t("workflowBlocked"),
     done: t("workflowDone")
   };
-
-  const suggestions = useMemo(() => {
-    const topIssues = issues
-      .filter((item) => item.severity === "high")
-      .slice(0, 2)
-      .map((item) => item.message);
-    const list: string[] = [];
-
-    if (topIssues.length > 0) {
-      list.push(`优先修复高风险问题：${topIssues.join("；")}`);
-      list.push("我可以基于高风险项生成《风险与整改建议清单》初稿。");
-    } else {
-      list.push(t("copilotNoIssues"));
-    }
-
-    if (currentStep?.key === "report_export") {
-      list.push("当前已接近交付阶段，建议先生成合规备忘录再导出正式版本。");
-    } else if (currentStep?.key === "evidence_binding") {
-      list.push("建议先补齐证据命中，再做报告定稿。");
-    } else if (currentStep?.key === "execution") {
-      list.push("建议先完成本任务模块执行，再生成通用服务文稿。");
-    }
-    return list.slice(0, 3);
-  }, [currentStep?.key, issues, t]);
 
   const nextActionText = useMemo(() => {
     if (!currentStep) return t("assistantNoBlocker");
@@ -212,26 +184,6 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
     setInput("");
   };
 
-  const runServiceAction = (action: ServiceAction) => {
-    if (action === "reports") {
-      navigate("/reports");
-      return;
-    }
-    if (action === "evidence") {
-      navigate("/evidence");
-      return;
-    }
-    if (action === "due_diligence") {
-      submitPrompt("生成尽调提纲");
-      return;
-    }
-    if (action === "memo") {
-      submitPrompt("生成合规备忘录");
-      return;
-    }
-    submitPrompt("生成风险与整改建议清单");
-  };
-
   return (
     <aside className="pane assistant-pane assistant-copilot-pane" data-guide="workspace-right">
       <div className="pane-title">{t("copilotPaneTitle")}</div>
@@ -251,7 +203,7 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
       </div>
 
       {viewMode === "status" ? (
-        <section className="assistant-mode-shell">
+        <section className="assistant-mode-shell assistant-mode-shell-status">
           <section className="assistant-section assistant-status">
             <h4>{t("assistantStatus")}</h4>
             <span className="assistant-online-dot">{t("copilotOnline")}</span>
@@ -292,35 +244,9 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
               ))}
             </div>
           </section>
-
-          <section className="assistant-section">
-            <h4>{t("copilotServicesTitle")}</h4>
-            <div className="assistant-actions-grid assistant-copilot-actions">
-              <button className="pill-btn" onClick={() => runServiceAction("reports")}>{t("copilotServiceOpenReports")}</button>
-              <button className="pill-btn" onClick={() => runServiceAction("evidence")}>{t("copilotServiceOpenEvidence")}</button>
-            </div>
-          </section>
         </section>
       ) : (
-        <section className="assistant-mode-shell">
-          <section className="assistant-section assistant-copilot-suggestions">
-            <h4>{t("copilotSuggestionTitle")}</h4>
-            <div className="assistant-copilot-suggestion-list">
-              {suggestions.map((item) => (
-                <article key={item} className="assistant-copilot-suggestion-item">{item}</article>
-              ))}
-            </div>
-          </section>
-
-          <section className="assistant-section">
-            <h4>{t("copilotServicesTitle")}</h4>
-            <div className="assistant-actions-grid assistant-copilot-actions">
-              <button className="pill-btn" onClick={() => runServiceAction("due_diligence")}>{t("copilotServiceDueDiligence")}</button>
-              <button className="pill-btn" onClick={() => runServiceAction("memo")}>{t("copilotServiceMemo")}</button>
-              <button className="pill-btn" onClick={() => runServiceAction("remediation")}>{t("copilotServiceRemediation")}</button>
-            </div>
-          </section>
-
+        <section className="assistant-mode-shell assistant-mode-shell-copilot">
           <section className="assistant-section assistant-copilot-chat">
             <h4>{t("copilotChatTitle")}</h4>
             <div className="assistant-stream assistant-copilot-stream">
