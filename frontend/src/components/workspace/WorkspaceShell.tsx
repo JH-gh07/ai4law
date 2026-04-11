@@ -3,7 +3,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -242,13 +241,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     if (matched) {
       openTab(matched.id);
       setWorkspaceQuery("");
-    }
-  };
-
-  const onWorkspaceQueryKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      openTabByQuery();
     }
   };
 
@@ -551,15 +543,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         </div>
 
         <div className="workspace-browser-actions">
-          <div className="workspace-browser-search">
-            <input
-              value={workspaceQuery}
-              onChange={(event) => setWorkspaceQuery(event.target.value)}
-              onKeyDown={onWorkspaceQueryKeyDown}
-              placeholder={t("workspaceTabSearchPlaceholder")}
-            />
-            <button className="pill-btn" onClick={openTabByQuery}>{t("workspaceTabSearchAction")}</button>
-          </div>
           <div className="workspace-header-actions">
             <button className="pill-btn" onClick={renameTask}>{t("tasksRenameAction")}</button>
             <button
