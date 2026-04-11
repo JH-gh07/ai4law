@@ -149,15 +149,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         }
       ];
 
-  const flow = isZh
-    ? ["输入企业与业务事实", "系统抽取关键字段并做规则匹配", "形成报告、矩阵与风险结论", "输出整改建议与后续动作"]
-    : [
-        "Input company and business facts",
-        "Extract key fields and match rules",
-        "Generate reports, matrix, and risk conclusions",
-        "Output remediation and next actions"
-      ];
-
   return (
     <section className="landing-blue-page">
       <div className="landing-blue-scroll">
@@ -313,31 +304,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 </ul>
               </article>
             ))}
-          </div>
-        </section>
-
-        <section id="flow" className="landing-blue-flow landing-blue-screen">
-          <div className="landing-blue-workflow-layout">
-          <header className="landing-blue-section-head landing-blue-workflow-left">
-            <div className="landing-blue-workflow-title">
-              <span>{isZh ? "WORKFLOW" : "WORKFLOW"}</span>
-              <h2>{isZh ? "把复杂工作流讲成四步" : "Explain the workflow in four steps"}</h2>
-            </div>
-            <p>
-              {isZh
-                ? "通过四步流程把复杂任务压缩成清晰路径，帮助用户快速进入执行状态。"
-                : "Compress complexity into four steps so users can act quickly."}
-            </p>
-          </header>
-          <div className="landing-blue-flow-grid landing-blue-workflow-right">
-            {flow.map((step, index) => (
-              <article key={step} className="landing-blue-workflow-step">
-                <span className="landing-blue-step-id">{String(index + 1).padStart(2, "0")}</span>
-                <p>{step}</p>
-                <em aria-hidden>›</em>
-              </article>
-            ))}
-          </div>
           </div>
         </section>
 
