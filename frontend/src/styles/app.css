@@ -1765,6 +1765,7 @@
   height: 100%;
   overflow-y: auto;
   scroll-snap-type: y mandatory;
+  scroll-padding-top: 0.65rem;
   padding: 0.72rem 0 1rem;
 }
 
@@ -1795,11 +1796,14 @@
 .landing-blue-section,
 .landing-blue-flow,
 .landing-blue-footer {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(137, 183, 238, 0.24);
   border-radius: 24px;
   background: rgba(11, 32, 57, 0.8);
   box-shadow: 0 16px 30px rgba(8, 21, 39, 0.22);
-  padding: 1rem;
+  backdrop-filter: blur(6px);
+  padding: clamp(0.9rem, 1.45vw, 1.3rem);
 }
 
 .landing-blue-hero {
@@ -1829,6 +1833,8 @@
   line-height: 1.16;
   letter-spacing: -0.015em;
   text-wrap: balance;
+  max-width: 15ch;
+  text-shadow: 0 8px 22px rgba(3, 10, 21, 0.35);
 }
 
 .landing-blue-hero-left p {
@@ -1847,6 +1853,16 @@
   flex-wrap: wrap;
 }
 
+.landing-blue-actions .pill-btn,
+.landing-blue-actions .pill-btn-primary {
+  transition: transform 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease;
+}
+
+.landing-blue-actions .pill-btn:hover,
+.landing-blue-actions .pill-btn-primary:hover {
+  transform: translateY(-1px);
+}
+
 .landing-blue-facts {
   margin-top: 1rem;
   display: grid;
@@ -1859,6 +1875,12 @@
   border-radius: 14px;
   background: rgba(10, 29, 52, 0.78);
   padding: 0.52rem 0.58rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-blue-facts article:hover {
+  border-color: rgba(181, 220, 252, 0.5);
+  transform: translateY(-1px);
 }
 
 .landing-blue-facts strong {
@@ -1891,6 +1913,12 @@
   border-radius: 14px;
   background: rgba(9, 28, 49, 0.8);
   padding: 0.52rem 0.58rem;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-blue-stats article:hover {
+  border-color: rgba(181, 220, 252, 0.5);
+  transform: translateY(-1px);
 }
 
 .landing-blue-stats span {
@@ -1915,6 +1943,7 @@
     radial-gradient(circle at 90% 0%, rgba(101, 175, 239, 0.14), transparent 34%),
     rgba(9, 27, 47, 0.86);
   padding: 0.6rem;
+  box-shadow: inset 0 0 0 1px rgba(10, 28, 48, 0.65);
 }
 
 .landing-blue-preview header span {
@@ -1943,6 +1972,12 @@
   border-radius: 12px;
   background: rgba(17, 41, 70, 0.76);
   padding: 0.44rem 0.5rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.landing-blue-preview-list article:hover {
+  border-color: rgba(184, 220, 252, 0.48);
+  background: rgba(20, 49, 82, 0.82);
 }
 
 .landing-blue-preview-list small {
@@ -2020,6 +2055,15 @@
   display: grid;
   align-content: start;
   gap: 0.28rem;
+  transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.landing-blue-pain-grid article:hover,
+.landing-blue-module-grid article:hover,
+.landing-blue-jurisdiction-grid article:hover {
+  border-color: rgba(183, 219, 252, 0.52);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(5, 16, 31, 0.3);
 }
 
 .landing-blue-icon {
@@ -2087,6 +2131,10 @@
   gap: 0.18rem;
 }
 
+.landing-blue-jurisdiction-grid li::marker {
+  color: #8eb5e3;
+}
+
 .landing-blue-jurisdiction-grid .pill-btn {
   margin-top: 0.58rem;
 }
@@ -2112,6 +2160,12 @@
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 0.5rem;
+  transition: border-color 0.22s ease, transform 0.22s ease;
+}
+
+.landing-blue-flow-grid article:hover {
+  border-color: rgba(183, 219, 252, 0.52);
+  transform: translateX(2px);
 }
 
 .landing-blue-flow-grid span {
@@ -2136,6 +2190,68 @@
 
 .landing-blue-footer-actions {
   justify-content: center;
+}
+
+.landing-blue-section::before,
+.landing-blue-flow::before,
+.landing-blue-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(175, 214, 251, 0.48), rgba(175, 214, 251, 0));
+  pointer-events: none;
+}
+
+@keyframes landingBlueFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-blue-hero-left,
+.landing-blue-hero-right,
+.landing-blue-section-head,
+.landing-blue-pain-grid,
+.landing-blue-module-grid,
+.landing-blue-jurisdiction-grid,
+.landing-blue-flow-grid,
+.landing-blue-footer-actions {
+  animation: landingBlueFadeUp 0.55s ease both;
+}
+
+.landing-blue-hero-right {
+  animation-delay: 0.08s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-blue-hero-left,
+  .landing-blue-hero-right,
+  .landing-blue-section-head,
+  .landing-blue-pain-grid,
+  .landing-blue-module-grid,
+  .landing-blue-jurisdiction-grid,
+  .landing-blue-flow-grid,
+  .landing-blue-footer-actions {
+    animation: none;
+  }
+
+  .landing-blue-actions .pill-btn:hover,
+  .landing-blue-actions .pill-btn-primary:hover,
+  .landing-blue-facts article:hover,
+  .landing-blue-stats article:hover,
+  .landing-blue-pain-grid article:hover,
+  .landing-blue-module-grid article:hover,
+  .landing-blue-jurisdiction-grid article:hover,
+  .landing-blue-flow-grid article:hover {
+    transform: none;
+  }
 }
 
 @media (max-width: 1200px) {
