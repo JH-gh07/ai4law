@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import { useLang } from "../../lib/language";
 import type { Jurisdiction, LaunchMode } from "../../lib/domain";
-import { buildSuggestedTaskName, listTaskTemplatesByJurisdiction } from "../../lib/task-templates";
 
 type LandingPageProps = {
   onStart: () => void;
@@ -21,7 +20,7 @@ type JurisdictionCard = {
   points: string[];
 };
 
-export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
+export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }: LandingPageProps) {
   const { lang, t } = useLang();
   const navigate = useNavigate();
   const { state } = useAppStore();
@@ -159,20 +158,6 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
         "Output remediation and next actions"
       ];
 
-  const createTaskByJurisdiction = (jurisdiction: Jurisdiction) => {
-    const template = listTaskTemplatesByJurisdiction(jurisdiction)[0];
-    if (!template) {
-      navigate("/tasks");
-      return;
-    }
-    onQuickCreate({
-      mode: "rapid",
-      name: buildSuggestedTaskName(template, lang),
-      jurisdiction: template.jurisdiction,
-      taskTemplateId: template.id
-    });
-  };
-
   return (
     <section className="landing-blue-page">
       <div className="landing-blue-shell">
@@ -190,15 +175,18 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
                 : "From route diagnosis and material prep to draft generation, document review, and remediation output, all in one execution flow."}
             </p>
             <div className="landing-blue-actions" data-guide="home-start">
-              <button className="pill-btn-primary" onClick={onStart}>
-                {isZh ? "立即开始诊断" : "Start Diagnosis"}
+              <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
+                {isZh ? "进入任务空间" : "Open Task Spaces"}
               </button>
-              <a className="pill-btn" href="#modules">{isZh ? "查看功能模块" : "View Modules"}</a>
               {latestTask ? (
                 <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
                   {t("homeIntroContinueAction")}
                 </button>
-              ) : null}
+              ) : (
+                <button className="pill-btn" disabled>
+                  {t("homeIntroContinueAction")}
+                </button>
+              )}
             </div>
             <div className="landing-blue-facts">
               <article>
@@ -319,9 +307,6 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
                     <li key={point}>{point}</li>
                   ))}
                 </ul>
-                <button className="pill-btn" onClick={() => createTaskByJurisdiction(card.code)}>
-                  {isZh ? "进入该法域任务" : "Open Jurisdiction Tasks"}
-                </button>
               </article>
             ))}
           </div>
@@ -360,8 +345,16 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
             </p>
           </header>
           <div className="landing-blue-actions landing-blue-footer-actions">
-            <button className="pill-btn-primary" onClick={onStart}>{isZh ? "立即开始诊断" : "Start Diagnosis"}</button>
-            <button className="pill-btn" onClick={() => navigate("/tasks")}>{isZh ? "进入任务空间" : "Open Task Spaces"}</button>
+            <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>{isZh ? "进入任务空间" : "Open Task Spaces"}</button>
+            {latestTask ? (
+              <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
+                {t("homeIntroContinueAction")}
+              </button>
+            ) : (
+              <button className="pill-btn" disabled>
+                {t("homeIntroContinueAction")}
+              </button>
+            )}
           </div>
         </section>
       </div>
