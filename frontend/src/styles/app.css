@@ -2032,6 +2032,22 @@
   max-width: 70ch;
 }
 
+.landing-blue-why-head {
+  margin-top: 0.2rem;
+}
+
+.landing-blue-why-head h2 {
+  max-width: 26ch;
+  font-size: clamp(2rem, 4.6vw, 4.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.landing-blue-why-head p {
+  max-width: 62ch;
+  font-size: clamp(1rem, 1.1vw, 1.18rem);
+}
+
 .landing-blue-split-head {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 0.9rem;
@@ -2043,6 +2059,16 @@
   display: grid;
   gap: 0.58rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-blue-why-grid {
+  margin-top: 1.45rem;
+}
+
+.landing-blue-why-card {
+  min-height: 300px;
+  border-radius: 30px;
+  padding: 1.05rem 1.02rem;
 }
 
 .landing-blue-pain-grid article,
@@ -2077,6 +2103,15 @@
   padding: 0.14rem 0.5rem;
 }
 
+.landing-blue-icon-box {
+  width: 70px;
+  height: 70px;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  border-radius: 20px;
+}
+
 .landing-blue-pain-grid h3,
 .landing-blue-module-grid h3,
 .landing-blue-jurisdiction-grid h3 {
@@ -2104,6 +2139,38 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.landing-blue-cap-head h2 {
+  max-width: 16ch;
+  font-size: clamp(2rem, 4.1vw, 4rem);
+  line-height: 1.08;
+}
+
+.landing-blue-cap-head p {
+  max-width: 40ch;
+  justify-self: end;
+}
+
+.landing-blue-cap-grid {
+  margin-top: 1.3rem;
+  gap: 0.82rem;
+}
+
+.landing-blue-cap-card {
+  min-height: 250px;
+  border-radius: 32px;
+  padding: 1.18rem 1.12rem;
+}
+
+.landing-blue-cap-card h3 {
+  font-size: clamp(1.7rem, 2.7vw, 2.1rem);
+}
+
+.landing-blue-cap-card p {
+  margin-top: 0.5rem;
+  font-size: clamp(1.04rem, 1.15vw, 1.28rem);
+  line-height: 1.7;
+}
+
 .landing-blue-module-grid article > span {
   display: inline-flex;
   border: 1px solid rgba(165, 209, 251, 0.32);
@@ -2121,6 +2188,42 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.landing-blue-jd-head h2 {
+  max-width: 13ch;
+  font-size: clamp(2rem, 4.1vw, 4rem);
+  line-height: 1.08;
+}
+
+.landing-blue-jd-head p {
+  max-width: 42ch;
+}
+
+.landing-blue-jd-grid {
+  margin-top: 1.3rem;
+  gap: 0.82rem;
+}
+
+.landing-blue-jd-card {
+  min-height: 510px;
+  border-radius: 32px;
+  padding: 1.18rem 1.12rem;
+}
+
+.landing-blue-jd-icon {
+  width: 66px;
+  height: 66px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  font-size: 1.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.landing-blue-jd-card h3 {
+  font-size: clamp(2rem, 2.7vw, 2.42rem);
+  margin: 0.1rem 0 0.1rem;
+}
+
 .landing-blue-jurisdiction-grid ul {
   margin: 0.36rem 0 0;
   padding-left: 1rem;
@@ -2131,18 +2234,62 @@
   gap: 0.18rem;
 }
 
-.landing-blue-jurisdiction-grid li::marker {
-  color: #8eb5e3;
+.landing-blue-jurisdiction-grid li {
+  list-style: none;
+  position: relative;
+  padding-left: 2.05rem;
 }
 
-.landing-blue-jurisdiction-grid .pill-btn {
-  margin-top: 0.58rem;
+.landing-blue-jurisdiction-grid li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0.06rem;
+  width: 1.22rem;
+  height: 1.22rem;
+  border-radius: 999px;
+  border: 1px solid rgba(141, 185, 236, 0.75);
+  color: #9dc0ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.73rem;
+  line-height: 1;
 }
 
 .landing-blue-flow {
   background:
     radial-gradient(circle at 100% 0%, rgba(103, 176, 240, 0.14), transparent 34%),
     rgba(10, 30, 53, 0.88);
+}
+
+.landing-blue-workflow-layout {
+  width: 100%;
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+}
+
+.landing-blue-workflow-left {
+  align-content: start;
+  gap: 0.86rem;
+}
+
+.landing-blue-workflow-title h2 {
+  max-width: 10ch;
+  font-size: clamp(2.1rem, 4.2vw, 4.6rem);
+  line-height: 1.04;
+}
+
+.landing-blue-workflow-left p {
+  font-size: clamp(1.02rem, 1.15vw, 1.2rem);
+  max-width: 28ch;
+}
+
+.landing-blue-workflow-right {
+  margin-top: 0;
+  gap: 0.78rem;
 }
 
 .landing-blue-flow-grid {
@@ -2182,6 +2329,38 @@
   line-height: 1.62;
   letter-spacing: 0.002em;
   text-wrap: pretty;
+}
+
+.landing-blue-workflow-step {
+  min-height: 132px;
+  border-radius: 38px !important;
+  grid-template-columns: auto 1fr auto !important;
+  padding: 0.88rem 1rem !important;
+}
+
+.landing-blue-workflow-step p {
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.3;
+  color: #eaf5ff;
+}
+
+.landing-blue-step-id {
+  width: 68px;
+  height: 68px;
+  border-radius: 22px !important;
+  font-size: 2rem !important;
+  font-family: "Source Serif 4", serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-blue-workflow-step em {
+  color: #8ab0de;
+  font-style: normal;
+  font-size: 2.8rem;
+  line-height: 1;
+  transform: translateY(-3px);
 }
 
 .landing-blue-footer {
@@ -2257,6 +2436,7 @@
 @media (max-width: 1200px) {
   .landing-blue-hero,
   .landing-blue-split-head,
+  .landing-blue-workflow-layout,
   .landing-blue-pain-grid,
   .landing-blue-jurisdiction-grid,
   .landing-blue-module-grid {
@@ -2266,6 +2446,11 @@
   .landing-blue-stats,
   .landing-blue-facts {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .landing-blue-cap-head p,
+  .landing-blue-jd-head p {
+    justify-self: start;
   }
 }
 
@@ -2284,6 +2469,41 @@
   .landing-blue-stats,
   .landing-blue-facts {
     grid-template-columns: 1fr;
+  }
+
+  .landing-blue-why-head h2,
+  .landing-blue-cap-head h2,
+  .landing-blue-jd-head h2,
+  .landing-blue-workflow-title h2 {
+    font-size: clamp(1.85rem, 8vw, 2.65rem);
+  }
+
+  .landing-blue-why-card,
+  .landing-blue-cap-card,
+  .landing-blue-jd-card,
+  .landing-blue-workflow-step {
+    min-height: auto;
+  }
+
+  .landing-blue-workflow-step {
+    border-radius: 22px !important;
+    grid-template-columns: auto 1fr !important;
+    padding: 0.7rem 0.74rem !important;
+  }
+
+  .landing-blue-workflow-step em {
+    display: none;
+  }
+
+  .landing-blue-step-id {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px !important;
+    font-size: 1.32rem !important;
+  }
+
+  .landing-blue-workflow-step p {
+    font-size: clamp(1.02rem, 4.6vw, 1.35rem);
   }
 }
 

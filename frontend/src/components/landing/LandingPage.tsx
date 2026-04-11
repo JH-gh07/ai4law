@@ -246,8 +246,8 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="overview" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-center-head">
-            <span>{isZh ? "WHY THIS PRODUCT" : "WHY THIS PRODUCT"}</span>
+          <header className="landing-blue-section-head landing-blue-center-head landing-blue-why-head">
+            <span>{isZh ? "WHY AI4LAW" : "WHY AI4LAW"}</span>
             <h2>{isZh ? "不是缺少信息，而是缺少一条清楚的合规主线" : "Not a lack of information, but a missing compliance storyline"}</h2>
             <p>
               {isZh
@@ -255,10 +255,10 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 : "The landing page should follow user cognition: problem first, then method, then action."}
             </p>
           </header>
-          <div className="landing-blue-pain-grid">
+          <div className="landing-blue-pain-grid landing-blue-why-grid">
             {painPoints.map((item) => (
-              <article key={item.title}>
-                <div className="landing-blue-icon">{item.badge}</div>
+              <article key={item.title} className="landing-blue-why-card">
+                <div className="landing-blue-icon landing-blue-icon-box">{item.badge}</div>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>
               </article>
@@ -267,7 +267,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="modules" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-split-head">
+          <header className="landing-blue-section-head landing-blue-split-head landing-blue-cap-head">
             <div>
               <span>{isZh ? "HOW IT WORKS" : "HOW IT WORKS"}</span>
               <h2>{isZh ? "一个层层下滑、逻辑递进的首页结构" : "A layered narrative homepage structure"}</h2>
@@ -278,9 +278,9 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 : "This keeps narrative continuity from your reference while adapting to AI4Law's legal tone."}
             </p>
           </header>
-          <div className="landing-blue-module-grid">
+          <div className="landing-blue-module-grid landing-blue-cap-grid">
             {modules.map((item) => (
-              <article key={item.title}>
+              <article key={item.title} className="landing-blue-cap-card">
                 <span>{item.tag}</span>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>
@@ -290,7 +290,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="jurisdictions" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-split-head">
+          <header className="landing-blue-section-head landing-blue-split-head landing-blue-jd-head">
             <div>
               <span>{isZh ? "JURISDICTIONS" : "JURISDICTIONS"}</span>
               <h2>{isZh ? "不同法域，不同规则，同一套交互入口" : "Different regimes, one interaction framework"}</h2>
@@ -301,9 +301,10 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 : "This is not generic legal AI. It explicitly covers CN/EU/US transfer scenarios."}
             </p>
           </header>
-          <div className="landing-blue-jurisdiction-grid">
+          <div className="landing-blue-jurisdiction-grid landing-blue-jd-grid">
             {jurisdictionCards.map((card) => (
-              <article key={card.code}>
+              <article key={card.code} className="landing-blue-jd-card">
+                <div className="landing-blue-icon landing-blue-jd-icon">◎</div>
                 <h3>{card.name}</h3>
                 <ul>
                   {card.points.map((point) => (
@@ -316,8 +317,9 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="flow" className="landing-blue-flow landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-split-head">
-            <div>
+          <div className="landing-blue-workflow-layout">
+          <header className="landing-blue-section-head landing-blue-workflow-left">
+            <div className="landing-blue-workflow-title">
               <span>{isZh ? "WORKFLOW" : "WORKFLOW"}</span>
               <h2>{isZh ? "把复杂工作流讲成四步" : "Explain the workflow in four steps"}</h2>
             </div>
@@ -327,13 +329,15 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 : "Compress complexity into four steps so users can act quickly."}
             </p>
           </header>
-          <div className="landing-blue-flow-grid">
+          <div className="landing-blue-flow-grid landing-blue-workflow-right">
             {flow.map((step, index) => (
-              <article key={step}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
+              <article key={step} className="landing-blue-workflow-step">
+                <span className="landing-blue-step-id">{String(index + 1).padStart(2, "0")}</span>
                 <p>{step}</p>
+                <em aria-hidden>›</em>
               </article>
             ))}
+          </div>
           </div>
         </section>
 
