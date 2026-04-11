@@ -2131,13 +2131,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.34rem;
-  color: #dceafe;
+  color: #2f557f;
   font-size: 0.82rem;
 }
 
 .workspace-browser-app {
   font-weight: 700;
-  color: #f2f8ff;
+  color: #1b406a;
 }
 
 .workspace-browser-task {
@@ -2152,11 +2152,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #c8dcf5;
+  color: #446b95;
 }
 
 .workspace-browser-sep {
-  color: rgba(195, 219, 244, 0.66);
+  color: rgba(75, 112, 152, 0.72);
 }
 
 .workspace-browser-tabs {
@@ -2180,9 +2180,9 @@
 .workspace-browser-tab-add {
   flex: 0 0 auto;
   border-radius: 12px;
-  border: 1px solid rgba(130, 170, 218, 0.34);
-  background: rgba(14, 43, 76, 0.48);
-  color: #d7e8fb;
+  border: 1px solid rgba(128, 168, 214, 0.46);
+  background: rgba(255, 255, 255, 0.74);
+  color: #284f7a;
   padding: 0.33rem 0.6rem;
   font-size: 0.78rem;
   line-height: 1;
@@ -2199,9 +2199,9 @@
 }
 
 .workspace-browser-tab.active {
-  background: rgba(226, 242, 255, 0.2);
-  border-color: rgba(160, 200, 241, 0.76);
-  color: #ffffff;
+  background: rgba(225, 239, 255, 0.84);
+  border-color: rgba(103, 155, 213, 0.74);
+  color: #163d69;
 }
 
 .workspace-browser-tab-close {
@@ -2211,17 +2211,17 @@
   width: 1rem;
   height: 1rem;
   border-radius: 999px;
-  color: #c4dbf6;
+  color: #4a6f99;
 }
 
 .workspace-browser-tab-close:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  background: rgba(160, 192, 226, 0.26);
+  color: #173f68;
 }
 
 .workspace-browser-tab-add {
-  background: rgba(8, 31, 57, 0.35);
-  color: #bdd4ee;
+  background: rgba(246, 252, 255, 0.9);
+  color: #35608e;
 }
 
 .workspace-browser-actions {
@@ -2236,21 +2236,21 @@
   gap: 0.25rem;
   padding: 0.16rem;
   border-radius: 12px;
-  border: 1px solid rgba(128, 167, 214, 0.34);
-  background: rgba(8, 34, 62, 0.45);
+  border: 1px solid rgba(128, 167, 214, 0.42);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .workspace-browser-search input {
   width: clamp(170px, 18vw, 260px);
   border: none;
   background: transparent;
-  color: #eaf4ff;
+  color: #173d67;
   font-size: 0.76rem;
   outline: none;
 }
 
 .workspace-browser-search input::placeholder {
-  color: rgba(189, 213, 238, 0.64);
+  color: rgba(91, 126, 166, 0.72);
 }
 
 .workspace-header-metrics {
@@ -2754,6 +2754,52 @@
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
+}
+
+.workspace-task-blueprint {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.workspace-task-blueprint-card {
+  border: 1px solid rgba(106, 141, 191, 0.23);
+  border-radius: 12px;
+  background: rgba(248, 252, 255, 0.92);
+  padding: 0.56rem 0.62rem;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.workspace-task-blueprint-card strong {
+  color: #244a74;
+  font-size: 0.82rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.workspace-task-blueprint-card p {
+  margin: 0;
+  color: #365d86;
+  font-size: 0.84rem;
+  line-height: 1.46;
+}
+
+.workspace-task-blueprint-card ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #365d86;
+  font-size: 0.84rem;
+  line-height: 1.46;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.workspace-task-blueprint-subtitle {
+  color: #55799f;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .stage-toolbar {
@@ -4189,7 +4235,7 @@
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 860px) {
   .app-main.workspace-main {
     height: auto;
     overflow: auto;
@@ -4355,6 +4401,10 @@
   }
 
   .stage-shell.layout-split {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-task-blueprint {
     grid-template-columns: 1fr;
   }
 
