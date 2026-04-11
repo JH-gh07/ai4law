@@ -107,6 +107,8 @@ export const MESSAGES = {
   tasksSavedEmpty: { zh: "暂无保存项目。可在右侧卡片点击“保存项目”。", en: "No saved projects yet. Click “Save Project” on the right cards." },
   tasksSaveProject: { zh: "保存项目", en: "Save Project" },
   tasksSavedProject: { zh: "已保存", en: "Saved" },
+  tasksDeleteAction: { zh: "删除项目", en: "Delete Project" },
+  tasksDeleteConfirm: { zh: "确认删除该项目及其运行记录？此操作不可恢复。", en: "Delete this project and all run records? This action cannot be undone." },
   tasksRenameAction: { zh: "重命名", en: "Rename" },
   tasksRenamePrompt: { zh: "请输入新的项目名称", en: "Enter new project name" },
   tasksQuickCreatePrompt: { zh: "请输入新任务名称（将直接创建并进入工作区）", en: "Enter a name for the new task (it will be created and opened directly)" },

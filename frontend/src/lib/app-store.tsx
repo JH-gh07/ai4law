@@ -25,6 +25,7 @@ type AppState = {
 type Action =
   | { type: "create_task_space"; payload: TaskSpace }
   | { type: "rename_task_space"; payload: { id: string; name: string; updatedAt: string } }
+  | { type: "delete_task_space"; payload: { id: string } }
   | { type: "touch_task_space"; payload: { id: string; updatedAt: string } }
   | { type: "append_run"; payload: ModuleRun }
   | { type: "append_artifacts"; payload: OutputArtifact[] }
@@ -154,7 +155,16 @@ function reducer(state: AppState, action: Action): AppState {
           task.id === action.payload.id
             ? { ...task, name: action.payload.name, updatedAt: action.payload.updatedAt }
             : task
-        )
+          )
+      };
+    case "delete_task_space":
+      return {
+        ...state,
+        taskSpaces: state.taskSpaces.filter((task) => task.id !== action.payload.id),
+        moduleRuns: state.moduleRuns.filter((run) => run.taskSpaceId !== action.payload.id),
+        artifacts: state.artifacts.filter((artifact) => artifact.taskSpaceId !== action.payload.id),
+        evidenceHits: state.evidenceHits.filter((hit) => hit.taskSpaceId !== action.payload.id),
+        issues: state.issues.filter((issue) => issue.taskSpaceId !== action.payload.id)
       };
     case "touch_task_space":
       return {

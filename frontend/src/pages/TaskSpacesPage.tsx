@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
@@ -22,27 +22,12 @@ type TaskSpacesPageProps = {
   }) => void;
 };
 
-const SAVED_TASK_IDS_KEY = "ai4law_saved_task_spaces_v1";
-
-const readSavedTaskIds = (): string[] => {
-  try {
-    const raw = globalThis.localStorage?.getItem(SAVED_TASK_IDS_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item): item is string => typeof item === "string");
-  } catch {
-    return [];
-  }
-};
-
 export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [jurisdiction, setJurisdiction] = useState<"ALL" | Jurisdiction>("ALL");
-  const [savedTaskIds, setSavedTaskIds] = useState<string[]>(readSavedTaskIds);
   const jurisdictionShowcase = [
     {
       code: "CN" as const,
@@ -94,32 +79,6 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     return state.taskSpaces.filter((task) => now - new Date(task.updatedAt).getTime() <= 24 * 3600 * 1000).length;
   }, [state.taskSpaces]);
 
-  useEffect(() => {
-    try {
-      globalThis.localStorage?.setItem(SAVED_TASK_IDS_KEY, JSON.stringify(savedTaskIds));
-    } catch {
-      // Ignore persistence failures in private mode or blocked storage.
-    }
-  }, [savedTaskIds]);
-
-  useEffect(() => {
-    const validIds = new Set(state.taskSpaces.map((task) => task.id));
-    setSavedTaskIds((prev) => {
-      const next = prev.filter((id) => validIds.has(id));
-      if (next.length === prev.length && next.every((id, idx) => id === prev[idx])) {
-        return prev;
-      }
-      return next;
-    });
-  }, [state.taskSpaces]);
-
-  const toggleSaveTask = (taskId: string) => {
-    setSavedTaskIds((prev) => {
-      if (prev.includes(taskId)) return prev.filter((id) => id !== taskId);
-      return [taskId, ...prev].slice(0, 40);
-    });
-  };
-
   const renameTask = (taskId: string, currentName: string) => {
     const nextName = globalThis.prompt(t("tasksRenamePrompt"), currentName)?.trim();
     if (!nextName || nextName === currentName) return;
@@ -135,6 +94,12 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
 
   const openTask = (taskId: string) => {
     navigate(`/workspace/${taskId}`);
+  };
+
+  const deleteTask = (taskId: string) => {
+    const ok = globalThis.confirm(t("tasksDeleteConfirm"));
+    if (!ok) return;
+    dispatch({ type: "delete_task_space", payload: { id: taskId } });
   };
 
   const onTaskCardKeyDown = (event: KeyboardEvent<HTMLElement>, taskId: string) => {
@@ -263,7 +228,6 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
           <div className="task-grid tasks-grid">
             {filteredTasks.map((task) => {
               const latestRun = latestRunByTask.get(task.id);
-              const saved = savedTaskIds.includes(task.id);
               const taskTemplate = findTaskTemplate(task.taskTemplateId) ?? findTaskTemplate("cn_diagnosis");
               return (
                 <article
@@ -295,10 +259,10 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
 
                   <div className="tasks-card-actions" onClick={(event) => event.stopPropagation()}>
                     <button
-                      className={`tasks-save-btn ${saved ? "is-saved" : ""}`}
-                      onClick={() => toggleSaveTask(task.id)}
+                      className="tasks-save-btn is-danger"
+                      onClick={() => deleteTask(task.id)}
                     >
-                      {saved ? t("tasksSavedProject") : t("tasksSaveProject")}
+                      {t("tasksDeleteAction")}
                     </button>
                     <button
                       className="tasks-save-btn"
