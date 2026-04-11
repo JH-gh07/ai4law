@@ -97,10 +97,10 @@ export const MESSAGES = {
   tasksCardModule: { zh: "模块", en: "Module" },
   tasksCardUpdated: { zh: "最近更新", en: "Updated" },
   tasksCardNoRuns: { zh: "尚未运行", en: "No Runs" },
-  tasksRecentTitle: { zh: "近期项目保存与查找", en: "Recent Projects: Save & Search" },
+  tasksRecentTitle: { zh: "近期项目管理与查找", en: "Recent Projects: Manage & Search" },
   tasksRecentSubtitle: {
-    zh: "模仿参考页的操作方式：先查找，再把常用项目保存下来，后续可快速回到工作台。",
-    en: "Find first, then save frequent projects for quick return to workspace."
+    zh: "项目默认自动保留。先查找，再执行重命名或删除，快速回到工作台继续处理。",
+    en: "Projects are retained by default. Search first, then rename or delete, and jump back to workspace quickly."
   },
   tasksSavedCount: { zh: "已保存", en: "Saved" },
   tasksSavedListTitle: { zh: "已保存项目", en: "Saved Projects" },
