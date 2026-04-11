@@ -6,6 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { ModuleRun, TaskSpace, WorkflowStepKey } from "../../lib/domain";
 import { useLang } from "../../lib/language";
@@ -31,7 +32,7 @@ const LEFT_PANEL_MIN = 220;
 const LEFT_PANEL_MAX = 520;
 const RIGHT_PANEL_MIN = 260;
 const RIGHT_PANEL_MAX = 560;
-const CENTER_PANEL_MIN = 520;
+const CENTER_PANEL_MIN = 360;
 const RESIZER_WIDTH = 10;
 const REPORT_ARTIFACT_KINDS = new Set(["report", "html", "pdf", "docx", "md"]);
 
@@ -88,6 +89,7 @@ const readResponseChapters = (response: unknown): ResponseChapter[] => {
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
+  const navigate = useNavigate();
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [workspaceQuery, setWorkspaceQuery] = useState("");
@@ -496,7 +498,14 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     <section className={`workspace-shell workspace-style-${taskSpace.workspaceStyle}`}>
       <header className="workspace-header workspace-header-compact">
         <div className="workspace-browser-left">
-          <span className="workspace-browser-app">AI4Law</span>
+          <button
+            type="button"
+            className="workspace-browser-app workspace-browser-app-link"
+            onClick={() => navigate("/")}
+            aria-label={t("navHome")}
+          >
+            AI4Law
+          </button>
           <span className="workspace-browser-sep">/</span>
           <span className="workspace-browser-task">{taskSpace.name}</span>
           <span className="workspace-browser-sep">/</span>
@@ -588,7 +597,20 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       ) : null}
 
       <div className={panelClass} ref={gridRef} style={{ gridTemplateColumns }}>
-        {state.panelState.leftOpen ? <ResourcePanel taskSpace={taskSpace} /> : null}
+        {state.panelState.leftOpen ? (
+          <ResourcePanel
+            taskSpace={taskSpace}
+            tabs={WORKSPACE_TABS.map((tab) => ({ id: tab.id, label: t(tab.key), closable: tab.closable }))}
+            openTabs={openTabs}
+            activeTab={activeTab}
+            tabQuery={workspaceQuery}
+            onTabQueryChange={setWorkspaceQuery}
+            onTabQuerySubmit={openTabByQuery}
+            onActivateTab={(tabId) => setActiveTab(tabId as WorkspaceTopTabId)}
+            onOpenTab={(tabId) => openTab(tabId as WorkspaceTopTabId)}
+            onCloseTab={(tabId) => closeTab(tabId as WorkspaceTopTabId)}
+          />
+        ) : null}
         {state.panelState.leftOpen ? (
           <div
             className="workspace-resizer workspace-resizer-left"

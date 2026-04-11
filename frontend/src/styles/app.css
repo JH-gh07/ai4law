@@ -2148,6 +2148,20 @@
   color: #1b406a;
 }
 
+.workspace-browser-app-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.workspace-browser-app-link:hover {
+  color: #12385f;
+}
+
 .workspace-browser-task {
   max-width: 180px;
   overflow: hidden;
@@ -2432,8 +2446,17 @@
 
 .resource-pane {
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.5rem;
+}
+
+.resource-pane-body {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 0.52rem;
+  padding-right: 0.12rem;
 }
 
 .assistant-pane {
@@ -2682,6 +2705,113 @@
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+}
+
+.resource-tab-shell {
+  display: grid;
+  gap: 0.44rem;
+}
+
+.resource-tab-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.resource-tab-search input {
+  width: 100%;
+  border: 1px solid rgba(116, 151, 194, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.42rem 0.65rem;
+  color: #173f69;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.resource-tab-search input::placeholder {
+  color: rgba(95, 129, 168, 0.72);
+}
+
+.resource-tab-search input:focus {
+  border-color: rgba(77, 128, 189, 0.76);
+  box-shadow: 0 0 0 3px rgba(110, 154, 210, 0.16);
+}
+
+.resource-tab-list {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.resource-tab-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.24rem;
+  align-items: center;
+}
+
+.resource-tab-main {
+  border: 1px solid rgba(124, 161, 206, 0.36);
+  border-radius: 12px;
+  background: rgba(250, 254, 255, 0.92);
+  color: #2b507b;
+  padding: 0.4rem 0.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.44rem;
+  align-items: center;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.resource-tab-main span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-tab-main small {
+  font-size: 0.67rem;
+  letter-spacing: 0.08em;
+  color: #5a7ca2;
+}
+
+.resource-tab-main.opened {
+  border-color: rgba(95, 145, 205, 0.64);
+  background: rgba(229, 241, 255, 0.82);
+}
+
+.resource-tab-item.active .resource-tab-main {
+  border-color: rgba(64, 117, 182, 0.84);
+  background: rgba(213, 232, 255, 0.92);
+  color: #123d69;
+}
+
+.resource-tab-close {
+  border: 1px solid rgba(128, 166, 210, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #3e648e;
+  width: 1.65rem;
+  height: 1.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.resource-tab-close:hover {
+  border-color: rgba(81, 132, 191, 0.62);
+  color: #1c4a79;
+}
+
+.resource-tab-meta {
+  margin: 0;
+  color: #5a7ca0;
+  font-size: 0.74rem;
 }
 
 .resource-scroll {
