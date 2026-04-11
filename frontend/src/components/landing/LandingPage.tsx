@@ -1,136 +1,213 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { OpenQuestModal } from "../modals/OpenQuestModal";
 import { useAppStore } from "../../lib/app-store";
 import { useLang } from "../../lib/language";
+import type { Jurisdiction, LaunchMode } from "../../lib/domain";
+import {
+  buildSuggestedTaskName,
+  findTaskTemplate,
+  getTaskTemplateInputHint,
+  getTaskTemplateOutputHint,
+  getTaskTemplateTitle,
+  listTaskTemplatesByJurisdiction
+} from "../../lib/task-templates";
 
 type LandingPageProps = {
   onStart: () => void;
+  onQuickCreate: (config: {
+    mode: LaunchMode;
+    name: string;
+    jurisdiction: Jurisdiction;
+    taskTemplateId: string;
+  }) => void;
 };
 
-export function LandingPage({ onStart }: LandingPageProps) {
-  const { t } = useLang();
+export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const { state } = useAppStore();
-  const [questOpen, setQuestOpen] = useState(false);
-  const [questQuery, setQuestQuery] = useState("");
 
   const recentTasks = useMemo(
     () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)),
     [state.taskSpaces]
   );
 
-  const scenes = [
-    { tag: t("storyScene1Tag"), title: t("storyScene1Title"), desc: t("storyScene1Desc"), metric: "Route Gate" },
-    { tag: t("storyScene2Tag"), title: t("storyScene2Title"), desc: t("storyScene2Desc"), metric: "Evidence Bind" },
-    { tag: t("storyScene3Tag"), title: t("storyScene3Title"), desc: t("storyScene3Desc"), metric: "Cross-Jurisdiction" }
+  const latestTask = recentTasks[0] ?? null;
+  const featureTags = [
+    t("homeResetFeatureTag1"),
+    t("homeResetFeatureTag2"),
+    t("homeResetFeatureTag3"),
+    t("homeResetFeatureTag4"),
+    t("homeResetFeatureTag5"),
+    t("homeResetFeatureTag6")
+  ];
+  const advantageItems = [
+    t("homeResetAdvantageItem1"),
+    t("homeResetAdvantageItem2"),
+    t("homeResetAdvantageItem3"),
+    t("homeResetAdvantageItem4"),
+    t("homeResetAdvantageItem5")
+  ];
+  const trustItems = [
+    t("homeResetTrustItem1"),
+    t("homeResetTrustItem2"),
+    t("homeResetTrustItem3"),
+    t("homeResetTrustItem4")
+  ];
+  const caseItems = [
+    t("homeResetCaseItem1"),
+    t("homeResetCaseItem2"),
+    t("homeResetCaseItem3"),
+    t("homeResetCaseItem4")
+  ];
+  const jurisdictionColumns = [
+    { code: "CN" as const, title: "China (CN)" },
+    { code: "EU" as const, title: "European Union (EU)" },
+    { code: "US" as const, title: "United States (US)" }
   ];
 
+  const quickCreateFromTemplate = (taskTemplateId: string) => {
+    const taskTemplate = findTaskTemplate(taskTemplateId);
+    if (!taskTemplate) return;
+    const suggestedName = buildSuggestedTaskName(taskTemplate, lang);
+    const taskName = globalThis.prompt(t("homePrdQuickCreatePrompt"), suggestedName)?.trim();
+    if (!taskName) return;
+    onQuickCreate({
+      mode: "rapid",
+      name: taskName,
+      jurisdiction: taskTemplate.jurisdiction,
+      taskTemplateId: taskTemplate.id
+    });
+  };
+
   return (
-    <section className="landing-hero" role="region" aria-label="landing hero">
-      <div className="landing-inner">
-        <div className="landing-content">
-          <div className="landing-copy">
-            <div className="landing-kicker reveal reveal-1">{t("heroEyebrow")}</div>
-            <h2 className="landing-title reveal reveal-2">{t("heroTitle")}</h2>
-            <h3 className="landing-accent reveal reveal-3">{t("heroTitleAccent")}</h3>
-            <p className="landing-desc reveal reveal-4">{t("heroDesc")}</p>
-
-            <div className="landing-actions reveal reveal-5" data-guide="home-start">
+    <section className="landing-reset-page">
+      <div className="landing-reset-shell">
+        <section className="landing-reset-hero">
+          <div className="landing-reset-hero-copy">
+            <span className="landing-reset-kicker">{t("heroEyebrow")}</span>
+            <h1>{t("homeResetHeroPosition")}</h1>
+            <p>{t("homeResetHeroValue")}</p>
+            <div className="landing-reset-actions" data-guide="home-start">
               <button className="pill-btn-primary" onClick={onStart}>{t("startCta")}</button>
-              <button className="pill-btn quest-open-btn" onClick={() => setQuestOpen(true)}>
-                {t("openQuestCta")}
-              </button>
+              <button className="pill-btn" onClick={() => navigate("/tasks")}>{t("homeIntroTaskAction")}</button>
+              {latestTask ? (
+                <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
+                  {t("homeIntroContinueAction")}
+                </button>
+              ) : null}
             </div>
           </div>
-
-          <div className="landing-visual" aria-hidden="true">
-            <div className="visual-glow" />
-            <div className="visual-card">
-              <div className="visual-card-kicker">LIVE COMPLIANCE SIGNAL</div>
-              <div className="visual-line" />
-              <div className="visual-metrics">
-                <div><span>11</span><small>Modules</small></div>
-                <div><span>3</span><small>Jurisdictions</small></div>
-                <div><span>RAG</span><small>Evidence</small></div>
-                <div><span>24/7</span><small>Copilot</small></div>
-              </div>
-              <div className="visual-orbit">
-                <span />
-                <span />
-                <span />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <section className="capability-section">
-          <div className="capability-head">
-            <h3>{t("capabilityTitle")}</h3>
-            <p>{t("capabilityFlow")}</p>
-          </div>
-          <div className="capability-grid">
-            <article className="capability-card">
-              <h4>Route Intelligence</h4>
-              <p>Diagnosis + threshold checks route each case to proper module path.</p>
+          <div className="landing-reset-hero-metrics">
+            <article>
+              <span>{t("tasksStatTotal")}</span>
+              <strong>{state.taskSpaces.length}</strong>
             </article>
-            <article className="capability-card wide">
-              <h4>Draft Delivery Engine</h4>
-              <p>Template-driven generation with report packages and structured outputs.</p>
+            <article>
+              <span>{t("tasksStatRuns")}</span>
+              <strong>{state.moduleRuns.length}</strong>
             </article>
-            <article className="capability-card">
-              <h4>Evidence Chain</h4>
-              <p>RAG citations and consistency issues flow into review and report center.</p>
+            <article>
+              <span>{t("homeResetMetricJurisdictions")}</span>
+              <strong>3</strong>
             </article>
           </div>
         </section>
 
-        <footer className="landing-footer">
-          <span>路径判定</span>
-          <span>证据引用</span>
-          <span>草案生成</span>
-          <span>质量复核</span>
-        </footer>
-      </div>
+        <section className="landing-reset-middle">
+          <header className="landing-reset-block-head">
+            <h2>{t("homeResetMiddleTitle")}</h2>
+          </header>
 
-      <section className="story-deck" aria-label={t("storyTitle")}>
-        {scenes.map((scene, index) => (
-          <article key={scene.title} className="story-scene">
-            <div className="story-inner">
-              <div className="story-copy">
-                <div className="story-tag">{scene.tag}</div>
-                <h3>{scene.title}</h3>
-                <p>{scene.desc}</p>
-              </div>
-              <div className="story-visual">
-                <div className="story-meter">{scene.metric}</div>
-                <div className="story-track">
-                  <div className="story-dot" />
-                  <div className="story-line" style={{ width: `${(index + 1) * 32}%` }} />
-                </div>
-              </div>
+          <article className="landing-reset-stage">
+            <div className="landing-reset-stage-title"><span>01</span><h3>{t("homeResetProblemTitle")}</h3></div>
+            <p>{t("homeResetProblemDesc")}</p>
+          </article>
+
+          <article className="landing-reset-stage">
+            <div className="landing-reset-stage-title"><span>02</span><h3>{t("homeResetSolutionTitle")}</h3></div>
+            <p>{t("homeResetSolutionDesc")}</p>
+          </article>
+
+          <article className="landing-reset-stage">
+            <div className="landing-reset-stage-title"><span>03</span><h3>{t("homeResetFeatureTitle")}</h3></div>
+            <div className="landing-reset-tags">
+              {featureTags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
             </div>
           </article>
-        ))}
-      </section>
 
-      {questOpen ? (
-        <OpenQuestModal
-          tasks={recentTasks}
-          runs={state.moduleRuns}
-          query={questQuery}
-          onQueryChange={setQuestQuery}
-          onClose={() => {
-            setQuestOpen(false);
-            setQuestQuery("");
-          }}
-          onOpenTask={(taskId) => {
-            setQuestOpen(false);
-            setQuestQuery("");
-            navigate(`/workspace/${taskId}`);
-          }}
-        />
-      ) : null}
+          <article className="landing-reset-stage">
+            <div className="landing-reset-stage-title"><span>04</span><h3>{t("homeResetSceneTitle")}</h3></div>
+            <div className="landing-reset-scene-grid">
+              {jurisdictionColumns.map((column) => (
+                <section key={column.code} className="landing-reset-scene-col">
+                  <header>
+                    <strong>{column.title}</strong>
+                  </header>
+                  <div className="landing-reset-template-list">
+                    {listTaskTemplatesByJurisdiction(column.code).map((template) => (
+                      <button
+                        key={template.id}
+                        type="button"
+                        className="landing-reset-template-card"
+                        onClick={() => quickCreateFromTemplate(template.id)}
+                      >
+                        <h4>{getTaskTemplateTitle(template, lang)}</h4>
+                        <p>{template.subtitle[lang]}</p>
+                        <span>{getTaskTemplateInputHint(template, lang)}</span>
+                        <span>{getTaskTemplateOutputHint(template, lang)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </article>
+
+          <article className="landing-reset-stage">
+            <div className="landing-reset-stage-title"><span>05</span><h3>{t("homeResetAdvantageTitle")}</h3></div>
+            <ul className="landing-reset-advantage-list">
+              {advantageItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        </section>
+
+        <section className="landing-reset-footer">
+          <header className="landing-reset-block-head">
+            <h2>{t("homeResetFooterTitle")}</h2>
+          </header>
+          <div className="landing-reset-footer-grid">
+            <article>
+              <h3>{t("homeResetCaseTitle")}</h3>
+              <ul>
+                {caseItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article>
+              <h3>{t("homeResetTrustTitle")}</h3>
+              <ul>
+                {trustItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article>
+              <h3>{t("homeResetConsultTitle")}</h3>
+              <p>{t("homeResetConsultDesc")}</p>
+              <div className="landing-reset-actions landing-reset-footer-actions">
+                <button className="pill-btn" onClick={() => navigate("/tasks")}>{t("homeResetConsultCta")}</button>
+                <button className="pill-btn-primary" onClick={onStart}>{t("homeResetTrialCta")}</button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
     </section>
   );
 }

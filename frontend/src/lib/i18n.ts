@@ -27,6 +27,224 @@ export const MESSAGES = {
     zh: "首页建立问题背景与路径认知，工作台承接输入、生成、复核与导出的完整闭环。",
     en: "Landing builds context; workspace executes input, generation, review, and export in one loop."
   },
+  homeResetHeroPosition: {
+    zh: "“数规通”——AI驱动的数据跨境合规诊断与文书智能生成平台",
+    en: "ShuGuiTong — AI-powered platform for cross-border data compliance diagnosis and legal draft generation"
+  },
+  homeResetHeroValue: {
+    zh: "将路径判定、证据绑定、报告生成与审阅交付统一到一条可追溯工作流中，显著降低合规交付的不确定性。",
+    en: "Unify route selection, evidence binding, report generation, and review delivery into one traceable workflow."
+  },
+  homeResetMetricJurisdictions: { zh: "法域覆盖", en: "Jurisdictions" },
+  homeResetMiddleTitle: { zh: "中段说明层", en: "Core Narrative Layer" },
+  homeResetProblemTitle: { zh: "问题", en: "Problem" },
+  homeResetProblemDesc: {
+    zh: "跨境合规常见难点是法规口径分散、路径判断不稳定、产出文书缺少可复核依据。",
+    en: "Cross-border compliance suffers from fragmented rules, unstable route decisions, and hard-to-review outputs."
+  },
+  homeResetSolutionTitle: { zh: "方案", en: "Solution" },
+  homeResetSolutionDesc: {
+    zh: "平台按法域分流任务，调用模块化流程完成输入校验、证据检索、风险判定与模板化交付。",
+    en: "The platform routes by jurisdiction and executes modular flows for validation, retrieval, risk judgment, and delivery."
+  },
+  homeResetFeatureTitle: { zh: "功能", en: "Capabilities" },
+  homeResetFeatureTag1: { zh: "合规路径诊断", en: "Route Diagnosis" },
+  homeResetFeatureTag2: { zh: "风险评估草案", en: "Risk Drafting" },
+  homeResetFeatureTag3: { zh: "证据命中追溯", en: "Evidence Traceability" },
+  homeResetFeatureTag4: { zh: "一致性告警", en: "Consistency Alerts" },
+  homeResetFeatureTag5: { zh: "多法域模块运行", en: "Multi-Jurisdiction Runs" },
+  homeResetFeatureTag6: { zh: "报告导出交付", en: "Report Delivery" },
+  homeResetSceneTitle: { zh: "场景", en: "Scenarios" },
+  homeResetAdvantageTitle: { zh: "优势", en: "Advantages" },
+  homeResetAdvantageItem1: { zh: "结构化输入模板，降低前置准备成本", en: "Structured inputs reduce setup cost" },
+  homeResetAdvantageItem2: { zh: "法规与证据链联动，结论可追溯", en: "Regulation-evidence linkage keeps conclusions traceable" },
+  homeResetAdvantageItem3: { zh: "风险分级与阻塞提示，过程更可控", en: "Risk tiers and blockers keep workflow controllable" },
+  homeResetAdvantageItem4: { zh: "输出物统一命名和模板，便于审阅交付", en: "Unified output templates improve review and delivery" },
+  homeResetAdvantageItem5: { zh: "同一工作台覆盖 CN/EU/US 主流任务", en: "One workspace supports CN/EU/US core tasks" },
+  homeResetFooterTitle: { zh: "尾部转化层", en: "Conversion Layer" },
+  homeResetCaseTitle: { zh: "案例输出", en: "Case Outputs" },
+  homeResetCaseItem1: { zh: "《合规路径诊断报告》", en: "Compliance Route Diagnosis Report" },
+  homeResetCaseItem2: { zh: "《数据出境风险自评估报告》", en: "Data Export Risk Self-Assessment Report" },
+  homeResetCaseItem3: { zh: "《PIPIA 报告》", en: "PIPIA Report" },
+  homeResetCaseItem4: { zh: "《SCC 合规审查报告》", en: "SCC Compliance Review Report" },
+  homeResetTrustTitle: { zh: "可信背书", en: "Trust Signals" },
+  homeResetTrustItem1: { zh: "依据可定位：段落可回指证据来源", en: "Citable basis per paragraph" },
+  homeResetTrustItem2: { zh: "过程可留痕：运行、告警、产物全量记录", en: "Full logs for runs, alerts, and outputs" },
+  homeResetTrustItem3: { zh: "结论可复核：关键结论支持人工门控", en: "Human-gated review for key conclusions" },
+  homeResetTrustItem4: { zh: "交付可落地：报告与清单可直接下载", en: "Deliverables export-ready for handoff" },
+  homeResetConsultTitle: { zh: "咨询与试用", en: "Consulting & Trial" },
+  homeResetConsultDesc: {
+    zh: "提交你的业务场景，先拿到法域与路径建议，再进入任务执行。",
+    en: "Submit your scenario for jurisdiction and route advice before execution."
+  },
+  homeResetConsultCta: { zh: "咨询入口", en: "Consult" },
+  homeResetTrialCta: { zh: "试用入口", en: "Start Trial" },
+  homeIntroKicker: { zh: "PROJECT INTRODUCTION", en: "PROJECT INTRODUCTION" },
+  homeIntroTitle: { zh: "AI4Law：面向跨境合规的结构化工作流", en: "AI4Law: Structured Workflow for Cross-Border Compliance" },
+  homeIntroSubtitle: {
+    zh: "以任务为核心组织输入、检索、推理、复核与交付",
+    en: "Task-centered flow for input, retrieval, reasoning, review, and delivery"
+  },
+  homeIntroLead: {
+    zh: "首页承担项目介绍与入口组织：先说明价值与方法，再让用户直接进入可执行任务。",
+    en: "Landing introduces project value and method first, then routes users into executable tasks."
+  },
+  homeIntroContinueAction: { zh: "继续最近任务", en: "Continue Latest Task" },
+  homeIntroTaskAction: { zh: "查看任务空间", en: "Open Task Spaces" },
+  homeIntroHeroNoteTitle: { zh: "介绍页定位", en: "Landing Purpose" },
+  homeIntroHeroNoteDesc: {
+    zh: "参照项目官网首页的分幕呈现方式，按“问题-方法-结果-行动”展开。",
+    en: "Following a project-homepage storytelling pattern: problem, method, results, and actions."
+  },
+  homeIntroVisionTitle: { zh: "项目价值与定位", en: "Project Value & Positioning" },
+  homeIntroVisionCard1Title: { zh: "问题导向", en: "Problem-Oriented" },
+  homeIntroVisionCard1Desc: {
+    zh: "聚焦高频高风险跨境合规任务，不做泛法律问答。",
+    en: "Focus on high-frequency, high-risk compliance tasks rather than generic legal chat."
+  },
+  homeIntroVisionCard2Title: { zh: "方法可复核", en: "Reviewable Method" },
+  homeIntroVisionCard2Desc: {
+    zh: "每条结论对应证据与规则来源，支持复核与追溯。",
+    en: "Each conclusion links to evidence and legal sources for review and traceability."
+  },
+  homeIntroVisionCard3Title: { zh: "结果可交付", en: "Deliverable Outputs" },
+  homeIntroVisionCard3Desc: {
+    zh: "输出报告、证据链与整改建议，直接进入交付流程。",
+    en: "Deliver reports, evidence chains, and remediation suggestions ready for delivery."
+  },
+  homeIntroMethodTitle: { zh: "核心能力与方法", en: "Core Capabilities & Method" },
+  homeIntroMethodCard1Title: { zh: "可追溯引用链", en: "Traceable Citations" },
+  homeIntroMethodCard1Desc: {
+    zh: "结论回指法条、案例要点与材料片段，减少黑箱决策。",
+    en: "Conclusions trace back to statutes, case points, and source snippets."
+  },
+  homeIntroMethodCard2Title: { zh: "风险分级与置信度", en: "Risk Tiering & Confidence" },
+  homeIntroMethodCard2Desc: {
+    zh: "高/中/低风险分层输出，不确定场景明确提示补充信息。",
+    en: "Risk-tiered outputs with explicit prompts for missing information."
+  },
+  homeIntroMethodCard3Title: { zh: "人机协作门控", en: "Human-in-the-Loop Gate" },
+  homeIntroMethodCard3Desc: {
+    zh: "关键定性与高风险结论支持人工确认与审计记录。",
+    en: "Critical classifications and high-risk conclusions support human confirmation and audit records."
+  },
+  homeIntroWorkflowTitle: { zh: "工作流路径", en: "Workflow Path" },
+  homeIntroWorkflowStep1: { zh: "任务输入与规则识别", en: "Input and Rule Detection" },
+  homeIntroWorkflowStep2: { zh: "证据检索与推理生成", en: "Evidence Retrieval and Reasoning" },
+  homeIntroWorkflowStep3: { zh: "一致性复核与风险分级", en: "Consistency Review and Risk Tiering" },
+  homeIntroWorkflowStep4: { zh: "结构化报告交付", en: "Structured Report Delivery" },
+  homeIntroScenarioSubtitle: {
+    zh: "按法域展示已接入后端模块的可执行模板，点击即可创建任务。",
+    en: "Executable templates are shown by jurisdiction based on connected backend modules."
+  },
+  homeIntroOutcome1Title: { zh: "报告成果", en: "Report Outcomes" },
+  homeIntroOutcome1Desc: { zh: "形成可审阅、可导出的结构化报告草案。", en: "Generate reviewable and exportable structured drafts." },
+  homeIntroOutcome2Title: { zh: "证据成果", en: "Evidence Outcomes" },
+  homeIntroOutcome2Desc: { zh: "自动关联法规命中与引用链，支持追溯。", en: "Auto-link regulation hits and citation chains for traceability." },
+  homeIntroOutcome3Title: { zh: "治理成果", en: "Governance Outcomes" },
+  homeIntroOutcome3Desc: { zh: "生成整改与下一步动作建议，形成闭环。", en: "Generate remediation and next-step actions for closed-loop governance." },
+  homeIntroRecentDesc: {
+    zh: "保留近期项目上下文，便于继续执行和二次复核。",
+    en: "Keep recent project context for continued execution and second-pass review."
+  },
+  homeDeckRailTitle: { zh: "演示目录", en: "Deck Navigation" },
+  homeDeckSectionIntro: { zh: "项目概览", en: "Overview" },
+  homeDeckSectionProblem: { zh: "问题定义", en: "Problem" },
+  homeDeckSectionMethod: { zh: "方法路径", en: "Method" },
+  homeDeckSectionScenario: { zh: "任务场景", en: "Scenarios" },
+  homeDeckSectionOutput: { zh: "交付结果", en: "Outputs" },
+  homeDeckSectionRecent: { zh: "近期任务", en: "Recent" },
+  homeDeckSectionAction: { zh: "立即行动", en: "Action" },
+  homeDeckProblemTitle: { zh: "为什么需要这个系统", en: "Why This System Matters" },
+  homeDeckProblemLead: {
+    zh: "跨境合规工作常见问题不是“不会答”，而是“难以稳定复核和交付”。",
+    en: "The challenge in cross-border compliance is not answering questions, but ensuring stable review and delivery."
+  },
+  homeDeckProblemCard1Title: { zh: "信息源分散", en: "Fragmented Sources" },
+  homeDeckProblemCard1Desc: {
+    zh: "法规、案例、合同和事实描述分散，人工整合成本高。",
+    en: "Statutes, cases, contracts, and facts are fragmented and expensive to consolidate manually."
+  },
+  homeDeckProblemCard2Title: { zh: "结论难复核", en: "Hard to Review" },
+  homeDeckProblemCard2Desc: {
+    zh: "缺少可追溯证据链时，结论难以复用和团队协作。",
+    en: "Without a traceable evidence chain, conclusions are hard to reuse and collaborate on."
+  },
+  homeDeckProblemCard3Title: { zh: "交付不稳定", en: "Unstable Delivery" },
+  homeDeckProblemCard3Desc: {
+    zh: "不同任务输出格式不统一，影响交付质量和时效。",
+    en: "Inconsistent output formats across tasks reduce delivery quality and speed."
+  },
+  homeDeckMethodTitle: { zh: "我们怎么做", en: "How We Execute" },
+  homeDeckMethodLead: {
+    zh: "把一次合规任务拆成稳定的工作流阶段，让每一步可解释、可复核、可交付。",
+    en: "We break one compliance task into stable workflow stages for explainability, reviewability, and delivery."
+  },
+  homeDeckActionTitle: { zh: "从介绍进入执行", en: "Move From Intro to Execution" },
+  homePrdHeroTitle: {
+    zh: "AI4Law：强逻辑法律任务工作流",
+    en: "AI4Law: Structured Legal Workflow"
+  },
+  homePrdHeroSubtitle: {
+    zh: "不是泛问答，而是在单一任务上完成输入、检索、推理、复核与交付。",
+    en: "Not generic Q&A. A single-task flow from input and retrieval to reasoning, review, and delivery."
+  },
+  homePrdHeroDesc: {
+    zh: "每条结论可追溯、每项风险可分级、关键结论可门控复核，首页直接进入可执行任务。",
+    en: "Every conclusion is traceable, risk is tiered, and key conclusions are review-gated for execution-ready tasks."
+  },
+  homePrdContinueAction: { zh: "继续最近任务", en: "Continue Latest Task" },
+  homePrdNavTitle: { zh: "Results 导航", en: "Results Navigation" },
+  homePrdNavOverview: { zh: "项目总览", en: "Overview" },
+  homePrdNavCapability: { zh: "核心能力", en: "Capabilities" },
+  homePrdNavOutput: { zh: "标准化输出", en: "Structured Output" },
+  homePrdNavScenario: { zh: "任务入口", en: "Task Entry" },
+  homePrdNavLoop: { zh: "双闭环路径", en: "Dual Loop" },
+  homePrdNavRecent: { zh: "近期项目", en: "Recent Projects" },
+  homePrdNavBoundary: { zh: "能力边界", en: "Boundary" },
+  homePrdCapabilityTitle: { zh: "三项硬能力", en: "Three Core Capabilities" },
+  homePrdCapabilityTraceTitle: { zh: "可追溯引用链", en: "Traceable Citations" },
+  homePrdCapabilityTraceDesc: {
+    zh: "结论必须回指法条、案例要点或材料片段。",
+    en: "Conclusions must trace back to statutes, case points, or source snippets."
+  },
+  homePrdCapabilityRiskTitle: { zh: "风险分级与置信度", en: "Risk Tiering & Confidence" },
+  homePrdCapabilityRiskDesc: {
+    zh: "高/中/低风险分层输出，不确定场景提示补充信息或转人工。",
+    en: "Outputs are tiered by risk; uncertain cases request missing inputs or escalate to human review."
+  },
+  homePrdCapabilityGateTitle: { zh: "人机协作门控", en: "Human-in-the-Loop Gate" },
+  homePrdCapabilityGateDesc: {
+    zh: "关键定性和高风险结论需人工确认并留存审计痕迹。",
+    en: "Critical legal classifications and high-risk conclusions require human confirmation with audit trails."
+  },
+  homePrdOutputTitle: { zh: "标准化输出", en: "Structured Deliverables" },
+  homePrdOutputDesc: {
+    zh: "交付不是一句答案，而是可复核、可追溯、可落地的结构化报告。",
+    en: "Delivery is not a one-line answer; it is a reviewable, traceable, actionable structured report."
+  },
+  homePrdScenarioTitle: { zh: "法域差异化任务入口", en: "Jurisdiction-Based Task Entry" },
+  homePrdScenarioCreateAction: { zh: "按此模板创建任务", en: "Create Task From Template" },
+  homePrdLoopTitle: { zh: "产品与研究双闭环", en: "Product + Research Dual Loop" },
+  homePrdLoopDesc: {
+    zh: "一次运行同时产出交付结果与结构化样本，兼顾业务与研究。",
+    en: "One execution yields both delivery outputs and structured samples for business and research."
+  },
+  homePrdLoopStep1: { zh: "任务运行", en: "Task Execution" },
+  homePrdLoopStep2: { zh: "中间推理结构化", en: "Intermediate Structuring" },
+  homePrdLoopStep3: { zh: "报告交付", en: "Report Delivery" },
+  homePrdLoopStep4: { zh: "样本沉淀", en: "Sample Accumulation" },
+  homePrdRecentTitle: { zh: "近期项目保存与查找", en: "Recent Projects: Save & Search" },
+  homePrdNoTasks: { zh: "暂无任务，先从上方法域模板创建第一个任务。", en: "No tasks yet. Create your first task from templates above." },
+  homePrdBoundaryTitle: { zh: "能力边界声明", en: "Capability Boundary" },
+  homePrdBoundaryDesc: {
+    zh: "首页仅展示已接入后端执行能力的任务模板，避免“可点不可跑”。",
+    en: "Only backend-connected templates are shown on the landing page to avoid non-executable entries."
+  },
+  homePrdQuickCreatePrompt: {
+    zh: "请输入任务名称（确认后将直接创建并进入工作区）",
+    en: "Enter task name (will create and open workspace directly)"
+  },
   startCta: { zh: "启动合规任务", en: "Start Compliance Run" },
   secondaryCta: { zh: "查看任务空间", en: "Open Task Spaces" },
   openQuestCta: { zh: "查看 Quest", en: "Open Quest" },
