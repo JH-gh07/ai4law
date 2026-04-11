@@ -147,6 +147,162 @@ const BLUEPRINTS: Record<
         "High-risk gaps detected"
       ]
     }
+  },
+  eu_scc: {
+    zh: {
+      process: [
+        "上传SCC主文本并补充传输角色、数据范围、TOM与救济机制。",
+        "校验模块适配、附件完整性与补充条款是否冲突。",
+        "输出SCC审查结论、条款级问题清单与修订建议。"
+      ],
+      checklist: [
+        "传输角色与模块是否匹配",
+        "附件与TOM是否可追溯",
+        "是否覆盖第三国风险与政府访问响应"
+      ]
+    },
+    en: {
+      process: [
+        "Upload SCC text and provide transfer roles, scope, TOMs, and remedy mechanisms.",
+        "Validate module fit, annex completeness, and supplementary-clause conflicts.",
+        "Output SCC review conclusion, issue list, and remediation suggestions."
+      ],
+      checklist: [
+        "Role-module mapping validated",
+        "Annex and TOM evidence traceable",
+        "Third-country and government-access risks covered"
+      ]
+    }
+  },
+  eu_bcr: {
+    zh: {
+      process: [
+        "采集集团结构、数据流范围、约束力与第三方受益人权利信息。",
+        "按EDPB框架检查监管协作、第三国评估、更新机制等关键章节。",
+        "输出BCR分级问题与整改优先级。"
+      ],
+      checklist: [
+        "是否覆盖BCR核心章节",
+        "责任与赔偿机制是否明确",
+        "第三国法律评估与政府访问机制是否完整"
+      ]
+    },
+    en: {
+      process: [
+        "Collect group structure, transfer scope, binding nature, and third-party rights evidence.",
+        "Check SA cooperation, third-country assessment, and update mechanisms under EDPB structure.",
+        "Generate graded BCR findings and remediation priorities."
+      ],
+      checklist: [
+        "Core BCR sections covered",
+        "Liability and compensation mechanism clear",
+        "Third-country and government-access mechanism complete"
+      ]
+    }
+  },
+  eu_dpia: {
+    zh: {
+      process: [
+        "按DPIA七步采集项目背景、处理活动、必要性与风险信息。",
+        "将风险与缓解措施一一对应并补齐签署与复审信息。",
+        "输出可编辑DPIA草案与关键风险结论。"
+      ],
+      checklist: [
+        "项目目标与触发理由是否完整",
+        "风险与措施是否一一对应",
+        "签署、DPO意见与复审安排是否明确"
+      ]
+    },
+    en: {
+      process: [
+        "Collect project, processing, necessity, and risk inputs following DPIA step structure.",
+        "Map risks to controls and complete sign-off/review fields.",
+        "Output editable DPIA draft with key risk conclusions."
+      ],
+      checklist: [
+        "Project rationale complete",
+        "Risk-control mapping complete",
+        "Sign-off, DPO advice, and review schedule defined"
+      ]
+    }
+  },
+  eu_tia: {
+    zh: {
+      process: [
+        "识别传输事实与传输工具，补充第三国法律评估结论。",
+        "匹配技术、合同、组织补充措施并形成有效性判断。",
+        "输出TIA草案与行动清单，并记录复审安排。"
+      ],
+      checklist: [
+        "出口方、进口方与目的地国家是否明确",
+        "法律评估与补充措施是否匹配",
+        "最终结论与复审计划是否可执行"
+      ]
+    },
+    en: {
+      process: [
+        "Identify transfer facts/tool and capture third-country law assessment.",
+        "Match technical/contractual/organizational measures to legal risks.",
+        "Output TIA draft, action plan, and review schedule."
+      ],
+      checklist: [
+        "Exporter/importer/destination confirmed",
+        "Legal assessment aligned with supplementary measures",
+        "Final conclusion and review plan executable"
+      ]
+    }
+  },
+  us_14117: {
+    zh: {
+      process: [
+        "分别采集数据清单与实体清单，建立“传什么/传给谁”的基础映射。",
+        "按14117规则识别敏感数据标签、受限实体风险与高风险传输链路。",
+        "输出红黄绿灯结论、风险匹配矩阵与整改行动建议。"
+      ],
+      checklist: [
+        "是否已上传数据清单与实体清单",
+        "接收方角色、国家与受限属性是否明确",
+        "高风险数据与高风险实体是否可交叉追溯"
+      ]
+    },
+    en: {
+      process: [
+        "Collect data inventory and entity inventory to map what data is transferred to whom.",
+        "Apply EO 14117 rules to identify sensitive data tags, restricted entities, and high-risk transfer chains.",
+        "Generate RAG conclusion, risk-matching matrix, and remediation actions."
+      ],
+      checklist: [
+        "Data and entity inventories uploaded",
+        "Recipient role, country, and restricted status defined",
+        "High-risk data to high-risk entity mapping traceable"
+      ]
+    }
+  },
+  us_cpra: {
+    zh: {
+      process: [
+        "采集企业适用性、数据生命周期、消费者权利机制与第三方管理信息。",
+        "联动隐私政策与制度附件做一致性检查，识别披露缺口与执行缺口。",
+        "输出CPRA合规全景结论、分域问题清单与路线图建议。"
+      ],
+      checklist: [
+        "是否完成CPRA适用性自检与业务模型说明",
+        "是否提供隐私政策URL或隐私政策文件",
+        "消费者权利、Opt-out与供应商管理机制是否覆盖"
+      ]
+    },
+    en: {
+      process: [
+        "Collect applicability, lifecycle, consumer-rights, and third-party governance inputs.",
+        "Run consistency checks between policy disclosure and operational controls.",
+        "Generate CPRA panorama conclusion, gap list by domain, and remediation roadmap."
+      ],
+      checklist: [
+        "Applicability self-check and business model completed",
+        "Privacy policy URL or file provided",
+        "Consumer rights, opt-out, and vendor controls covered"
+      ]
+    }
   }
 };
 

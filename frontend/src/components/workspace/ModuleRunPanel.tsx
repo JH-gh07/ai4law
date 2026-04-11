@@ -373,6 +373,63 @@ type TiaFormValues = {
   attachment_role: "transfer_agreement" | "country_law_analysis" | "technical_control_doc" | "other";
 };
 
+type CnFlowRecipientRole = "processor" | "controller" | "subprocessor" | "affiliate" | "vendor";
+type CnFlowFieldType = "text" | "textarea" | "select" | "checkbox";
+type CnFlowFieldConfig = {
+  name: keyof CnFlowFormValues;
+  label: string;
+  type: CnFlowFieldType;
+  options?: string[];
+};
+type CnFlowStepConfig = {
+  title: string;
+  fields: CnFlowFieldConfig[];
+};
+type CnFlowFormValues = {
+  company_name: string;
+  transfer_purpose: string;
+  data_categories: string;
+  sensitive_data_flags: string;
+  transfer_chain: string;
+  data_volume_note: string;
+  necessity_justification: string;
+  primary_recipient_name: string;
+  primary_recipient_country: string;
+  primary_recipient_role: CnFlowRecipientRole;
+  primary_recipient_restricted: boolean;
+  additional_recipients: string;
+  internal_access_note: string;
+};
+
+type CpraFieldType = "text" | "textarea" | "checkbox";
+type CpraFieldConfig = {
+  name: keyof CpraFormValues;
+  label: string;
+  type: CpraFieldType;
+};
+type CpraStepConfig = {
+  title: string;
+  fields: CpraFieldConfig[];
+};
+type CpraFormValues = {
+  company_name: string;
+  dba_name: string;
+  cpra_applicability_selfcheck: string;
+  business_model: string;
+  data_lifecycle: string;
+  data_categories: string;
+  notice_and_consent: string;
+  privacy_policy_url: string;
+  consumer_rights_process: string;
+  identity_verification_method: string;
+  rights_sla: string;
+  opt_out_and_sale_sharing: string;
+  spi_usage_summary: string;
+  vendor_management: string;
+  ui_dark_pattern_check: string;
+  review_focus: string;
+};
+
 const JURISDICTIONS = ["CN", "EU", "US"] as const;
 
 const DIAGNOSIS_STEPS: DiagnosisStepConfig[] = [
@@ -833,6 +890,93 @@ const BCR_REVIEW_ITEMS: Array<{ code: string; title: string; legal_basis: string
   { code: "3.2-C10", title: "Update and definitions", legal_basis: "EDPB 8.1/9.1", recommendation: "明确更新报送机制与定义表。" }
 ];
 
+const CN_FLOW_STEPS: CnFlowStepConfig[] = [
+  {
+    title: "出境数据清单",
+    fields: [
+      { name: "company_name", label: "企业名称", type: "text" },
+      { name: "transfer_purpose", label: "出境目的", type: "textarea" },
+      { name: "data_categories", label: "出境数据类别（逗号分隔）", type: "text" },
+      { name: "sensitive_data_flags", label: "敏感/重点数据标签（逗号分隔）", type: "text" },
+      { name: "data_volume_note", label: "数据规模与体量说明", type: "textarea" },
+      { name: "necessity_justification", label: "出境必要性与替代性说明", type: "textarea" }
+    ]
+  },
+  {
+    title: "外部实体清单",
+    fields: [
+      { name: "primary_recipient_name", label: "主要接收方名称", type: "text" },
+      { name: "primary_recipient_country", label: "主要接收方国家/地区", type: "text" },
+      {
+        name: "primary_recipient_role",
+        label: "主要接收方角色",
+        type: "select",
+        options: ["processor", "controller", "subprocessor", "affiliate", "vendor"]
+      },
+      { name: "primary_recipient_restricted", label: "主要接收方是否受限主体", type: "checkbox" },
+      {
+        name: "additional_recipients",
+        label: "其他接收方（每行：名称,国家,角色,是否受限[yes/no]）",
+        type: "textarea"
+      },
+      { name: "transfer_chain", label: "传输链路说明", type: "textarea" }
+    ]
+  },
+  {
+    title: "内部访问与材料",
+    fields: [
+      { name: "internal_access_note", label: "内部员工访问风险说明（可选）", type: "textarea" }
+    ]
+  },
+  {
+    title: "附件上传",
+    fields: []
+  }
+];
+
+const CPRA_STEPS: CpraStepConfig[] = [
+  {
+    title: "企业信息与适用性",
+    fields: [
+      { name: "company_name", label: "企业名称", type: "text" },
+      { name: "dba_name", label: "DBA/品牌名（可选）", type: "text" },
+      { name: "cpra_applicability_selfcheck", label: "CPRA适用性自检结论", type: "textarea" },
+      { name: "business_model", label: "业务模型", type: "text" }
+    ]
+  },
+  {
+    title: "数据处理活动",
+    fields: [
+      { name: "data_lifecycle", label: "数据生命周期描述", type: "textarea" },
+      { name: "data_categories", label: "处理数据类别", type: "text" },
+      { name: "notice_and_consent", label: "告知与同意机制", type: "textarea" },
+      { name: "privacy_policy_url", label: "隐私政策URL（可选）", type: "text" }
+    ]
+  },
+  {
+    title: "消费者权利机制",
+    fields: [
+      { name: "consumer_rights_process", label: "DSR受理渠道与流程", type: "textarea" },
+      { name: "identity_verification_method", label: "身份验证方法", type: "textarea" },
+      { name: "rights_sla", label: "处理时限/SLA说明", type: "textarea" }
+    ]
+  },
+  {
+    title: "敏感信息与第三方管理",
+    fields: [
+      { name: "opt_out_and_sale_sharing", label: "出售/共享与Opt-out机制", type: "textarea" },
+      { name: "spi_usage_summary", label: "敏感个人信息（SPI）使用说明", type: "textarea" },
+      { name: "vendor_management", label: "供应商/第三方管理机制", type: "textarea" },
+      { name: "ui_dark_pattern_check", label: "UI/UX暗模式风险检查", type: "textarea" },
+      { name: "review_focus", label: "本次重点整改关注项", type: "textarea" }
+    ]
+  },
+  {
+    title: "附件上传",
+    fields: []
+  }
+];
+
 const asRecord = (value: unknown): Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 
@@ -896,6 +1040,57 @@ const inferDpiaAttachmentFormat = (value: string): "docx" | "pdf" | "png" | "jpg
   if (suffix === "png") return "png";
   if (suffix === "jpg" || suffix === "jpeg") return "jpg";
   return null;
+};
+
+const inferCnFlowAttachmentFormat = (value: string): "xlsx" | "csv" | "docx" | "pdf" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "xlsx") return "xlsx";
+  if (suffix === "csv") return "csv";
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  return null;
+};
+
+const inferCpraAttachmentFormat = (value: string): "docx" | "pdf" | "xlsx" | "csv" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  if (suffix === "xlsx") return "xlsx";
+  if (suffix === "csv") return "csv";
+  return null;
+};
+
+const isValidUrl = (value: string): boolean => /^https?:\/\/\S+$/i.test(value.trim());
+
+const parseRecipientRows = (raw: string): Array<{
+  entity_name: string;
+  country_region: string;
+  entity_role: CnFlowRecipientRole;
+  is_restricted_party: boolean;
+}> => {
+  const rows = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return rows.flatMap((line) => {
+    const [name = "", country = "", role = "", restricted = ""] = line.split(/[,\|]/).map((part) => part.trim());
+    if (!hasText(name) || !hasText(country)) return [];
+    const entityRole: CnFlowRecipientRole =
+      role === "controller" || role === "subprocessor" || role === "affiliate" || role === "vendor"
+        ? role
+        : "processor";
+    const restrictedNormalized = restricted.toLowerCase();
+    const isRestricted = ["yes", "true", "1", "是", "受限", "high"].includes(restrictedNormalized);
+    return [
+      {
+        entity_name: name,
+        country_region: country,
+        entity_role: entityRole,
+        is_restricted_party: isRestricted
+      }
+    ];
+  });
 };
 
 const toBcrScore = (value: string): "compliant" | "partial" | "non_compliant" => {
@@ -1177,6 +1372,59 @@ const createDefaultTiaValues = (): TiaFormValues => {
   };
 };
 
+const createDefaultCnFlowValues = (): CnFlowFormValues => {
+  const demo = asRecord(getDefaultPayload("cn_flow"));
+  const recipient = Array.isArray(demo.recipient_entities) && demo.recipient_entities.length > 0
+    ? asRecord(demo.recipient_entities[0])
+    : {};
+  const roleRaw = toString(recipient.entity_role, "processor");
+  const primaryRole: CnFlowRecipientRole =
+    roleRaw === "controller" || roleRaw === "subprocessor" || roleRaw === "affiliate" || roleRaw === "vendor"
+      ? roleRaw
+      : "processor";
+  return {
+    company_name: toString(demo.company_name, ""),
+    transfer_purpose: toString(demo.transfer_purpose, ""),
+    data_categories: Array.isArray(demo.data_categories)
+      ? demo.data_categories.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    sensitive_data_flags: Array.isArray(demo.sensitive_data_flags)
+      ? demo.sensitive_data_flags.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    transfer_chain: toString(demo.transfer_chain, ""),
+    data_volume_note: "",
+    necessity_justification: "",
+    primary_recipient_name: toString(recipient.entity_name, ""),
+    primary_recipient_country: toString(recipient.country_region, ""),
+    primary_recipient_role: primaryRole,
+    primary_recipient_restricted: toBoolean(recipient.is_restricted_party, false),
+    additional_recipients: "",
+    internal_access_note: ""
+  };
+};
+
+const createDefaultCpraValues = (): CpraFormValues => {
+  const demo = asRecord(getDefaultPayload("cpra"));
+  return {
+    company_name: toString(demo.company_name, ""),
+    dba_name: "",
+    cpra_applicability_selfcheck: "",
+    business_model: toString(demo.business_model, ""),
+    data_lifecycle: toString(demo.data_lifecycle, ""),
+    data_categories: "",
+    notice_and_consent: toString(demo.notice_and_consent, ""),
+    privacy_policy_url: "",
+    consumer_rights_process: toString(demo.consumer_rights_process, ""),
+    identity_verification_method: "",
+    rights_sla: "",
+    opt_out_and_sale_sharing: toString(demo.opt_out_and_sale_sharing, ""),
+    spi_usage_summary: "",
+    vendor_management: toString(demo.vendor_management, ""),
+    ui_dark_pattern_check: "",
+    review_focus: "优先检查消费者权利响应时限、SPI限制与Do Not Sell/Share入口。"
+  };
+};
+
 const readStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
@@ -1331,6 +1579,18 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [tiaStepIndex, setTiaStepIndex] = useState(0);
   const [tiaValues, setTiaValues] = useState<TiaFormValues>(createDefaultTiaValues);
   const [tiaFiles, setTiaFiles] = useState<File[]>([]);
+  const [cnFlowStepIndex, setCnFlowStepIndex] = useState(0);
+  const [cnFlowValues, setCnFlowValues] = useState<CnFlowFormValues>(createDefaultCnFlowValues);
+  const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
+  const [cnFlowEntityInventoryFiles, setCnFlowEntityInventoryFiles] = useState<File[]>([]);
+  const [cnFlowSupportingFiles, setCnFlowSupportingFiles] = useState<File[]>([]);
+  const [cpraStepIndex, setCpraStepIndex] = useState(0);
+  const [cpraValues, setCpraValues] = useState<CpraFormValues>(createDefaultCpraValues);
+  const [cpraPrivacyPolicyFiles, setCpraPrivacyPolicyFiles] = useState<File[]>([]);
+  const [cpraRightsSopFiles, setCpraRightsSopFiles] = useState<File[]>([]);
+  const [cpraDataMapFiles, setCpraDataMapFiles] = useState<File[]>([]);
+  const [cpraVendorListFiles, setCpraVendorListFiles] = useState<File[]>([]);
+  const [cpraOtherFiles, setCpraOtherFiles] = useState<File[]>([]);
 
   const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
   const templateModule = useMemo(
@@ -1400,6 +1660,22 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setTiaValues(createDefaultTiaValues());
       setTiaFiles([]);
     }
+    if (moduleKey === "cn_flow") {
+      setCnFlowStepIndex(0);
+      setCnFlowValues(createDefaultCnFlowValues());
+      setCnFlowDataInventoryFiles([]);
+      setCnFlowEntityInventoryFiles([]);
+      setCnFlowSupportingFiles([]);
+    }
+    if (moduleKey === "cpra") {
+      setCpraStepIndex(0);
+      setCpraValues(createDefaultCpraValues());
+      setCpraPrivacyPolicyFiles([]);
+      setCpraRightsSopFiles([]);
+      setCpraDataMapFiles([]);
+      setCpraVendorListFiles([]);
+      setCpraOtherFiles([]);
+    }
   }, [moduleKey, taskTemplate?.id]);
 
   const definition = findModule(moduleKey);
@@ -1412,6 +1688,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const isBcrModule = moduleKey === "bcr";
   const isDpiaModule = moduleKey === "dpia";
   const isTiaModule = moduleKey === "tia";
+  const isCnFlowModule = moduleKey === "cn_flow";
+  const isCpraModule = moduleKey === "cpra";
 
   const updateDiagnosisValue = <K extends keyof DiagnosisFormValues>(name: K, value: DiagnosisFormValues[K]) => {
     setDiagnosisValues((prev) => ({ ...prev, [name]: value }));
@@ -1446,6 +1724,14 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   const updateTiaValue = <K extends keyof TiaFormValues>(name: K, value: TiaFormValues[K]) => {
     setTiaValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateCnFlowValue = <K extends keyof CnFlowFormValues>(name: K, value: CnFlowFormValues[K]) => {
+    setCnFlowValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateCpraValue = <K extends keyof CpraFormValues>(name: K, value: CpraFormValues[K]) => {
+    setCpraValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const uploadFiles = async (files: File[]): Promise<string[]> => {
@@ -1892,6 +2178,209 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
+  const buildCnFlowPayload = async (): Promise<unknown> => {
+    assertInput(hasText(cnFlowValues.company_name), "请填写企业名称。");
+    assertInput(hasText(cnFlowValues.transfer_purpose), "请填写出境目的。");
+    assertInput(splitCsv(cnFlowValues.data_categories).length > 0, "请至少填写一类拟出境数据。");
+    assertInput(hasText(cnFlowValues.transfer_chain), "请填写传输链路说明。");
+    assertInput(hasText(cnFlowValues.primary_recipient_name), "请填写主要接收方名称。");
+    assertInput(hasText(cnFlowValues.primary_recipient_country), "请填写主要接收方国家/地区。");
+    assertInput(cnFlowDataInventoryFiles.length > 0, "请上传数据清单附件（data_inventory）。");
+    assertInput(cnFlowEntityInventoryFiles.length > 0, "请上传实体清单附件（entity_inventory）。");
+
+    const [dataInventoryPaths, entityInventoryPaths, supportingPaths] = await Promise.all([
+      uploadFiles(cnFlowDataInventoryFiles),
+      uploadFiles(cnFlowEntityInventoryFiles),
+      uploadFiles(cnFlowSupportingFiles)
+    ]);
+
+    const attachments = [
+      ...dataInventoryPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `数据清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
+        return {
+          file_role: "data_inventory" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...entityInventoryPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `实体清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
+        return {
+          file_role: "entity_inventory" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...supportingPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `补充材料格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
+        return {
+          file_role: "supporting_material" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      })
+    ];
+
+    const recipient_entities = [
+      {
+        entity_name: cnFlowValues.primary_recipient_name.trim(),
+        country_region: cnFlowValues.primary_recipient_country.trim(),
+        entity_role: cnFlowValues.primary_recipient_role,
+        is_restricted_party: cnFlowValues.primary_recipient_restricted
+      },
+      ...parseRecipientRows(cnFlowValues.additional_recipients)
+    ];
+
+    return {
+      company_name: cnFlowValues.company_name.trim(),
+      transfer_purpose: [
+        cnFlowValues.transfer_purpose.trim(),
+        cnFlowValues.necessity_justification ? `必要性：${cnFlowValues.necessity_justification}` : "",
+        cnFlowValues.data_volume_note ? `规模说明：${cnFlowValues.data_volume_note}` : "",
+        cnFlowValues.internal_access_note ? `内部访问风险：${cnFlowValues.internal_access_note}` : ""
+      ].filter((item) => item.length > 0).join("；"),
+      data_categories: splitCsv(cnFlowValues.data_categories),
+      sensitive_data_flags: splitCsv(cnFlowValues.sensitive_data_flags),
+      recipient_entities,
+      transfer_chain: cnFlowValues.transfer_chain.trim(),
+      attachments
+    };
+  };
+
+  const buildCpraPayload = async (): Promise<unknown> => {
+    assertInput(hasText(cpraValues.company_name), "请填写企业名称。");
+    assertInput(hasText(cpraValues.business_model), "请填写业务模型。");
+    assertInput(hasText(cpraValues.data_lifecycle), "请填写数据生命周期说明。");
+    assertInput(hasText(cpraValues.notice_and_consent), "请填写告知与同意机制。");
+    assertInput(hasText(cpraValues.consumer_rights_process), "请填写消费者权利响应机制。");
+    assertInput(hasText(cpraValues.opt_out_and_sale_sharing), "请填写出售/共享与Opt-out机制。");
+    assertInput(
+      hasText(cpraValues.privacy_policy_url) || cpraPrivacyPolicyFiles.length > 0,
+      "请提供隐私政策URL或上传隐私政策文件。"
+    );
+
+    const [
+      privacyPaths,
+      rightsPaths,
+      dataMapPaths,
+      vendorPaths,
+      otherPaths
+    ] = await Promise.all([
+      uploadFiles(cpraPrivacyPolicyFiles),
+      uploadFiles(cpraRightsSopFiles),
+      uploadFiles(cpraDataMapFiles),
+      uploadFiles(cpraVendorListFiles),
+      uploadFiles(cpraOtherFiles)
+    ]);
+
+    const uploadedAttachments = [
+      ...privacyPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `隐私政策附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
+        return {
+          file_role: "privacy_policy" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...rightsPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `权利流程附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
+        return {
+          file_role: "rights_sop" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...dataMapPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `数据映射附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
+        return {
+          file_role: "data_map" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...vendorPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `供应商附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
+        return {
+          file_role: "vendor_list" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...otherPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `补充附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
+        return {
+          file_role: "other" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      })
+    ];
+
+    const urlAttachment = hasText(cpraValues.privacy_policy_url)
+      ? (() => {
+        assertInput(isValidUrl(cpraValues.privacy_policy_url), "隐私政策URL格式不正确，请使用 http(s) 链接。");
+        return [
+          {
+            file_role: "privacy_policy" as const,
+            file_name: "privacy_policy_url",
+            file_format: "url" as const,
+            storage_uri: cpraValues.privacy_policy_url.trim()
+          }
+        ];
+      })()
+      : [];
+
+    const attachments = [...urlAttachment, ...uploadedAttachments];
+    assertInput(attachments.length > 0, "请至少提供1份CPRA附件或隐私政策URL。");
+
+    return {
+      company_name: cpraValues.company_name.trim(),
+      business_model: [
+        cpraValues.business_model.trim(),
+        cpraValues.dba_name ? `DBA：${cpraValues.dba_name}` : "",
+        cpraValues.cpra_applicability_selfcheck ? `适用性：${cpraValues.cpra_applicability_selfcheck}` : "",
+        cpraValues.review_focus ? `重点：${cpraValues.review_focus}` : ""
+      ].filter((item) => item.length > 0).join("；"),
+      data_lifecycle: [
+        cpraValues.data_lifecycle,
+        cpraValues.data_categories ? `数据类别：${cpraValues.data_categories}` : "",
+        cpraValues.spi_usage_summary ? `SPI使用：${cpraValues.spi_usage_summary}` : ""
+      ].filter((item) => item.trim().length > 0).join("；"),
+      notice_and_consent: [
+        cpraValues.notice_and_consent,
+        hasText(cpraValues.privacy_policy_url) ? `隐私政策：${cpraValues.privacy_policy_url.trim()}` : "",
+        cpraValues.ui_dark_pattern_check ? `UI暗模式：${cpraValues.ui_dark_pattern_check}` : ""
+      ].filter((item) => item.trim().length > 0).join("；"),
+      consumer_rights_process: [
+        cpraValues.consumer_rights_process,
+        cpraValues.identity_verification_method ? `身份验证：${cpraValues.identity_verification_method}` : "",
+        cpraValues.rights_sla ? `SLA：${cpraValues.rights_sla}` : ""
+      ].filter((item) => item.trim().length > 0).join("；"),
+      opt_out_and_sale_sharing: cpraValues.opt_out_and_sale_sharing.trim(),
+      vendor_management: [
+        cpraValues.vendor_management,
+        cpraValues.spi_usage_summary ? `SPI限制：${cpraValues.spi_usage_summary}` : ""
+      ].filter((item) => item.trim().length > 0).join("；"),
+      attachments
+    };
+  };
+
   const buildDiagnosisPayload = (): unknown => ({
     company_name: diagnosisValues.company_name,
     answers: {
@@ -1925,6 +2414,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         requestPayload = await buildDpiaPayload();
       } else if (isTiaModule) {
         requestPayload = await buildTiaPayload();
+      } else if (isCnFlowModule) {
+        requestPayload = await buildCnFlowPayload();
+      } else if (isCpraModule) {
+        requestPayload = await buildCpraPayload();
       } else {
         requestPayload = JSON.parse(payloadText);
       }
@@ -1950,6 +2443,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                   ? dpiaValues
                   : isTiaModule
                     ? tiaValues
+                    : isCnFlowModule
+                      ? cnFlowValues
+                      : isCpraModule
+                        ? cpraValues
               : payloadText,
         success: false,
         error: message
@@ -1997,6 +2494,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const dpiaProgress = Math.round(((dpiaStepIndex + 1) / DPIA_STEPS.length) * 100);
   const currentTiaStep = TIA_STEPS[tiaStepIndex];
   const tiaProgress = Math.round(((tiaStepIndex + 1) / TIA_STEPS.length) * 100);
+  const currentCnFlowStep = CN_FLOW_STEPS[cnFlowStepIndex];
+  const cnFlowProgress = Math.round(((cnFlowStepIndex + 1) / CN_FLOW_STEPS.length) * 100);
+  const currentCpraStep = CPRA_STEPS[cpraStepIndex];
+  const cpraProgress = Math.round(((cpraStepIndex + 1) / CPRA_STEPS.length) * 100);
   const panelModuleLabel =
     isDocumentReviewTask && taskTemplate
       ? getTaskTemplateTitle(taskTemplate, lang)
@@ -2705,6 +3206,667 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
             </button>
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </section>
+      ) : isBcrModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">BCR Review Wizard</div>
+            <span>{bcrProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {BCR_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === bcrStepIndex ? "active" : ""}`}
+                onClick={() => setBcrStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentBcrStep.title}</div>
+          <div className="schema-field-grid">
+            {currentBcrStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <input
+                      value={String(bcrValues[field.name])}
+                      onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <select
+                      value={String(bcrValues[field.name])}
+                      onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="field-wrap schema-field-wide">
+                  <span>{field.label}</span>
+                  <textarea
+                    className="runner-textarea schema-textarea"
+                    value={String(bcrValues[field.name])}
+                    onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                  />
+                </label>
+              );
+            })}
+          </div>
+
+          {bcrStepIndex === BCR_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">BCR主文本与配套材料上传（仅docx/pdf）</div>
+              <input type="file" multiple onChange={(event) => setBcrFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {bcrFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {bcrFiles.length === 0 ? <p className="resource-empty">请上传至少1份BCR材料后再提交。</p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setBcrStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={bcrStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setBcrStepIndex((prev) => Math.min(BCR_STEPS.length - 1, prev + 1))}
+              disabled={bcrStepIndex === BCR_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "生成BCR审查报告"}
+            </button>
+          </div>
+        </section>
+      ) : isDpiaModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">DPIA Wizard</div>
+            <span>{dpiaProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {DPIA_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === dpiaStepIndex ? "active" : ""}`}
+                onClick={() => setDpiaStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentDpiaStep.title}</div>
+          <div className="schema-field-grid">
+            {currentDpiaStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <input
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{field.label}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <select
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(dpiaValues[field.name])}
+                    onChange={(event) => updateDpiaValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{field.label}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {dpiaStepIndex === DPIA_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">DPIA附件上传（docx/pdf/png/jpg）</div>
+              <input type="file" multiple onChange={(event) => setDpiaFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {dpiaFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {dpiaFiles.length === 0 ? <p className="resource-empty">请上传至少1份DPIA附件后再提交。</p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDpiaStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={dpiaStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDpiaStepIndex((prev) => Math.min(DPIA_STEPS.length - 1, prev + 1))}
+              disabled={dpiaStepIndex === DPIA_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "生成DPIA草案"}
+            </button>
+          </div>
+        </section>
+      ) : isTiaModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">TIA Wizard</div>
+            <span>{tiaProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {TIA_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === tiaStepIndex ? "active" : ""}`}
+                onClick={() => setTiaStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentTiaStep.title}</div>
+          <div className="schema-field-grid">
+            {currentTiaStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <input
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{field.label}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{field.label}</span>
+                    <select
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(tiaValues[field.name])}
+                    onChange={(event) => updateTiaValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{field.label}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {tiaStepIndex === TIA_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">TIA附件上传（docx/pdf）</div>
+              <input type="file" multiple onChange={(event) => setTiaFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {tiaFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {tiaFiles.length === 0 ? <p className="resource-empty">请上传至少1份TIA附件后再提交。</p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setTiaStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={tiaStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setTiaStepIndex((prev) => Math.min(TIA_STEPS.length - 1, prev + 1))}
+              disabled={tiaStepIndex === TIA_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "生成TIA草案"}
+            </button>
+          </div>
+        </section>
+      ) : isCnFlowModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">EO 14117 Wizard</div>
+            <span>{cnFlowProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {CN_FLOW_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === cnFlowStepIndex ? "active" : ""}`}
+                onClick={() => setCnFlowStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentCnFlowStep.title}</div>
+          {currentCnFlowStep.fields.length > 0 ? (
+            <div className="schema-field-grid">
+              {currentCnFlowStep.fields.map((field) => {
+                if (field.type === "text") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{field.label}</span>
+                      <input
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "textarea") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap schema-field-wide">
+                      <span>{field.label}</span>
+                      <textarea
+                        className="runner-textarea schema-textarea"
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "select") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{field.label}</span>
+                      <select
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      >
+                        {(field.options ?? []).map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                }
+                return (
+                  <label key={String(field.name)} className="schema-checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(cnFlowValues[field.name])}
+                      onChange={(event) => updateCnFlowValue(field.name, event.target.checked as never)}
+                    />
+                    <span>{field.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {cnFlowStepIndex === CN_FLOW_STEPS.length - 1 ? (
+            <>
+              <section className="schema-upload-card">
+                <div className="runner-title">数据清单附件（必传，data_inventory）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowDataInventoryFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowDataInventoryFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowDataInventoryFiles.length === 0 ? (
+                    <p className="resource-empty">请上传至少1份数据清单（xlsx/csv/docx/pdf）。</p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">实体清单附件（必传，entity_inventory）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowEntityInventoryFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowEntityInventoryFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowEntityInventoryFiles.length === 0 ? (
+                    <p className="resource-empty">请上传至少1份实体清单（xlsx/csv/docx/pdf）。</p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">补充材料（可选，supporting_material）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowSupportingFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowSupportingFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowSupportingFiles.length === 0 ? (
+                    <p className="resource-empty">可上传股权结构、组织架构、合同台账等辅助材料。</p>
+                  ) : null}
+                </div>
+              </section>
+            </>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCnFlowStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={cnFlowStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCnFlowStepIndex((prev) => Math.min(CN_FLOW_STEPS.length - 1, prev + 1))}
+              disabled={cnFlowStepIndex === CN_FLOW_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "生成14117风险评估结论报告"}
+            </button>
+          </div>
+        </section>
+      ) : isCpraModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">CPRA Wizard</div>
+            <span>{cpraProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {CPRA_STEPS.map((step, index) => (
+              <button
+                key={step.title}
+                className={`schema-step-dot ${index === cpraStepIndex ? "active" : ""}`}
+                onClick={() => setCpraStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentCpraStep.title}</div>
+          {currentCpraStep.fields.length > 0 ? (
+            <div className="schema-field-grid">
+              {currentCpraStep.fields.map((field) => {
+                if (field.type === "text") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{field.label}</span>
+                      <input
+                        value={String(cpraValues[field.name])}
+                        onChange={(event) => updateCpraValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "textarea") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap schema-field-wide">
+                      <span>{field.label}</span>
+                      <textarea
+                        className="runner-textarea schema-textarea"
+                        value={String(cpraValues[field.name])}
+                        onChange={(event) => updateCpraValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                return (
+                  <label key={String(field.name)} className="schema-checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(cpraValues[field.name])}
+                      onChange={(event) => updateCpraValue(field.name, event.target.checked as never)}
+                    />
+                    <span>{field.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {cpraStepIndex === CPRA_STEPS.length - 1 ? (
+            <>
+              <section className="schema-upload-card">
+                <div className="runner-title">隐私政策（privacy_policy）</div>
+                <p className="resource-empty">可填写URL，也可上传文档。两者满足其一即可。</p>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraPrivacyPolicyFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraPrivacyPolicyFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraPrivacyPolicyFiles.length === 0 ? (
+                    <p className="resource-empty">若未提供URL，请至少上传1份隐私政策文件。</p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">消费者权利SOP（rights_sop，可选）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraRightsSopFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraRightsSopFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraRightsSopFiles.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">数据映射材料（data_map，可选）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraDataMapFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraDataMapFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraDataMapFiles.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">供应商清单（vendor_list，可选）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraVendorListFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraVendorListFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraVendorListFiles.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">其他补充材料（other，可选）</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraOtherFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraOtherFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraOtherFiles.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
+                </div>
+              </section>
+            </>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCpraStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={cpraStepIndex === 0}
+            >
+              上一步
+            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCpraStepIndex((prev) => Math.min(CPRA_STEPS.length - 1, prev + 1))}
+              disabled={cpraStepIndex === CPRA_STEPS.length - 1}
+            >
+              下一步
+            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "生成CPRA合规全景报告"}
             </button>
           </div>
         </section>
