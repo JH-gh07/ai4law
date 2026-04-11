@@ -21,6 +21,7 @@ import { extractArtifacts, extractConsistencyIssues, extractEvidenceHits, extrac
 import { AssistantPanel } from "./AssistantPanel";
 import { ResourcePanel } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
+import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
 
 type WorkspaceShellProps = {
@@ -92,6 +93,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [workspaceQuery, setWorkspaceQuery] = useState("");
+  const [renameDraft, setRenameDraft] = useState(taskSpace.name);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<WorkspaceTopTabId>("details");
   const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "canvas", "report"]);
   const taskRuns = useMemo(
@@ -210,6 +213,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setActiveTab("details");
     setOpenTabs(["details", "canvas", "report"]);
     setWorkspaceQuery("");
+    setRenameDraft(taskSpace.name);
+    setRenameModalOpen(false);
   }, [taskSpace.id]);
 
   const openTab = (tabId: WorkspaceTopTabId) => {
@@ -326,8 +331,16 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   };
 
   const renameTask = () => {
-    const nextName = globalThis.prompt(t("tasksRenamePrompt"), taskSpace.name)?.trim();
-    if (!nextName || nextName === taskSpace.name) return;
+    setRenameDraft(taskSpace.name);
+    setRenameModalOpen(true);
+  };
+
+  const submitRenameTask = () => {
+    const nextName = renameDraft.trim();
+    if (!nextName || nextName === taskSpace.name) {
+      setRenameModalOpen(false);
+      return;
+    }
     dispatch({
       type: "rename_task_space",
       payload: {
@@ -336,6 +349,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         updatedAt: new Date().toISOString()
       }
     });
+    setRenameModalOpen(false);
   };
 
   const renderTabSurface = () => {
@@ -617,6 +631,21 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         ) : null}
         {state.panelState.rightOpen ? <AssistantPanel taskSpace={taskSpace} /> : null}
       </div>
+
+      <WorkspacePromptModal
+        open={renameModalOpen}
+        title={t("tasksRenameTitle")}
+        description={t("tasksRenameDesc")}
+        valueLabel={t("tasksNameField")}
+        value={renameDraft}
+        valuePlaceholder={t("tasksRenamePrompt")}
+        onValueChange={setRenameDraft}
+        confirmText={t("tasksRenameConfirmAction")}
+        cancelText={t("cancelBtn")}
+        confirmDisabled={renameDraft.trim().length === 0}
+        onCancel={() => setRenameModalOpen(false)}
+        onConfirm={submitRenameTask}
+      />
     </section>
   );
 }

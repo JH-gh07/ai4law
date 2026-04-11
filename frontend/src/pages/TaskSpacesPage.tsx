@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal";
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
 import { useLang } from "../lib/language";
@@ -28,6 +29,8 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [jurisdiction, setJurisdiction] = useState<"ALL" | Jurisdiction>("ALL");
+  const [renameDraft, setRenameDraft] = useState<{ taskId: string; value: string } | null>(null);
+  const [pendingDeleteTask, setPendingDeleteTask] = useState<{ taskId: string; name: string } | null>(null);
   const jurisdictionShowcase = [
     {
       code: "CN" as const,
@@ -80,16 +83,26 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   }, [state.taskSpaces]);
 
   const renameTask = (taskId: string, currentName: string) => {
-    const nextName = globalThis.prompt(t("tasksRenamePrompt"), currentName)?.trim();
-    if (!nextName || nextName === currentName) return;
+    setRenameDraft({ taskId, value: currentName });
+  };
+
+  const submitRenameTask = () => {
+    if (!renameDraft) return;
+    const task = state.taskSpaces.find((item) => item.id === renameDraft.taskId);
+    const nextName = renameDraft.value.trim();
+    if (!task || !nextName || nextName === task.name) {
+      setRenameDraft(null);
+      return;
+    }
     dispatch({
       type: "rename_task_space",
       payload: {
-        id: taskId,
+        id: renameDraft.taskId,
         name: nextName,
         updatedAt: new Date().toISOString()
       }
     });
+    setRenameDraft(null);
   };
 
   const openTask = (taskId: string) => {
@@ -97,9 +110,15 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   };
 
   const deleteTask = (taskId: string) => {
-    const ok = globalThis.confirm(t("tasksDeleteConfirm"));
-    if (!ok) return;
-    dispatch({ type: "delete_task_space", payload: { id: taskId } });
+    const task = state.taskSpaces.find((item) => item.id === taskId);
+    if (!task) return;
+    setPendingDeleteTask({ taskId, name: task.name });
+  };
+
+  const submitDeleteTask = () => {
+    if (!pendingDeleteTask) return;
+    dispatch({ type: "delete_task_space", payload: { id: pendingDeleteTask.taskId } });
+    setPendingDeleteTask(null);
   };
 
   const onTaskCardKeyDown = (event: KeyboardEvent<HTMLElement>, taskId: string) => {
@@ -278,6 +297,31 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
           </div>
         </div>
       </section>
+
+      <WorkspacePromptModal
+        open={!!renameDraft}
+        title={t("tasksRenameTitle")}
+        description={t("tasksRenameDesc")}
+        valueLabel={t("tasksNameField")}
+        value={renameDraft?.value ?? ""}
+        valuePlaceholder={t("tasksRenamePrompt")}
+        onValueChange={(value) => setRenameDraft((prev) => (prev ? { ...prev, value } : prev))}
+        confirmText={t("tasksRenameConfirmAction")}
+        cancelText={t("cancelBtn")}
+        confirmDisabled={!renameDraft || renameDraft.value.trim().length === 0}
+        onCancel={() => setRenameDraft(null)}
+        onConfirm={submitRenameTask}
+      />
+
+      <WorkspacePromptModal
+        open={!!pendingDeleteTask}
+        title={t("tasksDeleteTitle")}
+        description={`${t("tasksDeleteConfirm")}${pendingDeleteTask ? `\n${pendingDeleteTask.name}` : ""}`}
+        confirmText={t("tasksDeleteConfirmAction")}
+        cancelText={t("cancelBtn")}
+        onCancel={() => setPendingDeleteTask(null)}
+        onConfirm={submitDeleteTask}
+      />
     </section>
   );
 }
