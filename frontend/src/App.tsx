@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { TopNav } from "./components/common/TopNav";
 import { CreateWorkspaceModal } from "./components/modals/CreateWorkspaceModal";
@@ -14,10 +14,9 @@ import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
 import { ReportCenterPage } from "./pages/ReportCenterPage";
+import { SuperDesign002Page } from "./pages/SuperDesign002Page";
 import { TaskSpacesPage } from "./pages/TaskSpacesPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
-
-const SuperDesign002Page = lazy(() => import("./pages/SuperDesign002Page").then((mod) => ({ default: mod.SuperDesign002Page })));
 
 function AppShell() {
   const QUICK_START_DISMISSED_KEY = "ai4law_quick_start_dismissed_v1";
@@ -25,6 +24,7 @@ function AppShell() {
   const location = useLocation();
   const { state, dispatch } = useAppStore();
   const isWorkspaceRoute = location.pathname.startsWith("/workspace");
+  const hideGlobalTopNav = isWorkspaceRoute;
 
   const [modeModalOpen, setModeModalOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<LaunchMode | null>(null);
@@ -78,12 +78,14 @@ function AppShell() {
 
   return (
     <div className="app-root">
-      <TopNav
-        onStart={startFlow}
-        onReplayGuide={() => dispatch({ type: "set_onboarding", payload: { active: true, stepIndex: 0 } })}
-      />
+      {hideGlobalTopNav ? null : (
+        <TopNav
+          onStart={startFlow}
+          onReplayGuide={() => dispatch({ type: "set_onboarding", payload: { active: true, stepIndex: 0 } })}
+        />
+      )}
 
-      <main className={`app-main ${isWorkspaceRoute ? "workspace-main" : ""}`}>
+      <main className={`app-main ${isWorkspaceRoute ? "workspace-main workspace-main-embedded" : ""}`}>
         <Routes>
           <Route path="/" element={<HomePage onStart={startFlow} />} />
           <Route path="/jurisdictions/:code" element={<JurisdictionHubPage onStart={startFlow} />} />
@@ -93,14 +95,7 @@ function AppShell() {
           <Route path="/reports" element={<ReportCenterPage />} />
           <Route path="/evidence" element={<EvidenceCenterPage />} />
           <Route path="/docs" element={<DocsPlaceholderPage />} />
-          <Route
-            path="/superdesign/002"
-            element={
-              <Suspense fallback={<section className="page-shell">Loading SuperDesign component...</section>}>
-                <SuperDesign002Page />
-              </Suspense>
-            }
-          />
+          <Route path="/superdesign/002" element={<SuperDesign002Page />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

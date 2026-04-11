@@ -8,12 +8,18 @@ import Component_6 from './components/Component_6';
 import Component_7 from './components/Component_7';
 import Component_8 from './components/Component_8';
 
-function App() {
+function App({
+  appName = 'AI4Law',
+  workspaceName = '工作台',
+  tabs,
+  activeTabId = 'details',
+  onSelectTab,
+  onBackToTasks,
+  onOpenReports,
+  onOpenEvidence,
+  onOpenDocs
+}) {
   useEffect(() => {
-    // Execute delayed scripts after React has rendered
-    console.log('[React] DOM rendered, executing delayed scripts...');
-
-    // Execute regular delayed scripts first
     const delayedScripts = document.querySelectorAll(
       'script[type="text/delayed"]'
     );
@@ -21,21 +27,17 @@ function App() {
     delayedScripts.forEach((script) => {
       const newScript = document.createElement('script');
 
-      // External script (has data-src)
       if (script.dataset.src) {
         newScript.src = script.dataset.src;
 
-        // Copy other attributes (integrity, crossorigin, defer, etc.)
         Array.from(script.attributes).forEach((attr) => {
           if (attr.name !== 'type' && attr.name !== 'data-src') {
             newScript.setAttribute(attr.name, attr.value);
           }
         });
       } else {
-        // Inline script
         newScript.textContent = script.textContent;
 
-        // Copy data-* attributes
         Array.from(script.attributes).forEach((attr) => {
           if (attr.name !== 'type' && attr.name.startsWith('data-')) {
             newScript.setAttribute(attr.name, attr.value);
@@ -46,30 +48,25 @@ function App() {
       document.body.appendChild(newScript);
     });
 
-    // Execute delayed module scripts (Pattern 006: Pre-bundled ES Module Scripts)
     const delayedModules = document.querySelectorAll(
       'script[type="text/delayed-module"]'
     );
 
     delayedModules.forEach((script) => {
       const newScript = document.createElement('script');
-      newScript.type = 'module'; // Restore original type
+      newScript.type = 'module';
 
-      // External module script (has data-src)
       if (script.dataset.src) {
         newScript.src = script.dataset.src;
 
-        // Copy other attributes (crossorigin, etc.)
         Array.from(script.attributes).forEach((attr) => {
           if (attr.name !== 'type' && attr.name !== 'data-src') {
             newScript.setAttribute(attr.name, attr.value);
           }
         });
       } else {
-        // Inline module script
         newScript.textContent = script.textContent;
 
-        // Copy data-* attributes
         Array.from(script.attributes).forEach((attr) => {
           if (attr.name !== 'type' && attr.name.startsWith('data-')) {
             newScript.setAttribute(attr.name, attr.value);
@@ -79,10 +76,6 @@ function App() {
 
       document.body.appendChild(newScript);
     });
-
-    console.log(
-      `[React] Executed ${delayedScripts.length} delayed scripts + ${delayedModules.length} delayed modules`
-    );
   }, []);
 
   return (
@@ -91,7 +84,7 @@ function App() {
         <div id="superdesign-root-002" className="h-full caret-zinc-950 [color-scheme:light]">
           <div
             id="workspace-root"
-            className="[--workspace-left-width:280px] [--ws-scrollbar-fade-ms:410ms] bg-[#aba9a5] h-[838px] min-h-[838px] relative flex overflow-x-hidden overflow-y-hidden flex-col gap-y-2 gap-x-2 isolate caret-zinc-950 [color-scheme:light] p-2"
+            className="[--workspace-left-width:280px] [--ws-scrollbar-fade-ms:410ms] bg-[#aba9a5] h-[calc(100vh-16px)] min-h-[680px] relative flex overflow-x-hidden overflow-y-hidden flex-col gap-y-2 gap-x-2 isolate caret-zinc-950 [color-scheme:light] p-2"
           >
             <div
               aria-hidden="true"
@@ -113,9 +106,18 @@ function App() {
             </div>
             <div className="h-11 relative z-[60] shrink-0 caret-zinc-950 [color-scheme:light]">
               <nav className="bg-[rgba(255,255,255,0.72)] w-full h-11 border-t-zinc-200 border-r-zinc-200 border-l-zinc-200 z-50 flex shrink-0 items-center gap-y-3.5 gap-x-3.5 shadow-[rgba(0,0,0,0.06)_0px_1px_2px_0px] backdrop-blur-md [clip-path:inset(0px_round_10px)] caret-zinc-950 [color-scheme:light] px-3.5 rounded-br-[10px] rounded-t-[10px] rounded-bl-[10px] border-b-[rgba(0,0,0,0.05)] border-b">
-                <Component_1 />
-                <Component_2 />
-                <Component_3 />
+                <Component_1
+                  appName={appName}
+                  workspaceName={workspaceName}
+                  onBackToTasks={onBackToTasks}
+                />
+                <Component_2 tabs={tabs} activeTabId={activeTabId} onSelectTab={onSelectTab} />
+                <Component_3
+                  onOpenReports={onOpenReports}
+                  onOpenEvidence={onOpenEvidence}
+                  onOpenDocs={onOpenDocs}
+                  onOpenTasks={onBackToTasks}
+                />
               </nav>
             </div>
             <div className="w-full min-h-0 relative flex grow basis-[0%] gap-y-0 gap-x-0 caret-zinc-950 [color-scheme:light]">

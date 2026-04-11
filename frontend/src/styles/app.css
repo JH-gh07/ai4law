@@ -27,6 +27,10 @@
   overflow: hidden;
 }
 
+.app-main.workspace-main.workspace-main-embedded {
+  height: 100vh;
+}
+
 .global-nav-wrap {
   position: sticky;
   top: 0;
