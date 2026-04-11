@@ -2063,9 +2063,11 @@
 
 .landing-blue-why-grid {
   margin-top: 1.45rem;
+  grid-auto-rows: 1fr;
 }
 
 .landing-blue-why-card {
+  height: 100%;
   min-height: 300px;
   border-radius: 30px;
   padding: 1.05rem 1.02rem;
@@ -2153,9 +2155,11 @@
 .landing-blue-cap-grid {
   margin-top: 1.3rem;
   gap: 0.82rem;
+  grid-auto-rows: 1fr;
 }
 
 .landing-blue-cap-card {
+  height: 100%;
   min-height: 250px;
   border-radius: 32px;
   padding: 1.18rem 1.12rem;
@@ -2201,9 +2205,11 @@
 .landing-blue-jd-grid {
   margin-top: 1.3rem;
   gap: 0.82rem;
+  grid-auto-rows: 1fr;
 }
 
 .landing-blue-jd-card {
+  height: 100%;
   min-height: 510px;
   border-radius: 32px;
   padding: 1.18rem 1.12rem;
@@ -2290,6 +2296,7 @@
 .landing-blue-workflow-right {
   margin-top: 0;
   gap: 0.78rem;
+  align-content: start;
 }
 
 .landing-blue-flow-grid {
@@ -2336,6 +2343,7 @@
   border-radius: 38px !important;
   grid-template-columns: auto 1fr auto !important;
   padding: 0.88rem 1rem !important;
+  align-items: center;
 }
 
 .landing-blue-workflow-step p {
