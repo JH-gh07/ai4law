@@ -160,8 +160,10 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
 
   return (
     <section className="landing-blue-page">
-      <div className="landing-blue-shell">
-        <section className="landing-blue-hero">
+      <div className="landing-blue-scroll">
+        <div className="landing-blue-shell">
+        <section className="landing-blue-hero-screen">
+          <div className="landing-blue-hero">
           <div className="landing-blue-hero-left">
             <div className="landing-blue-chip">{isZh ? "跨境合规工作流" : "Cross-Border Compliance Workflow"}</div>
             <h1>
@@ -240,9 +242,10 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
               </div>
             </div>
           </div>
+          </div>
         </section>
 
-        <section id="overview" className="landing-blue-section">
+        <section id="overview" className="landing-blue-section landing-blue-screen">
           <header className="landing-blue-section-head landing-blue-center-head">
             <span>{isZh ? "WHY THIS PRODUCT" : "WHY THIS PRODUCT"}</span>
             <h2>{isZh ? "不是缺少信息，而是缺少一条清楚的合规主线" : "Not a lack of information, but a missing compliance storyline"}</h2>
@@ -263,7 +266,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </div>
         </section>
 
-        <section id="modules" className="landing-blue-section">
+        <section id="modules" className="landing-blue-section landing-blue-screen">
           <header className="landing-blue-section-head landing-blue-split-head">
             <div>
               <span>{isZh ? "HOW IT WORKS" : "HOW IT WORKS"}</span>
@@ -286,7 +289,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </div>
         </section>
 
-        <section id="jurisdictions" className="landing-blue-section">
+        <section id="jurisdictions" className="landing-blue-section landing-blue-screen">
           <header className="landing-blue-section-head landing-blue-split-head">
             <div>
               <span>{isZh ? "JURISDICTIONS" : "JURISDICTIONS"}</span>
@@ -312,7 +315,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </div>
         </section>
 
-        <section id="flow" className="landing-blue-flow">
+        <section id="flow" className="landing-blue-flow landing-blue-screen">
           <header className="landing-blue-section-head landing-blue-split-head">
             <div>
               <span>{isZh ? "WORKFLOW" : "WORKFLOW"}</span>
@@ -334,7 +337,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </div>
         </section>
 
-        <section className="landing-blue-footer">
+        <section className="landing-blue-footer landing-blue-screen">
           <header className="landing-blue-section-head landing-blue-center-head">
             <span>{isZh ? "NEXT STEP" : "NEXT STEP"}</span>
             <h2>{isZh ? "从介绍到执行，直接进入任务空间" : "Move from narrative to execution"}</h2>
@@ -357,6 +360,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
             )}
           </div>
         </section>
+        </div>
       </div>
     </section>
   );
