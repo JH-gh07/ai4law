@@ -2284,37 +2284,38 @@
 .landing-blue-workflow-layout {
   width: 100%;
   display: grid;
-  gap: 1.1rem;
+  gap: 1rem;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  align-items: start;
+  align-items: stretch;
 }
 
 .landing-blue-workflow-left {
   align-content: start;
-  gap: 0.86rem;
+  gap: 0.72rem;
+  padding-top: 0.08rem;
 }
 
 .landing-blue-workflow-title h2 {
-  max-width: 10ch;
-  font-size: clamp(2.1rem, 4.2vw, 4.6rem);
-  line-height: 1.04;
+  max-width: 12ch;
+  font-size: clamp(1.5rem, 2.5vw, 2.12rem);
+  line-height: 1.24;
 }
 
 .landing-blue-workflow-left p {
-  font-size: clamp(1.02rem, 1.15vw, 1.2rem);
-  max-width: 28ch;
+  font-size: clamp(0.96rem, 1.03vw, 1.06rem);
+  max-width: 52ch;
 }
 
 .landing-blue-workflow-right {
   margin-top: 0;
-  gap: 0.78rem;
+  gap: 0.66rem;
   align-content: start;
 }
 
 .landing-blue-flow-grid {
-  margin-top: 0.88rem;
+  margin-top: 0.46rem;
   display: grid;
-  gap: 0.46rem;
+  gap: 0.52rem;
 }
 
 .landing-blue-flow-grid article {
@@ -2351,40 +2352,50 @@
 }
 
 .landing-blue-workflow-step {
-  min-height: 132px;
-  border-radius: 38px !important;
+  min-height: 104px;
+  border-radius: 28px !important;
   grid-template-columns: auto 1fr auto !important;
-  padding: 0.88rem 1rem !important;
+  padding: 0.76rem 0.92rem !important;
   align-items: center;
+  background:
+    linear-gradient(180deg, rgba(17, 43, 72, 0.82) 0%, rgba(12, 34, 59, 0.82) 100%) !important;
+  border-color: rgba(156, 198, 244, 0.28) !important;
 }
 
 .landing-blue-workflow-step p {
-  font-size: clamp(1.45rem, 2vw, 2rem);
-  line-height: 1.3;
-  color: #eaf5ff;
+  margin: 0;
+  font-size: clamp(1.02rem, 1.35vw, 1.32rem);
+  line-height: 1.45;
+  letter-spacing: 0.002em;
+  color: #e7f3ff;
 }
 
 .landing-blue-step-id {
-  width: 68px;
-  height: 68px;
-  border-radius: 22px !important;
-  font-size: 2rem !important;
-  font-family: "Source Serif 4", serif;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px !important;
+  font-size: 1.05rem !important;
+  font-family: "SF Mono", "JetBrains Mono", "Source Code Pro", monospace;
+  border: 1px solid rgba(166, 209, 251, 0.4);
+  background: rgba(14, 40, 67, 0.86);
+  color: #d5e9ff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .landing-blue-workflow-step em {
-  color: #8ab0de;
+  color: #9ec2eb;
   font-style: normal;
-  font-size: 2.8rem;
+  font-size: 1.8rem;
   line-height: 1;
-  transform: translateY(-3px);
+  transform: translateY(-1px);
 }
 
 .landing-blue-footer {
   text-align: center;
+  justify-items: center;
+  align-content: center;
 }
 
 .landing-blue-footer-actions {
@@ -2471,6 +2482,14 @@
   .landing-blue-cap-head p,
   .landing-blue-jd-head p {
     justify-self: start;
+  }
+
+  .landing-blue-workflow-title h2 {
+    max-width: none;
+  }
+
+  .landing-blue-workflow-left p {
+    max-width: none;
   }
 }
 

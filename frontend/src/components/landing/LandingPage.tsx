@@ -246,7 +246,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="overview" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-stack-head landing-blue-why-head">
+          <header className="landing-blue-section-head landing-blue-center-head landing-blue-why-head">
             <span>{isZh ? "WHY AI4LAW" : "WHY AI4LAW"}</span>
             <h2>{isZh ? "不是缺少信息，而是缺少一条清楚的合规主线" : "Not a lack of information, but a missing compliance storyline"}</h2>
             <p>
@@ -267,9 +267,11 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="modules" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-stack-head landing-blue-cap-head">
-            <span>{isZh ? "HOW IT WORKS" : "HOW IT WORKS"}</span>
-            <h2>{isZh ? "一个层层下滑、逻辑递进的首页结构" : "A layered narrative homepage structure"}</h2>
+          <header className="landing-blue-section-head landing-blue-split-head landing-blue-cap-head">
+            <div>
+              <span>{isZh ? "HOW IT WORKS" : "HOW IT WORKS"}</span>
+              <h2>{isZh ? "一个层层下滑、逻辑递进的首页结构" : "A layered narrative homepage structure"}</h2>
+            </div>
             <p>
               {isZh
                 ? "参考你的目标页面，它的核心是叙事连续。这里采用同样结构，但保持 AI4Law 的法学严肃风格。"
@@ -288,9 +290,11 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         </section>
 
         <section id="jurisdictions" className="landing-blue-section landing-blue-screen">
-          <header className="landing-blue-section-head landing-blue-stack-head landing-blue-jd-head">
-            <span>{isZh ? "JURISDICTIONS" : "JURISDICTIONS"}</span>
-            <h2>{isZh ? "不同法域，不同规则，同一套交互入口" : "Different regimes, one interaction framework"}</h2>
+          <header className="landing-blue-section-head landing-blue-split-head landing-blue-jd-head">
+            <div>
+              <span>{isZh ? "JURISDICTIONS" : "JURISDICTIONS"}</span>
+              <h2>{isZh ? "不同法域，不同规则，同一套交互入口" : "Different regimes, one interaction framework"}</h2>
+            </div>
             <p>
               {isZh
                 ? "这个系统不是抽象的法律 AI，而是明确覆盖中国、欧盟、美国三类跨境数据核心场景。"
