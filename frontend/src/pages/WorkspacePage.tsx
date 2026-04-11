@@ -15,6 +15,9 @@ export function WorkspacePage() {
   const task = taskId ? state.taskSpaces.find((item) => item.id === taskId) : null;
 
   if (!task) {
+    if (latestTask) {
+      return <Navigate to={`/workspace/${latestTask.id}`} replace />;
+    }
     return <Navigate to="/tasks" replace />;
   }
 
