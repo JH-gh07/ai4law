@@ -1797,6 +1797,9 @@
 .landing-blue-flow,
 .landing-blue-footer {
   position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.72rem;
   overflow: hidden;
   border: 1px solid rgba(137, 183, 238, 0.24);
   border-radius: 24px;
@@ -2008,8 +2011,8 @@
   margin: 0;
   color: #ebf5ff;
   font-family: "Noto Serif SC", serif;
-  font-size: clamp(1.35rem, 2.45vw, 2.2rem);
-  line-height: 1.26;
+  font-size: clamp(1.2rem, 2.1vw, 1.9rem);
+  line-height: 1.3;
   letter-spacing: -0.012em;
   text-wrap: balance;
 }
@@ -2032,14 +2035,22 @@
   max-width: 70ch;
 }
 
+.landing-blue-stack-head {
+  margin-bottom: 0.04rem;
+}
+
+.landing-blue-stack-head p {
+  max-width: 70ch;
+}
+
 .landing-blue-why-head {
-  margin-top: 0.2rem;
+  margin-top: 0.08rem;
 }
 
 .landing-blue-why-head h2 {
-  max-width: 26ch;
-  font-size: clamp(1.7rem, 3.2vw, 2.9rem);
-  line-height: 1.16;
+  max-width: 24ch;
+  font-size: clamp(1.42rem, 2.45vw, 2.08rem);
+  line-height: 1.22;
   letter-spacing: -0.014em;
 }
 
@@ -2062,15 +2073,15 @@
 }
 
 .landing-blue-why-grid {
-  margin-top: 1rem;
+  margin-top: 0.6rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-why-card {
   height: 100%;
-  min-height: 240px;
-  border-radius: 24px;
-  padding: 0.86rem 0.9rem;
+  min-height: 188px;
+  border-radius: 18px;
+  padding: 0.72rem 0.78rem;
 }
 
 .landing-blue-pain-grid article,
@@ -2142,32 +2153,31 @@
 }
 
 .landing-blue-cap-head h2 {
-  max-width: 16ch;
-  font-size: clamp(1.7rem, 3vw, 2.85rem);
-  line-height: 1.14;
+  max-width: 17ch;
+  font-size: clamp(1.42rem, 2.42vw, 2.04rem);
+  line-height: 1.22;
 }
 
 .landing-blue-cap-head p {
-  max-width: 40ch;
-  justify-self: end;
+  max-width: 70ch;
   font-size: clamp(0.95rem, 1vw, 1.04rem);
 }
 
 .landing-blue-cap-grid {
-  margin-top: 1rem;
+  margin-top: 0.6rem;
   gap: 0.64rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-cap-card {
   height: 100%;
-  min-height: 210px;
-  border-radius: 24px;
-  padding: 0.88rem 0.92rem;
+  min-height: 174px;
+  border-radius: 18px;
+  padding: 0.7rem 0.78rem;
 }
 
 .landing-blue-cap-card h3 {
-  font-size: clamp(1.48rem, 2.2vw, 1.9rem);
+  font-size: clamp(1.28rem, 1.92vw, 1.64rem);
 }
 
 .landing-blue-cap-card p {
@@ -2194,52 +2204,52 @@
 }
 
 .landing-blue-jd-head h2 {
-  max-width: 13ch;
-  font-size: clamp(1.7rem, 3vw, 2.85rem);
-  line-height: 1.14;
+  max-width: 18ch;
+  font-size: clamp(1.42rem, 2.45vw, 2.08rem);
+  line-height: 1.22;
 }
 
 .landing-blue-jd-head p {
-  max-width: 42ch;
+  max-width: 70ch;
   font-size: clamp(0.95rem, 1vw, 1.04rem);
 }
 
 .landing-blue-jd-grid {
-  margin-top: 1rem;
+  margin-top: 0.6rem;
   gap: 0.64rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-jd-card {
   height: 100%;
-  min-height: 390px;
-  border-radius: 24px;
-  padding: 0.88rem 0.92rem;
+  min-height: 278px;
+  border-radius: 18px;
+  padding: 0.72rem 0.8rem;
 }
 
 .landing-blue-jd-icon {
-  width: 66px;
-  height: 66px;
+  width: 58px;
+  height: 58px;
   align-items: center;
   justify-content: center;
-  border-radius: 20px;
-  font-size: 1.6rem;
-  margin-bottom: 0.55rem;
+  border-radius: 16px;
+  font-size: 1.3rem;
+  margin-bottom: 0.38rem;
 }
 
 .landing-blue-jd-card h3 {
-  font-size: clamp(1.8rem, 2.2vw, 2.08rem);
+  font-size: clamp(1.5rem, 2vw, 1.84rem);
   margin: 0.06rem 0 0.06rem;
 }
 
 .landing-blue-jurisdiction-grid ul {
-  margin: 0.36rem 0 0;
+  margin: 0.2rem 0 0;
   padding-left: 1rem;
   color: #b6cfe8;
-  line-height: 1.68;
-  font-size: 0.94rem;
+  line-height: 1.62;
+  font-size: 0.92rem;
   display: grid;
-  gap: 0.18rem;
+  gap: 0.14rem;
 }
 
 .landing-blue-jurisdiction-grid li {
@@ -2485,7 +2495,7 @@
   .landing-blue-cap-head h2,
   .landing-blue-jd-head h2,
   .landing-blue-workflow-title h2 {
-    font-size: clamp(1.85rem, 8vw, 2.65rem);
+    font-size: clamp(1.45rem, 7vw, 2rem);
   }
 
   .landing-blue-why-card,
