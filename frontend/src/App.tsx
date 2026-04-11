@@ -14,6 +14,7 @@ import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
 import { ReportCenterPage } from "./pages/ReportCenterPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { SuperDesign002Page } from "./pages/SuperDesign002Page";
 import { TaskSpacesPage } from "./pages/TaskSpacesPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
@@ -87,7 +88,7 @@ function AppShell() {
 
       <main className={`app-main ${isWorkspaceRoute ? "workspace-main workspace-main-embedded" : ""}`}>
         <Routes>
-          <Route path="/" element={<HomePage onStart={startFlow} />} />
+          <Route path="/" element={<HomePage onStart={startFlow} onQuickCreate={createTask} />} />
           <Route path="/jurisdictions/:code" element={<JurisdictionHubPage onStart={startFlow} />} />
           <Route path="/tasks" element={<TaskSpacesPage onStart={startFlow} onQuickCreate={createTask} />} />
           <Route path="/workspace" element={<WorkspacePage />} />
@@ -95,6 +96,7 @@ function AppShell() {
           <Route path="/reports" element={<ReportCenterPage />} />
           <Route path="/evidence" element={<EvidenceCenterPage />} />
           <Route path="/docs" element={<DocsPlaceholderPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/superdesign/002" element={<SuperDesign002Page />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

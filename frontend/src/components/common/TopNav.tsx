@@ -45,7 +45,7 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
           <Link to="/docs" className="global-chip">{t("navDocs")}</Link>
           <button className="global-chip" onClick={onReplayGuide}>{t("onboardingReplay")}</button>
           {!onWorkspace ? <button className="global-chip global-chip-optional">{t("navHelp")}</button> : null}
-          {!onWorkspace ? <Link to="/docs" className="global-chip global-chip-optional">{t("navSettings")}</Link> : null}
+          {!onWorkspace ? <Link to="/settings" className="global-chip global-chip-optional">{t("navSettings")}</Link> : null}
           <button className={`lang-btn ${lang === "zh" ? "active" : ""}`} onClick={() => setLang("zh")}>中</button>
           <button className={`lang-btn ${lang === "en" ? "active" : ""}`} onClick={() => setLang("en")}>EN</button>
           <button className="pill-btn-primary" onClick={onStart}>{t("navStart")}</button>
