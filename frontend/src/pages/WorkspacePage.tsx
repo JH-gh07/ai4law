@@ -1,6 +1,6 @@
 import { Navigate, useParams } from "react-router-dom";
 import { useAppStore } from "../lib/app-store";
-import { SuperDesign002Page } from "./SuperDesign002Page";
+import { WorkspaceShell } from "../components/workspace/WorkspaceShell";
 
 export function WorkspacePage() {
   const { taskId } = useParams();
@@ -21,5 +21,5 @@ export function WorkspacePage() {
     return <Navigate to="/tasks" replace />;
   }
 
-  return <SuperDesign002Page taskSpace={task} />;
+  return <WorkspaceShell taskSpace={task} />;
 }

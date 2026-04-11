@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ModuleRun, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
+import { findTaskTemplate, getTaskTemplateInputHint, getTaskTemplateOutputHint } from "../../lib/task-templates";
 import { extractInsight } from "../../lib/workspace";
 import { ModuleRunPanel, type RunOutput } from "./ModuleRunPanel";
 
@@ -18,6 +19,11 @@ type PreviewChapter = {
   citations: string[];
 };
 
+type WorkspaceBlueprint = {
+  process: string[];
+  checklist: string[];
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -32,6 +38,116 @@ const RECOMMENDED_PATH_LABEL: Record<string, { zh: string; en: string }> = {
   security_assessment: { zh: "安全评估路径", en: "Security Assessment Path" },
   scc_or_certification: { zh: "标准合同备案/认证路径", en: "SCC Filing / Certification Path" },
   exemption: { zh: "豁免路径", en: "Exemption Path" }
+};
+
+const BLUEPRINTS: Record<
+  string,
+  { zh: WorkspaceBlueprint; en: WorkspaceBlueprint }
+> = {
+  cn_diagnosis: {
+    zh: {
+      process: [
+        "先做法定门槛与豁免判断，再进入强制评估触发项。",
+        "无法直接二选一时，输出“标准合同/认证”并进入二次分流。",
+        "输出建议路径、理由摘要与下一步动作清单。"
+      ],
+      checklist: [
+        "是否完成重要数据判断",
+        "是否完成豁免情形核验",
+        "是否完成人数门槛确认"
+      ]
+    },
+    en: {
+      process: [
+        "Complete exemption and threshold diagnosis before route decision.",
+        "Return SCC/certification bundle when direct split is unavailable.",
+        "Output path recommendation, rationale summary, and next actions."
+      ],
+      checklist: [
+        "Important data check completed",
+        "Exemption checks completed",
+        "Volume thresholds confirmed"
+      ]
+    }
+  },
+  cn_assessment: {
+    zh: {
+      process: [
+        "采集主体信息、自评估过程、场景、数据清单与链路材料。",
+        "执行一致性校验（场景-数据项-接收方-法律文件映射）。",
+        "按章节输出《数据出境风险自评估报告》草案。"
+      ],
+      checklist: [
+        "主体信息是否完整",
+        "数据项是否完成场景内去重",
+        "链路与接收方是否可追溯"
+      ]
+    },
+    en: {
+      process: [
+        "Collect entity profile, assessment process, scenarios, datasets, and transfer chain evidence.",
+        "Run consistency checks across scenario-data-recipient-legal mappings.",
+        "Generate a chaptered risk self-assessment draft report."
+      ],
+      checklist: [
+        "Entity profile completed",
+        "Dataset deduplicated by scenario",
+        "Transfer chain and recipient traceable"
+      ]
+    }
+  },
+  cn_pipia: {
+    zh: {
+      process: [
+        "围绕处理活动与跨境说明构建 PIPIA 事实基础。",
+        "识别个人信息种类、敏感程度、权利保障与应急机制。",
+        "输出《个人信息保护影响评估（PIPIA）》草案。"
+      ],
+      checklist: [
+        "处理者与接收方信息是否齐全",
+        "个人信息与敏感信息范围是否明确",
+        "告知、同意、DSAR 与应急机制是否覆盖"
+      ]
+    },
+    en: {
+      process: [
+        "Build PIPIA evidence base from processing and transfer context.",
+        "Assess PI categories, sensitivity, rights safeguards, and incident readiness.",
+        "Generate a structured PIPIA draft for review."
+      ],
+      checklist: [
+        "Controller and recipient details complete",
+        "PI and SPI scope clarified",
+        "Notice/consent/DSAR/emergency mechanisms covered"
+      ]
+    }
+  },
+  cn_document_review: {
+    zh: {
+      process: [
+        "上传合同或政策文本并补充审查范围。",
+        "自动抽取条款并标注高/中/低风险问题。",
+        "输出文档合规审查结论、问题清单与修订建议。"
+      ],
+      checklist: [
+        "文档版本与适用范围是否明确",
+        "是否包含出境告知与权利条款",
+        "是否存在高风险缺失条款"
+      ]
+    },
+    en: {
+      process: [
+        "Upload contract/policy text and define review scope.",
+        "Extract clauses and classify high/medium/low risks.",
+        "Output compliance review conclusion, issue list, and remediation advice."
+      ],
+      checklist: [
+        "Document version and scope identified",
+        "Transfer notice and rights clauses present",
+        "High-risk gaps detected"
+      ]
+    }
+  }
 };
 
 const readChapters = (response: unknown): PreviewChapter[] => {
@@ -62,18 +178,31 @@ const readRegulations = (response: unknown): Array<{ title: string; article?: st
 
 export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitViewProps) {
   const { t, lang } = useLang();
+  const taskTemplate = useMemo(() => findTaskTemplate(taskSpace.taskTemplateId), [taskSpace.taskTemplateId]);
+  const blueprint = useMemo<WorkspaceBlueprint | null>(() => {
+    if (!taskTemplate) return null;
+    return BLUEPRINTS[taskTemplate.id]?.[lang] ?? null;
+  }, [lang, taskTemplate]);
   const copy = lang === "zh"
     ? {
       outputFilesTitle: "已生成文件",
       chapterTitle: "报告章节",
       regulationTitle: "相关法规依据",
-      recommendedPathLabel: "建议路径"
+      recommendedPathLabel: "建议路径",
+      inputTitle: "任务输入",
+      processTitle: "处理逻辑",
+      outputTitle: "任务输出",
+      checklistTitle: "核验清单"
     }
     : {
       outputFilesTitle: "Generated Files",
       chapterTitle: "Report Chapters",
       regulationTitle: "Relevant Legal Basis",
-      recommendedPathLabel: "Suggested Path"
+      recommendedPathLabel: "Suggested Path",
+      inputTitle: "Task Input",
+      processTitle: "Processing Logic",
+      outputTitle: "Task Output",
+      checklistTitle: "Checklist"
     };
   const insight = extractInsight(latestRun?.response);
   const reportFileName = insight.reportPath ? toFileName(insight.reportPath) : "";
@@ -85,6 +214,36 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
 
   return (
     <section className="stage-split" data-guide="workspace-center">
+      {taskTemplate ? (
+        <section className="workspace-task-blueprint">
+          <article className="workspace-task-blueprint-card">
+            <strong>{copy.inputTitle}</strong>
+            <p>{getTaskTemplateInputHint(taskTemplate, lang)}</p>
+          </article>
+          <article className="workspace-task-blueprint-card">
+            <strong>{copy.processTitle}</strong>
+            <ul>
+              {(blueprint?.process ?? []).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+          <article className="workspace-task-blueprint-card">
+            <strong>{copy.outputTitle}</strong>
+            <p>{getTaskTemplateOutputHint(taskTemplate, lang)}</p>
+            {(blueprint?.checklist?.length ?? 0) > 0 ? (
+              <>
+                <div className="workspace-task-blueprint-subtitle">{copy.checklistTitle}</div>
+                <ul>
+                  {blueprint?.checklist.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+          </article>
+        </section>
+      ) : null}
       <div className="stage-shell layout-split">
         <section className="stage-pane">
           <div className="stage-pane-head">

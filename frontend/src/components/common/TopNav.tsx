@@ -15,13 +15,13 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
   return (
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
-        <div className="global-brand">
+        <Link to="/" className="global-brand" aria-label={t("navHome")}>
           <span className="global-brand-logo">§</span>
           <div>
             <div className="global-brand-title">{t("appBrand")}</div>
             <div className="global-brand-sub">Compliance OS</div>
           </div>
-        </div>
+        </Link>
 
         <nav className="global-links" aria-label="global navigation">
           <NavLink to="/" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
