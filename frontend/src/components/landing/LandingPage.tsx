@@ -3,14 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import { useLang } from "../../lib/language";
 import type { Jurisdiction, LaunchMode } from "../../lib/domain";
-import {
-  buildSuggestedTaskName,
-  findTaskTemplate,
-  getTaskTemplateInputHint,
-  getTaskTemplateOutputHint,
-  getTaskTemplateTitle,
-  listTaskTemplatesByJurisdiction
-} from "../../lib/task-templates";
+import { buildSuggestedTaskName, listTaskTemplatesByJurisdiction } from "../../lib/task-templates";
 
 type LandingPageProps = {
   onStart: () => void;
@@ -22,220 +15,259 @@ type LandingPageProps = {
   }) => void;
 };
 
+type JurisdictionCard = {
+  code: Jurisdiction;
+  name: string;
+  points: string[];
+};
+
 export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
-  const { t, lang } = useLang();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
   const { state } = useAppStore();
   const isZh = lang === "zh";
 
-  const recentTasks = useMemo(
-    () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)),
+  const latestTask = useMemo(
+    () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0] ?? null,
     [state.taskSpaces]
   );
 
-  const latestTask = recentTasks[0] ?? null;
-  const featureTags = [
-    t("homeResetFeatureTag1"),
-    t("homeResetFeatureTag2"),
-    t("homeResetFeatureTag3"),
-    t("homeResetFeatureTag4"),
-    t("homeResetFeatureTag5"),
-    t("homeResetFeatureTag6")
-  ];
-  const advantageItems = [
-    t("homeResetAdvantageItem1"),
-    t("homeResetAdvantageItem2"),
-    t("homeResetAdvantageItem3"),
-    t("homeResetAdvantageItem4"),
-    t("homeResetAdvantageItem5")
-  ];
-  const trustItems = [
-    t("homeResetTrustItem1"),
-    t("homeResetTrustItem2"),
-    t("homeResetTrustItem3"),
-    t("homeResetTrustItem4")
-  ];
-  const caseItems = [
-    t("homeResetCaseItem1"),
-    t("homeResetCaseItem2"),
-    t("homeResetCaseItem3"),
-    t("homeResetCaseItem4")
-  ];
-  const jurisdictionColumns = [
-    { code: "CN" as const, title: isZh ? "中国（CN）" : "China (CN)" },
-    { code: "EU" as const, title: isZh ? "欧盟（EU）" : "European Union (EU)" },
-    { code: "US" as const, title: isZh ? "美国（US）" : "United States (US)" }
-  ];
-  const previewQuestions = isZh
-    ? [
-        "企业是否属于受规制主体？",
-        "涉及哪些数据类型与跨境场景？",
-        "应走哪条合规路径？",
-        "需要生成哪些报告与补充材料？"
-      ]
-    : [
-        "Is the company a regulated entity?",
-        "What data types and transfer scenarios are involved?",
-        "Which compliance path should be selected?",
-        "What reports and supporting materials are required?"
-      ];
   const painPoints = isZh
     ? [
         {
           title: "规则分散，判断容易出错",
-          desc: "中国、欧盟、美国跨境规则口径差异大，路径判断容易偏差。"
+          desc: "中国、欧盟、美国的跨境数据规则口径不同，企业很难快速判断适用路径与义务边界。",
+          badge: "规则"
         },
         {
           title: "材料复杂，文书成本高",
-          desc: "从清单到评估报告，准备链路长、协同成本高、反复修改频繁。"
+          desc: "从数据清单、实体清单到影响评估与风险自评估，准备过程长、协同成本高、反复修改频繁。",
+          badge: "文书"
         },
         {
           title: "审查标准不稳定，缺口难定位",
-          desc: "很多问题并非完全缺失，而是不完整、不一致、不可审计。"
+          desc: "很多问题并不是完全没有做，而是做得不完整、不一致、不足以支撑监管或客户审查。",
+          badge: "审查"
         }
       ]
     : [
         {
-          title: "Fragmented rules, unstable judgments",
-          desc: "CN, EU, and US rules differ significantly and route decisions often drift."
+          title: "Fragmented rules cause unstable judgments",
+          desc: "CN, EU, and US cross-border regimes differ and obligation boundaries are hard to identify quickly.",
+          badge: "Rules"
         },
         {
-          title: "Heavy documentation cost",
-          desc: "From inventories to assessment drafts, preparation and collaboration are expensive."
+          title: "Complex materials and expensive drafting",
+          desc: "From inventories to impact assessments, preparation is long and collaboration cost is high.",
+          badge: "Docs"
         },
         {
-          title: "Unstable review standards",
-          desc: "Many issues are partial, inconsistent, and hard to audit."
+          title: "Review standards drift, gaps are hard to locate",
+          desc: "Many cases are not totally missing, but partial and inconsistent for regulatory review.",
+          badge: "Review"
         }
-      ];
-  const moduleCards = isZh
-    ? [
-        { title: "合规路径诊断", desc: "问答 + 规则树判断义务路径与下一步动作。" },
-        { title: "报告草案生成", desc: "生成安全评估、PIPIA、DPIA、TIA 等文书草案。" },
-        { title: "合同与文件审查", desc: "对隐私政策、SCC/BCR、处理协议进行条款级检查。" },
-        { title: "风险整改清单", desc: "把问题转为可执行整改任务并给出优先级。" }
-      ]
-    : [
-        { title: "Route Diagnosis", desc: "Q&A + rule tree to choose obligations and next actions." },
-        { title: "Draft Generation", desc: "Generate safety assessment, PIPIA, DPIA, and TIA drafts." },
-        { title: "Contract Review", desc: "Clause-level checks for privacy policy, SCC/BCR, and DPAs." },
-        { title: "Remediation List", desc: "Convert findings into prioritized, executable actions." }
-      ];
-  const flowSteps = isZh
-    ? ["输入企业与业务事实", "抽取关键字段并做规则匹配", "形成报告与风险结论", "输出整改建议与后续动作"]
-    : [
-        "Input business facts",
-        "Extract key fields and match rules",
-        "Generate reports and risk conclusions",
-        "Output remediation actions"
       ];
 
-  const quickCreateFromTemplate = (taskTemplateId: string) => {
-    const taskTemplate = findTaskTemplate(taskTemplateId);
-    if (!taskTemplate) return;
-    const suggestedName = buildSuggestedTaskName(taskTemplate, lang);
-    const taskName = globalThis.prompt(t("homePrdQuickCreatePrompt"), suggestedName)?.trim();
-    if (!taskName) return;
+  const modules = isZh
+    ? [
+        {
+          title: "合规路径诊断",
+          desc: "基于问答、规则树与事实抽取，判断应走哪条路径、为什么、下一步做什么。",
+          tag: "Diagnosis"
+        },
+        {
+          title: "报告草案生成",
+          desc: "自动生成风险自评估、PIPIA、DPIA、TIA 等文书草案，保留人工复核接口。",
+          tag: "Drafting"
+        },
+        {
+          title: "合同与文件审查",
+          desc: "针对隐私政策、数据处理协议、标准合同、SCC/BCR 等文件做条款级检查与修改建议。",
+          tag: "Review"
+        },
+        {
+          title: "风险整改清单",
+          desc: "把发现的问题转化为可执行任务，按优先级、责任域和整改动作输出。",
+          tag: "Action"
+        }
+      ]
+    : [
+        {
+          title: "Compliance Route Diagnosis",
+          desc: "Use Q&A, rule trees, and fact extraction to determine obligation path and next actions.",
+          tag: "Diagnosis"
+        },
+        {
+          title: "Draft Generation",
+          desc: "Generate risk self-assessment, PIPIA, DPIA, and TIA drafts with human review checkpoints.",
+          tag: "Drafting"
+        },
+        {
+          title: "Contract and File Review",
+          desc: "Clause-level checks for privacy policies, DPAs, standard contracts, SCC/BCR, and more.",
+          tag: "Review"
+        },
+        {
+          title: "Remediation Checklist",
+          desc: "Transform findings into executable actions with prioritization and ownership hints.",
+          tag: "Action"
+        }
+      ];
+
+  const jurisdictionCards: JurisdictionCard[] = isZh
+    ? [
+        {
+          code: "CN",
+          name: "中国",
+          points: ["安全评估路径", "标准合同路径", "个人信息出境认证", "PIPIA 与材料审查"]
+        },
+        {
+          code: "EU",
+          name: "欧盟",
+          points: ["SCC / BCR 审查", "DPIA 草案生成", "TIA 草案生成", "跨境传输义务分析"]
+        },
+        {
+          code: "US",
+          name: "美国",
+          points: ["14117 行政令风险识别", "CPRA 合规全景审查", "敏感数据处理义务核查", "第三方共享风险分析"]
+        }
+      ]
+    : [
+        {
+          code: "CN",
+          name: "China",
+          points: ["Security Assessment Route", "Standard Contract Route", "PI Export Certification", "PIPIA and Material Review"]
+        },
+        {
+          code: "EU",
+          name: "European Union",
+          points: ["SCC / BCR Review", "DPIA Drafting", "TIA Drafting", "Transfer Obligation Analysis"]
+        },
+        {
+          code: "US",
+          name: "United States",
+          points: ["EO 14117 Screening", "CPRA Panorama Review", "Sensitive Data Duty Check", "Third-party Sharing Risk Analysis"]
+        }
+      ];
+
+  const flow = isZh
+    ? ["输入企业与业务事实", "系统抽取关键字段并做规则匹配", "形成报告、矩阵与风险结论", "输出整改建议与后续动作"]
+    : [
+        "Input company and business facts",
+        "Extract key fields and match rules",
+        "Generate reports, matrix, and risk conclusions",
+        "Output remediation and next actions"
+      ];
+
+  const createTaskByJurisdiction = (jurisdiction: Jurisdiction) => {
+    const template = listTaskTemplatesByJurisdiction(jurisdiction)[0];
+    if (!template) {
+      navigate("/tasks");
+      return;
+    }
     onQuickCreate({
       mode: "rapid",
-      name: taskName,
-      jurisdiction: taskTemplate.jurisdiction,
-      taskTemplateId: taskTemplate.id
+      name: buildSuggestedTaskName(template, lang),
+      jurisdiction: template.jurisdiction,
+      taskTemplateId: template.id
     });
   };
 
   return (
-    <section className="landing-reset-page">
-      <div className="landing-reset-shell">
-        <section className="landing-reset-hero">
-          <div className="landing-reset-hero-copy">
-            <span className="landing-reset-kicker">{t("heroEyebrow")}</span>
-            <h1>{t("homeResetHeroPosition")}</h1>
-            <p>{t("homeResetHeroValue")}</p>
-            <div className="landing-reset-actions" data-guide="home-start">
-              <button className="pill-btn-primary" onClick={onStart}>{t("startCta")}</button>
-              <button className="pill-btn" onClick={() => navigate("/tasks")}>{t("homeIntroTaskAction")}</button>
+    <section className="landing-blue-page">
+      <div className="landing-blue-shell">
+        <section className="landing-blue-hero">
+          <div className="landing-blue-hero-left">
+            <div className="landing-blue-chip">{isZh ? "跨境合规工作流" : "Cross-Border Compliance Workflow"}</div>
+            <h1>
+              {isZh ? "把复杂的跨境数据合规，" : "Turn complex data transfer compliance"}
+              <br />
+              {isZh ? "变成清晰、可执行的工作流" : "into a clear, executable workflow"}
+            </h1>
+            <p>
+              {isZh
+                ? "从合规路径判断、材料收集、报告草案生成，到文件审查、风险定位与整改清单输出，为企业提供一套可落地的合规辅助入口。"
+                : "From route diagnosis and material prep to draft generation, document review, and remediation output, all in one execution flow."}
+            </p>
+            <div className="landing-blue-actions" data-guide="home-start">
+              <button className="pill-btn-primary" onClick={onStart}>
+                {isZh ? "立即开始诊断" : "Start Diagnosis"}
+              </button>
+              <a className="pill-btn" href="#modules">{isZh ? "查看功能模块" : "View Modules"}</a>
               {latestTask ? (
                 <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
                   {t("homeIntroContinueAction")}
                 </button>
               ) : null}
             </div>
-          </div>
-          <div className="landing-reset-hero-side">
-            <div className="landing-reset-hero-metrics">
+            <div className="landing-blue-facts">
               <article>
-                <span>{t("tasksStatTotal")}</span>
+                <strong>{isZh ? "3 大法域" : "3 Jurisdictions"}</strong>
+                <span>{isZh ? "中国 / 欧盟 / 美国" : "CN / EU / US"}</span>
+              </article>
+              <article>
+                <strong>{isZh ? "4 类核心能力" : "4 Core Capabilities"}</strong>
+                <span>{isZh ? "诊断 / 起草 / 审查 / 整改" : "Diagnosis / Drafting / Review / Action"}</span>
+              </article>
+              <article>
+                <strong>{isZh ? "文书与规则双驱动" : "Rules + Drafting"}</strong>
+                <span>{isZh ? "不是只做问答或检索" : "More than Q&A or plain search"}</span>
+              </article>
+            </div>
+          </div>
+          <div className="landing-blue-hero-right">
+            <div className="landing-blue-stats">
+              <article>
+                <span>{isZh ? "任务总数" : "Tasks"}</span>
                 <strong>{state.taskSpaces.length}</strong>
               </article>
               <article>
-                <span>{t("tasksStatRuns")}</span>
+                <span>{isZh ? "运行总数" : "Runs"}</span>
                 <strong>{state.moduleRuns.length}</strong>
               </article>
               <article>
-                <span>{t("homeResetMetricJurisdictions")}</span>
+                <span>{isZh ? "法域覆盖" : "Jurisdictions"}</span>
                 <strong>3</strong>
               </article>
             </div>
-            <article className="landing-reset-preview-card">
+            <div className="landing-blue-preview">
               <header>
-                <p>{isZh ? "实时预览" : "Live Preview"}</p>
-                <strong>{isZh ? "合规路径智能诊断" : "Compliance Path Diagnosis"}</strong>
+                <span>{isZh ? "Live Preview" : "Live Preview"}</span>
+                <strong>{isZh ? "合规路径智能诊断" : "Compliance Route Diagnosis"}</strong>
               </header>
-              <div className="landing-reset-preview-list">
-                {previewQuestions.map((question) => (
-                  <div key={question}>
-                    <span>{question}</span>
-                  </div>
+              <div className="landing-blue-preview-list">
+                {(isZh
+                  ? ["企业是否属于受规制主体？", "涉及哪些数据类型与跨境场景？", "应走哪条合规路径？", "需要生成哪些报告与补充材料？"]
+                  : [
+                      "Is the company a regulated entity?",
+                      "What data types and scenarios are involved?",
+                      "Which compliance route is applicable?",
+                      "What reports and attachments are required?"
+                    ]).map((q, i) => (
+                  <article key={q}>
+                    <small>{isZh ? `问题 ${i + 1}` : `Question ${i + 1}`}</small>
+                    <p>{q}</p>
+                  </article>
                 ))}
               </div>
-            </article>
+            </div>
           </div>
         </section>
 
-        <section className="landing-reset-middle">
-          <header className="landing-reset-block-head">
-            <h2>{t("homeResetMiddleTitle")}</h2>
+        <section id="overview" className="landing-blue-section">
+          <header className="landing-blue-section-head landing-blue-center-head">
+            <span>{isZh ? "WHY THIS PRODUCT" : "WHY THIS PRODUCT"}</span>
+            <h2>{isZh ? "不是缺少信息，而是缺少一条清楚的合规主线" : "Not a lack of information, but a missing compliance storyline"}</h2>
+            <p>
+              {isZh
+                ? "首页不只展示功能，而是沿着用户真实思考顺序展开：先看到问题，再理解方法，最后知道如何开始。"
+                : "The landing page should follow user cognition: problem first, then method, then action."}
+            </p>
           </header>
-          <div className="landing-reset-steps-rail">
-            <article className="landing-reset-stage">
-              <div className="landing-reset-stage-title"><span>01</span><h3>{t("homeResetProblemTitle")}</h3></div>
-              <p>{t("homeResetProblemDesc")}</p>
-            </article>
-            <article className="landing-reset-stage">
-              <div className="landing-reset-stage-title"><span>02</span><h3>{t("homeResetSolutionTitle")}</h3></div>
-              <p>{t("homeResetSolutionDesc")}</p>
-            </article>
-            <article className="landing-reset-stage">
-              <div className="landing-reset-stage-title"><span>03</span><h3>{t("homeResetFeatureTitle")}</h3></div>
-              <div className="landing-reset-tags">
-                {featureTags.map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-              </div>
-            </article>
-            <article className="landing-reset-stage">
-              <div className="landing-reset-stage-title"><span>04</span><h3>{t("homeResetSceneTitle")}</h3></div>
-              <p>{isZh ? "按法域分组展示可执行模板，点击即可创建任务。" : "Templates are grouped by jurisdiction and executable directly."}</p>
-            </article>
-            <article className="landing-reset-stage">
-              <div className="landing-reset-stage-title"><span>05</span><h3>{t("homeResetAdvantageTitle")}</h3></div>
-              <ul className="landing-reset-advantage-list">
-                {advantageItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </div>
-        </section>
-
-        <section className="landing-reset-overview">
-          <header className="landing-reset-block-head">
-            <h2>{isZh ? "问题与价值" : "Why This Matters"}</h2>
-          </header>
-          <div className="landing-reset-overview-grid">
+          <div className="landing-blue-pain-grid">
             {painPoints.map((item) => (
-              <article key={item.title} className="landing-reset-overview-card">
+              <article key={item.title}>
+                <div className="landing-blue-icon">{item.badge}</div>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>
               </article>
@@ -243,13 +275,22 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="landing-reset-modules">
-          <header className="landing-reset-block-head">
-            <h2>{isZh ? "功能模块" : "Core Modules"}</h2>
+        <section id="modules" className="landing-blue-section">
+          <header className="landing-blue-section-head landing-blue-split-head">
+            <div>
+              <span>{isZh ? "HOW IT WORKS" : "HOW IT WORKS"}</span>
+              <h2>{isZh ? "一个层层下滑、逻辑递进的首页结构" : "A layered narrative homepage structure"}</h2>
+            </div>
+            <p>
+              {isZh
+                ? "参考你的目标页面，它的核心是叙事连续。这里采用同样结构，但保持 AI4Law 的法学严肃风格。"
+                : "This keeps narrative continuity from your reference while adapting to AI4Law's legal tone."}
+            </p>
           </header>
-          <div className="landing-reset-modules-grid">
-            {moduleCards.map((item) => (
-              <article key={item.title} className="landing-reset-module-card">
+          <div className="landing-blue-module-grid">
+            {modules.map((item) => (
+              <article key={item.title}>
+                <span>{item.tag}</span>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>
               </article>
@@ -257,42 +298,49 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="landing-reset-scenes">
-          <header className="landing-reset-block-head">
-            <h2>{isZh ? "法域场景入口" : "Jurisdiction Entries"}</h2>
+        <section id="jurisdictions" className="landing-blue-section">
+          <header className="landing-blue-section-head landing-blue-split-head">
+            <div>
+              <span>{isZh ? "JURISDICTIONS" : "JURISDICTIONS"}</span>
+              <h2>{isZh ? "不同法域，不同规则，同一套交互入口" : "Different regimes, one interaction framework"}</h2>
+            </div>
+            <p>
+              {isZh
+                ? "这个系统不是抽象的法律 AI，而是明确覆盖中国、欧盟、美国三类跨境数据核心场景。"
+                : "This is not generic legal AI. It explicitly covers CN/EU/US transfer scenarios."}
+            </p>
           </header>
-          <div className="landing-reset-scene-grid">
-            {jurisdictionColumns.map((column) => (
-              <section key={column.code} className="landing-reset-scene-col">
-                <header>
-                  <strong>{column.title}</strong>
-                </header>
-                <div className="landing-reset-template-list">
-                  {listTaskTemplatesByJurisdiction(column.code).map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      className="landing-reset-template-card"
-                      onClick={() => quickCreateFromTemplate(template.id)}
-                    >
-                      <h4>{getTaskTemplateTitle(template, lang)}</h4>
-                      <p>{template.subtitle[lang]}</p>
-                      <span>{getTaskTemplateInputHint(template, lang)}</span>
-                      <span>{getTaskTemplateOutputHint(template, lang)}</span>
-                    </button>
+          <div className="landing-blue-jurisdiction-grid">
+            {jurisdictionCards.map((card) => (
+              <article key={card.code}>
+                <h3>{card.name}</h3>
+                <ul>
+                  {card.points.map((point) => (
+                    <li key={point}>{point}</li>
                   ))}
-                </div>
-              </section>
+                </ul>
+                <button className="pill-btn" onClick={() => createTaskByJurisdiction(card.code)}>
+                  {isZh ? "进入该法域任务" : "Open Jurisdiction Tasks"}
+                </button>
+              </article>
             ))}
           </div>
         </section>
 
-        <section className="landing-reset-flow">
-          <header className="landing-reset-block-head">
-            <h2>{isZh ? "工作流程" : "Workflow"}</h2>
+        <section id="flow" className="landing-blue-flow">
+          <header className="landing-blue-section-head landing-blue-split-head">
+            <div>
+              <span>{isZh ? "WORKFLOW" : "WORKFLOW"}</span>
+              <h2>{isZh ? "把复杂工作流讲成四步" : "Explain the workflow in four steps"}</h2>
+            </div>
+            <p>
+              {isZh
+                ? "通过四步流程把复杂任务压缩成清晰路径，帮助用户快速进入执行状态。"
+                : "Compress complexity into four steps so users can act quickly."}
+            </p>
           </header>
-          <div className="landing-reset-flow-grid">
-            {flowSteps.map((step, index) => (
+          <div className="landing-blue-flow-grid">
+            {flow.map((step, index) => (
               <article key={step}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <p>{step}</p>
@@ -301,35 +349,19 @@ export function LandingPage({ onStart, onQuickCreate }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="landing-reset-footer">
-          <header className="landing-reset-block-head">
-            <h2>{t("homeResetFooterTitle")}</h2>
+        <section className="landing-blue-footer">
+          <header className="landing-blue-section-head landing-blue-center-head">
+            <span>{isZh ? "NEXT STEP" : "NEXT STEP"}</span>
+            <h2>{isZh ? "从介绍到执行，直接进入任务空间" : "Move from narrative to execution"}</h2>
+            <p>
+              {isZh
+                ? "当前版本已完成结构与视觉基线，下一步可继续细化文案、图示、动画节奏与法域入口策略。"
+                : "Structure and visual baseline are ready; next iteration can refine copy, visuals, and transitions."}
+            </p>
           </header>
-          <div className="landing-reset-footer-grid">
-            <article>
-              <h3>{t("homeResetCaseTitle")}</h3>
-              <ul>
-                {caseItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-            <article>
-              <h3>{t("homeResetTrustTitle")}</h3>
-              <ul>
-                {trustItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-            <article>
-              <h3>{t("homeResetConsultTitle")}</h3>
-              <p>{t("homeResetConsultDesc")}</p>
-              <div className="landing-reset-actions landing-reset-footer-actions">
-                <button className="pill-btn" onClick={() => navigate("/tasks")}>{t("homeResetConsultCta")}</button>
-                <button className="pill-btn-primary" onClick={onStart}>{t("homeResetTrialCta")}</button>
-              </div>
-            </article>
+          <div className="landing-blue-actions landing-blue-footer-actions">
+            <button className="pill-btn-primary" onClick={onStart}>{isZh ? "立即开始诊断" : "Start Diagnosis"}</button>
+            <button className="pill-btn" onClick={() => navigate("/tasks")}>{isZh ? "进入任务空间" : "Open Task Spaces"}</button>
           </div>
         </section>
       </div>
