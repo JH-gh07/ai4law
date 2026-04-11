@@ -2038,14 +2038,14 @@
 
 .landing-blue-why-head h2 {
   max-width: 26ch;
-  font-size: clamp(2rem, 4.6vw, 4.4rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.7rem, 3.2vw, 2.9rem);
+  line-height: 1.16;
+  letter-spacing: -0.014em;
 }
 
 .landing-blue-why-head p {
   max-width: 62ch;
-  font-size: clamp(1rem, 1.1vw, 1.18rem);
+  font-size: clamp(0.95rem, 1vw, 1.06rem);
 }
 
 .landing-blue-split-head {
@@ -2062,15 +2062,15 @@
 }
 
 .landing-blue-why-grid {
-  margin-top: 1.45rem;
+  margin-top: 1rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-why-card {
   height: 100%;
-  min-height: 300px;
-  border-radius: 30px;
-  padding: 1.05rem 1.02rem;
+  min-height: 240px;
+  border-radius: 24px;
+  padding: 0.86rem 0.9rem;
 }
 
 .landing-blue-pain-grid article,
@@ -2143,36 +2143,37 @@
 
 .landing-blue-cap-head h2 {
   max-width: 16ch;
-  font-size: clamp(2rem, 4.1vw, 4rem);
-  line-height: 1.08;
+  font-size: clamp(1.7rem, 3vw, 2.85rem);
+  line-height: 1.14;
 }
 
 .landing-blue-cap-head p {
   max-width: 40ch;
   justify-self: end;
+  font-size: clamp(0.95rem, 1vw, 1.04rem);
 }
 
 .landing-blue-cap-grid {
-  margin-top: 1.3rem;
-  gap: 0.82rem;
+  margin-top: 1rem;
+  gap: 0.64rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-cap-card {
   height: 100%;
-  min-height: 250px;
-  border-radius: 32px;
-  padding: 1.18rem 1.12rem;
+  min-height: 210px;
+  border-radius: 24px;
+  padding: 0.88rem 0.92rem;
 }
 
 .landing-blue-cap-card h3 {
-  font-size: clamp(1.7rem, 2.7vw, 2.1rem);
+  font-size: clamp(1.48rem, 2.2vw, 1.9rem);
 }
 
 .landing-blue-cap-card p {
-  margin-top: 0.5rem;
-  font-size: clamp(1.04rem, 1.15vw, 1.28rem);
-  line-height: 1.7;
+  margin-top: 0.34rem;
+  font-size: clamp(0.96rem, 1vw, 1.06rem);
+  line-height: 1.62;
 }
 
 .landing-blue-module-grid article > span {
@@ -2194,25 +2195,26 @@
 
 .landing-blue-jd-head h2 {
   max-width: 13ch;
-  font-size: clamp(2rem, 4.1vw, 4rem);
-  line-height: 1.08;
+  font-size: clamp(1.7rem, 3vw, 2.85rem);
+  line-height: 1.14;
 }
 
 .landing-blue-jd-head p {
   max-width: 42ch;
+  font-size: clamp(0.95rem, 1vw, 1.04rem);
 }
 
 .landing-blue-jd-grid {
-  margin-top: 1.3rem;
-  gap: 0.82rem;
+  margin-top: 1rem;
+  gap: 0.64rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-jd-card {
   height: 100%;
-  min-height: 510px;
-  border-radius: 32px;
-  padding: 1.18rem 1.12rem;
+  min-height: 390px;
+  border-radius: 24px;
+  padding: 0.88rem 0.92rem;
 }
 
 .landing-blue-jd-icon {
@@ -2226,8 +2228,8 @@
 }
 
 .landing-blue-jd-card h3 {
-  font-size: clamp(2rem, 2.7vw, 2.42rem);
-  margin: 0.1rem 0 0.1rem;
+  font-size: clamp(1.8rem, 2.2vw, 2.08rem);
+  margin: 0.06rem 0 0.06rem;
 }
 
 .landing-blue-jurisdiction-grid ul {

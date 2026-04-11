@@ -149,6 +149,15 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         }
       ];
 
+  const flow = isZh
+    ? ["输入企业事实与业务材料", "系统抽取关键字段并匹配规则", "生成报告、矩阵与风险结论", "输出整改建议与后续动作"]
+    : [
+        "Input company facts and business materials",
+        "Extract key fields and map rules",
+        "Generate reports, matrix, and risk conclusions",
+        "Output remediation and next actions"
+      ];
+
   return (
     <section className="landing-blue-page">
       <div className="landing-blue-scroll">
@@ -304,6 +313,31 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 </ul>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section id="flow" className="landing-blue-flow landing-blue-screen">
+          <div className="landing-blue-workflow-layout">
+            <header className="landing-blue-section-head landing-blue-workflow-left">
+              <div className="landing-blue-workflow-title">
+                <span>{isZh ? "WORKFLOW" : "WORKFLOW"}</span>
+                <h2>{isZh ? "最后一层，应当把复杂流程讲成清楚的四步" : "Explain complex workflow in four clear steps"}</h2>
+              </div>
+              <p>
+                {isZh
+                  ? "企业级官网不宜把流程讲得过碎。更合适的方式，是将完整工作流压缩为几个稳定、可记忆、可理解的核心阶段。"
+                  : "Enterprise landing pages should compress complexity into memorable core stages."}
+              </p>
+            </header>
+            <div className="landing-blue-flow-grid landing-blue-workflow-right">
+              {flow.map((step, index) => (
+                <article key={step} className="landing-blue-workflow-step">
+                  <span className="landing-blue-step-id">{String(index + 1).padStart(2, "0")}</span>
+                  <p>{step}</p>
+                  <em aria-hidden>›</em>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
