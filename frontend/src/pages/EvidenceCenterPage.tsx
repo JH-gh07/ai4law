@@ -5,7 +5,8 @@ import {
   fetchKnowledgeCaseDetail,
   fetchKnowledgeCitation,
   fetchKnowledgeIndex,
-  fetchKnowledgeSourceDetail
+  fetchKnowledgeSourceDetail,
+  syncKnowledgeIndex
 } from "../lib/knowledge-api";
 
 type KnowledgeRow = Record<string, string>;
@@ -23,6 +24,7 @@ const toggleValue = (items: string[], value: string): string[] =>
   items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
 
 const rowText = (row: KnowledgeRow, key: string, fallback = "-"): string => row[key] || fallback;
+const toFileName = (value: string): string => value.replace(/\\/g, "/").split("/").pop() || value;
 
 export function EvidenceCenterPage() {
   const { lang } = useLang();
@@ -64,6 +66,18 @@ export function EvidenceCenterPage() {
       loading: "加载中…",
       matchEmpty: "未匹配到知识库条目。",
       optionsEmpty: "暂无可选项"
+      ,
+      syncNow: "同步后端知识库",
+      syncing: "同步中…",
+      syncAt: "最近同步",
+      syncMode: "同步模式",
+      syncSourceFile: "法规源文件",
+      syncCaseFile: "案例源文件",
+      syncStatus: "文件状态",
+      syncReady: "已加载",
+      syncMissing: "缺失",
+      syncForced: "强制刷新缓存",
+      syncNormal: "常规读取"
     }
     : {
       title: "Knowledge Center",
@@ -101,6 +115,18 @@ export function EvidenceCenterPage() {
       loading: "Loading...",
       matchEmpty: "No knowledge entry matched.",
       optionsEmpty: "No options"
+      ,
+      syncNow: "Sync Backend Knowledge",
+      syncing: "Syncing...",
+      syncAt: "Last Synced",
+      syncMode: "Sync Mode",
+      syncSourceFile: "Source File",
+      syncCaseFile: "Case File",
+      syncStatus: "File Status",
+      syncReady: "Loaded",
+      syncMissing: "Missing",
+      syncForced: "Forced Cache Refresh",
+      syncNormal: "Normal Read"
     };
 
   const [tab, setTab] = useState<KnowledgeTab>("sources");
@@ -116,6 +142,17 @@ export function EvidenceCenterPage() {
   const [caseModuleOptions, setCaseModuleOptions] = useState<string[]>([]);
   const [casePriorityOptions, setCasePriorityOptions] = useState<string[]>([]);
   const [summary, setSummary] = useState({ source_count: 0, case_count: 0, p0_source_count: 0 });
+  const [syncMeta, setSyncMeta] = useState({
+    synced_at: "",
+    cache_refreshed: false,
+    sources_csv_path: "",
+    cases_csv_path: "",
+    sources_csv_exists: false,
+    cases_csv_exists: false,
+    sources_csv_mtime: "",
+    cases_csv_mtime: ""
+  });
+  const [syncing, setSyncing] = useState(false);
 
   const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
@@ -133,6 +170,27 @@ export function EvidenceCenterPage() {
   const [citationPreview, setCitationPreview] = useState("");
   const [citationLoading, setCitationLoading] = useState(false);
 
+  const applyKnowledgeIndexData = (
+    data: Awaited<ReturnType<typeof fetchKnowledgeIndex>>
+  ): void => {
+    setSources(data.sources);
+    setCases(data.cases);
+    setSummary(data.summary);
+    setSyncMeta(data.sync_meta);
+
+    setSourceLayerOptions(data.source_options.layers);
+    setSourcePathOptions(data.source_options.paths);
+    setSourcePriorityOptions(data.source_options.priorities);
+    setCaseModuleOptions(data.case_options.modules);
+    setCasePriorityOptions(data.case_options.priorities);
+
+    setSelectedLayers(data.source_options.layers);
+    setSelectedPaths(data.source_options.paths);
+    setSelectedSourcePriority(data.source_options.priorities);
+    setSelectedModules(data.case_options.modules);
+    setSelectedCasePriority(data.case_options.priorities);
+  };
+
   useEffect(() => {
     let isActive = true;
 
@@ -142,22 +200,7 @@ export function EvidenceCenterPage() {
       try {
         const data = await fetchKnowledgeIndex();
         if (!isActive) return;
-
-        setSources(data.sources);
-        setCases(data.cases);
-        setSummary(data.summary);
-
-        setSourceLayerOptions(data.source_options.layers);
-        setSourcePathOptions(data.source_options.paths);
-        setSourcePriorityOptions(data.source_options.priorities);
-        setCaseModuleOptions(data.case_options.modules);
-        setCasePriorityOptions(data.case_options.priorities);
-
-        setSelectedLayers(data.source_options.layers);
-        setSelectedPaths(data.source_options.paths);
-        setSelectedSourcePriority(data.source_options.priorities);
-        setSelectedModules(data.case_options.modules);
-        setSelectedCasePriority(data.case_options.priorities);
+        applyKnowledgeIndexData(data);
       } catch (err) {
         if (!isActive) return;
         setError(err instanceof Error ? err.message : "Failed to load knowledge index.");
@@ -287,6 +330,23 @@ export function EvidenceCenterPage() {
   }, [citationQuery]);
 
   const currentMatches = tab === "sources" ? filteredSources.length : tab === "cases" ? filteredCases.length : citationMatch ? 1 : 0;
+  const syncTimeLabel = syncMeta.synced_at
+    ? new Date(syncMeta.synced_at).toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { hour12: false })
+    : "-";
+  const syncFileStatusLabel = `${syncMeta.sources_csv_exists ? copy.syncReady : copy.syncMissing} / ${syncMeta.cases_csv_exists ? copy.syncReady : copy.syncMissing}`;
+
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setError("");
+    try {
+      const data = await syncKnowledgeIndex();
+      applyKnowledgeIndexData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <section className="page-shell evidence-page">
@@ -298,6 +358,9 @@ export function EvidenceCenterPage() {
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
         />
+        <button className="pill-btn" onClick={() => void handleSyncNow()} disabled={loading || syncing}>
+          {syncing ? copy.syncing : copy.syncNow}
+        </button>
       </div>
 
       <section className="evidence-metrics">
@@ -317,6 +380,29 @@ export function EvidenceCenterPage() {
           <span>{copy.currentStat}</span>
           <strong>{currentMatches}</strong>
         </article>
+      </section>
+
+      <section className="evidence-sync-card">
+        <div className="evidence-sync-kv">
+          <small>{copy.syncAt}</small>
+          <strong>{syncTimeLabel}</strong>
+        </div>
+        <div className="evidence-sync-kv">
+          <small>{copy.syncMode}</small>
+          <strong>{syncMeta.cache_refreshed ? copy.syncForced : copy.syncNormal}</strong>
+        </div>
+        <div className="evidence-sync-kv">
+          <small>{copy.syncSourceFile}</small>
+          <strong>{syncMeta.sources_csv_path ? toFileName(syncMeta.sources_csv_path) : "-"}</strong>
+        </div>
+        <div className="evidence-sync-kv">
+          <small>{copy.syncCaseFile}</small>
+          <strong>{syncMeta.cases_csv_path ? toFileName(syncMeta.cases_csv_path) : "-"}</strong>
+        </div>
+        <div className="evidence-sync-kv">
+          <small>{copy.syncStatus}</small>
+          <strong>{syncFileStatusLabel}</strong>
+        </div>
       </section>
 
       <section className="evidence-tabbar">

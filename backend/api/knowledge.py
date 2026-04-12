@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from app_streamlit.services.knowledge import (
+    get_knowledge_sync_meta,
     load_practice_cases,
     load_sources_index,
     read_text_preview,
+    refresh_knowledge_cache,
     resolve_citation,
 )
 from backend.schemas.knowledge import (
@@ -14,6 +16,7 @@ from backend.schemas.knowledge import (
     KnowledgeSourceDetailResponse,
     KnowledgeSourceOptions,
     KnowledgeSummary,
+    KnowledgeSyncMeta,
 )
 
 router = APIRouter()
@@ -47,6 +50,16 @@ def _build_case_options(rows: list[dict[str, str]]) -> KnowledgeCaseOptions:
 
 @router.get("/index", response_model=KnowledgeIndexResponse)
 def get_knowledge_index() -> KnowledgeIndexResponse:
+    return _build_index_response(cache_refreshed=False)
+
+
+@router.post("/sync", response_model=KnowledgeIndexResponse)
+def sync_knowledge_index() -> KnowledgeIndexResponse:
+    refresh_knowledge_cache()
+    return _build_index_response(cache_refreshed=True)
+
+
+def _build_index_response(*, cache_refreshed: bool) -> KnowledgeIndexResponse:
     sources = load_sources_index()
     cases = load_practice_cases()
 
@@ -55,9 +68,11 @@ def get_knowledge_index() -> KnowledgeIndexResponse:
         case_count=len(cases),
         p0_source_count=sum(1 for row in sources if row.get("usage_priority") == "P0"),
     )
+    sync_meta = KnowledgeSyncMeta.model_validate(get_knowledge_sync_meta(cache_refreshed=cache_refreshed))
 
     return KnowledgeIndexResponse(
         summary=summary,
+        sync_meta=sync_meta,
         source_options=_build_source_options(sources),
         case_options=_build_case_options(cases),
         sources=sources,

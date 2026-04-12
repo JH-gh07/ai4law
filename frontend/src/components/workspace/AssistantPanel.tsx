@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useAppStore } from "../../lib/app-store";
+import { requestCopilotChat } from "../../lib/copilot-api";
 import type { TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
@@ -34,6 +35,7 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
   const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
   const [viewMode, setViewMode] = useState<"status" | "copilot">("status");
   const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -131,47 +133,9 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
     return events.slice(0, 8);
   }, [artifacts, issues, latestRun, statusLabelMap, stepLabelMap, t, workflowSteps]);
 
-  const buildReply = (prompt: string): string => {
-    const low = prompt.toLowerCase();
-    if (low.includes("尽调")) {
-      return [
-        "尽调提纲已为你准备：",
-        "1) 业务场景与跨境链路说明",
-        "2) 数据分类分级与处理角色矩阵",
-        "3) 法域义务映射与差距清单",
-        "4) 补证材料与时间计划"
-      ].join("\n");
-    }
-    if (low.includes("备忘录")) {
-      return [
-        "合规备忘录建议结构：",
-        "1) 背景与结论",
-        "2) 适用法域与法律依据",
-        "3) 当前状态与风险摘要",
-        "4) 本周行动项与责任分工"
-      ].join("\n");
-    }
-    if (low.includes("整改") || low.includes("风险")) {
-      const topIssues = issues.slice(0, 3).map((item, idx) => `${idx + 1}. [${item.severity}] ${item.message}`);
-      if (topIssues.length === 0) {
-        return "当前没有可用风险条目。建议先执行任务模块或补充证据后再生成整改清单。";
-      }
-      return `整改清单草案：\n${topIssues.join("\n")}\n后续建议：按“必须立即修复/本周修复/持续优化”分层推进。`;
-    }
-    if (low.includes("下一步") || low.includes("next")) {
-      return currentStep
-        ? `建议下一步：${stepLabelMap[currentStep.key]}（${statusLabelMap[currentStep.status]}）。${currentStep.reason ?? "当前无阻塞。"}`
-        : "当前无阶段信息，可先执行模块并生成报告草案。";
-    }
-    if (low.includes("报告")) {
-      return "可先在右上动作中进入报告中心，再由我给你生成“提交版摘要”和“律师复核版摘要”。";
-    }
-    return "我已记录你的需求。可以直接说“生成尽调提纲 / 生成备忘录 / 生成整改清单 / 给出下一步动作”。";
-  };
-
-  const submitPrompt = (prompt?: string) => {
+  const submitPrompt = async (prompt?: string, action?: string) => {
     const text = (prompt ?? input).trim();
-    if (!text) return;
+    if (!text || isSending) return;
 
     const now = new Date().toISOString();
     const userMsg: ChatMessage = {
@@ -180,14 +144,60 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
       createdAt: now,
       text
     };
-    const replyMsg: ChatMessage = {
-      id: `assistant-${now}`,
-      role: "assistant",
-      createdAt: new Date(Date.now() + 1).toISOString(),
-      text: buildReply(text)
-    };
-    setMessages((prev) => [...prev, userMsg, replyMsg]);
+    const historyForModel = [...messages, userMsg];
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsSending(true);
+
+    try {
+      const response = await requestCopilotChat({
+        prompt: text,
+        action,
+        task_space: {
+          id: taskSpace.id,
+          name: taskSpace.name,
+          jurisdiction: taskSpace.jurisdiction,
+          module: taskSpace.module,
+          mode: taskSpace.mode,
+          workspace_style: taskSpace.workspaceStyle
+        },
+        context: {
+          current_step: currentStep ? `${stepLabelMap[currentStep.key]} · ${statusLabelMap[currentStep.status]}` : undefined,
+          blocker: currentStep?.reason,
+          runs_count: runs.length,
+          issues_count: issues.length,
+          evidence_count: evidenceCount,
+          artifact_count: artifacts.length,
+          top_issues: issues.slice(0, 5).map((item) => `[${item.severity}] ${item.message}`),
+          latest_artifacts: artifacts
+            .slice(0, 5)
+            .map((item) => (item.path ? toFileName(item.path) : item.kind))
+        },
+        messages: historyForModel.map((item) => ({
+          role: item.role,
+          content: item.text
+        }))
+      });
+
+      const replyMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        createdAt: new Date().toISOString(),
+        text: response.reply || t("copilotEmptyReply")
+      };
+      setMessages((prev) => [...prev, replyMsg]);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : t("copilotRequestFailed");
+      const replyMsg: ChatMessage = {
+        id: `assistant-error-${Date.now()}`,
+        role: "assistant",
+        createdAt: new Date().toISOString(),
+        text: `${t("copilotRequestFailed")} ${detail}`
+      };
+      setMessages((prev) => [...prev, replyMsg]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -274,14 +284,17 @@ export function AssistantPanel({ taskSpace }: AssistantPanelProps) {
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={t("copilotInputPlaceholder")}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" && !isSending) {
                     event.preventDefault();
                     submitPrompt();
                   }
                 }}
               />
-              <button className="pill-btn-primary" onClick={() => submitPrompt()}>{t("copilotSend")}</button>
+              <button className="pill-btn-primary" onClick={() => submitPrompt()} disabled={isSending}>
+                {isSending ? t("copilotSending") : t("copilotSend")}
+              </button>
             </div>
+            {isSending ? <p className="assistant-msg">{t("copilotThinking")}</p> : null}
           </section>
         </section>
       )}

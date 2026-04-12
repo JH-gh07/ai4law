@@ -4,6 +4,7 @@ import csv
 import re
 from functools import lru_cache
 from pathlib import Path
+from datetime import datetime, timezone
 
 SOURCES_CSV = Path("doc/knowledge/index/sources.csv")
 CASES_CSV = Path("doc/knowledge/index/practice_cases.csv")
@@ -26,6 +27,35 @@ def load_sources_index() -> list[dict[str, str]]:
 
 def load_practice_cases() -> list[dict[str, str]]:
     return _load_csv(str(CASES_CSV))
+
+
+def refresh_knowledge_cache() -> None:
+    _load_csv.cache_clear()
+
+
+def get_knowledge_sync_meta(*, cache_refreshed: bool) -> dict[str, str | bool]:
+    source_exists = SOURCES_CSV.exists()
+    case_exists = CASES_CSV.exists()
+    source_mtime = (
+        datetime.fromtimestamp(SOURCES_CSV.stat().st_mtime, tz=timezone.utc).isoformat()
+        if source_exists
+        else ""
+    )
+    case_mtime = (
+        datetime.fromtimestamp(CASES_CSV.stat().st_mtime, tz=timezone.utc).isoformat()
+        if case_exists
+        else ""
+    )
+    return {
+        "synced_at": datetime.now(timezone.utc).isoformat(),
+        "cache_refreshed": cache_refreshed,
+        "sources_csv_path": str(SOURCES_CSV),
+        "cases_csv_path": str(CASES_CSV),
+        "sources_csv_exists": source_exists,
+        "cases_csv_exists": case_exists,
+        "sources_csv_mtime": source_mtime,
+        "cases_csv_mtime": case_mtime,
+    }
 
 
 def _normalize(text: str) -> str:

@@ -18,8 +18,20 @@ class KnowledgeCaseOptions(BaseModel):
     priorities: list[str] = Field(default_factory=list)
 
 
+class KnowledgeSyncMeta(BaseModel):
+    synced_at: str
+    cache_refreshed: bool = False
+    sources_csv_path: str
+    cases_csv_path: str
+    sources_csv_exists: bool
+    cases_csv_exists: bool
+    sources_csv_mtime: str = ""
+    cases_csv_mtime: str = ""
+
+
 class KnowledgeIndexResponse(BaseModel):
     summary: KnowledgeSummary
+    sync_meta: KnowledgeSyncMeta
     source_options: KnowledgeSourceOptions
     case_options: KnowledgeCaseOptions
     sources: list[dict[str, str]] = Field(default_factory=list)

@@ -25,8 +25,8 @@ const parseErrorMessage = (data: unknown): string => {
   return "Request failed";
 };
 
-async function requestJson(url: string): Promise<unknown> {
-  const response = await fetch(url);
+async function requestJson(url: string, init?: RequestInit): Promise<unknown> {
+  const response = await fetch(url, { cache: "no-store", ...init });
   const data: unknown = await response.json();
   if (!response.ok) {
     throw new Error(parseErrorMessage(data));
@@ -38,6 +38,17 @@ export type KnowledgeSummary = {
   source_count: number;
   case_count: number;
   p0_source_count: number;
+};
+
+export type KnowledgeSyncMeta = {
+  synced_at: string;
+  cache_refreshed: boolean;
+  sources_csv_path: string;
+  cases_csv_path: string;
+  sources_csv_exists: boolean;
+  cases_csv_exists: boolean;
+  sources_csv_mtime: string;
+  cases_csv_mtime: string;
 };
 
 export type KnowledgeSourceOptions = {
@@ -53,6 +64,7 @@ export type KnowledgeCaseOptions = {
 
 export type KnowledgeIndexData = {
   summary: KnowledgeSummary;
+  sync_meta: KnowledgeSyncMeta;
   source_options: KnowledgeSourceOptions;
   case_options: KnowledgeCaseOptions;
   sources: Record<string, string>[];
@@ -70,13 +82,13 @@ export type KnowledgeCitationData = {
   preview: string;
 };
 
-export async function fetchKnowledgeIndex(): Promise<KnowledgeIndexData> {
-  const data = await requestJson("/api/v1/knowledge/index");
+const parseKnowledgeIndexData = (data: unknown): KnowledgeIndexData => {
   if (!isRecord(data)) {
     throw new Error("Invalid knowledge index payload");
   }
 
   const summaryRaw = isRecord(data.summary) ? data.summary : {};
+  const syncMetaRaw = isRecord(data.sync_meta) ? data.sync_meta : {};
   const sourceOptionsRaw = isRecord(data.source_options) ? data.source_options : {};
   const caseOptionsRaw = isRecord(data.case_options) ? data.case_options : {};
 
@@ -85,6 +97,16 @@ export async function fetchKnowledgeIndex(): Promise<KnowledgeIndexData> {
       source_count: typeof summaryRaw.source_count === "number" ? summaryRaw.source_count : 0,
       case_count: typeof summaryRaw.case_count === "number" ? summaryRaw.case_count : 0,
       p0_source_count: typeof summaryRaw.p0_source_count === "number" ? summaryRaw.p0_source_count : 0
+    },
+    sync_meta: {
+      synced_at: typeof syncMetaRaw.synced_at === "string" ? syncMetaRaw.synced_at : "",
+      cache_refreshed: syncMetaRaw.cache_refreshed === true,
+      sources_csv_path: typeof syncMetaRaw.sources_csv_path === "string" ? syncMetaRaw.sources_csv_path : "",
+      cases_csv_path: typeof syncMetaRaw.cases_csv_path === "string" ? syncMetaRaw.cases_csv_path : "",
+      sources_csv_exists: syncMetaRaw.sources_csv_exists === true,
+      cases_csv_exists: syncMetaRaw.cases_csv_exists === true,
+      sources_csv_mtime: typeof syncMetaRaw.sources_csv_mtime === "string" ? syncMetaRaw.sources_csv_mtime : "",
+      cases_csv_mtime: typeof syncMetaRaw.cases_csv_mtime === "string" ? syncMetaRaw.cases_csv_mtime : ""
     },
     source_options: {
       layers: toStringList(sourceOptionsRaw.layers),
@@ -98,6 +120,16 @@ export async function fetchKnowledgeIndex(): Promise<KnowledgeIndexData> {
     sources: toStringRecordList(data.sources),
     cases: toStringRecordList(data.cases)
   };
+};
+
+export async function fetchKnowledgeIndex(): Promise<KnowledgeIndexData> {
+  const data = await requestJson("/api/v1/knowledge/index");
+  return parseKnowledgeIndexData(data);
+}
+
+export async function syncKnowledgeIndex(): Promise<KnowledgeIndexData> {
+  const data = await requestJson("/api/v1/knowledge/sync", { method: "POST" });
+  return parseKnowledgeIndexData(data);
 }
 
 export async function fetchKnowledgeSourceDetail(sourceId: string): Promise<KnowledgeDetailData> {
