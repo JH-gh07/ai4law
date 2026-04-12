@@ -40,10 +40,10 @@ const toRunBatch = (latestRun: ModuleRun | null, fallbackModule: string): string
   return hit ? `${hit[1]}-2026` : `${fallbackModule.toLowerCase()}-2026`;
 };
 
-const deriveSummaryStatus = (inputMaterials: ResourceItemData[], latestRun: ModuleRun | null): "failed" | "in_progress" | "completed" => {
+const deriveSummaryStatus = (inputMaterials: ResourceItemData[], latestRun: ModuleRun | null): "blocked" | "in_progress" | "completed" => {
   const hasMissingCritical = inputMaterials.some((item) => item.kind === "input" && item.status === "missing" && item.id === "data_inventory");
-  if (hasMissingCritical) return "failed";
-  if (latestRun && !latestRun.success) return "failed";
+  if (hasMissingCritical) return "blocked";
+  if (latestRun && !latestRun.success) return "blocked";
   if (latestRun) return "in_progress";
   return "in_progress";
 };
@@ -226,7 +226,7 @@ export function buildResourceExplorerData({
   ];
 
   const summaryStatus = deriveSummaryStatus(inputMaterials, latestRun);
-  const progress = summaryStatus === "failed" ? 25 : Math.round((workflowSteps.filter((step) => step.status === "done").length / STEP_KEY_ORDER.length) * 100);
+  const progress = summaryStatus === "blocked" ? 25 : Math.round((workflowSteps.filter((step) => step.status === "done").length / STEP_KEY_ORDER.length) * 100);
   const blockedReason = !hasDataInventory ? "请上传数据清单附件（data_inventory）" : undefined;
 
   return {

@@ -12,6 +12,7 @@ const STATUS_META: Record<ExplorerStatus, { label: string; tone: string }> = {
   in_progress: { label: "进行中", tone: "active" },
   pending: { label: "待处理", tone: "pending" },
   pending_generation: { label: "待生成", tone: "pending" },
+  blocked: { label: "阻塞", tone: "danger" },
   opened: { label: "打开中", tone: "active" },
   collapsed: { label: "收起", tone: "neutral" },
   failed: { label: "失败", tone: "danger" },
@@ -23,4 +24,3 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const meta = STATUS_META[status];
   return <span className={`rx-badge rx-badge-${meta.tone}`}>{meta.label}</span>;
 }
-

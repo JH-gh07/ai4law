@@ -8,6 +8,7 @@ export type ExplorerStatus =
   | "in_progress"
   | "pending"
   | "pending_generation"
+  | "blocked"
   | "opened"
   | "collapsed"
   | "failed"
@@ -66,4 +67,3 @@ export type ResourceExplorerHandlers = {
   onSwitchWorkspace: (item: ResourceItemData) => void;
   onUploadMissingItem: (item: ResourceItemData) => void;
 };
-
