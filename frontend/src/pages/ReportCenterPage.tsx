@@ -19,6 +19,11 @@ function readChapters(run: ModuleRun | undefined): Array<{ title: string; conten
     .slice(0, 8);
 }
 
+const toTimestamp = (value: string): number => {
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+};
+
 export function ReportCenterPage() {
   const { t } = useLang();
   const { state } = useAppStore();
@@ -66,7 +71,7 @@ export function ReportCenterPage() {
             riskLevel: snapshot.riskLevel || t("reportNoEvidenceLabel")
           };
         })
-        .sort((a, b) => (a.generatedAt < b.generatedAt ? 1 : -1));
+        .sort((a, b) => toTimestamp(b.generatedAt) - toTimestamp(a.generatedAt));
 
       return {
         taskId: task.id,
@@ -83,9 +88,15 @@ export function ReportCenterPage() {
         return byTaskName || task.documents.length > 0;
       })
       .sort((a, b) => {
-        const latestA = a.documents[0]?.generatedAt ?? a.taskUpdatedAt;
-        const latestB = b.documents[0]?.generatedAt ?? b.taskUpdatedAt;
-        return latestA < latestB ? 1 : -1;
+        const latestA = Math.max(
+          toTimestamp(a.taskUpdatedAt),
+          toTimestamp(a.documents[0]?.generatedAt ?? "")
+        );
+        const latestB = Math.max(
+          toTimestamp(b.taskUpdatedAt),
+          toTimestamp(b.documents[0]?.generatedAt ?? "")
+        );
+        return latestB - latestA;
       });
   }, [filteredSnapshots, keyword, state.taskSpaces, t]);
 

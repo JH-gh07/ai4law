@@ -45,8 +45,8 @@ export function ReportTaskTreeSidebar({
       if (selectedTaskId && validTaskIds.has(selectedTaskId)) {
         next.add(selectedTaskId);
       }
-      if (next.size === 0 && tasks[0]) {
-        next.add(tasks[0].taskId);
+      if (next.size === 0) {
+        tasks.slice(0, 3).forEach((task) => next.add(task.taskId));
       }
       return next;
     });
