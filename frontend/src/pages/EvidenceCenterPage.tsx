@@ -33,9 +33,12 @@ export function EvidenceCenterPage() {
     ? {
       title: "知识库中心",
       searchPlaceholder: "搜索标题、来源机构、路径…",
+      searchNow: "搜索",
       sourceTab: "法规与指南",
       caseTab: "实践案例",
       citationTab: "引用联动演示",
+      p0Only: "P0 条目",
+      citationLinked: "已引用条目",
       sourceStat: "法规/指南条目",
       caseStat: "实践案例条目",
       p0Stat: "P0 法规条目",
@@ -82,9 +85,12 @@ export function EvidenceCenterPage() {
     : {
       title: "Knowledge Center",
       searchPlaceholder: "Search title, source org, path...",
+      searchNow: "Search",
       sourceTab: "Regulations & Guidance",
       caseTab: "Practice Cases",
       citationTab: "Citation Linkage Demo",
+      p0Only: "P0 Items",
+      citationLinked: "Cited Items",
       sourceStat: "Regulation/Guide Items",
       caseStat: "Practice Case Items",
       p0Stat: "P0 Regulation Items",
@@ -349,166 +355,217 @@ export function EvidenceCenterPage() {
   };
 
   return (
-    <section className="page-shell evidence-page">
-      <div className="page-header evidence-header">
-        <h2>{copy.title}</h2>
-        <input
-          className="resource-search"
-          placeholder={copy.searchPlaceholder}
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-        />
-        <button className="pill-btn" onClick={() => void handleSyncNow()} disabled={loading || syncing}>
-          {syncing ? copy.syncing : copy.syncNow}
-        </button>
-      </div>
+    <section className="page-shell evidence-page kc-page">
+      <section className="kc-hero">
+        <div className="kc-hero-title-row">
+          <h2>{copy.title}</h2>
+          <div className="kc-search-row">
+            <input
+              className="resource-search kc-search-input"
+              placeholder={copy.searchPlaceholder}
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+            />
+            <button className="kc-btn primary" type="button">{copy.searchNow}</button>
+          </div>
+          <button className="kc-btn" onClick={() => void handleSyncNow()} disabled={loading || syncing}>
+            {syncing ? copy.syncing : copy.syncNow}
+          </button>
+        </div>
 
-      <section className="evidence-metrics">
-        <article className="evidence-metric-card">
-          <span>{copy.sourceStat}</span>
-          <strong>{summary.source_count}</strong>
-        </article>
-        <article className="evidence-metric-card">
-          <span>{copy.caseStat}</span>
-          <strong>{summary.case_count}</strong>
-        </article>
-        <article className="evidence-metric-card">
-          <span>{copy.p0Stat}</span>
-          <strong>{summary.p0_source_count}</strong>
-        </article>
-        <article className="evidence-metric-card">
-          <span>{copy.currentStat}</span>
-          <strong>{currentMatches}</strong>
-        </article>
-      </section>
+        <div className="kc-quick-entry-row">
+          <button className={`quick-chip ${tab === "sources" ? "active" : ""}`} onClick={() => setTab("sources")}>{copy.sourceTab}</button>
+          <button className={`quick-chip ${tab === "cases" ? "active" : ""}`} onClick={() => setTab("cases")}>{copy.caseTab}</button>
+          <button className={`quick-chip ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>{copy.citationTab}</button>
+          <button className={`quick-chip ${tab === "sources" && selectedSourcePriority.length === 1 && selectedSourcePriority[0] === "P0" ? "active" : ""}`} onClick={() => {
+            setTab("sources");
+            setSelectedSourcePriority(["P0"]);
+          }}>{copy.p0Only}</button>
+          <button className={`quick-chip ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>{copy.citationLinked}</button>
+        </div>
 
-      <section className="evidence-sync-card">
-        <div className="evidence-sync-kv">
-          <small>{copy.syncAt}</small>
-          <strong>{syncTimeLabel}</strong>
-        </div>
-        <div className="evidence-sync-kv">
-          <small>{copy.syncMode}</small>
-          <strong>{syncMeta.cache_refreshed ? copy.syncForced : copy.syncNormal}</strong>
-        </div>
-        <div className="evidence-sync-kv">
-          <small>{copy.syncSourceFile}</small>
-          <strong>{syncMeta.sources_csv_path ? toFileName(syncMeta.sources_csv_path) : "-"}</strong>
-        </div>
-        <div className="evidence-sync-kv">
-          <small>{copy.syncCaseFile}</small>
-          <strong>{syncMeta.cases_csv_path ? toFileName(syncMeta.cases_csv_path) : "-"}</strong>
-        </div>
-        <div className="evidence-sync-kv">
-          <small>{copy.syncStatus}</small>
-          <strong>{syncFileStatusLabel}</strong>
+        <div className="kc-status-row">
+          <article className="kc-status-item">
+            <div className="k">{copy.sourceStat}</div>
+            <div className="v">{summary.source_count}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.caseStat}</div>
+            <div className="v">{summary.case_count}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.p0Stat}</div>
+            <div className="v">{summary.p0_source_count}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.currentStat}</div>
+            <div className="v">{currentMatches}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.syncAt}</div>
+            <div className="v">{syncTimeLabel}</div>
+          </article>
         </div>
       </section>
 
-      <section className="evidence-tabbar">
-        <button className={`tab-btn ${tab === "sources" ? "active" : ""}`} onClick={() => setTab("sources")}>
-          {copy.sourceTab}
-        </button>
-        <button className={`tab-btn ${tab === "cases" ? "active" : ""}`} onClick={() => setTab("cases")}>
-          {copy.caseTab}
-        </button>
-        <button className={`tab-btn ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>
-          {copy.citationTab}
-        </button>
-      </section>
-
-      <div className="evidence-panel">
-        {error ? <p className="resource-empty">{error}</p> : null}
-        {loading ? <p className="resource-empty">{copy.loading}</p> : null}
-
-        {!loading && tab === "sources" ? (
-          <div className="evidence-hits-layout">
-            <aside className="evidence-hit-list">
-              <h3>{copy.sourceListTitle}</h3>
-              <div className="knowledge-filter-grid">
-                <div className="knowledge-filter-group">
-                  <small>{copy.sourceFilterLayer}</small>
-                  <div className="knowledge-chip-row">
-                    {sourceLayerOptions.map((option) => (
-                      <button
-                        key={option}
-                        className={`chip-btn ${selectedLayers.includes(option) ? "active" : ""}`}
-                        onClick={() => setSelectedLayers((prev) => toggleValue(prev, option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    {sourceLayerOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+      <section className="kc-main-grid">
+        <aside className="kc-col">
+          <header className="kc-col-head">
+            <span>{tab === "sources" ? copy.sourceListTitle : tab === "cases" ? copy.caseListTitle : copy.citationTab}</span>
+            <small>{copy.currentStat}: {currentMatches}</small>
+          </header>
+          <div className="kc-col-body">
+            {tab === "sources" ? (
+              <>
+                <div className="knowledge-filter-grid">
+                  <div className="knowledge-filter-group">
+                    <small>{copy.sourceFilterLayer}</small>
+                    <div className="knowledge-chip-row">
+                      {sourceLayerOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedLayers.includes(option) ? "active" : ""}`} onClick={() => setSelectedLayers((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {sourceLayerOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedLayers(sourceLayerOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedLayers([])}>{copy.clearAll}</button>
+                    </div>
                   </div>
-                  <div className="knowledge-filter-actions">
-                    <button className="ghost-btn" onClick={() => setSelectedLayers(sourceLayerOptions)}>{copy.selectAll}</button>
-                    <button className="ghost-btn" onClick={() => setSelectedLayers([])}>{copy.clearAll}</button>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.sourceFilterPath}</small>
+                    <div className="knowledge-chip-row">
+                      {sourcePathOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedPaths.includes(option) ? "active" : ""}`} onClick={() => setSelectedPaths((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {sourcePathOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedPaths(sourcePathOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedPaths([])}>{copy.clearAll}</button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="knowledge-filter-group">
-                  <small>{copy.sourceFilterPath}</small>
-                  <div className="knowledge-chip-row">
-                    {sourcePathOptions.map((option) => (
-                      <button
-                        key={option}
-                        className={`chip-btn ${selectedPaths.includes(option) ? "active" : ""}`}
-                        onClick={() => setSelectedPaths((prev) => toggleValue(prev, option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    {sourcePathOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                  </div>
-                  <div className="knowledge-filter-actions">
-                    <button className="ghost-btn" onClick={() => setSelectedPaths(sourcePathOptions)}>{copy.selectAll}</button>
-                    <button className="ghost-btn" onClick={() => setSelectedPaths([])}>{copy.clearAll}</button>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.sourceFilterPriority}</small>
+                    <div className="knowledge-chip-row">
+                      {sourcePriorityOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedSourcePriority.includes(option) ? "active" : ""}`} onClick={() => setSelectedSourcePriority((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {sourcePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedSourcePriority(sourcePriorityOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedSourcePriority([])}>{copy.clearAll}</button>
+                    </div>
                   </div>
                 </div>
+                <div className="evidence-hit-scroll kc-list-scroll">
+                  {filteredSources.map((row) => {
+                    const sourceId = rowText(row, "source_id");
+                    return (
+                      <article key={sourceId} className={`evidence-hit-item ${selectedSource?.source_id === sourceId ? "active" : ""}`} onClick={() => setSelectedSourceId(sourceId)}>
+                        <small>{rowText(row, "layer")} · {rowText(row, "path")}</small>
+                        <strong>{rowText(row, "title")}</strong>
+                        <p>{rowText(row, "source_org")}</p>
+                      </article>
+                    );
+                  })}
+                  {filteredSources.length === 0 ? <p className="resource-empty">{copy.noData}</p> : null}
+                </div>
+              </>
+            ) : null}
 
-                <div className="knowledge-filter-group">
-                  <small>{copy.sourceFilterPriority}</small>
-                  <div className="knowledge-chip-row">
-                    {sourcePriorityOptions.map((option) => (
-                      <button
-                        key={option}
-                        className={`chip-btn ${selectedSourcePriority.includes(option) ? "active" : ""}`}
-                        onClick={() => setSelectedSourcePriority((prev) => toggleValue(prev, option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    {sourcePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+            {tab === "cases" ? (
+              <>
+                <div className="knowledge-filter-grid">
+                  <div className="knowledge-filter-group">
+                    <small>{copy.caseFilterModule}</small>
+                    <div className="knowledge-chip-row">
+                      {caseModuleOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedModules.includes(option) ? "active" : ""}`} onClick={() => setSelectedModules((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {caseModuleOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedModules(caseModuleOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedModules([])}>{copy.clearAll}</button>
+                    </div>
                   </div>
-                  <div className="knowledge-filter-actions">
-                    <button className="ghost-btn" onClick={() => setSelectedSourcePriority(sourcePriorityOptions)}>{copy.selectAll}</button>
-                    <button className="ghost-btn" onClick={() => setSelectedSourcePriority([])}>{copy.clearAll}</button>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.caseFilterPriority}</small>
+                    <div className="knowledge-chip-row">
+                      {casePriorityOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedCasePriority.includes(option) ? "active" : ""}`} onClick={() => setSelectedCasePriority((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {casePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedCasePriority(casePriorityOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedCasePriority([])}>{copy.clearAll}</button>
+                    </div>
                   </div>
                 </div>
+                <div className="evidence-hit-scroll kc-list-scroll">
+                  {filteredCases.map((row) => {
+                    const caseId = rowText(row, "case_id");
+                    return (
+                      <article key={caseId} className={`evidence-hit-item ${selectedCase?.case_id === caseId ? "active" : ""}`} onClick={() => setSelectedCaseId(caseId)}>
+                        <small>{rowText(row, "case_type")} · {rowText(row, "priority")}</small>
+                        <strong>{rowText(row, "case_title")}</strong>
+                        <p>{rowText(row, "expected_module")}</p>
+                      </article>
+                    );
+                  })}
+                  {filteredCases.length === 0 ? <p className="resource-empty">{copy.noData}</p> : null}
+                </div>
+              </>
+            ) : null}
+
+            {tab === "citation" ? (
+              <div className="evidence-citation-panel">
+                <article className="citation-query-card">
+                  <label className="field-wrap">
+                    <span>{copy.citationInputLabel}</span>
+                    <input value={citationQuery} placeholder={copy.citationPlaceholder} onChange={(event) => setCitationQuery(event.target.value)} />
+                  </label>
+                </article>
+                {!citationLoading && !citationMatch ? <article className="citation-empty-card"><p>{copy.matchEmpty}</p></article> : null}
+                {!citationLoading && citationMatch ? (
+                  <article className="citation-match-card">
+                    <h4>{copy.citationSummaryTitle}</h4>
+                    <div className="citation-kv-grid">
+                      <div className="citation-kv-row"><span>{copy.sourceId}</span><strong>{rowText(citationMatch, "source_id")}</strong></div>
+                      <div className="citation-kv-row"><span>{copy.layer}</span><strong>{rowText(citationMatch, "layer")}</strong></div>
+                      <div className="citation-kv-row"><span>{copy.path}</span><strong>{rowText(citationMatch, "path")}</strong></div>
+                    </div>
+                    <p className="citation-title">{rowText(citationMatch, "title")}</p>
+                    <small>{copy.snapshotPath}: <code>{rowText(citationMatch, "snapshot_path", "-")}</code></small>
+                  </article>
+                ) : null}
               </div>
+            ) : null}
+          </div>
+        </aside>
 
-              <div className="evidence-hit-scroll">
-                {filteredSources.map((row) => {
-                  const sourceId = rowText(row, "source_id");
-                  return (
-                    <article
-                      key={sourceId}
-                      className={`evidence-hit-item ${selectedSource?.source_id === sourceId ? "active" : ""}`}
-                      onClick={() => setSelectedSourceId(sourceId)}
-                    >
-                      <small>{rowText(row, "layer")} · {rowText(row, "path")}</small>
-                      <strong>{rowText(row, "title")}</strong>
-                      <p>{rowText(row, "source_org")}</p>
-                    </article>
-                  );
-                })}
-                {filteredSources.length === 0 ? <p className="resource-empty">{copy.noData}</p> : null}
-              </div>
-            </aside>
+        <main className="kc-col">
+          <header className="kc-col-head">
+            <span>{tab === "sources" ? copy.sourceDetailTitle : tab === "cases" ? copy.caseDetailTitle : copy.previewTitle}</span>
+          </header>
+          <div className="kc-col-body">
+            {loading ? <p className="resource-empty">{copy.loading}</p> : null}
+            {error ? <p className="resource-empty">{error}</p> : null}
 
-            <main className="evidence-hit-detail">
-              <h3>{copy.sourceDetailTitle}</h3>
-              {selectedSource ? (
+            {!loading && tab === "sources" ? (
+              selectedSource ? (
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
                     <span>{rowText(selectedSource, "source_id")}</span>
@@ -518,94 +575,15 @@ export function EvidenceCenterPage() {
                   </div>
                   <h4>{rowText(selectedSource, "title")}</h4>
                   <p>{rowText(selectedSource, "notes", "-")}</p>
-                  {selectedSource.url ? (
-                    <a className="ghost-btn link-btn" href={selectedSource.url} target="_blank" rel="noreferrer">
-                      {copy.openSource}
-                    </a>
-                  ) : null}
+                  {selectedSource.url ? <a className="ghost-btn link-btn" href={selectedSource.url} target="_blank" rel="noreferrer">{copy.openSource}</a> : null}
                   <small>{copy.snapshotPath}: <code>{rowText(selectedSource, "snapshot_path", "-")}</code></small>
-                  {sourcePreview ? (
-                    <div className="knowledge-preview-block">
-                      <strong>{copy.previewTitle}</strong>
-                      <p>{sourcePreview}</p>
-                    </div>
-                  ) : null}
+                  {sourcePreview ? <div className="knowledge-preview-block"><strong>{copy.previewTitle}</strong><p>{sourcePreview}</p></div> : null}
                 </article>
-              ) : (
-                <p className="resource-empty">{copy.noData}</p>
-              )}
-            </main>
-          </div>
-        ) : null}
+              ) : <p className="resource-empty">{copy.noData}</p>
+            ) : null}
 
-        {!loading && tab === "cases" ? (
-          <div className="evidence-hits-layout">
-            <aside className="evidence-hit-list">
-              <h3>{copy.caseListTitle}</h3>
-              <div className="knowledge-filter-grid">
-                <div className="knowledge-filter-group">
-                  <small>{copy.caseFilterModule}</small>
-                  <div className="knowledge-chip-row">
-                    {caseModuleOptions.map((option) => (
-                      <button
-                        key={option}
-                        className={`chip-btn ${selectedModules.includes(option) ? "active" : ""}`}
-                        onClick={() => setSelectedModules((prev) => toggleValue(prev, option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    {caseModuleOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                  </div>
-                  <div className="knowledge-filter-actions">
-                    <button className="ghost-btn" onClick={() => setSelectedModules(caseModuleOptions)}>{copy.selectAll}</button>
-                    <button className="ghost-btn" onClick={() => setSelectedModules([])}>{copy.clearAll}</button>
-                  </div>
-                </div>
-
-                <div className="knowledge-filter-group">
-                  <small>{copy.caseFilterPriority}</small>
-                  <div className="knowledge-chip-row">
-                    {casePriorityOptions.map((option) => (
-                      <button
-                        key={option}
-                        className={`chip-btn ${selectedCasePriority.includes(option) ? "active" : ""}`}
-                        onClick={() => setSelectedCasePriority((prev) => toggleValue(prev, option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                    {casePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                  </div>
-                  <div className="knowledge-filter-actions">
-                    <button className="ghost-btn" onClick={() => setSelectedCasePriority(casePriorityOptions)}>{copy.selectAll}</button>
-                    <button className="ghost-btn" onClick={() => setSelectedCasePriority([])}>{copy.clearAll}</button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="evidence-hit-scroll">
-                {filteredCases.map((row) => {
-                  const caseId = rowText(row, "case_id");
-                  return (
-                    <article
-                      key={caseId}
-                      className={`evidence-hit-item ${selectedCase?.case_id === caseId ? "active" : ""}`}
-                      onClick={() => setSelectedCaseId(caseId)}
-                    >
-                      <small>{rowText(row, "case_type")} · {rowText(row, "priority")}</small>
-                      <strong>{rowText(row, "case_title")}</strong>
-                      <p>{rowText(row, "expected_module")}</p>
-                    </article>
-                  );
-                })}
-                {filteredCases.length === 0 ? <p className="resource-empty">{copy.noData}</p> : null}
-              </div>
-            </aside>
-
-            <main className="evidence-hit-detail">
-              <h3>{copy.caseDetailTitle}</h3>
-              {selectedCase ? (
+            {!loading && tab === "cases" ? (
+              selectedCase ? (
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
                     <span>{rowText(selectedCase, "case_id")}</span>
@@ -615,84 +593,64 @@ export function EvidenceCenterPage() {
                   <h4>{rowText(selectedCase, "case_title")}</h4>
                   <p>{rowText(selectedCase, "limitations", "-")}</p>
                   <p>{rowText(selectedCase, "available_artifacts", "-")}</p>
-                  {selectedCase.url ? (
-                    <a className="ghost-btn link-btn" href={selectedCase.url} target="_blank" rel="noreferrer">
-                      {copy.openCase}
-                    </a>
-                  ) : null}
+                  {selectedCase.url ? <a className="ghost-btn link-btn" href={selectedCase.url} target="_blank" rel="noreferrer">{copy.openCase}</a> : null}
                   <small>{copy.snapshotPath}: <code>{rowText(selectedCase, "snapshot_path", "-")}</code></small>
-                  {casePreview ? (
-                    <div className="knowledge-preview-block">
-                      <strong>{copy.casePreviewTitle}</strong>
-                      <p>{casePreview}</p>
-                    </div>
-                  ) : null}
+                  {casePreview ? <div className="knowledge-preview-block"><strong>{copy.casePreviewTitle}</strong><p>{casePreview}</p></div> : null}
                 </article>
-              ) : (
-                <p className="resource-empty">{copy.noData}</p>
-              )}
-            </main>
-          </div>
-        ) : null}
+              ) : <p className="resource-empty">{copy.noData}</p>
+            ) : null}
 
-        {!loading && tab === "citation" ? (
-          <div className="evidence-citation-panel">
+            {!loading && tab === "citation" ? (
+              <>
+                {citationLoading ? <article className="citation-empty-card"><p>{copy.loading}</p></article> : null}
+                {!citationLoading && citationPreview ? (
+                  <article className="citation-preview-card">
+                    <strong>{copy.previewTitle}</strong>
+                    <p>{citationPreview}</p>
+                  </article>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </main>
+
+        <aside className="kc-col">
+          <header className="kc-col-head">
+            <span>{lang === "zh" ? "联动与状态" : "Linkage & Status"}</span>
+          </header>
+          <div className="kc-col-body">
+            <section className="kc-sync-box">
+              <div className="kc-sync-row"><small>{copy.syncAt}</small><strong>{syncTimeLabel}</strong></div>
+              <div className="kc-sync-row"><small>{copy.syncMode}</small><strong>{syncMeta.cache_refreshed ? copy.syncForced : copy.syncNormal}</strong></div>
+              <div className="kc-sync-row"><small>{copy.syncSourceFile}</small><strong>{syncMeta.sources_csv_path ? toFileName(syncMeta.sources_csv_path) : "-"}</strong></div>
+              <div className="kc-sync-row"><small>{copy.syncCaseFile}</small><strong>{syncMeta.cases_csv_path ? toFileName(syncMeta.cases_csv_path) : "-"}</strong></div>
+              <div className="kc-sync-row"><small>{copy.syncStatus}</small><strong>{syncFileStatusLabel}</strong></div>
+            </section>
+
             <article className="citation-query-card">
               <label className="field-wrap">
                 <span>{copy.citationInputLabel}</span>
-                <input
-                  value={citationQuery}
-                  placeholder={copy.citationPlaceholder}
-                  onChange={(event) => setCitationQuery(event.target.value)}
-                />
+                <input value={citationQuery} placeholder={copy.citationPlaceholder} onChange={(event) => setCitationQuery(event.target.value)} />
               </label>
             </article>
 
-            <div className="citation-result-grid">
-              {citationLoading ? (
-                <article className="citation-empty-card">
-                  <p>{copy.loading}</p>
-                </article>
-              ) : null}
-
-              {!citationLoading && citationMatch ? (
-                <article className="citation-match-card">
-                  <h4>{copy.citationSummaryTitle}</h4>
-                  <div className="citation-kv-grid">
-                    <div className="citation-kv-row">
-                      <span>{copy.sourceId}</span>
-                      <strong>{rowText(citationMatch, "source_id")}</strong>
-                    </div>
-                    <div className="citation-kv-row">
-                      <span>{copy.layer}</span>
-                      <strong>{rowText(citationMatch, "layer")}</strong>
-                    </div>
-                    <div className="citation-kv-row">
-                      <span>{copy.path}</span>
-                      <strong>{rowText(citationMatch, "path")}</strong>
-                    </div>
-                  </div>
-                  <p className="citation-title">{rowText(citationMatch, "title")}</p>
-                  <small>{copy.snapshotPath}: <code>{rowText(citationMatch, "snapshot_path", "-")}</code></small>
-                </article>
-              ) : null}
-
-              {!citationLoading && !citationMatch ? (
-                <article className="citation-empty-card">
-                  <p>{copy.matchEmpty}</p>
-                </article>
-              ) : null}
-
-              {!citationLoading && citationPreview ? (
-                <article className="citation-preview-card">
-                  <strong>{copy.previewTitle}</strong>
-                  <p>{citationPreview}</p>
-                </article>
-              ) : null}
-            </div>
+            {citationLoading ? <article className="citation-empty-card"><p>{copy.loading}</p></article> : null}
+            {!citationLoading && citationMatch ? (
+              <article className="citation-match-card">
+                <h4>{copy.citationSummaryTitle}</h4>
+                <div className="citation-kv-grid">
+                  <div className="citation-kv-row"><span>{copy.sourceId}</span><strong>{rowText(citationMatch, "source_id")}</strong></div>
+                  <div className="citation-kv-row"><span>{copy.layer}</span><strong>{rowText(citationMatch, "layer")}</strong></div>
+                  <div className="citation-kv-row"><span>{copy.path}</span><strong>{rowText(citationMatch, "path")}</strong></div>
+                </div>
+                <p className="citation-title">{rowText(citationMatch, "title")}</p>
+                <small>{copy.snapshotPath}: <code>{rowText(citationMatch, "snapshot_path", "-")}</code></small>
+              </article>
+            ) : null}
+            {!citationLoading && !citationMatch ? <article className="citation-empty-card"><p>{copy.matchEmpty}</p></article> : null}
           </div>
-        ) : null}
-      </div>
+        </aside>
+      </section>
     </section>
   );
 }

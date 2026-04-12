@@ -29,6 +29,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [jurisdiction, setJurisdiction] = useState<"ALL" | Jurisdiction>("ALL");
+  const [quickCreateDraft, setQuickCreateDraft] = useState<{ taskTemplateId: string; value: string; error: string } | null>(null);
   const [renameDraft, setRenameDraft] = useState<{ taskId: string; value: string } | null>(null);
   const [pendingDeleteTask, setPendingDeleteTask] = useState<{ taskId: string; name: string } | null>(null);
   const jurisdictionShowcase = [
@@ -131,15 +132,32 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const quickCreateFromTemplate = (taskTemplateId: string) => {
     const taskTemplate = findTaskTemplate(taskTemplateId);
     if (!taskTemplate) return;
-    const suggestedName = buildSuggestedTaskName(taskTemplate, lang);
-    const taskName = globalThis.prompt(t("tasksQuickCreatePrompt"), suggestedName)?.trim();
-    if (!taskName) return;
+    setQuickCreateDraft({
+      taskTemplateId: taskTemplate.id,
+      value: buildSuggestedTaskName(taskTemplate, lang),
+      error: ""
+    });
+  };
+
+  const submitQuickCreateTask = () => {
+    if (!quickCreateDraft) return;
+    const taskTemplate = findTaskTemplate(quickCreateDraft.taskTemplateId);
+    if (!taskTemplate) {
+      setQuickCreateDraft(null);
+      return;
+    }
+    const taskName = quickCreateDraft.value.trim();
+    if (!taskName) {
+      setQuickCreateDraft((prev) => (prev ? { ...prev, error: t("tasksQuickCreateEmptyError") } : prev));
+      return;
+    }
     onQuickCreate({
       mode: "rapid",
       name: taskName,
       jurisdiction: taskTemplate.jurisdiction,
       taskTemplateId: taskTemplate.id
     });
+    setQuickCreateDraft(null);
   };
 
   return (
@@ -297,6 +315,22 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
           </div>
         </div>
       </section>
+
+      <WorkspacePromptModal
+        open={!!quickCreateDraft}
+        title={t("tasksQuickCreateTitle")}
+        description={t("tasksQuickCreateDesc")}
+        valueLabel={t("tasksNameField")}
+        value={quickCreateDraft?.value ?? ""}
+        valuePlaceholder={t("tasksQuickCreatePlaceholder")}
+        onValueChange={(value) => setQuickCreateDraft((prev) => (prev ? { ...prev, value, error: "" } : prev))}
+        confirmText={t("tasksQuickCreateConfirmAction")}
+        cancelText={t("cancelBtn")}
+        errorText={quickCreateDraft?.error}
+        modalClassName="action-modal-task-create"
+        onCancel={() => setQuickCreateDraft(null)}
+        onConfirm={submitQuickCreateTask}
+      />
 
       <WorkspacePromptModal
         open={!!renameDraft}

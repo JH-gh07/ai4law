@@ -16,7 +16,15 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
         <Link to="/" className="global-brand" aria-label={t("navHome")}>
-          <span className="global-brand-logo">§</span>
+          <span className="global-brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 4v16" />
+              <path d="M4 7h16" />
+              <path d="M6 7l-2.4 4.3a1 1 0 0 0 .87 1.5h3.06a1 1 0 0 0 .87-1.5L6 7Z" />
+              <path d="M18 7l-2.4 4.3a1 1 0 0 0 .87 1.5h3.06a1 1 0 0 0 .87-1.5L18 7Z" />
+              <path d="M8 20h8" />
+            </svg>
+          </span>
           <div>
             <div className="global-brand-title">{t("appBrand")}</div>
             <div className="global-brand-sub">Compliance OS</div>

@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { OpenQuestModal } from "../modals/OpenQuestModal";
 import { useAppStore } from "../../lib/app-store";
 import { useLang } from "../../lib/language";
 import type { Jurisdiction, LaunchMode } from "../../lib/domain";
@@ -25,11 +26,8 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
   const navigate = useNavigate();
   const { state } = useAppStore();
   const isZh = lang === "zh";
-
-  const latestTask = useMemo(
-    () => [...state.taskSpaces].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0] ?? null,
-    [state.taskSpaces]
-  );
+  const [openQuestModalOpen, setOpenQuestModalOpen] = useState(false);
+  const [openQuestQuery, setOpenQuestQuery] = useState("");
 
   const painPoints = isZh
     ? [
@@ -180,15 +178,15 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
               <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
                 {isZh ? "进入任务空间" : "Open Task Spaces"}
               </button>
-              {latestTask ? (
-                <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
-                  {t("homeIntroContinueAction")}
-                </button>
-              ) : (
-                <button className="pill-btn" disabled>
-                  {t("homeIntroContinueAction")}
-                </button>
-              )}
+              <button
+                className="pill-btn quest-open-btn"
+                onClick={() => {
+                  setOpenQuestQuery("");
+                  setOpenQuestModalOpen(true);
+                }}
+              >
+                {t("homeIntroContinueAction")}
+              </button>
             </div>
             <div className="landing-blue-facts">
               <article>
@@ -353,19 +351,33 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </header>
           <div className="landing-blue-actions landing-blue-footer-actions">
             <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>{isZh ? "进入任务空间" : "Open Task Spaces"}</button>
-            {latestTask ? (
-              <button className="pill-btn" onClick={() => navigate(`/workspace/${latestTask.id}`)}>
-                {t("homeIntroContinueAction")}
-              </button>
-            ) : (
-              <button className="pill-btn" disabled>
-                {t("homeIntroContinueAction")}
-              </button>
-            )}
+            <button
+              className="pill-btn quest-open-btn"
+              onClick={() => {
+                setOpenQuestQuery("");
+                setOpenQuestModalOpen(true);
+              }}
+            >
+              {t("homeIntroContinueAction")}
+            </button>
           </div>
         </section>
         </div>
       </div>
+
+      {openQuestModalOpen ? (
+        <OpenQuestModal
+          tasks={state.taskSpaces}
+          runs={state.moduleRuns}
+          query={openQuestQuery}
+          onQueryChange={setOpenQuestQuery}
+          onClose={() => setOpenQuestModalOpen(false)}
+          onOpenTask={(taskId) => {
+            setOpenQuestModalOpen(false);
+            navigate(`/workspace/${taskId}`);
+          }}
+        />
+      ) : null}
     </section>
   );
 }

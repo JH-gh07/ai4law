@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ModuleRun, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
@@ -28,6 +28,16 @@ export function OpenQuestModal({
 }: OpenQuestModalProps) {
   const { t, lang } = useLang();
 
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onClose();
+    };
+    globalThis.addEventListener("keydown", onEscape);
+    return () => globalThis.removeEventListener("keydown", onEscape);
+  }, [onClose]);
+
   const latestRunByTask = useMemo(() => {
     const map = new Map<string, ModuleRun>();
     for (const run of runs) {
@@ -48,7 +58,7 @@ export function OpenQuestModal({
     return sorted.filter((task) => {
       const latest = latestRunByTask.get(task.id);
       const template = findTaskTemplate(task.taskTemplateId);
-      const text = `${task.name} ${task.id} ${task.mode} ${task.jurisdiction} ${task.module} ${latest?.module ?? ""} ${template?.title.zh ?? ""} ${template?.title.en ?? ""}`.toLowerCase();
+      const text = `${task.name} ${task.id} ${task.mode} ${task.jurisdiction} ${task.module} ${task.taskTemplateId} ${task.workspaceStyle} ${latest?.module ?? ""} ${template?.title.zh ?? ""} ${template?.title.en ?? ""}`.toLowerCase();
       return text.includes(token);
     });
   }, [latestRunByTask, query, tasks]);
@@ -75,6 +85,7 @@ export function OpenQuestModal({
               className="quest-search"
               placeholder={t("openQuestSearchPlaceholder")}
               value={query}
+              autoFocus
               onChange={(event) => onQueryChange(event.target.value)}
             />
             <div className="quest-left-pills">
@@ -94,8 +105,21 @@ export function OpenQuestModal({
               filtered.map((task, index) => {
                 const latest = latestRunByTask.get(task.id);
                 const template = findTaskTemplate(task.taskTemplateId);
+                const onCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  onOpenTask(task.id);
+                };
                 return (
-                  <article key={task.id} className="quest-item-card">
+                  <article
+                    key={task.id}
+                    className="quest-item-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onOpenTask(task.id)}
+                    onKeyDown={onCardKeyDown}
+                    aria-label={`${t("openQuestOpenAction")} ${task.name}`}
+                  >
                     <div className="quest-item-row">
                       <strong>{task.name}</strong>
                       <small>
@@ -119,7 +143,13 @@ export function OpenQuestModal({
                       {template ? <span>{getTaskTemplateTitle(template, lang)}</span> : null}
                     </div>
 
-                    <button className="pill-btn" onClick={() => onOpenTask(task.id)}>
+                    <button
+                      className="pill-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenTask(task.id);
+                      }}
+                    >
                       {t("openQuestOpenAction")}
                     </button>
                   </article>
