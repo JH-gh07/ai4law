@@ -5075,6 +5075,9 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.5rem;
+  background:
+    radial-gradient(circle at 94% 2%, rgba(124, 173, 230, 0.16), transparent 44%),
+    linear-gradient(180deg, rgba(235, 245, 255, 0.92), rgba(228, 240, 252, 0.9));
 }
 
 .resource-pane-body {
@@ -5084,6 +5087,253 @@
   align-content: start;
   gap: 0.52rem;
   padding-right: 0.12rem;
+}
+
+.resource-explorer {
+  display: grid;
+  align-content: start;
+  gap: 0.58rem;
+}
+
+.resource-explorer-meta {
+  margin: 0;
+  color: #547398;
+  font-size: 0.73rem;
+  text-align: right;
+}
+
+.rx-summary {
+  border: 1px solid rgba(115, 152, 197, 0.34);
+  border-radius: 14px;
+  background: rgba(247, 252, 255, 0.95);
+  padding: 0.56rem;
+  display: grid;
+  gap: 0.36rem;
+}
+
+.rx-summary-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rx-summary-head h3 {
+  margin: 0;
+  color: #27496e;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+}
+
+.rx-summary-name {
+  color: #143a62;
+  font-size: 0.98rem;
+  line-height: 1.4;
+}
+
+.rx-summary-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.rx-summary-tags span {
+  border: 1px solid rgba(124, 164, 210, 0.45);
+  border-radius: 999px;
+  padding: 0.12rem 0.46rem;
+  font-size: 0.72rem;
+  color: #355980;
+  background: rgba(240, 248, 255, 0.92);
+}
+
+.rx-summary-progress {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.rx-summary-progress label {
+  color: #42688f;
+  font-size: 0.74rem;
+}
+
+.rx-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(166, 194, 224, 0.48);
+  overflow: hidden;
+}
+
+.rx-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f67a8 0%, #5e8fca 100%);
+}
+
+.rx-summary-blocked {
+  margin: 0;
+  color: #8a3f3f;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.rx-section {
+  border: 1px solid rgba(114, 152, 198, 0.3);
+  border-radius: 14px;
+  background: rgba(249, 253, 255, 0.92);
+  padding: 0.44rem;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.rx-workspace-section {
+  border-color: rgba(98, 141, 194, 0.4);
+  background:
+    linear-gradient(180deg, rgba(239, 248, 255, 0.96), rgba(234, 245, 255, 0.96));
+}
+
+.rx-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.rx-section-head h4 {
+  margin: 0;
+  color: #21486f;
+  font-size: 0.83rem;
+  letter-spacing: 0.05em;
+}
+
+.rx-section-toggle {
+  border: 1px solid rgba(118, 160, 208, 0.52);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #2f5d8a;
+  font-size: 0.72rem;
+  padding: 0.12rem 0.46rem;
+  cursor: pointer;
+}
+
+.rx-item-list {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.rx-item {
+  border: 1px solid rgba(124, 165, 212, 0.27);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.36rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.rx-item.is-highlight {
+  border-color: rgba(201, 93, 93, 0.58);
+  box-shadow: 0 0 0 2px rgba(223, 98, 98, 0.12);
+  background: rgba(255, 244, 244, 0.9);
+}
+
+.rx-item.is-blocked .rx-item-copy strong {
+  color: #8e2f2f;
+}
+
+.rx-item-main {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.4rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rx-item-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.rx-item-copy strong {
+  color: #173f67;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.rx-item-copy p {
+  margin: 0;
+  color: #446a92;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.rx-item-copy small {
+  color: #6a87a9;
+  font-size: 0.72rem;
+}
+
+.rx-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.rx-item-upload {
+  border: 1px solid rgba(196, 84, 84, 0.56);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #8a3030;
+  font-size: 0.72rem;
+  padding: 0.14rem 0.46rem;
+  cursor: pointer;
+}
+
+.rx-badge {
+  border-radius: 999px;
+  padding: 0.12rem 0.42rem;
+  font-size: 0.7rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.rx-badge-danger {
+  border-color: rgba(197, 87, 87, 0.44);
+  color: #8f3838;
+  background: rgba(255, 236, 236, 0.9);
+}
+
+.rx-badge-success {
+  border-color: rgba(97, 157, 118, 0.4);
+  color: #2f6b42;
+  background: rgba(235, 251, 240, 0.9);
+}
+
+.rx-badge-info {
+  border-color: rgba(84, 141, 205, 0.42);
+  color: #2a5c94;
+  background: rgba(235, 246, 255, 0.9);
+}
+
+.rx-badge-neutral {
+  border-color: rgba(124, 157, 196, 0.42);
+  color: #486c92;
+  background: rgba(241, 248, 255, 0.88);
+}
+
+.rx-badge-active {
+  border-color: rgba(77, 131, 194, 0.52);
+  color: #1f4f84;
+  background: rgba(223, 239, 255, 0.94);
+}
+
+.rx-badge-pending {
+  border-color: rgba(165, 145, 100, 0.4);
+  color: #7b6132;
+  background: rgba(255, 247, 231, 0.9);
 }
 
 .assistant-pane {

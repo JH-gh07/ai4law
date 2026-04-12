@@ -55,14 +55,6 @@ const WORKSPACE_TABS: WorkspaceTopTab[] = [
   { id: "report", key: "workspaceTabReport", closable: true }
 ];
 
-const WORKSPACE_TAB_KEYWORDS: Record<WorkspaceTopTabId, string[]> = {
-  details: ["details", "detail", "详情", "运行", "main"],
-  canvas: ["canvas", "画布", "流程", "stage"],
-  docs: ["doc", "docs", "文档", "资料"],
-  terminal: ["terminal", "终端", "日志", "log"],
-  report: ["report", "报告", "review", "交付"]
-};
-
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -92,7 +84,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const navigate = useNavigate();
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [workspaceQuery, setWorkspaceQuery] = useState("");
   const [renameDraft, setRenameDraft] = useState(taskSpace.name);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<WorkspaceTopTabId>("details");
@@ -212,7 +203,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   useEffect(() => {
     setActiveTab("details");
     setOpenTabs(["details", "canvas", "report"]);
-    setWorkspaceQuery("");
     setRenameDraft(taskSpace.name);
     setRenameModalOpen(false);
   }, [taskSpace.id]);
@@ -235,18 +225,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       });
       return next;
     });
-  };
-
-  const openTabByQuery = () => {
-    const normalized = workspaceQuery.trim().toLowerCase();
-    if (!normalized) return;
-    const matched = WORKSPACE_TABS.find((tab) =>
-      WORKSPACE_TAB_KEYWORDS[tab.id].some((keyword) => normalized.includes(keyword) || keyword.includes(normalized))
-    );
-    if (matched) {
-      openTab(matched.id);
-      setWorkspaceQuery("");
-    }
   };
 
   const startResize = (side: "left" | "right", startX: number) => {
@@ -600,12 +578,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             tabs={WORKSPACE_TABS.map((tab) => ({ id: tab.id, label: t(tab.key), closable: tab.closable }))}
             openTabs={openTabs}
             activeTab={activeTab}
-            tabQuery={workspaceQuery}
-            onTabQueryChange={setWorkspaceQuery}
-            onTabQuerySubmit={openTabByQuery}
             onActivateTab={(tabId) => setActiveTab(tabId as WorkspaceTopTabId)}
             onOpenTab={(tabId) => openTab(tabId as WorkspaceTopTabId)}
-            onCloseTab={(tabId) => closeTab(tabId as WorkspaceTopTabId)}
           />
         ) : null}
         {state.panelState.leftOpen ? (
