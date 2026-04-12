@@ -154,6 +154,73 @@ export async function fetchKnowledgeCaseDetail(caseId: string): Promise<Knowledg
   };
 }
 
+export type KnowledgeSearchItem = {
+  id: string;
+  title: string;
+  article: string;
+  content: string;
+  jurisdiction: string;
+  path: string;
+  doc_type: string;
+  usage_priority: string;
+  source_url: string;
+  keywords: string[];
+};
+
+export type KnowledgeSearchData = {
+  query: string;
+  jurisdiction: string | null;
+  path: string | null;
+  mode: string;
+  top_k: number;
+  hit_count: number;
+  items: KnowledgeSearchItem[];
+};
+
+const parseSearchItem = (item: unknown): KnowledgeSearchItem => {
+  const r = isRecord(item) ? item : {};
+  return {
+    id: typeof r.id === "string" ? r.id : "",
+    title: typeof r.title === "string" ? r.title : "",
+    article: typeof r.article === "string" ? r.article : "",
+    content: typeof r.content === "string" ? r.content : "",
+    jurisdiction: typeof r.jurisdiction === "string" ? r.jurisdiction : "",
+    path: typeof r.path === "string" ? r.path : "",
+    doc_type: typeof r.doc_type === "string" ? r.doc_type : "",
+    usage_priority: typeof r.usage_priority === "string" ? r.usage_priority : "",
+    source_url: typeof r.source_url === "string" ? r.source_url : "",
+    keywords: toStringList(r.keywords),
+  };
+};
+
+export async function fetchKnowledgeSearch(params: {
+  q: string;
+  jurisdiction?: string;
+  path?: string;
+  top_k?: number;
+  mode?: string;
+}): Promise<KnowledgeSearchData> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("q", params.q);
+  if (params.jurisdiction) searchParams.set("jurisdiction", params.jurisdiction);
+  if (params.path) searchParams.set("path", params.path);
+  if (params.top_k !== undefined) searchParams.set("top_k", String(params.top_k));
+  if (params.mode) searchParams.set("mode", params.mode);
+
+  const data = await requestJson(`/api/v1/knowledge/search?${searchParams.toString()}`);
+  if (!isRecord(data)) throw new Error("Invalid search response");
+
+  return {
+    query: typeof data.query === "string" ? data.query : params.q,
+    jurisdiction: typeof data.jurisdiction === "string" ? data.jurisdiction : null,
+    path: typeof data.path === "string" ? data.path : null,
+    mode: typeof data.mode === "string" ? data.mode : "hybrid",
+    top_k: typeof data.top_k === "number" ? data.top_k : 8,
+    hit_count: typeof data.hit_count === "number" ? data.hit_count : 0,
+    items: Array.isArray(data.items) ? data.items.map(parseSearchItem) : [],
+  };
+}
+
 export async function fetchKnowledgeCitation(query: string): Promise<KnowledgeCitationData> {
   const data = await requestJson(`/api/v1/knowledge/citation?query=${encodeURIComponent(query)}`);
   if (!isRecord(data)) {

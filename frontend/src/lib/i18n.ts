@@ -516,6 +516,7 @@ export const MESSAGES = {
   reportCopyPath: { zh: "复制路径", en: "Copy Path" },
   reportPathCopied: { zh: "路径已复制", en: "Path copied" },
   reportNoData: { zh: "暂无可审阅报告。", en: "No reports available for review." },
+  reportTaskEmpty: { zh: "该任务暂无报告产出。", en: "No report outputs for this task." },
   reportTraceEmpty: { zh: "暂无追溯对象。", en: "No trace links available." },
   reportNoEvidenceLabel: { zh: "待补证据", en: "Evidence Pending" },
   reportRunSource: { zh: "来源模块", en: "Source Module" },

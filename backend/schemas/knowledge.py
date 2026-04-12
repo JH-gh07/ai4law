@@ -52,3 +52,26 @@ class KnowledgeCitationResponse(BaseModel):
     query: str
     matched: dict[str, str] | None = None
     preview: str = ""
+
+
+class KnowledgeSearchItem(BaseModel):
+    id: str
+    title: str
+    article: str
+    content: str
+    jurisdiction: str = ""
+    path: str = ""
+    doc_type: str = ""
+    usage_priority: str = ""
+    source_url: str = ""
+    keywords: list[str] = Field(default_factory=list)
+
+
+class KnowledgeSearchResponse(BaseModel):
+    query: str
+    jurisdiction: str | None = None
+    path: str | None = None
+    mode: str = "hybrid"
+    top_k: int = 8
+    hit_count: int
+    items: list[KnowledgeSearchItem] = Field(default_factory=list)

@@ -5,12 +5,14 @@ import {
   fetchKnowledgeCaseDetail,
   fetchKnowledgeCitation,
   fetchKnowledgeIndex,
+  fetchKnowledgeSearch,
   fetchKnowledgeSourceDetail,
-  syncKnowledgeIndex
+  syncKnowledgeIndex,
+  type KnowledgeSearchItem,
 } from "../lib/knowledge-api";
 
 type KnowledgeRow = Record<string, string>;
-type KnowledgeTab = "sources" | "cases" | "citation";
+type KnowledgeTab = "sources" | "cases" | "citation" | "articles";
 
 const splitModules = (value: string): string[] =>
   value
@@ -80,7 +82,17 @@ export function EvidenceCenterPage() {
       syncReady: "已加载",
       syncMissing: "缺失",
       syncForced: "强制刷新缓存",
-      syncNormal: "常规读取"
+      syncNormal: "常规读取",
+      articlesTab: "条文检索",
+      articlesPlaceholder: "输入关键词检索法规条文，如：标准合同备案",
+      articlesFilterJurisdiction: "法域",
+      articlesFilterPath: "路径",
+      articlesSearching: "检索中…",
+      articlesEmpty: "未检索到相关条文。",
+      articlesHitCount: "命中条文",
+      articlesDetailTitle: "条文详情",
+      articlesContentLabel: "条文内容",
+      articlesSourceLink: "查看来源",
     }
     : {
       title: "Knowledge Center",
@@ -132,7 +144,17 @@ export function EvidenceCenterPage() {
       syncReady: "Loaded",
       syncMissing: "Missing",
       syncForced: "Forced Cache Refresh",
-      syncNormal: "Normal Read"
+      syncNormal: "Normal Read",
+      articlesTab: "Article Search",
+      articlesPlaceholder: "Search regulation articles, e.g. standard contract filing",
+      articlesFilterJurisdiction: "Jurisdiction",
+      articlesFilterPath: "Path",
+      articlesSearching: "Searching...",
+      articlesEmpty: "No articles found.",
+      articlesHitCount: "Articles Found",
+      articlesDetailTitle: "Article Detail",
+      articlesContentLabel: "Content",
+      articlesSourceLink: "View Source",
     };
 
   const [tab, setTab] = useState<KnowledgeTab>("sources");
@@ -175,6 +197,14 @@ export function EvidenceCenterPage() {
   const [citationMatch, setCitationMatch] = useState<KnowledgeRow | null>(null);
   const [citationPreview, setCitationPreview] = useState("");
   const [citationLoading, setCitationLoading] = useState(false);
+
+  const [articlesQuery, setArticlesQuery] = useState("");
+  const [articlesJurisdiction, setArticlesJurisdiction] = useState<string>("");
+  const [articlesPath, setArticlesPath] = useState<string>("");
+  const [articlesResults, setArticlesResults] = useState<KnowledgeSearchItem[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articlesHitCount, setArticlesHitCount] = useState(0);
+  const [selectedArticleId, setSelectedArticleId] = useState<string>("");
 
   const applyKnowledgeIndexData = (
     data: Awaited<ReturnType<typeof fetchKnowledgeIndex>>
@@ -335,7 +365,48 @@ export function EvidenceCenterPage() {
     };
   }, [citationQuery]);
 
-  const currentMatches = tab === "sources" ? filteredSources.length : tab === "cases" ? filteredCases.length : citationMatch ? 1 : 0;
+  useEffect(() => {
+    const query = articlesQuery.trim();
+    if (!query) {
+      setArticlesResults([]);
+      setArticlesHitCount(0);
+      return;
+    }
+
+    let isActive = true;
+    const timer = globalThis.setTimeout(() => {
+      setArticlesLoading(true);
+      void fetchKnowledgeSearch({
+        q: query,
+        jurisdiction: articlesJurisdiction || undefined,
+        path: articlesPath || undefined,
+        top_k: 8,
+      })
+        .then((data) => {
+          if (!isActive) return;
+          setArticlesResults(data.items);
+          setArticlesHitCount(data.hit_count);
+          setSelectedArticleId(data.items[0]?.id ?? "");
+        })
+        .catch(() => {
+          if (!isActive) return;
+          setArticlesResults([]);
+          setArticlesHitCount(0);
+        })
+        .finally(() => {
+          if (isActive) setArticlesLoading(false);
+        });
+    }, 300);
+
+    return () => {
+      isActive = false;
+      globalThis.clearTimeout(timer);
+    };
+  }, [articlesQuery, articlesJurisdiction, articlesPath]);
+
+  const selectedArticle = articlesResults.find((item) => item.id === selectedArticleId) ?? articlesResults[0] ?? null;
+
+  const currentMatches = tab === "sources" ? filteredSources.length : tab === "cases" ? filteredCases.length : tab === "articles" ? articlesHitCount : citationMatch ? 1 : 0;
   const syncTimeLabel = syncMeta.synced_at
     ? new Date(syncMeta.synced_at).toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { hour12: false })
     : "-";
@@ -376,6 +447,7 @@ export function EvidenceCenterPage() {
         <div className="kc-quick-entry-row">
           <button className={`quick-chip ${tab === "sources" ? "active" : ""}`} onClick={() => setTab("sources")}>{copy.sourceTab}</button>
           <button className={`quick-chip ${tab === "cases" ? "active" : ""}`} onClick={() => setTab("cases")}>{copy.caseTab}</button>
+          <button className={`quick-chip ${tab === "articles" ? "active" : ""}`} onClick={() => setTab("articles")}>{copy.articlesTab}</button>
           <button className={`quick-chip ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>{copy.citationTab}</button>
           <button className={`quick-chip ${tab === "sources" && selectedSourcePriority.length === 1 && selectedSourcePriority[0] === "P0" ? "active" : ""}`} onClick={() => {
             setTab("sources");
@@ -411,7 +483,7 @@ export function EvidenceCenterPage() {
       <section className="kc-main-grid">
         <aside className="kc-col">
           <header className="kc-col-head">
-            <span>{tab === "sources" ? copy.sourceListTitle : tab === "cases" ? copy.caseListTitle : copy.citationTab}</span>
+            <span>{tab === "sources" ? copy.sourceListTitle : tab === "cases" ? copy.caseListTitle : tab === "articles" ? copy.articlesTab : copy.citationTab}</span>
             <small>{copy.currentStat}: {currentMatches}</small>
           </header>
           <div className="kc-col-body">
@@ -530,6 +602,65 @@ export function EvidenceCenterPage() {
               </>
             ) : null}
 
+            {tab === "articles" ? (
+              <>
+                <div className="knowledge-filter-grid">
+                  <div className="knowledge-filter-group">
+                    <small>{copy.articlesFilterJurisdiction}</small>
+                    <div className="knowledge-chip-row">
+                      {["cn", "eu", "us"].map((jur) => (
+                        <button
+                          key={jur}
+                          className={`chip-btn ${articlesJurisdiction === jur ? "active" : ""}`}
+                          onClick={() => setArticlesJurisdiction((prev) => prev === jur ? "" : jur)}
+                        >
+                          {jur.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.articlesFilterPath}</small>
+                    <div className="knowledge-chip-row">
+                      {["assessment", "scc", "all"].map((p) => (
+                        <button
+                          key={p}
+                          className={`chip-btn ${articlesPath === p ? "active" : ""}`}
+                          onClick={() => setArticlesPath((prev) => prev === p ? "" : p)}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <label className="field-wrap" style={{ marginTop: "0.5rem" }}>
+                    <input
+                      placeholder={copy.articlesPlaceholder}
+                      value={articlesQuery}
+                      onChange={(e) => setArticlesQuery(e.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="evidence-hit-scroll kc-list-scroll">
+                  {articlesLoading ? <p className="resource-empty">{copy.articlesSearching}</p> : null}
+                  {!articlesLoading && articlesQuery.trim() && articlesResults.length === 0 ? (
+                    <p className="resource-empty">{copy.articlesEmpty}</p>
+                  ) : null}
+                  {articlesResults.map((item) => (
+                    <article
+                      key={item.id}
+                      className={`evidence-hit-item ${selectedArticle?.id === item.id ? "active" : ""}`}
+                      onClick={() => setSelectedArticleId(item.id)}
+                    >
+                      <small>{item.jurisdiction.toUpperCase()} · {item.usage_priority}</small>
+                      <strong>{item.title}</strong>
+                      <p>{item.article}</p>
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
             {tab === "citation" ? (
               <div className="evidence-citation-panel">
                 <article className="citation-query-card">
@@ -558,11 +689,46 @@ export function EvidenceCenterPage() {
 
         <main className="kc-col">
           <header className="kc-col-head">
-            <span>{tab === "sources" ? copy.sourceDetailTitle : tab === "cases" ? copy.caseDetailTitle : copy.previewTitle}</span>
+            <span>{tab === "sources" ? copy.sourceDetailTitle : tab === "cases" ? copy.caseDetailTitle : tab === "articles" ? copy.articlesDetailTitle : copy.previewTitle}</span>
           </header>
           <div className="kc-col-body">
             {loading ? <p className="resource-empty">{copy.loading}</p> : null}
             {error ? <p className="resource-empty">{error}</p> : null}
+
+            {tab === "articles" ? (
+              selectedArticle ? (
+                <article className="evidence-detail-card">
+                  <div className="evidence-detail-meta">
+                    <span>{selectedArticle.jurisdiction.toUpperCase()}</span>
+                    <span>{selectedArticle.path}</span>
+                    <span>{selectedArticle.usage_priority}</span>
+                    {selectedArticle.doc_type ? <span>{selectedArticle.doc_type}</span> : null}
+                  </div>
+                  <h4>{selectedArticle.title}</h4>
+                  <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{selectedArticle.article}</p>
+                  <div className="knowledge-preview-block">
+                    <strong>{copy.articlesContentLabel}</strong>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{selectedArticle.content}</p>
+                  </div>
+                  {selectedArticle.source_url ? (
+                    <a className="ghost-btn link-btn" href={selectedArticle.source_url} target="_blank" rel="noreferrer">
+                      {copy.articlesSourceLink}
+                    </a>
+                  ) : null}
+                  {selectedArticle.keywords.length > 0 ? (
+                    <div className="knowledge-chip-row" style={{ marginTop: "0.75rem" }}>
+                      {selectedArticle.keywords.map((kw) => (
+                        <span key={kw} className="chip-btn" style={{ cursor: "default" }}>{kw}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              ) : articlesQuery.trim() ? (
+                <p className="resource-empty">{copy.articlesEmpty}</p>
+              ) : (
+                <p className="resource-empty">{copy.articlesPlaceholder}</p>
+              )
+            ) : null}
 
             {!loading && tab === "sources" ? (
               selectedSource ? (

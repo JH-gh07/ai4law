@@ -7403,6 +7403,16 @@
   gap: 0.75rem;
 }
 
+.report-task-count-pill {
+  border: 1px solid rgba(116, 156, 211, 0.3);
+  border-radius: 999px;
+  background: rgba(244, 250, 255, 0.88);
+  color: #355d8a;
+  padding: 0.38rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .report-review-layout {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr) 360px;
@@ -7422,6 +7432,156 @@
   overflow: auto;
   display: grid;
   gap: 0.46rem;
+}
+
+.report-task-tree-scroll {
+  max-height: 74vh;
+  overflow: auto;
+  display: grid;
+  gap: 0.46rem;
+}
+
+.report-task-node {
+  border: 1px solid rgba(108, 147, 205, 0.24);
+  border-radius: 12px;
+  background: rgba(246, 252, 255, 0.88);
+  overflow: hidden;
+}
+
+.report-task-node.active {
+  border-color: rgba(60, 112, 185, 0.42);
+  background: rgba(235, 246, 255, 0.95);
+}
+
+.report-task-trigger {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.38rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.52rem;
+  cursor: pointer;
+}
+
+.report-task-trigger:hover {
+  background: rgba(232, 245, 255, 0.66);
+}
+
+.report-task-caret {
+  color: #476f9f;
+  font-size: 0.8rem;
+  transition: transform 0.18s ease;
+}
+
+.report-task-caret.open {
+  transform: rotate(90deg);
+}
+
+.report-task-main {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.report-task-main strong {
+  color: #1b416d;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-task-main small {
+  color: #6286af;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-task-count {
+  border-radius: 999px;
+  border: 1px solid rgba(87, 130, 189, 0.24);
+  padding: 0.02rem 0.44rem;
+  color: #355a88;
+  font-size: 0.72rem;
+  background: rgba(240, 248, 255, 0.88);
+}
+
+.report-doc-tree {
+  border-top: 1px dashed rgba(108, 147, 205, 0.28);
+  padding: 0.34rem;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.report-doc-empty {
+  margin: 0;
+  border: 1px dashed rgba(122, 161, 214, 0.35);
+  border-radius: 10px;
+  background: rgba(250, 253, 255, 0.84);
+  color: #6489b1;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 0.42rem 0.5rem;
+}
+
+.report-doc-node {
+  border: 1px solid rgba(119, 158, 213, 0.22);
+  border-radius: 10px;
+  background: rgba(252, 255, 255, 0.9);
+  padding: 0.4rem 0.44rem;
+  display: grid;
+  gap: 0.26rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-doc-node:hover {
+  border-color: rgba(74, 123, 190, 0.38);
+  background: rgba(242, 250, 255, 0.94);
+}
+
+.report-doc-node.active {
+  border-color: rgba(62, 116, 186, 0.5);
+  background: rgba(227, 243, 255, 0.97);
+}
+
+.report-doc-main {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
+.report-doc-main strong {
+  color: #224c7a;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-doc-main small {
+  color: #6489b1;
+  font-size: 0.72rem;
+}
+
+.report-doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.26rem;
+}
+
+.report-doc-tags span {
+  border: 1px solid rgba(122, 163, 218, 0.22);
+  border-radius: 999px;
+  padding: 0.04rem 0.36rem;
+  color: #456d9a;
+  font-size: 0.68rem;
+  background: rgba(245, 251, 255, 0.9);
 }
 
 .report-list-item {

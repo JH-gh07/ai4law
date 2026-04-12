@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ReportTaskTreeSidebar, type ReportTaskTreeNode } from "../components/report-center/ReportTaskTreeSidebar";
 import { useAppStore } from "../lib/app-store";
 import type { ModuleRun, ReportReviewSnapshot } from "../lib/domain";
 import { useLang } from "../lib/language";
@@ -22,31 +23,82 @@ export function ReportCenterPage() {
   const { t } = useLang();
   const { state } = useAppStore();
   const [keyword, setKeyword] = useState("");
-  const [taskId, setTaskId] = useState<string>("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
   const [remoteSummary, setRemoteSummary] = useState<Record<string, { summary?: string; version?: string; risk_level?: string }>>({});
   const [copiedPath, setCopiedPath] = useState("");
 
+  const taskMap = useMemo(
+    () => new Map(state.taskSpaces.map((task) => [task.id, task])),
+    [state.taskSpaces]
+  );
+
   const snapshots = useMemo(() => {
-    const list = state.taskSpaces.flatMap((task) =>
+    return state.taskSpaces.flatMap((task) =>
       buildReportSnapshots(task, state.artifacts, state.moduleRuns, state.issues, state.evidenceHits)
     );
+  }, [state.artifacts, state.evidenceHits, state.issues, state.moduleRuns, state.taskSpaces]);
+
+  const filteredSnapshots = useMemo(() => {
     const token = keyword.trim().toLowerCase();
-    return list
-      .filter((item) => (taskId === "ALL" ? true : item.taskSpaceId === taskId))
-      .filter((item) => (token ? `${item.module} ${item.artifactPath}`.toLowerCase().includes(token) : true));
-  }, [keyword, state.artifacts, state.evidenceHits, state.issues, state.moduleRuns, state.taskSpaces, taskId]);
+    return snapshots
+      .filter((item) => {
+        if (!token) return true;
+        const task = taskMap.get(item.taskSpaceId);
+        const searchable = `${item.module} ${item.artifactPath} ${item.artifactKind} ${item.taskSpaceId} ${task?.name ?? ""}`.toLowerCase();
+        return searchable.includes(token);
+      });
+  }, [keyword, snapshots, taskMap]);
+
+  const treeNodes = useMemo<ReportTaskTreeNode[]>(() => {
+    const token = keyword.trim().toLowerCase();
+    const allNodes = state.taskSpaces.map<ReportTaskTreeNode>((task) => {
+      const docs = filteredSnapshots
+        .filter((snapshot) => snapshot.taskSpaceId === task.id)
+        .map((snapshot) => {
+          const filename = snapshot.artifactPath.split("/").slice(-1)[0] ?? "";
+          const title = filename ? filename.replace(/\.[^/.]+$/, "") : `${snapshot.module.toUpperCase()} · ${snapshot.artifactKind.toUpperCase()}`;
+          return {
+            snapshotId: snapshot.id,
+            title,
+            generatedAt: snapshot.generatedAt,
+            module: snapshot.module,
+            artifactKind: snapshot.artifactKind,
+            riskLevel: snapshot.riskLevel || t("reportNoEvidenceLabel")
+          };
+        })
+        .sort((a, b) => (a.generatedAt < b.generatedAt ? 1 : -1));
+
+      return {
+        taskId: task.id,
+        taskName: task.name,
+        taskUpdatedAt: task.updatedAt,
+        documents: docs
+      };
+    });
+
+    return allNodes
+      .filter((task) => {
+        if (!token) return true;
+        const byTaskName = `${task.taskName} ${task.taskId}`.toLowerCase().includes(token);
+        return byTaskName || task.documents.length > 0;
+      })
+      .sort((a, b) => {
+        const latestA = a.documents[0]?.generatedAt ?? a.taskUpdatedAt;
+        const latestB = b.documents[0]?.generatedAt ?? b.taskUpdatedAt;
+        return latestA < latestB ? 1 : -1;
+      });
+  }, [filteredSnapshots, keyword, state.taskSpaces, t]);
 
   useEffect(() => {
-    if (!selectedId && snapshots.length > 0) {
-      setSelectedId(snapshots[0].id);
+    if (!selectedId && filteredSnapshots.length > 0) {
+      setSelectedId(filteredSnapshots[0].id);
     }
-    if (selectedId && snapshots.every((item) => item.id !== selectedId)) {
-      setSelectedId(snapshots[0]?.id ?? "");
+    if (selectedId && filteredSnapshots.every((item) => item.id !== selectedId)) {
+      setSelectedId(filteredSnapshots[0]?.id ?? "");
     }
-  }, [selectedId, snapshots]);
+  }, [filteredSnapshots, selectedId]);
 
-  const selectedSnapshot = snapshots.find((item) => item.id === selectedId) ?? snapshots[0] ?? null;
+  const selectedSnapshot = filteredSnapshots.find((item) => item.id === selectedId) ?? filteredSnapshots[0] ?? null;
 
   useEffect(() => {
     if (!selectedSnapshot) return;
@@ -95,37 +147,20 @@ export function ReportCenterPage() {
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
         />
-        <select className="runner-select report-task-select" value={taskId} onChange={(event) => setTaskId(event.target.value)}>
-          <option value="ALL">{t("taskSpacesTitle")}</option>
-          {state.taskSpaces.map((task) => (
-            <option key={task.id} value={task.id}>{task.name}</option>
-          ))}
-        </select>
+        <div className="report-task-count-pill">{t("taskSpacesTitle")} · {treeNodes.length}</div>
       </header>
 
       <div className="report-review-layout">
         <aside className="report-pane report-pane-list">
           <div className="pane-title">{t("reportReviewList")}</div>
-          <div className="report-list-scroll">
-            {snapshots.map((snapshot) => (
-              <article
-                key={snapshot.id}
-                className={`report-list-item ${snapshot.id === selectedSnapshot?.id ? "active" : ""}`}
-                onClick={() => setSelectedId(snapshot.id)}
-              >
-                <div className="report-list-head">
-                  <strong>{snapshot.module.toUpperCase()}</strong>
-                  <span>{t("reportDraftLabel")}</span>
-                </div>
-                <p>{snapshot.artifactKind.toUpperCase()} · {snapshot.artifactPath.split("/").slice(-1)[0]}</p>
-                <div className="report-list-meta">
-                  <span>{t("reportRiskLabel")}: {snapshot.riskLevel}</span>
-                  <span>{t("reportIssueCount")}: {snapshot.issueCount}</span>
-                </div>
-              </article>
-            ))}
-            {snapshots.length === 0 ? <p className="resource-empty">{t("reportNoData")}</p> : null}
-          </div>
+          <ReportTaskTreeSidebar
+            tasks={treeNodes}
+            selectedTaskId={selectedSnapshot?.taskSpaceId ?? ""}
+            selectedSnapshotId={selectedSnapshot?.id ?? ""}
+            onSelectSnapshot={setSelectedId}
+            emptyText={t("reportNoData")}
+            emptyDocumentsText={t("reportTaskEmpty")}
+          />
         </aside>
 
         <main className="report-pane report-pane-preview">
@@ -198,4 +233,3 @@ export function ReportCenterPage() {
     </section>
   );
 }
-

@@ -6,8 +6,9 @@ from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, timezone
 
-SOURCES_CSV = Path("doc/knowledge/index/sources.csv")
-CASES_CSV = Path("doc/knowledge/index/practice_cases.csv")
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SOURCES_CSV = _PROJECT_ROOT / "doc/knowledge/index/sources.csv"
+CASES_CSV = _PROJECT_ROOT / "doc/knowledge/index/practice_cases.csv"
 
 
 @lru_cache(maxsize=4)
@@ -145,6 +146,8 @@ def get_report_records(output_root: str = "outputs") -> list[dict[str, str]]:
 
 def read_text_preview(path: str, limit: int = 1200) -> str:
     file_path = Path(path)
+    if not file_path.is_absolute():
+        file_path = _PROJECT_ROOT / file_path
     if not file_path.exists():
         return ""
 

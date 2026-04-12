@@ -8,11 +8,14 @@ from app_streamlit.services.knowledge import (
     refresh_knowledge_cache,
     resolve_citation,
 )
+from backend.common.rag.retriever import retrieve_regulations
 from backend.schemas.knowledge import (
     KnowledgeCaseDetailResponse,
     KnowledgeCaseOptions,
     KnowledgeCitationResponse,
     KnowledgeIndexResponse,
+    KnowledgeSearchItem,
+    KnowledgeSearchResponse,
     KnowledgeSourceDetailResponse,
     KnowledgeSourceOptions,
     KnowledgeSummary,
@@ -100,6 +103,53 @@ def get_case_detail(case_id: str) -> KnowledgeCaseDetailResponse:
 
     preview = read_text_preview(item.get("snapshot_path", ""), limit=600)
     return KnowledgeCaseDetailResponse(item=item, preview=preview)
+
+
+@router.get("/search", response_model=KnowledgeSearchResponse)
+def search_regulations(
+    q: str = Query(default=""),
+    jurisdiction: str | None = Query(default=None),
+    path: str | None = Query(default=None),
+    top_k: int = Query(default=8, ge=1, le=20),
+    mode: str = Query(default="hybrid"),
+) -> KnowledgeSearchResponse:
+    query = q.strip()
+    if not query:
+        return KnowledgeSearchResponse(query=q, hit_count=0)
+
+    docs = retrieve_regulations(
+        query,
+        top_k=top_k,
+        jurisdiction=jurisdiction or None,
+        path=path or None,
+        mode=mode,
+    )
+
+    items = [
+        KnowledgeSearchItem(
+            id=doc.id,
+            title=doc.title,
+            article=doc.article,
+            content=doc.content,
+            jurisdiction=doc.jurisdiction,
+            path=doc.path,
+            doc_type=doc.doc_type,
+            usage_priority=doc.usage_priority,
+            source_url=doc.source_url,
+            keywords=list(doc.keywords),
+        )
+        for doc in docs
+    ]
+
+    return KnowledgeSearchResponse(
+        query=query,
+        jurisdiction=jurisdiction,
+        path=path,
+        mode=mode,
+        top_k=top_k,
+        hit_count=len(items),
+        items=items,
+    )
 
 
 @router.get("/citation", response_model=KnowledgeCitationResponse)
