@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI4Law 项目总览架构图</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #1f2a3a;
+      --muted: #607089;
+      --line: #d7dfed;
+
+      --blue: #2b63b8;
+      --blue-soft: #f4f8ff;
+      --teal: #1f7a77;
+      --teal-soft: #f2fbfa;
+      --purple: #6b57a8;
+      --purple-soft: #faf8ff;
+      --amber: #a56b2c;
+      --amber-soft: #fffaf4;
+
+      --edge-primary: #2f68c2;
+      --edge-secondary: #8793aa;
+      --edge-active: #d25713;
+
+      --radius-card: 12px;
+      --radius-group: 16px;
+      --shadow-soft: 0 8px 18px rgba(31, 52, 92, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    }
+
+    .page {
+      width: min(1900px, 96vw);
+      margin: 0 auto;
+      padding: 16px 16px 24px;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #f6faff 100%);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(24px, 2vw, 34px);
+      line-height: 1.15;
+      letter-spacing: 0.2px;
+    }
+
+    .hero .subtitle {
+      margin: 8px 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid #cfd9ed;
+      border-radius: 999px;
+      background: #f7faff;
+      color: #4c5f7c;
+      padding: 3px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .quick-logic {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .logic-item {
+      border: 1px solid #d5deee;
+      border-radius: 10px;
+      padding: 8px 9px;
+      background: #fcfdff;
+    }
+
+    .logic-item h3 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      color: #244072;
+    }
+
+    .logic-item p {
+      margin: 0;
+      font-size: 12px;
+      color: #5d6d86;
+      line-height: 1.45;
+    }
+
+    .scenario {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      gap: 8px;
+    }
+
+    .scenario h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      color: #66738b;
+    }
+
+    .control-row select {
+      width: 100%;
+      border: 1px solid #cbd8ec;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+      background: #fff;
+      color: #25354e;
+    }
+
+    .scenario-name {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #244f8a;
+    }
+
+    .scenario-goal {
+      margin: 0;
+      font-size: 12px;
+      color: #5f6c84;
+      line-height: 1.45;
+    }
+
+    .scenario-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      min-height: 118px;
+    }
+
+    .mini {
+      border: 1px solid #d2dced;
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 7px 8px;
+      overflow: auto;
+    }
+
+    .mini h4 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: #2f3f5d;
+    }
+
+    .mini ol,
+    .mini ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 11px;
+      color: #4f5d74;
+      line-height: 1.45;
+    }
+
+    .board {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fcfdff;
+      box-shadow: var(--shadow-soft);
+      padding: 12px;
+      position: relative;
+      min-height: 930px;
+      overflow: hidden;
+    }
+
+    .layout {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 330px 1fr 360px;
+      grid-template-rows: 260px 260px 180px 190px;
+      gap: 10px;
+      min-height: 900px;
+    }
+
+    .group {
+      position: relative;
+      border: 1.5px dashed;
+      border-radius: var(--radius-group);
+      padding: 24px 10px 10px;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .tag {
+      position: absolute;
+      top: -11px;
+      left: 12px;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(33, 49, 80, 0.2);
+    }
+
+    .g-domain { border-color: #a6b8da; background: var(--blue-soft); }
+    .g-domain .tag { background: #4068aa; }
+
+    .g-core { border-color: #8cbad7; background: #f4fbff; }
+    .g-core .tag { background: #1b7097; }
+
+    .g-stack { border-color: #c0b5d9; background: var(--purple-soft); }
+    .g-stack .tag { background: #6755a6; }
+
+    .g-principle { border-color: #9cc7bd; background: var(--teal-soft); }
+    .g-principle .tag { background: #287f67; }
+
+    .g-state { border-color: #d5b48f; background: var(--amber-soft); }
+    .g-state .tag { background: #a2672b; }
+
+    #domainGroup { grid-column: 1; grid-row: 1 / 3; }
+    #coreGroup { grid-column: 2; grid-row: 1 / 3; }
+    #stackGroup { grid-column: 3; grid-row: 1 / 3; }
+    #principleGroup { grid-column: 1 / 4; grid-row: 3; }
+    #stateGroup { grid-column: 1 / 4; grid-row: 4; }
+
+    .stack {
+      display: grid;
+      grid-auto-rows: 1fr;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      height: 100%;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      height: 100%;
+    }
+
+    .grid6 {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      height: 100%;
+    }
+
+    .card {
+      border: 1px solid #cfd9ec;
+      border-radius: var(--radius-card);
+      background: #fff;
+      padding: 8px 9px;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: #90a9d1;
+      box-shadow: 0 8px 16px rgba(38, 58, 98, 0.12);
+    }
+
+    .card.key {
+      background: linear-gradient(150deg, #ffffff 0%, #f4f9ff 100%);
+      border-color: #9eb8de;
+    }
+
+    .title {
+      margin: 0 0 4px;
+      font-size: clamp(12px, 0.78vw, 14px);
+      font-weight: 700;
+      color: #273751;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .desc {
+      font-size: clamp(10px, 0.64vw, 12px);
+      color: #607089;
+      line-height: 1.34;
+      max-height: 2.7em;
+      overflow: hidden;
+    }
+
+    .focus {
+      border-color: var(--edge-active) !important;
+      box-shadow: 0 0 0 2px rgba(210, 87, 19, 0.18), 0 10px 18px rgba(180, 87, 36, 0.2) !important;
+    }
+
+    .svg {
+      position: absolute;
+      inset: 12px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .edge {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.9;
+    }
+
+    .edge.primary { stroke: var(--edge-primary); stroke-width: 2.4; }
+    .edge.secondary { stroke: var(--edge-secondary); stroke-width: 1.8; stroke-dasharray: 7 5; }
+    .edge.active { stroke: var(--edge-active); stroke-width: 3; stroke-dasharray: none; }
+
+    @media (max-width: 1560px) {
+      .layout { grid-template-columns: 300px 1fr 320px; }
+      .pipeline { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 1200px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        min-height: auto;
+      }
+      #domainGroup, #coreGroup, #stackGroup, #principleGroup, #stateGroup {
+        grid-column: auto;
+        grid-row: auto;
+      }
+      .svg { display: none; }
+      .quick-logic,
+      .scenario-columns { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="top-grid">
+      <div class="panel hero">
+        <h1>AI4Law：跨境数据合规“判路 + 生成 + 审查”系统</h1>
+        <p class="subtitle">一句话逻辑：用户在四大功能模块中提交材料，系统先做规则判路，再用 RAG + 生成引擎产出可提交文档，并在报告中心完成下载与引用追溯。</p>
+        <div class="chips">
+          <span class="chip">功能模块：CN / EU / US / 公共能力</span>
+          <span class="chip">主方法：规则约束 + RAG 检索 + 模板化生成</span>
+          <span class="chip">输出：md/docx/pdf/xlsx/zip</span>
+          <span class="chip">执行形态：同步 + 异步任务轮询</span>
+        </div>
+        <div class="quick-logic" style="margin-top:10px;">
+          <div class="logic-item">
+            <h3>项目在做什么</h3>
+            <p>把复杂的跨境合规工作，拆成可执行模块（诊断、评估、PIPIA、SCC、DPIA/TIA、CPRA、合同审查）。</p>
+          </div>
+          <div class="logic-item">
+            <h3>通过什么技术实现</h3>
+            <p>Streamlit 前端 + FastAPI 后端 + 规则引擎 + RAG 检索 + 文档渲染工具链 + 异步任务管理。</p>
+          </div>
+          <div class="logic-item">
+            <h3>最终怎么交付</h3>
+            <p>生成可下载报告与附件包，提供法条/案例引用追溯，支持复核、提交与版本留痕。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel scenario">
+        <h2>流程原理讲解器</h2>
+        <div class="control-row">
+          <span>场景切换</span>
+          <select id="scenarioSelect">
+            <option value="overview">总览：全局逻辑</option>
+            <option value="cn">中国大陆 -> 境外</option>
+            <option value="eu">欧盟 -> 境外</option>
+            <option value="us">美国 -> 境外</option>
+            <option value="public">公共能力</option>
+            <option value="m1">M1 合规诊断</option>
+            <option value="m23">M2/M3 评估与PIPIA</option>
+            <option value="m5">M5 合同审查（当前实现）</option>
+          </select>
+        </div>
+        <h3 class="scenario-name" id="scenarioName"></h3>
+        <p class="scenario-goal" id="scenarioGoal"></p>
+        <div class="scenario-columns">
+          <div class="mini">
+            <h4>执行流程</h4>
+            <ol id="scenarioSteps"></ol>
+          </div>
+          <div class="mini">
+            <h4>技术原理</h4>
+            <ul id="scenarioPrinciples"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="board" id="board">
+      <svg class="svg" id="svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <marker id="arrP" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,4 L0,8 z" fill="var(--edge-primary)"></path>
+          </marker>
+          <marker id="arrS" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,4 L0,8 z" fill="var(--edge-secondary)"></path>
+          </marker>
+          <marker id="arrA" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,4 L0,8 z" fill="var(--edge-active)"></path>
+          </marker>
+        </defs>
+        <g id="edgeLayer"></g>
+      </svg>
+
+      <div class="layout">
+        <article class="group g-domain" id="domainGroup">
+          <span class="tag">功能模块分区（业务视角）</span>
+          <div class="stack">
+            <div class="card" id="domain_cn"><p class="title">中国大陆 -> 境外（2.1~2.5）</p><p class="desc">诊断、评估、PIPIA、通用服务、文档审查。</p></div>
+            <div class="card" id="domain_eu"><p class="title">欧盟 -> 境外（3.1~3.4）</p><p class="desc">SCC/BCR 审查 + DPIA/TIA 草案生成。</p></div>
+            <div class="card" id="domain_us"><p class="title">美国 -> 境外（4.1~4.2）</p><p class="desc">对华数据流动合规 + CPRA 合规全景。</p></div>
+            <div class="card" id="domain_public"><p class="title">公共能力</p><p class="desc">模块总览、报告中心、知识库中心、引用联动。</p></div>
+          </div>
+        </article>
+
+        <article class="group g-core" id="coreGroup">
+          <span class="tag">项目主逻辑（技术执行链路）</span>
+          <div class="pipeline">
+            <div class="card key" id="flow_1"><p class="title">1. 输入采集</p><p class="desc">Streamlit 页面 + Schema 表单 + 附件上传。</p></div>
+            <div class="card key" id="flow_2"><p class="title">2. 接口校验</p><p class="desc">FastAPI/Pydantic 校验，422 字段级错误回传。</p></div>
+            <div class="card key" id="flow_3"><p class="title">3. 规则判路</p><p class="desc">decision_tree + 风险评分确定执行分支。</p></div>
+            <div class="card key" id="flow_4"><p class="title">4. 模块执行</p><p class="desc">assessment/scc/pipia/bcr/dpia/tia/cn_flow/cpra。</p></div>
+            <div class="card" id="flow_5"><p class="title">5. 证据注入</p><p class="desc">RAG 检索法规案例，注入章节/依据。</p></div>
+            <div class="card key" id="flow_6"><p class="title">6. 文档生成</p><p class="desc">LLMAdapter + 模板渲染输出多格式产物。</p></div>
+            <div class="card key" id="flow_7"><p class="title">7. 发布追溯</p><p class="desc">报告中心下载 + 知识库引用匹配与跳转。</p></div>
+          </div>
+        </article>
+
+        <article class="group g-stack" id="stackGroup">
+          <span class="tag">技术栈与依赖（实现视角）</span>
+          <div class="grid4">
+            <div class="card" id="stack_front"><p class="title">前端：Streamlit</p><p class="desc">多页面模块导航，状态保存，报告预览与下载。</p></div>
+            <div class="card" id="stack_api"><p class="title">后端：FastAPI</p><p class="desc">`/api/v1` 模块路由，`/api/v0` 任务网关。</p></div>
+            <div class="card" id="stack_task"><p class="title">任务：InMemoryTaskManager</p><p class="desc">submit/status/retry/cancel + 线程池执行。</p></div>
+            <div class="card" id="stack_rag"><p class="title">检索：retrieve_regulations</p><p class="desc">法域/路径约束检索，支持离题拒答策略。</p></div>
+            <div class="card" id="stack_doc"><p class="title">渲染：report/artifacts</p><p class="desc">markdown/docx/pdf/xlsx/zip 统一导出。</p></div>
+            <div class="card" id="stack_external"><p class="title">外部：得理 API（可选）</p><p class="desc">配置 appid/secret 时增强案例检索。</p></div>
+          </div>
+        </article>
+
+        <article class="group g-principle" id="principleGroup">
+          <span class="tag">执行原理（为什么这么跑）</span>
+          <div class="grid6">
+            <div class="card" id="p_rule"><p class="title">规则先行</p><p class="desc">先判路再生成，降低大模型自由发挥导致的偏差。</p></div>
+            <div class="card" id="p_rag"><p class="title">RAG 增强</p><p class="desc">给生成过程注入法规/案例证据，提升可解释性。</p></div>
+            <div class="card" id="p_consistency"><p class="title">一致性门禁</p><p class="desc">附件角色、路径类型、字段约束自动检查。</p></div>
+            <div class="card" id="p_async"><p class="title">异步稳态</p><p class="desc">长任务轮询 + 重试，避免前端长阻塞。</p></div>
+            <div class="card" id="p_trace"><p class="title">可追溯输出</p><p class="desc">报告引用可定位来源，支持复核与答辩。</p></div>
+            <div class="card" id="p_fallback"><p class="title">降级可用</p><p class="desc">无外部密钥时仍可用本地检索/本地生成链路。</p></div>
+          </div>
+        </article>
+
+        <article class="group g-state" id="stateGroup">
+          <span class="tag">状态与存储（数据落在哪里）</span>
+          <div class="grid6">
+            <div class="card" id="s_upload"><p class="title">storage/uploads</p><p class="desc">模块上传文件落盘，供后续解析。</p></div>
+            <div class="card" id="s_draft"><p class="title">storage/drafts</p><p class="desc">前端草稿保存与恢复。</p></div>
+            <div class="card" id="s_output"><p class="title">outputs/*</p><p class="desc">最终报告及打包附件归档。</p></div>
+            <div class="card" id="s_sources"><p class="title">knowledge/index</p><p class="desc">sources.csv / practice_cases.csv 索引。</p></div>
+            <div class="card" id="s_norm"><p class="title">knowledge/normalized</p><p class="desc">regulation_articles.jsonl 规范化法规库。</p></div>
+            <div class="card" id="s_task"><p class="title">任务状态（内存）</p><p class="desc">TaskSnapshot 当前不持久化，重启清空。</p></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const EDGES = [
+      { id: "d1", from: "domain_cn", to: "flow_1", fs: "right", ts: "left", t: "secondary" },
+      { id: "d2", from: "domain_eu", to: "flow_1", fs: "right", ts: "left", t: "secondary" },
+      { id: "d3", from: "domain_us", to: "flow_1", fs: "right", ts: "left", t: "secondary" },
+      { id: "d4", from: "domain_public", to: "flow_7", fs: "right", ts: "left", t: "secondary" },
+
+      { id: "m1", from: "flow_1", to: "flow_2", fs: "right", ts: "left", t: "primary" },
+      { id: "m2", from: "flow_2", to: "flow_3", fs: "right", ts: "left", t: "primary" },
+      { id: "m3", from: "flow_3", to: "flow_4", fs: "right", ts: "left", t: "primary" },
+      { id: "m4", from: "flow_4", to: "flow_5", fs: "right", ts: "left", t: "primary" },
+      { id: "m5", from: "flow_5", to: "flow_6", fs: "right", ts: "left", t: "primary" },
+      { id: "m6", from: "flow_6", to: "flow_7", fs: "right", ts: "left", t: "primary" },
+
+      { id: "t1", from: "flow_2", to: "stack_api", fs: "right", ts: "left", t: "secondary" },
+      { id: "t2", from: "flow_4", to: "stack_task", fs: "right", ts: "left", t: "secondary" },
+      { id: "t3", from: "flow_5", to: "stack_rag", fs: "right", ts: "left", t: "secondary" },
+      { id: "t4", from: "flow_6", to: "stack_doc", fs: "right", ts: "left", t: "secondary" },
+      { id: "t5", from: "flow_5", to: "stack_external", fs: "right", ts: "left", t: "secondary" },
+      { id: "t6", from: "flow_1", to: "stack_front", fs: "right", ts: "left", t: "secondary" },
+
+      { id: "p1", from: "flow_3", to: "p_rule", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "p2", from: "flow_5", to: "p_rag", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "p3", from: "flow_4", to: "p_consistency", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "p4", from: "flow_4", to: "p_async", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "p5", from: "flow_7", to: "p_trace", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "p6", from: "stack_external", to: "p_fallback", fs: "bottom", ts: "top", t: "secondary" },
+
+      { id: "s1", from: "flow_1", to: "s_upload", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "s2", from: "flow_2", to: "s_draft", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "s3", from: "flow_7", to: "s_output", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "s4", from: "flow_7", to: "s_sources", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "s5", from: "flow_5", to: "s_norm", fs: "bottom", ts: "top", t: "secondary" },
+      { id: "s6", from: "stack_task", to: "s_task", fs: "bottom", ts: "top", t: "secondary" }
+    ];
+
+    const SCENARIOS = {
+      overview: {
+        name: "总览：项目一眼逻辑",
+        goal: "从四大功能模块进入，同一条技术主链路完成判路、生成、发布与追溯。",
+        steps: [
+          "用户在 CN/EU/US/公共能力中进入对应页面并提交字段+附件。",
+          "后端完成校验并基于规则判定执行路径。",
+          "执行模块调用 RAG 与生成器输出报告。",
+          "结果进入报告中心，知识库中心完成引用追溯。"
+        ],
+        principles: [
+          "规则先于生成，保证路线正确。",
+          "RAG 注入证据，保证可解释。",
+          "异步任务支撑长流程，保证稳定。",
+          "结果和依据可追溯，便于复核。"
+        ],
+        cards: ["domain_cn","domain_eu","domain_us","flow_3","flow_4","flow_6","flow_7","p_rule","p_rag","s_output"],
+        edges: ["m1","m2","m3","m4","m5","m6","d1","d2","d3"]
+      },
+      cn: {
+        name: "中国大陆 -> 境外",
+        goal: "2.1~2.5 模块：以规则判路和评估/PIPIA生成为主。",
+        steps: [
+          "2.1 诊断基于 decision_tree + 风险评分输出路径建议。",
+          "2.2/2.3 通过 async 任务生成评估与 PIPIA 报告。",
+          "2.4/2.5 当前前端有本地兜底生成链路。",
+          "统一输出到报告中心，支持下载和引用核对。"
+        ],
+        principles: [
+          "规则驱动：先决定走评估/备案/审查。",
+          "附件一致性检查防止漏材料。",
+          "多格式输出满足比赛交付。"
+        ],
+        cards: ["domain_cn","flow_3","flow_4","flow_6","flow_7","p_rule","p_consistency","s_upload","s_output"],
+        edges: ["d1","m2","m3","m4","m5","m6","p1","p3","s1","s3"]
+      },
+      eu: {
+        name: "欧盟 -> 境外",
+        goal: "3.1~3.4 模块：SCC/BCR 审查与 DPIA/TIA 草案。",
+        steps: [
+          "进入 SCC/BCR/DPIA/TIA 接口并提交字段。",
+          "服务层做附件抽取、法规检索、章节生成。",
+          "异步轮询直到 COMPLETED，返回 docx/md/zip。"
+        ],
+        principles: [
+          "法域约束检索（jurisdiction='eu'）。",
+          "章节模板化，便于稳定复现。",
+          "异步任务保证可恢复执行。"
+        ],
+        cards: ["domain_eu","flow_4","flow_5","flow_6","stack_task","stack_rag","p_async","s_task"],
+        edges: ["d2","m3","m4","m5","t2","t3","p4","s6"]
+      },
+      us: {
+        name: "美国 -> 境外",
+        goal: "4.1/4.2 模块：风险条目化分析 + 全景路线图。",
+        steps: [
+          "4.1 产出风险项并导出报告 + xlsx 风险清单。",
+          "4.2 产出 gap roadmap 并导出文档包。",
+          "都通过异步任务和统一渲染链路交付。"
+        ],
+        principles: [
+          "先规则识别风险，再生成解释。",
+          "多产物并行导出，便于提交与整改。"
+        ],
+        cards: ["domain_us","flow_4","flow_6","stack_doc","p_consistency","s_output"],
+        edges: ["d3","m3","m4","m5","t4","p3","s3"]
+      },
+      public: {
+        name: "公共能力",
+        goal: "统一查看报告、下载产物、做法规来源联动核验。",
+        steps: [
+          "报告中心扫描 outputs 并按模块过滤。",
+          "知识库中心查询 sources/practice_cases。",
+          "引用文本匹配后可打开来源链接。"
+        ],
+        principles: [
+          "可追溯是答辩和复核关键。",
+          "公共能力与业务模块解耦。"
+        ],
+        cards: ["domain_public","flow_7","p_trace","s_sources","s_output"],
+        edges: ["d4","m6","p5","s4","s3"]
+      },
+      m1: {
+        name: "M1 合规诊断",
+        goal: "问答后输出风险等级、推荐路径与行动建议。",
+        steps: [
+          "前端提交 /diagnosis/report。",
+          "DiagnosisService 使用 decision_tree 匹配规则。",
+          "risk_level() 计算风险并返回 legal_basis。"
+        ],
+        principles: [
+          "确定性规则优先，降低生成漂移。",
+          "结果含依据，便于解释。"
+        ],
+        cards: ["flow_2","flow_3","p_rule","flow_7","s_output"],
+        edges: ["m2","m3","p1","m6","s3"]
+      },
+      m23: {
+        name: "M2/M3 评估与PIPIA",
+        goal: "自动生成可提交报告草稿并打包。",
+        steps: [
+          "调用 generate_async 获取 task_id。",
+          "轮询 tasks/{task_id}，失败可 retry/cancel。",
+          "检索法规 -> 生成章节 -> 一致性检查 -> 多格式渲染。"
+        ],
+        principles: [
+          "异步流程保证稳定性。",
+          "检索注入保证依据性。",
+          "模板渲染保证格式一致。"
+        ],
+        cards: ["flow_4","flow_5","flow_6","stack_task","stack_rag","stack_doc","p_async","p_rag","p_consistency"],
+        edges: ["m3","m4","m5","t2","t3","t4","p2","p3","p4","s6"]
+      },
+      m5: {
+        name: "M5 合同审查（当前实现）",
+        goal: "识别文本缺项并输出问题与修订建议。",
+        steps: [
+          "2.5 页面调用 generate_review_report（本地）。",
+          "FileParser 提取文本后按规则检测关键词缺失。",
+          "生成 markdown/docx 并在页面展示下载。"
+        ],
+        principles: [
+          "当前以规则审查为主，先保证可验收。",
+          "后续可切换至后端 review 任务管线。"
+        ],
+        cards: ["domain_cn","flow_1","flow_6","stack_doc","p_consistency","s_upload","s_output"],
+        edges: ["d1","m1","m5","t4","p3","s1","s3"]
+      }
+    };
+
+    let activeScenario = "overview";
+
+    function anchor(el, side, rect) {
+      const r = el.getBoundingClientRect();
+      const x = r.left - rect.left;
+      const y = r.top - rect.top;
+      const cx = x + r.width / 2;
+      const cy = y + r.height / 2;
+      const p = 4;
+      if (side === "left") return { x: x - p, y: cy };
+      if (side === "right") return { x: x + r.width + p, y: cy };
+      if (side === "top") return { x: cx, y: y - p };
+      if (side === "bottom") return { x: cx, y: y + r.height + p };
+      return { x: cx, y: cy };
+    }
+
+    function orth(a, b, mode) {
+      if (mode === "v") {
+        const my = (a.y + b.y) / 2;
+        return `M ${a.x} ${a.y} L ${a.x} ${my} L ${b.x} ${my} L ${b.x} ${b.y}`;
+      }
+      const mx = (a.x + b.x) / 2;
+      return `M ${a.x} ${a.y} L ${mx} ${a.y} L ${mx} ${b.y} L ${b.x} ${b.y}`;
+    }
+
+    function renderEdges() {
+      const svg = document.getElementById("svg");
+      const layer = document.getElementById("edgeLayer");
+      layer.innerHTML = "";
+
+      const rect = svg.getBoundingClientRect();
+      svg.setAttribute("viewBox", `0 0 ${Math.max(10, svg.clientWidth)} ${Math.max(10, svg.clientHeight)}`);
+
+      EDGES.forEach((e) => {
+        const from = document.getElementById(e.from);
+        const to = document.getElementById(e.to);
+        if (!from || !to) return;
+        const a = anchor(from, e.fs, rect);
+        const b = anchor(to, e.ts, rect);
+        const mode = e.mode || ((e.fs === "top" || e.fs === "bottom") ? "v" : "h");
+
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", orth(a, b, mode));
+        p.setAttribute("class", `edge ${e.t}`);
+        p.setAttribute("data-eid", e.id);
+        p.setAttribute("marker-end", e.t === "primary" ? "url(#arrP)" : "url(#arrS)");
+        layer.appendChild(p);
+      });
+    }
+
+    function applyScenario(name) {
+      activeScenario = name;
+      const s = SCENARIOS[name] || SCENARIOS.overview;
+
+      document.getElementById("scenarioName").textContent = s.name;
+      document.getElementById("scenarioGoal").textContent = s.goal;
+
+      const steps = document.getElementById("scenarioSteps");
+      steps.innerHTML = "";
+      s.steps.forEach((x) => {
+        const li = document.createElement("li");
+        li.textContent = x;
+        steps.appendChild(li);
+      });
+
+      const pri = document.getElementById("scenarioPrinciples");
+      pri.innerHTML = "";
+      s.principles.forEach((x) => {
+        const li = document.createElement("li");
+        li.textContent = x;
+        pri.appendChild(li);
+      });
+
+      document.querySelectorAll(".card").forEach((c) => c.classList.remove("focus"));
+      document.querySelectorAll(".edge").forEach((edge) => {
+        edge.classList.remove("active");
+        edge.setAttribute("marker-end", edge.classList.contains("primary") ? "url(#arrP)" : "url(#arrS)");
+      });
+
+      s.cards.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add("focus");
+      });
+
+      s.edges.forEach((id) => {
+        const edge = document.querySelector(`.edge[data-eid="${id}"]`);
+        if (edge) {
+          edge.classList.add("active");
+          edge.setAttribute("marker-end", "url(#arrA)");
+        }
+      });
+    }
+
+    function debounce(fn, ms = 120) {
+      let t = null;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+
+    function init() {
+      renderEdges();
+      applyScenario(activeScenario);
+      document.getElementById("scenarioSelect").addEventListener("change", (e) => applyScenario(e.target.value));
+      window.addEventListener("resize", debounce(() => {
+        renderEdges();
+        applyScenario(activeScenario);
+      }, 140));
+    }
+
+    window.addEventListener("load", init);
+  </script>
+</body>
+</html>

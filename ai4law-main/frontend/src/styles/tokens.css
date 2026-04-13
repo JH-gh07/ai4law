@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-paper: #edf1f7;
+  --bg-paper-deep: #e2e8f2;
+  --ink-main: #0f2138;
+  --ink-soft: #314867;
+  --line-soft: rgba(24, 48, 85, 0.17);
+  --glass-bg: rgba(250, 252, 255, 0.82);
+}
+
+body {
+  margin: 0;
+  font-family: "Source Sans 3", "PingFang SC", sans-serif;
+  color: var(--ink-main);
+  background:
+    radial-gradient(980px 520px at 104% -8%, rgba(39, 85, 162, 0.16), transparent 66%),
+    radial-gradient(920px 520px at -18% -14%, rgba(72, 113, 182, 0.14), transparent 60%),
+    linear-gradient(180deg, var(--bg-paper) 0%, var(--bg-paper-deep) 56%, #eef3fa 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(22, 47, 84, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 47, 84, 0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at center, black 30%, transparent 88%);
+}

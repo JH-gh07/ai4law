@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Module 3.4 Input Schema",
+  "type": "object",
+  "required": [
+    "transfer_tool",
+    "data_exporter_profile",
+    "data_importer_profile",
+    "third_country_assessment",
+    "supplementary_measures",
+    "final_conclusion",
+    "attachments"
+  ],
+  "properties": {
+    "transfer_tool": {
+      "type": "string",
+      "enum": [
+        "scc",
+        "bcr",
+        "derogation"
+      ]
+    },
+    "data_exporter_profile": {
+      "type": "string"
+    },
+    "data_importer_profile": {
+      "type": "string"
+    },
+    "third_country_assessment": {
+      "type": "string"
+    },
+    "supplementary_measures": {
+      "type": "string"
+    },
+    "final_conclusion": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": [
+              "file_role",
+              "file_name",
+              "file_format",
+              "storage_uri"
+            ],
+            "properties": {
+              "file_role": {
+                "type": "string"
+              },
+              "file_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "file_format": {
+                "type": "string"
+              },
+              "storage_uri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "checksum_sha256": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ],
+        "properties": {
+          "file_role": {
+            "type": "string",
+            "enum": [
+              "transfer_agreement",
+              "country_law_analysis",
+              "technical_control_doc",
+              "other"
+            ]
+          },
+          "file_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file_format": {
+            "type": "string",
+            "enum": [
+              "docx",
+              "pdf"
+            ]
+          },
+          "storage_uri": {
+            "type": "string",
+            "minLength": 1
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checksum_sha256": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

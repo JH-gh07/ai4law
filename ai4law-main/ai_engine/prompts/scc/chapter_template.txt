@@ -1,0 +1,3 @@
+Generate chapter content for PIPIA report under SCC/certification route.
+Input: SCC profile + regulation hits.
+Output: concise, traceable text with citations.

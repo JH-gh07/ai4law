@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegulationArticle",
+  "type": "object",
+  "required": [
+    "article_id",
+    "jurisdiction",
+    "law_name",
+    "article_ref",
+    "content",
+    "source_url",
+    "effective_date",
+    "status"
+  ],
+  "properties": {
+    "article_id": { "type": "string" },
+    "jurisdiction": { "type": "string" },
+    "path": { "type": "string" },
+    "law_name": { "type": "string" },
+    "article_ref": { "type": "string" },
+    "content": { "type": "string" },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_url": { "type": "string" },
+    "snapshot_path": { "type": "string" },
+    "publish_date": { "type": "string" },
+    "effective_date": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["effective", "draft", "abolished", "superseded"]
+    }
+  }
+}

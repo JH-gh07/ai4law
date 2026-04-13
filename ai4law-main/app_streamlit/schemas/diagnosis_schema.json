@@ -1,0 +1,96 @@
+{
+  "title": "合规路径诊断",
+  "questions": [
+    {
+      "name": "q5_no_personal_info",
+      "label": "Q1 本次出境数据是否完全不含个人信息和重要数据？",
+      "type": "select",
+      "options": ["no", "yes", "unknown"],
+      "option_labels": {
+        "no": "否（含个人信息或重要数据）",
+        "yes": "是（纯业务/技术数据，如匿名统计、设备日志）",
+        "unknown": "不确定"
+      },
+      "default": "no",
+      "help": "如出境数据不含个人信息且不涉及重要数据，依法无需进行合规申报。"
+    },
+    {
+      "name": "q6_scenario",
+      "label": "Q2 本次数据出境的主要业务场景",
+      "type": "select",
+      "options": ["other", "contract_performance", "hr_management", "emergency", "legal_duty"],
+      "option_labels": {
+        "other": "其他商业目的",
+        "contract_performance": "履行合同 / 向消费者提供服务（跨境电商、国际物流等）",
+        "hr_management": "跨国公司内部人力资源管理",
+        "emergency": "紧急情况保护自然人生命、健康或财产安全",
+        "legal_duty": "依法履行法定职责或法定义务"
+      },
+      "default": "other",
+      "help": "特定豁免场景下，如个人信息规模未触发强制门槛，可免于向监管机构申报（《促进和规范数据跨境流动规定》第5条）。"
+    },
+    {
+      "name": "q7_receiver_type",
+      "label": "Q3 境外数据接收方类型",
+      "type": "select",
+      "options": ["third_party", "intra_group"],
+      "option_labels": {
+        "third_party": "独立第三方（合作伙伴 / 服务商）",
+        "intra_group": "集团内部关联公司"
+      },
+      "default": "third_party",
+      "help": "人力资源管理豁免情形要求接收方为集团内关联公司。"
+    },
+    {
+      "name": "q1_is_ciio",
+      "label": "Q4 是否为关键信息基础设施运营者（CIIO）？",
+      "type": "select",
+      "options": ["no", "yes", "unknown"],
+      "option_labels": {
+        "no": "否",
+        "yes": "是",
+        "unknown": "不确定"
+      },
+      "default": "no",
+      "help": "CIIO 无论规模大小均须走安全评估路径（《个人信息保护法》第40条）。"
+    },
+    {
+      "name": "q2_has_important_data",
+      "label": "Q5 出境数据是否包含重要数据？",
+      "type": "select",
+      "options": ["no", "yes", "unknown"],
+      "option_labels": {
+        "no": "否",
+        "yes": "是",
+        "unknown": "不确定（建议咨询合规顾问）"
+      },
+      "default": "no",
+      "help": "重要数据须走安全评估路径（《数据安全法》第21条）。"
+    },
+    {
+      "name": "q3_pii_count",
+      "label": "Q6 近12个月累计向境外提供个人信息的人数",
+      "type": "number",
+      "min": 0,
+      "step": 1000,
+      "default": 0,
+      "help": "累计达到100万人须走安全评估（《数据出境安全评估办法》第4条）。"
+    },
+    {
+      "name": "q4_spi_count",
+      "label": "Q7 近12个月累计向境外提供敏感个人信息的人数",
+      "type": "number",
+      "min": 0,
+      "step": 100,
+      "default": 0,
+      "help": "累计达到1万人须走安全评估。敏感个人信息包括：生物特征、宗教信仰、医疗健康、金融账户、行踪轨迹等。"
+    },
+    {
+      "name": "q8_purpose",
+      "label": "Q8 出境目的简述（可选，填写越详细AI分析越精准）",
+      "type": "text",
+      "default": "",
+      "help": "例如：向欧洲总部传输中国员工薪资数据用于统一薪酬管理。"
+    }
+  ]
+}

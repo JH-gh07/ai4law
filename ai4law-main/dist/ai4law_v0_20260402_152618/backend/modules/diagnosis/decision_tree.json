@@ -1,0 +1,36 @@
+{
+  "rules": [
+    {
+      "id": "ciio",
+      "description": "CIIO must apply for security assessment",
+      "when": {"q1_is_ciio": ["yes"]},
+      "path": "security_assessment",
+      "legal_basis": ["个人信息保护法 第40条", "数据出境安全评估办法 第4条"]
+    },
+    {
+      "id": "important_data",
+      "description": "Important data export must apply for security assessment",
+      "when": {"q2_has_important_data": ["yes"]},
+      "path": "security_assessment",
+      "legal_basis": ["数据安全法 第21条", "数据出境安全评估办法 第4条"]
+    },
+    {
+      "id": "pii_threshold",
+      "description": "PII count >= 1,000,000 must apply for security assessment",
+      "when": {"q3_pii_count_gte": 1000000},
+      "path": "security_assessment",
+      "legal_basis": ["数据出境安全评估办法 第4条"]
+    },
+    {
+      "id": "spi_threshold",
+      "description": "Sensitive PII count >= 10,000 must apply for security assessment",
+      "when": {"q4_spi_count_gte": 10000},
+      "path": "security_assessment",
+      "legal_basis": ["数据出境安全评估办法 第4条"]
+    }
+  ],
+  "default": {
+    "path": "scc_or_certification",
+    "legal_basis": ["个人信息出境标准合同办法", "GB/T 46068-2025"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PIPIAOutput",
+  "type": "object",
+  "properties": {
+    "report_path": {"type": "string"},
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chapter_no": {"type": "integer"},
+          "title": {"type": "string"},
+          "content": {"type": "string"},
+          "risk_level": {"type": "string"}
+        },
+        "required": ["chapter_no", "title", "content", "risk_level"]
+      }
+    }
+  },
+  "required": ["report_path", "chapters"]
+}

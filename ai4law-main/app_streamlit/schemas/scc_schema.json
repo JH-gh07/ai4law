@@ -1,0 +1,56 @@
+{
+  "title": "认证/标准合同路径",
+  "steps": [
+    {
+      "title": "企业与接收方信息",
+      "fields": [
+        {"name": "company_name", "label": "企业名称", "type": "text", "default": "示例科技"},
+        {
+          "name": "receiver_name",
+          "label": "境外接收方",
+          "type": "text",
+          "default": "Example SG Pte. Ltd."
+        },
+        {
+          "name": "receiver_country",
+          "label": "接收方国家",
+          "type": "text",
+          "default": "Singapore"
+        }
+      ]
+    },
+    {
+      "title": "出境数据特征",
+      "fields": [
+        {
+          "name": "transfer_purpose",
+          "label": "出境目的",
+          "type": "textarea",
+          "default": "集团统一客户管理"
+        },
+        {
+          "name": "pii_count",
+          "label": "普通个人信息量",
+          "type": "number",
+          "min": 0,
+          "step": 1000,
+          "default": 200000
+        },
+        {
+          "name": "spi_count",
+          "label": "敏感个人信息量",
+          "type": "number",
+          "min": 0,
+          "step": 100,
+          "default": 800
+        },
+        {
+          "name": "has_scc_draft",
+          "label": "是否已有 SCC 草案",
+          "type": "checkbox",
+          "default": false
+        }
+      ]
+    }
+  ]
+}
