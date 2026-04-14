@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     rag_candidate_pool_size: int = 24
     rag_rerank_candidate_count: int = 12
     rag_auto_build_index: bool = True
+    rag_embedding_backend: str = "hashing"  # "hashing" | "semantic"
+    rag_semantic_model: str = "moka-ai/m3e-base"
+    rag_semantic_index_path: Path = Path("storage/rag/regulation_index_v3.json")
 
     # 腾讯混元 LLM — 兼容无 AI4LAW_ 前缀的环境变量
     tencent_api_key: str | None = Field(

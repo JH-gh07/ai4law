@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import lru_cache
@@ -10,9 +11,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
-from backend.common.rag.ingest import build_regulation_index
+from backend.common.rag.ingest import build_regulation_index, build_semantic_regulation_index
 from backend.common.rag.reranker import HeuristicReranker, RerankCandidate
-from backend.common.rag.vector_store import LocalVectorStore
+from backend.common.rag.vector_store import DenseVectorStore, LocalVectorStore
 from backend.core.settings import Settings, get_settings
 
 if TYPE_CHECKING:
@@ -133,7 +134,7 @@ JURISDICTION_STRONG_HINTS: dict[str, tuple[str, ...]] = {
         "数据保护官",
         "DPO",
         "标准合同条款",
-        "充分性决定",
+        # 注意：故意不加"充分性决定"——会和 BCR 查询产生错误 lexical overlap，将第66条排在第47条之前
     ),
     "us": (
         # 原有
@@ -284,9 +285,19 @@ def _lexical_score(query: str, doc: RegulationDoc) -> float:
 class RegulationRAGService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.embedder = HashingEmbedder(settings.rag_embedding_dimension)
-        self.vector_store = LocalVectorStore(settings.rag_index_path, self.embedder)
+        backend = getattr(settings, "rag_embedding_backend", "hashing")
+        if backend == "semantic":
+            from backend.common.rag.semantic_embedder import SemanticEmbedder
+            self.embedder = SemanticEmbedder(settings.rag_semantic_model)
+            self.vector_store: LocalVectorStore | DenseVectorStore = DenseVectorStore(
+                settings.rag_semantic_index_path, self.embedder
+            )
+        else:
+            self.embedder = HashingEmbedder(settings.rag_embedding_dimension)
+            self.vector_store = LocalVectorStore(settings.rag_index_path, self.embedder)
         self.reranker = HeuristicReranker()
+        # 语义模式下向量分数更可靠，提高权重避免 lexical + priority 压制语义结果
+        self._semantic_mode = (getattr(settings, "rag_embedding_backend", "hashing") == "semantic")
 
     def retrieve(
         self,
@@ -329,7 +340,11 @@ class RegulationRAGService:
             elif mode == "lexical":
                 base_score = lexical_score + _priority_weight(doc.usage_priority)
             else:
-                base_score = vector_score * 0.7 + lexical_score * 0.3 + _priority_weight(doc.usage_priority)
+                # 语义模式：向量分数更可靠（0.85/0.15），避免 lexical+priority 压制语义结果
+                if self._semantic_mode:
+                    base_score = vector_score * 0.85 + lexical_score * 0.15 + _priority_weight(doc.usage_priority) * 0.5
+                else:
+                    base_score = vector_score * 0.7 + lexical_score * 0.3 + _priority_weight(doc.usage_priority)
             candidates.append(
                 RerankCandidate(
                     payload=entry.payload,
@@ -369,14 +384,22 @@ class RegulationRAGService:
         return deduped
 
     def rebuild_index(self) -> Path:
-        path = build_regulation_index(self.settings)
+        backend = getattr(self.settings, "rag_embedding_backend", "hashing")
+        if backend == "semantic":
+            path = build_semantic_regulation_index(self.settings)
+        else:
+            path = build_regulation_index(self.settings)
         self._ensure_entries.cache_clear()  # type: ignore[attr-defined]
         return path
 
     @lru_cache(maxsize=1)
     def _ensure_entries(self) -> tuple:
         if self.settings.rag_auto_build_index and not self.vector_store.exists():
-            build_regulation_index(self.settings)
+            backend = getattr(self.settings, "rag_embedding_backend", "hashing")
+            if backend == "semantic":
+                build_semantic_regulation_index(self.settings)
+            else:
+                build_regulation_index(self.settings)
         return tuple(self.vector_store.load())
 
     @staticmethod
@@ -401,14 +424,6 @@ def _service() -> RegulationRAGService:
     return RegulationRAGService(get_settings())
 
 
-def _needs_external_search(docs: list[RegulationDoc], min_local: int) -> bool:
-    """数量不足 或 没有高质量（P0/P1）结果，则触发外部搜索。"""
-    if len(docs) < min_local:
-        return True
-    high_quality = [d for d in docs if d.usage_priority in ("P0", "P1")]
-    return len(high_quality) == 0
-
-
 def retrieve_regulations(
     query: str,
     top_k: int = 8,
@@ -418,7 +433,7 @@ def retrieve_regulations(
     mode: str = "hybrid",
     score_floor: Optional[float] = None,
     legal_service: Optional["DeliLegalService"] = None,
-    min_local: int = 3,
+    min_local: int = 3,  # kept for API compat, no longer used
 ) -> list[RegulationDoc]:
     rewritten_query = _rewrite_query(query, jurisdiction, path)
     if _is_off_topic_query(rewritten_query):
@@ -428,7 +443,13 @@ def retrieve_regulations(
     if _is_path_mismatch(rewritten_query, path):
         return []
 
-    docs = _service().retrieve(
+    effective_legal_service = legal_service if legal_service is not None else _get_default_legal_service()
+    deli_enabled = bool(effective_legal_service and getattr(effective_legal_service, "enabled", False))
+
+    # 并行：本地检索 + 得理 API 同时发起，互不等待
+    executor = ThreadPoolExecutor(max_workers=2)
+    local_future: Future = executor.submit(
+        _service().retrieve,
         rewritten_query,
         top_k=top_k,
         jurisdiction=jurisdiction,
@@ -437,30 +458,46 @@ def retrieve_regulations(
         mode=mode,
         score_floor=score_floor,
     )
+    deli_future: Optional[Future] = None
+    if deli_enabled:
+        deli_future = executor.submit(
+            effective_legal_service.search_laws,  # type: ignore[union-attr]
+            query,
+            max(top_k, 5),
+        )
 
-    effective_legal_service = legal_service if legal_service is not None else _get_default_legal_service()
-    if effective_legal_service and getattr(effective_legal_service, "enabled", False) and _needs_external_search(docs, min_local):
-        existing_titles = {_normalize(doc.title) for doc in docs}
-        remote_hits = effective_legal_service.search_laws(query, size=max(top_k - len(docs), 0) + 2)
-        for hit in remote_hits:
-            title = str(hit.get("title", "")).strip()
-            if not title or _normalize(title) in existing_titles:
-                continue
-            docs.append(
-                RegulationDoc(
-                    id=f"delilegal-{_normalize(title)[:20]}",
-                    title=title,
-                    article="",
-                    content=str(hit.get("summary", "")),
-                    jurisdiction=jurisdiction or "",
-                    path=path or "all",
-                    doc_type="external",
-                    usage_priority="P2",
-                )
+    docs: list[RegulationDoc] = local_future.result()
+
+    deli_hits: list[dict] = []
+    if deli_future is not None:
+        try:
+            deli_hits = deli_future.result(timeout=12)
+        except Exception:
+            deli_hits = []
+
+    executor.shutdown(wait=False)
+
+    # 去重合并：本地结果优先，得理结果补充到 top_k
+    existing_titles = {_normalize(doc.title) for doc in docs}
+    for hit in deli_hits:
+        if len(docs) >= top_k:
+            break
+        title = str(hit.get("title", "")).strip()
+        if not title or _normalize(title) in existing_titles:
+            continue
+        docs.append(
+            RegulationDoc(
+                id=f"delilegal-{_normalize(title)[:20]}",
+                title=title,
+                article="",
+                content=str(hit.get("summary", "")),
+                jurisdiction=jurisdiction or "",
+                path=path or "all",
+                doc_type="external",
+                usage_priority="P2",
             )
-            existing_titles.add(_normalize(title))
-            if len(docs) >= top_k:
-                break
+        )
+        existing_titles.add(_normalize(title))
 
     _log_rag_hits(
         query=query,

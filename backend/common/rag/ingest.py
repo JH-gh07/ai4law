@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from backend.common.rag.embedding import HashingEmbedder
-from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
+from backend.common.rag.vector_store import DenseVectorIndexEntry, DenseVectorStore, LocalVectorStore, VectorIndexEntry
 
 if TYPE_CHECKING:
     from backend.core.settings import Settings
@@ -82,4 +82,62 @@ def build_regulation_index(settings: Settings, source_jsonl: Path | None = None,
             "embedding_dimension": settings.rag_embedding_dimension,
         },
     )
+    return index_path
+
+
+def build_semantic_regulation_index(
+    settings: "Settings",
+    source_jsonl: Path | None = None,
+    output_path: Path | None = None,
+    batch_size: int = 64,
+) -> Path:
+    """用语义 Embedding（moka-ai/m3e-base）重建向量索引。"""
+    from backend.common.rag.semantic_embedder import SemanticEmbedder
+
+    source_path = source_jsonl or settings.rag_source_jsonl
+    index_path = output_path or settings.rag_semantic_index_path
+
+    print(f"[semantic-ingest] 加载模型 {settings.rag_semantic_model} ...")
+    embedder = SemanticEmbedder(settings.rag_semantic_model)
+    store = DenseVectorStore(index_path=index_path, embedder=embedder)
+    rows = load_regulation_rows(source_path)
+    print(f"[semantic-ingest] 共 {len(rows)} 条文章，开始批量编码 ...")
+
+    search_texts = [build_search_text(row) for row in rows]
+    embeddings = embedder.embed_batch(search_texts, batch_size=batch_size, show_progress=True)
+
+    entries: list[DenseVectorIndexEntry] = []
+    for row, search_text, emb in zip(rows, search_texts, embeddings):
+        payload = {
+            "id": str(row.get("article_id", "")),
+            "title": str(row.get("law_name", "")),
+            "article": str(row.get("article_ref", "")),
+            "content": str(row.get("content", "")),
+            "jurisdiction": str(row.get("jurisdiction", "")),
+            "path": str(row.get("path", "")),
+            "doc_type": str(row.get("doc_type", "")),
+            "source_url": str(row.get("source_url", "")),
+            "snapshot_path": str(row.get("snapshot_path", "")),
+            "usage_priority": str(row.get("usage_priority", "P1")),
+            "keywords": [str(item) for item in row.get("keywords", []) if str(item).strip()],
+        }
+        entries.append(
+            DenseVectorIndexEntry(
+                doc_id=payload["id"],
+                payload=payload,
+                search_text=search_text,
+                embedding=emb,
+            )
+        )
+
+    store.save(
+        entries,
+        metadata={
+            "source_jsonl": str(source_path),
+            "entry_count": len(entries),
+            "embedding_model": settings.rag_semantic_model,
+            "embedding_dimension": embedder.dimension,
+        },
+    )
+    print(f"[semantic-ingest] 索引已写入 {index_path}（{len(entries)} 条）")
     return index_path
