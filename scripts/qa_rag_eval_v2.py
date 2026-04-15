@@ -19,14 +19,6 @@ if str(ROOT) not in sys.path:
 
 from backend.common.rag.retriever import DEFAULT_SCORE_FLOOR_BY_MODE, RegulationDoc, retrieve_regulations
 
-
-class _NoOpLegalService:
-    """评测专用：禁用得理 API，保证评测只测本地 RAG（隔离 embedding 变量）。"""
-    enabled = False
-
-    def search_laws(self, *args, **kwargs) -> list:
-        return []
-
 DATASET_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_queries.csv"
 EXTRA_NEGATIVE_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_hard_negatives.csv"
 SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
@@ -166,7 +158,6 @@ def run_eval(top_k: int = 5, mode: str = "hybrid") -> dict:
             jurisdiction=row.expected_jurisdiction,
             path=row.expected_path,
             mode=mode,
-            legal_service=_NoOpLegalService(),  # 评测只测本地 RAG
         )
 
         hit_sources = [_extract_source_id(doc.id) for doc in hits]
