@@ -23,6 +23,7 @@ import { ResourcePanel } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
+import { ChevronToggleIcon } from "../common/AppIcons";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -43,6 +44,11 @@ type WorkspaceTopTab = {
   closable: boolean;
 };
 type ResponseChapter = {
+  title: string;
+  content: string;
+};
+
+type ReportPreviewSection = {
   title: string;
   content: string;
 };
@@ -78,6 +84,60 @@ const readResponseChapters = (response: unknown): ResponseChapter[] => {
     .filter((item) => item.content.trim().length > 0);
 };
 
+const readStringList = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+
+const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): ReportPreviewSection[] => {
+  if (!isRecord(response)) return [];
+
+  const result = isRecord(response.result) ? response.result : {};
+  const sections: ReportPreviewSection[] = [];
+  const pushSection = (title: string, lines: string[]) => {
+    const cleaned = lines.map((item) => item.trim()).filter((item) => item.length > 0);
+    if (cleaned.length === 0) return;
+    sections.push({ title, content: cleaned.join("\n") });
+  };
+
+  const summary = readString(result.summary);
+  if (summary) {
+    sections.push({
+      title: lang === "zh" ? "执行摘要" : "Executive Summary",
+      content: summary
+    });
+  }
+
+  const hitRules = readStringList(result.hit_rules);
+  pushSection(
+    lang === "zh" ? "命中规则与判断依据" : "Applied Rules and Basis",
+    hitRules
+  );
+
+  const citations = Array.isArray(result.citations)
+    ? result.citations
+        .filter(isRecord)
+        .map((item) => [readString(item.source), readString(item.article), readString(item.note)].filter(Boolean).join(" | "))
+        .filter((item): item is string => item.trim().length > 0)
+    : [];
+  pushSection(
+    lang === "zh" ? "引用法规与条文" : "Citations",
+    citations
+  );
+
+  const nextActions = readStringList(result.next_actions);
+  pushSection(
+    lang === "zh" ? "建议下一步" : "Recommended Next Steps",
+    nextActions.map((item, index) => `${index + 1}. ${item}`)
+  );
+
+  const consistencyIssues = readStringList(response.consistency_issues);
+  pushSection(
+    lang === "zh" ? "一致性提示" : "Consistency Notes",
+    consistencyIssues
+  );
+
+  return sections;
+};
+
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
@@ -87,7 +147,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [renameDraft, setRenameDraft] = useState(taskSpace.name);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<WorkspaceTopTabId>("details");
-  const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "canvas", "report"]);
+  const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "report"]);
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -119,6 +179,12 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   );
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
+  const reportPreviewSections = useMemo<ReportPreviewSection[]>(() => {
+    if (responseChapters.length > 0) {
+      return responseChapters.map((chapter) => ({ title: chapter.title, content: chapter.content }));
+    }
+    return buildFallbackPreviewSections(latestRun?.response, lang);
+  }, [lang, latestRun?.response, responseChapters]);
   const terminalLines = useMemo(() => {
     const lines: string[] = [];
     lines.push(`[workspace] ${taskSpace.name} (${taskSpace.id})`);
@@ -202,7 +268,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   useEffect(() => {
     setActiveTab("details");
-    setOpenTabs(["details", "canvas", "report"]);
+    setOpenTabs(["details", "report"]);
     setRenameDraft(taskSpace.name);
     setRenameModalOpen(false);
   }, [taskSpace.id]);
@@ -305,6 +371,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       dispatch({ type: "append_artifacts", payload: extractArtifacts(taskSpace.id, output.module, output.response) });
       dispatch({ type: "append_evidence", payload: extractEvidenceHits(taskSpace.id, output.module, output.response) });
       dispatch({ type: "append_issues", payload: extractConsistencyIssues(taskSpace.id, output.module, output.response) });
+      setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
+      setActiveTab("report");
     }
   };
 
@@ -432,7 +500,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       <section className="workspace-tab-page workspace-tab-report">
         <header className="workspace-tab-head">
           <h3>{t("workspaceTabReportTitle")}</h3>
-          <p>{t("workspaceTabReportDesc")}</p>
+          <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
         </header>
         <section className="workspace-report-kpi-row">
           <article>
@@ -452,24 +520,31 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             <strong>{responseInsight.riskLevel ?? t("workflowPending")}</strong>
           </article>
         </section>
-        {reportArtifacts.length > 0 ? (
-          <section className="workspace-report-list">
-            {reportArtifacts.map((artifact) => (
-              <article key={artifact.id} className="workspace-report-item">
-                <strong>{artifact.kind.toUpperCase()}</strong>
-                <span>{toFileName(artifact.path)}</span>
+        {reportPreviewSections.length > 0 ? (
+          <section className="workspace-report-chapters">
+            {reportPreviewSections.map((section, index) => (
+              <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
+                <strong>{section.title}</strong>
+                <div className="workspace-report-richtext">
+                  {section.content
+                    .split("\n")
+                    .filter((line) => line.trim().length > 0)
+                    .map((line, lineIndex) => (
+                      <p key={`${section.title}-${lineIndex}`}>{line}</p>
+                    ))}
+                </div>
               </article>
             ))}
           </section>
         ) : (
           <p className="resource-empty">{t("reportNoData")}</p>
         )}
-        {responseChapters.length > 0 ? (
-          <section className="workspace-report-chapters">
-            {responseChapters.slice(0, 3).map((chapter, index) => (
-              <article key={`${chapter.title}-${index}`} className="workspace-report-chapter">
-                <strong>{chapter.title}</strong>
-                <p>{chapter.content}</p>
+        {reportArtifacts.length > 0 ? (
+          <section className="workspace-report-list">
+            {reportArtifacts.map((artifact) => (
+              <article key={artifact.id} className="workspace-report-item">
+                <strong>{artifact.kind.toUpperCase()}</strong>
+                <span>{toFileName(artifact.path)}</span>
               </article>
             ))}
           </section>
@@ -537,49 +612,15 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         <div className="workspace-browser-actions">
           <div className="workspace-header-actions">
             <button className="pill-btn" onClick={renameTask}>{t("tasksRenameAction")}</button>
-            <button
-              className="pill-btn"
-              onClick={() => dispatch({ type: "set_panel_state", payload: { topOpen: !state.panelState.topOpen } })}
-            >
-              {state.panelState.topOpen ? t("topCollapse") : t("topExpand")}
-            </button>
-            <button
-              className="pill-btn"
-              onClick={() => dispatch({ type: "set_panel_state", payload: { leftOpen: !state.panelState.leftOpen } })}
-            >
-              {state.panelState.leftOpen ? t("leftCollapse") : t("leftExpand")}
-            </button>
-            <button
-              className="pill-btn"
-              onClick={() => dispatch({ type: "set_panel_state", payload: { rightOpen: !state.panelState.rightOpen } })}
-            >
-              {state.panelState.rightOpen ? t("rightCollapse") : t("rightExpand")}
-            </button>
           </div>
         </div>
       </header>
-
-      {state.panelState.topOpen ? (
-        <div className="workspace-header-metrics">
-          <span className="workspace-data-chip">{taskSpace.jurisdiction}</span>
-          <span className="workspace-data-chip">{taskSpace.mode.toUpperCase()}</span>
-          <span className="workspace-data-chip">{taskSpace.module.toUpperCase()}</span>
-          <span className="workspace-data-chip">{t("tasksStatRuns")}: {taskRuns.length}</span>
-          <span className="workspace-data-chip">{t("copilotContextIssues")}: {taskIssues.length}</span>
-          <span className="workspace-data-chip">{t("copilotContextEvidence")}: {taskEvidence.length}</span>
-          <span className="workspace-data-chip">{t("copilotContextArtifacts")}: {taskArtifacts.length}</span>
-        </div>
-      ) : null}
 
       <div className={panelClass} ref={gridRef} style={{ gridTemplateColumns }}>
         {state.panelState.leftOpen ? (
           <ResourcePanel
             taskSpace={taskSpace}
-            tabs={WORKSPACE_TABS.map((tab) => ({ id: tab.id, label: t(tab.key), closable: tab.closable }))}
-            openTabs={openTabs}
-            activeTab={activeTab}
-            onActivateTab={(tabId) => setActiveTab(tabId as WorkspaceTopTabId)}
-            onOpenTab={(tabId) => openTab(tabId as WorkspaceTopTabId)}
+            onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { leftOpen: false } })}
           />
         ) : null}
         {state.panelState.leftOpen ? (
@@ -592,6 +633,24 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         ) : null}
 
         <main className="pane center-pane">
+          {!state.panelState.leftOpen ? (
+            <button
+              className="workspace-floating-toggle workspace-floating-toggle-left"
+              onClick={() => dispatch({ type: "set_panel_state", payload: { leftOpen: true } })}
+              aria-label="expand-left-sidebar"
+            >
+              <ChevronToggleIcon direction="right" width="16" height="16" />
+            </button>
+          ) : null}
+          {!state.panelState.rightOpen ? (
+            <button
+              className="workspace-floating-toggle workspace-floating-toggle-right"
+              onClick={() => dispatch({ type: "set_panel_state", payload: { rightOpen: true } })}
+              aria-label="expand-right-sidebar"
+            >
+              <ChevronToggleIcon direction="left" width="16" height="16" />
+            </button>
+          ) : null}
           {renderTabSurface()}
         </main>
 
@@ -603,7 +662,12 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             onPointerDown={onRightResizerPointerDown}
           />
         ) : null}
-        {state.panelState.rightOpen ? <AssistantPanel taskSpace={taskSpace} /> : null}
+        {state.panelState.rightOpen ? (
+          <AssistantPanel
+            taskSpace={taskSpace}
+            onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { rightOpen: false } })}
+          />
+        ) : null}
       </div>
 
       <WorkspacePromptModal

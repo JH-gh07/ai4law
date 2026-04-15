@@ -1,12 +1,13 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useLang } from "../../lib/language";
+import { BrandShieldIcon, DocsIcon, GuideIcon, HelpIcon, SettingsIcon } from "./AppIcons";
 
 type TopNavProps = {
   onStart: () => void;
   onReplayGuide: () => void;
 };
 
-export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
+export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const { lang, setLang, t } = useLang();
   const location = useLocation();
   const onHome = location.pathname === "/";
@@ -17,17 +18,12 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
         <Link to="/" className="global-brand" aria-label={t("navHome")}>
           <span className="global-brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 4v16" />
-              <path d="M4 7h16" />
-              <path d="M6 7l-2.4 4.3a1 1 0 0 0 .87 1.5h3.06a1 1 0 0 0 .87-1.5L6 7Z" />
-              <path d="M18 7l-2.4 4.3a1 1 0 0 0 .87 1.5h3.06a1 1 0 0 0 .87-1.5L18 7Z" />
-              <path d="M8 20h8" />
-            </svg>
+            <BrandShieldIcon width="22" height="22" />
           </span>
-          <div>
-            <div className="global-brand-title">{t("appBrand")}</div>
-            <div className="global-brand-sub">Compliance OS</div>
+          <div className="global-brand-copy">
+            <div className="global-brand-title">数规通</div>
+            <div className="global-brand-sub">DataComply Flow</div>
+            <div className="global-brand-tagline">AI驱动的数据跨境合规诊断与文书智能生成平台</div>
           </div>
         </Link>
 
@@ -41,22 +37,39 @@ export function TopNav({ onStart, onReplayGuide }: TopNavProps) {
           <NavLink to="/workspace" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
             {t("navWorkspace")}
           </NavLink>
-          <NavLink to="/reports" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
-            {t("navReports")}
-          </NavLink>
           <NavLink to="/evidence" className={({ isActive }) => `global-link ${isActive ? "active" : ""}`}>
             {t("navEvidence")}
           </NavLink>
         </nav>
 
         <div className="global-actions">
-          <Link to="/docs" className="global-chip">{t("navDocs")}</Link>
-          <button className="global-chip" onClick={onReplayGuide}>{t("onboardingReplay")}</button>
-          {!onWorkspace ? <button className="global-chip global-chip-optional">{t("navHelp")}</button> : null}
-          {!onWorkspace ? <Link to="/settings" className="global-chip global-chip-optional">{t("navSettings")}</Link> : null}
-          <button className={`lang-btn ${lang === "zh" ? "active" : ""}`} onClick={() => setLang("zh")}>中</button>
-          <button className={`lang-btn ${lang === "en" ? "active" : ""}`} onClick={() => setLang("en")}>EN</button>
-          <button className="pill-btn-primary" onClick={onStart}>{t("navStart")}</button>
+          <Link to="/docs" className="global-chip global-chip-with-icon">
+            <DocsIcon width="15" height="15" />
+            <span>{t("navDocs")}</span>
+          </Link>
+          <button className="global-chip global-chip-with-icon" onClick={onReplayGuide}>
+            <GuideIcon width="15" height="15" />
+            <span>引导</span>
+          </button>
+          {!onWorkspace ? (
+            <button className="global-chip global-chip-optional global-chip-with-icon">
+              <HelpIcon width="15" height="15" />
+              <span>{t("navHelp")}</span>
+            </button>
+          ) : null}
+          {!onWorkspace ? (
+            <Link to="/settings" className="global-chip global-chip-optional global-chip-with-icon">
+              <SettingsIcon width="15" height="15" />
+              <span>{t("navSettings")}</span>
+            </Link>
+          ) : null}
+          <button
+            className="lang-btn lang-toggle-btn active"
+            onClick={() => setLang(lang === "zh" ? "en" : "zh")}
+            aria-label="toggle-language"
+          >
+            {lang === "zh" ? "中 / EN" : "EN / 中"}
+          </button>
         </div>
       </div>
     </header>
