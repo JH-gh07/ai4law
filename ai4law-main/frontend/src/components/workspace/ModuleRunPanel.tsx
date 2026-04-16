@@ -3,7 +3,6 @@ import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
   findModule,
   getDefaultPayload,
-  hasAsync,
   listModules,
   runModule,
   uploadTaskFile
@@ -1553,7 +1552,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
   const [moduleKey, setModuleKey] = useState<ModuleKey>(taskSpace.module);
-  const [runMode, setRunMode] = useState<RunMode>("sync");
   const [payloadText, setPayloadText] = useState("");
   const [responseData, setResponseData] = useState<unknown>(undefined);
   const [loading, setLoading] = useState(false);
@@ -1683,7 +1681,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   }, [moduleKey, taskTemplate?.id]);
 
   const definition = findModule(moduleKey);
-  const allowAsync = hasAsync(definition);
   const isDocumentReviewTask = taskTemplate?.id === "cn_document_review";
   const isEuSccTask = taskTemplate?.id === "eu_scc";
   const isDiagnosisModule = moduleKey === "diagnosis";
@@ -2430,7 +2427,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setError(message);
       onRunDone({
         module: moduleKey,
-        runMode,
+        runMode: "sync",
         request: isDocumentReviewTask
           ? documentReviewValues
           : isEuSccTask
@@ -2461,7 +2458,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await runModule(definition, requestPayload, allowAsync ? runMode : "sync");
+      const result = await runModule(definition, requestPayload, "sync");
       setResponseData(result.response);
       onRunDone({
         module: moduleKey,
@@ -2476,7 +2473,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
       setResponseData(undefined);
       setError(message);
-      onRunDone({ module: moduleKey, runMode, request: requestPayload, success: false, error: message });
+      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
     } finally {
       setLoading(false);
     }
@@ -2518,21 +2515,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               {getTaskTemplateTitle(taskTemplate, lang)}
             </p>
           ) : null}
-        </div>
-        <div className="run-mode-group">
-          <button
-            className={`pill-btn ${runMode === "sync" ? "active-mode" : ""}`}
-            onClick={() => setRunMode("sync")}
-          >
-            {t("runSync")}
-          </button>
-          <button
-            className={`pill-btn ${runMode === "async" ? "active-mode" : ""}`}
-            onClick={() => setRunMode("async")}
-            disabled={!allowAsync}
-          >
-            {t("runAsync")}
-          </button>
         </div>
       </header>
 

@@ -1,0 +1,16 @@
+INFO:     127.0.0.1:62762 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62763 - "GET /api/v1/artifacts/preview?path=C%3A%5CUsers%5Csataxisama%5CDesktop%5Cagent%20individual%5CAI4law%5C111%5Cai4law-main%5Cai4law-main%5Coutputs%5Cdiagnosis%5CDemoDiag023432_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61767 - "POST /api/v1/diagnosis/report HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49333 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56069 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.pdf HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57484 - "GET /api/v1/artifacts/file?path=C%3A%5CUsers%5Csataxisama%5CDesktop%5Cagent%20individual%5CAI4law%5C111%5Cai4law-main%5Cai4law-main%5Coutputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.pdf HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54314 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51855 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.pdf HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51659 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56886 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58276 - "GET /api/v1/artifacts/preview?path=outputs%5Cdiagnosis%5CDemoDiag025405_diagnosis_report.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57405 - "POST /api/v0/files/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54807 - "POST /api/v1/assessment/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50174 - "GET /api/v1/artifacts/preview?path=outputs%5Cassessment%5CDemoAssess025810_%E6%95%B0%E6%8D%AE%E5%87%BA%E5%A2%83%E9%A3%8E%E9%99%A9%E8%87%AA%E8%AF%84%E4%BC%B0%E6%8A%A5%E5%91%8A_%E8%8D%89%E6%A1%88_20260416.docx HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59778 - "GET /api/v1/artifacts/preview?path=outputs%5Cassessment%5CDemoAssess025810_%E6%95%B0%E6%8D%AE%E5%87%BA%E5%A2%83%E9%A3%8E%E9%99%A9%E8%87%AA%E8%AF%84%E4%BC%B0%E6%8A%A5%E5%91%8A_%E8%8D%89%E6%A1%88_20260416.md HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52869 - "GET /api/v1/artifacts/preview?path=outputs%5Cassessment%5CDemoAssess025810_%E6%95%B0%E6%8D%AE%E5%87%BA%E5%A2%83%E9%A3%8E%E9%99%A9%E8%87%AA%E8%AF%84%E4%BC%B0%E6%8A%A5%E5%91%8A_%E8%8D%89%E6%A1%88_20260416.docx HTTP/1.1" 200 OK

@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { useAppStore } from "../../lib/app-store";
-import type { TaskSpace } from "../../lib/domain";
+import type { OutputArtifact, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { ChevronToggleIcon, FileNodeIcon, FolderInputIcon, FolderOutputIcon } from "../common/AppIcons";
 
 type ResourcePanelProps = {
   taskSpace: TaskSpace;
   onToggleCollapse: () => void;
+  onSelectOutput: (artifact: OutputArtifact) => void;
+  selectedOutputPath?: string | null;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -34,7 +36,7 @@ function collectPaths(value: unknown, bag: Set<string>) {
   }
 }
 
-export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProps) {
+export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, selectedOutputPath }: ResourcePanelProps) {
   const { state } = useAppStore();
   const { lang } = useLang();
 
@@ -100,13 +102,18 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
           <div className="ide-file-list">
             {outputFiles.length > 0 ? (
               outputFiles.map((file) => (
-                <article key={file.id} className="ide-file-row">
+                <button
+                  type="button"
+                  key={file.id}
+                  className={`ide-file-row ide-file-row-button ${selectedOutputPath === file.path ? "active" : ""}`}
+                  onClick={() => onSelectOutput(file)}
+                >
                   <span className="ide-file-icon"><FileNodeIcon width="14" height="14" /></span>
                   <div className="ide-file-copy">
                     <strong>{toFileName(file.path)}</strong>
                     <span>{file.kind.toUpperCase()}</span>
                   </div>
-                </article>
+                </button>
               ))
             ) : (
               <p className="ide-folder-empty">{lang === "zh" ? "暂无生成报告或产物文件" : "No generated output files yet"}</p>
