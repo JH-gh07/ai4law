@@ -7,7 +7,8 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
-import type { ModuleRun, TaskSpace, WorkflowStepKey } from "../../lib/domain";
+import type { ModuleRun, OutputArtifact, TaskSpace, WorkflowStepKey } from "../../lib/domain";
+import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
 import { useLang } from "../../lib/language";
 import {
   findTaskTemplate,
@@ -35,7 +36,7 @@ const RIGHT_PANEL_MIN = 260;
 const RIGHT_PANEL_MAX = 560;
 const CENTER_PANEL_MIN = 360;
 const RESIZER_WIDTH = 10;
-const REPORT_ARTIFACT_KINDS = new Set(["report", "html", "pdf", "docx", "md"]);
+const PREFERRED_ARTIFACT_ORDER = ["html", "report", "markdown", "md", "docx", "annotated_docx", "pdf"];
 
 type WorkspaceTopTabId = "details" | "canvas" | "docs" | "terminal" | "report";
 type WorkspaceTopTab = {
@@ -71,6 +72,11 @@ const toFileName = (value: string): string => {
   const normalized = value.replace(/\\/g, "/");
   const chunks = normalized.split("/");
   return chunks[chunks.length - 1] || value;
+};
+
+const getArtifactPriority = (artifact: OutputArtifact): number => {
+  const index = PREFERRED_ARTIFACT_ORDER.indexOf(artifact.kind.toLowerCase());
+  return index === -1 ? PREFERRED_ARTIFACT_ORDER.length + 1 : index;
 };
 
 const readResponseChapters = (response: unknown): ResponseChapter[] => {
@@ -148,6 +154,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<WorkspaceTopTabId>("details");
   const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "report"]);
+  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null);
+  const [artifactPreview, setArtifactPreview] = useState<ArtifactPreview | null>(null);
+  const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
+  const [artifactPreviewError, setArtifactPreviewError] = useState<string | null>(null);
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -173,9 +183,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     () => deriveWorkflowSteps(taskSpace, latestRun, state.artifacts, state.evidenceHits, state.issues),
     [latestRun, state.artifacts, state.evidenceHits, state.issues, taskSpace]
   );
-  const reportArtifacts = useMemo(
-    () => taskArtifacts.filter((item) => REPORT_ARTIFACT_KINDS.has(item.kind.toLowerCase())),
-    [taskArtifacts]
+  const reportArtifacts = useMemo(() => taskArtifacts, [taskArtifacts]);
+  const sortedReportArtifacts = useMemo(
+    () => [...reportArtifacts].sort((a, b) => getArtifactPriority(a) - getArtifactPriority(b)),
+    [reportArtifacts]
   );
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
@@ -271,7 +282,53 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setOpenTabs(["details", "report"]);
     setRenameDraft(taskSpace.name);
     setRenameModalOpen(false);
+    setSelectedArtifactPath(null);
+    setArtifactPreview(null);
+    setArtifactPreviewError(null);
   }, [taskSpace.id]);
+
+  useEffect(() => {
+    if (sortedReportArtifacts.length === 0) {
+      setSelectedArtifactPath(null);
+      return;
+    }
+    setSelectedArtifactPath((current) => {
+      if (current && sortedReportArtifacts.some((artifact) => artifact.path === current)) {
+        return current;
+      }
+      return sortedReportArtifacts[0]?.path ?? null;
+    });
+  }, [sortedReportArtifacts]);
+
+  useEffect(() => {
+    if (!selectedArtifactPath) {
+      setArtifactPreview(null);
+      setArtifactPreviewError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setArtifactPreviewLoading(true);
+    setArtifactPreviewError(null);
+    fetchArtifactPreview(selectedArtifactPath)
+      .then((preview) => {
+        if (cancelled) return;
+        setArtifactPreview(preview);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setArtifactPreview(null);
+        setArtifactPreviewError(error instanceof Error ? error.message : "Failed to load artifact preview");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setArtifactPreviewLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedArtifactPath]);
 
   const openTab = (tabId: WorkspaceTopTabId) => {
     setOpenTabs((prev) => (prev.includes(tabId) ? prev : [...prev, tabId]));
@@ -374,6 +431,12 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
       setActiveTab("report");
     }
+  };
+
+  const handleSelectArtifact = (artifact: OutputArtifact) => {
+    setSelectedArtifactPath(artifact.path);
+    setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
+    setActiveTab("report");
   };
 
   const renameTask = () => {
@@ -520,6 +583,54 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             <strong>{responseInsight.riskLevel ?? t("workflowPending")}</strong>
           </article>
         </section>
+        {artifactPreviewLoading ? (
+          <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文档预览..." : "Loading artifact preview..."}</div>
+        ) : null}
+        {artifactPreviewError ? (
+          <div className="workspace-report-preview-state workspace-report-preview-error">{artifactPreviewError}</div>
+        ) : null}
+        {artifactPreview ? (
+          <section className="workspace-report-selected">
+            <div className="workspace-report-selected-head">
+              <div>
+                <span>{lang === "zh" ? "当前预览" : "Now Previewing"}</span>
+                <strong>{artifactPreview.file_name}</strong>
+              </div>
+              <em>{artifactPreview.kind.toUpperCase()}</em>
+            </div>
+            {artifactPreview.render_mode === "html" ? (
+              <div className="workspace-report-html-frame">
+                <iframe
+                  title={artifactPreview.file_name}
+                  srcDoc={artifactPreview.content}
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            ) : artifactPreview.render_mode === "pdf" && artifactPreview.file_url ? (
+              <div className="workspace-report-pdf-frame">
+                <iframe title={artifactPreview.file_name} src={artifactPreview.file_url} />
+              </div>
+            ) : artifactPreview.render_mode === "text" ? (
+              <article className="workspace-report-chapter workspace-report-preview-block">
+                <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
+                <div className="workspace-report-richtext">
+                  {artifactPreview.content
+                    .split("\n")
+                    .filter((line) => line.trim().length > 0)
+                    .map((line, index) => (
+                      <p key={`${artifactPreview.path}-${index}`}>{line}</p>
+                    ))}
+                </div>
+              </article>
+            ) : artifactPreview.file_url ? (
+              <div className="workspace-report-preview-state">
+                <a href={artifactPreview.file_url} target="_blank" rel="noreferrer">
+                  {lang === "zh" ? "当前文件暂不支持内嵌预览，点击打开原文件" : "Inline preview is not available for this file. Open the source file."}
+                </a>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
         {reportPreviewSections.length > 0 ? (
           <section className="workspace-report-chapters">
             {reportPreviewSections.map((section, index) => (
@@ -539,13 +650,18 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         ) : (
           <p className="resource-empty">{t("reportNoData")}</p>
         )}
-        {reportArtifacts.length > 0 ? (
+        {sortedReportArtifacts.length > 0 ? (
           <section className="workspace-report-list">
-            {reportArtifacts.map((artifact) => (
-              <article key={artifact.id} className="workspace-report-item">
+            {sortedReportArtifacts.map((artifact) => (
+              <button
+                type="button"
+                key={artifact.id}
+                className={`workspace-report-item workspace-report-item-button ${selectedArtifactPath === artifact.path ? "active" : ""}`}
+                onClick={() => handleSelectArtifact(artifact)}
+              >
                 <strong>{artifact.kind.toUpperCase()}</strong>
                 <span>{toFileName(artifact.path)}</span>
-              </article>
+              </button>
             ))}
           </section>
         ) : null}
@@ -621,6 +737,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <ResourcePanel
             taskSpace={taskSpace}
             onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { leftOpen: false } })}
+            onSelectOutput={handleSelectArtifact}
+            selectedOutputPath={selectedArtifactPath}
           />
         ) : null}
         {state.panelState.leftOpen ? (
