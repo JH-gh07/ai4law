@@ -12,6 +12,7 @@ from backend.common.render.report import (
     render_markdown_template,
     safe_filename,
 )
+from backend.common.render.docx_comments import DocxComment, render_commented_docx
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.risk.scoring import risk_level
 from backend.common.storage.file_parser import FileParser
@@ -160,10 +161,14 @@ class SCCService:
         )
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        annotated_docx_output = self._render_annotated_docx(payload, findings, date_stamp)
+        output_files = {"markdown": str(md_output), "docx": str(docx_output)}
+        if annotated_docx_output is not None:
+            output_files["annotated_docx"] = str(annotated_docx_output)
 
         return SCCResult(
             report_path=str(docx_output),
-            output_files={"markdown": str(md_output), "docx": str(docx_output)},
+            output_files=output_files,
             profile=profile,
             chapters=chapters,
             consistency_issues=issues,
@@ -211,6 +216,35 @@ class SCCService:
             error=snapshot.error,
             result=result,
         )
+
+    def _render_annotated_docx(self, payload: SCCRequest, findings: list[dict[str, str]], date_stamp: str) -> Path | None:
+        source_docx = self._pick_source_docx(payload.uploaded_files)
+        if source_docx is None:
+            return None
+
+        safe_company = safe_filename(payload.company_name)
+        output_path = Path("outputs/scc") / f"{safe_company}_SCC_批注修订版_{date_stamp}.docx"
+        comments = [
+            DocxComment(
+                label=item.get("issue_type", "审查意见"),
+                location=item.get("location", ""),
+                quote=item.get("quote", ""),
+                risk_level=item.get("risk_level", "MEDIUM"),
+                basis=item.get("basis", ""),
+                risk_analysis=item.get("risk_analysis", ""),
+                suggestion=item.get("suggestion", ""),
+            )
+            for item in findings
+        ]
+        return render_commented_docx(source_docx, output_path, comments)
+
+    @staticmethod
+    def _pick_source_docx(uploaded_files: list[str]) -> Path | None:
+        for raw_path in uploaded_files:
+            path = Path(raw_path)
+            if path.suffix.lower() == ".docx" and path.exists():
+                return path
+        return None
 
 
 def _build_scc_template_mapping(

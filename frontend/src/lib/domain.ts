@@ -98,6 +98,8 @@ export type OnboardingState = {
   active: boolean;
   stepIndex: number;
   completed: boolean;
+  source?: "task_create" | "replay";
+  targetTaskId?: string;
 };
 
 export type WorkflowStepKey =

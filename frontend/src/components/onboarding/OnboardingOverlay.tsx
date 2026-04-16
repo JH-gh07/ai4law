@@ -47,20 +47,27 @@ const STEPS: OnboardingStep[] = [
 
 type OnboardingOverlayProps = {
   active: boolean;
+  initialStepIndex?: number;
+  targetTaskId?: string;
   onClose: () => void;
 };
 
-export function OnboardingOverlay({ active, onClose }: OnboardingOverlayProps) {
+export function OnboardingOverlay({
+  active,
+  initialStepIndex = 0,
+  targetTaskId,
+  onClose
+}: OnboardingOverlayProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, t } = useLang();
   const { state, dispatch } = useAppStore();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialStepIndex);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   const step = useMemo(() => STEPS[index], [index]);
   const text = lang === "zh" ? step.zh : step.en;
-  const workspaceTaskId = state.taskSpaces[0]?.id;
+  const workspaceTaskId = targetTaskId ?? state.taskSpaces[0]?.id;
   const targetPath = step.route === "home" ? "/" : workspaceTaskId ? `/workspace/${workspaceTaskId}` : "/tasks";
 
   const updateRect = useCallback(() => {
@@ -137,11 +144,15 @@ export function OnboardingOverlay({ active, onClose }: OnboardingOverlayProps) {
   }, [active, dispatch, location.pathname, navigate, step.ensurePanels, step.selector, targetPath, updateRect]);
 
   useEffect(() => {
+    if (active) {
+      setIndex(initialStepIndex);
+      return;
+    }
     if (!active) {
-      setIndex(0);
+      setIndex(initialStepIndex);
       setRect(null);
     }
-  }, [active]);
+  }, [active, initialStepIndex]);
 
   if (!active) {
     return null;

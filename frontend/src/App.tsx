@@ -69,20 +69,59 @@ function AppShell() {
       }
     });
 
-    dispatch({ type: "set_onboarding", payload: { active: true, completed: false, stepIndex: 0 } });
+    dispatch({
+      type: "set_onboarding",
+      payload: {
+        active: true,
+        completed: false,
+        stepIndex: 1,
+        source: "task_create",
+        targetTaskId: id
+      }
+    });
     setSelectedMode(null);
     setModeModalOpen(false);
     navigate(`/workspace/${id}`);
   };
 
   const onboardingActive = state.onboarding.active;
+  const closeOnboarding = () => {
+    const source = state.onboarding.source;
+    const targetTaskId = state.onboarding.targetTaskId;
+
+    dispatch({
+      type: "set_onboarding",
+      payload: {
+        active: false,
+        completed: true,
+        stepIndex: 0,
+        source: undefined,
+        targetTaskId: undefined
+      }
+    });
+
+    if (source === "task_create" && targetTaskId) {
+      navigate(`/workspace/${targetTaskId}`, { replace: true });
+    }
+  };
 
   return (
     <div className="app-root">
       {hideGlobalTopNav ? null : (
         <TopNav
           onStart={startFlow}
-          onReplayGuide={() => dispatch({ type: "set_onboarding", payload: { active: true, stepIndex: 0 } })}
+          onReplayGuide={() =>
+            dispatch({
+              type: "set_onboarding",
+              payload: {
+                active: true,
+                completed: false,
+                stepIndex: 0,
+                source: "replay",
+                targetTaskId: undefined
+              }
+            })
+          }
         />
       )}
 
@@ -130,14 +169,25 @@ function AppShell() {
           }}
           onGuided={() => {
             closeQuickStart(false);
-            dispatch({ type: "set_onboarding", payload: { active: true, stepIndex: 0 } });
+            dispatch({
+              type: "set_onboarding",
+              payload: {
+                active: true,
+                completed: false,
+                stepIndex: 0,
+                source: "replay",
+                targetTaskId: undefined
+              }
+            });
           }}
         />
       ) : null}
 
       <OnboardingOverlay
         active={onboardingActive}
-        onClose={() => dispatch({ type: "set_onboarding", payload: { active: false, completed: true } })}
+        initialStepIndex={state.onboarding.stepIndex}
+        targetTaskId={state.onboarding.targetTaskId}
+        onClose={closeOnboarding}
       />
     </div>
   );

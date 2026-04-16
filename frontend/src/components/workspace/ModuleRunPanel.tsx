@@ -1547,6 +1547,8 @@ const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacing
   };
 };
 
+void buildUserFacingResult;
+
 export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
@@ -1605,6 +1607,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     }
     return listModules().filter((item) => item.jurisdiction === jurisdiction);
   }, [jurisdiction, lockedModule, templateModule]);
+
+  const userFacingResult = useMemo(() => buildUserFacingResult(responseData, lang), [responseData, lang]);
 
   useEffect(() => {
     setJurisdiction(taskSpace.jurisdiction);
@@ -2502,10 +2506,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     isDocumentReviewTask && taskTemplate
       ? getTaskTemplateTitle(taskTemplate, lang)
       : definition.label;
-  const userFacingResult = useMemo(
-    () => buildUserFacingResult(responseData, lang),
-    [lang, responseData]
-  );
 
   return (
     <section className="run-panel" data-guide="stage-run">
@@ -3931,6 +3931,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         <div className="runner-empty-card">{t("runResultPlaceholder")}</div>
       )}
 
+      <div className="runner-preview-hint">
+        {responseData
+          ? (lang === "zh" ? "结果已生成，系统会自动切换到“报告”页签进行前端预览。" : "Result generated. The workspace switches to the report tab for preview.")
+          : (lang === "zh" ? "运行完成后，报告内容将在“报告”页签中预览。" : "Generated reports will be previewed in the report tab.")}
+      </div>
       {error ? <div className="runner-error">{error}</div> : null}
     </section>
   );

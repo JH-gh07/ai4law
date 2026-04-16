@@ -1,115 +1,118 @@
 import { useMemo } from "react";
 import { useAppStore } from "../../lib/app-store";
 import type { TaskSpace } from "../../lib/domain";
-import { deriveWorkflowSteps } from "../../lib/workflow";
-import { ResourceExplorer } from "./resource-explorer/ResourceExplorer";
-import { buildResourceExplorerData, defaultResourceExplorerHandlers } from "./resource-explorer/mock";
-import type { ResourceItemData } from "./resource-explorer/types";
+import { useLang } from "../../lib/language";
+import { ChevronToggleIcon, FileNodeIcon, FolderInputIcon, FolderOutputIcon } from "../common/AppIcons";
 
 type ResourcePanelProps = {
   taskSpace: TaskSpace;
-  tabs: Array<{ id: string; label: string; closable: boolean }>;
-  openTabs: string[];
-  activeTab: string;
-  onActivateTab: (tabId: string) => void;
-  onOpenTab: (tabId: string) => void;
-  onOpenResource?: (item: ResourceItemData) => void;
-  onGoToStep?: (item: ResourceItemData) => void;
-  onSwitchWorkspace?: (item: ResourceItemData) => void;
-  onUploadMissingItem?: (item: ResourceItemData) => void;
+  onToggleCollapse: () => void;
 };
 
-export function ResourcePanel({
-  taskSpace,
-  tabs,
-  openTabs,
-  activeTab,
-  onActivateTab,
-  onOpenTab,
-  onOpenResource,
-  onGoToStep,
-  onSwitchWorkspace,
-  onUploadMissingItem
-}: ResourcePanelProps) {
-  const { state } = useAppStore();
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
-  const runs = useMemo(
-    () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id).sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)),
+const toFileName = (value: string): string => {
+  const normalized = value.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  return chunks[chunks.length - 1] || value;
+};
+
+function collectPaths(value: unknown, bag: Set<string>) {
+  if (typeof value === "string") {
+    if (/[\\/]/.test(value) || /\.(docx?|pdf|md|html|txt|csv|xlsx?|png|jpg|jpeg)$/i.test(value)) {
+      bag.add(value);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectPaths(item, bag));
+    return;
+  }
+  if (isRecord(value)) {
+    Object.values(value).forEach((item) => collectPaths(item, bag));
+  }
+}
+
+export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProps) {
+  const { state } = useAppStore();
+  const { lang } = useLang();
+
+  const relatedRuns = useMemo(
+    () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
   );
 
-  const artifacts = useMemo(
+  const outputFiles = useMemo(
     () => state.artifacts.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.artifacts, taskSpace.id]
   );
 
-  const latestRunByModule = useMemo(() => {
-    return runs[0] ?? null;
-  }, [runs]);
-
-  const evidence = useMemo(
-    () => state.evidenceHits.filter((item) => item.taskSpaceId === taskSpace.id),
-    [state.evidenceHits, taskSpace.id]
-  );
-
-  const issues = useMemo(
-    () => state.issues.filter((item) => item.taskSpaceId === taskSpace.id),
-    [state.issues, taskSpace.id]
-  );
-
-  const workflowSteps = useMemo(
-    () => deriveWorkflowSteps(taskSpace, latestRunByModule, state.artifacts, state.evidenceHits, state.issues),
-    [latestRunByModule, state.artifacts, state.evidenceHits, state.issues, taskSpace]
-  );
-
-  const closedTabs = useMemo(
-    () => tabs.filter((tab) => !openTabs.includes(tab.id)),
-    [tabs, openTabs]
-  );
-
-  const explorerData = useMemo(
-    () =>
-      buildResourceExplorerData({
-        taskSpace,
-        latestRun: latestRunByModule,
-        workflowSteps,
-        openTabs: tabs.filter((tab) => openTabs.includes(tab.id)).map((tab) => ({ id: tab.id, label: tab.label })),
-        closedTabs: closedTabs.map((tab) => ({ id: tab.id, label: tab.label })),
-        evidenceCount: evidence.length,
-        issueCount: issues.length,
-        artifactCount: artifacts.length
-      }),
-    [artifacts.length, closedTabs, evidence.length, issues.length, latestRunByModule, openTabs, tabs, taskSpace, workflowSteps]
-  );
-
-  const handlers = useMemo(
-    () => ({
-      onOpenResource: onOpenResource ?? defaultResourceExplorerHandlers.onOpenResource,
-      onGoToStep: onGoToStep ?? defaultResourceExplorerHandlers.onGoToStep,
-      onSwitchWorkspace: (item: ResourceItemData) => {
-        if (item.workspaceTabId) {
-          if (openTabs.includes(item.workspaceTabId)) {
-            onActivateTab(item.workspaceTabId);
-          } else {
-            onOpenTab(item.workspaceTabId);
-          }
-        }
-        if (onSwitchWorkspace) onSwitchWorkspace(item);
-        else defaultResourceExplorerHandlers.onSwitchWorkspace(item);
-      },
-      onUploadMissingItem: onUploadMissingItem ?? defaultResourceExplorerHandlers.onUploadMissingItem
-    }),
-    [onActivateTab, onGoToStep, onOpenResource, onOpenTab, onSwitchWorkspace, onUploadMissingItem, openTabs]
-  );
+  const inputFiles = useMemo(() => {
+    const bag = new Set<string>();
+    relatedRuns.forEach((run) => collectPaths(run.request, bag));
+    return Array.from(bag)
+      .filter((path) => !outputFiles.some((file) => file.path === path))
+      .map((path) => ({ id: path, name: toFileName(path), path }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [outputFiles, relatedRuns]);
 
   return (
-    <aside className="pane resource-pane" data-guide="workspace-left">
-      <div className="pane-title">Resource Explorer</div>
-      <div className="resource-pane-body">
-        <ResourceExplorer data={explorerData} handlers={handlers} />
-        <p className="resource-explorer-meta">
-          当前标签页：{tabs.find((tab) => tab.id === activeTab)?.label ?? activeTab} · 打开 {openTabs.length}/{tabs.length}
-        </p>
+    <aside className="pane resource-pane resource-pane-ide" data-guide="workspace-left">
+      <div className="pane-title resource-pane-headline">Project Files</div>
+      <button className="workspace-side-toggle workspace-side-toggle-left" onClick={onToggleCollapse} aria-label="collapse-left-sidebar">
+        <ChevronToggleIcon direction="left" width="16" height="16" />
+      </button>
+      <div className="resource-pane-body resource-pane-body-ide">
+        <section className="ide-tree-section">
+          <div className="ide-folder-head">
+            <div className="ide-folder-title">
+              <FolderInputIcon width="16" height="16" />
+              <span>{lang === "zh" ? "input" : "input"}</span>
+            </div>
+            <small>{inputFiles.length}</small>
+          </div>
+          <div className="ide-file-list">
+            {inputFiles.length > 0 ? (
+              inputFiles.map((file) => (
+                <article key={file.id} className="ide-file-row">
+                  <span className="ide-file-icon"><FileNodeIcon width="14" height="14" /></span>
+                  <div className="ide-file-copy">
+                    <strong>{file.name}</strong>
+                    <span>{file.path}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <p className="ide-folder-empty">{lang === "zh" ? "暂无已上传输入文件" : "No uploaded input files yet"}</p>
+            )}
+          </div>
+        </section>
+
+        <section className="ide-tree-section">
+          <div className="ide-folder-head">
+            <div className="ide-folder-title">
+              <FolderOutputIcon width="16" height="16" />
+              <span>{lang === "zh" ? "output" : "output"}</span>
+            </div>
+            <small>{outputFiles.length}</small>
+          </div>
+          <div className="ide-file-list">
+            {outputFiles.length > 0 ? (
+              outputFiles.map((file) => (
+                <article key={file.id} className="ide-file-row">
+                  <span className="ide-file-icon"><FileNodeIcon width="14" height="14" /></span>
+                  <div className="ide-file-copy">
+                    <strong>{toFileName(file.path)}</strong>
+                    <span>{file.kind.toUpperCase()}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <p className="ide-folder-empty">{lang === "zh" ? "暂无生成报告或产物文件" : "No generated output files yet"}</p>
+            )}
+          </div>
+        </section>
       </div>
     </aside>
   );

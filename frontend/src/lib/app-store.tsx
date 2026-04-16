@@ -55,7 +55,9 @@ const initialState: AppState = {
   onboarding: {
     active: false,
     stepIndex: 0,
-    completed: false
+    completed: false,
+    source: undefined,
+    targetTaskId: undefined
   }
 };
 
