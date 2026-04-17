@@ -22,16 +22,29 @@ class Settings(BaseSettings):
     rag_rerank_candidate_count: int = 12
     rag_auto_build_index: bool = True
 
-    # 腾讯混元 LLM — 兼容无 AI4LAW_ 前缀的环境变量
+    # OpenAI-compatible LLM config, supporting both legacy Tencent keys and generic LLM keys.
     tencent_api_key: str | None = Field(
         default=None,
-        validation_alias=AliasChoices("TENCENT_API_KEY", "AI4LAW_TENCENT_API_KEY"),
+        validation_alias=AliasChoices(
+            "TENCENT_API_KEY",
+            "AI4LAW_TENCENT_API_KEY",
+            "LLM_API_KEY",
+            "AI4LAW_LLM_API_KEY",
+        ),
     )
     tencent_api_url: str = Field(
-        default="https://api.hunyuan.cloud.tencent.com/v1",
-        validation_alias=AliasChoices("TENCENT_API_URL", "AI4LAW_TENCENT_API_URL"),
+        default="https://tokenhub.tencentmaas.com/v1",
+        validation_alias=AliasChoices(
+            "TENCENT_API_URL",
+            "AI4LAW_TENCENT_API_URL",
+            "LLM_API_URL",
+            "AI4LAW_LLM_API_URL",
+        ),
     )
-    llm_model: str = "hunyuan-turbos-latest"
+    llm_model: str = Field(
+        default="hunyuan-2.0-instruct-20251111",
+        validation_alias=AliasChoices("LLM_MODEL", "AI4LAW_LLM_MODEL"),
+    )
 
     model_config = SettingsConfigDict(
         env_prefix="AI4LAW_",

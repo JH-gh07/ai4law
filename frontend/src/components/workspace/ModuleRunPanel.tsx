@@ -3,7 +3,6 @@ import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
   findModule,
   getDefaultPayload,
-  hasAsync,
   listModules,
   runModule,
   uploadTaskFile
@@ -1446,6 +1445,323 @@ const DOCUMENT_TYPE_LABEL: Record<DocumentReviewFormValues["document_type"], str
   other: "其他文档"
 };
 
+const STEP_TITLE_EN: Record<string, string> = {
+  "基础识别": "Basic Identification",
+  "强制路径触发项": "Mandatory Path Triggers",
+  "补充说明": "Supplementary Notes",
+  "主体基础信息": "Entity Basics",
+  "自评估工作组织": "Assessment Team Setup",
+  "出境场景与必要性": "Transfer Scenario and Necessity",
+  "数据清单与链路": "Data Inventory and Transfer Chain",
+  "执行策略与材料": "Execution Strategy and Materials",
+  "企业基本信息": "Enterprise Profile",
+  "出境场景与范围": "Transfer Scenario and Scope",
+  "权利保障与响应": "Rights Protection and Response",
+  "审查对象": "Review Subject",
+  "披露完整性检查": "Disclosure Completeness Check",
+  "出境与处理背景": "Transfer and Processing Context",
+  "审查重点与附件": "Review Focus and Attachments",
+  "传输主体与模块": "Transfer Parties and Modules",
+  "场景与数据范围": "Scenario and Data Scope",
+  "条款与保障机制": "Clauses and Safeguards",
+  "审查文件": "Review Files",
+  "主体与范围": "Entity and Scope",
+  "约束力与权利机制": "Binding Force and Rights",
+  "治理与监管协作": "Governance and Regulatory Cooperation",
+  "更新与文档材料": "Updates and Documentation",
+  "项目与触发理由": "Project and Trigger",
+  "必要性与相称性": "Necessity and Proportionality",
+  "风险与缓解措施": "Risks and Mitigations",
+  "出境数据清单": "Outbound Data Inventory",
+  "外部实体清单": "External Entity Inventory",
+  "内部访问与材料": "Internal Access and Materials",
+  "企业信息与适用性": "Business Profile and Applicability",
+  "消费者权利机制": "Consumer Rights Process",
+  "敏感信息与第三方管理": "Sensitive Data and Vendor Governance",
+  "附件上传": "File Uploads"
+};
+
+const FIELD_LABEL_EN: Record<string, string> = {
+  company_name: "Company Name",
+  company_uscc: "Unified Social Credit Code",
+  legal_representative: "Legal Representative",
+  registered_address: "Registered Address",
+  company_nature: "Company Nature",
+  industry: "Industry",
+  receiver_country: "Recipient Country / Region",
+  receiver_name: "Overseas Recipient Name",
+  q5_no_personal_info: "Q1 Is the outbound dataset completely free of personal information and important data?",
+  q6_scenario: "Q2 What is the main business scenario for this outbound transfer?",
+  q7_receiver_type: "Q3 What type of overseas recipient is involved?",
+  q1_is_ciio: "Q4 Is the company a Critical Information Infrastructure Operator (CIIO)?",
+  q2_has_important_data: "Q5 Does the outbound dataset include important data?",
+  q3_pii_count: "Q6 Within the past 2 months, how many individuals' personal information has been provided overseas?",
+  q4_spi_count: "Q7 Within the past 2 months, how many individuals' sensitive personal information has been provided overseas?",
+  q8_purpose: "Q8 Additional context and purpose notes",
+  assessment_start_date: "Assessment Start Date",
+  assessment_end_date: "Assessment End Date",
+  lead_department: "Lead Department",
+  participant_departments: "Participating Departments (comma-separated)",
+  third_party_support: "Third-Party Support Involved",
+  third_party_name: "Third-Party Organization Name",
+  third_party_scope: "Third-Party Scope",
+  scenario_name: "Scenario Name",
+  transfer_frequency: "Transfer Frequency",
+  is_long_term: "Long-term / Ongoing Transfer",
+  transfer_purpose: "Transfer Purpose",
+  legal_basis: "Legal Basis",
+  necessity_basis: "Necessity Explanation",
+  is_ciio: "Is CIIO",
+  contains_important_data: "Contains Important Data",
+  pii_count: "PI Volume",
+  spi_count: "SPI Volume",
+  data_inventory_summary: "Data Inventory Summary",
+  system_chain_summary: "System and Transfer Chain Description",
+  security_capability_summary: "Security Capability Summary",
+  force_override_path: "Allow Output Even if Path Differs",
+  shareholding_structure: "Shareholding Structure",
+  actual_controller: "Actual Controller",
+  overseas_investment: "Domestic and Overseas Investments",
+  org_structure_privacy_team: "Org Structure and Privacy Team",
+  business_overview: "Business Overview",
+  processing_activity_overview: "Processing Activity Overview",
+  processing_person_count: "PI Processing Scale",
+  outbound_pi_count: "Outbound PI Volume",
+  outbound_spi_count: "Outbound SPI Volume",
+  route_type: "Route Type",
+  outbound_scenario_name: "Outbound Scenario Name",
+  outbound_frequency: "Outbound Frequency",
+  transfer_method: "Transfer Method (API / file / sync)",
+  domestic_storage: "Domestic Storage System / DC",
+  overseas_storage: "Overseas Storage System / DC",
+  transfer_link: "Transfer Chain Description",
+  purpose: "Purpose",
+  recipient_name: "Recipient Name",
+  recipient_country_region: "Recipient Country / Region",
+  legality_justification: "Legality Analysis",
+  necessity_justification: "Necessity Analysis",
+  pi_categories: "PI Categories (comma-separated)",
+  spi_categories: "SPI Categories (comma-separated)",
+  subject_volume: "Data Subject Volume",
+  notice_mechanism: "Notice Mechanism",
+  consent_mechanism: "Consent Mechanism",
+  dsar_channel: "DSAR Channel",
+  retention_policy: "Retention / Deletion Policy",
+  incident_response_sla_hours: "Incident Response SLA (hours)",
+  escalation_path: "Escalation Path",
+  attachment_role: "Attachment Role",
+  publisher_entity: "Publishing Entity",
+  document_title: "Document Title",
+  document_version: "Document Version",
+  effective_date: "Effective Date",
+  applicable_products: "Applicable Products / Sites",
+  applicable_scope: "Applicable Scope",
+  is_live_version: "Live Version",
+  document_type: "Document Type",
+  processor_identity_disclosed: "Discloses Processor Identity",
+  scope_disclosed: "Discloses Scope",
+  collection_purpose_disclosed: "Discloses Collection and Processing Purpose",
+  processing_method_disclosed: "Discloses Processing Method",
+  category_disclosed: "Discloses PI Categories",
+  sensitive_pi_disclosed: "Discloses Sensitive PI Processing",
+  crossborder_rule_disclosed: "Discloses Cross-Border Rules",
+  rights_channel_disclosed: "Discloses Rights Exercise Channel",
+  contact_channel: "Contact / Complaint Channel",
+  has_scc_draft: "Has Existing Draft",
+  review_focus: "Review Focus",
+  exporter_name: "Data Exporter (EEA)",
+  importer_name: "Data Importer (Third Country)",
+  importer_country: "Importer Country / Region",
+  transfer_role: "Transfer Role",
+  scc_version: "SCC Version",
+  data_categories: "Data Categories",
+  data_subject_categories: "Data Subject Categories",
+  retention_rule: "Retention Rule",
+  tom_summary: "Technical and Organizational Measures (TOM) Summary",
+  onward_transfer_control: "Onward Transfer / Subprocessor Control",
+  rights_and_complaint: "Rights and Complaint Mechanism",
+  government_access_response: "Government Access Response",
+  supplementary_clause_review: "Supplementary Clause Review Focus",
+  group_structure: "Group Structure",
+  applicant_entity: "Applicant Entity and Responsibilities",
+  lead_sa_rationale: "Lead SA Rationale",
+  data_flow_scope: "Data Flow and Processing Scope",
+  binding_mechanism: "Binding Mechanism",
+  third_party_beneficiary: "Third-Party Beneficiary Rights",
+  liability_compensation: "Liability and Compensation",
+  transparency_notice: "Transparency and Notice",
+  training_audit: "Training and Audit Mechanism",
+  cooperation_with_sa: "Cooperation with Supervisory Authority",
+  dp_safeguards: "Data Protection Safeguards",
+  third_country_assessment: "Third-Country Law Assessment",
+  government_access_process: "Government Access Handling Process",
+  update_mechanism: "Update Mechanism",
+  definitions_quality: "Definitions and Terminology Quality",
+  project_name: "Project Name",
+  project_goal: "Project Goal",
+  need_reason: "Main Trigger for DPIA",
+  controller_name: "Controller Name",
+  dpo_role: "DPO / Privacy Role",
+  processing_description: "Processing Description",
+  data_types: "Data Types",
+  subject_scale: "Data Subject Scale",
+  frequency: "Frequency",
+  retention_period: "Retention Period",
+  geo_scope: "Geographic Scope",
+  data_source: "Data Source",
+  includes_special_data: "Includes Special Category Data",
+  has_crossborder_transfer: "Includes Cross-Border Transfer",
+  vulnerable_group: "Vulnerable Group",
+  relationship_context: "Relationship Context",
+  purpose_and_necessity: "Purpose and Necessity",
+  expectation_control: "Reasonable Expectations and Control",
+  lawful_basis: "Lawful Basis",
+  prior_concerns: "Prior Concerns / Incidents",
+  novel_technology: "Novel Technology",
+  function_creep_control: "Function Creep Control",
+  minimization_quality: "Minimization and Data Quality",
+  notice_plan: "Notice Plan",
+  rights_support: "Rights Support",
+  processor_management: "Processor / Vendor Management",
+  risk_assessment: "Risk Assessment",
+  mitigation_measures: "Mitigation Measures",
+  residual_risk: "Residual Risk",
+  signoff_owner: "Sign-off Owner",
+  dpo_advice: "DPO Advice",
+  review_schedule: "Review Schedule",
+  data_exporter_name: "Data Exporter (EU)",
+  data_importer_name: "Data Importer",
+  importer_country_region: "Importer Country / Region",
+  law_assessed: "Law Assessment Completed",
+  law_findings: "Law and Practice Findings",
+  pre_effectiveness: "Effectiveness Before Supplementary Measures",
+  supplementary_technical: "Technical Supplementary Measures",
+  supplementary_contractual: "Contractual Supplementary Measures",
+  supplementary_organizational: "Organizational Supplementary Measures",
+  post_effectiveness: "Effectiveness After Supplementary Measures",
+  key_actions: "Key Action Items",
+  transfer_chain: "Transfer Chain Description",
+  sensitive_data_flags: "Sensitive / Important Data Flags",
+  data_volume_note: "Data Volume Notes",
+  primary_recipient_name: "Primary Recipient Name",
+  primary_recipient_country: "Primary Recipient Country / Region",
+  primary_recipient_role: "Primary Recipient Role",
+  primary_recipient_restricted: "Primary Recipient Is Restricted",
+  additional_recipients: "Additional Recipients (one per line: name, country, role, restricted[yes/no])",
+  internal_access_note: "Internal Access Notes",
+  dba_name: "DBA / Brand Name",
+  cpra_applicability_selfcheck: "CPRA Applicability Self-Check",
+  business_model: "Business Model",
+  data_lifecycle: "Data Lifecycle",
+  privacy_policy_url: "Privacy Policy URL",
+  consumer_rights_process: "Consumer Rights Process",
+  identity_verification_method: "Identity Verification Method",
+  rights_sla: "Rights SLA",
+  opt_out_and_sale_sharing: "Sale / Sharing and Opt-Out",
+  spi_usage_summary: "SPI Usage Summary",
+  vendor_management: "Vendor Management",
+  ui_dark_pattern_check: "UI / UX Dark Pattern Check"
+};
+
+const TEXT_EN_BY_ZH: Record<string, string> = {
+  "否（含个人信息或重要数据）": "No (contains personal information or important data)",
+  "是（纯匿名技术数据）": "Yes (purely anonymous technical data)",
+  "不确定": "Unknown",
+  "其他商业目的": "Other Business Purpose",
+  "履行合同 / 向消费者提供服务": "Contract Performance / Consumer Services",
+  "跨国公司内部人力资源管理": "Intra-group HR Management",
+  "紧急情况下保护自然人生命、健康或财产安全": "Emergency Protection of Life, Health or Property",
+  "依法履行法定职责或法定义务": "Compliance with Legal Duties or Obligations",
+  "独立第三方（合作伙伴 / 服务商）": "Independent Third Party (partner / vendor)",
+  "集团内部关联公司": "Intra-group Affiliate",
+  "上一步": "Previous",
+  "下一步": "Next",
+  "上传待审文本": "Upload Documents for Review",
+  "SCC文本与配套材料上传": "Upload SCC Text and Supporting Materials",
+  "BCR主文本与配套材料上传（仅docx/pdf）": "Upload BCR Main Text and Supporting Materials (docx/pdf)",
+  "DPIA附件上传（docx/pdf/png/jpg）": "Upload DPIA Attachments (docx/pdf/png/jpg)",
+  "TIA附件上传（docx/pdf）": "Upload TIA Attachments (docx/pdf)",
+  "数据清单附件（必传，data_inventory）": "Data Inventory Attachment (required, data_inventory)",
+  "实体清单附件（必传，entity_inventory）": "Entity Inventory Attachment (required, entity_inventory)",
+  "补充材料（可选，supporting_material）": "Supporting Materials (optional, supporting_material)",
+  "隐私政策（privacy_policy）": "Privacy Policy (privacy_policy)",
+  "请至少上传1份合同或政策文本后再执行。": "Upload at least one contract or policy document before running.",
+  "请至少上传1份SCC文本或附件后再提交。": "Upload at least one SCC text or supporting file before submitting.",
+  "请上传附件材料后再提交。": "Upload supporting materials before submitting.",
+  "请至少上传1份PIPIA附件后再提交。": "Upload at least one PIPIA attachment before submitting.",
+  "请至少上传1份BCR材料后再提交。": "Upload at least one BCR document before submitting.",
+  "请至少上传1份DPIA附件后再提交。": "Upload at least one DPIA attachment before submitting.",
+  "请至少上传1份TIA附件后再提交。": "Upload at least one TIA attachment before submitting.",
+  "请至少上传1份数据清单（xlsx/csv/docx/pdf）。": "Upload at least one data inventory file (xlsx/csv/docx/pdf).",
+  "请至少上传1份实体清单（xlsx/csv/docx/pdf）。": "Upload at least one entity inventory file (xlsx/csv/docx/pdf).",
+  "可上传股权结构组织架构合同台账等辅助材料。": "You may upload supporting materials such as shareholding charts, org charts, and contract ledgers.",
+  "可填写URL，也可上传文档，两者满足其一即可。": "You may provide a URL or upload a file. Either one is sufficient.",
+  "若未提供URL，请至少上传1份隐私政策文件。": "If no URL is provided, upload at least one privacy policy file.",
+  "可上传。": "Optional upload.",
+  "privacy_policy": "Privacy Policy",
+  "scc_contract": "Standard Contract",
+  "dpa": "Data Processing Agreement",
+  "other": "Other",
+  one_time: "One-time",
+  periodic: "Periodic",
+  continuous: "Continuous",
+  scc_filing: "SCC Filing",
+  certification: "Certification",
+  processor: "Processor",
+  controller: "Controller",
+  subprocessor: "Subprocessor",
+  affiliate: "Affiliate",
+  vendor: "Vendor",
+  c2c: "Controller to Controller",
+  c2p: "Controller to Processor",
+  p2p: "Processor to Processor",
+  p2c: "Processor to Controller",
+  eu_2021: "EU 2021 SCC",
+  other_business: "Other"
+};
+
+const humanizeKey = (value: string): string =>
+  value
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((part) => {
+      const upperMap: Record<string, string> = {
+        uscc: "USCC",
+        cpra: "CPRA",
+        dpia: "DPIA",
+        tia: "TIA",
+        dpo: "DPO",
+        sla: "SLA",
+        url: "URL",
+        ui: "UI",
+        ux: "UX",
+        spi: "SPI",
+        pii: "PII",
+        pi: "PI",
+        ciio: "CIIO",
+        scc: "SCC",
+        bcr: "BCR",
+        dsar: "DSAR",
+        dsr: "DSR",
+        tom: "TOM",
+        eea: "EEA",
+        eu: "EU",
+        cpra_applicability_selfcheck: "CPRA Applicability Self-Check"
+      };
+      if (upperMap[part]) return upperMap[part];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");
+
+const localizeStepTitle = (lang: "zh" | "en", title: string): string =>
+  lang === "en" ? (STEP_TITLE_EN[title] ?? title) : title;
+
+const localizeFieldLabel = (lang: "zh" | "en", fieldName: string, label: string): string =>
+  lang === "en" ? (FIELD_LABEL_EN[fieldName] ?? humanizeKey(fieldName)) : label;
+
+const localizeOptionLabel = (lang: "zh" | "en", key: string, fallback: string): string =>
+  lang === "en" ? (TEXT_EN_BY_ZH[fallback] ?? TEXT_EN_BY_ZH[key] ?? humanizeKey(key)) : fallback;
+
 const toFileName = (value: string): string => {
   const name = basenameFromPath(value);
   return name || value;
@@ -1553,7 +1869,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
   const [moduleKey, setModuleKey] = useState<ModuleKey>(taskSpace.module);
-  const [runMode, setRunMode] = useState<RunMode>("sync");
   const [payloadText, setPayloadText] = useState("");
   const [responseData, setResponseData] = useState<unknown>(undefined);
   const [loading, setLoading] = useState(false);
@@ -1683,7 +1998,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   }, [moduleKey, taskTemplate?.id]);
 
   const definition = findModule(moduleKey);
-  const allowAsync = hasAsync(definition);
   const isDocumentReviewTask = taskTemplate?.id === "cn_document_review";
   const isEuSccTask = taskTemplate?.id === "eu_scc";
   const isDiagnosisModule = moduleKey === "diagnosis";
@@ -2430,7 +2744,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setError(message);
       onRunDone({
         module: moduleKey,
-        runMode,
+        runMode: "sync",
         request: isDocumentReviewTask
           ? documentReviewValues
           : isEuSccTask
@@ -2461,7 +2775,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await runModule(definition, requestPayload, allowAsync ? runMode : "sync");
+      const result = await runModule(definition, requestPayload, "sync");
       setResponseData(result.response);
       onRunDone({
         module: moduleKey,
@@ -2476,7 +2790,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
       setResponseData(undefined);
       setError(message);
-      onRunDone({ module: moduleKey, runMode, request: requestPayload, success: false, error: message });
+      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
     } finally {
       setLoading(false);
     }
@@ -2518,21 +2832,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               {getTaskTemplateTitle(taskTemplate, lang)}
             </p>
           ) : null}
-        </div>
-        <div className="run-mode-group">
-          <button
-            className={`pill-btn ${runMode === "sync" ? "active-mode" : ""}`}
-            onClick={() => setRunMode("sync")}
-          >
-            {t("runSync")}
-          </button>
-          <button
-            className={`pill-btn ${runMode === "async" ? "active-mode" : ""}`}
-            onClick={() => setRunMode("async")}
-            disabled={!allowAsync}
-          >
-            {t("runAsync")}
-          </button>
         </div>
       </header>
 
@@ -2579,23 +2878,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {DOCUMENT_REVIEW_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === documentReviewStepIndex ? "active" : ""}`}
                 onClick={() => setDocumentReviewStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentDocumentReviewStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentDocumentReviewStep.title)}</div>
           <div className="schema-field-grid">
             {currentDocumentReviewStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(documentReviewValues[field.name])}
                       onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
@@ -2607,7 +2906,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(documentReviewValues[field.name])}
@@ -2620,7 +2919,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "number") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       type="number"
                       min={field.min}
@@ -2638,13 +2937,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(documentReviewValues[field.name])}
                       onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -2658,7 +2957,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(documentReviewValues[field.name])}
                     onChange={(event) => updateDocumentReviewValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -2715,23 +3014,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {EU_SCC_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === euSccStepIndex ? "active" : ""}`}
                 onClick={() => setEuSccStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentEuSccStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentEuSccStep.title)}</div>
           <div className="schema-field-grid">
             {currentEuSccStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(euSccValues[field.name])}
                       onChange={(event) => updateEuSccValue(field.name, event.target.value as never)}
@@ -2742,7 +3041,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(euSccValues[field.name])}
@@ -2754,7 +3053,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "number") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       type="number"
                       min={field.min}
@@ -2771,13 +3070,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(euSccValues[field.name])}
                       onChange={(event) => updateEuSccValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -2790,7 +3089,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(euSccValues[field.name])}
                     onChange={(event) => updateEuSccValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -2843,23 +3142,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {DIAGNOSIS_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === diagnosisStepIndex ? "active" : ""}`}
                 onClick={() => setDiagnosisStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentDiagnosisStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentDiagnosisStep.title)}</div>
           <div className="schema-field-grid">
             {currentDiagnosisStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(diagnosisValues[field.name])}
                       onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
@@ -2871,7 +3170,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(diagnosisValues[field.name])}
@@ -2884,7 +3183,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "number") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       type="number"
                       min={field.min}
@@ -2901,13 +3200,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
               return (
                 <label key={String(field.name)} className="field-wrap">
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                   <select
                     value={String(diagnosisValues[field.name])}
                     onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
                   >
                     {(field.options ?? []).map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
+                      <option key={option.value} value={option.value}>{localizeOptionLabel(lang, String(option.value), option.label)}</option>
                     ))}
                   </select>
                 </label>
@@ -2946,23 +3245,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {ASSESSMENT_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === assessmentStepIndex ? "active" : ""}`}
                 onClick={() => setAssessmentStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentAssessmentStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentAssessmentStep.title)}</div>
           <div className="schema-field-grid">
             {currentAssessmentStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(assessmentValues[field.name])}
                       onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
@@ -2974,7 +3273,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(assessmentValues[field.name])}
@@ -2987,7 +3286,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "number") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       type="number"
                       min={field.min}
@@ -3005,13 +3304,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(assessmentValues[field.name])}
                       onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -3025,7 +3324,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(assessmentValues[field.name])}
                     onChange={(event) => updateAssessmentValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -3082,23 +3381,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {PIPIA_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === pipiaStepIndex ? "active" : ""}`}
                 onClick={() => setPipiaStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentPipiaStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentPipiaStep.title)}</div>
           <div className="schema-field-grid">
             {currentPipiaStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(pipiaValues[field.name])}
                       onChange={(event) => updatePipiaValue(field.name, event.target.value as never)}
@@ -3110,7 +3409,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(pipiaValues[field.name])}
@@ -3123,7 +3422,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "number") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       type="number"
                       min={field.min}
@@ -3141,13 +3440,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(pipiaValues[field.name])}
                       onChange={(event) => updatePipiaValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -3161,7 +3460,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(pipiaValues[field.name])}
                     onChange={(event) => updatePipiaValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -3218,23 +3517,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {BCR_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === bcrStepIndex ? "active" : ""}`}
                 onClick={() => setBcrStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentBcrStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentBcrStep.title)}</div>
           <div className="schema-field-grid">
             {currentBcrStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(bcrValues[field.name])}
                       onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
@@ -3245,13 +3544,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(bcrValues[field.name])}
                       onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -3259,7 +3558,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               }
               return (
                 <label key={String(field.name)} className="field-wrap schema-field-wide">
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                   <textarea
                     className="runner-textarea schema-textarea"
                     value={String(bcrValues[field.name])}
@@ -3317,23 +3616,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {DPIA_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === dpiaStepIndex ? "active" : ""}`}
                 onClick={() => setDpiaStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentDpiaStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentDpiaStep.title)}</div>
           <div className="schema-field-grid">
             {currentDpiaStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(dpiaValues[field.name])}
                       onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
@@ -3344,7 +3643,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(dpiaValues[field.name])}
@@ -3356,13 +3655,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(dpiaValues[field.name])}
                       onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -3375,7 +3674,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(dpiaValues[field.name])}
                     onChange={(event) => updateDpiaValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -3428,23 +3727,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {TIA_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === tiaStepIndex ? "active" : ""}`}
                 onClick={() => setTiaStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentTiaStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentTiaStep.title)}</div>
           <div className="schema-field-grid">
             {currentTiaStep.fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
                       value={String(tiaValues[field.name])}
                       onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
@@ -3455,7 +3754,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "textarea") {
                 return (
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
                       value={String(tiaValues[field.name])}
@@ -3467,13 +3766,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               if (field.type === "select") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
                       value={String(tiaValues[field.name])}
                       onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
                     >
                       {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                       ))}
                     </select>
                   </label>
@@ -3486,7 +3785,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     checked={Boolean(tiaValues[field.name])}
                     onChange={(event) => updateTiaValue(field.name, event.target.checked as never)}
                   />
-                  <span>{field.label}</span>
+                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                 </label>
               );
             })}
@@ -3539,24 +3838,24 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {CN_FLOW_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === cnFlowStepIndex ? "active" : ""}`}
                 onClick={() => setCnFlowStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentCnFlowStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentCnFlowStep.title)}</div>
           {currentCnFlowStep.fields.length > 0 ? (
             <div className="schema-field-grid">
               {currentCnFlowStep.fields.map((field) => {
                 if (field.type === "text") {
                   return (
                     <label key={String(field.name)} className="field-wrap">
-                      <span>{field.label}</span>
+                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                       <input
                         value={String(cnFlowValues[field.name])}
                         onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
@@ -3567,7 +3866,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 if (field.type === "textarea") {
                   return (
                     <label key={String(field.name)} className="field-wrap schema-field-wide">
-                      <span>{field.label}</span>
+                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                       <textarea
                         className="runner-textarea schema-textarea"
                         value={String(cnFlowValues[field.name])}
@@ -3579,13 +3878,13 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 if (field.type === "select") {
                   return (
                     <label key={String(field.name)} className="field-wrap">
-                      <span>{field.label}</span>
+                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                       <select
                         value={String(cnFlowValues[field.name])}
                         onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
                       >
                         {(field.options ?? []).map((option) => (
-                          <option key={option} value={option}>{option}</option>
+                          <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
                         ))}
                       </select>
                     </label>
@@ -3598,7 +3897,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                       checked={Boolean(cnFlowValues[field.name])}
                       onChange={(event) => updateCnFlowValue(field.name, event.target.checked as never)}
                     />
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                   </label>
                 );
               })}
@@ -3700,24 +3999,24 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <div className="schema-stepper">
             {CPRA_STEPS.map((step, index) => (
               <button
-                key={step.title}
+                key={localizeStepTitle(lang, step.title)}
                 className={`schema-step-dot ${index === cpraStepIndex ? "active" : ""}`}
                 onClick={() => setCpraStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {step.title}
+                {index + 1}. {localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
-          <div className="schema-current-title">{currentCpraStep.title}</div>
+          <div className="schema-current-title">{localizeStepTitle(lang, currentCpraStep.title)}</div>
           {currentCpraStep.fields.length > 0 ? (
             <div className="schema-field-grid">
               {currentCpraStep.fields.map((field) => {
                 if (field.type === "text") {
                   return (
                     <label key={String(field.name)} className="field-wrap">
-                      <span>{field.label}</span>
+                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                       <input
                         value={String(cpraValues[field.name])}
                         onChange={(event) => updateCpraValue(field.name, event.target.value as never)}
@@ -3728,7 +4027,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 if (field.type === "textarea") {
                   return (
                     <label key={String(field.name)} className="field-wrap schema-field-wide">
-                      <span>{field.label}</span>
+                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                       <textarea
                         className="runner-textarea schema-textarea"
                         value={String(cpraValues[field.name])}
@@ -3744,7 +4043,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                       checked={Boolean(cpraValues[field.name])}
                       onChange={(event) => updateCpraValue(field.name, event.target.checked as never)}
                     />
-                    <span>{field.label}</span>
+                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                   </label>
                 );
               })}

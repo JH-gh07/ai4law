@@ -13,6 +13,13 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const onHome = location.pathname === "/";
   const onWorkspace = location.pathname.startsWith("/workspace");
 
+  const brandTitle = lang === "zh" ? "数规通" : "DATACOMPLY FLOW";
+  const brandSub = lang === "zh" ? "DataComply Flow" : "";
+  const brandTagline =
+    lang === "zh"
+      ? "AI驱动的数据跨境合规诊断与文书智能生成平台"
+      : "AI-Driven Platform for Cross-Border Data Compliance Diagnosis and Intelligent Document Generation";
+
   return (
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
@@ -21,9 +28,9 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
             <BrandShieldIcon width="22" height="22" />
           </span>
           <div className="global-brand-copy">
-            <div className="global-brand-title">数规通</div>
-            <div className="global-brand-sub">DataComply Flow</div>
-            <div className="global-brand-tagline">AI驱动的数据跨境合规诊断与文书智能生成平台</div>
+            <div className="global-brand-title">{brandTitle}</div>
+            {brandSub ? <div className="global-brand-sub">{brandSub}</div> : null}
+            <div className="global-brand-tagline">{brandTagline}</div>
           </div>
         </Link>
 
@@ -49,7 +56,7 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
           </Link>
           <button className="global-chip global-chip-with-icon" onClick={onReplayGuide}>
             <GuideIcon width="15" height="15" />
-            <span>引导</span>
+            <span>{lang === "zh" ? "引导" : "Guide"}</span>
           </button>
           {!onWorkspace ? (
             <button className="global-chip global-chip-optional global-chip-with-icon">

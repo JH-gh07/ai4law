@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { useAppStore } from "../../lib/app-store";
-import type { TaskSpace } from "../../lib/domain";
+import type { OutputArtifact, TaskSpace } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { ChevronToggleIcon, FileNodeIcon, FolderInputIcon, FolderOutputIcon } from "../common/AppIcons";
 
 type ResourcePanelProps = {
   taskSpace: TaskSpace;
   onToggleCollapse: () => void;
+  onSelectOutput: (artifact: OutputArtifact) => void;
+  selectedOutputPath?: string | null;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -34,9 +36,23 @@ function collectPaths(value: unknown, bag: Set<string>) {
   }
 }
 
-export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProps) {
+export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, selectedOutputPath }: ResourcePanelProps) {
   const { state } = useAppStore();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
+  const copy =
+    lang === "zh"
+      ? {
+          inputLabel: "输入",
+          outputLabel: "产物",
+          inputEmpty: "暂无已上传输入文件",
+          outputEmpty: "暂无已生成输出文件"
+        }
+      : {
+          inputLabel: "INPUT",
+          outputLabel: "OUTPUT",
+          inputEmpty: "No uploaded input files yet",
+          outputEmpty: "No generated output files yet"
+        };
 
   const relatedRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
@@ -59,8 +75,12 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
 
   return (
     <aside className="pane resource-pane resource-pane-ide" data-guide="workspace-left">
-      <div className="pane-title resource-pane-headline">Project Files</div>
-      <button className="workspace-side-toggle workspace-side-toggle-left" onClick={onToggleCollapse} aria-label="collapse-left-sidebar">
+      <div className="pane-title resource-pane-headline">{t("leftTitle")}</div>
+      <button
+        className="workspace-side-toggle workspace-side-toggle-left"
+        onClick={onToggleCollapse}
+        aria-label="collapse-left-sidebar"
+      >
         <ChevronToggleIcon direction="left" width="16" height="16" />
       </button>
       <div className="resource-pane-body resource-pane-body-ide">
@@ -68,7 +88,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
           <div className="ide-folder-head">
             <div className="ide-folder-title">
               <FolderInputIcon width="16" height="16" />
-              <span>{lang === "zh" ? "input" : "input"}</span>
+              <span>{copy.inputLabel}</span>
             </div>
             <small>{inputFiles.length}</small>
           </div>
@@ -76,7 +96,9 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
             {inputFiles.length > 0 ? (
               inputFiles.map((file) => (
                 <article key={file.id} className="ide-file-row">
-                  <span className="ide-file-icon"><FileNodeIcon width="14" height="14" /></span>
+                  <span className="ide-file-icon">
+                    <FileNodeIcon width="14" height="14" />
+                  </span>
                   <div className="ide-file-copy">
                     <strong>{file.name}</strong>
                     <span>{file.path}</span>
@@ -84,7 +106,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
                 </article>
               ))
             ) : (
-              <p className="ide-folder-empty">{lang === "zh" ? "暂无已上传输入文件" : "No uploaded input files yet"}</p>
+              <p className="ide-folder-empty">{copy.inputEmpty}</p>
             )}
           </div>
         </section>
@@ -93,23 +115,30 @@ export function ResourcePanel({ taskSpace, onToggleCollapse }: ResourcePanelProp
           <div className="ide-folder-head">
             <div className="ide-folder-title">
               <FolderOutputIcon width="16" height="16" />
-              <span>{lang === "zh" ? "output" : "output"}</span>
+              <span>{copy.outputLabel}</span>
             </div>
             <small>{outputFiles.length}</small>
           </div>
           <div className="ide-file-list">
             {outputFiles.length > 0 ? (
               outputFiles.map((file) => (
-                <article key={file.id} className="ide-file-row">
-                  <span className="ide-file-icon"><FileNodeIcon width="14" height="14" /></span>
+                <button
+                  type="button"
+                  key={file.id}
+                  className={`ide-file-row ide-file-row-button ${selectedOutputPath === file.path ? "active" : ""}`}
+                  onClick={() => onSelectOutput(file)}
+                >
+                  <span className="ide-file-icon">
+                    <FileNodeIcon width="14" height="14" />
+                  </span>
                   <div className="ide-file-copy">
                     <strong>{toFileName(file.path)}</strong>
                     <span>{file.kind.toUpperCase()}</span>
                   </div>
-                </article>
+                </button>
               ))
             ) : (
-              <p className="ide-folder-empty">{lang === "zh" ? "暂无生成报告或产物文件" : "No generated output files yet"}</p>
+              <p className="ide-folder-empty">{copy.outputEmpty}</p>
             )}
           </div>
         </section>

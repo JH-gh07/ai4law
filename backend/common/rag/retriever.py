@@ -64,7 +64,6 @@ DEFAULT_SCORE_FLOOR_BY_MODE = {
 }
 
 OFF_TOPIC_HINTS: tuple[str, ...] = (
-    # 原有英文词
     "weather",
     "python",
     "docker",
@@ -75,32 +74,10 @@ OFF_TOPIC_HINTS: tuple[str, ...] = (
     "steak",
     "cake",
     "macbook",
-    # 非合规领域中文词
-    "违约金",
-    "公司注册",
-    "税务申报",
-    "劳动合同",
-    "社保",
-    "知识产权",
-    "专利",
-    "商标",
-    "著作权",
-    "股权",
-    "融资",
-    "ipo",
-    "上市",
-    "财务报表",
-    "审计",
-    "刑事",
-    "行政处罚",
-    "诉讼",
-    "仲裁",
-    "律师费",
 )
 
 JURISDICTION_STRONG_HINTS: dict[str, tuple[str, ...]] = {
     "cn": (
-        # 原有
         "数据出境",
         "个人信息",
         "重要数据",
@@ -109,16 +86,8 @@ JURISDICTION_STRONG_HINTS: dict[str, tuple[str, ...]] = {
         "安全评估",
         "认证",
         "pipl",
-        # 新增中文法域词
-        "网络安全法",
-        "数据安全法",
-        "个人信息保护法",
-        "跨境流动",
-        "CAC",
-        "网信办",
     ),
     "eu": (
-        # 原有
         "gdpr",
         "edpb",
         "bcr",
@@ -126,42 +95,21 @@ JURISDICTION_STRONG_HINTS: dict[str, tuple[str, ...]] = {
         "tia",
         "article 35",
         "article 47",
-        # 新增中文法域词
-        "欧盟",
-        "欧洲",
-        "GDPR",
-        "数据保护官",
-        "DPO",
-        "标准合同条款",
-        "充分性决定",
     ),
     "us": (
-        # 原有
         "cpra",
         "ccpa",
         "california",
         "eo 14117",
         "covered person",
         "restricted transaction",
-        # 新增中文法域词
-        "加州",
-        "美国",
-        "隐私权",
-        "消费者隐私",
-        "联邦",
-        "DOJ",
-        "敏感个人数据",
     ),
 }
 
 PATH_STRONG_HINTS: dict[str, tuple[str, ...]] = {
     "assessment": ("安全评估", "assessment", "重要数据", "100万", "10万敏感"),
-    "scc": ("标准合同", "认证", "scc", "备案", "个人信息出境", "standard contractual"),
+    "scc": ("标准合同", "认证", "scc", "备案", "个人信息出境"),
     "review": ("合同审查", "条款", "协议", "合规审查", "review"),
-    # 新增欧盟专项路径
-    "bcr": ("binding corporate rules", "BCR", "约束性企业规则", "集团内部"),
-    "tia": ("transfer impact assessment", "TIA", "传输影响评估", "补充措施"),
-    "dpia": ("data protection impact", "DPIA", "数据保护影响评估", "高风险处理"),
 }
 
 
@@ -303,18 +251,9 @@ class RegulationRAGService:
             return []
 
         entries = self._ensure_entries()
-        # 指定法域时只在该法域内做向量检索，避免中文文档把英文法域文档挤出候选池
-        if jurisdiction:
-            j_norm = _normalize(jurisdiction)
-            search_pool = [
-                e for e in entries
-                if not e.payload.get("jurisdiction") or _normalize(e.payload.get("jurisdiction", "")) == j_norm
-            ]
-        else:
-            search_pool = list(entries)
         vector_hits = self.vector_store.search(
             query,
-            search_pool,
+            list(entries),
             top_k=max(top_k, self.settings.rag_candidate_pool_size),
         )
 
@@ -401,14 +340,6 @@ def _service() -> RegulationRAGService:
     return RegulationRAGService(get_settings())
 
 
-def _needs_external_search(docs: list[RegulationDoc], min_local: int) -> bool:
-    """数量不足 或 没有高质量（P0/P1）结果，则触发外部搜索。"""
-    if len(docs) < min_local:
-        return True
-    high_quality = [d for d in docs if d.usage_priority in ("P0", "P1")]
-    return len(high_quality) == 0
-
-
 def retrieve_regulations(
     query: str,
     top_k: int = 8,
@@ -439,7 +370,11 @@ def retrieve_regulations(
     )
 
     effective_legal_service = legal_service if legal_service is not None else _get_default_legal_service()
-    if effective_legal_service and getattr(effective_legal_service, "enabled", False) and _needs_external_search(docs, min_local):
+    if (
+        effective_legal_service
+        and getattr(effective_legal_service, "enabled", False)
+        and len(docs) < min_local
+    ):
         existing_titles = {_normalize(doc.title) for doc in docs}
         remote_hits = effective_legal_service.search_laws(query, size=max(top_k - len(docs), 0) + 2)
         for hit in remote_hits:
