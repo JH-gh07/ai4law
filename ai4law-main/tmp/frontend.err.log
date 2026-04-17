@@ -1,0 +1,67 @@
+[2m11:31:16[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\src\components\landing\LandingPage.tsx: Unexpected token, expected ":" (36:42)
+
+[0m [90m 34 |[31m   [36mconst[31m { state } [33m=[31m useAppStore()[33m;[31m
+ [90m 35 |[31m   [36mconst[31m isZh [33m=[31m lang [33m===[31m [32m"zh"[31m[33m;[31m
+[31m[1m>[22m[31m[90m 36 |[31m   [36mconst[31m heroBrandTitle [33m=[31m isZh [33m?[31m [32m"鏁拌閫? : "[31m[33mDATACOMPLY[31m [33mFLOW[31m[32m";[31m
+ [90m    |[31m                                           [31m[1m^[22m[31m
+ [90m 37 |[31m   [36mconst[31m heroBrandSub [33m=[31m isZh [33m?[31m [32m"DataComply Flow"[31m [33m:[31m [32m""[31m[33m;[31m
+ [90m 38 |[31m   [36mconst[31m heroTagline [33m=[31m isZh
+ [90m 39 |[31m     [33m?[31m [32m"AI椹卞姩鐨勬暟鎹法澧冨悎瑙勮瘖鏂笌鏂囦功鏅鸿兘鐢熸垚骞冲彴"[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/sataxisama/Desktop/agent individual/AI4law/111/ai4law-main/ai4law-main/frontend/src/components/landing/LandingPage.tsx[39m:36:42
+[33m  35 |    const isZh = lang === "zh";
+  36 |    const heroBrandTitle = isZh ? "鏁拌閫? : "DATACOMPLY FLOW";
+  37 |    const heroBrandSub = isZh ? "DataComply Flow" : "";
+     |                   ^
+  38 |    const heroTagline = isZh
+  39 |      ? "AI椹卞姩鐨勬暟鎹法澧冨悎瑙勮瘖鏂笌鏂囦功鏅鸿兘鐢熸垚骞冲彴"[39m
+      at constructor (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at TypeScriptParserMixin.expect (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:6899:12)
+      at TypeScriptParserMixin.parseConditional (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10892:12)
+      at TypeScriptParserMixin.parseConditional (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9603:18)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10885:17)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12421:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseVar (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9408:31)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12100:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12086:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9172:18)
+      at C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13445:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13444:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13125:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12791:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12747:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13934:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9629:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13893:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13812:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9385:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12878:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12744:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13316:36)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at TypeScriptParserMixin.parseProgram (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12622:10)
+      at TypeScriptParserMixin.parseTopLevel (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:12612:25)
+      at TypeScriptParserMixin.parse (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:14488:25)
+      at TypeScriptParserMixin.parse (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:10126:18)
+      at parse (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\parser\lib\index.js:14522:38)
+      at parser (C:\Users\sataxisama\Desktop\agent individual\AI4law\111\ai4law-main\ai4law-main\frontend\node_modules\@babel\core\lib\parser\index.js:41:34)
