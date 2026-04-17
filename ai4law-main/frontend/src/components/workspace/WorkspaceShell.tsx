@@ -14,7 +14,6 @@ import {
   findTaskTemplate,
   getTaskTemplateInputHint,
   getTaskTemplateOutputHint,
-  getTaskTemplateSubtitle,
   getTaskTemplateTitle
 } from "../../lib/task-templates";
 import { deriveWorkflowSteps } from "../../lib/workflow";
@@ -683,8 +682,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           </button>
           <span className="workspace-browser-sep">/</span>
           <span className="workspace-browser-task">{taskSpace.name}</span>
-          <span className="workspace-browser-sep">/</span>
-          <span className="workspace-browser-module">{taskTemplate ? getTaskTemplateSubtitle(taskTemplate, lang) : taskSpace.module.toUpperCase()}</span>
         </div>
 
         <div className="workspace-browser-tabs">
