@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useLang } from "../../lib/language";
-import { DocsIcon, GuideIcon, HelpIcon, SettingsIcon } from "./AppIcons";
+import { DocsIcon, GuideIcon, SettingsIcon } from "./AppIcons";
 
 type TopNavProps = {
   onStart: () => void;
@@ -60,12 +60,6 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
             <GuideIcon width="15" height="15" />
             <span>{lang === "zh" ? "引导" : "Guide"}</span>
           </button>
-          {!onWorkspace ? (
-            <button className="global-chip global-chip-optional global-chip-with-icon">
-              <HelpIcon width="15" height="15" />
-              <span>{t("navHelp")}</span>
-            </button>
-          ) : null}
           {!onWorkspace ? (
             <Link to="/settings" className="global-chip global-chip-optional global-chip-with-icon">
               <SettingsIcon width="15" height="15" />

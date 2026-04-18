@@ -268,9 +268,11 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
               </h2>
             </header>
             <div className="landing-blue-pain-grid landing-blue-why-grid">
-              {copy.painPoints.map((item) => (
+              {copy.painPoints.map((item, index) => {
+                const iconClass = index === 0 ? "is-rules" : index === 1 ? "is-docs" : "is-review";
+                return (
                 <article key={item.title} className="landing-blue-why-card">
-                  <div className="landing-blue-icon landing-blue-icon-box">
+                  <div className={`landing-blue-icon landing-blue-icon-box ${iconClass}`}>
                     <span />
                     <span />
                     <span />
@@ -278,7 +280,8 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                   <h3>{item.title}</h3>
                   <p>{item.desc}</p>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </section>
 

@@ -1,0 +1,23 @@
+{
+  "delilegal": {
+    "base_url": "https://openapi.delilegal.com",
+    "app_id": "QthdBErlyaYvyXul",
+    "secret": "EC5D455E6BD348CE8E18BE05926D2EBE"
+  },
+  "llm": {
+    "provider": "tencent_hunyuan",
+    "api_key": "sk-DI1QPl1gE6mQHGmMYFzE8DhvXK4nIQQOZXArGEyjVfLIXpIq",
+    "api_url": "https://api.hunyuan.cloud.tencent.com/v1",
+    "model": "hunyuan-2.0-instruct-20251111"
+  },
+  "custom_providers": [
+    {
+      "id": "provider-1776514704126",
+      "name": "New Provider",
+      "api_key": "",
+      "api_url": "",
+      "model": "",
+      "enabled": false
+    }
+  ]
+}
