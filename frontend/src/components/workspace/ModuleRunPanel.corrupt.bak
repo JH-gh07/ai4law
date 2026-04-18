@@ -1,0 +1,4248 @@
+import { useEffect, useMemo, useState } from "react";
+import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
+import {
+  findModule,
+  getDefaultPayload,
+  listModules,
+  runModule,
+  uploadTaskFile
+} from "../../lib/module-adapter";
+import { useLang } from "../../lib/language";
+import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
+import { extractInsight } from "../../lib/workspace";
+
+export type RunOutput = {
+  module: ModuleKey;
+  runMode: RunMode;
+  request: unknown;
+  response?: unknown;
+  success: boolean;
+  error?: string;
+  asyncTaskId?: string;
+  asyncState?: string;
+};
+
+type ModuleRunPanelProps = {
+  onRunDone: (output: RunOutput) => void;
+  taskSpace: TaskSpace;
+};
+
+type UserFacingResult = {
+  headline: string;
+  chips: string[];
+  deliverables: string[];
+  highlights: string[];
+  nextSteps: string[];
+};
+
+type DiagnosisSelectValue =
+  | "yes"
+  | "no"
+  | "unknown"
+  | "contract_performance"
+  | "hr_management"
+  | "emergency"
+  | "legal_duty"
+  | "other"
+  | "intra_group"
+  | "third_party";
+
+type DiagnosisFieldType = "text" | "textarea" | "number" | "select";
+
+type DiagnosisFieldConfig = {
+  name: keyof DiagnosisFormValues;
+  label: string;
+  type: DiagnosisFieldType;
+  options?: Array<{ value: DiagnosisSelectValue; label: string }>;
+  min?: number;
+  step?: number;
+};
+
+type DiagnosisStepConfig = {
+  title: string;
+  fields: DiagnosisFieldConfig[];
+};
+
+type DiagnosisFormValues = {
+  company_name: string;
+  q5_no_personal_info: "yes" | "no" | "unknown";
+  q6_scenario: "contract_performance" | "hr_management" | "emergency" | "legal_duty" | "other";
+  q7_receiver_type: "intra_group" | "third_party";
+  q1_is_ciio: "yes" | "no" | "unknown";
+  q2_has_important_data: "yes" | "no" | "unknown";
+  q3_pii_count: number;
+  q4_spi_count: number;
+  q8_purpose: string;
+};
+
+type AssessmentFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
+
+type AssessmentFieldConfig = {
+  name: keyof AssessmentFormValues;
+  label: string;
+  type: AssessmentFieldType;
+  options?: string[];
+  min?: number;
+  step?: number;
+};
+
+type AssessmentStepConfig = {
+  title: string;
+  fields: AssessmentFieldConfig[];
+};
+
+type AssessmentFormValues = {
+  company_name: string;
+  company_uscc: string;
+  legal_representative: string;
+  registered_address: string;
+  company_nature: string;
+  industry: string;
+  assessment_start_date: string;
+  assessment_end_date: string;
+  lead_department: string;
+  participant_departments: string;
+  third_party_support: boolean;
+  third_party_name: string;
+  third_party_scope: string;
+  scenario_name: string;
+  receiver_name: string;
+  transfer_frequency: "one_time" | "periodic" | "continuous";
+  is_long_term: boolean;
+  legal_basis: string;
+  necessity_basis: string;
+  receiver_country: string;
+  is_ciio: boolean;
+  contains_important_data: boolean;
+  pii_count: number;
+  spi_count: number;
+  transfer_purpose: string;
+  data_inventory_summary: string;
+  system_chain_summary: string;
+  security_capability_summary: string;
+  force_override_path: boolean;
+};
+
+type PipiaRouteType = "scc_filing" | "certification";
+type PipiaAttachmentRole = "scc_contract" | "certification_material" | "internal_policy" | "supporting_evidence";
+
+type PipiaFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
+
+type PipiaFieldConfig = {
+  name: keyof PipiaFormValues;
+  label: string;
+  type: PipiaFieldType;
+  options?: string[];
+  min?: number;
+  step?: number;
+};
+
+type PipiaStepConfig = {
+  title: string;
+  fields: PipiaFieldConfig[];
+};
+
+type PipiaFormValues = {
+  company_name: string;
+  company_uscc: string;
+  industry: string;
+  shareholding_structure: string;
+  actual_controller: string;
+  overseas_investment: string;
+  org_structure_privacy_team: string;
+  business_overview: string;
+  processing_activity_overview: string;
+  is_ciio: boolean;
+  processing_person_count: number;
+  outbound_pi_count: number;
+  outbound_spi_count: number;
+  route_type: PipiaRouteType;
+  outbound_scenario_name: string;
+  outbound_frequency: "one_time" | "periodic" | "continuous";
+  transfer_method: string;
+  domestic_storage: string;
+  overseas_storage: string;
+  transfer_link: string;
+  purpose: string;
+  recipient_name: string;
+  recipient_country_region: string;
+  legal_basis: string;
+  legality_justification: string;
+  necessity_justification: string;
+  pi_categories: string;
+  spi_categories: string;
+  subject_volume: number;
+  notice_mechanism: string;
+  consent_mechanism: string;
+  dsar_channel: string;
+  retention_policy: string;
+  incident_response_sla_hours: number;
+  escalation_path: string;
+  attachment_role: PipiaAttachmentRole;
+};
+
+type DocumentReviewFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
+
+type DocumentReviewFieldConfig = {
+  name: keyof DocumentReviewFormValues;
+  label: string;
+  type: DocumentReviewFieldType;
+  options?: string[];
+  min?: number;
+  step?: number;
+};
+
+type DocumentReviewStepConfig = {
+  title: string;
+  fields: DocumentReviewFieldConfig[];
+};
+
+type DocumentReviewFormValues = {
+  company_name: string;
+  document_title: string;
+  document_version: string;
+  effective_date: string;
+  applicable_products: string;
+  applicable_scope: string;
+  publisher_entity: string;
+  is_live_version: boolean;
+  document_type: "privacy_policy" | "scc_contract" | "dpa" | "other";
+  receiver_name: string;
+  receiver_country: string;
+  transfer_purpose: string;
+  processor_identity_disclosed: boolean;
+  scope_disclosed: boolean;
+  collection_purpose_disclosed: boolean;
+  processing_method_disclosed: boolean;
+  category_disclosed: boolean;
+  sensitive_pi_disclosed: boolean;
+  crossborder_rule_disclosed: boolean;
+  rights_channel_disclosed: boolean;
+  contact_channel: string;
+  pii_count: number;
+  spi_count: number;
+  has_scc_draft: boolean;
+  review_focus: string;
+};
+
+type EuSccFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
+type EuSccFieldConfig = {
+  name: keyof EuSccFormValues;
+  label: string;
+  type: EuSccFieldType;
+  options?: string[];
+  min?: number;
+  step?: number;
+};
+type EuSccStepConfig = {
+  title: string;
+  fields: EuSccFieldConfig[];
+};
+type EuSccFormValues = {
+  exporter_name: string;
+  importer_name: string;
+  importer_country: string;
+  transfer_role: "c2c" | "c2p" | "p2p" | "p2c";
+  scc_version: "eu_2021" | "other";
+  transfer_purpose: string;
+  data_categories: string;
+  data_subject_categories: string;
+  transfer_frequency: "one_time" | "periodic" | "continuous";
+  retention_rule: string;
+  tom_summary: string;
+  onward_transfer_control: string;
+  rights_and_complaint: string;
+  government_access_response: string;
+  supplementary_clause_review: string;
+  pii_count: number;
+  spi_count: number;
+  has_scc_draft: boolean;
+};
+
+type BcrFieldType = "text" | "textarea" | "select";
+type BcrFieldConfig = {
+  name: keyof BcrFormValues;
+  label: string;
+  type: BcrFieldType;
+  options?: string[];
+};
+type BcrStepConfig = {
+  title: string;
+  fields: BcrFieldConfig[];
+};
+type BcrFormValues = {
+  company_name: string;
+  group_structure: string;
+  applicant_entity: string;
+  data_flow_scope: string;
+  lead_sa_rationale: string;
+  binding_mechanism: string;
+  third_party_beneficiary: string;
+  liability_compensation: string;
+  transparency_notice: string;
+  training_audit: string;
+  cooperation_with_sa: string;
+  dp_safeguards: string;
+  third_country_assessment: string;
+  government_access_process: string;
+  update_mechanism: string;
+  definitions_quality: string;
+  review_focus: string;
+};
+
+type DpiaFieldType = "text" | "textarea" | "select" | "checkbox";
+type DpiaFieldConfig = {
+  name: keyof DpiaFormValues;
+  label: string;
+  type: DpiaFieldType;
+  options?: string[];
+};
+type DpiaStepConfig = {
+  title: string;
+  fields: DpiaFieldConfig[];
+};
+type DpiaFormValues = {
+  project_name: string;
+  project_goal: string;
+  need_reason: string;
+  controller_name: string;
+  dpo_role: string;
+  contact_channel: string;
+  processing_description: string;
+  data_types: string;
+  includes_special_data: boolean;
+  subject_scale: string;
+  frequency: string;
+  retention_period: string;
+  geo_scope: string;
+  has_crossborder_transfer: boolean;
+  data_source: string;
+  relationship_context: string;
+  expectation_control: string;
+  vulnerable_group: string;
+  prior_concerns: string;
+  novel_technology: string;
+  lawful_basis: string;
+  purpose_and_necessity: string;
+  function_creep_control: string;
+  minimization_quality: string;
+  notice_plan: string;
+  rights_support: string;
+  processor_management: string;
+  risk_assessment: string;
+  mitigation_measures: string;
+  residual_risk: string;
+  signoff_owner: string;
+  dpo_advice: string;
+  review_schedule: string;
+  attachment_role: "data_flow_diagram" | "security_policy" | "dpa" | "other";
+};
+
+type TiaFieldType = "text" | "textarea" | "select" | "checkbox";
+type TiaFieldConfig = {
+  name: keyof TiaFormValues;
+  label: string;
+  type: TiaFieldType;
+  options?: string[];
+};
+type TiaStepConfig = {
+  title: string;
+  fields: TiaFieldConfig[];
+};
+type TiaFormValues = {
+  data_exporter_name: string;
+  data_importer_name: string;
+  importer_country_region: string;
+  transfer_purpose: string;
+  data_categories: string;
+  sensitive_data_description: string;
+  data_subject_categories: string;
+  transfer_frequency: "one_time" | "periodic" | "continuous";
+  transfer_tool: "scc" | "bcr" | "derogation";
+  law_assessed: boolean;
+  law_findings: string;
+  pre_effectiveness: string;
+  supplementary_technical: string;
+  supplementary_contractual: string;
+  supplementary_organizational: string;
+  post_effectiveness: string;
+  key_actions: string;
+  dpo_opinion: string;
+  review_date: string;
+  attachment_role: "transfer_agreement" | "country_law_analysis" | "technical_control_doc" | "other";
+};
+
+type CnFlowRecipientRole = "processor" | "controller" | "subprocessor" | "affiliate" | "vendor";
+type CnFlowFieldType = "text" | "textarea" | "select" | "checkbox";
+type CnFlowFieldConfig = {
+  name: keyof CnFlowFormValues;
+  label: string;
+  type: CnFlowFieldType;
+  options?: string[];
+};
+type CnFlowStepConfig = {
+  title: string;
+  fields: CnFlowFieldConfig[];
+};
+type CnFlowFormValues = {
+  company_name: string;
+  transfer_purpose: string;
+  data_categories: string;
+  sensitive_data_flags: string;
+  transfer_chain: string;
+  data_volume_note: string;
+  necessity_justification: string;
+  primary_recipient_name: string;
+  primary_recipient_country: string;
+  primary_recipient_role: CnFlowRecipientRole;
+  primary_recipient_restricted: boolean;
+  additional_recipients: string;
+  internal_access_note: string;
+};
+
+type CpraFieldType = "text" | "textarea" | "checkbox";
+type CpraFieldConfig = {
+  name: keyof CpraFormValues;
+  label: string;
+  type: CpraFieldType;
+};
+type CpraStepConfig = {
+  title: string;
+  fields: CpraFieldConfig[];
+};
+type CpraFormValues = {
+  company_name: string;
+  dba_name: string;
+  cpra_applicability_selfcheck: string;
+  business_model: string;
+  data_lifecycle: string;
+  data_categories: string;
+  notice_and_consent: string;
+  privacy_policy_url: string;
+  consumer_rights_process: string;
+  identity_verification_method: string;
+  rights_sla: string;
+  opt_out_and_sale_sharing: string;
+  spi_usage_summary: string;
+  vendor_management: string;
+  ui_dark_pattern_check: string;
+  review_focus: string;
+};
+
+const JURISDICTIONS = ["CN", "EU", "US"] as const;
+
+const DIAGNOSIS_STEPS: DiagnosisStepConfig[] = [
+  {
+    title: "鍩虹璇嗗埆",
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      {
+        name: "q5_no_personal_info",
+        label: "Q1 鏈鍑哄鏁版嵁鏄惁瀹屽叏涓嶅惈涓汉淇℃伅鍜岄噸瑕佹暟鎹紵",
+        type: "select",
+        options: [
+          { value: "no", label: "鍚︼紙鍚釜浜轰俊鎭垨閲嶈鏁版嵁锛? },
+          { value: "yes", label: "鏄紙绾笟鍔?鎶€鏈暟鎹級" },
+          { value: "unknown", label: "涓嶇‘瀹? }
+        ]
+      },
+      {
+        name: "q6_scenario",
+        label: "Q2 鏈鏁版嵁鍑哄鐨勪富瑕佷笟鍔″満鏅?,
+        type: "select",
+        options: [
+          { value: "other", label: "鍏朵粬鍟嗕笟鐩殑" },
+          { value: "contract_performance", label: "灞ヨ鍚堝悓 / 鍚戞秷璐硅€呮彁渚涙湇鍔? },
+          { value: "hr_management", label: "璺ㄥ浗鍏徃鍐呴儴浜哄姏璧勬簮绠＄悊" },
+          { value: "emergency", label: "绱ф€ユ儏鍐典繚鎶よ嚜鐒朵汉鐢熷懡銆佸仴搴锋垨璐骇瀹夊叏" },
+          { value: "legal_duty", label: "渚濇硶灞ヨ娉曞畾鑱岃矗鎴栨硶瀹氫箟鍔? }
+        ]
+      },
+      {
+        name: "q7_receiver_type",
+        label: "Q3 澧冨鏁版嵁鎺ユ敹鏂圭被鍨?,
+        type: "select",
+        options: [
+          { value: "third_party", label: "鐙珛绗笁鏂癸紙鍚堜綔浼欎即 / 鏈嶅姟鍟嗭級" },
+          { value: "intra_group", label: "闆嗗洟鍐呴儴鍏宠仈鍏徃" }
+        ]
+      }
+    ]
+  },
+  {
+    title: "寮哄埗璺緞瑙﹀彂椤?,
+    fields: [
+      {
+        name: "q1_is_ciio",
+        label: "Q4 鏄惁涓哄叧閿俊鎭熀纭€璁炬柦杩愯惀鑰咃紙CIIO锛夛紵",
+        type: "select",
+        options: [
+          { value: "no", label: "鍚? },
+          { value: "yes", label: "鏄? },
+          { value: "unknown", label: "涓嶇‘瀹? }
+        ]
+      },
+      {
+        name: "q2_has_important_data",
+        label: "Q5 鍑哄鏁版嵁鏄惁鍖呭惈閲嶈鏁版嵁锛?,
+        type: "select",
+        options: [
+          { value: "no", label: "鍚? },
+          { value: "yes", label: "鏄? },
+          { value: "unknown", label: "涓嶇‘瀹? }
+        ]
+      },
+      { name: "q3_pii_count", label: "Q6 杩?2涓湀绱鍚戝澶栨彁渚涗釜浜轰俊鎭殑浜烘暟", type: "number", min: 0, step: 1000 },
+      { name: "q4_spi_count", label: "Q7 杩?2涓湀绱鍚戝澶栨彁渚涙晱鎰熶釜浜轰俊鎭殑浜烘暟", type: "number", min: 0, step: 100 }
+    ]
+  },
+  {
+    title: "琛ュ厖璇存槑",
+    fields: [
+      { name: "q8_purpose", label: "Q8 鍑哄鐩殑绠€杩帮紙鍙€夛級", type: "textarea" }
+    ]
+  }
+];
+
+const ASSESSMENT_STEPS: AssessmentStepConfig[] = [
+  {
+    title: "涓讳綋鍩虹淇℃伅",
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      { name: "company_uscc", label: "缁熶竴绀句細淇＄敤浠ｇ爜", type: "text" },
+      { name: "legal_representative", label: "娉曞畾浠ｈ〃浜?, type: "text" },
+      { name: "registered_address", label: "娉ㄥ唽鍦板潃", type: "text" },
+      { name: "company_nature", label: "鍏徃鎬ц川", type: "text" },
+      { name: "industry", label: "琛屼笟", type: "text" },
+      { name: "receiver_country", label: "鎺ユ敹鏂瑰浗瀹?, type: "text" },
+      { name: "receiver_name", label: "澧冨鎺ユ敹鏂瑰悕绉?, type: "text" }
+    ]
+  },
+  {
+    title: "鑷瘎浼板伐浣滅粍缁?,
+    fields: [
+      { name: "assessment_start_date", label: "鑷瘎浼板紑濮嬫棩鏈?, type: "text" },
+      { name: "assessment_end_date", label: "鑷瘎浼扮粨鏉熸棩鏈?, type: "text" },
+      { name: "lead_department", label: "鐗靛ご閮ㄩ棬", type: "text" },
+      { name: "participant_departments", label: "鍙備笌閮ㄩ棬锛堥€楀彿鍒嗛殧锛?, type: "text" },
+      { name: "third_party_support", label: "鏄惁鏈夌涓夋柟鏈烘瀯鍙備笌", type: "checkbox" },
+      { name: "third_party_name", label: "绗笁鏂规満鏋勫悕绉?, type: "text" },
+      { name: "third_party_scope", label: "绗笁鏂瑰弬涓庤寖鍥?, type: "textarea" }
+    ]
+  },
+  {
+    title: "鍑哄鍦烘櫙涓庡繀瑕佹€?,
+    fields: [
+      { name: "scenario_name", label: "鍑哄鍦烘櫙鍚嶇О", type: "text" },
+      {
+        name: "transfer_frequency",
+        label: "鍑哄棰戠巼",
+        type: "select",
+        options: ["one_time", "periodic", "continuous"]
+      },
+      { name: "is_long_term", label: "鏄惁闀挎湡鎸佺画鍑哄", type: "checkbox" },
+      { name: "transfer_purpose", label: "鍑哄鐩殑", type: "textarea" },
+      { name: "legal_basis", label: "鍚堟硶鎬у熀纭€", type: "textarea" },
+      { name: "necessity_basis", label: "蹇呰鎬ц鏄?, type: "textarea" }
+    ]
+  },
+  {
+    title: "鏁版嵁娓呭崟涓庨摼璺?,
+    fields: [
+      { name: "is_ciio", label: "鏄惁 CIIO", type: "checkbox" },
+      { name: "contains_important_data", label: "鏄惁娑夊強閲嶈鏁版嵁", type: "checkbox" },
+      { name: "pii_count", label: "鏅€氫釜浜轰俊鎭噺", type: "number", min: 0, step: 1000 },
+      { name: "spi_count", label: "鏁忔劅涓汉淇℃伅閲?, type: "number", min: 0, step: 100 },
+      { name: "data_inventory_summary", label: "鏁版嵁娓呭崟鎽樿锛堝満鏅?瀛楁/蹇呰鎬э級", type: "textarea" },
+      { name: "system_chain_summary", label: "绯荤粺涓庡嚭澧冮摼璺鏄?, type: "textarea" },
+      { name: "security_capability_summary", label: "鏁版嵁瀹夊叏淇濋殰鑳藉姏璇存槑", type: "textarea" }
+    ]
+  },
+  {
+    title: "鎵ц绛栫暐涓庢潗鏂?,
+    fields: [
+      { name: "force_override_path", label: "鍏佽璺緞涓嶄竴鑷存椂缁х画鐢熸垚", type: "checkbox" }
+    ]
+  }
+];
+
+const PIPIA_STEPS: PipiaStepConfig[] = [
+  {
+    title: "浼佷笟鍩烘湰淇℃伅",
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      { name: "company_uscc", label: "缁熶竴绀句細淇＄敤浠ｇ爜", type: "text" },
+      { name: "industry", label: "琛屼笟", type: "text" },
+      { name: "shareholding_structure", label: "鑲℃潈缁撴瀯", type: "textarea" },
+      { name: "actual_controller", label: "瀹為檯鎺у埗浜?, type: "text" },
+      { name: "overseas_investment", label: "澧冨唴澶栨姇璧勬儏鍐?, type: "textarea" },
+      { name: "org_structure_privacy_team", label: "缁勭粐鏋舵瀯涓庝釜淇濇満鏋勪俊鎭?, type: "textarea" },
+      { name: "business_overview", label: "鏁翠綋涓氬姟姒傚喌", type: "textarea" },
+      { name: "processing_activity_overview", label: "澶勭悊娲诲姩姒傚喌", type: "textarea" },
+      { name: "is_ciio", label: "鏄惁 CIIO", type: "checkbox" },
+      { name: "processing_person_count", label: "澶勭悊涓汉淇℃伅瑙勬ā", type: "number", min: 0, step: 1000 },
+      { name: "outbound_pi_count", label: "鍑哄鏅€氫釜浜轰俊鎭妯?, type: "number", min: 0, step: 1000 },
+      { name: "outbound_spi_count", label: "鍑哄鏁忔劅涓汉淇℃伅瑙勬ā", type: "number", min: 0, step: 100 }
+    ]
+  },
+  {
+    title: "鍑哄鍦烘櫙涓庤寖鍥?,
+    fields: [
+      { name: "route_type", label: "璺緞绫诲瀷", type: "select", options: ["scc_filing", "certification"] },
+      { name: "outbound_scenario_name", label: "鍑哄鍦烘櫙鍚嶇О", type: "text" },
+      {
+        name: "outbound_frequency",
+        label: "鍑哄棰戠巼",
+        type: "select",
+        options: ["one_time", "periodic", "continuous"]
+      },
+      { name: "transfer_method", label: "鍑哄鏂瑰紡锛圓PI/鏂囦欢/鍚屾锛?, type: "text" },
+      { name: "domestic_storage", label: "澧冨唴瀛樺偍绯荤粺/鏁版嵁涓績", type: "textarea" },
+      { name: "overseas_storage", label: "澧冨瀛樺偍绯荤粺/鏁版嵁涓績", type: "textarea" },
+      { name: "transfer_link", label: "鍑哄閾捐矾璇存槑", type: "textarea" },
+      { name: "purpose", label: "鍑哄鐩殑", type: "textarea" },
+      { name: "recipient_name", label: "澧冨鎺ユ敹鏂?, type: "text" },
+      { name: "recipient_country_region", label: "鎺ユ敹鏂瑰浗瀹?鍦板尯", type: "text" },
+      { name: "legal_basis", label: "澶勭悊鍚堟硶鎬у熀纭€", type: "text" },
+      { name: "legality_justification", label: "鍚堟硶鎬ц璇?, type: "textarea" },
+      { name: "necessity_justification", label: "蹇呰鎬ц璇?, type: "textarea" },
+      { name: "pi_categories", label: "鏅€氫釜浜轰俊鎭被鍒紙閫楀彿鍒嗛殧锛?, type: "text" },
+      { name: "spi_categories", label: "鏁忔劅涓汉淇℃伅绫诲埆锛堥€楀彿鍒嗛殧锛?, type: "text" },
+      { name: "subject_volume", label: "鏁版嵁涓讳綋瑙勬ā", type: "number", min: 0, step: 1000 }
+    ]
+  },
+  {
+    title: "鏉冨埄淇濋殰涓庡簲鎬?,
+    fields: [
+      { name: "notice_mechanism", label: "鍛婄煡鏈哄埗", type: "textarea" },
+      { name: "consent_mechanism", label: "鍚屾剰鏈哄埗", type: "text" },
+      { name: "dsar_channel", label: "鏉冨埄璇锋眰娓犻亾", type: "text" },
+      { name: "retention_policy", label: "淇濆瓨涓庡垹闄ょ瓥鐣?, type: "textarea" },
+      { name: "incident_response_sla_hours", label: "浜嬩欢鍝嶅簲SLA锛堝皬鏃讹級", type: "number", min: 1, step: 1 },
+      { name: "escalation_path", label: "鍗囩骇璺緞", type: "text" },
+      {
+        name: "attachment_role",
+        label: "闄勪欢瑙掕壊",
+        type: "select",
+        options: ["scc_contract", "certification_material", "internal_policy", "supporting_evidence"]
+      }
+    ]
+  }
+];
+
+const DOCUMENT_REVIEW_STEPS: DocumentReviewStepConfig[] = [
+  {
+    title: "瀹℃煡瀵硅薄",
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      { name: "publisher_entity", label: "鍙戝竷涓讳綋", type: "text" },
+      { name: "document_title", label: "鏂囨。鍚嶇О", type: "text" },
+      { name: "document_version", label: "鏂囨。鐗堟湰鍙?, type: "text" },
+      { name: "effective_date", label: "鐢熸晥鏃ユ湡", type: "text" },
+      { name: "applicable_products", label: "閫傜敤浜у搧/绔欑偣", type: "text" },
+      { name: "applicable_scope", label: "閫傜敤鑼冨洿璇存槑", type: "textarea" },
+      { name: "is_live_version", label: "鏄惁绾夸笂鐢熸晥鐗堟湰", type: "checkbox" },
+      {
+        name: "document_type",
+        label: "鏂囨。绫诲瀷",
+        type: "select",
+        options: ["privacy_policy", "scc_contract", "dpa", "other"]
+      }
+    ]
+  },
+  {
+    title: "鎶湶瀹屾暣鎬ф鏌?,
+    fields: [
+      { name: "processor_identity_disclosed", label: "鏄惁鎶湶澶勭悊鑰呰韩浠?, type: "checkbox" },
+      { name: "scope_disclosed", label: "鏄惁鎶湶閫傜敤鑼冨洿", type: "checkbox" },
+      { name: "collection_purpose_disclosed", label: "鏄惁鎶湶鏀堕泦涓庡鐞嗙洰鐨?, type: "checkbox" },
+      { name: "processing_method_disclosed", label: "鏄惁鎶湶澶勭悊鏂瑰紡", type: "checkbox" },
+      { name: "category_disclosed", label: "鏄惁鎶湶涓汉淇℃伅绉嶇被", type: "checkbox" },
+      { name: "sensitive_pi_disclosed", label: "鏄惁鎶湶鏁忔劅涓汉淇℃伅澶勭悊", type: "checkbox" },
+      { name: "crossborder_rule_disclosed", label: "鏄惁鎶湶鍑哄瑙勫垯涓庢帴鏀舵柟", type: "checkbox" },
+      { name: "rights_channel_disclosed", label: "鏄惁鎶湶涓汉鏉冨埄琛屼娇鏂瑰紡", type: "checkbox" },
+      { name: "contact_channel", label: "鎶曡瘔/鑱旂郴娓犻亾", type: "text" }
+    ]
+  },
+  {
+    title: "鍑哄涓庡鐞嗚儗鏅?,
+    fields: [
+      { name: "receiver_name", label: "澧冨鎺ユ敹鏂癸紙濡傞€傜敤锛?, type: "text" },
+      { name: "receiver_country", label: "鎺ユ敹鏂瑰浗瀹?鍦板尯", type: "text" },
+      { name: "transfer_purpose", label: "澶勭悊/鍑哄鐩殑", type: "textarea" },
+      { name: "pii_count", label: "娑夊強涓汉淇℃伅瑙勬ā锛堜及绠楋級", type: "number", min: 0, step: 1000 },
+      { name: "spi_count", label: "娑夊強鏁忔劅涓汉淇℃伅瑙勬ā锛堜及绠楋級", type: "number", min: 0, step: 100 },
+      { name: "has_scc_draft", label: "鏄惁宸叉湁鍙鏌ュ悎鍚岃崏妗?, type: "checkbox" }
+    ]
+  },
+  {
+    title: "瀹℃煡閲嶇偣涓庨檮浠?,
+    fields: [
+      { name: "review_focus", label: "鏈閲嶇偣鍏虫敞鏉℃", type: "textarea" }
+    ]
+  }
+];
+
+const EU_SCC_STEPS: EuSccStepConfig[] = [
+  {
+    title: "浼犺緭涓讳綋涓庢ā鍧?,
+    fields: [
+      { name: "exporter_name", label: "鏁版嵁鍑哄彛鏂癸紙EEA锛?, type: "text" },
+      { name: "importer_name", label: "鏁版嵁杩涘彛鏂癸紙绗笁鍥斤級", type: "text" },
+      { name: "importer_country", label: "杩涘彛鏂瑰浗瀹?鍦板尯", type: "text" },
+      { name: "transfer_role", label: "浼犺緭瑙掕壊鍏崇郴", type: "select", options: ["c2c", "c2p", "p2p", "p2c"] },
+      { name: "scc_version", label: "SCC鐗堟湰璇嗗埆", type: "select", options: ["eu_2021", "other"] },
+      { name: "has_scc_draft", label: "鏄惁宸叉湁瀹屾暣SCC鏂囨湰", type: "checkbox" }
+    ]
+  },
+  {
+    title: "鍦烘櫙涓庢暟鎹寖鍥?,
+    fields: [
+      { name: "transfer_purpose", label: "浼犺緭鐩殑", type: "textarea" },
+      { name: "data_categories", label: "涓汉鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?, type: "text" },
+      { name: "data_subject_categories", label: "鏁版嵁涓讳綋绫诲埆", type: "text" },
+      { name: "transfer_frequency", label: "浼犺緭棰戠巼", type: "select", options: ["one_time", "periodic", "continuous"] },
+      { name: "retention_rule", label: "淇濆瓨鏈熼檺/鍒犻櫎瑙勫垯", type: "textarea" },
+      { name: "pii_count", label: "PI 瑙勬ā锛堜及绠楋級", type: "number", min: 0, step: 1000 },
+      { name: "spi_count", label: "SPI 瑙勬ā锛堜及绠楋級", type: "number", min: 0, step: 100 }
+    ]
+  },
+  {
+    title: "鏉℃涓庝繚闅滄満鍒?,
+    fields: [
+      { name: "tom_summary", label: "鎶€鏈笌缁勭粐鎺柦锛圱OM锛夋憳瑕?, type: "textarea" },
+      { name: "onward_transfer_control", label: "瀛愬鐞嗚€?鍐嶄紶杈撴帶鍒?, type: "textarea" },
+      { name: "rights_and_complaint", label: "鏁版嵁涓讳綋鏉冨埄涓庢姇璇夋満鍒?, type: "textarea" },
+      { name: "government_access_response", label: "鏀垮簻璁块棶璇锋眰搴斿鏈哄埗", type: "textarea" },
+      { name: "supplementary_clause_review", label: "琛ュ厖鏉℃鍐茬獊妫€鏌ュ叧娉ㄧ偣", type: "textarea" }
+    ]
+  },
+  {
+    title: "瀹℃煡鏂囦欢",
+    fields: []
+  }
+];
+
+const BCR_STEPS: BcrStepConfig[] = [
+  {
+    title: "涓讳綋涓庤寖鍥?,
+    fields: [
+      { name: "company_name", label: "闆嗗洟鍚嶇О", type: "text" },
+      { name: "group_structure", label: "闆嗗洟缁撴瀯涓庣敵璇蜂富浣?, type: "textarea" },
+      { name: "applicant_entity", label: "鐢宠瀹炰綋涓庤亴璐?, type: "textarea" },
+      { name: "lead_sa_rationale", label: "BCR Lead 閫夋嫨鐞嗙敱", type: "textarea" },
+      { name: "data_flow_scope", label: "鏁版嵁娴佷笌澶勭悊娲诲姩鑼冨洿", type: "textarea" }
+    ]
+  },
+  {
+    title: "绾︽潫鍔涗笌鏉冨埄鏈哄埗",
+    fields: [
+      { name: "binding_mechanism", label: "闆嗗洟鍐呴儴/鍛樺伐绾︽潫鏈哄埗", type: "textarea" },
+      { name: "third_party_beneficiary", label: "绗笁鏂瑰彈鐩婁汉鏉冨埄鏉℃", type: "textarea" },
+      { name: "liability_compensation", label: "璐ｄ换鎵挎媴涓庤禂鍋胯兘鍔涜鏄?, type: "textarea" },
+      { name: "transparency_notice", label: "瀵瑰鍏紑涓庡憡鐭ュ畨鎺?, type: "textarea" }
+    ]
+  },
+  {
+    title: "娌荤悊涓庣洃绠″崗浣?,
+    fields: [
+      { name: "training_audit", label: "鍩硅涓庡璁″埗搴?, type: "textarea" },
+      { name: "cooperation_with_sa", label: "涓庣洃绠″崗浣滀箟鍔?, type: "textarea" },
+      { name: "dp_safeguards", label: "鏁版嵁淇濇姢鍘熷垯涓庝繚闅?, type: "textarea" },
+      { name: "third_country_assessment", label: "绗笁鍥芥硶寰嬭瘎浼版満鍒?, type: "textarea" },
+      { name: "government_access_process", label: "鏀垮簻璁块棶璇锋眰澶勭悊鏈哄埗", type: "textarea" }
+    ]
+  },
+  {
+    title: "鏇存柊涓庢枃妗ｆ潗鏂?,
+    fields: [
+      { name: "update_mechanism", label: "鏇存柊鏈哄埗涓庢垚鍛樻竻鍗曠淮鎶?, type: "textarea" },
+      { name: "definitions_quality", label: "瀹氫箟琛ㄤ笌鏈娓呮櫚搴?, type: "textarea" },
+      { name: "review_focus", label: "鏈閲嶇偣鍏虫敞椤?, type: "textarea" }
+    ]
+  }
+];
+
+const DPIA_STEPS: DpiaStepConfig[] = [
+  {
+    title: "椤圭洰涓庤Е鍙戠悊鐢?,
+    fields: [
+      { name: "project_name", label: "椤圭洰鍚嶇О", type: "text" },
+      { name: "project_goal", label: "椤圭洰鐩爣/鎽樿", type: "textarea" },
+      { name: "need_reason", label: "闇€瑕?DPIA 鐨勪富瑕佺悊鐢?, type: "textarea" },
+      { name: "controller_name", label: "鎺у埗鑰呭悕绉?, type: "text" },
+      { name: "dpo_role", label: "DPO 鑱屼綅", type: "text" },
+      { name: "contact_channel", label: "鎺у埗鑰?DPO 鑱旂郴鏂瑰紡", type: "text" }
+    ]
+  },
+  {
+    title: "澶勭悊娲诲姩鎻忚堪",
+    fields: [
+      { name: "processing_description", label: "澶勭悊娴佺▼涓庢椿鍔ㄦ弿杩?, type: "textarea" },
+      { name: "data_types", label: "鏁版嵁绫诲瀷", type: "text" },
+      { name: "includes_special_data", label: "鏄惁娑夊強鐗规畩绫诲埆鏁版嵁", type: "checkbox" },
+      { name: "subject_scale", label: "鏁版嵁涓讳綋瑙勬ā", type: "text" },
+      { name: "frequency", label: "澶勭悊棰戠巼", type: "text" },
+      { name: "retention_period", label: "淇濆瓨鏈熼檺", type: "text" },
+      { name: "geo_scope", label: "鍦扮悊瑕嗙洊鑼冨洿", type: "text" },
+      { name: "has_crossborder_transfer", label: "鏄惁娑夊強璺ㄥ浼犺緭", type: "checkbox" },
+      { name: "data_source", label: "鏁版嵁鏉ユ簮", type: "text" },
+      { name: "relationship_context", label: "涓庢暟鎹富浣撳叧绯?, type: "text" }
+    ]
+  },
+  {
+    title: "蹇呰鎬т笌鐩哥О鎬?,
+    fields: [
+      { name: "lawful_basis", label: "鍚堟硶鎬у熀纭€", type: "text" },
+      { name: "purpose_and_necessity", label: "鐩殑涓庡繀瑕佹€ц璇?, type: "textarea" },
+      { name: "expectation_control", label: "鍚堢悊棰勬湡涓庢帶鍒剁▼搴?, type: "textarea" },
+      { name: "vulnerable_group", label: "鑴嗗急缇や綋璇存槑", type: "text" },
+      { name: "prior_concerns", label: "鏃㈡湁浜夎/鍘嗗彶缂洪櫡", type: "textarea" },
+      { name: "novel_technology", label: "鏂版妧鏈?鍒涙柊鎶€鏈儏鍐?, type: "textarea" },
+      { name: "function_creep_control", label: "闃叉鍔熻兘婕傜Щ鎺柦", type: "textarea" },
+      { name: "minimization_quality", label: "鏈€灏忓寲涓庢暟鎹川閲忔帾鏂?, type: "textarea" },
+      { name: "notice_plan", label: "鍛婄煡瀹夋帓", type: "textarea" },
+      { name: "rights_support", label: "鏁版嵁涓讳綋鏉冨埄鏀寔鏈哄埗", type: "textarea" },
+      { name: "processor_management", label: "澶勭悊鑰?渚涘簲鍟嗙鐞嗘満鍒?, type: "textarea" }
+    ]
+  },
+  {
+    title: "椋庨櫓涓庣紦瑙?,
+    fields: [
+      { name: "risk_assessment", label: "椋庨櫓璇嗗埆涓庡奖鍝嶈瘎浼?, type: "textarea" },
+      { name: "mitigation_measures", label: "缂撹В鎺柦", type: "textarea" },
+      { name: "residual_risk", label: "鍓╀綑椋庨櫓", type: "textarea" },
+      { name: "signoff_owner", label: "绛剧讲/鎵瑰噯璐ｄ换浜?, type: "text" },
+      { name: "dpo_advice", label: "DPO 鎰忚鎽樿", type: "textarea" },
+      { name: "review_schedule", label: "鎸佺画澶嶅瀹夋帓", type: "text" },
+      {
+        name: "attachment_role",
+        label: "闄勪欢瑙掕壊",
+        type: "select",
+        options: ["data_flow_diagram", "security_policy", "dpa", "other"]
+      }
+    ]
+  },
+  {
+    title: "闄勪欢鏉愭枡",
+    fields: []
+  }
+];
+
+const TIA_STEPS: TiaStepConfig[] = [
+  {
+    title: "浼犺緭浜嬪疄璇嗗埆",
+    fields: [
+      { name: "data_exporter_name", label: "鏁版嵁鍑哄彛鏂癸紙EU锛?, type: "text" },
+      { name: "data_importer_name", label: "鏁版嵁杩涘彛鏂癸紙绗笁鍥斤級", type: "text" },
+      { name: "importer_country_region", label: "杩涘彛鏂瑰浗瀹?鍦板尯", type: "text" },
+      { name: "transfer_purpose", label: "浼犺緭鐩殑", type: "textarea" },
+      { name: "data_categories", label: "鏁版嵁绫诲埆", type: "text" },
+      { name: "sensitive_data_description", label: "鏁忔劅/鐗规畩绫诲埆鏁版嵁璇存槑", type: "text" },
+      { name: "data_subject_categories", label: "鏁版嵁涓讳綋绫诲埆", type: "text" },
+      { name: "transfer_frequency", label: "浼犺緭棰戠巼", type: "select", options: ["one_time", "periodic", "continuous"] },
+      { name: "transfer_tool", label: "浼犺緭宸ュ叿", type: "select", options: ["scc", "bcr", "derogation"] }
+    ]
+  },
+  {
+    title: "绗笁鍥芥硶寰嬭瘎浼?,
+    fields: [
+      { name: "law_assessed", label: "鏄惁宸插畬鎴愮洰鐨勫湴娉曞緥璇勪及", type: "checkbox" },
+      { name: "law_findings", label: "娉曞緥涓庡疄璺佃瘎浼板彂鐜?, type: "textarea" },
+      { name: "pre_effectiveness", label: "琛ュ厖鎺柦鍓嶇殑鏈夋晥鎬у垽鏂?, type: "textarea" }
+    ]
+  },
+  {
+    title: "琛ュ厖鎺柦涓庣粨璁?,
+    fields: [
+      { name: "supplementary_technical", label: "鎶€鏈€цˉ鍏呮帾鏂?, type: "textarea" },
+      { name: "supplementary_contractual", label: "鍚堝悓鎬цˉ鍏呮帾鏂?, type: "textarea" },
+      { name: "supplementary_organizational", label: "缁勭粐鎬цˉ鍏呮帾鏂?, type: "textarea" },
+      { name: "post_effectiveness", label: "琛ュ厖鎺柦鍚庣殑鏈夋晥鎬у垽鏂?, type: "textarea" },
+      { name: "key_actions", label: "鍏抽敭琛屽姩椤?, type: "textarea" },
+      { name: "dpo_opinion", label: "DPO 鎰忚", type: "textarea" },
+      { name: "review_date", label: "涓嬫澶嶅鏃ユ湡", type: "text" },
+      {
+        name: "attachment_role",
+        label: "闄勪欢瑙掕壊",
+        type: "select",
+        options: ["transfer_agreement", "country_law_analysis", "technical_control_doc", "other"]
+      }
+    ]
+  },
+  {
+    title: "闄勪欢鏉愭枡",
+    fields: []
+  }
+];
+
+const BCR_REVIEW_ITEMS: Array<{ code: string; title: string; legal_basis: string; recommendation: string }> = [
+  { code: "3.2-C1", title: "Binding nature and scope", legal_basis: "GDPR Art.47 + EDPB 1/2022", recommendation: "琛ラ綈鍐呴儴绾︽潫鍔涖€佺敵璇蜂富浣撲笌鑼冨洿鏄犲皠銆? },
+  { code: "3.2-C2", title: "Material scope and data flow", legal_basis: "EDPB 1/2022 Scope", recommendation: "鏄庣‘鏁版嵁绫诲埆銆佷富浣撶被鍒€佸鐞嗙洰鐨勫拰浼犺緭鑼冨洿銆? },
+  { code: "3.2-C3", title: "Third-party beneficiary rights", legal_basis: "EDPB 1.3.1", recommendation: "鏄庣‘鏁版嵁涓讳綋鍙洿鎺ヤ富寮犳潈鍒╀笌鏁戞祹璺緞銆? },
+  { code: "3.2-C4", title: "Liability and compensation", legal_basis: "EDPB 1.5/1.6", recommendation: "鏄庣‘EEA璐ｄ换涓讳綋銆佽禂鍋挎満鍒朵笌涓捐瘉璐ｄ换銆? },
+  { code: "3.2-C5", title: "Transparency and notice", legal_basis: "EDPB 1.7", recommendation: "琛ラ綈鍏紑鐗堟湰銆佽仈绯绘柟寮忎笌鍙鎬ц姹傘€? },
+  { code: "3.2-C6", title: "Training and audit effectiveness", legal_basis: "EDPB 3.1/3.3", recommendation: "鏄庣‘鍩硅涓庡璁￠鐜囥€佽亴璐ｅ拰鏁存敼闂幆銆? },
+  { code: "3.2-C7", title: "Cooperation duty with SA", legal_basis: "EDPB 4.1", recommendation: "琛ラ綈鐩戠鍗忎綔銆佹鏌ヤ笌淇℃伅鎻愪緵涔夊姟銆? },
+  { code: "3.2-C8", title: "Data protection safeguards", legal_basis: "EDPB 5.x", recommendation: "琛ラ綈鍘熷垯銆佹潈鍒┿€丄rticle 28銆佽褰曞拰DPIA鑱斿姩銆? },
+  { code: "3.2-C9", title: "Third-country law and government access", legal_basis: "EDPB 5.4", recommendation: "琛ラ綈绗笁鍥芥硶寰嬭瘎浼颁笌鏀垮簻璁块棶搴斿鏈哄埗銆? },
+  { code: "3.2-C10", title: "Update and definitions", legal_basis: "EDPB 8.1/9.1", recommendation: "鏄庣‘鏇存柊鎶ラ€佹満鍒朵笌瀹氫箟琛ㄣ€? }
+];
+
+const CN_FLOW_STEPS: CnFlowStepConfig[] = [
+  {
+    title: "鍑哄鏁版嵁娓呭崟",
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      { name: "transfer_purpose", label: "鍑哄鐩殑", type: "textarea" },
+      { name: "data_categories", label: "鍑哄鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?, type: "text" },
+      { name: "sensitive_data_flags", label: "鏁忔劅/閲嶇偣鏁版嵁鏍囩锛堥€楀彿鍒嗛殧锛?, type: "text" },
+      { name: "data_volume_note", label: "鏁版嵁瑙勬ā涓庝綋閲忚鏄?, type: "textarea" },
+      { name: "necessity_justification", label: "鍑哄蹇呰鎬т笌鏇夸唬鎬ц鏄?, type: "textarea" }
+    ]
+  },
+  {
+    title: "澶栭儴瀹炰綋娓呭崟",
+    fields: [
+      { name: "primary_recipient_name", label: "涓昏鎺ユ敹鏂瑰悕绉?, type: "text" },
+      { name: "primary_recipient_country", label: "涓昏鎺ユ敹鏂瑰浗瀹?鍦板尯", type: "text" },
+      {
+        name: "primary_recipient_role",
+        label: "涓昏鎺ユ敹鏂硅鑹?,
+        type: "select",
+        options: ["processor", "controller", "subprocessor", "affiliate", "vendor"]
+      },
+      { name: "primary_recipient_restricted", label: "涓昏鎺ユ敹鏂规槸鍚﹀彈闄愪富浣?, type: "checkbox" },
+      {
+        name: "additional_recipients",
+        label: "鍏朵粬鎺ユ敹鏂癸紙姣忚锛氬悕绉?鍥藉,瑙掕壊,鏄惁鍙楅檺[yes/no]锛?,
+        type: "textarea"
+      },
+      { name: "transfer_chain", label: "浼犺緭閾捐矾璇存槑", type: "textarea" }
+    ]
+  },
+  {
+    title: "鍐呴儴璁块棶涓庢潗鏂?,
+    fields: [
+      { name: "internal_access_note", label: "鍐呴儴鍛樺伐璁块棶椋庨櫓璇存槑锛堝彲閫夛級", type: "textarea" }
+    ]
+  },
+  {
+    title: "闄勪欢涓婁紶",
+    fields: []
+  }
+];
+
+const CPRA_STEPS: CpraStepConfig[] = [
+  {
+    title: "浼佷笟淇℃伅涓庨€傜敤鎬?,
+    fields: [
+      { name: "company_name", label: "浼佷笟鍚嶇О", type: "text" },
+      { name: "dba_name", label: "DBA/鍝佺墝鍚嶏紙鍙€夛級", type: "text" },
+      { name: "cpra_applicability_selfcheck", label: "CPRA閫傜敤鎬ц嚜妫€缁撹", type: "textarea" },
+      { name: "business_model", label: "涓氬姟妯″瀷", type: "text" }
+    ]
+  },
+  {
+    title: "鏁版嵁澶勭悊娲诲姩",
+    fields: [
+      { name: "data_lifecycle", label: "鏁版嵁鐢熷懡鍛ㄦ湡鎻忚堪", type: "textarea" },
+      { name: "data_categories", label: "澶勭悊鏁版嵁绫诲埆", type: "text" },
+      { name: "notice_and_consent", label: "鍛婄煡涓庡悓鎰忔満鍒?, type: "textarea" },
+      { name: "privacy_policy_url", label: "闅愮鏀跨瓥URL锛堝彲閫夛級", type: "text" }
+    ]
+  },
+  {
+    title: "娑堣垂鑰呮潈鍒╂満鍒?,
+    fields: [
+      { name: "consumer_rights_process", label: "DSR鍙楃悊娓犻亾涓庢祦绋?, type: "textarea" },
+      { name: "identity_verification_method", label: "韬唤楠岃瘉鏂规硶", type: "textarea" },
+      { name: "rights_sla", label: "澶勭悊鏃堕檺/SLA璇存槑", type: "textarea" }
+    ]
+  },
+  {
+    title: "鏁忔劅淇℃伅涓庣涓夋柟绠＄悊",
+    fields: [
+      { name: "opt_out_and_sale_sharing", label: "鍑哄敭/鍏变韩涓嶰pt-out鏈哄埗", type: "textarea" },
+      { name: "spi_usage_summary", label: "鏁忔劅涓汉淇℃伅锛圫PI锛変娇鐢ㄨ鏄?, type: "textarea" },
+      { name: "vendor_management", label: "渚涘簲鍟?绗笁鏂圭鐞嗘満鍒?, type: "textarea" },
+      { name: "ui_dark_pattern_check", label: "UI/UX鏆楁ā寮忛闄╂鏌?, type: "textarea" },
+      { name: "review_focus", label: "鏈閲嶇偣鏁存敼鍏虫敞椤?, type: "textarea" }
+    ]
+  },
+  {
+    title: "闄勪欢涓婁紶",
+    fields: []
+  }
+];
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+
+const toString = (value: unknown, fallback = ""): string => (typeof value === "string" ? value : fallback);
+const toNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+const toBoolean = (value: unknown, fallback = false): boolean => (typeof value === "boolean" ? value : fallback);
+
+const toRouteType = (value: unknown): PipiaRouteType =>
+  value === "certification" ? "certification" : "scc_filing";
+
+const toAttachmentRole = (value: unknown): PipiaAttachmentRole => {
+  if (value === "certification_material") return "certification_material";
+  if (value === "internal_policy") return "internal_policy";
+  if (value === "supporting_evidence") return "supporting_evidence";
+  return "scc_contract";
+};
+
+const splitCsv = (value: string): string[] =>
+  value
+    .split(/[,锛孿n]/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+const hasText = (value: string, minLength = 2): boolean => value.trim().length >= minLength;
+
+const assertInput = (condition: boolean, message: string): void => {
+  if (!condition) {
+    throw new Error(message);
+  }
+};
+
+const basenameFromPath = (path: string): string => {
+  const normalized = path.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  return chunks[chunks.length - 1] || "attachment.txt";
+};
+
+const inferAttachmentFormat = (value: string): "doc" | "docx" | "pdf" | "txt" | "md" | "json" | "csv" => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "doc") return "doc";
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  if (suffix === "md") return "md";
+  if (suffix === "json") return "json";
+  if (suffix === "csv") return "csv";
+  return "txt";
+};
+
+const inferDocxPdfFormat = (value: string): "docx" | "pdf" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  return null;
+};
+
+const inferDpiaAttachmentFormat = (value: string): "docx" | "pdf" | "png" | "jpg" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  if (suffix === "png") return "png";
+  if (suffix === "jpg" || suffix === "jpeg") return "jpg";
+  return null;
+};
+
+const inferCnFlowAttachmentFormat = (value: string): "xlsx" | "csv" | "docx" | "pdf" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "xlsx") return "xlsx";
+  if (suffix === "csv") return "csv";
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  return null;
+};
+
+const inferCpraAttachmentFormat = (value: string): "docx" | "pdf" | "xlsx" | "csv" | null => {
+  const suffix = value.split(".").pop()?.toLowerCase();
+  if (suffix === "docx") return "docx";
+  if (suffix === "pdf") return "pdf";
+  if (suffix === "xlsx") return "xlsx";
+  if (suffix === "csv") return "csv";
+  return null;
+};
+
+const isValidUrl = (value: string): boolean => /^https?:\/\/\S+$/i.test(value.trim());
+
+const parseRecipientRows = (raw: string): Array<{
+  entity_name: string;
+  country_region: string;
+  entity_role: CnFlowRecipientRole;
+  is_restricted_party: boolean;
+}> => {
+  const rows = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return rows.flatMap((line) => {
+    const [name = "", country = "", role = "", restricted = ""] = line.split(/[,\|]/).map((part) => part.trim());
+    if (!hasText(name) || !hasText(country)) return [];
+    const entityRole: CnFlowRecipientRole =
+      role === "controller" || role === "subprocessor" || role === "affiliate" || role === "vendor"
+        ? role
+        : "processor";
+    const restrictedNormalized = restricted.toLowerCase();
+    const isRestricted = ["yes", "true", "1", "鏄?, "鍙楅檺", "high"].includes(restrictedNormalized);
+    return [
+      {
+        entity_name: name,
+        country_region: country,
+        entity_role: entityRole,
+        is_restricted_party: isRestricted
+      }
+    ];
+  });
+};
+
+const toBcrScore = (value: string): "compliant" | "partial" | "non_compliant" => {
+  const len = value.trim().length;
+  if (len >= 48) return "compliant";
+  if (len >= 16) return "partial";
+  return "non_compliant";
+};
+
+const composeBcrFinding = (score: "compliant" | "partial" | "non_compliant", evidence: string): string => {
+  if (score === "compliant") return `宸茶鐩栨牳蹇冭姹傦細${evidence}`;
+  if (score === "partial") return `鏉℃宸叉秹鍙婁絾琛ㄨ堪涓嶅厖鍒嗭細${evidence}`;
+  return `灏氭湭褰㈡垚鍙墽琛屾満鍒讹細${evidence}`;
+};
+
+const createDefaultAssessmentValues = (): AssessmentFormValues => {
+  const demo = asRecord(getDefaultPayload("assessment"));
+  return {
+    company_name: toString(demo.company_name, ""),
+    company_uscc: "91310000XXXXXXXXXX",
+    legal_representative: "",
+    registered_address: "",
+    company_nature: "",
+    industry: toString(demo.industry, ""),
+    assessment_start_date: "",
+    assessment_end_date: "",
+    lead_department: "",
+    participant_departments: "",
+    third_party_support: false,
+    third_party_name: "",
+    third_party_scope: "",
+    scenario_name: "",
+    receiver_name: "",
+    transfer_frequency: "periodic",
+    is_long_term: true,
+    legal_basis: "",
+    necessity_basis: "",
+    receiver_country: toString(demo.receiver_country, ""),
+    is_ciio: toBoolean(demo.is_ciio, false),
+    contains_important_data: toBoolean(demo.contains_important_data, false),
+    pii_count: toNumber(demo.pii_count, 0),
+    spi_count: toNumber(demo.spi_count, 0),
+    transfer_purpose: toString(demo.transfer_purpose, ""),
+    data_inventory_summary: "",
+    system_chain_summary: "",
+    security_capability_summary: "",
+    force_override_path: toBoolean(demo.force_override_path, true)
+  };
+};
+
+const createDefaultDiagnosisValues = (): DiagnosisFormValues => {
+  const demo = asRecord(getDefaultPayload("diagnosis"));
+  const answers = asRecord(demo.answers);
+  return {
+    company_name: toString(demo.company_name, ""),
+    q5_no_personal_info:
+      answers.q5_no_personal_info === "yes" || answers.q5_no_personal_info === "unknown"
+        ? answers.q5_no_personal_info
+        : "no",
+    q6_scenario:
+      answers.q6_scenario === "contract_performance" ||
+      answers.q6_scenario === "hr_management" ||
+      answers.q6_scenario === "emergency" ||
+      answers.q6_scenario === "legal_duty"
+        ? answers.q6_scenario
+        : "other",
+    q7_receiver_type: answers.q7_receiver_type === "intra_group" ? "intra_group" : "third_party",
+    q1_is_ciio: answers.q1_is_ciio === "yes" || answers.q1_is_ciio === "unknown" ? answers.q1_is_ciio : "no",
+    q2_has_important_data:
+      answers.q2_has_important_data === "yes" || answers.q2_has_important_data === "unknown"
+        ? answers.q2_has_important_data
+        : "no",
+    q3_pii_count: toNumber(answers.q3_pii_count, 0),
+    q4_spi_count: toNumber(answers.q4_spi_count, 0),
+    q8_purpose: toString(answers.q8_purpose, "")
+  };
+};
+
+const createDefaultPipiaValues = (): PipiaFormValues => {
+  const demo = asRecord(getDefaultPayload("pipia"));
+  const companyProfile = asRecord(demo.company_profile);
+  const transferContext = asRecord(demo.transfer_context);
+  const personalInfoScope = asRecord(demo.personal_info_scope);
+  const rightsProtection = asRecord(demo.rights_protection);
+  const emergencyPlan = asRecord(demo.emergency_plan);
+  const firstAttachment =
+    Array.isArray(demo.attachments) && demo.attachments.length > 0
+      ? asRecord(demo.attachments[0])
+      : {};
+
+  return {
+    company_name: toString(companyProfile.company_name, ""),
+    company_uscc: toString(companyProfile.company_uscc, ""),
+    industry: toString(companyProfile.industry, ""),
+    shareholding_structure: "",
+    actual_controller: "",
+    overseas_investment: "",
+    org_structure_privacy_team: "",
+    business_overview: "",
+    processing_activity_overview: "",
+    is_ciio: toBoolean(companyProfile.is_ciio, false),
+    processing_person_count: toNumber(companyProfile.processing_person_count, 0),
+    outbound_pi_count: toNumber(companyProfile.outbound_pi_count, 0),
+    outbound_spi_count: toNumber(companyProfile.outbound_spi_count, 0),
+    route_type: toRouteType(demo.route_type),
+    outbound_scenario_name: "",
+    outbound_frequency: "periodic",
+    transfer_method: "",
+    domestic_storage: "",
+    overseas_storage: "",
+    transfer_link: "",
+    purpose: toString(transferContext.purpose, ""),
+    recipient_name: toString(transferContext.recipient_name, ""),
+    recipient_country_region: toString(transferContext.recipient_country_region, ""),
+    legal_basis: toString(transferContext.legal_basis, ""),
+    legality_justification: "",
+    necessity_justification: "",
+    pi_categories: Array.isArray(personalInfoScope.pi_categories)
+      ? personalInfoScope.pi_categories.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    spi_categories: Array.isArray(personalInfoScope.spi_categories)
+      ? personalInfoScope.spi_categories.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    subject_volume: toNumber(personalInfoScope.subject_volume, 0),
+    notice_mechanism: toString(rightsProtection.notice_mechanism, ""),
+    consent_mechanism: toString(rightsProtection.consent_mechanism, ""),
+    dsar_channel: toString(rightsProtection.dsar_channel, ""),
+    retention_policy: toString(rightsProtection.retention_policy, ""),
+    incident_response_sla_hours: toNumber(emergencyPlan.incident_response_sla_hours, 24),
+    escalation_path: toString(emergencyPlan.escalation_path, ""),
+    attachment_role: toAttachmentRole(firstAttachment.file_role)
+  };
+};
+
+const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
+  const demo = asRecord(getDefaultPayload("scc"));
+  return {
+    company_name: toString(demo.company_name, ""),
+    document_title: "闅愮鏀跨瓥",
+    document_version: "v1.0",
+    effective_date: "",
+    applicable_products: "",
+    applicable_scope: "",
+    publisher_entity: "",
+    is_live_version: true,
+    document_type: "privacy_policy",
+    receiver_name: toString(demo.receiver_name, ""),
+    receiver_country: toString(demo.receiver_country, ""),
+    transfer_purpose: toString(demo.transfer_purpose, ""),
+    processor_identity_disclosed: false,
+    scope_disclosed: false,
+    collection_purpose_disclosed: false,
+    processing_method_disclosed: false,
+    category_disclosed: false,
+    sensitive_pi_disclosed: false,
+    crossborder_rule_disclosed: false,
+    rights_channel_disclosed: false,
+    contact_channel: "",
+    pii_count: toNumber(demo.pii_count, 0),
+    spi_count: toNumber(demo.spi_count, 0),
+    has_scc_draft: toBoolean(demo.has_scc_draft, false),
+    review_focus: "閲嶇偣瀹℃煡鍑哄鍛婄煡銆佹晱鎰熶俊鎭鐞嗐€佷釜浜烘潈鍒╀笌鏁戞祹鏉℃銆?
+  };
+};
+
+const createDefaultEuSccValues = (): EuSccFormValues => {
+  const demo = asRecord(getDefaultPayload("scc"));
+  return {
+    exporter_name: toString(demo.company_name, ""),
+    importer_name: toString(demo.receiver_name, ""),
+    importer_country: toString(demo.receiver_country, ""),
+    transfer_role: "c2p",
+    scc_version: "eu_2021",
+    transfer_purpose: toString(demo.transfer_purpose, ""),
+    data_categories: "",
+    data_subject_categories: "",
+    transfer_frequency: "periodic",
+    retention_rule: "",
+    tom_summary: "",
+    onward_transfer_control: "",
+    rights_and_complaint: "",
+    government_access_response: "",
+    supplementary_clause_review: "",
+    pii_count: toNumber(demo.pii_count, 0),
+    spi_count: toNumber(demo.spi_count, 0),
+    has_scc_draft: toBoolean(demo.has_scc_draft, true)
+  };
+};
+
+const createDefaultBcrValues = (): BcrFormValues => {
+  const demo = asRecord(getDefaultPayload("bcr"));
+  return {
+    company_name: toString(demo.company_name, ""),
+    group_structure: "",
+    applicant_entity: "",
+    data_flow_scope: "",
+    lead_sa_rationale: "",
+    binding_mechanism: "",
+    third_party_beneficiary: "",
+    liability_compensation: "",
+    transparency_notice: "",
+    training_audit: "",
+    cooperation_with_sa: "",
+    dp_safeguards: "",
+    third_country_assessment: "",
+    government_access_process: "",
+    update_mechanism: "",
+    definitions_quality: "",
+    review_focus: "浼樺厛妫€鏌ョ涓夊浗娉曞緥璇勪及鏈哄埗銆佺涓夋柟鍙楃泭浜烘潈鍒╁拰璐ｄ换鎵挎媴鏉℃銆?
+  };
+};
+
+const createDefaultDpiaValues = (): DpiaFormValues => {
+  const demo = asRecord(getDefaultPayload("dpia"));
+  return {
+    project_name: toString(demo.project_name, ""),
+    project_goal: "",
+    need_reason: "",
+    controller_name: "",
+    dpo_role: "",
+    contact_channel: "",
+    processing_description: toString(demo.processing_description, ""),
+    data_types: "",
+    includes_special_data: false,
+    subject_scale: "",
+    frequency: "",
+    retention_period: "",
+    geo_scope: "",
+    has_crossborder_transfer: false,
+    data_source: "",
+    relationship_context: "",
+    expectation_control: "",
+    vulnerable_group: "",
+    prior_concerns: "",
+    novel_technology: "",
+    lawful_basis: toString(demo.lawful_basis, ""),
+    purpose_and_necessity: toString(demo.purpose_and_necessity, ""),
+    function_creep_control: "",
+    minimization_quality: "",
+    notice_plan: "",
+    rights_support: "",
+    processor_management: "",
+    risk_assessment: toString(demo.risk_assessment, ""),
+    mitigation_measures: toString(demo.mitigation_measures, ""),
+    residual_risk: toString(demo.residual_risk, ""),
+    signoff_owner: "",
+    dpo_advice: "",
+    review_schedule: "",
+    attachment_role: "data_flow_diagram"
+  };
+};
+
+const createDefaultTiaValues = (): TiaFormValues => {
+  const demo = asRecord(getDefaultPayload("tia"));
+  const transferToolRaw = toString(demo.transfer_tool, "scc");
+  const transferTool: TiaFormValues["transfer_tool"] =
+    transferToolRaw === "bcr" || transferToolRaw === "derogation" ? transferToolRaw : "scc";
+  return {
+    data_exporter_name: "",
+    data_importer_name: "",
+    importer_country_region: "",
+    transfer_purpose: "",
+    data_categories: "",
+    sensitive_data_description: "",
+    data_subject_categories: "",
+    transfer_frequency: "periodic",
+    transfer_tool: transferTool,
+    law_assessed: true,
+    law_findings: toString(demo.third_country_assessment, ""),
+    pre_effectiveness: "",
+    supplementary_technical: "",
+    supplementary_contractual: "",
+    supplementary_organizational: "",
+    post_effectiveness: "",
+    key_actions: "",
+    dpo_opinion: "",
+    review_date: "",
+    attachment_role: "country_law_analysis"
+  };
+};
+
+const createDefaultCnFlowValues = (): CnFlowFormValues => {
+  const demo = asRecord(getDefaultPayload("cn_flow"));
+  const recipient = Array.isArray(demo.recipient_entities) && demo.recipient_entities.length > 0
+    ? asRecord(demo.recipient_entities[0])
+    : {};
+  const roleRaw = toString(recipient.entity_role, "processor");
+  const primaryRole: CnFlowRecipientRole =
+    roleRaw === "controller" || roleRaw === "subprocessor" || roleRaw === "affiliate" || roleRaw === "vendor"
+      ? roleRaw
+      : "processor";
+  return {
+    company_name: toString(demo.company_name, ""),
+    transfer_purpose: toString(demo.transfer_purpose, ""),
+    data_categories: Array.isArray(demo.data_categories)
+      ? demo.data_categories.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    sensitive_data_flags: Array.isArray(demo.sensitive_data_flags)
+      ? demo.sensitive_data_flags.filter((item): item is string => typeof item === "string").join(",")
+      : "",
+    transfer_chain: toString(demo.transfer_chain, ""),
+    data_volume_note: "",
+    necessity_justification: "",
+    primary_recipient_name: toString(recipient.entity_name, ""),
+    primary_recipient_country: toString(recipient.country_region, ""),
+    primary_recipient_role: primaryRole,
+    primary_recipient_restricted: toBoolean(recipient.is_restricted_party, false),
+    additional_recipients: "",
+    internal_access_note: ""
+  };
+};
+
+const createDefaultCpraValues = (): CpraFormValues => {
+  const demo = asRecord(getDefaultPayload("cpra"));
+  return {
+    company_name: toString(demo.company_name, ""),
+    dba_name: "",
+    cpra_applicability_selfcheck: "",
+    business_model: toString(demo.business_model, ""),
+    data_lifecycle: toString(demo.data_lifecycle, ""),
+    data_categories: "",
+    notice_and_consent: toString(demo.notice_and_consent, ""),
+    privacy_policy_url: "",
+    consumer_rights_process: toString(demo.consumer_rights_process, ""),
+    identity_verification_method: "",
+    rights_sla: "",
+    opt_out_and_sale_sharing: toString(demo.opt_out_and_sale_sharing, ""),
+    spi_usage_summary: "",
+    vendor_management: toString(demo.vendor_management, ""),
+    ui_dark_pattern_check: "",
+    review_focus: "浼樺厛妫€鏌ユ秷璐硅€呮潈鍒╁搷搴旀椂闄愩€丼PI闄愬埗涓嶥o Not Sell/Share鍏ュ彛銆?
+  };
+};
+
+const readStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+const RECOMMENDED_PATH_LABEL: Record<string, { zh: string; en: string }> = {
+  security_assessment: { zh: "瀹夊叏璇勪及璺緞", en: "Security Assessment Path" },
+  scc_or_certification: { zh: "鏍囧噯鍚堝悓澶囨/璁よ瘉璺緞", en: "SCC Filing / Certification Path" },
+  exemption: { zh: "璞佸厤璺緞", en: "Exemption Path" }
+};
+
+const ROUTE_TYPE_LABEL: Record<string, { zh: string; en: string }> = {
+  scc_filing: { zh: "鏍囧噯鍚堝悓澶囨", en: "SCC Filing" },
+  certification: { zh: "璁よ瘉璺緞", en: "Certification Path" }
+};
+
+const DOCUMENT_TYPE_LABEL: Record<DocumentReviewFormValues["document_type"], { zh: string; en: string }> = {
+  privacy_policy: { zh: "闅愮鏀跨瓥", en: "Privacy Policy" },
+  scc_contract: { zh: "鏍囧噯鍚堝悓", en: "Standard Contract" },
+  dpa: { zh: "鏁版嵁澶勭悊鍗忚", en: "Data Processing Agreement" },
+  other: { zh: "鍏朵粬鏂囨。", en: "Other Document" }
+};
+
+const MODULE_RUN_UI_TEXT: Record<string, { zh: string; en: string }> = {
+  "鍩虹璇嗗埆": { zh: "鍩虹璇嗗埆", en: "Basic Identification" },
+  "寮哄埗璺緞瑙﹀彂椤?: { zh: "寮哄埗璺緞瑙﹀彂椤?, en: "Mandatory Path Triggers" },
+  "琛ュ厖璇存槑": { zh: "琛ュ厖璇存槑", en: "Supplementary Notes" },
+  "涓讳綋鍩虹淇℃伅": { zh: "涓讳綋鍩虹淇℃伅", en: "Entity Basics" },
+  "鑷瘎浼板伐浣滅粍缁?: { zh: "鑷瘎浼板伐浣滅粍缁?, en: "Assessment Team Setup" },
+  "鍑哄鍦烘櫙涓庡繀瑕佹€?: { zh: "鍑哄鍦烘櫙涓庡繀瑕佹€?, en: "Transfer Scenario and Necessity" },
+  "鏁版嵁娓呭崟涓庨摼璺?: { zh: "鏁版嵁娓呭崟涓庨摼璺?, en: "Data Inventory and Transfer Chain" },
+  "鎵ц绛栫暐涓庢潗鏂?: { zh: "鎵ц绛栫暐涓庢潗鏂?, en: "Execution Strategy and Materials" },
+  "浼佷笟鍩烘湰淇℃伅": { zh: "浼佷笟鍩烘湰淇℃伅", en: "Enterprise Profile" },
+  "鍑哄鍦烘櫙涓庤寖鍥?: { zh: "鍑哄鍦烘櫙涓庤寖鍥?, en: "Transfer Scenario and Scope" },
+  "鏉冨埄淇濋殰涓庡簲鎬?: { zh: "鏉冨埄淇濋殰涓庡簲鎬?, en: "Rights Protection and Incident Response" },
+  "瀹℃煡瀵硅薄": { zh: "瀹℃煡瀵硅薄", en: "Review Subject" },
+  "鎶湶瀹屾暣鎬ф鏌?: { zh: "鎶湶瀹屾暣鎬ф鏌?, en: "Disclosure Completeness Check" },
+  "鍑哄涓庡鐞嗚儗鏅?: { zh: "鍑哄涓庡鐞嗚儗鏅?, en: "Transfer and Processing Context" },
+  "瀹℃煡閲嶇偣涓庨檮浠?: { zh: "瀹℃煡閲嶇偣涓庨檮浠?, en: "Review Focus and Attachments" },
+  "浼犺緭涓讳綋涓庢ā鍧?: { zh: "浼犺緭涓讳綋涓庢ā鍧?, en: "Transfer Parties and Module" },
+  "鍦烘櫙涓庢暟鎹寖鍥?: { zh: "鍦烘櫙涓庢暟鎹寖鍥?, en: "Scenario and Data Scope" },
+  "鏉℃涓庝繚闅滄満鍒?: { zh: "鏉℃涓庝繚闅滄満鍒?, en: "Clauses and Safeguards" },
+  "瀹℃煡鏂囦欢": { zh: "瀹℃煡鏂囦欢", en: "Review Files" },
+  "涓讳綋涓庤寖鍥?: { zh: "涓讳綋涓庤寖鍥?, en: "Entity and Scope" },
+  "绾︽潫鍔涗笌鏉冨埄鏈哄埗": { zh: "绾︽潫鍔涗笌鏉冨埄鏈哄埗", en: "Binding Force and Rights Mechanism" },
+  "娌荤悊涓庣洃绠″崗浣?: { zh: "娌荤悊涓庣洃绠″崗浣?, en: "Governance and Regulatory Cooperation" },
+  "鏇存柊涓庢枃妗ｆ潗鏂?: { zh: "鏇存柊涓庢枃妗ｆ潗鏂?, en: "Updates and Documentation" },
+  "椤圭洰涓庤Е鍙戠悊鐢?: { zh: "椤圭洰涓庤Е鍙戠悊鐢?, en: "Project and Trigger" },
+  "蹇呰鎬т笌鐩哥О鎬?: { zh: "蹇呰鎬т笌鐩哥О鎬?, en: "Necessity and Proportionality" },
+  "椋庨櫓涓庣紦瑙?: { zh: "椋庨櫓涓庣紦瑙?, en: "Risks and Mitigation" },
+  "闄勪欢鏉愭枡": { zh: "闄勪欢鏉愭枡", en: "Attachments" },
+  "浼犺緭浜嬪疄璇嗗埆": { zh: "浼犺緭浜嬪疄璇嗗埆", en: "Transfer Facts" },
+  "绗笁鍥芥硶寰嬭瘎浼?: { zh: "绗笁鍥芥硶寰嬭瘎浼?, en: "Third-Country Law Assessment" },
+  "琛ュ厖鎺柦涓庣粨璁?: { zh: "琛ュ厖鎺柦涓庣粨璁?, en: "Supplementary Measures and Conclusion" },
+  "鍑哄鏁版嵁娓呭崟": { zh: "鍑哄鏁版嵁娓呭崟", en: "Outbound Data Inventory" },
+  "澶栭儴瀹炰綋娓呭崟": { zh: "澶栭儴瀹炰綋娓呭崟", en: "External Entity List" },
+  "浼犺緭閾捐矾璇存槑": { zh: "浼犺緭閾捐矾璇存槑", en: "Transfer Chain Description" },
+  "鍐呴儴璁块棶涓庢潗鏂?: { zh: "鍐呴儴璁块棶涓庢潗鏂?, en: "Internal Access and Materials" },
+  "浼佷笟淇℃伅涓庨€傜敤鎬?: { zh: "浼佷笟淇℃伅涓庨€傜敤鎬?, en: "Business Profile and Applicability" },
+  "鏁版嵁澶勭悊娲诲姩": { zh: "鏁版嵁澶勭悊娲诲姩", en: "Data Processing Activities" },
+  "鍛婄煡涓庡悓鎰忔満鍒?: { zh: "鍛婄煡涓庡悓鎰忔満鍒?, en: "Notice and Consent Mechanism" },
+  "娑堣垂鑰呮潈鍒╂満鍒?: { zh: "娑堣垂鑰呮潈鍒╂満鍒?, en: "Consumer Rights Mechanism" },
+  "鏁忔劅淇℃伅涓庣涓夋柟绠＄悊": { zh: "鏁忔劅淇℃伅涓庣涓夋柟绠＄悊", en: "Sensitive Information and Third-Party Governance" },
+  "浼佷笟鍚嶇О": { zh: "浼佷笟鍚嶇О", en: "Company Name" },
+  "缁熶竴绀句細淇＄敤浠ｇ爜": { zh: "缁熶竴绀句細淇＄敤浠ｇ爜", en: "Unified Social Credit Code" },
+  "娉曞畾浠ｈ〃浜?: { zh: "娉曞畾浠ｈ〃浜?, en: "Legal Representative" },
+  "娉ㄥ唽鍦板潃": { zh: "娉ㄥ唽鍦板潃", en: "Registered Address" },
+  "鍏徃鎬ц川": { zh: "鍏徃鎬ц川", en: "Company Type" },
+  "琛屼笟": { zh: "琛屼笟", en: "Industry" },
+  "鎺ユ敹鏂瑰浗瀹?: { zh: "鎺ユ敹鏂瑰浗瀹?, en: "Recipient Country" },
+  "澧冨鎺ユ敹鏂瑰悕绉?: { zh: "澧冨鎺ユ敹鏂瑰悕绉?, en: "Overseas Recipient Name" },
+  "鑷瘎浼板紑濮嬫棩鏈?: { zh: "鑷瘎浼板紑濮嬫棩鏈?, en: "Assessment Start Date" },
+  "鑷瘎浼扮粨鏉熸棩鏈?: { zh: "鑷瘎浼扮粨鏉熸棩鏈?, en: "Assessment End Date" },
+  "鐗靛ご閮ㄩ棬": { zh: "鐗靛ご閮ㄩ棬", en: "Lead Department" },
+  "鍙備笌閮ㄩ棬锛堥€楀彿鍒嗛殧锛?: { zh: "鍙備笌閮ㄩ棬锛堥€楀彿鍒嗛殧锛?, en: "Participating Departments (comma-separated)" },
+  "鏄惁鏈夌涓夋柟鏈烘瀯鍙備笌": { zh: "鏄惁鏈夌涓夋柟鏈烘瀯鍙備笌", en: "Third-Party Support Involved" },
+  "绗笁鏂规満鏋勫悕绉?: { zh: "绗笁鏂规満鏋勫悕绉?, en: "Third-Party Provider Name" },
+  "绗笁鏂瑰弬涓庤寖鍥?: { zh: "绗笁鏂瑰弬涓庤寖鍥?, en: "Third-Party Scope" },
+  "鍑哄鍦烘櫙鍚嶇О": { zh: "鍑哄鍦烘櫙鍚嶇О", en: "Transfer Scenario Name" },
+  "鍑哄棰戠巼": { zh: "鍑哄棰戠巼", en: "Transfer Frequency" },
+  "鏄惁闀挎湡鎸佺画鍑哄": { zh: "鏄惁闀挎湡鎸佺画鍑哄", en: "Long-Term Ongoing Transfer" },
+  "鍑哄鐩殑": { zh: "鍑哄鐩殑", en: "Transfer Purpose" },
+  "鍚堟硶鎬у熀纭€": { zh: "鍚堟硶鎬у熀纭€", en: "Legal Basis" },
+  "蹇呰鎬ц鏄?: { zh: "蹇呰鎬ц鏄?, en: "Necessity Statement" },
+  "鏄惁 CIIO": { zh: "鏄惁 CIIO", en: "Is CIIO" },
+  "鏄惁娑夊強閲嶈鏁版嵁": { zh: "鏄惁娑夊強閲嶈鏁版嵁", en: "Contains Important Data" },
+  "鏅€氫釜浜轰俊鎭噺": { zh: "鏅€氫釜浜轰俊鎭噺", en: "Volume of PI" },
+  "鏁忔劅涓汉淇℃伅閲?: { zh: "鏁忔劅涓汉淇℃伅閲?, en: "Volume of SPI" },
+  "鏁版嵁娓呭崟鎽樿锛堝満鏅?瀛楁/蹇呰鎬э級": { zh: "鏁版嵁娓呭崟鎽樿锛堝満鏅?瀛楁/蹇呰鎬э級", en: "Data Inventory Summary (scenario/fields/necessity)" },
+  "绯荤粺涓庡嚭澧冮摼璺鏄?: { zh: "绯荤粺涓庡嚭澧冮摼璺鏄?, en: "System and Transfer Chain Description" },
+  "鏁版嵁瀹夊叏淇濋殰鑳藉姏璇存槑": { zh: "鏁版嵁瀹夊叏淇濋殰鑳藉姏璇存槑", en: "Security Capability Summary" },
+  "鍏佽璺緞涓嶄竴鑷存椂缁х画鐢熸垚": { zh: "鍏佽璺緞涓嶄竴鑷存椂缁х画鐢熸垚", en: "Allow Generation When Path Differs" },
+  "鑲℃潈缁撴瀯": { zh: "鑲℃潈缁撴瀯", en: "Shareholding Structure" },
+  "瀹為檯鎺у埗浜?: { zh: "瀹為檯鎺у埗浜?, en: "Actual Controller" },
+  "澧冨唴澶栨姇璧勬儏鍐?: { zh: "澧冨唴澶栨姇璧勬儏鍐?, en: "Domestic and Overseas Investments" },
+  "缁勭粐鏋舵瀯涓庝釜淇濇満鏋勪俊鎭?: { zh: "缁勭粐鏋舵瀯涓庝釜淇濇満鏋勪俊鎭?, en: "Org Structure and Privacy Team" },
+  "鏁翠綋涓氬姟姒傚喌": { zh: "鏁翠綋涓氬姟姒傚喌", en: "Business Overview" },
+  "澶勭悊娲诲姩姒傚喌": { zh: "澶勭悊娲诲姩姒傚喌", en: "Processing Activity Overview" },
+  "澶勭悊涓汉淇℃伅瑙勬ā": { zh: "澶勭悊涓汉淇℃伅瑙勬ā", en: "Scale of PI Processing" },
+  "鍑哄鏅€氫釜浜轰俊鎭妯?: { zh: "鍑哄鏅€氫釜浜轰俊鎭妯?, en: "Outbound PI Volume" },
+  "鍑哄鏁忔劅涓汉淇℃伅瑙勬ā": { zh: "鍑哄鏁忔劅涓汉淇℃伅瑙勬ā", en: "Outbound SPI Volume" },
+  "璺緞绫诲瀷": { zh: "璺緞绫诲瀷", en: "Route Type" },
+  "鍑哄鏂瑰紡锛圓PI/鏂囦欢/鍚屾锛?: { zh: "鍑哄鏂瑰紡锛圓PI/鏂囦欢/鍚屾锛?, en: "Transfer Method (API/file/sync)" },
+  "澧冨唴瀛樺偍绯荤粺/鏁版嵁涓績": { zh: "澧冨唴瀛樺偍绯荤粺/鏁版嵁涓績", en: "Domestic Storage System / Data Center" },
+  "澧冨瀛樺偍绯荤粺/鏁版嵁涓績": { zh: "澧冨瀛樺偍绯荤粺/鏁版嵁涓績", en: "Overseas Storage System / Data Center" },
+  "澧冨鎺ユ敹鏂?: { zh: "澧冨鎺ユ敹鏂?, en: "Overseas Recipient" },
+  "鎺ユ敹鏂瑰浗瀹?鍦板尯": { zh: "鎺ユ敹鏂瑰浗瀹?鍦板尯", en: "Recipient Country / Region" },
+  "澶勭悊鍚堟硶鎬у熀纭€": { zh: "澶勭悊鍚堟硶鎬у熀纭€", en: "Processing Legal Basis" },
+  "鍚堟硶鎬ц璇?: { zh: "鍚堟硶鎬ц璇?, en: "Legality Analysis" },
+  "蹇呰鎬ц璇?: { zh: "蹇呰鎬ц璇?, en: "Necessity Analysis" },
+  "鏅€氫釜浜轰俊鎭被鍒紙閫楀彿鍒嗛殧锛?: { zh: "鏅€氫釜浜轰俊鎭被鍒紙閫楀彿鍒嗛殧锛?, en: "PI Categories (comma-separated)" },
+  "鏁忔劅涓汉淇℃伅绫诲埆锛堥€楀彿鍒嗛殧锛?: { zh: "鏁忔劅涓汉淇℃伅绫诲埆锛堥€楀彿鍒嗛殧锛?, en: "SPI Categories (comma-separated)" },
+  "鏁版嵁涓讳綋瑙勬ā": { zh: "鏁版嵁涓讳綋瑙勬ā", en: "Scale of Data Subjects" },
+  "鍛婄煡鏈哄埗": { zh: "鍛婄煡鏈哄埗", en: "Notice Mechanism" },
+  "鍚屾剰鏈哄埗": { zh: "鍚屾剰鏈哄埗", en: "Consent Mechanism" },
+  "鏉冨埄璇锋眰娓犻亾": { zh: "鏉冨埄璇锋眰娓犻亾", en: "Rights Request Channel" },
+  "淇濆瓨涓庡垹闄ょ瓥鐣?: { zh: "淇濆瓨涓庡垹闄ょ瓥鐣?, en: "Retention and Deletion Policy" },
+  "浜嬩欢鍝嶅簲SLA锛堝皬鏃讹級": { zh: "浜嬩欢鍝嶅簲SLA锛堝皬鏃讹級", en: "Incident Response SLA (hours)" },
+  "鍗囩骇璺緞": { zh: "鍗囩骇璺緞", en: "Escalation Path" },
+  "闄勪欢瑙掕壊": { zh: "闄勪欢瑙掕壊", en: "Attachment Role" },
+  "鍙戝竷涓讳綋": { zh: "鍙戝竷涓讳綋", en: "Publishing Entity" },
+  "鏂囨。鍚嶇О": { zh: "鏂囨。鍚嶇О", en: "Document Title" },
+  "鏂囨。鐗堟湰鍙?: { zh: "鏂囨。鐗堟湰鍙?, en: "Document Version" },
+  "鐢熸晥鏃ユ湡": { zh: "鐢熸晥鏃ユ湡", en: "Effective Date" },
+  "閫傜敤浜у搧/绔欑偣": { zh: "閫傜敤浜у搧/绔欑偣", en: "Applicable Product / Site" },
+  "閫傜敤鑼冨洿璇存槑": { zh: "閫傜敤鑼冨洿璇存槑", en: "Applicable Scope" },
+  "鏄惁绾夸笂鐢熸晥鐗堟湰": { zh: "鏄惁绾夸笂鐢熸晥鐗堟湰", en: "Is Live Version" },
+  "鏂囨。绫诲瀷": { zh: "鏂囨。绫诲瀷", en: "Document Type" },
+  "鏄惁鎶湶澶勭悊鑰呰韩浠?: { zh: "鏄惁鎶湶澶勭悊鑰呰韩浠?, en: "Discloses Processor Identity" },
+  "鏄惁鎶湶閫傜敤鑼冨洿": { zh: "鏄惁鎶湶閫傜敤鑼冨洿", en: "Discloses Applicable Scope" },
+  "鏄惁鎶湶鏀堕泦涓庡鐞嗙洰鐨?: { zh: "鏄惁鎶湶鏀堕泦涓庡鐞嗙洰鐨?, en: "Discloses Collection and Processing Purpose" },
+  "鏄惁鎶湶澶勭悊鏂瑰紡": { zh: "鏄惁鎶湶澶勭悊鏂瑰紡", en: "Discloses Processing Method" },
+  "鏄惁鎶湶涓汉淇℃伅绉嶇被": { zh: "鏄惁鎶湶涓汉淇℃伅绉嶇被", en: "Discloses PI Categories" },
+  "鏄惁鎶湶鏁忔劅涓汉淇℃伅澶勭悊": { zh: "鏄惁鎶湶鏁忔劅涓汉淇℃伅澶勭悊", en: "Discloses Sensitive PI Processing" },
+  "鏄惁鎶湶鍑哄瑙勫垯涓庢帴鏀舵柟": { zh: "鏄惁鎶湶鍑哄瑙勫垯涓庢帴鏀舵柟", en: "Discloses Transfer Rules and Recipient" },
+  "鏄惁鎶湶涓汉鏉冨埄琛屼娇鏂瑰紡": { zh: "鏄惁鎶湶涓汉鏉冨埄琛屼娇鏂瑰紡", en: "Discloses Rights Exercise Method" },
+  "鎶曡瘔/鑱旂郴娓犻亾": { zh: "鎶曡瘔/鑱旂郴娓犻亾", en: "Complaint / Contact Channel" },
+  "澧冨鎺ユ敹鏂癸紙濡傞€傜敤锛?: { zh: "澧冨鎺ユ敹鏂癸紙濡傞€傜敤锛?, en: "Overseas Recipient (if applicable)" },
+  "澶勭悊/鍑哄鐩殑": { zh: "澶勭悊/鍑哄鐩殑", en: "Processing / Transfer Purpose" },
+  "娑夊強涓汉淇℃伅瑙勬ā锛堜及绠楋級": { zh: "娑夊強涓汉淇℃伅瑙勬ā锛堜及绠楋級", en: "Estimated PI Volume" },
+  "娑夊強鏁忔劅涓汉淇℃伅瑙勬ā锛堜及绠楋級": { zh: "娑夊強鏁忔劅涓汉淇℃伅瑙勬ā锛堜及绠楋級", en: "Estimated SPI Volume" },
+  "鏄惁宸叉湁鍙鏌ュ悎鍚岃崏妗?: { zh: "鏄惁宸叉湁鍙鏌ュ悎鍚岃崏妗?, en: "Existing Reviewable Contract Draft" },
+  "鏈閲嶇偣鍏虫敞鏉℃": { zh: "鏈閲嶇偣鍏虫敞鏉℃", en: "Key Clauses to Review" },
+  "鏁版嵁鍑哄彛鏂癸紙EEA锛?: { zh: "鏁版嵁鍑哄彛鏂癸紙EEA锛?, en: "Data Exporter (EEA)" },
+  "鏁版嵁杩涘彛鏂癸紙绗笁鍥斤級": { zh: "鏁版嵁杩涘彛鏂癸紙绗笁鍥斤級", en: "Data Importer (Third Country)" },
+  "杩涘彛鏂瑰浗瀹?鍦板尯": { zh: "杩涘彛鏂瑰浗瀹?鍦板尯", en: "Importer Country / Region" },
+  "浼犺緭瑙掕壊鍏崇郴": { zh: "浼犺緭瑙掕壊鍏崇郴", en: "Transfer Role Relationship" },
+  "SCC鐗堟湰璇嗗埆": { zh: "SCC鐗堟湰璇嗗埆", en: "SCC Version" },
+  "鏄惁宸叉湁瀹屾暣SCC鏂囨湰": { zh: "鏄惁宸叉湁瀹屾暣SCC鏂囨湰", en: "Has Complete SCC Text" },
+  "浼犺緭鐩殑": { zh: "浼犺緭鐩殑", en: "Transfer Purpose" },
+  "涓汉鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?: { zh: "涓汉鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?, en: "Personal Data Categories (comma-separated)" },
+  "鏁版嵁涓讳綋绫诲埆": { zh: "鏁版嵁涓讳綋绫诲埆", en: "Data Subject Categories" },
+  "淇濆瓨鏈熼檺/鍒犻櫎瑙勫垯": { zh: "淇濆瓨鏈熼檺/鍒犻櫎瑙勫垯", en: "Retention / Deletion Rule" },
+  "PI 瑙勬ā锛堜及绠楋級": { zh: "PI 瑙勬ā锛堜及绠楋級", en: "Estimated PI Volume" },
+  "SPI 瑙勬ā锛堜及绠楋級": { zh: "SPI 瑙勬ā锛堜及绠楋級", en: "Estimated SPI Volume" },
+  "鎶€鏈笌缁勭粐鎺柦锛圱OM锛夋憳瑕?: { zh: "鎶€鏈笌缁勭粐鎺柦锛圱OM锛夋憳瑕?, en: "TOM Summary" },
+  "瀛愬鐞嗚€?鍐嶄紶杈撴帶鍒?: { zh: "瀛愬鐞嗚€?鍐嶄紶杈撴帶鍒?, en: "Subprocessor / Onward Transfer Control" },
+  "鏁版嵁涓讳綋鏉冨埄涓庢姇璇夋満鍒?: { zh: "鏁版嵁涓讳綋鏉冨埄涓庢姇璇夋満鍒?, en: "Data Subject Rights and Complaint Mechanism" },
+  "鏀垮簻璁块棶璇锋眰搴斿鏈哄埗": { zh: "鏀垮簻璁块棶璇锋眰搴斿鏈哄埗", en: "Government Access Response" },
+  "琛ュ厖鏉℃鍐茬獊妫€鏌ュ叧娉ㄧ偣": { zh: "琛ュ厖鏉℃鍐茬獊妫€鏌ュ叧娉ㄧ偣", en: "Supplementary Clause Conflict Focus" },
+  "闆嗗洟鍚嶇О": { zh: "闆嗗洟鍚嶇О", en: "Group Name" },
+  "闆嗗洟缁撴瀯涓庣敵璇蜂富浣?: { zh: "闆嗗洟缁撴瀯涓庣敵璇蜂富浣?, en: "Group Structure and Applicant" },
+  "鐢宠瀹炰綋涓庤亴璐?: { zh: "鐢宠瀹炰綋涓庤亴璐?, en: "Applicant Entity and Responsibilities" },
+  "BCR Lead 閫夋嫨鐞嗙敱": { zh: "BCR Lead 閫夋嫨鐞嗙敱", en: "Reason for BCR Lead Selection" },
+  "鏁版嵁娴佷笌澶勭悊娲诲姩鑼冨洿": { zh: "鏁版嵁娴佷笌澶勭悊娲诲姩鑼冨洿", en: "Data Flow and Processing Scope" },
+  "闆嗗洟鍐呴儴/鍛樺伐绾︽潫鏈哄埗": { zh: "闆嗗洟鍐呴儴/鍛樺伐绾︽潫鏈哄埗", en: "Internal / Employee Binding Mechanism" },
+  "绗笁鏂瑰彈鐩婁汉鏉冨埄鏉℃": { zh: "绗笁鏂瑰彈鐩婁汉鏉冨埄鏉℃", en: "Third-Party Beneficiary Rights" },
+  "璐ｄ换鎵挎媴涓庤禂鍋胯兘鍔涜鏄?: { zh: "璐ｄ换鎵挎媴涓庤禂鍋胯兘鍔涜鏄?, en: "Liability and Compensation Capability" },
+  "瀵瑰鍏紑涓庡憡鐭ュ畨鎺?: { zh: "瀵瑰鍏紑涓庡憡鐭ュ畨鎺?, en: "Public Disclosure and Notice" },
+  "鍩硅涓庡璁″埗搴?: { zh: "鍩硅涓庡璁″埗搴?, en: "Training and Audit Mechanism" },
+  "涓庣洃绠″崗浣滀箟鍔?: { zh: "涓庣洃绠″崗浣滀箟鍔?, en: "Regulatory Cooperation Obligation" },
+  "鏁版嵁淇濇姢鍘熷垯涓庝繚闅?: { zh: "鏁版嵁淇濇姢鍘熷垯涓庝繚闅?, en: "Data Protection Principles and Safeguards" },
+  "绗笁鍥芥硶寰嬭瘎浼版満鍒?: { zh: "绗笁鍥芥硶寰嬭瘎浼版満鍒?, en: "Third-Country Law Assessment Mechanism" },
+  "鏇存柊鏈哄埗涓庢垚鍛樻竻鍗曠淮鎶?: { zh: "鏇存柊鏈哄埗涓庢垚鍛樻竻鍗曠淮鎶?, en: "Update Mechanism and Member List Maintenance" },
+  "瀹氫箟琛ㄤ笌鏈娓呮櫚搴?: { zh: "瀹氫箟琛ㄤ笌鏈娓呮櫚搴?, en: "Definitions and Terminology Clarity" },
+  "鏈閲嶇偣鍏虫敞椤?: { zh: "鏈閲嶇偣鍏虫敞椤?, en: "Focus Items for This Review" },
+  "椤圭洰鍚嶇О": { zh: "椤圭洰鍚嶇О", en: "Project Name" },
+  "椤圭洰鐩爣/鎽樿": { zh: "椤圭洰鐩爣/鎽樿", en: "Project Goal / Summary" },
+  "闇€瑕?DPIA 鐨勪富瑕佺悊鐢?: { zh: "闇€瑕?DPIA 鐨勪富瑕佺悊鐢?, en: "Main Trigger for DPIA" },
+  "鎺у埗鑰呭悕绉?: { zh: "鎺у埗鑰呭悕绉?, en: "Controller Name" },
+  "DPO 鑱屼綅": { zh: "DPO 鑱屼綅", en: "DPO Role" },
+  "鎺у埗鑰?DPO 鑱旂郴鏂瑰紡": { zh: "鎺у埗鑰?DPO 鑱旂郴鏂瑰紡", en: "Controller / DPO Contact" },
+  "澶勭悊娲诲姩鎻忚堪": { zh: "澶勭悊娲诲姩鎻忚堪", en: "Processing Description" },
+  "澶勭悊娴佺▼涓庢椿鍔ㄦ弿杩?: { zh: "澶勭悊娴佺▼涓庢椿鍔ㄦ弿杩?, en: "Process Flow and Activity Description" },
+  "鏁版嵁绫诲瀷": { zh: "鏁版嵁绫诲瀷", en: "Data Types" },
+  "鏄惁娑夊強鐗规畩绫诲埆鏁版嵁": { zh: "鏄惁娑夊強鐗规畩绫诲埆鏁版嵁", en: "Includes Special Category Data" },
+  "澶勭悊棰戠巼": { zh: "澶勭悊棰戠巼", en: "Processing Frequency" },
+  "淇濆瓨鏈熼檺": { zh: "淇濆瓨鏈熼檺", en: "Retention Period" },
+  "鍦扮悊瑕嗙洊鑼冨洿": { zh: "鍦扮悊瑕嗙洊鑼冨洿", en: "Geographic Scope" },
+  "鏄惁娑夊強璺ㄥ浼犺緭": { zh: "鏄惁娑夊強璺ㄥ浼犺緭", en: "Involves Cross-Border Transfer" },
+  "鏁版嵁鏉ユ簮": { zh: "鏁版嵁鏉ユ簮", en: "Data Source" },
+  "涓庢暟鎹富浣撳叧绯?: { zh: "涓庢暟鎹富浣撳叧绯?, en: "Relationship with Data Subjects" },
+  "鐩殑涓庡繀瑕佹€ц璇?: { zh: "鐩殑涓庡繀瑕佹€ц璇?, en: "Purpose and Necessity Analysis" },
+  "鍚堢悊棰勬湡涓庢帶鍒剁▼搴?: { zh: "鍚堢悊棰勬湡涓庢帶鍒剁▼搴?, en: "Reasonable Expectation and Degree of Control" },
+  "鑴嗗急缇や綋璇存槑": { zh: "鑴嗗急缇や綋璇存槑", en: "Vulnerable Group Notes" },
+  "鏃㈡湁浜夎/鍘嗗彶缂洪櫡": { zh: "鏃㈡湁浜夎/鍘嗗彶缂洪櫡", en: "Prior Concerns / Historical Gaps" },
+  "鏂版妧鏈?鍒涙柊鎶€鏈儏鍐?: { zh: "鏂版妧鏈?鍒涙柊鎶€鏈儏鍐?, en: "Novel / Innovative Technology" },
+  "闃叉鍔熻兘婕傜Щ鎺柦": { zh: "闃叉鍔熻兘婕傜Щ鎺柦", en: "Function Creep Controls" },
+  "鏈€灏忓寲涓庢暟鎹川閲忔帾鏂?: { zh: "鏈€灏忓寲涓庢暟鎹川閲忔帾鏂?, en: "Minimization and Data Quality Measures" },
+  "鏁版嵁涓讳綋鏉冨埄鏀寔鏈哄埗": { zh: "鏁版嵁涓讳綋鏉冨埄鏀寔鏈哄埗", en: "Data Subject Rights Support" },
+  "澶勭悊鑰?渚涘簲鍟嗙鐞嗘満鍒?: { zh: "澶勭悊鑰?渚涘簲鍟嗙鐞嗘満鍒?, en: "Processor / Vendor Management" },
+  "椋庨櫓璇嗗埆涓庡奖鍝嶈瘎浼?: { zh: "椋庨櫓璇嗗埆涓庡奖鍝嶈瘎浼?, en: "Risk Identification and Impact Assessment" },
+  "缂撹В鎺柦": { zh: "缂撹В鎺柦", en: "Mitigation Measures" },
+  "鍓╀綑椋庨櫓": { zh: "鍓╀綑椋庨櫓", en: "Residual Risk" },
+  "绛剧讲/鎵瑰噯璐ｄ换浜?: { zh: "绛剧讲/鎵瑰噯璐ｄ换浜?, en: "Sign-Off Owner" },
+  "DPO 鎰忚鎽樿": { zh: "DPO 鎰忚鎽樿", en: "DPO Opinion Summary" },
+  "鎸佺画澶嶅瀹夋帓": { zh: "鎸佺画澶嶅瀹夋帓", en: "Review Schedule" },
+  "鏁版嵁鍑哄彛鏂癸紙EU锛?: { zh: "鏁版嵁鍑哄彛鏂癸紙EU锛?, en: "Data Exporter (EU)" },
+  "鏁版嵁绫诲埆": { zh: "鏁版嵁绫诲埆", en: "Data Categories" },
+  "鏁忔劅/鐗规畩绫诲埆鏁版嵁璇存槑": { zh: "鏁忔劅/鐗规畩绫诲埆鏁版嵁璇存槑", en: "Sensitive / Special Category Data Notes" },
+  "浼犺緭宸ュ叿": { zh: "浼犺緭宸ュ叿", en: "Transfer Tool" },
+  "鏄惁宸插畬鎴愮洰鐨勫湴娉曞緥璇勪及": { zh: "鏄惁宸插畬鎴愮洰鐨勫湴娉曞緥璇勪及", en: "Destination Law Assessment Completed" },
+  "娉曞緥涓庡疄璺佃瘎浼板彂鐜?: { zh: "娉曞緥涓庡疄璺佃瘎浼板彂鐜?, en: "Law and Practice Findings" },
+  "琛ュ厖鎺柦鍓嶇殑鏈夋晥鎬у垽鏂?: { zh: "琛ュ厖鎺柦鍓嶇殑鏈夋晥鎬у垽鏂?, en: "Effectiveness Before Supplementary Measures" },
+  "鎶€鏈€цˉ鍏呮帾鏂?: { zh: "鎶€鏈€цˉ鍏呮帾鏂?, en: "Technical Supplementary Measures" },
+  "鍚堝悓鎬цˉ鍏呮帾鏂?: { zh: "鍚堝悓鎬цˉ鍏呮帾鏂?, en: "Contractual Supplementary Measures" },
+  "缁勭粐鎬цˉ鍏呮帾鏂?: { zh: "缁勭粐鎬цˉ鍏呮帾鏂?, en: "Organizational Supplementary Measures" },
+  "琛ュ厖鎺柦鍚庣殑鏈夋晥鎬у垽鏂?: { zh: "琛ュ厖鎺柦鍚庣殑鏈夋晥鎬у垽鏂?, en: "Effectiveness After Supplementary Measures" },
+  "鍏抽敭琛屽姩椤?: { zh: "鍏抽敭琛屽姩椤?, en: "Key Action Items" },
+  "DPO 鎰忚": { zh: "DPO 鎰忚", en: "DPO Opinion" },
+  "涓嬫澶嶅鏃ユ湡": { zh: "涓嬫澶嶅鏃ユ湡", en: "Next Review Date" },
+  "鍑哄鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?: { zh: "鍑哄鏁版嵁绫诲埆锛堥€楀彿鍒嗛殧锛?, en: "Outbound Data Categories (comma-separated)" },
+  "鏁忔劅/閲嶇偣鏁版嵁鏍囩锛堥€楀彿鍒嗛殧锛?: { zh: "鏁忔劅/閲嶇偣鏁版嵁鏍囩锛堥€楀彿鍒嗛殧锛?, en: "Sensitive / Important Data Tags (comma-separated)" },
+  "鏁版嵁瑙勬ā涓庝綋閲忚鏄?: { zh: "鏁版嵁瑙勬ā涓庝綋閲忚鏄?, en: "Data Volume Notes" },
+  "鍑哄蹇呰鎬т笌鏇夸唬鎬ц鏄?: { zh: "鍑哄蹇呰鎬т笌鏇夸唬鎬ц鏄?, en: "Necessity and Alternatives" },
+  "涓昏鎺ユ敹鏂瑰悕绉?: { zh: "涓昏鎺ユ敹鏂瑰悕绉?, en: "Primary Recipient Name" },
+  "涓昏鎺ユ敹鏂瑰浗瀹?鍦板尯": { zh: "涓昏鎺ユ敹鏂瑰浗瀹?鍦板尯", en: "Primary Recipient Country / Region" },
+  "涓昏鎺ユ敹鏂硅鑹?: { zh: "涓昏鎺ユ敹鏂硅鑹?, en: "Primary Recipient Role" },
+  "涓昏鎺ユ敹鏂规槸鍚﹀彈闄愪富浣?: { zh: "涓昏鎺ユ敹鏂规槸鍚﹀彈闄愪富浣?, en: "Primary Recipient Is Restricted" },
+  "鍏朵粬鎺ユ敹鏂癸紙姣忚锛氬悕绉?鍥藉,瑙掕壊,鏄惁鍙楅檺[yes/no]锛?: { zh: "鍏朵粬鎺ユ敹鏂癸紙姣忚锛氬悕绉?鍥藉,瑙掕壊,鏄惁鍙楅檺[yes/no]锛?, en: "Other Recipients (one per line: name,country,role,restricted[yes/no])" },
+  "鍐呴儴鍛樺伐璁块棶椋庨櫓璇存槑锛堝彲閫夛級": { zh: "鍐呴儴鍛樺伐璁块棶椋庨櫓璇存槑锛堝彲閫夛級", en: "Internal Employee Access Risk Notes (optional)" },
+  "DBA/鍝佺墝鍚嶏紙鍙€夛級": { zh: "DBA/鍝佺墝鍚嶏紙鍙€夛級", en: "DBA / Brand Name (optional)" },
+  "CPRA閫傜敤鎬ц嚜妫€缁撹": { zh: "CPRA閫傜敤鎬ц嚜妫€缁撹", en: "CPRA Applicability Self-Check" },
+  "涓氬姟妯″瀷": { zh: "涓氬姟妯″瀷", en: "Business Model" },
+  "鏁版嵁鐢熷懡鍛ㄦ湡鎻忚堪": { zh: "鏁版嵁鐢熷懡鍛ㄦ湡鎻忚堪", en: "Data Lifecycle Description" },
+  "澶勭悊鏁版嵁绫诲埆": { zh: "澶勭悊鏁版嵁绫诲埆", en: "Processed Data Categories" },
+  "闅愮鏀跨瓥URL锛堝彲閫夛級": { zh: "闅愮鏀跨瓥URL锛堝彲閫夛級", en: "Privacy Policy URL (optional)" },
+  "DSR鍙楃悊娓犻亾涓庢祦绋?: { zh: "DSR鍙楃悊娓犻亾涓庢祦绋?, en: "DSR Intake Channel and Process" },
+  "韬唤楠岃瘉鏂规硶": { zh: "韬唤楠岃瘉鏂规硶", en: "Identity Verification Method" },
+  "澶勭悊鏃堕檺/SLA璇存槑": { zh: "澶勭悊鏃堕檺/SLA璇存槑", en: "Response Timeline / SLA" },
+  "鍑哄敭/鍏变韩涓嶰pt-out鏈哄埗": { zh: "鍑哄敭/鍏变韩涓嶰pt-out鏈哄埗", en: "Sale / Sharing and Opt-Out Mechanism" },
+  "鏁忔劅涓汉淇℃伅锛圫PI锛変娇鐢ㄨ鏄?: { zh: "鏁忔劅涓汉淇℃伅锛圫PI锛変娇鐢ㄨ鏄?, en: "Sensitive Personal Information (SPI) Usage" },
+  "渚涘簲鍟?绗笁鏂圭鐞嗘満鍒?: { zh: "渚涘簲鍟?绗笁鏂圭鐞嗘満鍒?, en: "Vendor / Third-Party Management" },
+  "UI/UX鏆楁ā寮忛闄╂鏌?: { zh: "UI/UX鏆楁ā寮忛闄╂鏌?, en: "Dark Pattern Risk Check" },
+  "鏈閲嶇偣鏁存敼鍏虫敞椤?: { zh: "鏈閲嶇偣鏁存敼鍏虫敞椤?, en: "Priority Remediation Focus" },
+  "涓婁紶寰呭鏂囨湰": { zh: "涓婁紶寰呭鏂囨湰", en: "Upload Files for Review" },
+  "SCC鏂囨湰涓庨厤濂楁潗鏂欎笂浼?: { zh: "SCC鏂囨湰涓庨厤濂楁潗鏂欎笂浼?, en: "Upload SCC Text and Supporting Materials" },
+  "闄勪欢涓婁紶": { zh: "闄勪欢涓婁紶", en: "Upload Attachments" },
+  "BCR涓绘枃鏈笌閰嶅鏉愭枡涓婁紶锛堜粎docx/pdf锛?: { zh: "BCR涓绘枃鏈笌閰嶅鏉愭枡涓婁紶锛堜粎docx/pdf锛?, en: "Upload BCR Main Text and Supporting Materials (docx/pdf only)" },
+  "DPIA闄勪欢涓婁紶锛坉ocx/pdf/png/jpg锛?: { zh: "DPIA闄勪欢涓婁紶锛坉ocx/pdf/png/jpg锛?, en: "Upload DPIA Attachments (docx/pdf/png/jpg)" },
+  "TIA闄勪欢涓婁紶锛坉ocx/pdf锛?: { zh: "TIA闄勪欢涓婁紶锛坉ocx/pdf锛?, en: "Upload TIA Attachments (docx/pdf)" },
+  "鏁版嵁娓呭崟闄勪欢锛堝繀浼狅紝data_inventory锛?: { zh: "鏁版嵁娓呭崟闄勪欢锛堝繀浼狅紝data_inventory锛?, en: "Data Inventory Attachment (required, data_inventory)" },
+  "瀹炰綋娓呭崟闄勪欢锛堝繀浼狅紝entity_inventory锛?: { zh: "瀹炰綋娓呭崟闄勪欢锛堝繀浼狅紝entity_inventory锛?, en: "Entity Inventory Attachment (required, entity_inventory)" },
+  "琛ュ厖鏉愭枡锛堝彲閫夛紝supporting_material锛?: { zh: "琛ュ厖鏉愭枡锛堝彲閫夛紝supporting_material锛?, en: "Supporting Materials (optional, supporting_material)" },
+  "闅愮鏀跨瓥锛坧rivacy_policy锛?: { zh: "闅愮鏀跨瓥锛坧rivacy_policy锛?, en: "Privacy Policy (privacy_policy)" },
+  "娑堣垂鑰呮潈鍒㏒OP锛坮ights_sop锛屽彲閫夛級": { zh: "娑堣垂鑰呮潈鍒㏒OP锛坮ights_sop锛屽彲閫夛級", en: "Consumer Rights SOP (rights_sop, optional)" },
+  "鏁版嵁鏄犲皠鏉愭枡锛坉ata_map锛屽彲閫夛級": { zh: "鏁版嵁鏄犲皠鏉愭枡锛坉ata_map锛屽彲閫夛級", en: "Data Map Materials (data_map, optional)" },
+  "渚涘簲鍟嗘竻鍗曪紙vendor_list锛屽彲閫夛級": { zh: "渚涘簲鍟嗘竻鍗曪紙vendor_list锛屽彲閫夛級", en: "Vendor List (vendor_list, optional)" },
+  "鍏朵粬琛ュ厖鏉愭枡锛坥ther锛屽彲閫夛級": { zh: "鍏朵粬琛ュ厖鏉愭枡锛坥ther锛屽彲閫夛級", en: "Other Supporting Materials (other, optional)" },
+  "璇蜂笂浼犺嚦灏?浠藉悎鍚屾垨鏀跨瓥鏂囨湰鍚庡啀鎵ц銆?: { zh: "璇蜂笂浼犺嚦灏?浠藉悎鍚屾垨鏀跨瓥鏂囨湰鍚庡啀鎵ц銆?, en: "Upload at least one contract or policy document before running." },
+  "璇蜂笂浼犺嚦灏?浠絊CC鏂囨湰鎴栭檮浠跺悗鍐嶆彁浜ゃ€?: { zh: "璇蜂笂浼犺嚦灏?浠絊CC鏂囨湰鎴栭檮浠跺悗鍐嶆彁浜ゃ€?, en: "Upload at least one SCC text or supporting file before submitting." },
+  "璇蜂笂浼犻檮浠舵潗鏂欏悗鍐嶆彁浜ゃ€?: { zh: "璇蜂笂浼犻檮浠舵潗鏂欏悗鍐嶆彁浜ゃ€?, en: "Upload supporting materials before submitting." },
+  "璇蜂笂浼犺嚦灏?浠絇IPIA闄勪欢鍚庡啀鎻愪氦銆?: { zh: "璇蜂笂浼犺嚦灏?浠絇IPIA闄勪欢鍚庡啀鎻愪氦銆?, en: "Upload at least one PIPIA attachment before submitting." },
+  "璇蜂笂浼犺嚦灏?浠紹CR鏉愭枡鍚庡啀鎻愪氦銆?: { zh: "璇蜂笂浼犺嚦灏?浠紹CR鏉愭枡鍚庡啀鎻愪氦銆?, en: "Upload at least one BCR document before submitting." },
+  "璇蜂笂浼犺嚦灏?浠紻PIA闄勪欢鍚庡啀鎻愪氦銆?: { zh: "璇蜂笂浼犺嚦灏?浠紻PIA闄勪欢鍚庡啀鎻愪氦銆?, en: "Upload at least one DPIA attachment before submitting." },
+  "璇蜂笂浼犺嚦灏?浠絋IA闄勪欢鍚庡啀鎻愪氦銆?: { zh: "璇蜂笂浼犺嚦灏?浠絋IA闄勪欢鍚庡啀鎻愪氦銆?, en: "Upload at least one TIA attachment before submitting." },
+  "璇蜂笂浼犺嚦灏?浠芥暟鎹竻鍗曪紙xlsx/csv/docx/pdf锛夈€?: { zh: "璇蜂笂浼犺嚦灏?浠芥暟鎹竻鍗曪紙xlsx/csv/docx/pdf锛夈€?, en: "Upload at least one data inventory file (xlsx/csv/docx/pdf)." },
+  "璇蜂笂浼犺嚦灏?浠藉疄浣撴竻鍗曪紙xlsx/csv/docx/pdf锛夈€?: { zh: "璇蜂笂浼犺嚦灏?浠藉疄浣撴竻鍗曪紙xlsx/csv/docx/pdf锛夈€?, en: "Upload at least one entity inventory file (xlsx/csv/docx/pdf)." },
+  "鍙笂浼犺偂鏉冪粨鏋勩€佺粍缁囨灦鏋勩€佸悎鍚屽彴璐︾瓑杈呭姪鏉愭枡銆?: { zh: "鍙笂浼犺偂鏉冪粨鏋勩€佺粍缁囨灦鏋勩€佸悎鍚屽彴璐︾瓑杈呭姪鏉愭枡銆?, en: "You may upload supporting materials such as shareholding charts, org charts, and contract ledgers." },
+  "鍙～鍐橴RL锛屼篃鍙笂浼犳枃妗ｃ€備袱鑰呮弧瓒冲叾涓€鍗冲彲銆?: { zh: "鍙～鍐橴RL锛屼篃鍙笂浼犳枃妗ｃ€備袱鑰呮弧瓒冲叾涓€鍗冲彲銆?, en: "You may enter a URL or upload a file. Either one is sufficient." },
+  "鑻ユ湭鎻愪緵URL锛岃鑷冲皯涓婁紶1浠介殣绉佹斂绛栨枃浠躲€?: { zh: "鑻ユ湭鎻愪緵URL锛岃鑷冲皯涓婁紶1浠介殣绉佹斂绛栨枃浠躲€?, en: "If no URL is provided, upload at least one privacy policy file." },
+  "鍙€変笂浼犮€?: { zh: "鍙€変笂浼犮€?, en: "Optional upload." },
+  "涓婁竴姝?: { zh: "涓婁竴姝?, en: "Previous" },
+  "涓嬩竴姝?: { zh: "涓嬩竴姝?, en: "Next" },
+  "鐢熸垚鏂囨。鍚堣瀹℃煡鎶ュ憡": { zh: "鐢熸垚鏂囨。鍚堣瀹℃煡鎶ュ憡", en: "Generate Document Compliance Review Report" },
+  "鐢熸垚SCC鍚堣瀹℃煡鎶ュ憡": { zh: "鐢熸垚SCC鍚堣瀹℃煡鎶ュ憡", en: "Generate SCC Compliance Review Report" },
+  "鐢熸垚BCR瀹℃煡鎶ュ憡": { zh: "鐢熸垚BCR瀹℃煡鎶ュ憡", en: "Generate BCR Review Report" },
+  "鐢熸垚DPIA鑽夋": { zh: "鐢熸垚DPIA鑽夋", en: "Generate DPIA Draft" },
+  "鐢熸垚TIA鑽夋": { zh: "鐢熸垚TIA鑽夋", en: "Generate TIA Draft" },
+  "鐢熸垚14117椋庨櫓璇勪及缁撹鎶ュ憡": { zh: "鐢熸垚14117椋庨櫓璇勪及缁撹鎶ュ憡", en: "Generate EO 14117 Risk Assessment Conclusion Report" },
+  "鐢熸垚CPRA鍚堣鍏ㄦ櫙鎶ュ憡": { zh: "鐢熸垚CPRA鍚堣鍏ㄦ櫙鎶ュ憡", en: "Generate CPRA Compliance Overview Report" },
+  "宸茬敓鎴愭枃浠?: { zh: "宸茬敓鎴愭枃浠?, en: "Generated Files" },
+  "鍏抽敭缁撴灉": { zh: "鍏抽敭缁撴灉", en: "Key Findings" },
+  "寤鸿涓嬩竴姝?: { zh: "寤鸿涓嬩竴姝?, en: "Recommended Next Steps" },
+  "鍦烘櫙": { zh: "鍦烘櫙", en: "Scenario" },
+  "鍚堟硶鎬?: { zh: "鍚堟硶鎬?, en: "Legality" },
+  "蹇呰鎬?: { zh: "蹇呰鎬?, en: "Necessity" },
+  "鏁版嵁娓呭崟": { zh: "鏁版嵁娓呭崟", en: "Data Inventory" },
+  "閾捐矾": { zh: "閾捐矾", en: "Transfer Chain" },
+  "淇濋殰鑳藉姏": { zh: "淇濋殰鑳藉姏", en: "Safeguards" },
+  "鑷瘎浼板懆鏈?: { zh: "鑷瘎浼板懆鏈?, en: "Assessment Period" },
+  "鍙備笌閮ㄩ棬": { zh: "鍙備笌閮ㄩ棬", en: "Participating Departments" },
+  "绗笁鏂规敮鎸?: { zh: "绗笁鏂规敮鎸?, en: "Third-Party Support" },
+  "鏂瑰紡": { zh: "鏂瑰紡", en: "Method" },
+  "涓氬姟姒傚喌": { zh: "涓氬姟姒傚喌", en: "Business Overview" },
+  "澶勭悊娲诲姩": { zh: "澶勭悊娲诲姩", en: "Processing Activities" },
+  "鍚堝悓鎺柦": { zh: "鍚堝悓鎺柦", en: "Contractual Measures" },
+  "缁勭粐鎺柦": { zh: "缁勭粐鎺柦", en: "Organizational Measures" },
+  "瑙勬ā璇存槑": { zh: "瑙勬ā璇存槑", en: "Volume Notes" },
+  "鍐呴儴璁块棶椋庨櫓": { zh: "鍐呴儴璁块棶椋庨櫓", en: "Internal Access Risk" },
+  "鏁版嵁涓讳綋": { zh: "鏁版嵁涓讳綋", en: "Data Subjects" },
+  "鏁忔劅鏁版嵁": { zh: "鏁忔劅鏁版嵁", en: "Sensitive Data" },
+  "娉曞緥璇勪及寰呭畬鎴?: { zh: "娉曞緥璇勪及寰呭畬鎴?, en: "Law Assessment Pending" },
+  "宸插畬鎴愭硶寰嬭瘎浼?: { zh: "宸插畬鎴愭硶寰嬭瘎浼?, en: "Law Assessment Completed" },
+  "褰撳墠绾夸笂鐢熸晥鐗堟湰": { zh: "褰撳墠绾夸笂鐢熸晥鐗堟湰", en: "Current Live Version" },
+  "闈炵嚎涓婄敓鏁堢増鏈?: { zh: "闈炵嚎涓婄敓鏁堢増鏈?, en: "Not a Live Version" },
+  "宸叉姭闇插鐞嗚€呰韩浠?: { zh: "宸叉姭闇插鐞嗚€呰韩浠?, en: "Processor Identity Disclosed" },
+  "鏈槑纭姭闇插鐞嗚€呰韩浠?: { zh: "鏈槑纭姭闇插鐞嗚€呰韩浠?, en: "Processor Identity Not Clearly Disclosed" },
+  "宸叉姭闇查€傜敤鑼冨洿": { zh: "宸叉姭闇查€傜敤鑼冨洿", en: "Applicable Scope Disclosed" },
+  "鏈槑纭姭闇查€傜敤鑼冨洿": { zh: "鏈槑纭姭闇查€傜敤鑼冨洿", en: "Applicable Scope Not Clearly Disclosed" },
+  "宸叉姭闇叉敹闆嗕笌澶勭悊鐩殑": { zh: "宸叉姭闇叉敹闆嗕笌澶勭悊鐩殑", en: "Collection and Processing Purpose Disclosed" },
+  "鏈厖鍒嗘姭闇叉敹闆嗕笌澶勭悊鐩殑": { zh: "鏈厖鍒嗘姭闇叉敹闆嗕笌澶勭悊鐩殑", en: "Collection and Processing Purpose Not Fully Disclosed" },
+  "宸叉姭闇插鐞嗘柟寮?: { zh: "宸叉姭闇插鐞嗘柟寮?, en: "Processing Method Disclosed" },
+  "鏈厖鍒嗘姭闇插鐞嗘柟寮?: { zh: "鏈厖鍒嗘姭闇插鐞嗘柟寮?, en: "Processing Method Not Fully Disclosed" },
+  "宸叉姭闇蹭釜浜轰俊鎭绫?: { zh: "宸叉姭闇蹭釜浜轰俊鎭绫?, en: "PI Categories Disclosed" },
+  "鏈厖鍒嗘姭闇蹭釜浜轰俊鎭绫?: { zh: "鏈厖鍒嗘姭闇蹭釜浜轰俊鎭绫?, en: "PI Categories Not Fully Disclosed" },
+  "宸叉姭闇叉晱鎰熶俊鎭鐞?: { zh: "宸叉姭闇叉晱鎰熶俊鎭鐞?, en: "Sensitive Information Processing Disclosed" },
+  "鏈厖鍒嗘姭闇叉晱鎰熶俊鎭鐞?: { zh: "鏈厖鍒嗘姭闇叉晱鎰熶俊鎭鐞?, en: "Sensitive Information Processing Not Fully Disclosed" },
+  "宸叉姭闇插嚭澧冭鍒?: { zh: "宸叉姭闇插嚭澧冭鍒?, en: "Transfer Rules Disclosed" },
+  "鏈厖鍒嗘姭闇插嚭澧冭鍒?: { zh: "鏈厖鍒嗘姭闇插嚭澧冭鍒?, en: "Transfer Rules Not Fully Disclosed" },
+  "宸叉姭闇叉潈鍒╄浣挎笭閬?: { zh: "宸叉姭闇叉潈鍒╄浣挎笭閬?, en: "Rights Exercise Channel Disclosed" },
+  "鏈厖鍒嗘姭闇叉潈鍒╄浣挎笭閬?: { zh: "鏈厖鍒嗘姭闇叉潈鍒╄浣挎笭閬?, en: "Rights Exercise Channel Not Fully Disclosed" },
+  "one_time": { zh: "涓€娆℃€?, en: "One-time" },
+  "periodic": { zh: "鍛ㄦ湡鎬?, en: "Periodic" },
+  "continuous": { zh: "鎸佺画鎬?, en: "Continuous" },
+  "scc_filing": { zh: "鏍囧噯鍚堝悓澶囨", en: "SCC Filing" },
+  "certification": { zh: "璁よ瘉璺緞", en: "Certification" },
+  "privacy_policy": { zh: "闅愮鏀跨瓥", en: "Privacy Policy" },
+  "scc_contract": { zh: "鏍囧噯鍚堝悓", en: "Standard Contract" },
+  "dpa": { zh: "鏁版嵁澶勭悊鍗忚", en: "Data Processing Agreement" },
+  "other": { zh: "鍏朵粬", en: "Other" },
+  "c2c": { zh: "鎺у埗鑰呭埌鎺у埗鑰?, en: "Controller to Controller" },
+  "c2p": { zh: "鎺у埗鑰呭埌澶勭悊鑰?, en: "Controller to Processor" },
+  "p2p": { zh: "澶勭悊鑰呭埌澶勭悊鑰?, en: "Processor to Processor" },
+  "p2c": { zh: "澶勭悊鑰呭埌鎺у埗鑰?, en: "Processor to Controller" },
+  "eu_2021": { zh: "娆х洘 2021 鐗?SCC", en: "EU 2021 SCC" },
+  "processor": { zh: "澶勭悊鑰?, en: "Processor" },
+  "controller": { zh: "鎺у埗鑰?, en: "Controller" },
+  "subprocessor": { zh: "瀛愬鐞嗚€?, en: "Subprocessor" },
+  "affiliate": { zh: "鍏宠仈鏂?, en: "Affiliate" },
+  "vendor": { zh: "渚涘簲鍟?, en: "Vendor" },
+  "scc": { zh: "SCC", en: "SCC" },
+  "bcr": { zh: "BCR", en: "BCR" },
+  "derogation": { zh: "渚嬪璞佸厤", en: "Derogation" }
+};
+
+const localizeUiText = (lang: "zh" | "en", text: string): string => {
+  const direct = MODULE_RUN_UI_TEXT[text];
+  if (direct) return direct[lang];
+
+  if (lang === "en") {
+    for (const separator of ["锛?, ":"]) {
+      const index = text.indexOf(separator);
+      if (index > 0) {
+        const prefix = text.slice(0, index).trim();
+        const suffix = text.slice(index + 1).trim();
+        const localizedPrefix = MODULE_RUN_UI_TEXT[prefix]?.en;
+        if (localizedPrefix) {
+          return suffix ? `${localizedPrefix}: ${suffix}` : localizedPrefix;
+        }
+      }
+    }
+  }
+
+  return text;
+};
+
+const toFileName = (value: string): string => {
+  const name = basenameFromPath(value);
+  return name || value;
+};
+
+const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacingResult => {
+  const copy = lang === "zh"
+    ? {
+      noHeadline: "宸插畬鎴愯繍琛屽苟鐢熸垚鍙敤缁撴灉",
+      pathPrefix: "寤鸿璺緞",
+      routePrefix: "寤鸿娴佺▼",
+      reportDone: "鏂囨。鑽夋宸茬敓鎴?,
+      riskPrefix: "椋庨櫓绛夌骇",
+      issuePrefix: "涓€鑷存€ф彁閱?,
+      chapterPrefix: "绔犺妭鐢熸垚",
+      regPrefix: "娉曡鍛戒腑",
+      filesPrefix: "浜や粯鏂囦欢",
+      defaultStep1: "鍏堟煡鐪嬫湰椤碘€滃叧閿粨鏋溾€濓紝纭璺緞鍜岄闄╃瓑绾ф槸鍚︾鍚堥鏈熴€?,
+      defaultStep2: "鍐嶈繘鍏ョ粨鏋滈潰鏉垮拰鎶ュ憡涓績杩涜鍐呭澶嶆牳涓庝氦浠樸€?
+    }
+    : {
+      noHeadline: "Run completed with user-ready results",
+      pathPrefix: "Suggested Path",
+      routePrefix: "Suggested Workflow",
+      reportDone: "Draft documents generated",
+      riskPrefix: "Risk Level",
+      issuePrefix: "Consistency Alerts",
+      chapterPrefix: "Chapters",
+      regPrefix: "Regulation Hits",
+      filesPrefix: "Deliverables",
+      defaultStep1: "Review key outcomes on this panel and confirm path/risk alignment.",
+      defaultStep2: "Then continue to result panel and report center for final review."
+    };
+
+  const insight = extractInsight(response);
+  const responseRecord = asRecord(response);
+  const resultRecord = asRecord(responseRecord.result);
+
+  const recommendedPathRaw = toString(responseRecord.recommended_path) || toString(resultRecord.recommended_path);
+  const recommendedPathLabel = recommendedPathRaw
+    ? (RECOMMENDED_PATH_LABEL[recommendedPathRaw]?.[lang] ?? recommendedPathRaw)
+    : "";
+
+  const routeTypeRaw = toString(responseRecord.route_type);
+  const routeTypeLabel = routeTypeRaw ? (ROUTE_TYPE_LABEL[routeTypeRaw]?.[lang] ?? routeTypeRaw) : "";
+
+  const riskLevel = insight.riskLevel || toString(responseRecord.risk_level) || toString(resultRecord.risk_level);
+  const rationale = toString(resultRecord.rationale);
+  const legalBasis = readStringArray(resultRecord.legal_basis);
+  const actionItems = readStringArray(resultRecord.action_items);
+
+  const chapters = Array.isArray(responseRecord.chapters) ? responseRecord.chapters.filter(asRecord) : [];
+  const regulations = Array.isArray(responseRecord.regulations) ? responseRecord.regulations.filter(asRecord) : [];
+
+  const deliverableNames = Array.from(
+    new Set(
+      [insight.reportPath, ...Object.values(insight.outputFiles)]
+        .filter((item): item is string => typeof item === "string" && item.length > 0)
+        .map((item) => toFileName(item))
+    )
+  );
+
+  let headline = copy.noHeadline;
+  if (recommendedPathLabel) {
+    headline = `${copy.pathPrefix}锛?{recommendedPathLabel}`;
+  } else if (routeTypeLabel) {
+    headline = `${copy.routePrefix}锛?{routeTypeLabel}`;
+  } else if (deliverableNames.length > 0) {
+    headline = copy.reportDone;
+  }
+
+  const chips: string[] = [];
+  if (riskLevel) chips.push(`${copy.riskPrefix}锛?{riskLevel}`);
+  if (insight.consistencyIssues.length > 0) chips.push(`${copy.issuePrefix}锛?{insight.consistencyIssues.length}`);
+  if (chapters.length > 0) chips.push(`${copy.chapterPrefix}锛?{chapters.length}`);
+  if (regulations.length > 0) chips.push(`${copy.regPrefix}锛?{regulations.length}`);
+  if (deliverableNames.length > 0) chips.push(`${copy.filesPrefix}锛?{deliverableNames.length}`);
+
+  const highlights: string[] = [];
+  if (rationale) highlights.push(rationale);
+  if (legalBasis.length > 0) highlights.push(legalBasis.slice(0, 3).join("锛?));
+  if (insight.consistencyIssues.length > 0) highlights.push(...insight.consistencyIssues.slice(0, 3));
+  if (highlights.length === 0 && regulations.length > 0) {
+    const topTitles = regulations
+      .map((item) => toString(item.title))
+      .filter((item): item is string => typeof item === "string" && item.length > 0)
+      .slice(0, 3);
+    if (topTitles.length > 0) highlights.push(topTitles.join("锛?));
+  }
+
+  const nextSteps = actionItems.length > 0 ? actionItems.slice(0, 4) : [copy.defaultStep1, copy.defaultStep2];
+
+  return {
+    headline,
+    chips,
+    deliverables: deliverableNames,
+    highlights,
+    nextSteps
+  };
+};
+
+void buildUserFacingResult;
+
+export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
+  const { t, lang } = useLang();
+  const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
+  const [moduleKey, setModuleKey] = useState<ModuleKey>(taskSpace.module);
+  const [payloadText, setPayloadText] = useState("");
+  const [responseData, setResponseData] = useState<unknown>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
+  const [diagnosisValues, setDiagnosisValues] = useState<DiagnosisFormValues>(createDefaultDiagnosisValues);
+  const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
+  const [assessmentValues, setAssessmentValues] = useState<AssessmentFormValues>(createDefaultAssessmentValues);
+  const [assessmentFiles, setAssessmentFiles] = useState<File[]>([]);
+  const [pipiaStepIndex, setPipiaStepIndex] = useState(0);
+  const [pipiaValues, setPipiaValues] = useState<PipiaFormValues>(createDefaultPipiaValues);
+  const [pipiaFiles, setPipiaFiles] = useState<File[]>([]);
+  const [documentReviewStepIndex, setDocumentReviewStepIndex] = useState(0);
+  const [documentReviewValues, setDocumentReviewValues] = useState<DocumentReviewFormValues>(createDefaultDocumentReviewValues);
+  const [documentReviewFiles, setDocumentReviewFiles] = useState<File[]>([]);
+  const [euSccStepIndex, setEuSccStepIndex] = useState(0);
+  const [euSccValues, setEuSccValues] = useState<EuSccFormValues>(createDefaultEuSccValues);
+  const [euSccFiles, setEuSccFiles] = useState<File[]>([]);
+  const [bcrStepIndex, setBcrStepIndex] = useState(0);
+  const [bcrValues, setBcrValues] = useState<BcrFormValues>(createDefaultBcrValues);
+  const [bcrFiles, setBcrFiles] = useState<File[]>([]);
+  const [dpiaStepIndex, setDpiaStepIndex] = useState(0);
+  const [dpiaValues, setDpiaValues] = useState<DpiaFormValues>(createDefaultDpiaValues);
+  const [dpiaFiles, setDpiaFiles] = useState<File[]>([]);
+  const [tiaStepIndex, setTiaStepIndex] = useState(0);
+  const [tiaValues, setTiaValues] = useState<TiaFormValues>(createDefaultTiaValues);
+  const [tiaFiles, setTiaFiles] = useState<File[]>([]);
+  const [cnFlowStepIndex, setCnFlowStepIndex] = useState(0);
+  const [cnFlowValues, setCnFlowValues] = useState<CnFlowFormValues>(createDefaultCnFlowValues);
+  const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
+  const [cnFlowEntityInventoryFiles, setCnFlowEntityInventoryFiles] = useState<File[]>([]);
+  const [cnFlowSupportingFiles, setCnFlowSupportingFiles] = useState<File[]>([]);
+  const [cpraStepIndex, setCpraStepIndex] = useState(0);
+  const [cpraValues, setCpraValues] = useState<CpraFormValues>(createDefaultCpraValues);
+  const [cpraPrivacyPolicyFiles, setCpraPrivacyPolicyFiles] = useState<File[]>([]);
+  const [cpraRightsSopFiles, setCpraRightsSopFiles] = useState<File[]>([]);
+  const [cpraDataMapFiles, setCpraDataMapFiles] = useState<File[]>([]);
+  const [cpraVendorListFiles, setCpraVendorListFiles] = useState<File[]>([]);
+  const [cpraOtherFiles, setCpraOtherFiles] = useState<File[]>([]);
+
+  const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
+  const templateModule = useMemo(
+    () => listModules().find((item) => item.key === taskSpace.module),
+    [taskSpace.module]
+  );
+  const lockedModule = !!taskTemplate && !!templateModule;
+
+  const modules = useMemo(() => {
+    if (lockedModule && templateModule) {
+      return [templateModule];
+    }
+    return listModules().filter((item) => item.jurisdiction === jurisdiction);
+  }, [jurisdiction, lockedModule, templateModule]);
+
+  const userFacingResult = useMemo(() => buildUserFacingResult(responseData, lang), [responseData, lang]);
+
+  useEffect(() => {
+    setJurisdiction(taskSpace.jurisdiction);
+    setModuleKey(taskSpace.module);
+  }, [taskSpace.jurisdiction, taskSpace.module]);
+
+  useEffect(() => {
+    if (!modules.find((item) => item.key === moduleKey)) {
+      setModuleKey(modules[0]?.key ?? "diagnosis");
+    }
+  }, [moduleKey, modules]);
+
+  useEffect(() => {
+    setPayloadText(JSON.stringify(getDefaultPayload(moduleKey), null, 2));
+    setResponseData(undefined);
+    setError(null);
+    if (moduleKey === "diagnosis") {
+      setDiagnosisStepIndex(0);
+      setDiagnosisValues(createDefaultDiagnosisValues());
+    }
+    if (moduleKey === "assessment") {
+      setAssessmentStepIndex(0);
+      setAssessmentValues(createDefaultAssessmentValues());
+      setAssessmentFiles([]);
+    }
+    if (moduleKey === "pipia") {
+      setPipiaStepIndex(0);
+      setPipiaValues(createDefaultPipiaValues());
+      setPipiaFiles([]);
+    }
+    if (taskTemplate?.id === "cn_document_review") {
+      setDocumentReviewStepIndex(0);
+      setDocumentReviewValues(createDefaultDocumentReviewValues());
+      setDocumentReviewFiles([]);
+    }
+    if (taskTemplate?.id === "eu_scc") {
+      setEuSccStepIndex(0);
+      setEuSccValues(createDefaultEuSccValues());
+      setEuSccFiles([]);
+    }
+    if (moduleKey === "bcr") {
+      setBcrStepIndex(0);
+      setBcrValues(createDefaultBcrValues());
+      setBcrFiles([]);
+    }
+    if (moduleKey === "dpia") {
+      setDpiaStepIndex(0);
+      setDpiaValues(createDefaultDpiaValues());
+      setDpiaFiles([]);
+    }
+    if (moduleKey === "tia") {
+      setTiaStepIndex(0);
+      setTiaValues(createDefaultTiaValues());
+      setTiaFiles([]);
+    }
+    if (moduleKey === "cn_flow") {
+      setCnFlowStepIndex(0);
+      setCnFlowValues(createDefaultCnFlowValues());
+      setCnFlowDataInventoryFiles([]);
+      setCnFlowEntityInventoryFiles([]);
+      setCnFlowSupportingFiles([]);
+    }
+    if (moduleKey === "cpra") {
+      setCpraStepIndex(0);
+      setCpraValues(createDefaultCpraValues());
+      setCpraPrivacyPolicyFiles([]);
+      setCpraRightsSopFiles([]);
+      setCpraDataMapFiles([]);
+      setCpraVendorListFiles([]);
+      setCpraOtherFiles([]);
+    }
+  }, [moduleKey, taskTemplate?.id]);
+
+  const definition = findModule(moduleKey);
+  const isDocumentReviewTask = taskTemplate?.id === "cn_document_review";
+  const isEuSccTask = taskTemplate?.id === "eu_scc";
+  const isDiagnosisModule = moduleKey === "diagnosis";
+  const isAssessmentModule = moduleKey === "assessment";
+  const isPipiaModule = moduleKey === "pipia";
+  const isBcrModule = moduleKey === "bcr";
+  const isDpiaModule = moduleKey === "dpia";
+  const isTiaModule = moduleKey === "tia";
+  const isCnFlowModule = moduleKey === "cn_flow";
+  const isCpraModule = moduleKey === "cpra";
+
+  const updateDiagnosisValue = <K extends keyof DiagnosisFormValues>(name: K, value: DiagnosisFormValues[K]) => {
+    setDiagnosisValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateAssessmentValue = <K extends keyof AssessmentFormValues>(name: K, value: AssessmentFormValues[K]) => {
+    setAssessmentValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updatePipiaValue = <K extends keyof PipiaFormValues>(name: K, value: PipiaFormValues[K]) => {
+    setPipiaValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateDocumentReviewValue = <K extends keyof DocumentReviewFormValues>(
+    name: K,
+    value: DocumentReviewFormValues[K]
+  ) => {
+    setDocumentReviewValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateEuSccValue = <K extends keyof EuSccFormValues>(name: K, value: EuSccFormValues[K]) => {
+    setEuSccValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateBcrValue = <K extends keyof BcrFormValues>(name: K, value: BcrFormValues[K]) => {
+    setBcrValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateDpiaValue = <K extends keyof DpiaFormValues>(name: K, value: DpiaFormValues[K]) => {
+    setDpiaValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateTiaValue = <K extends keyof TiaFormValues>(name: K, value: TiaFormValues[K]) => {
+    setTiaValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateCnFlowValue = <K extends keyof CnFlowFormValues>(name: K, value: CnFlowFormValues[K]) => {
+    setCnFlowValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const updateCpraValue = <K extends keyof CpraFormValues>(name: K, value: CpraFormValues[K]) => {
+    setCpraValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const uploadFiles = async (files: File[]): Promise<string[]> => {
+    if (files.length === 0) return [];
+    const uploadedPaths: string[] = [];
+    for (const file of files) {
+      const uploaded = await uploadTaskFile(file);
+      uploadedPaths.push(uploaded.path);
+    }
+    return uploadedPaths;
+  };
+
+  const buildAssessmentPayload = async (): Promise<unknown> => {
+    assertInput(hasText(assessmentValues.company_name), "璇峰～鍐欎紒涓氬悕绉般€?);
+    assertInput(hasText(assessmentValues.company_uscc, 8), "璇峰～鍐欑粺涓€绀句細淇＄敤浠ｇ爜锛堣嚦灏?浣嶏級銆?);
+    assertInput(hasText(assessmentValues.receiver_country), "璇峰～鍐欐帴鏀舵柟鍥藉/鍦板尯銆?);
+    assertInput(hasText(assessmentValues.transfer_purpose), "璇峰～鍐欏嚭澧冪洰鐨勩€?);
+    assertInput(hasText(assessmentValues.legal_basis), "璇峰～鍐欏悎娉曟€у熀纭€銆?);
+    assertInput(hasText(assessmentValues.necessity_basis), "璇峰～鍐欏繀瑕佹€ц鏄庛€?);
+    assertInput(hasText(assessmentValues.data_inventory_summary), "璇峰～鍐欐暟鎹竻鍗曟憳瑕併€?);
+    assertInput(hasText(assessmentValues.system_chain_summary), "璇峰～鍐欑郴缁熶笌鍑哄閾捐矾璇存槑銆?);
+    assertInput(
+      assessmentFiles.length > 0,
+      "璇蜂笂浼犺嚦灏?浠藉畨鍏ㄨ瘎浼伴檮浠舵潗鏂欙紙濡傛暟鎹竻鍗曘€佺郴缁熼摼璺浘銆佸埗搴︽枃浠讹級銆?
+    );
+
+    const uploadedFiles = await uploadFiles(assessmentFiles);
+    const trimOr = (value: string, fallback: string): string => {
+      const trimmed = value.trim();
+      return trimmed.length >= 2 ? trimmed : fallback;
+    };
+    const purposeContext = [
+      assessmentValues.transfer_purpose.trim(),
+      assessmentValues.scenario_name ? `鍦烘櫙锛?{assessmentValues.scenario_name}` : "",
+      assessmentValues.legal_basis ? `鍚堟硶鎬э細${assessmentValues.legal_basis}` : "",
+      assessmentValues.necessity_basis ? `蹇呰鎬э細${assessmentValues.necessity_basis}` : "",
+      assessmentValues.data_inventory_summary ? `鏁版嵁娓呭崟锛?{assessmentValues.data_inventory_summary}` : "",
+      assessmentValues.system_chain_summary ? `閾捐矾锛?{assessmentValues.system_chain_summary}` : "",
+      assessmentValues.security_capability_summary ? `淇濋殰鑳藉姏锛?{assessmentValues.security_capability_summary}` : "",
+      assessmentValues.assessment_start_date || assessmentValues.assessment_end_date
+        ? `鑷瘎浼板懆鏈燂細${assessmentValues.assessment_start_date || "鏈～"} 鑷?${assessmentValues.assessment_end_date || "鏈～"}`
+        : "",
+      assessmentValues.lead_department ? `鐗靛ご閮ㄩ棬锛?{assessmentValues.lead_department}` : "",
+      assessmentValues.participant_departments ? `鍙備笌閮ㄩ棬锛?{assessmentValues.participant_departments}` : "",
+      assessmentValues.third_party_support
+        ? `绗笁鏂规敮鎸侊細${assessmentValues.third_party_name || "宸插弬涓?}锛?{assessmentValues.third_party_scope || "鑼冨洿鏈～"}`
+        : ""
+    ]
+      .filter((item) => item.length > 0)
+      .join("锛?);
+
+    return {
+      company_name: trimOr(assessmentValues.company_name, "寰呯‘璁や紒涓?),
+      industry: trimOr(
+        [assessmentValues.industry, assessmentValues.company_nature].filter((item) => item.trim().length > 0).join(" / "),
+        "鏈鏄庤涓?
+      ),
+      is_ciio: assessmentValues.is_ciio,
+      contains_important_data: assessmentValues.contains_important_data,
+      pii_count: Math.max(0, assessmentValues.pii_count),
+      spi_count: Math.max(0, assessmentValues.spi_count),
+      transfer_purpose: trimOr(purposeContext, "鏁版嵁鍑哄鍦烘櫙璇勪及涓庨闄╄嚜璇勪及"),
+      receiver_country: trimOr(assessmentValues.receiver_country, "寰呯‘璁ゅ浗瀹?),
+      force_override_path: assessmentValues.force_override_path,
+      uploaded_files: uploadedFiles
+    };
+  };
+
+  const buildPipiaPayload = async (): Promise<unknown> => {
+    assertInput(hasText(pipiaValues.company_name), "璇峰～鍐欏鐞嗚€呭悕绉般€?);
+    assertInput(hasText(pipiaValues.company_uscc, 8), "璇峰～鍐欑粺涓€绀句細淇＄敤浠ｇ爜锛堣嚦灏?浣嶏級銆?);
+    assertInput(hasText(pipiaValues.purpose), "璇峰～鍐欐嫙鍑哄娲诲姩鐩殑銆?);
+    assertInput(hasText(pipiaValues.recipient_name), "璇峰～鍐欏澶栨帴鏀舵柟鍚嶇О銆?);
+    assertInput(hasText(pipiaValues.recipient_country_region), "璇峰～鍐欐帴鏀舵柟鍥藉/鍦板尯銆?);
+    assertInput(hasText(pipiaValues.legal_basis), "璇峰～鍐欏鐞嗗悎娉曟€у熀纭€銆?);
+    assertInput(splitCsv(pipiaValues.pi_categories).length > 0, "璇疯嚦灏戝～鍐欎竴绫绘嫙鍑哄涓汉淇℃伅銆?);
+    assertInput(hasText(pipiaValues.notice_mechanism), "璇峰～鍐欏憡鐭ユ満鍒躲€?);
+    assertInput(hasText(pipiaValues.consent_mechanism), "璇峰～鍐欏崟鐙悓鎰忔満鍒躲€?);
+    assertInput(hasText(pipiaValues.dsar_channel), "璇峰～鍐欎釜浜烘潈鍒╄姹傛笭閬撱€?);
+    assertInput(hasText(pipiaValues.retention_policy), "璇峰～鍐欎繚瀛樹笌鍒犻櫎绛栫暐銆?);
+    assertInput(pipiaFiles.length > 0, "璇蜂笂浼犺嚦灏?浠絇IPIA鐩稿叧闄勪欢銆?);
+    if (pipiaValues.route_type === "scc_filing") {
+      assertInput(
+        pipiaValues.attachment_role === "scc_contract",
+        "鏍囧噯鍚堝悓澶囨璺緞涓嬶紝闄勪欢瑙掕壊闇€閫夋嫨涓?scc_contract銆?
+      );
+    }
+
+    const uploadedFiles = await uploadFiles(pipiaFiles);
+    const trimOr = (value: string, fallback: string): string => {
+      const trimmed = value.trim();
+      return trimmed.length >= 2 ? trimmed : fallback;
+    };
+    const attachments = uploadedFiles.map((path) => ({
+      file_role: pipiaValues.attachment_role,
+      file_name: basenameFromPath(path),
+      file_format: inferAttachmentFormat(path),
+      storage_uri: path
+    }));
+
+    return {
+      route_type: pipiaValues.route_type,
+      company_profile: {
+        company_name: trimOr(pipiaValues.company_name, "寰呯‘璁や紒涓?),
+        company_uscc: pipiaValues.company_uscc.trim().length >= 8 ? pipiaValues.company_uscc.trim() : "91310000XXXXXXXXXX",
+        is_ciio: pipiaValues.is_ciio,
+        processing_person_count: pipiaValues.processing_person_count,
+        outbound_pi_count: pipiaValues.outbound_pi_count,
+        outbound_spi_count: pipiaValues.outbound_spi_count,
+        industry: trimOr(pipiaValues.industry, "鏈鏄庤涓?)
+      },
+      transfer_context: {
+        purpose: trimOr(
+          [
+            pipiaValues.purpose,
+            pipiaValues.outbound_scenario_name ? `鍦烘櫙锛?{pipiaValues.outbound_scenario_name}` : "",
+            pipiaValues.outbound_frequency ? `棰戠巼锛?{pipiaValues.outbound_frequency}` : "",
+            pipiaValues.transfer_method ? `鏂瑰紡锛?{pipiaValues.transfer_method}` : "",
+            pipiaValues.business_overview ? `涓氬姟姒傚喌锛?{pipiaValues.business_overview}` : "",
+            pipiaValues.processing_activity_overview ? `澶勭悊娲诲姩锛?{pipiaValues.processing_activity_overview}` : ""
+          ].filter((item) => item.trim().length > 0).join("锛?),
+          "涓汉淇℃伅鍑哄澶勭悊娲诲姩璇勪及"
+        ),
+        recipient_name: trimOr(pipiaValues.recipient_name, "寰呯‘璁ゆ帴鏀舵柟"),
+        recipient_country_region: trimOr(pipiaValues.recipient_country_region, "寰呯‘璁ゅ浗瀹?鍦板尯"),
+        legal_basis: trimOr(
+          [
+            pipiaValues.legal_basis,
+            pipiaValues.legality_justification ? `鍚堟硶鎬ц璇侊細${pipiaValues.legality_justification}` : "",
+            pipiaValues.necessity_justification ? `蹇呰鎬ц璇侊細${pipiaValues.necessity_justification}` : ""
+          ].filter((item) => item.trim().length > 0).join("锛?),
+          "鍚堝悓灞ヨ蹇呰"
+        )
+      },
+      personal_info_scope: {
+        pi_categories: splitCsv(pipiaValues.pi_categories).length > 0 ? splitCsv(pipiaValues.pi_categories) : ["璐︽埛淇℃伅"],
+        spi_categories: splitCsv(pipiaValues.spi_categories),
+        subject_volume: pipiaValues.subject_volume
+      },
+      rights_protection: {
+        notice_mechanism: trimOr(pipiaValues.notice_mechanism, "闅愮鏀跨瓥鍛婄煡"),
+        consent_mechanism: trimOr(pipiaValues.consent_mechanism, "鍗曠嫭鍚屾剰"),
+        dsar_channel: trimOr(pipiaValues.dsar_channel, "privacy@example.com"),
+        retention_policy: trimOr(
+          [
+            pipiaValues.retention_policy,
+            pipiaValues.domestic_storage ? `澧冨唴瀛樺偍锛?{pipiaValues.domestic_storage}` : "",
+            pipiaValues.overseas_storage ? `澧冨瀛樺偍锛?{pipiaValues.overseas_storage}` : ""
+          ].filter((item) => item.trim().length > 0).join("锛?),
+          "鍒版湡鍒犻櫎+鏈€鐭繀瑕?
+        )
+      },
+      emergency_plan: {
+        incident_response_sla_hours: pipiaValues.incident_response_sla_hours,
+        escalation_path: trimOr(
+          [
+            pipiaValues.escalation_path,
+            pipiaValues.transfer_link ? `閾捐矾锛?{pipiaValues.transfer_link}` : "",
+            pipiaValues.shareholding_structure ? `鑲℃潈锛?{pipiaValues.shareholding_structure}` : "",
+            pipiaValues.actual_controller ? `鎺у埗浜猴細${pipiaValues.actual_controller}` : "",
+            pipiaValues.overseas_investment ? `澧冨唴澶栨姇璧勶細${pipiaValues.overseas_investment}` : "",
+            pipiaValues.org_structure_privacy_team ? `缁勭粐涓庝釜淇濇満鏋勶細${pipiaValues.org_structure_privacy_team}` : ""
+          ].filter((item) => item.trim().length > 0).join("锛?),
+          "DPO -> 娉曞姟 -> 绠＄悊灞?
+        )
+      },
+      attachments
+    };
+  };
+
+  const buildDocumentReviewPayload = async (): Promise<unknown> => {
+    assertInput(
+      hasText(documentReviewValues.publisher_entity) || hasText(documentReviewValues.company_name),
+      "璇峰～鍐欎紒涓氬悕绉版垨鍙戝竷涓讳綋銆?
+    );
+    assertInput(hasText(documentReviewValues.document_title), "璇峰～鍐欐枃妗ｅ悕绉般€?);
+    assertInput(hasText(documentReviewValues.review_focus), "璇峰～鍐欐湰娆″鏌ラ噸鐐广€?);
+    assertInput(documentReviewFiles.length > 0, "璇疯嚦灏戜笂浼?浠藉悎鍚屾垨鏀跨瓥鏂囨湰鍚庡啀鎵ц瀹℃煡銆?);
+
+    const uploadedFiles = await uploadFiles(documentReviewFiles);
+    const trimOr = (value: string, fallback: string): string => {
+      const trimmed = value.trim();
+      return trimmed.length >= 2 ? trimmed : fallback;
+    };
+    const reviewContext = [
+      documentReviewValues.document_title ? `鏂囨。锛?{documentReviewValues.document_title}` : "",
+      documentReviewValues.document_version ? `鐗堟湰锛?{documentReviewValues.document_version}` : "",
+      documentReviewValues.effective_date ? `鐢熸晥鏃ユ湡锛?{documentReviewValues.effective_date}` : "",
+      documentReviewValues.applicable_products ? `閫傜敤浜у搧锛?{documentReviewValues.applicable_products}` : "",
+      documentReviewValues.applicable_scope ? `閫傜敤鑼冨洿锛?{documentReviewValues.applicable_scope}` : "",
+      documentReviewValues.is_live_version ? "褰撳墠绾夸笂鐢熸晥鐗堟湰" : "闈炵嚎涓婄敓鏁堢増鏈?,
+      documentReviewValues.transfer_purpose.trim(),
+      `${DOCUMENT_TYPE_LABEL[documentReviewValues.document_type]}瀹℃煡`,
+      documentReviewValues.processor_identity_disclosed ? "宸叉姭闇插鐞嗚€呰韩浠? : "鏈槑纭姭闇插鐞嗚€呰韩浠?,
+      documentReviewValues.scope_disclosed ? "宸叉姭闇查€傜敤鑼冨洿" : "鏈槑纭姭闇查€傜敤鑼冨洿",
+      documentReviewValues.collection_purpose_disclosed ? "宸叉姭闇叉敹闆嗕笌澶勭悊鐩殑" : "鏈厖鍒嗘姭闇叉敹闆嗕笌澶勭悊鐩殑",
+      documentReviewValues.processing_method_disclosed ? "宸叉姭闇插鐞嗘柟寮? : "鏈厖鍒嗘姭闇插鐞嗘柟寮?,
+      documentReviewValues.category_disclosed ? "宸叉姭闇蹭釜浜轰俊鎭绫? : "鏈厖鍒嗘姭闇蹭釜浜轰俊鎭绫?,
+      documentReviewValues.sensitive_pi_disclosed ? "宸叉姭闇叉晱鎰熶俊鎭鐞? : "鏈厖鍒嗘姭闇叉晱鎰熶俊鎭鐞?,
+      documentReviewValues.crossborder_rule_disclosed ? "宸叉姭闇插嚭澧冭鍒? : "鏈厖鍒嗘姭闇插嚭澧冭鍒?,
+      documentReviewValues.rights_channel_disclosed ? "宸叉姭闇叉潈鍒╄浣挎笭閬? : "鏈厖鍒嗘姭闇叉潈鍒╄浣挎笭閬?,
+      documentReviewValues.contact_channel ? `鑱旂郴娓犻亾锛?{documentReviewValues.contact_channel}` : "",
+      documentReviewValues.review_focus.trim()
+    ]
+      .filter((item) => item.length > 0)
+      .join("锛?);
+
+    return {
+      company_name: trimOr(documentReviewValues.publisher_entity || documentReviewValues.company_name, "寰呯‘璁や紒涓?),
+      receiver_name: trimOr(documentReviewValues.receiver_name, "寰呯‘璁ゆ帴鏀舵柟"),
+      receiver_country: trimOr(documentReviewValues.receiver_country, "寰呯‘璁ゅ浗瀹?),
+      transfer_purpose: trimOr(
+        reviewContext || documentReviewValues.transfer_purpose,
+        "鏂囨。鍚堣瀹℃煡涓庤法澧冩潯娆炬牳楠?
+      ),
+      pii_count: Math.max(0, documentReviewValues.pii_count),
+      spi_count: Math.max(0, documentReviewValues.spi_count),
+      has_scc_draft: documentReviewValues.has_scc_draft || uploadedFiles.length > 0,
+      uploaded_files: uploadedFiles
+    };
+  };
+
+  const buildEuSccPayload = async (): Promise<unknown> => {
+    assertInput(hasText(euSccValues.exporter_name), "璇峰～鍐欐暟鎹嚭鍙ｆ柟鍚嶇О銆?);
+    assertInput(hasText(euSccValues.importer_name), "璇峰～鍐欐暟鎹繘鍙ｆ柟鍚嶇О銆?);
+    assertInput(hasText(euSccValues.importer_country), "璇峰～鍐欒繘鍙ｆ柟鍥藉/鍦板尯銆?);
+    assertInput(hasText(euSccValues.transfer_purpose), "璇峰～鍐欎紶杈撶洰鐨勩€?);
+    assertInput(hasText(euSccValues.data_categories), "璇峰～鍐欐暟鎹被鍒€?);
+    assertInput(hasText(euSccValues.tom_summary), "璇峰～鍐欐妧鏈笌缁勭粐鎺柦锛圱OM锛夋憳瑕併€?);
+    assertInput(hasText(euSccValues.rights_and_complaint), "璇峰～鍐欐暟鎹富浣撴潈鍒╀笌鎶曡瘔鏈哄埗銆?);
+    assertInput(euSccFiles.length > 0, "璇蜂笂浼犺嚦灏?浠絊CC鏂囨湰鎴栭厤濂楅檮浠躲€?);
+
+    const uploadedFiles = await uploadFiles(euSccFiles);
+    const purposeContext = [
+      euSccValues.transfer_purpose.trim(),
+      `瑙掕壊鍏崇郴锛?{euSccValues.transfer_role}`,
+      `SCC鐗堟湰锛?{euSccValues.scc_version}`,
+      `鏁版嵁绫诲埆锛?{euSccValues.data_categories}`,
+      euSccValues.data_subject_categories ? `涓讳綋绫诲埆锛?{euSccValues.data_subject_categories}` : "",
+      `浼犺緭棰戠巼锛?{euSccValues.transfer_frequency}`,
+      euSccValues.retention_rule ? `淇濆瓨瑙勫垯锛?{euSccValues.retention_rule}` : "",
+      euSccValues.tom_summary ? `TOM锛?{euSccValues.tom_summary}` : "",
+      euSccValues.onward_transfer_control ? `鍐嶄紶杈擄細${euSccValues.onward_transfer_control}` : "",
+      euSccValues.government_access_response ? `鏀垮簻璁块棶锛?{euSccValues.government_access_response}` : "",
+      euSccValues.supplementary_clause_review ? `琛ュ厖鏉℃锛?{euSccValues.supplementary_clause_review}` : "",
+      euSccValues.rights_and_complaint ? `鏉冨埄鏁戞祹锛?{euSccValues.rights_and_complaint}` : ""
+    ]
+      .filter((item) => item.length > 0)
+      .join("锛?);
+
+    return {
+      company_name: euSccValues.exporter_name.trim(),
+      receiver_name: euSccValues.importer_name.trim(),
+      receiver_country: euSccValues.importer_country.trim(),
+      transfer_purpose: purposeContext,
+      pii_count: Math.max(0, euSccValues.pii_count),
+      spi_count: Math.max(0, euSccValues.spi_count),
+      has_scc_draft: euSccValues.has_scc_draft || uploadedFiles.length > 0,
+      uploaded_files: uploadedFiles
+    };
+  };
+
+  const buildBcrPayload = async (): Promise<unknown> => {
+    assertInput(hasText(bcrValues.company_name), "璇峰～鍐欓泦鍥㈠悕绉般€?);
+    assertInput(hasText(bcrValues.group_structure), "璇峰～鍐欓泦鍥㈢粨鏋勪笌鐢宠涓讳綋淇℃伅銆?);
+    assertInput(hasText(bcrValues.data_flow_scope), "璇峰～鍐欐暟鎹祦涓庡鐞嗘椿鍔ㄨ寖鍥淬€?);
+    assertInput(hasText(bcrValues.binding_mechanism), "璇峰～鍐欏唴閮ㄧ害鏉熸満鍒躲€?);
+    assertInput(hasText(bcrValues.third_country_assessment), "璇峰～鍐欑涓夊浗娉曞緥璇勪及鏈哄埗銆?);
+    assertInput(hasText(bcrValues.government_access_process), "璇峰～鍐欐斂搴滆闂姹傚鐞嗘満鍒躲€?);
+    assertInput(bcrFiles.length > 0, "璇蜂笂浼犺嚦灏?浠紹CR涓绘枃鏈垨閰嶅鐢宠鏉愭枡銆?);
+
+    const uploadedFiles = await uploadFiles(bcrFiles);
+    const attachments = uploadedFiles.map((path) => {
+      const format = inferDocxPdfFormat(path);
+      assertInput(!!format, `BCR闄勪欢浠呮敮鎸?.docx 鎴?.pdf锛?{basenameFromPath(path)}`);
+      return {
+        file_name: basenameFromPath(path),
+        file_format: format,
+        storage_uri: path
+      };
+    });
+
+    const evidenceTexts = [
+      `${bcrValues.binding_mechanism} ${bcrValues.lead_sa_rationale}`,
+      bcrValues.data_flow_scope,
+      bcrValues.third_party_beneficiary,
+      bcrValues.liability_compensation,
+      bcrValues.transparency_notice,
+      bcrValues.training_audit,
+      bcrValues.cooperation_with_sa,
+      bcrValues.dp_safeguards,
+      `${bcrValues.third_country_assessment} ${bcrValues.government_access_process}`,
+      `${bcrValues.update_mechanism} ${bcrValues.definitions_quality}`
+    ];
+
+    const review_items = BCR_REVIEW_ITEMS.map((item, index) => {
+      const evidence = evidenceTexts[index]?.trim() || "鏈彁渚?;
+      const score = toBcrScore(evidence);
+      return {
+        code: item.code,
+        title: item.title,
+        score,
+        finding: composeBcrFinding(score, evidence.slice(0, 180)),
+        legal_basis: item.legal_basis,
+        recommendation: bcrValues.review_focus
+          ? `${item.recommendation} 鏈疆閲嶇偣锛?{bcrValues.review_focus}`
+          : item.recommendation,
+        evidence
+      };
+    });
+
+    return {
+      company_name: bcrValues.company_name.trim(),
+      review_items,
+      attachments,
+      uploaded_files: uploadedFiles
+    };
+  };
+
+  const buildDpiaPayload = async (): Promise<unknown> => {
+    assertInput(hasText(dpiaValues.project_name), "璇峰～鍐欓」鐩悕绉般€?);
+    assertInput(hasText(dpiaValues.processing_description), "璇峰～鍐欏鐞嗘椿鍔ㄦ弿杩般€?);
+    assertInput(hasText(dpiaValues.purpose_and_necessity), "璇峰～鍐欑洰鐨勪笌蹇呰鎬ц鏄庛€?);
+    assertInput(hasText(dpiaValues.lawful_basis), "璇峰～鍐欏悎娉曟€у熀纭€銆?);
+    assertInput(hasText(dpiaValues.risk_assessment), "璇峰～鍐欓闄╄瘎浼般€?);
+    assertInput(hasText(dpiaValues.mitigation_measures), "璇峰～鍐欑紦瑙ｆ帾鏂姐€?);
+    assertInput(hasText(dpiaValues.residual_risk), "璇峰～鍐欏墿浣欓闄╃粨璁恒€?);
+    assertInput(dpiaFiles.length > 0, "璇蜂笂浼犺嚦灏?浠紻PIA闄勪欢锛堟祦绋嬪浘/鍒跺害/鍚堝悓绛夛級銆?);
+
+    const uploadedFiles = await uploadFiles(dpiaFiles);
+    const attachments = uploadedFiles.map((path) => {
+      const format = inferDpiaAttachmentFormat(path);
+      assertInput(!!format, `DPIA闄勪欢浠呮敮鎸?.docx/.pdf/.png/.jpg锛?{basenameFromPath(path)}`);
+      return {
+        file_role: dpiaValues.attachment_role,
+        file_name: basenameFromPath(path),
+        file_format: format,
+        storage_uri: path
+      };
+    });
+
+    return {
+      project_name: dpiaValues.project_name.trim(),
+      processing_description: [
+        dpiaValues.processing_description,
+        dpiaValues.project_goal ? `椤圭洰鐩爣锛?{dpiaValues.project_goal}` : "",
+        dpiaValues.data_types ? `鏁版嵁绫诲瀷锛?{dpiaValues.data_types}` : "",
+        dpiaValues.subject_scale ? `涓讳綋瑙勬ā锛?{dpiaValues.subject_scale}` : "",
+        dpiaValues.frequency ? `棰戠巼锛?{dpiaValues.frequency}` : "",
+        dpiaValues.retention_period ? `淇濆瓨鏈熼檺锛?{dpiaValues.retention_period}` : "",
+        dpiaValues.geo_scope ? `鍦扮悊鑼冨洿锛?{dpiaValues.geo_scope}` : "",
+        dpiaValues.data_source ? `鏁版嵁鏉ユ簮锛?{dpiaValues.data_source}` : "",
+        dpiaValues.relationship_context ? `鍏崇郴鑳屾櫙锛?{dpiaValues.relationship_context}` : "",
+        dpiaValues.includes_special_data ? "鍖呭惈鐗规畩绫诲埆鏁版嵁" : "",
+        dpiaValues.has_crossborder_transfer ? "娑夊強璺ㄥ浼犺緭" : "",
+        dpiaValues.vulnerable_group ? `鑴嗗急缇や綋锛?{dpiaValues.vulnerable_group}` : "",
+        dpiaValues.novel_technology ? `鏂版妧鏈細${dpiaValues.novel_technology}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      purpose_and_necessity: [
+        dpiaValues.purpose_and_necessity,
+        dpiaValues.need_reason ? `瑙﹀彂鐞嗙敱锛?{dpiaValues.need_reason}` : "",
+        dpiaValues.expectation_control ? `鍚堢悊棰勬湡锛?{dpiaValues.expectation_control}` : "",
+        dpiaValues.function_creep_control ? `闃插姛鑳芥紓绉伙細${dpiaValues.function_creep_control}` : "",
+        dpiaValues.minimization_quality ? `鏈€灏忓寲涓庤川閲忥細${dpiaValues.minimization_quality}` : "",
+        dpiaValues.notice_plan ? `鍛婄煡瀹夋帓锛?{dpiaValues.notice_plan}` : "",
+        dpiaValues.rights_support ? `鏉冨埄鏀寔锛?{dpiaValues.rights_support}` : "",
+        dpiaValues.processor_management ? `澶勭悊鑰呯鐞嗭細${dpiaValues.processor_management}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      lawful_basis: dpiaValues.lawful_basis.trim(),
+      risk_assessment: [
+        dpiaValues.risk_assessment,
+        dpiaValues.prior_concerns ? `鍘嗗彶椋庨櫓锛?{dpiaValues.prior_concerns}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      mitigation_measures: [
+        dpiaValues.mitigation_measures,
+        dpiaValues.signoff_owner ? `绛剧讲璐ｄ换浜猴細${dpiaValues.signoff_owner}` : "",
+        dpiaValues.controller_name ? `鎺у埗鑰咃細${dpiaValues.controller_name}` : "",
+        dpiaValues.dpo_role ? `DPO锛?{dpiaValues.dpo_role}` : "",
+        dpiaValues.contact_channel ? `鑱旂郴娓犻亾锛?{dpiaValues.contact_channel}` : "",
+        dpiaValues.dpo_advice ? `DPO鎰忚锛?{dpiaValues.dpo_advice}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      residual_risk: [
+        dpiaValues.residual_risk,
+        dpiaValues.review_schedule ? `澶嶅瀹夋帓锛?{dpiaValues.review_schedule}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      attachments
+    };
+  };
+
+  const buildTiaPayload = async (): Promise<unknown> => {
+    assertInput(hasText(tiaValues.data_exporter_name), "璇峰～鍐欐暟鎹嚭鍙ｆ柟鍚嶇О銆?);
+    assertInput(hasText(tiaValues.data_importer_name), "璇峰～鍐欐暟鎹繘鍙ｆ柟鍚嶇О銆?);
+    assertInput(hasText(tiaValues.importer_country_region), "璇峰～鍐欒繘鍙ｆ柟鍥藉/鍦板尯銆?);
+    assertInput(hasText(tiaValues.transfer_purpose), "璇峰～鍐欎紶杈撶洰鐨勩€?);
+    assertInput(hasText(tiaValues.law_findings), "璇峰～鍐欑涓夊浗娉曞緥璇勪及鍙戠幇銆?);
+    assertInput(hasText(tiaValues.supplementary_technical), "璇峰～鍐欐妧鏈€цˉ鍏呮帾鏂姐€?);
+    assertInput(hasText(tiaValues.post_effectiveness), "璇峰～鍐欒ˉ鍏呮帾鏂藉悗鐨勬湁鏁堟€у垽鏂€?);
+    assertInput(hasText(tiaValues.key_actions), "璇峰～鍐欏叧閿鍔ㄩ」銆?);
+    assertInput(tiaFiles.length > 0, "璇蜂笂浼犺嚦灏?浠絋IA闄勪欢銆?);
+
+    const uploadedFiles = await uploadFiles(tiaFiles);
+    const attachments = uploadedFiles.map((path) => {
+      const format = inferDocxPdfFormat(path);
+      assertInput(!!format, `TIA闄勪欢浠呮敮鎸?.docx 鎴?.pdf锛?{basenameFromPath(path)}`);
+      return {
+        file_role: tiaValues.attachment_role,
+        file_name: basenameFromPath(path),
+        file_format: format,
+        storage_uri: path
+      };
+    });
+
+    return {
+      transfer_tool: tiaValues.transfer_tool,
+      data_exporter_profile: [
+        tiaValues.data_exporter_name,
+        `浼犺緭鐩殑锛?{tiaValues.transfer_purpose}`,
+        tiaValues.data_categories ? `鏁版嵁绫诲埆锛?{tiaValues.data_categories}` : "",
+        tiaValues.data_subject_categories ? `鏁版嵁涓讳綋锛?{tiaValues.data_subject_categories}` : "",
+        `棰戠巼锛?{tiaValues.transfer_frequency}`
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      data_importer_profile: [
+        tiaValues.data_importer_name,
+        `鍥藉/鍦板尯锛?{tiaValues.importer_country_region}`,
+        tiaValues.sensitive_data_description ? `鏁忔劅鏁版嵁锛?{tiaValues.sensitive_data_description}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      third_country_assessment: [
+        tiaValues.law_assessed ? "宸插畬鎴愭硶寰嬭瘎浼? : "娉曞緥璇勪及寰呭畬鎴?,
+        tiaValues.law_findings,
+        tiaValues.pre_effectiveness ? `琛ュ厖鎺柦鍓嶅垽鏂細${tiaValues.pre_effectiveness}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      supplementary_measures: [
+        `鎶€鏈帾鏂斤細${tiaValues.supplementary_technical}`,
+        tiaValues.supplementary_contractual ? `鍚堝悓鎺柦锛?{tiaValues.supplementary_contractual}` : "",
+        tiaValues.supplementary_organizational ? `缁勭粐鎺柦锛?{tiaValues.supplementary_organizational}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      final_conclusion: [
+        tiaValues.post_effectiveness,
+        `鍏抽敭琛屽姩锛?{tiaValues.key_actions}`,
+        tiaValues.dpo_opinion ? `DPO鎰忚锛?{tiaValues.dpo_opinion}` : "",
+        tiaValues.review_date ? `澶嶅鏃ユ湡锛?{tiaValues.review_date}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      attachments
+    };
+  };
+
+  const buildCnFlowPayload = async (): Promise<unknown> => {
+    assertInput(hasText(cnFlowValues.company_name), "璇峰～鍐欎紒涓氬悕绉般€?);
+    assertInput(hasText(cnFlowValues.transfer_purpose), "璇峰～鍐欏嚭澧冪洰鐨勩€?);
+    assertInput(splitCsv(cnFlowValues.data_categories).length > 0, "璇疯嚦灏戝～鍐欎竴绫绘嫙鍑哄鏁版嵁銆?);
+    assertInput(hasText(cnFlowValues.transfer_chain), "璇峰～鍐欎紶杈撻摼璺鏄庛€?);
+    assertInput(hasText(cnFlowValues.primary_recipient_name), "璇峰～鍐欎富瑕佹帴鏀舵柟鍚嶇О銆?);
+    assertInput(hasText(cnFlowValues.primary_recipient_country), "璇峰～鍐欎富瑕佹帴鏀舵柟鍥藉/鍦板尯銆?);
+    assertInput(cnFlowDataInventoryFiles.length > 0, "璇蜂笂浼犳暟鎹竻鍗曢檮浠讹紙data_inventory锛夈€?);
+    assertInput(cnFlowEntityInventoryFiles.length > 0, "璇蜂笂浼犲疄浣撴竻鍗曢檮浠讹紙entity_inventory锛夈€?);
+
+    const [dataInventoryPaths, entityInventoryPaths, supportingPaths] = await Promise.all([
+      uploadFiles(cnFlowDataInventoryFiles),
+      uploadFiles(cnFlowEntityInventoryFiles),
+      uploadFiles(cnFlowSupportingFiles)
+    ]);
+
+    const attachments = [
+      ...dataInventoryPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `鏁版嵁娓呭崟闄勪欢鏍煎紡浠呮敮鎸?.xlsx/.csv/.docx/.pdf锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "data_inventory" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...entityInventoryPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `瀹炰綋娓呭崟闄勪欢鏍煎紡浠呮敮鎸?.xlsx/.csv/.docx/.pdf锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "entity_inventory" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...supportingPaths.map((path) => {
+        const format = inferCnFlowAttachmentFormat(path);
+        assertInput(!!format, `琛ュ厖鏉愭枡鏍煎紡浠呮敮鎸?.xlsx/.csv/.docx/.pdf锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "supporting_material" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      })
+    ];
+
+    const recipient_entities = [
+      {
+        entity_name: cnFlowValues.primary_recipient_name.trim(),
+        country_region: cnFlowValues.primary_recipient_country.trim(),
+        entity_role: cnFlowValues.primary_recipient_role,
+        is_restricted_party: cnFlowValues.primary_recipient_restricted
+      },
+      ...parseRecipientRows(cnFlowValues.additional_recipients)
+    ];
+
+    return {
+      company_name: cnFlowValues.company_name.trim(),
+      transfer_purpose: [
+        cnFlowValues.transfer_purpose.trim(),
+        cnFlowValues.necessity_justification ? `蹇呰鎬э細${cnFlowValues.necessity_justification}` : "",
+        cnFlowValues.data_volume_note ? `瑙勬ā璇存槑锛?{cnFlowValues.data_volume_note}` : "",
+        cnFlowValues.internal_access_note ? `鍐呴儴璁块棶椋庨櫓锛?{cnFlowValues.internal_access_note}` : ""
+      ].filter((item) => item.length > 0).join("锛?),
+      data_categories: splitCsv(cnFlowValues.data_categories),
+      sensitive_data_flags: splitCsv(cnFlowValues.sensitive_data_flags),
+      recipient_entities,
+      transfer_chain: cnFlowValues.transfer_chain.trim(),
+      attachments
+    };
+  };
+
+  const buildCpraPayload = async (): Promise<unknown> => {
+    assertInput(hasText(cpraValues.company_name), "璇峰～鍐欎紒涓氬悕绉般€?);
+    assertInput(hasText(cpraValues.business_model), "璇峰～鍐欎笟鍔℃ā鍨嬨€?);
+    assertInput(hasText(cpraValues.data_lifecycle), "璇峰～鍐欐暟鎹敓鍛藉懆鏈熻鏄庛€?);
+    assertInput(hasText(cpraValues.notice_and_consent), "璇峰～鍐欏憡鐭ヤ笌鍚屾剰鏈哄埗銆?);
+    assertInput(hasText(cpraValues.consumer_rights_process), "璇峰～鍐欐秷璐硅€呮潈鍒╁搷搴旀満鍒躲€?);
+    assertInput(hasText(cpraValues.opt_out_and_sale_sharing), "璇峰～鍐欏嚭鍞?鍏变韩涓嶰pt-out鏈哄埗銆?);
+    assertInput(
+      hasText(cpraValues.privacy_policy_url) || cpraPrivacyPolicyFiles.length > 0,
+      "璇锋彁渚涢殣绉佹斂绛朥RL鎴栦笂浼犻殣绉佹斂绛栨枃浠躲€?
+    );
+
+    const [
+      privacyPaths,
+      rightsPaths,
+      dataMapPaths,
+      vendorPaths,
+      otherPaths
+    ] = await Promise.all([
+      uploadFiles(cpraPrivacyPolicyFiles),
+      uploadFiles(cpraRightsSopFiles),
+      uploadFiles(cpraDataMapFiles),
+      uploadFiles(cpraVendorListFiles),
+      uploadFiles(cpraOtherFiles)
+    ]);
+
+    const uploadedAttachments = [
+      ...privacyPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `闅愮鏀跨瓥闄勪欢鏍煎紡浠呮敮鎸?.docx/.pdf/.xlsx/.csv锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "privacy_policy" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...rightsPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `鏉冨埄娴佺▼闄勪欢鏍煎紡浠呮敮鎸?.docx/.pdf/.xlsx/.csv锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "rights_sop" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...dataMapPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `鏁版嵁鏄犲皠闄勪欢鏍煎紡浠呮敮鎸?.docx/.pdf/.xlsx/.csv锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "data_map" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...vendorPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `渚涘簲鍟嗛檮浠舵牸寮忎粎鏀寔 .docx/.pdf/.xlsx/.csv锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "vendor_list" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      }),
+      ...otherPaths.map((path) => {
+        const format = inferCpraAttachmentFormat(path);
+        assertInput(!!format, `琛ュ厖闄勪欢鏍煎紡浠呮敮鎸?.docx/.pdf/.xlsx/.csv锛?{basenameFromPath(path)}`);
+        return {
+          file_role: "other" as const,
+          file_name: basenameFromPath(path),
+          file_format: format,
+          storage_uri: path
+        };
+      })
+    ];
+
+    const urlAttachment = hasText(cpraValues.privacy_policy_url)
+      ? (() => {
+        assertInput(isValidUrl(cpraValues.privacy_policy_url), "闅愮鏀跨瓥URL鏍煎紡涓嶆纭紝璇蜂娇鐢?http(s) 閾炬帴銆?);
+        return [
+          {
+            file_role: "privacy_policy" as const,
+            file_name: "privacy_policy_url",
+            file_format: "url" as const,
+            storage_uri: cpraValues.privacy_policy_url.trim()
+          }
+        ];
+      })()
+      : [];
+
+    const attachments = [...urlAttachment, ...uploadedAttachments];
+    assertInput(attachments.length > 0, "璇疯嚦灏戞彁渚?浠紺PRA闄勪欢鎴栭殣绉佹斂绛朥RL銆?);
+
+    return {
+      company_name: cpraValues.company_name.trim(),
+      business_model: [
+        cpraValues.business_model.trim(),
+        cpraValues.dba_name ? `DBA锛?{cpraValues.dba_name}` : "",
+        cpraValues.cpra_applicability_selfcheck ? `閫傜敤鎬э細${cpraValues.cpra_applicability_selfcheck}` : "",
+        cpraValues.review_focus ? `閲嶇偣锛?{cpraValues.review_focus}` : ""
+      ].filter((item) => item.length > 0).join("锛?),
+      data_lifecycle: [
+        cpraValues.data_lifecycle,
+        cpraValues.data_categories ? `鏁版嵁绫诲埆锛?{cpraValues.data_categories}` : "",
+        cpraValues.spi_usage_summary ? `SPI浣跨敤锛?{cpraValues.spi_usage_summary}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      notice_and_consent: [
+        cpraValues.notice_and_consent,
+        hasText(cpraValues.privacy_policy_url) ? `闅愮鏀跨瓥锛?{cpraValues.privacy_policy_url.trim()}` : "",
+        cpraValues.ui_dark_pattern_check ? `UI鏆楁ā寮忥細${cpraValues.ui_dark_pattern_check}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      consumer_rights_process: [
+        cpraValues.consumer_rights_process,
+        cpraValues.identity_verification_method ? `韬唤楠岃瘉锛?{cpraValues.identity_verification_method}` : "",
+        cpraValues.rights_sla ? `SLA锛?{cpraValues.rights_sla}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      opt_out_and_sale_sharing: cpraValues.opt_out_and_sale_sharing.trim(),
+      vendor_management: [
+        cpraValues.vendor_management,
+        cpraValues.spi_usage_summary ? `SPI闄愬埗锛?{cpraValues.spi_usage_summary}` : ""
+      ].filter((item) => item.trim().length > 0).join("锛?),
+      attachments
+    };
+  };
+
+  const buildDiagnosisPayload = (): unknown => ({
+    company_name: diagnosisValues.company_name,
+    answers: {
+      q1_is_ciio: diagnosisValues.q1_is_ciio,
+      q2_has_important_data: diagnosisValues.q2_has_important_data,
+      q3_pii_count: diagnosisValues.q3_pii_count,
+      q4_spi_count: diagnosisValues.q4_spi_count,
+      q5_no_personal_info: diagnosisValues.q5_no_personal_info,
+      q6_scenario: diagnosisValues.q6_scenario,
+      q7_receiver_type: diagnosisValues.q7_receiver_type,
+      q8_purpose: diagnosisValues.q8_purpose
+    }
+  });
+
+  const execute = async () => {
+    let requestPayload: unknown;
+    try {
+      if (isDocumentReviewTask) {
+        requestPayload = await buildDocumentReviewPayload();
+      } else if (isEuSccTask) {
+        requestPayload = await buildEuSccPayload();
+      } else if (isDiagnosisModule) {
+        requestPayload = buildDiagnosisPayload();
+      } else if (isAssessmentModule) {
+        requestPayload = await buildAssessmentPayload();
+      } else if (isPipiaModule) {
+        requestPayload = await buildPipiaPayload();
+      } else if (isBcrModule) {
+        requestPayload = await buildBcrPayload();
+      } else if (isDpiaModule) {
+        requestPayload = await buildDpiaPayload();
+      } else if (isTiaModule) {
+        requestPayload = await buildTiaPayload();
+      } else if (isCnFlowModule) {
+        requestPayload = await buildCnFlowPayload();
+      } else if (isCpraModule) {
+        requestPayload = await buildCpraPayload();
+      } else {
+        requestPayload = JSON.parse(payloadText);
+      }
+    } catch (parseErr) {
+      const message = parseErr instanceof Error ? parseErr.message : "Payload parse error";
+      setError(message);
+      onRunDone({
+        module: moduleKey,
+        runMode: "sync",
+        request: isDocumentReviewTask
+          ? documentReviewValues
+          : isEuSccTask
+          ? euSccValues
+          : isDiagnosisModule
+          ? diagnosisValues
+          : isAssessmentModule
+            ? assessmentValues
+            : isPipiaModule
+              ? pipiaValues
+              : isBcrModule
+                ? bcrValues
+                : isDpiaModule
+                  ? dpiaValues
+                  : isTiaModule
+                    ? tiaValues
+                    : isCnFlowModule
+                      ? cnFlowValues
+                      : isCpraModule
+                        ? cpraValues
+              : payloadText,
+        success: false,
+        error: message
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await runModule(definition, requestPayload, "sync");
+      setResponseData(result.response);
+      onRunDone({
+        module: moduleKey,
+        runMode: result.runMode,
+        request: requestPayload,
+        response: result.response,
+        success: true,
+        asyncTaskId: result.asyncTaskId,
+        asyncState: result.asyncState
+      });
+    } catch (runErr) {
+      const message = runErr instanceof Error ? runErr.message : "Request failed";
+      setResponseData(undefined);
+      setError(message);
+      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentAssessmentStep = ASSESSMENT_STEPS[assessmentStepIndex];
+  const assessmentProgress = Math.round(((assessmentStepIndex + 1) / ASSESSMENT_STEPS.length) * 100);
+  const currentDiagnosisStep = DIAGNOSIS_STEPS[diagnosisStepIndex];
+  const diagnosisProgress = Math.round(((diagnosisStepIndex + 1) / DIAGNOSIS_STEPS.length) * 100);
+  const currentPipiaStep = PIPIA_STEPS[pipiaStepIndex];
+  const pipiaProgress = Math.round(((pipiaStepIndex + 1) / PIPIA_STEPS.length) * 100);
+  const currentDocumentReviewStep = DOCUMENT_REVIEW_STEPS[documentReviewStepIndex];
+  const documentReviewProgress = Math.round(((documentReviewStepIndex + 1) / DOCUMENT_REVIEW_STEPS.length) * 100);
+  const currentEuSccStep = EU_SCC_STEPS[euSccStepIndex];
+  const euSccProgress = Math.round(((euSccStepIndex + 1) / EU_SCC_STEPS.length) * 100);
+  const currentBcrStep = BCR_STEPS[bcrStepIndex];
+  const bcrProgress = Math.round(((bcrStepIndex + 1) / BCR_STEPS.length) * 100);
+  const currentDpiaStep = DPIA_STEPS[dpiaStepIndex];
+  const dpiaProgress = Math.round(((dpiaStepIndex + 1) / DPIA_STEPS.length) * 100);
+  const currentTiaStep = TIA_STEPS[tiaStepIndex];
+  const tiaProgress = Math.round(((tiaStepIndex + 1) / TIA_STEPS.length) * 100);
+  const currentCnFlowStep = CN_FLOW_STEPS[cnFlowStepIndex];
+  const cnFlowProgress = Math.round(((cnFlowStepIndex + 1) / CN_FLOW_STEPS.length) * 100);
+  const currentCpraStep = CPRA_STEPS[cpraStepIndex];
+  const cpraProgress = Math.round(((cpraStepIndex + 1) / CPRA_STEPS.length) * 100);
+  const panelModuleLabel =
+    isDocumentReviewTask && taskTemplate
+      ? getTaskTemplateTitle(taskTemplate, lang)
+      : definition.label;
+
+  return (
+    <section className="run-panel" data-guide="stage-run">
+      <header className="run-panel-head">
+        <div>
+          <div className="runner-title">{t("runPanel")}</div>
+          <h3 className="font-display text-xl text-ink">{panelModuleLabel}</h3>
+          {taskTemplate ? (
+            <p className="run-panel-template-hint">
+              {getTaskTemplateTitle(taskTemplate, lang)}
+            </p>
+          ) : null}
+        </div>
+      </header>
+
+      {!lockedModule ? (
+        <div className="jurisdiction-tabs">
+          {JURISDICTIONS.map((item) => (
+            <button
+              key={item}
+              className={`tab-btn ${item === jurisdiction ? "active" : ""}`}
+              onClick={() => setJurisdiction(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {!lockedModule ? (
+        <div className="module-tabs">
+          {modules.map((item) => (
+            <button
+              key={item.key}
+              className={`tab-btn ${item.key === moduleKey ? "active" : ""}`}
+              onClick={() => setModuleKey(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="module-lock-line">
+          {t("runLockedModule")}
+          {" "}
+          <strong>{panelModuleLabel}</strong>
+        </div>
+      )}
+
+      {isDocumentReviewTask ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">Document Review Wizard</div>
+            <span>{documentReviewProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {DOCUMENT_REVIEW_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === documentReviewStepIndex ? "active" : ""}`}
+                onClick={() => setDocumentReviewStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{localizeUiText(lang, currentDocumentReviewStep.title)}</div>
+          <div className="schema-field-grid">
+            {currentDocumentReviewStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(documentReviewValues[field.name])}
+                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(documentReviewValues[field.name])}
+                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(documentReviewValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updateDocumentReviewValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(documentReviewValues[field.name])}
+                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(documentReviewValues[field.name])}
+                    onChange={(event) => updateDocumentReviewValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {documentReviewStepIndex === DOCUMENT_REVIEW_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">涓婁紶寰呭鏂囨湰</div>
+              <input
+                type="file"
+                multiple
+                onChange={(event) => setDocumentReviewFiles(Array.from(event.target.files ?? []))}
+              />
+              <div className="schema-upload-list">
+                {documentReviewFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {documentReviewFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠藉悎鍚屾垨鏀跨瓥鏂囨湰鍚庡啀鎵ц銆?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDocumentReviewStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={documentReviewStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDocumentReviewStepIndex((prev) => Math.min(DOCUMENT_REVIEW_STEPS.length - 1, prev + 1))}
+              disabled={documentReviewStepIndex === DOCUMENT_REVIEW_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚鏂囨。鍚堣瀹℃煡鎶ュ憡"}
+            </button>
+          </div>
+        </section>
+      ) : isEuSccTask ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">SCC Review Wizard</div>
+            <span>{euSccProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {EU_SCC_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === euSccStepIndex ? "active" : ""}`}
+                onClick={() => setEuSccStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{localizeUiText(lang, currentEuSccStep.title)}</div>
+          <div className="schema-field-grid">
+            {currentEuSccStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(euSccValues[field.name])}
+                      onChange={(event) => updateEuSccValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(euSccValues[field.name])}
+                      onChange={(event) => updateEuSccValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(euSccValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updateEuSccValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(euSccValues[field.name])}
+                      onChange={(event) => updateEuSccValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                          <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(euSccValues[field.name])}
+                    onChange={(event) => updateEuSccValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {euSccStepIndex === EU_SCC_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">SCC鏂囨湰涓庨厤濂楁潗鏂欎笂浼?/div>
+              <input type="file" multiple onChange={(event) => setEuSccFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {euSccFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {euSccFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠絊CC鏂囨湰鎴栭檮浠跺悗鍐嶆彁浜ゃ€?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setEuSccStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={euSccStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setEuSccStepIndex((prev) => Math.min(EU_SCC_STEPS.length - 1, prev + 1))}
+              disabled={euSccStepIndex === EU_SCC_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚SCC鍚堣瀹℃煡鎶ュ憡"}
+            </button>
+          </div>
+        </section>
+      ) : isDiagnosisModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">Diagnosis Wizard</div>
+            <span>{diagnosisProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {DIAGNOSIS_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === diagnosisStepIndex ? "active" : ""}`}
+                onClick={() => setDiagnosisStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentDiagnosisStep.title}</div>
+          <div className="schema-field-grid">
+            {currentDiagnosisStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(diagnosisValues[field.name])}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(diagnosisValues[field.name])}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(diagnosisValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updateDiagnosisValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+
+              return (
+                <label key={String(field.name)} className="field-wrap">
+                  <span>{localizeUiText(lang, field.label)}</span>
+                  <select
+                    value={String(diagnosisValues[field.name])}
+                    onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                  >
+                    {(field.options ?? []).map((option) => (
+                      <option key={option.value} value={option.value}>{localizeUiText(lang, option.label)}</option>
+                    ))}
+                  </select>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDiagnosisStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={diagnosisStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDiagnosisStepIndex((prev) => Math.min(DIAGNOSIS_STEPS.length - 1, prev + 1))}
+              disabled={diagnosisStepIndex === DIAGNOSIS_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </section>
+      ) : isAssessmentModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">Assessment Wizard</div>
+            <span>{assessmentProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {ASSESSMENT_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === assessmentStepIndex ? "active" : ""}`}
+                onClick={() => setAssessmentStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentAssessmentStep.title}</div>
+          <div className="schema-field-grid">
+            {currentAssessmentStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(assessmentValues[field.name])}
+                      onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(assessmentValues[field.name])}
+                      onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(assessmentValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updateAssessmentValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(assessmentValues[field.name])}
+                      onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(assessmentValues[field.name])}
+                    onChange={(event) => updateAssessmentValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {assessmentStepIndex === ASSESSMENT_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">闄勪欢涓婁紶</div>
+              <input
+                type="file"
+                multiple
+                onChange={(event) => setAssessmentFiles(Array.from(event.target.files ?? []))}
+              />
+              <div className="schema-upload-list">
+                {assessmentFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {assessmentFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犻檮浠舵潗鏂欏悗鍐嶆彁浜ゃ€?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setAssessmentStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={assessmentStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setAssessmentStepIndex((prev) => Math.min(ASSESSMENT_STEPS.length - 1, prev + 1))}
+              disabled={assessmentStepIndex === ASSESSMENT_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </section>
+      ) : isPipiaModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">PIPIA Wizard</div>
+            <span>{pipiaProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {PIPIA_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === pipiaStepIndex ? "active" : ""}`}
+                onClick={() => setPipiaStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentPipiaStep.title}</div>
+          <div className="schema-field-grid">
+            {currentPipiaStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(pipiaValues[field.name])}
+                      onChange={(event) => updatePipiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(pipiaValues[field.name])}
+                      onChange={(event) => updatePipiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "number") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      type="number"
+                      min={field.min}
+                      step={field.step}
+                      value={Number(pipiaValues[field.name])}
+                      onChange={(event) => {
+                        const parsed = Number(event.target.value);
+                        updatePipiaValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
+                      }}
+                    />
+                  </label>
+                );
+              }
+
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(pipiaValues[field.name])}
+                      onChange={(event) => updatePipiaValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(pipiaValues[field.name])}
+                    onChange={(event) => updatePipiaValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {pipiaStepIndex === PIPIA_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">闄勪欢涓婁紶</div>
+              <input
+                type="file"
+                multiple
+                onChange={(event) => setPipiaFiles(Array.from(event.target.files ?? []))}
+              />
+              <div className="schema-upload-list">
+                {pipiaFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {pipiaFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠絇IPIA闄勪欢鍚庡啀鎻愪氦銆?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setPipiaStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={pipiaStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setPipiaStepIndex((prev) => Math.min(PIPIA_STEPS.length - 1, prev + 1))}
+              disabled={pipiaStepIndex === PIPIA_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </section>
+      ) : isBcrModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">BCR Review Wizard</div>
+            <span>{bcrProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {BCR_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === bcrStepIndex ? "active" : ""}`}
+                onClick={() => setBcrStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentBcrStep.title}</div>
+          <div className="schema-field-grid">
+            {currentBcrStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(bcrValues[field.name])}
+                      onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(bcrValues[field.name])}
+                      onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="field-wrap schema-field-wide">
+                  <span>{localizeUiText(lang, field.label)}</span>
+                  <textarea
+                    className="runner-textarea schema-textarea"
+                    value={String(bcrValues[field.name])}
+                    onChange={(event) => updateBcrValue(field.name, event.target.value as never)}
+                  />
+                </label>
+              );
+            })}
+          </div>
+
+          {bcrStepIndex === BCR_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">BCR涓绘枃鏈笌閰嶅鏉愭枡涓婁紶锛堜粎docx/pdf锛?/div>
+              <input type="file" multiple onChange={(event) => setBcrFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {bcrFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {bcrFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠紹CR鏉愭枡鍚庡啀鎻愪氦銆?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setBcrStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={bcrStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setBcrStepIndex((prev) => Math.min(BCR_STEPS.length - 1, prev + 1))}
+              disabled={bcrStepIndex === BCR_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚BCR瀹℃煡鎶ュ憡"}
+            </button>
+          </div>
+        </section>
+      ) : isDpiaModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">DPIA Wizard</div>
+            <span>{dpiaProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {DPIA_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === dpiaStepIndex ? "active" : ""}`}
+                onClick={() => setDpiaStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentDpiaStep.title}</div>
+          <div className="schema-field-grid">
+            {currentDpiaStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(dpiaValues[field.name])}
+                      onChange={(event) => updateDpiaValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(dpiaValues[field.name])}
+                    onChange={(event) => updateDpiaValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {dpiaStepIndex === DPIA_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">DPIA闄勪欢涓婁紶锛坉ocx/pdf/png/jpg锛?/div>
+              <input type="file" multiple onChange={(event) => setDpiaFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {dpiaFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {dpiaFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠紻PIA闄勪欢鍚庡啀鎻愪氦銆?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDpiaStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={dpiaStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setDpiaStepIndex((prev) => Math.min(DPIA_STEPS.length - 1, prev + 1))}
+              disabled={dpiaStepIndex === DPIA_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚DPIA鑽夋"}
+            </button>
+          </div>
+        </section>
+      ) : isTiaModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">TIA Wizard</div>
+            <span>{tiaProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {TIA_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === tiaStepIndex ? "active" : ""}`}
+                onClick={() => setTiaStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentTiaStep.title}</div>
+          <div className="schema-field-grid">
+            {currentTiaStep.fields.map((field) => {
+              if (field.type === "text") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <input
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "textarea") {
+                return (
+                  <label key={String(field.name)} className="field-wrap schema-field-wide">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <textarea
+                      className="runner-textarea schema-textarea"
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    />
+                  </label>
+                );
+              }
+              if (field.type === "select") {
+                return (
+                  <label key={String(field.name)} className="field-wrap">
+                    <span>{localizeUiText(lang, field.label)}</span>
+                    <select
+                      value={String(tiaValues[field.name])}
+                      onChange={(event) => updateTiaValue(field.name, event.target.value as never)}
+                    >
+                      {(field.options ?? []).map((option) => (
+                        <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                      ))}
+                    </select>
+                  </label>
+                );
+              }
+              return (
+                <label key={String(field.name)} className="schema-checkbox-field">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(tiaValues[field.name])}
+                    onChange={(event) => updateTiaValue(field.name, event.target.checked as never)}
+                  />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {tiaStepIndex === TIA_STEPS.length - 1 ? (
+            <section className="schema-upload-card">
+              <div className="runner-title">TIA闄勪欢涓婁紶锛坉ocx/pdf锛?/div>
+              <input type="file" multiple onChange={(event) => setTiaFiles(Array.from(event.target.files ?? []))} />
+              <div className="schema-upload-list">
+                {tiaFiles.map((file) => (
+                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                    <strong>{file.name}</strong>
+                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                  </article>
+                ))}
+                {tiaFiles.length === 0 ? <p className="resource-empty">璇蜂笂浼犺嚦灏?浠絋IA闄勪欢鍚庡啀鎻愪氦銆?/p> : null}
+              </div>
+            </section>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setTiaStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={tiaStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setTiaStepIndex((prev) => Math.min(TIA_STEPS.length - 1, prev + 1))}
+              disabled={tiaStepIndex === TIA_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚TIA鑽夋"}
+            </button>
+          </div>
+        </section>
+      ) : isCnFlowModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">EO 14117 Wizard</div>
+            <span>{cnFlowProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {CN_FLOW_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === cnFlowStepIndex ? "active" : ""}`}
+                onClick={() => setCnFlowStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentCnFlowStep.title}</div>
+          {currentCnFlowStep.fields.length > 0 ? (
+            <div className="schema-field-grid">
+              {currentCnFlowStep.fields.map((field) => {
+                if (field.type === "text") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{localizeUiText(lang, field.label)}</span>
+                      <input
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "textarea") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap schema-field-wide">
+                      <span>{localizeUiText(lang, field.label)}</span>
+                      <textarea
+                        className="runner-textarea schema-textarea"
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "select") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{localizeUiText(lang, field.label)}</span>
+                      <select
+                        value={String(cnFlowValues[field.name])}
+                        onChange={(event) => updateCnFlowValue(field.name, event.target.value as never)}
+                      >
+                        {(field.options ?? []).map((option) => (
+                          <option key={option} value={option}>{localizeUiText(lang, option)}</option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                }
+                return (
+                  <label key={String(field.name)} className="schema-checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(cnFlowValues[field.name])}
+                      onChange={(event) => updateCnFlowValue(field.name, event.target.checked as never)}
+                    />
+                  <span>{localizeUiText(lang, field.label)}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {cnFlowStepIndex === CN_FLOW_STEPS.length - 1 ? (
+            <>
+              <section className="schema-upload-card">
+                <div className="runner-title">鏁版嵁娓呭崟闄勪欢锛堝繀浼狅紝data_inventory锛?/div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowDataInventoryFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowDataInventoryFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowDataInventoryFiles.length === 0 ? (
+                    <p className="resource-empty">璇蜂笂浼犺嚦灏?浠芥暟鎹竻鍗曪紙xlsx/csv/docx/pdf锛夈€?/p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">瀹炰綋娓呭崟闄勪欢锛堝繀浼狅紝entity_inventory锛?/div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowEntityInventoryFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowEntityInventoryFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowEntityInventoryFiles.length === 0 ? (
+                    <p className="resource-empty">璇蜂笂浼犺嚦灏?浠藉疄浣撴竻鍗曪紙xlsx/csv/docx/pdf锛夈€?/p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">琛ュ厖鏉愭枡锛堝彲閫夛紝supporting_material锛?/div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCnFlowSupportingFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cnFlowSupportingFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cnFlowSupportingFiles.length === 0 ? (
+                    <p className="resource-empty">鍙笂浼犺偂鏉冪粨鏋勩€佺粍缁囨灦鏋勩€佸悎鍚屽彴璐︾瓑杈呭姪鏉愭枡銆?/p>
+                  ) : null}
+                </div>
+              </section>
+            </>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCnFlowStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={cnFlowStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCnFlowStepIndex((prev) => Math.min(CN_FLOW_STEPS.length - 1, prev + 1))}
+              disabled={cnFlowStepIndex === CN_FLOW_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚14117椋庨櫓璇勪及缁撹鎶ュ憡"}
+            </button>
+          </div>
+        </section>
+      ) : isCpraModule ? (
+        <section className="schema-wizard">
+          <div className="schema-wizard-head">
+            <div className="runner-title">CPRA Wizard</div>
+            <span>{cpraProgress}%</span>
+          </div>
+          <div className="schema-stepper">
+            {CPRA_STEPS.map((step, index) => (
+              <button
+                key={localizeUiText(lang, step.title)}
+                className={`schema-step-dot ${index === cpraStepIndex ? "active" : ""}`}
+                onClick={() => setCpraStepIndex(index)}
+                type="button"
+              >
+                {index + 1}. {localizeUiText(lang, step.title)}
+              </button>
+            ))}
+          </div>
+
+          <div className="schema-current-title">{currentCpraStep.title}</div>
+          {currentCpraStep.fields.length > 0 ? (
+            <div className="schema-field-grid">
+              {currentCpraStep.fields.map((field) => {
+                if (field.type === "text") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap">
+                      <span>{localizeUiText(lang, field.label)}</span>
+                      <input
+                        value={String(cpraValues[field.name])}
+                        onChange={(event) => updateCpraValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                if (field.type === "textarea") {
+                  return (
+                    <label key={String(field.name)} className="field-wrap schema-field-wide">
+                      <span>{localizeUiText(lang, field.label)}</span>
+                      <textarea
+                        className="runner-textarea schema-textarea"
+                        value={String(cpraValues[field.name])}
+                        onChange={(event) => updateCpraValue(field.name, event.target.value as never)}
+                      />
+                    </label>
+                  );
+                }
+                return (
+                  <label key={String(field.name)} className="schema-checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(cpraValues[field.name])}
+                      onChange={(event) => updateCpraValue(field.name, event.target.checked as never)}
+                    />
+                    <span>{localizeUiText(lang, field.label)}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {cpraStepIndex === CPRA_STEPS.length - 1 ? (
+            <>
+              <section className="schema-upload-card">
+                <div className="runner-title">闅愮鏀跨瓥锛坧rivacy_policy锛?/div>
+                <p className="resource-empty">鍙～鍐橴RL锛屼篃鍙笂浼犳枃妗ｃ€備袱鑰呮弧瓒冲叾涓€鍗冲彲銆?/p>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraPrivacyPolicyFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraPrivacyPolicyFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraPrivacyPolicyFiles.length === 0 ? (
+                    <p className="resource-empty">鑻ユ湭鎻愪緵URL锛岃鑷冲皯涓婁紶1浠介殣绉佹斂绛栨枃浠躲€?/p>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">娑堣垂鑰呮潈鍒㏒OP锛坮ights_sop锛屽彲閫夛級</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraRightsSopFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraRightsSopFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraRightsSopFiles.length === 0 ? <p className="resource-empty">鍙€変笂浼犮€?/p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">鏁版嵁鏄犲皠鏉愭枡锛坉ata_map锛屽彲閫夛級</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraDataMapFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraDataMapFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraDataMapFiles.length === 0 ? <p className="resource-empty">鍙€変笂浼犮€?/p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">渚涘簲鍟嗘竻鍗曪紙vendor_list锛屽彲閫夛級</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraVendorListFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraVendorListFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraVendorListFiles.length === 0 ? <p className="resource-empty">鍙€変笂浼犮€?/p> : null}
+                </div>
+              </section>
+
+              <section className="schema-upload-card">
+                <div className="runner-title">鍏朵粬琛ュ厖鏉愭枡锛坥ther锛屽彲閫夛級</div>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setCpraOtherFiles(Array.from(event.target.files ?? []))}
+                />
+                <div className="schema-upload-list">
+                  {cpraOtherFiles.map((file) => (
+                    <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </article>
+                  ))}
+                  {cpraOtherFiles.length === 0 ? <p className="resource-empty">鍙€変笂浼犮€?/p> : null}
+                </div>
+              </section>
+            </>
+          ) : null}
+
+          <div className="schema-actions-row">
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCpraStepIndex((prev) => Math.max(0, prev - 1))}
+              disabled={cpraStepIndex === 0}
+            >
+              涓婁竴姝?            </button>
+            <button
+              className="pill-btn"
+              type="button"
+              onClick={() => setCpraStepIndex((prev) => Math.min(CPRA_STEPS.length - 1, prev + 1))}
+              disabled={cpraStepIndex === CPRA_STEPS.length - 1}
+            >
+              涓嬩竴姝?            </button>
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : "鐢熸垚CPRA鍚堣鍏ㄦ櫙鎶ュ憡"}
+            </button>
+          </div>
+        </section>
+      ) : (
+        <>
+          <div className="runner-title">{t("payloadLabel")}</div>
+          <textarea className="runner-textarea" value={payloadText} onChange={(event) => setPayloadText(event.target.value)} />
+          <div className="mt-2 flex justify-end">
+            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+              {loading ? t("runningNow") : `${t("runNow")} ${definition.label}`}
+            </button>
+          </div>
+        </>
+      )}
+
+      <div className="runner-title mt-3">{t("responseLabel")}</div>
+      {responseData ? (
+        <section className="runner-user-result">
+          <article className="runner-user-headline">
+            <strong>{userFacingResult.headline}</strong>
+            {userFacingResult.chips.length > 0 ? (
+              <div className="runner-user-chip-row">
+                {userFacingResult.chips.map((chip) => (
+                  <span key={chip} className="runner-user-chip">{chip}</span>
+                ))}
+              </div>
+            ) : null}
+          </article>
+
+          {userFacingResult.deliverables.length > 0 ? (
+            <article className="runner-user-block">
+              <h4>{lang === "zh" ? "宸茬敓鎴愭枃浠? : "Generated Files"}</h4>
+              <ul>
+                {userFacingResult.deliverables.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+
+          {userFacingResult.highlights.length > 0 ? (
+            <article className="runner-user-block">
+              <h4>{lang === "zh" ? "鍏抽敭缁撴灉" : "Key Findings"}</h4>
+              <ul>
+                {userFacingResult.highlights.map((item, index) => (
+                  <li key={`${item}-${index}`}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+
+          <article className="runner-user-block">
+            <h4>{lang === "zh" ? "寤鸿涓嬩竴姝? : "Recommended Next Steps"}</h4>
+            <ul>
+              {userFacingResult.nextSteps.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        </section>
+      ) : (
+        <div className="runner-empty-card">{t("runResultPlaceholder")}</div>
+      )}
+
+      <div className="runner-preview-hint">
+        {responseData
+          ? (lang === "zh" ? "缁撴灉宸茬敓鎴愶紝绯荤粺浼氳嚜鍔ㄥ垏鎹㈠埌鈥滄姤鍛娾€濋〉绛捐繘琛屽墠绔瑙堛€? : "Result generated. The workspace switches to the report tab for preview.")
+          : (lang === "zh" ? "杩愯瀹屾垚鍚庯紝鎶ュ憡鍐呭灏嗗湪鈥滄姤鍛娾€濋〉绛句腑棰勮銆? : "Generated reports will be previewed in the report tab.")}
+      </div>
+      {error ? <div className="runner-error">{error}</div> : null}
+    </section>
+  );
+}

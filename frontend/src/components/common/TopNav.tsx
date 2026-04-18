@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useLang } from "../../lib/language";
-import { BrandShieldIcon, DocsIcon, GuideIcon, HelpIcon, SettingsIcon } from "./AppIcons";
+import { DocsIcon, GuideIcon, HelpIcon, SettingsIcon } from "./AppIcons";
 
 type TopNavProps = {
   onStart: () => void;
@@ -13,8 +13,8 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const onHome = location.pathname === "/";
   const onWorkspace = location.pathname.startsWith("/workspace");
 
-  const brandTitle = lang === "zh" ? "数规通" : "DATACOMPLY FLOW";
-  const brandSub = lang === "zh" ? "DataComply Flow" : "";
+  const brandTitle = "DataComply Flow";
+  const brandSub = lang === "zh" ? "数规通" : "";
   const brandTagline =
     lang === "zh"
       ? "AI驱动的数据跨境合规诊断与文书智能生成平台"
@@ -25,11 +25,13 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
       <div className={`global-nav ${onHome ? "global-nav-home" : ""}`}>
         <Link to="/" className="global-brand" aria-label={t("navHome")}>
           <span className="global-brand-logo" aria-hidden="true">
-            <BrandShieldIcon width="22" height="22" />
+            <img src="/brand-shield.svg" alt="" />
           </span>
           <div className="global-brand-copy">
-            <div className="global-brand-title">{brandTitle}</div>
-            {brandSub ? <div className="global-brand-sub">{brandSub}</div> : null}
+            <div className="global-brand-name-row">
+              {brandSub ? <div className="global-brand-sub">{brandSub}</div> : null}
+              <div className="global-brand-title">{brandTitle}</div>
+            </div>
             <div className="global-brand-tagline">{brandTagline}</div>
           </div>
         </Link>

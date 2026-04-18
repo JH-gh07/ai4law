@@ -101,30 +101,30 @@
 }
 
 .global-brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #2c62b3, #3a82d6);
-  color: #ecf4ff;
-  font-weight: 700;
 }
 
+.global-brand-logo img,
 .global-brand-logo svg {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .global-brand-title {
-  font-size: 1rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: #e9f3ff;
 }
 
 .global-brand-sub {
-  font-size: 0.75rem;
-  color: #9ab8da;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #d3e6ff;
 }
 
 .global-links {
@@ -1921,7 +1921,7 @@
 .landing-blue-stats {
   display: grid;
   gap: 0.52rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .landing-blue-stats article {
@@ -2634,7 +2634,10 @@
     grid-template-columns: 1fr;
   }
 
-  .landing-blue-stats,
+  .landing-blue-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .landing-blue-facts {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -7258,6 +7261,13 @@
 .global-brand-copy {
   display: grid;
   gap: 0.06rem;
+}
+
+.global-brand-name-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .global-brand-tagline {

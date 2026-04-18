@@ -192,19 +192,11 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           <section className="landing-blue-hero-screen">
             <div className="landing-blue-hero">
               <div className="landing-blue-hero-left">
-                <div className="landing-blue-chip">
-                  {isZh ? "跨境数据合规工作流" : "Cross-Border Data Compliance Workflow"}
-                </div>
                 <h1 className="landing-brand-headline">
                   {heroBrandTitle}
                   {heroBrandSub ? <span>{heroBrandSub}</span> : null}
                 </h1>
                 <p className="landing-brand-subtitle">{heroTagline}</p>
-                <p>
-                  {isZh
-                    ? "把路径判断、材料准备、文书草案、合同审查和整改推进收敛到同一条可复核、可执行、可交付的工作流。"
-                    : "Bring route decisions, material preparation, legal drafting, document review, and remediation into one reviewable workflow."}
-                </p>
                 <div className="landing-blue-actions" data-guide="home-start">
                   <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
                     {isZh ? "进入任务空间" : "Open Task Spaces"}
@@ -247,10 +239,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                     <span>{isZh ? "运行总数" : "Runs"}</span>
                     <strong>{state.moduleRuns.length}</strong>
                   </article>
-                  <article>
-                    <span>{isZh ? "法域覆盖" : "Jurisdictions"}</span>
-                    <strong>3</strong>
-                  </article>
                 </div>
                 <div className="landing-blue-preview">
                   <header>
@@ -278,11 +266,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                   ? "不是缺少信息，而是缺少一条清晰、可执行的合规主线"
                   : "The real gap is not information, but an executable compliance storyline"}
               </h2>
-              <p>
-                {isZh
-                  ? "企业真正难的不是找到规则，而是把规则、材料和判断依据收敛成一条团队能持续推进的路径。"
-                  : "The difficult part is not finding the rules. It is aligning materials, reasoning, and delivery into one path teams can actually execute."}
-              </p>
             </header>
             <div className="landing-blue-pain-grid landing-blue-why-grid">
               {copy.painPoints.map((item) => (
