@@ -44,12 +44,8 @@
 }
 
 .global-nav-wrap.is-home {
-  background: linear-gradient(
-    180deg,
-    rgba(4, 25, 46, 0.99) 0%,
-    rgba(6, 32, 60, 0.93) 58%,
-    rgba(6, 32, 60, 0.24) 100%
-  );
+  background: #081427;
+  border-bottom-color: rgba(92, 124, 168, 0.38);
 }
 
 .global-nav-wrap::after {
@@ -61,6 +57,10 @@
   height: 16px;
   pointer-events: none;
   background: linear-gradient(180deg, rgba(7, 34, 62, 0.22), rgba(7, 34, 62, 0));
+}
+
+.global-nav-wrap.is-home::after {
+  display: none;
 }
 
 .global-nav-wrap:not(.is-home)::after {
@@ -127,6 +127,10 @@
   color: #d3e6ff;
 }
 
+.global-nav-wrap.is-home .global-brand-sub {
+  color: #9fb3cf;
+}
+
 .global-links {
   justify-self: center;
   display: flex;
@@ -155,6 +159,23 @@
 .global-link.active {
   border-color: rgba(100, 160, 232, 0.44);
   background: rgba(23, 53, 97, 0.72);
+}
+
+.global-nav-wrap.is-home .global-link {
+  border-color: rgba(90, 122, 165, 0.4);
+  background: #0b1f3d;
+  color: #cfddf2;
+}
+
+.global-nav-wrap.is-home .global-link:hover {
+  border-color: rgba(116, 156, 205, 0.52);
+  background: #102a50;
+}
+
+.global-nav-wrap.is-home .global-link.active {
+  border-color: rgba(84, 170, 208, 0.58);
+  background: linear-gradient(135deg, rgba(29, 109, 144, 0.92), rgba(42, 130, 166, 0.9));
+  color: #f7fbff;
 }
 
 .global-actions {
@@ -187,6 +208,34 @@
 .global-nav-wrap:not(.is-home) .pill-btn-primary {
   background: linear-gradient(135deg, #244f93, #326ab5);
   color: #fff;
+}
+
+.global-nav-wrap.is-home .global-chip,
+.global-nav-wrap.is-home .lang-btn,
+.global-nav-wrap.is-home .pill-btn {
+  background: #0b1f3d;
+  border-color: rgba(90, 122, 165, 0.4);
+  color: #d1e1f7;
+}
+
+.global-nav-wrap.is-home .global-chip:hover,
+.global-nav-wrap.is-home .lang-btn:hover,
+.global-nav-wrap.is-home .pill-btn:hover {
+  background: #102a50;
+  border-color: rgba(116, 156, 205, 0.52);
+}
+
+.global-nav-wrap.is-home .pill-btn-primary,
+.global-nav-wrap.is-home .lang-btn.active {
+  background: linear-gradient(135deg, #1f7295, #2f8ab0);
+  border-color: rgba(96, 185, 221, 0.54);
+  color: #f7fbff;
+}
+
+.global-nav-wrap.is-home .pill-btn-primary:hover,
+.global-nav-wrap.is-home .lang-btn.active:hover {
+  background: linear-gradient(135deg, #2380a8, #3a95b7);
+  border-color: rgba(134, 220, 245, 0.58);
 }
 
 .global-chip,
