@@ -117,6 +117,16 @@ export function EditIcon(props: IconProps) {
   );
 }
 
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <path d="M12 4.75v10.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="m7.9 11.7 4.1 4.1 4.1-4.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.25 18.75h13.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ChevronToggleIcon({ direction = "left", ...props }: IconProps & { direction?: "left" | "right" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>

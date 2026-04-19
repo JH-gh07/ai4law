@@ -23,7 +23,7 @@ import { ResourcePanel } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
-import { ChevronToggleIcon, EditIcon, HomeIcon } from "../common/AppIcons";
+import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/AppIcons";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -72,6 +72,24 @@ const toFileName = (value: string): string => {
   const chunks = normalized.split("/");
   return chunks[chunks.length - 1] || value;
 };
+
+const getArtifactExtension = (value: string): string => {
+  const fileName = toFileName(value).toLowerCase();
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex === -1 ? "" : fileName.slice(dotIndex + 1);
+};
+
+const getArtifactBaseName = (value: string): string => {
+  const fileName = toFileName(value).toLowerCase();
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex === -1 ? fileName : fileName.slice(0, dotIndex);
+};
+
+const isHtmlArtifact = (artifact: OutputArtifact): boolean =>
+  artifact.kind.toLowerCase() === "html" || getArtifactExtension(artifact.path) === "html";
+
+const isPdfArtifact = (artifact: OutputArtifact): boolean =>
+  artifact.kind.toLowerCase() === "pdf" || getArtifactExtension(artifact.path) === "pdf";
 
 const getArtifactPriority = (artifact: OutputArtifact): number => {
   const index = PREFERRED_ARTIFACT_ORDER.indexOf(artifact.kind.toLowerCase());
@@ -187,6 +205,21 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     () => [...reportArtifacts].sort((a, b) => getArtifactPriority(a) - getArtifactPriority(b)),
     [reportArtifacts]
   );
+  const displayReportArtifacts = useMemo(() => {
+    const htmlArtifacts = sortedReportArtifacts.filter(isHtmlArtifact);
+    return htmlArtifacts.length > 0 ? htmlArtifacts : sortedReportArtifacts;
+  }, [sortedReportArtifacts]);
+  const selectedArtifact = useMemo(
+    () => sortedReportArtifacts.find((artifact) => artifact.path === selectedArtifactPath) ?? null,
+    [selectedArtifactPath, sortedReportArtifacts]
+  );
+  const selectedHtmlPdfArtifact = useMemo(() => {
+    if (!selectedArtifact || !isHtmlArtifact(selectedArtifact)) return null;
+    const selectedBaseName = getArtifactBaseName(selectedArtifact.path);
+    const sameBatchPdf = sortedReportArtifacts.find((artifact) => isPdfArtifact(artifact) && getArtifactBaseName(artifact.path) === selectedBaseName);
+    if (sameBatchPdf) return sameBatchPdf;
+    return sortedReportArtifacts.find(isPdfArtifact) ?? null;
+  }, [selectedArtifact, sortedReportArtifacts]);
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
   const reportPreviewSections = useMemo<ReportPreviewSection[]>(() => {
@@ -287,17 +320,17 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [taskSpace.id]);
 
   useEffect(() => {
-    if (sortedReportArtifacts.length === 0) {
+    if (displayReportArtifacts.length === 0) {
       setSelectedArtifactPath(null);
       return;
     }
     setSelectedArtifactPath((current) => {
-      if (current && sortedReportArtifacts.some((artifact) => artifact.path === current)) {
+      if (current && displayReportArtifacts.some((artifact) => artifact.path === current)) {
         return current;
       }
-      return sortedReportArtifacts[0]?.path ?? null;
+      return displayReportArtifacts[0]?.path ?? null;
     });
-  }, [sortedReportArtifacts]);
+  }, [displayReportArtifacts]);
 
   useEffect(() => {
     if (!selectedArtifactPath) {
@@ -575,7 +608,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           </article>
           <article>
             <span>{t("reportDownloadHint")}</span>
-            <strong>{reportArtifacts.length}</strong>
+            <strong>{displayReportArtifacts.length}</strong>
           </article>
           <article>
             <span>{t("fieldRisk")}</span>
@@ -595,7 +628,31 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                 <span>{lang === "zh" ? "当前预览" : "Now Previewing"}</span>
                 <strong>{artifactPreview.file_name}</strong>
               </div>
-              <em>{artifactPreview.kind.toUpperCase()}</em>
+              <div className="workspace-report-selected-actions">
+                {artifactPreview.render_mode === "html" ? (
+                  selectedHtmlPdfArtifact ? (
+                    <a
+                      className="workspace-report-download-icon"
+                      href={`/api/v1/artifacts/download?path=${encodeURIComponent(selectedHtmlPdfArtifact.path)}`}
+                      aria-label={lang === "zh" ? "下载 PDF" : "Download PDF"}
+                      title={lang === "zh" ? "下载 PDF" : "Download PDF"}
+                    >
+                      <DownloadIcon width="16" height="16" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className="workspace-report-download-icon disabled"
+                      aria-label={lang === "zh" ? "暂无 PDF 可下载" : "No PDF available"}
+                      title={lang === "zh" ? "暂无 PDF 可下载" : "No PDF available"}
+                      disabled
+                    >
+                      <DownloadIcon width="16" height="16" />
+                    </button>
+                  )
+                ) : null}
+                <em>{artifactPreview.kind.toUpperCase()}</em>
+              </div>
             </div>
             {artifactPreview.render_mode === "html" ? (
               <div className="workspace-report-html-frame">
@@ -649,9 +706,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         ) : (
           <p className="resource-empty">{t("reportNoData")}</p>
         )}
-        {sortedReportArtifacts.length > 0 ? (
+        {displayReportArtifacts.length > 0 ? (
           <section className="workspace-report-list">
-            {sortedReportArtifacts.map((artifact) => (
+            {displayReportArtifacts.map((artifact) => (
               <button
                 type="button"
                 key={artifact.id}
