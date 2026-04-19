@@ -23,7 +23,7 @@ import { ResourcePanel } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
-import { ChevronToggleIcon } from "../common/AppIcons";
+import { ChevronToggleIcon, EditIcon, HomeIcon } from "../common/AppIcons";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -674,6 +674,15 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         <div className="workspace-browser-left">
           <button
             type="button"
+            className="workspace-browser-icon-btn workspace-browser-home-btn"
+            onClick={() => navigate("/")}
+            aria-label={t("navHome")}
+            title={t("navHome")}
+          >
+            <HomeIcon width="16" height="16" />
+          </button>
+          <button
+            type="button"
             className="workspace-browser-app workspace-browser-app-link"
             onClick={() => navigate("/")}
             aria-label={t("navHome")}
@@ -724,7 +733,15 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
         <div className="workspace-browser-actions">
           <div className="workspace-header-actions">
-            <button className="pill-btn" onClick={renameTask}>{t("tasksRenameAction")}</button>
+            <button
+              type="button"
+              className="workspace-browser-icon-btn workspace-browser-rename-btn"
+              onClick={renameTask}
+              aria-label={t("tasksRenameAction")}
+              title={t("tasksRenameAction")}
+            >
+              <EditIcon width="16" height="16" />
+            </button>
           </div>
         </div>
       </header>

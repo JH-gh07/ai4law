@@ -350,7 +350,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                   <article key={step} className="landing-blue-workflow-step">
                     <span className="landing-blue-step-id">{String(index + 1).padStart(2, "0")}</span>
                     <p>{step}</p>
-                    <em aria-hidden>→</em>
                   </article>
                 ))}
               </div>

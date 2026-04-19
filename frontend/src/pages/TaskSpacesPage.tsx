@@ -37,19 +37,19 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
       code: "CN" as const,
       tone: "cn" as const,
       title: "中国任务包",
-      description: "点击具体类别后即创建新任务并进入工作区。"
+      description: "点击具体类别后即创建新任务并进入工作区"
     },
     {
       code: "EU" as const,
       tone: "eu" as const,
       title: "欧盟任务包",
-      description: "围绕 SCC / BCR / DPIA / TIA 的合规模块。"
+      description: "围绕 SCC / BCR / DPIA / TIA 的合规模块"
     },
     {
       code: "US" as const,
       tone: "us" as const,
       title: "美国任务包",
-      description: "覆盖 EO 14117 与 CPRA 的任务类别。"
+      description: "覆盖 EO 14117 与 CPRA 的任务类别"
     }
   ];
 
@@ -193,7 +193,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
       <section className="tasks-section tasks-showcase-section">
         <div className="tasks-section-head">
           <h3>法域差异化编排</h3>
-          <p>点击具体类别后直接创建新任务，不再经过法域中间层。</p>
+          <p>点击具体类别后直接创建新任务，不再经过法域中间层</p>
         </div>
         <div className="tasks-showcase-grid">
           {jurisdictionShowcase.map((item) => (

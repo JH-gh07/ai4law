@@ -2391,10 +2391,13 @@
 }
 
 .landing-blue-module-grid {
-  margin-top: 0.88rem;
+  margin-top: 0.72rem;
   display: grid;
-  gap: 0.58rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.84rem;
+  grid-template-columns: repeat(2, minmax(360px, 372px));
+  justify-content: center;
+  width: min(100%, 1248px);
+  justify-self: center;
 }
 
 .landing-blue-cap-head h2 {
@@ -2408,25 +2411,27 @@
 
 .landing-blue-cap-grid {
   margin-top: 0.6rem;
-  gap: 0.64rem;
+  gap: 0.84rem;
   grid-auto-rows: 1fr;
 }
 
 .landing-blue-cap-card {
   height: 100%;
-  min-height: 174px;
+  min-height: 236px;
   border-radius: 18px;
-  padding: 0.7rem 0.78rem;
+  padding: 1.04rem 1.1rem 1rem;
 }
 
 .landing-blue-cap-card h3 {
-  font-size: clamp(1.28rem, 1.92vw, 1.64rem);
+  font-size: clamp(1.28rem, 1.9vw, 1.6rem);
+  line-height: 1.32;
 }
 
 .landing-blue-cap-card p {
-  margin-top: 0.34rem;
-  font-size: clamp(0.96rem, 1vw, 1.06rem);
-  line-height: 1.62;
+  margin-top: 0.18rem;
+  max-width: 28ch;
+  font-size: 1rem;
+  line-height: 1.64;
 }
 
 .landing-blue-module-grid article > span {
@@ -2580,9 +2585,8 @@
 
 .landing-blue-flow-grid article:hover {
   border-color: rgba(183, 219, 252, 0.52);
-  transform: translateX(2px);
-  background: rgba(16, 43, 73, 0.86);
-  box-shadow: 0 14px 24px rgba(7, 20, 36, 0.18);
+  background: rgba(16, 43, 73, 0.84);
+  box-shadow: 0 10px 22px rgba(7, 20, 36, 0.16);
 }
 
 .landing-blue-flow-grid span {
@@ -2602,19 +2606,19 @@
 }
 
 .landing-blue-workflow-step {
-  min-height: 104px;
-  border-radius: 28px !important;
-  padding: 0.76rem 0.92rem !important;
+  min-height: 122px;
+  border-radius: 18px !important;
+  padding: 1.02rem 1.08rem !important;
   align-items: center;
-  background:
-    linear-gradient(180deg, rgba(17, 43, 72, 0.82) 0%, rgba(12, 34, 59, 0.82) 100%) !important;
-  border-color: rgba(156, 198, 244, 0.28) !important;
+  background: rgba(13, 36, 63, 0.78) !important;
+  border-color: rgba(146, 189, 240, 0.24) !important;
+  cursor: default;
 }
 
 .landing-blue-workflow-step p {
   margin: 0;
-  font-size: clamp(1.02rem, 1.35vw, 1.32rem);
-  line-height: 1.45;
+  font-size: clamp(1rem, 1.2vw, 1.14rem);
+  line-height: 1.6;
   letter-spacing: 0.002em;
   color: #e7f3ff;
   flex: 1 1 auto;
@@ -2637,19 +2641,8 @@
   justify-content: center;
 }
 
-.landing-blue-workflow-step em {
-  color: #9ec2eb;
-  font-style: normal;
-  font-size: 1.8rem;
-  line-height: 1;
-  transform: translateY(-1px);
-  margin-left: auto;
-  transition: transform 0.22s ease, color 0.22s ease;
-}
-
-.landing-blue-workflow-step:hover em {
-  transform: translate(4px, -1px);
-  color: #c7e2ff;
+.landing-blue-workflow-step:hover {
+  transform: none;
 }
 
 .landing-blue-footer {
@@ -2805,10 +2798,6 @@
     border-radius: 22px !important;
     grid-template-columns: auto 1fr !important;
     padding: 0.7rem 0.74rem !important;
-  }
-
-  .landing-blue-workflow-step em {
-    display: none;
   }
 
   .landing-blue-step-id {
@@ -5799,6 +5788,31 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+.workspace-browser-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(128, 168, 214, 0.5);
+  background: rgba(255, 255, 255, 0.82);
+  color: #264f7c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.workspace-browser-icon-btn:hover {
+  border-color: rgba(100, 151, 209, 0.7);
+  background: rgba(230, 242, 255, 0.9);
+  color: #123f6c;
+}
+
+.workspace-browser-icon-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .workspace-browser-search {

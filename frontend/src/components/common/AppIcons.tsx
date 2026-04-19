@@ -79,6 +79,35 @@ export function SettingsIcon(props: IconProps) {
   );
 }
 
+export function HomeIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="M4.75 10.1 12 4.75l7.25 5.35v8.15A1.75 1.75 0 0 1 17.5 20h-11a1.75 1.75 0 0 1-1.75-1.75V10.1Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M9.75 20v-5.25h4.5V20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function EditIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="m15.2 5.3 3.5 3.5m-2.1-4.9a2.15 2.15 0 0 1 3.05 3.05l-8.9 8.9-4.05 1 1-4.05 8.9-8.9Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M5.25 18.75H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ChevronToggleIcon({ direction = "left", ...props }: IconProps & { direction?: "left" | "right" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
