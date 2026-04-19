@@ -18,7 +18,8 @@
 }
 
 .app-main {
-  min-height: calc(100vh - 76px);
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-main.workspace-main {
@@ -44,8 +45,14 @@
 }
 
 .global-nav-wrap.is-home {
-  background: #081427;
-  border-bottom-color: rgba(92, 124, 168, 0.38);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  border-bottom-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .global-nav-wrap::after {
@@ -76,9 +83,10 @@
   backdrop-filter: none;
   box-shadow: none;
   padding: 0.58rem clamp(16px, 3vw, 48px);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(12px, 2vw, 28px);
   align-items: center;
-  gap: 0.5rem;
 }
 
 .global-nav-wrap.is-workspace .global-nav {
@@ -89,6 +97,29 @@
 .global-nav-home {
   background: transparent;
   border-color: transparent;
+}
+
+.global-nav-wrap.is-home .global-nav {
+  padding: 0.72rem clamp(16px, 3vw, 52px);
+}
+
+.global-brand,
+.global-nav-wrap.is-home .global-brand {
+  justify-self: start;
+}
+
+.global-links,
+.global-nav-wrap.is-home .global-links {
+  margin-left: 0;
+  justify-self: center;
+  justify-content: center;
+  gap: clamp(12px, 1.5vw, 22px);
+}
+
+.global-actions,
+.global-nav-wrap.is-home .global-actions {
+  margin-left: 0;
+  justify-self: end;
 }
 
 .global-brand {
@@ -127,14 +158,13 @@
 }
 
 .global-nav-wrap.is-home .global-brand-sub {
-  color: #9fb3cf;
+  color: #d8e9ff;
 }
 
 .global-links {
   display: flex;
   align-items: center;
-  gap: 0.62rem;
-  margin-left: clamp(18px, 2.4vw, 34px);
+  gap: clamp(12px, 1.5vw, 22px);
   flex-wrap: wrap;
 }
 
@@ -151,6 +181,15 @@
   opacity: 0.9;
 }
 
+.global-nav-wrap.is-home .global-link {
+  color: rgba(225, 239, 255, 0.86);
+}
+
+.global-nav-wrap.is-home .global-link:hover,
+.global-nav-wrap.is-home .global-link.active {
+  color: #ffffff;
+}
+
 .global-link:hover {
   color: #eaf4ff;
   opacity: 1;
@@ -165,7 +204,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.26rem;
-  margin-left: auto;
 }
 
 .global-nav-wrap.is-workspace .global-actions {
@@ -198,13 +236,62 @@
 .global-nav-wrap.is-home .pill-btn {
   background: transparent;
   border-color: transparent;
-  color: #d1e1f7;
+  color: rgba(220, 236, 255, 0.9);
 }
 
 .global-nav-wrap.is-home .global-chip:hover,
 .global-nav-wrap.is-home .lang-btn:hover,
 .global-nav-wrap.is-home .pill-btn:hover {
   color: #f3f9ff;
+}
+
+.global-nav-wrap.is-home .global-icon-action {
+  border-color: rgba(150, 189, 233, 0.3);
+  background: rgba(7, 26, 48, 0.24);
+  color: #e0efff;
+}
+
+.global-nav-wrap.is-home .global-icon-action:hover {
+  border-color: rgba(182, 219, 255, 0.5);
+  background: rgba(9, 32, 58, 0.36);
+  color: #ffffff;
+}
+
+@media (max-width: 980px) {
+  .global-nav {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "brand actions"
+      "links links";
+    row-gap: 0.44rem;
+  }
+
+  .global-nav-wrap.is-home .global-nav {
+    padding-top: 0.62rem;
+    padding-bottom: 0.62rem;
+  }
+
+  .global-brand {
+    grid-area: brand;
+  }
+
+  .global-actions {
+    grid-area: actions;
+  }
+
+  .global-links {
+    grid-area: links;
+    justify-self: start;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .global-links::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .global-chip,
@@ -1820,7 +1907,9 @@
 }
 
 .landing-blue-page {
-  height: calc(100vh - 5rem);
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100%;
   background:
     radial-gradient(circle at 10% 4%, rgba(70, 156, 219, 0.15), transparent 34%),
     radial-gradient(circle at 88% 7%, rgba(94, 128, 207, 0.14), transparent 34%),
@@ -1828,10 +1917,10 @@
 }
 
 .landing-blue-scroll {
-  height: 100%;
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  scroll-padding-top: 0.65rem;
+  min-height: 100%;
+  height: auto;
+  overflow: visible;
+  scroll-snap-type: none;
   padding: 0 0 1rem;
 }
 
@@ -1849,6 +1938,7 @@
   margin: 0 auto;
   display: grid;
   gap: 0.9rem;
+  min-height: 100%;
 }
 
 .landing-blue-hero-screen,
