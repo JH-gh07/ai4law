@@ -27,6 +27,76 @@ type CopyBlock = {
   jurisdictions: JurisdictionCard[];
 };
 
+function JurisdictionFlag({ code }: { code: Jurisdiction }) {
+  if (code === "CN") {
+    return (
+      <svg viewBox="0 0 36 24" aria-hidden="true">
+        <rect width="36" height="24" rx="3" fill="#de2910" />
+        <polygon points="7,4 7.8,6.3 10.2,6.3 8.2,7.7 9,10 7,8.6 5,10 5.8,7.7 3.8,6.3 6.2,6.3" fill="#ffde00" />
+        <polygon points="12.5,3.5 13,4.8 14.3,4.8 13.2,5.6 13.7,6.9 12.5,6.1 11.3,6.9 11.8,5.6 10.7,4.8 12,4.8" fill="#ffde00" />
+        <polygon points="15,6.8 15.5,8.1 16.8,8.1 15.7,8.9 16.2,10.2 15,9.4 13.8,10.2 14.3,8.9 13.2,8.1 14.5,8.1" fill="#ffde00" />
+        <polygon points="14.7,10.7 15.2,12 16.5,12 15.4,12.8 15.9,14.1 14.7,13.3 13.5,14.1 14,12.8 12.9,12 14.2,12" fill="#ffde00" />
+        <polygon points="12,13.5 12.5,14.8 13.8,14.8 12.7,15.6 13.2,16.9 12,16.1 10.8,16.9 11.3,15.6 10.2,14.8 11.5,14.8" fill="#ffde00" />
+      </svg>
+    );
+  }
+
+  if (code === "EU") {
+    return (
+      <svg viewBox="0 0 36 24" aria-hidden="true">
+        <rect width="36" height="24" rx="3" fill="#003399" />
+        <g fill="#ffcc00">
+          <circle cx="18" cy="5" r="1.1" />
+          <circle cx="21.8" cy="6" r="1.1" />
+          <circle cx="24.5" cy="9" r="1.1" />
+          <circle cx="25" cy="12" r="1.1" />
+          <circle cx="24.5" cy="15" r="1.1" />
+          <circle cx="21.8" cy="18" r="1.1" />
+          <circle cx="18" cy="19" r="1.1" />
+          <circle cx="14.2" cy="18" r="1.1" />
+          <circle cx="11.5" cy="15" r="1.1" />
+          <circle cx="11" cy="12" r="1.1" />
+          <circle cx="11.5" cy="9" r="1.1" />
+          <circle cx="14.2" cy="6" r="1.1" />
+        </g>
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 36 24" aria-hidden="true">
+      <rect width="36" height="24" rx="3" fill="#b22234" />
+      <rect y="2" width="36" height="2" fill="#ffffff" />
+      <rect y="6" width="36" height="2" fill="#ffffff" />
+      <rect y="10" width="36" height="2" fill="#ffffff" />
+      <rect y="14" width="36" height="2" fill="#ffffff" />
+      <rect y="18" width="36" height="2" fill="#ffffff" />
+      <rect y="22" width="36" height="2" fill="#ffffff" />
+      <rect width="15.2" height="12.5" rx="2" fill="#3c3b6e" />
+      <g fill="#ffffff">
+        <circle cx="3" cy="2.5" r="0.55" />
+        <circle cx="6" cy="2.5" r="0.55" />
+        <circle cx="9" cy="2.5" r="0.55" />
+        <circle cx="12" cy="2.5" r="0.55" />
+        <circle cx="4.5" cy="4.5" r="0.55" />
+        <circle cx="7.5" cy="4.5" r="0.55" />
+        <circle cx="10.5" cy="4.5" r="0.55" />
+        <circle cx="3" cy="6.5" r="0.55" />
+        <circle cx="6" cy="6.5" r="0.55" />
+        <circle cx="9" cy="6.5" r="0.55" />
+        <circle cx="12" cy="6.5" r="0.55" />
+        <circle cx="4.5" cy="8.5" r="0.55" />
+        <circle cx="7.5" cy="8.5" r="0.55" />
+        <circle cx="10.5" cy="8.5" r="0.55" />
+        <circle cx="3" cy="10.5" r="0.55" />
+        <circle cx="6" cy="10.5" r="0.55" />
+        <circle cx="9" cy="10.5" r="0.55" />
+        <circle cx="12" cy="10.5" r="0.55" />
+      </g>
+    </svg>
+  );
+}
+
 export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }: LandingPageProps) {
   const { lang, t } = useLang();
   const navigate = useNavigate();
@@ -240,8 +310,9 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
               </div>
             </header>
             <div className="landing-blue-module-grid landing-blue-cap-grid">
-              {copy.modules.map((item) => (
-                <article key={item.title} className="landing-blue-cap-card">
+              {copy.modules.map((item, index) => (
+                <article key={item.title} className={`landing-blue-cap-card step-${index + 1}`}>
+                  <span className="landing-blue-cap-seq">{String(index + 1).padStart(2, "0")}</span>
                   <span>{item.tag}</span>
                   <h3>{item.title}</h3>
                   <p>{item.desc}</p>
@@ -264,7 +335,9 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
             <div className="landing-blue-jurisdiction-grid landing-blue-jd-grid">
               {copy.jurisdictions.map((card) => (
                 <article key={card.code} className="landing-blue-jd-card">
-                  <div className="landing-blue-icon landing-blue-jd-icon">{card.code}</div>
+                  <div className="landing-blue-icon landing-blue-jd-icon">
+                    <JurisdictionFlag code={card.code} />
+                  </div>
                   <h3>{card.name}</h3>
                   <ul>
                     {card.points.map((point) => (

@@ -2664,10 +2664,13 @@
 }
 
 .landing-blue-jd-head h2 {
-  max-width: 18ch;
+  width: 100%;
+  max-width: none;
   text-align: center;
   justify-self: center;
   margin-inline: auto;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .landing-blue-jd-head p {
@@ -2697,6 +2700,13 @@
   font-size: 1.3rem;
   margin-bottom: 0.38rem;
   justify-self: center;
+}
+
+.landing-blue-jd-icon svg {
+  width: 36px;
+  height: 24px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(194, 221, 247, 0.24);
 }
 
 .landing-blue-jd-card h3 {
