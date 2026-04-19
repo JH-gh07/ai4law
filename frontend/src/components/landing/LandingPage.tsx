@@ -25,8 +25,6 @@ type CopyBlock = {
   painPoints: { title: string; desc: string; badge: string }[];
   modules: { title: string; desc: string; tag: string }[];
   jurisdictions: JurisdictionCard[];
-  flow: string[];
-  previewQuestions: string[];
 };
 
 export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }: LandingPageProps) {
@@ -100,18 +98,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
             name: "美国",
             points: ["EO 14117 风险识别", "CPRA 合规核查", "敏感数据处理义务", "第三方共享风险分析"]
           }
-        ],
-        flow: [
-          "输入业务事实与现有材料",
-          "系统收敛合规路径与判断依据",
-          "生成报告、审查结论与风险输出",
-          "沉淀整改动作并持续推进"
-        ],
-        previewQuestions: [
-          "企业是否属于受规制主体？",
-          "涉及哪些数据类型与跨境场景？",
-          "应走哪条合规路径？",
-          "还需要哪些报告与补充材料？"
         ]
       }
     : {
@@ -170,18 +156,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
             name: "United States",
             points: ["EO 14117 Screening", "CPRA Review", "Sensitive Data Duty Check", "Third-Party Sharing Risk Analysis"]
           }
-        ],
-        flow: [
-          "Input business facts and available materials",
-          "Converge on route and supporting basis",
-          "Generate reports, review conclusions, and risk outputs",
-          "Turn findings into next-step actions"
-        ],
-        previewQuestions: [
-          "Is the company a regulated entity?",
-          "What data types and transfer scenarios are involved?",
-          "Which compliance route should apply?",
-          "What reports and materials are required next?"
         ]
       };
 
@@ -190,68 +164,37 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
       <div className="landing-blue-scroll">
         <div className="landing-blue-shell">
           <section className="landing-blue-hero-screen">
-            <div className="landing-blue-hero">
-              <div className="landing-blue-hero-left">
-                <h1 className="landing-brand-headline">
-                  {heroBrandTitle}
-                  {heroBrandSub ? <span>{heroBrandSub}</span> : null}
-                </h1>
-                <p className="landing-brand-subtitle">{heroTagline}</p>
-                <div className="landing-blue-actions" data-guide="home-start">
-                  <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
-                    {isZh ? "进入任务空间" : "Open Task Spaces"}
-                  </button>
-                  <button
-                    className="pill-btn quest-open-btn"
-                    onClick={() => {
-                      setOpenQuestQuery("");
-                      setOpenQuestModalOpen(true);
-                    }}
-                  >
-                    {t("homeIntroContinueAction")}
-                  </button>
-                </div>
-                <div className="landing-blue-facts">
-                  <article>
-                    <strong>{isZh ? "3 大法域" : "3 Jurisdictions"}</strong>
-                    <span>{isZh ? "中国 / 欧盟 / 美国" : "CN / EU / US"}</span>
-                  </article>
-                  <article>
-                    <strong>{isZh ? "4 类核心能力" : "4 Core Capabilities"}</strong>
-                    <span>{isZh ? "诊断 / 起草 / 审查 / 整改" : "Diagnosis / Drafting / Review / Action"}</span>
-                  </article>
-                  <article>
-                    <strong>{isZh ? "结果导向交付" : "Delivery-Oriented"}</strong>
-                    <span>
-                      {isZh ? "从判断走向文书、报告与修订成果" : "From judgment to reports, drafts, and revision-ready outputs"}
-                    </span>
-                  </article>
-                </div>
-              </div>
-
-              <div className="landing-blue-hero-right">
-                <div className="landing-blue-stats">
-                  <article>
-                    <span>{isZh ? "任务总数" : "Tasks"}</span>
-                    <strong>{state.taskSpaces.length}</strong>
-                  </article>
-                  <article>
-                    <span>{isZh ? "运行总数" : "Runs"}</span>
-                    <strong>{state.moduleRuns.length}</strong>
-                  </article>
-                </div>
-                <div className="landing-blue-preview">
-                  <header>
-                    <span>LIVE PREVIEW</span>
-                    <strong>{isZh ? "合规路径智能诊断" : "Compliance Route Diagnosis"}</strong>
-                  </header>
-                  <div className="landing-blue-preview-list">
-                    {copy.previewQuestions.map((item, index) => (
-                      <article key={item}>
-                        <small>{isZh ? `问题 ${index + 1}` : `Question ${index + 1}`}</small>
-                        <p>{item}</p>
-                      </article>
-                    ))}
+            <div className="landing-blue-hero landing-blue-hero-video-mode">
+              <video
+                className="landing-blue-hero-video-bg"
+                src="/media/homepage.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+              />
+              <div className="landing-blue-hero-layer landing-blue-hero-layer-brand" />
+              <div className="landing-blue-hero-content">
+                <div className="landing-blue-hero-left">
+                  <h1 className="landing-brand-headline">
+                    {heroBrandTitle}
+                    {heroBrandSub ? <span>{heroBrandSub}</span> : null}
+                  </h1>
+                  <p className="landing-brand-subtitle">{heroTagline}</p>
+                  <div className="landing-blue-actions" data-guide="home-start">
+                    <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
+                      {isZh ? "进入任务空间" : "Open Task Spaces"}
+                    </button>
+                    <button
+                      className="pill-btn quest-open-btn"
+                      onClick={() => {
+                        setOpenQuestQuery("");
+                        setOpenQuestModalOpen(true);
+                      }}
+                    >
+                      {t("homeIntroContinueAction")}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -308,7 +251,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           </section>
 
           <section id="jurisdictions" className="landing-blue-section landing-blue-screen">
-            <header className="landing-blue-section-head landing-blue-split-head landing-blue-jd-head">
+            <header className="landing-blue-section-head landing-blue-center-head landing-blue-jd-head">
               <div>
                 <span>JURISDICTIONS</span>
                 <h2>
@@ -330,29 +273,6 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                   </ul>
                 </article>
               ))}
-            </div>
-          </section>
-
-          <section id="flow" className="landing-blue-flow landing-blue-screen">
-            <div className="landing-blue-workflow-layout">
-              <header className="landing-blue-section-head landing-blue-workflow-left">
-                <div className="landing-blue-workflow-title">
-                  <span>WORKFLOW</span>
-                  <h2>
-                    {isZh
-                      ? "最后一层，应当把复杂流程讲成清楚的四步"
-                      : "Turn a complex workflow into four clear steps"}
-                  </h2>
-                </div>
-              </header>
-              <div className="landing-blue-flow-grid landing-blue-workflow-right">
-                {copy.flow.map((step, index) => (
-                  <article key={step} className="landing-blue-workflow-step">
-                    <span className="landing-blue-step-id">{String(index + 1).padStart(2, "0")}</span>
-                    <p>{step}</p>
-                  </article>
-                ))}
-              </div>
             </div>
           </section>
 

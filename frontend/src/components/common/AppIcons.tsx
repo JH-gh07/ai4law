@@ -79,6 +79,15 @@ export function SettingsIcon(props: IconProps) {
   );
 }
 
+export function GlobeIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.8 12h16.4M12 3.8c2.2 2.1 3.4 5 3.4 8.2s-1.2 6.1-3.4 8.2M12 3.8c-2.2 2.1-3.4 5-3.4 8.2s1.2 6.1 3.4 8.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function HomeIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>

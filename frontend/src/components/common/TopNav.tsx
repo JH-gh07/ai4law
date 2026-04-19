@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useLang } from "../../lib/language";
-import { DocsIcon, GuideIcon, SettingsIcon } from "./AppIcons";
+import { DocsIcon, GlobeIcon, GuideIcon, SettingsIcon } from "./AppIcons";
 
 type TopNavProps = {
   onStart: () => void;
@@ -15,10 +15,6 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
 
   const brandTitle = "DataComply Flow";
   const brandSub = lang === "zh" ? "数规通" : "";
-  const brandTagline =
-    lang === "zh"
-      ? "AI驱动的数据跨境合规诊断与文书智能生成平台"
-      : "AI-Driven Platform for Cross-Border Data Compliance Diagnosis and Intelligent Document Generation";
 
   return (
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
@@ -32,7 +28,6 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
               {brandSub ? <div className="global-brand-sub">{brandSub}</div> : null}
               <div className="global-brand-title">{brandTitle}</div>
             </div>
-            <div className="global-brand-tagline">{brandTagline}</div>
           </div>
         </Link>
 
@@ -61,17 +56,17 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
             <span>{lang === "zh" ? "引导" : "Guide"}</span>
           </button>
           {!onWorkspace ? (
-            <Link to="/settings" className="global-chip global-chip-optional global-chip-with-icon">
-              <SettingsIcon width="15" height="15" />
-              <span>{t("navSettings")}</span>
+            <Link to="/settings" className="global-icon-action" aria-label={t("navSettings")} title={t("navSettings")}>
+              <SettingsIcon width="17" height="17" />
             </Link>
           ) : null}
           <button
-            className="lang-btn lang-toggle-btn active"
+            className="global-icon-action global-lang-action"
             onClick={() => setLang(lang === "zh" ? "en" : "zh")}
-            aria-label="toggle-language"
+            aria-label={lang === "zh" ? "switch-to-english" : "switch-to-chinese"}
+            title={lang === "zh" ? "EN" : "中"}
           >
-            {lang === "zh" ? "中 / EN" : "EN / 中"}
+            <GlobeIcon width="17" height="17" />
           </button>
         </div>
       </div>
