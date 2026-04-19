@@ -160,7 +160,6 @@ export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelPr
 
   return (
     <aside className="pane assistant-pane assistant-copilot-pane assistant-pane-redesign" data-guide="workspace-right">
-      <div className="pane-title">{t("copilotChatTitle")}</div>
       <button className="workspace-side-toggle workspace-side-toggle-right" onClick={onToggleCollapse} aria-label="collapse-right-sidebar">
         <ChevronToggleIcon direction="right" width="16" height="16" />
       </button>
