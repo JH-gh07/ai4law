@@ -167,7 +167,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
           <p className="tasks-hub-kicker">TASK HUB</p>
           <h2>任务空间</h2>
           <p className="tasks-hero-subtitle">
-            点击法域下的具体类别，先命名再直接创建新任务进入工作区。每个任务空间已绑定后端可执行模块，可直接运行与回溯。
+            点击法域下的具体类别，先命名再直接创建新任务进入工作区。每个任务空间已绑定后端可执行模块，可直接运行与回溯
           </p>
           <div className="tasks-hub-actions">
             <button className="pill-btn-primary" onClick={onStart}>{t("startCta")}</button>
