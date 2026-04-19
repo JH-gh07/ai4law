@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useAppStore } from "../../lib/app-store";
 import { requestCopilotChat } from "../../lib/copilot-api";
 import type { TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
-import { ChevronToggleIcon, SparkleIcon } from "../common/AppIcons";
+import { ChevronToggleIcon } from "../common/AppIcons";
 
 type AssistantPanelProps = {
   taskSpace: TaskSpace;
@@ -175,14 +177,11 @@ export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelPr
         <section ref={streamRef} className="assistant-stream assistant-copilot-stream assistant-copilot-stream-redesign assistant-chat-stream" aria-live="polite">
           {messages.map((item) => (
             <article key={item.id} className={`assistant-msg assistant-copilot-msg assistant-copilot-msg-redesign assistant-chat-bubble ${item.role}`}>
-              <div className="assistant-msg-meta">
-                <span className={`assistant-msg-role role-${item.role}`}>
-                  {item.role === "assistant" ? <SparkleIcon width="12" height="12" /> : null}
-                  {item.role === "assistant" ? "Copilot" : (lang === "zh" ? "你" : "You")}
-                </span>
-                <small>{new Date(item.createdAt).toLocaleTimeString()}</small>
+              <div className="assistant-msg-content markdown-content">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {item.text}
+                </ReactMarkdown>
               </div>
-              <p>{item.text}</p>
             </article>
           ))}
           {isSending ? <p className="assistant-thinking-note">{t("copilotThinking")}</p> : null}

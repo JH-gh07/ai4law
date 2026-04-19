@@ -2665,6 +2665,9 @@
 
 .landing-blue-jd-head h2 {
   max-width: 18ch;
+  text-align: center;
+  justify-self: center;
+  margin-inline: auto;
 }
 
 .landing-blue-jd-head p {
@@ -6924,6 +6927,86 @@
   overflow-wrap: anywhere;
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+.assistant-msg-content {
+  color: #274b72;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.assistant-msg-content > :first-child {
+  margin-top: 0;
+}
+
+.assistant-msg-content > :last-child {
+  margin-bottom: 0;
+}
+
+.assistant-msg-content h1,
+.assistant-msg-content h2,
+.assistant-msg-content h3,
+.assistant-msg-content h4,
+.assistant-msg-content h5,
+.assistant-msg-content h6 {
+  margin: 0.34rem 0 0.2rem;
+  color: #1f4268;
+  line-height: 1.35;
+}
+
+.assistant-msg-content h1 {
+  font-size: 1rem;
+}
+
+.assistant-msg-content h2 {
+  font-size: 0.96rem;
+}
+
+.assistant-msg-content h3,
+.assistant-msg-content h4,
+.assistant-msg-content h5,
+.assistant-msg-content h6 {
+  font-size: 0.9rem;
+}
+
+.assistant-msg-content p {
+  margin: 0.18rem 0;
+}
+
+.assistant-msg-content ul,
+.assistant-msg-content ol {
+  margin: 0.22rem 0;
+  padding-left: 1.1rem;
+}
+
+.assistant-msg-content li {
+  margin: 0.12rem 0;
+}
+
+.assistant-msg-content code {
+  border-radius: 6px;
+  padding: 0.08rem 0.3rem;
+  background: rgba(45, 92, 150, 0.12);
+  color: #1d4676;
+  font-size: 0.78rem;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.assistant-msg-content pre {
+  margin: 0.24rem 0;
+  padding: 0.56rem 0.62rem;
+  border-radius: 10px;
+  border: 1px solid rgba(113, 151, 205, 0.24);
+  background: rgba(242, 248, 255, 0.92);
+  overflow-x: auto;
+}
+
+.assistant-msg-content pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .stage-split {
