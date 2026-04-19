@@ -448,11 +448,6 @@ export function EvidenceCenterPage() {
           <button className={`quick-chip ${tab === "sources" ? "active" : ""}`} onClick={() => setTab("sources")}>{copy.sourceTab}</button>
           <button className={`quick-chip ${tab === "cases" ? "active" : ""}`} onClick={() => setTab("cases")}>{copy.caseTab}</button>
           <button className={`quick-chip ${tab === "articles" ? "active" : ""}`} onClick={() => setTab("articles")}>{copy.articlesTab}</button>
-          <button className={`quick-chip ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>{copy.citationTab}</button>
-          <button className={`quick-chip ${tab === "sources" && selectedSourcePriority.length === 1 && selectedSourcePriority[0] === "P0" ? "active" : ""}`} onClick={() => {
-            setTab("sources");
-            setSelectedSourcePriority(["P0"]);
-          }}>{copy.p0Only}</button>
           <button className={`quick-chip ${tab === "citation" ? "active" : ""}`} onClick={() => setTab("citation")}>{copy.citationLinked}</button>
         </div>
 
