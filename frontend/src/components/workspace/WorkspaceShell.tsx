@@ -675,19 +675,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <button
             type="button"
             className="workspace-browser-icon-btn workspace-browser-home-btn"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/tasks")}
             aria-label={t("navHome")}
             title={t("navHome")}
           >
             <HomeIcon width="16" height="16" />
-          </button>
-          <button
-            type="button"
-            className="workspace-browser-app workspace-browser-app-link"
-            onClick={() => navigate("/")}
-            aria-label={t("navHome")}
-          >
-            AI4Law
           </button>
           <span className="workspace-browser-sep">/</span>
           <span className="workspace-browser-task">{taskSpace.name}</span>

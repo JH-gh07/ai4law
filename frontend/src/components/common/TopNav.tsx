@@ -14,7 +14,7 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const onWorkspace = location.pathname.startsWith("/workspace");
 
   const brandTitle = "DataComply Flow";
-  const brandSub = lang === "zh" ? "数规通" : "";
+  const brandSub = "数规通";
 
   return (
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
@@ -25,7 +25,7 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
           </span>
           <div className="global-brand-copy">
             <div className="global-brand-name-row">
-              {brandSub ? <div className="global-brand-sub">{brandSub}</div> : null}
+              <div className="global-brand-sub">{brandSub}</div>
               <div className="global-brand-title">{brandTitle}</div>
             </div>
           </div>
