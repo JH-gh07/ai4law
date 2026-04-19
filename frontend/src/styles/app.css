@@ -3146,6 +3146,10 @@
   color: #ecf4ff;
 }
 
+.landing-blue-cap-head > div > span {
+  white-space: nowrap;
+}
+
 .landing-blue-section-head.landing-blue-why-head .landing-blue-why-copy,
 .landing-blue-cap-head h2,
 .landing-blue-jd-head h2,
