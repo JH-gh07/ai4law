@@ -309,14 +309,20 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                 </h2>
               </div>
             </header>
-            <div className="landing-blue-module-grid landing-blue-cap-grid">
+            <div className="landing-blue-timeline">
+              <div className="landing-blue-timeline-axis" />
               {copy.modules.map((item, index) => (
-                <article key={item.title} className={`landing-blue-cap-card step-${index + 1}`}>
-                  <span className="landing-blue-cap-seq">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{item.tag}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.desc}</p>
-                </article>
+                <div key={item.title} className={`landing-blue-timeline-step step-${index + 1}`}>
+                  <div className="landing-blue-timeline-card">
+                    <span className="landing-blue-timeline-seq">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="landing-blue-timeline-tag">{item.tag}</span>
+                    <h3>{item.title}</h3>
+                    <p>{item.desc}</p>
+                  </div>
+                  <div className="landing-blue-timeline-node">
+                    <span className="landing-blue-timeline-dot" />
+                  </div>
+                </div>
               ))}
             </div>
           </section>

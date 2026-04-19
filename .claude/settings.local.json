@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(xargs -I {} bash -c 'echo \"=== {} ===\" && head -20 {}')",
-      "Bash(grep -E \"\\\\.py$\")"
+      "Bash(grep -E \"\\\\.py$\")",
+      "mcp__chrome-devtools__list_pages",
+      "Bash(npm run *)",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot"
     ]
   }
 }
