@@ -20,12 +20,24 @@ const toFileName = (value: string): string => {
   return chunks[chunks.length - 1] || value;
 };
 
+const toFolderPath = (value: string): string => {
+  const normalized = value.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  chunks.pop();
+  return chunks.join("/");
+};
+
 type TreeNode = {
   id: string;
   type: "folder" | "file";
   name: string;
   path?: string;
   children: TreeNode[];
+};
+
+type OutputTreeEntry = {
+  virtualPath: string;
+  artifact: OutputArtifact;
 };
 
 type MutableTreeNode = TreeNode & {
@@ -104,6 +116,12 @@ function collectPaths(value: unknown, bag: Set<string>) {
   }
 }
 
+const parseTime = (value: string | undefined): number | null => {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, selectedOutputPath }: ResourcePanelProps) {
   const { state } = useAppStore();
   const { lang, t } = useLang();
@@ -135,6 +153,50 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
     [state.artifacts, taskSpace.id]
   );
 
+  const outputEntries = useMemo<OutputTreeEntry[]>(() => {
+    if (outputFiles.length === 0) return [];
+
+    const runsWithTime = relatedRuns
+      .map((run) => {
+        const startedAt = parseTime(run.startedAt);
+        const finishedAt = parseTime(run.finishedAt);
+        const anchorTime = startedAt ?? finishedAt;
+        return anchorTime === null ? null : { runId: run.id, time: anchorTime };
+      })
+      .filter((item): item is { runId: string; time: number } => !!item)
+      .sort((a, b) => b.time - a.time);
+
+    const runFolderById = new Map<string, string>();
+    runsWithTime.forEach((item, index) => {
+      runFolderById.set(item.runId, `run-${String(index + 1).padStart(3, "0")}`);
+    });
+
+    const assignRunFolder = (artifact: OutputArtifact): string => {
+      const artifactTime = parseTime(artifact.createdAt);
+      if (artifactTime === null || runsWithTime.length === 0) return "run-unknown";
+      for (let index = 0; index < runsWithTime.length; index += 1) {
+        const lowerBound = runsWithTime[index].time;
+        const upperBound = index === 0 ? Number.POSITIVE_INFINITY : runsWithTime[index - 1].time;
+        if (artifactTime >= lowerBound && artifactTime < upperBound) {
+          return runFolderById.get(runsWithTime[index].runId) ?? "run-unknown";
+        }
+      }
+      return "run-unknown";
+    };
+
+    const duplicateCounter = new Map<string, number>();
+    return outputFiles.map((artifact) => {
+      const folder = toFolderPath(artifact.path);
+      const fileName = toFileName(artifact.path);
+      const runFolder = assignRunFolder(artifact);
+      const virtualBase = folder ? `${folder}/${runFolder}/${fileName}` : `${runFolder}/${fileName}`;
+      const count = (duplicateCounter.get(virtualBase) ?? 0) + 1;
+      duplicateCounter.set(virtualBase, count);
+      const virtualPath = count === 1 ? virtualBase : `${virtualBase}#${count}`;
+      return { virtualPath, artifact };
+    });
+  }, [outputFiles, relatedRuns]);
+
   const inputFiles = useMemo(() => {
     const bag = new Set<string>();
     relatedRuns.forEach((run) => collectPaths(run.request, bag));
@@ -145,16 +207,16 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
   }, [outputFiles, relatedRuns]);
 
   const outputFileMap = useMemo(
-    () => new Map(outputFiles.map((file) => [file.path, file])),
-    [outputFiles]
+    () => new Map(outputEntries.map((entry) => [entry.virtualPath, entry.artifact])),
+    [outputEntries]
   );
   const inputTree = useMemo(
     () => buildPathTree(inputFiles.map((file) => file.path), "tree-input"),
     [inputFiles]
   );
   const outputTree = useMemo(
-    () => buildPathTree(outputFiles.map((file) => file.path), "tree-output"),
-    [outputFiles]
+    () => buildPathTree(outputEntries.map((entry) => entry.virtualPath), "tree-output"),
+    [outputEntries]
   );
 
   const toggleFolder = (folderId: string) => {
@@ -195,7 +257,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
       }
 
       const artifact = node.path ? outputFileMap.get(node.path) : undefined;
-      const isActive = allowFileSelect && !!node.path && selectedOutputPath === node.path;
+      const isActive = allowFileSelect && !!artifact && selectedOutputPath === artifact.path;
       const rowClass = `ide-tree-row ide-tree-row-file ${isActive ? "active" : ""}`;
       const rowContent = (
         <>
