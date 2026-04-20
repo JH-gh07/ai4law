@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
   findModule,
@@ -35,27 +35,22 @@ type UserFacingResult = {
   nextSteps: string[];
 };
 
-type DiagnosisSelectValue =
-  | "yes"
-  | "no"
-  | "unknown"
-  | "contract_performance"
-  | "hr_management"
-  | "emergency"
-  | "legal_duty"
-  | "other"
-  | "intra_group"
-  | "third_party";
+type DiagnosisOption = {
+  value: string;
+  label: string;
+  extraFieldId?: string;
+  extraPlaceholder?: string;
+};
 
-type DiagnosisFieldType = "text" | "textarea" | "number" | "select";
+type DiagnosisFieldType = "text" | "textarea" | "single" | "multi";
 
 type DiagnosisFieldConfig = {
-  name: keyof DiagnosisFormValues;
+  name: string;
   label: string;
   type: DiagnosisFieldType;
-  options?: Array<{ value: DiagnosisSelectValue; label: string }>;
-  min?: number;
-  step?: number;
+  group?: string;
+  options?: DiagnosisOption[];
+  visibleWhen?: (answers: DiagnosisFormValues) => boolean;
 };
 
 type DiagnosisStepConfig = {
@@ -63,17 +58,7 @@ type DiagnosisStepConfig = {
   fields: DiagnosisFieldConfig[];
 };
 
-type DiagnosisFormValues = {
-  company_name: string;
-  q5_no_personal_info: "yes" | "no" | "unknown";
-  q6_scenario: "contract_performance" | "hr_management" | "emergency" | "legal_duty" | "other";
-  q7_receiver_type: "intra_group" | "third_party";
-  q1_is_ciio: "yes" | "no" | "unknown";
-  q2_has_important_data: "yes" | "no" | "unknown";
-  q3_pii_count: number;
-  q4_spi_count: number;
-  q8_purpose: string;
-};
+type DiagnosisFormValues = Record<string, unknown>;
 
 type AssessmentFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
 
@@ -431,75 +416,359 @@ type CpraFormValues = {
 
 const JURISDICTIONS = ["CN", "EU", "US"] as const;
 
+const diagnosisIsYes = (answers: DiagnosisFormValues, key: string): boolean => answers[key] === "yes";
+const DIAGNOSIS_STEP_SHORT_TITLES = ["业务基础", "合规需求", "数据处理", "数据流转", "系统架构"] as const;
+
 const DIAGNOSIS_STEPS: DiagnosisStepConfig[] = [
   {
-    title: "基础识别",
+    title: "一、业务基础信息",
     fields: [
-      { name: "company_name", label: "企业名称", type: "text" },
+      { name: "company_name", label: "企业名称（选填）", type: "text", group: "企业基础" },
       {
-        name: "q5_no_personal_info",
-        label: "Q1 本次出境数据是否完全不含个人信息和重要数据？",
-        type: "select",
+        name: "m1_industry",
+        label: "业务所属行业",
+        type: "single",
+        group: "行业与服务对象",
         options: [
-          { value: "no", label: "否（含个人信息或重要数据）" },
-          { value: "yes", label: "是（纯业务/技术数据）" },
-          { value: "unknown", label: "不确定" }
+          { value: "电商零售", label: "电商零售" },
+          { value: "社交娱乐", label: "社交娱乐" },
+          { value: "工具类应用", label: "工具类应用" },
+          { value: "金融科技", label: "金融科技" },
+          { value: "教育培训", label: "教育培训" },
+          { value: "医疗健康", label: "医疗健康" },
+          { value: "智能制造", label: "智能制造" },
+          { value: "政务服务", label: "政务服务" },
+          { value: "其他", label: "其他（需补充文本）", extraFieldId: "m1_industry_other", extraPlaceholder: "请补充行业" }
         ]
       },
       {
-        name: "q6_scenario",
-        label: "Q2 本次数据出境的主要业务场景",
-        type: "select",
+        name: "m1_business_channels",
+        label: "业务主要开展方式（多选）",
+        type: "multi",
+        group: "业务开展方式",
         options: [
-          { value: "other", label: "其他商业目的" },
-          { value: "contract_performance", label: "履行合同 / 向消费者提供服务" },
-          { value: "hr_management", label: "跨国公司内部人力资源管理" },
-          { value: "emergency", label: "紧急情况保护自然人生命、健康或财产安全" },
-          { value: "legal_duty", label: "依法履行法定职责或法定义务" }
+          { value: "线上平台（APP / 小程序 / 官网）", label: "线上平台（APP / 小程序 / 官网）" },
+          { value: "线下实体（门店 / 上门服务）", label: "线下实体（门店 / 上门服务）" },
+          { value: "数据合作（与其他公司共享 / 交换数据）", label: "数据合作（与其他公司共享 / 交换数据）" },
+          { value: "跨境服务（面向国外用户 / 业务涉及国外）", label: "跨境服务（面向国外用户 / 业务涉及国外）" },
+          { value: "纯内部使用（仅员工用，不对外）", label: "纯内部使用（仅员工用，不对外）" },
+          {
+            value: "其他",
+            label: "其他（需补充文本）",
+            extraFieldId: "m1_business_channels_other",
+            extraPlaceholder: "请补充开展方式"
+          }
         ]
       },
       {
-        name: "q7_receiver_type",
-        label: "Q3 境外数据接收方类型",
-        type: "select",
+        name: "m1_service_targets",
+        label: "服务对象",
+        type: "single",
+        group: "行业与服务对象",
         options: [
-          { value: "third_party", label: "独立第三方（合作伙伴 / 服务商）" },
-          { value: "intra_group", label: "集团内部关联公司" }
+          { value: "个人用户", label: "个人用户" },
+          { value: "企业用户", label: "企业用户" },
+          { value: "个人用户和企业用户两者都有", label: "个人用户和企业用户两者都有" },
+          { value: "政府机构", label: "政府机构" }
+        ]
+      },
+      {
+        name: "m1_company_size",
+        label: "企业规模",
+        type: "single",
+        group: "企业规模",
+        options: [
+          { value: "微型（员工≤10人）", label: "微型（员工≤10人）" },
+          { value: "小型（11-50人）", label: "小型（11-50人）" },
+          { value: "中型（51-200人）", label: "中型（51-200人）" },
+          { value: "大型（201-500人）", label: "大型（201-500人）" },
+          { value: "特大型（501-1000人）", label: "特大型（501-1000人）" },
+          { value: "超大型（>1000人）", label: "超大型（>1000人）" }
         ]
       }
     ]
   },
   {
-    title: "强制路径触发项",
+    title: "二、合规需求与现状",
     fields: [
       {
-        name: "q1_is_ciio",
-        label: "Q4 是否为关键信息基础设施运营者（CIIO）？",
-        type: "select",
+        name: "m2_core_needs",
+        label: "当前最想解决的合规问题（多选）",
+        type: "multi",
         options: [
-          { value: "no", label: "否" },
-          { value: "yes", label: "是" },
-          { value: "unknown", label: "不确定" }
+          { value: "不确定业务是否需要做数据合规", label: "不确定业务是否需要做数据合规" },
+          { value: "识别业务合规风险点", label: "识别业务合规风险点" },
+          { value: "制定合规文件（隐私政策 / 用户协议等）", label: "制定合规文件（隐私政策 / 用户协议等）" },
+          { value: "数据安全技术落地指导", label: "数据安全技术落地指导" },
+          { value: "合规审计 / 备案", label: "合规审计 / 备案" },
+          { value: "应对合规紧急情况（投诉 / 整改）", label: "应对合规紧急情况（投诉 / 整改）" },
+          { value: "其他", label: "其他（需补充文本）", extraFieldId: "m2_core_needs_other", extraPlaceholder: "请补充需求" }
         ]
       },
       {
-        name: "q2_has_important_data",
-        label: "Q5 出境数据是否包含重要数据？",
-        type: "select",
+        name: "m2_had_compliance_issue",
+        label: "是否遇到过数据合规相关问题",
+        type: "single",
         options: [
+          { value: "yes", label: "是（需补充描述）", extraFieldId: "m2_issue_description", extraPlaceholder: "请补充问题描述" },
           { value: "no", label: "否" },
-          { value: "yes", label: "是" },
-          { value: "unknown", label: "不确定" }
+          { value: "unknown", label: "不清楚" }
         ]
       },
-      { name: "q3_pii_count", label: "Q6 近12个月累计向境外提供个人信息的人数", type: "number", min: 0, step: 1000 },
-      { name: "q4_spi_count", label: "Q7 近12个月累计向境外提供敏感个人信息的人数", type: "number", min: 0, step: 100 }
+      {
+        name: "m2_deadline",
+        label: "完成合规的时间节点",
+        type: "single",
+        options: [
+          { value: "无紧急需求（3个月以上）", label: "无紧急需求（3个月以上）" },
+          { value: "一般需求（1-3个月）", label: "一般需求（1-3个月）" },
+          { value: "紧急需求（1个月内）", label: "紧急需求（1个月内）" },
+          { value: "已被要求整改", label: "已被要求整改（需填写期限）", extraFieldId: "m2_deadline_detail", extraPlaceholder: "请填写整改期限" }
+        ]
+      }
     ]
   },
   {
-    title: "补充说明",
+    title: "三、数据处理核心信息",
     fields: [
-      { name: "q8_purpose", label: "Q8 出境目的简述（可选）", type: "textarea" }
+      {
+        name: "m3_processes_personal_info",
+        label: "是否会收集、存储或使用个人信息",
+        type: "single",
+        options: [
+          { value: "yes", label: "是" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m3_personal_info_types",
+        label: "收集的个人信息类型（多选）",
+        type: "multi",
+        visibleWhen: (answers) => diagnosisIsYes(answers, "m3_processes_personal_info"),
+        options: [
+          { value: "姓名", label: "姓名" },
+          { value: "手机号", label: "手机号" },
+          { value: "邮箱", label: "邮箱" },
+          { value: "收货地址", label: "收货地址" },
+          { value: "设备信息", label: "设备信息" },
+          { value: "浏览 / 行为记录", label: "浏览 / 行为记录" },
+          { value: "交易信息", label: "交易信息" },
+          { value: "身份证号", label: "身份证号" },
+          { value: "人脸 / 指纹 / 声纹", label: "人脸 / 指纹 / 声纹" },
+          { value: "健康信息", label: "健康信息" },
+          { value: "金融账户信息", label: "金融账户信息" },
+          { value: "未成年人信息", label: "未成年人信息" },
+          { value: "精准位置信息", label: "精准位置信息" }
+        ]
+      },
+      {
+        name: "m3_processes_important_data",
+        label: "是否处理重要数据",
+        type: "single",
+        visibleWhen: (answers) => diagnosisIsYes(answers, "m3_processes_personal_info"),
+        options: [
+          { value: "yes", label: "是" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m3_important_data_types",
+        label: "重要数据类型（多选）",
+        type: "multi",
+        visibleWhen: (answers) =>
+          diagnosisIsYes(answers, "m3_processes_personal_info") && diagnosisIsYes(answers, "m3_processes_important_data"),
+        options: [
+          { value: "工业生产数据", label: "工业生产数据" },
+          { value: "金融交易数据", label: "金融交易数据" },
+          { value: "医疗健康数据", label: "医疗健康数据" },
+          { value: "教育数据", label: "教育数据" },
+          { value: "交通数据", label: "交通数据" },
+          { value: "能源数据", label: "能源数据" },
+          { value: "政务数据", label: "政务数据" },
+          { value: "其他", label: "其他（需补充文本）", extraFieldId: "m3_important_data_types_other", extraPlaceholder: "请补充重要数据类型" }
+        ]
+      },
+      {
+        name: "m3_data_sources",
+        label: "数据来源（多选）",
+        type: "multi",
+        visibleWhen: (answers) => diagnosisIsYes(answers, "m3_processes_personal_info"),
+        options: [
+          { value: "用户主动提交", label: "用户主动提交" },
+          { value: "第三方合作获取", label: "第三方合作获取" },
+          { value: "公开渠道采集", label: "公开渠道采集" },
+          { value: "设备自动采集", label: "设备自动采集" },
+          { value: "其他", label: "其他（需补充文本）", extraFieldId: "m3_data_sources_other", extraPlaceholder: "请补充数据来源" }
+        ]
+      },
+      {
+        name: "m3_processing_activities",
+        label: "数据处理方式（多选）",
+        type: "multi",
+        visibleWhen: (answers) => diagnosisIsYes(answers, "m3_processes_personal_info"),
+        options: [
+          { value: "收集", label: "收集" },
+          { value: "存储", label: "存储" },
+          { value: "加工", label: "加工" },
+          { value: "传输", label: "传输" },
+          { value: "提供给他人", label: "提供给他人" },
+          { value: "公开", label: "公开" },
+          { value: "删除", label: "删除" },
+          { value: "跨境传输", label: "跨境传输" }
+        ]
+      },
+      {
+        name: "m3_data_volume_range",
+        label: "数据处理规模",
+        type: "single",
+        visibleWhen: (answers) => diagnosisIsYes(answers, "m3_processes_personal_info"),
+        options: [
+          { value: "10万条以下", label: "10万条以下" },
+          { value: "10-100万条", label: "10-100万条" },
+          { value: "100-1000万条", label: "100-1000万条" },
+          { value: "1000万条以上", label: "1000万条以上" }
+        ]
+      },
+      {
+        name: "m3_processes_enterprise_public_data",
+        label: "是否处理企业数据或公共数据",
+        type: "single",
+        options: [
+          { value: "yes", label: "是（补充说明）", extraFieldId: "m3_enterprise_public_data_desc", extraPlaceholder: "请补充说明" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m3_retention_period",
+        label: "数据留存周期",
+        type: "single",
+        options: [
+          { value: "永久留存", label: "永久留存" },
+          { value: "业务必要期限内留存", label: "业务必要期限内留存（补充说明）", extraFieldId: "m3_retention_desc", extraPlaceholder: "请补充留存说明" },
+          { value: "按法律规定期限留存", label: "按法律规定期限留存" },
+          { value: "无明确规则", label: "无明确规则" }
+        ]
+      }
+    ]
+  },
+  {
+    title: "四、数据流转与共享情况",
+    fields: [
+      {
+        name: "m4_share_to_third_party",
+        label: "是否共享给第三方",
+        type: "single",
+        options: [
+          { value: "yes", label: "是（补充第三方类型）", extraFieldId: "m4_third_party_types", extraPlaceholder: "请补充第三方类型" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m4_cross_border_transfer",
+        label: "是否涉及跨境传输",
+        type: "single",
+        options: [
+          { value: "yes", label: "是（补充出境国家/地区）", extraFieldId: "m4_cross_border_regions", extraPlaceholder: "请补充出境国家/地区" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m4_commercialization",
+        label: "数据是否用于商业化变现",
+        type: "single",
+        options: [
+          { value: "yes", label: "是（补充变现方式）", extraFieldId: "m4_commercialization_mode", extraPlaceholder: "请补充变现方式" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m4_entrusted_processing",
+        label: "是否委托其他公司处理数据",
+        type: "single",
+        options: [
+          { value: "yes", label: "是（补充委托方类型）", extraFieldId: "m4_entrusted_party_type", extraPlaceholder: "请补充委托方类型" },
+          { value: "no", label: "否" }
+        ]
+      },
+      {
+        name: "m4_authorization_method",
+        label: "用户授权方式",
+        type: "single",
+        options: [
+          { value: "弹窗勾选同意", label: "弹窗勾选同意" },
+          { value: "单独点击“同意”按钮", label: "单独点击“同意”按钮" },
+          { value: "继续使用即视为同意", label: "继续使用即视为同意" },
+          { value: "分级授权", label: "分级授权" },
+          { value: "无授权机制", label: "无授权机制" }
+        ]
+      }
+    ]
+  },
+  {
+    title: "五、业务系统与技术架构",
+    fields: [
+      {
+        name: "m5_systems",
+        label: "当前业务系统（多选）",
+        type: "multi",
+        options: [
+          { value: "自有 APP", label: "自有 APP" },
+          { value: "微信 / 支付宝小程序", label: "微信 / 支付宝小程序" },
+          { value: "官方网站", label: "官方网站" },
+          { value: "企业微信 / 飞书 / 钉钉等协作工具", label: "企业微信 / 飞书 / 钉钉等协作工具" },
+          { value: "定制化业务系统", label: "定制化业务系统" },
+          { value: "其他", label: "其他（补充文本）", extraFieldId: "m5_systems_other", extraPlaceholder: "请补充系统类型" }
+        ]
+      },
+      {
+        name: "m5_security_measures",
+        label: "当前数据安全技术措施（多选）",
+        type: "multi",
+        options: [
+          { value: "数据加密", label: "数据加密" },
+          { value: "数据脱敏", label: "数据脱敏" },
+          { value: "访问权限控制", label: "访问权限控制" },
+          { value: "操作日志审计", label: "操作日志审计" },
+          { value: "安全防护设备", label: "安全防护设备" },
+          { value: "无", label: "无" },
+          { value: "其他", label: "其他（补充文本）", extraFieldId: "m5_security_measures_other", extraPlaceholder: "请补充安全措施" }
+        ]
+      },
+      {
+        name: "m5_compliance_docs",
+        label: "当前合规相关制度文件（多选）",
+        type: "multi",
+        options: [
+          { value: "隐私政策", label: "隐私政策" },
+          { value: "用户协议", label: "用户协议" },
+          { value: "数据安全管理制度", label: "数据安全管理制度" },
+          { value: "应急响应预案", label: "应急响应预案" },
+          { value: "无", label: "无" },
+          { value: "其他", label: "其他（补充文本）", extraFieldId: "m5_compliance_docs_other", extraPlaceholder: "请补充制度文件" }
+        ]
+      },
+      {
+        name: "m5_penalty_or_complaint",
+        label: "是否有过合规相关处罚或投诉记录",
+        type: "single",
+        options: [
+          { value: "曾被监管部门处罚", label: "曾被监管部门处罚", extraFieldId: "m5_penalty_time", extraPlaceholder: "请填写处罚时间" },
+          { value: "收到过用户合规投诉", label: "收到过用户合规投诉" },
+          { value: "无相关记录", label: "无相关记录" }
+        ]
+      },
+      {
+        name: "m5_penalty_reason",
+        label: "处罚事由",
+        type: "text",
+        visibleWhen: (answers) => answers.m5_penalty_or_complaint === "曾被监管部门处罚"
+      },
+      {
+        name: "m5_penalty_result",
+        label: "处罚结果",
+        type: "text",
+        visibleWhen: (answers) => answers.m5_penalty_or_complaint === "曾被监管部门处罚"
+      }
     ]
   }
 ];
@@ -1143,28 +1412,67 @@ const createDefaultAssessmentValues = (): AssessmentFormValues => {
 const createDefaultDiagnosisValues = (): DiagnosisFormValues => {
   const demo = asRecord(getDefaultPayload("diagnosis"));
   const answers = asRecord(demo.answers);
+  const toStrArray = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value.map((item) => String(item));
+    if (typeof value === "string") {
+      return value
+        .split(/[,，\n]/)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    }
+    return [];
+  };
+
   return {
     company_name: toString(demo.company_name, ""),
-    q5_no_personal_info:
-      answers.q5_no_personal_info === "yes" || answers.q5_no_personal_info === "unknown"
-        ? answers.q5_no_personal_info
-        : "no",
-    q6_scenario:
-      answers.q6_scenario === "contract_performance" ||
-      answers.q6_scenario === "hr_management" ||
-      answers.q6_scenario === "emergency" ||
-      answers.q6_scenario === "legal_duty"
-        ? answers.q6_scenario
-        : "other",
-    q7_receiver_type: answers.q7_receiver_type === "intra_group" ? "intra_group" : "third_party",
-    q1_is_ciio: answers.q1_is_ciio === "yes" || answers.q1_is_ciio === "unknown" ? answers.q1_is_ciio : "no",
-    q2_has_important_data:
-      answers.q2_has_important_data === "yes" || answers.q2_has_important_data === "unknown"
-        ? answers.q2_has_important_data
-        : "no",
-    q3_pii_count: toNumber(answers.q3_pii_count, 0),
-    q4_spi_count: toNumber(answers.q4_spi_count, 0),
-    q8_purpose: toString(answers.q8_purpose, "")
+    m1_industry: toString(answers.m1_industry, ""),
+    m1_industry_other: toString(answers.m1_industry_other, ""),
+    m1_business_channels: toStrArray(answers.m1_business_channels),
+    m1_business_channels_other: toString(answers.m1_business_channels_other, ""),
+    m1_service_targets: toString(answers.m1_service_targets, ""),
+    m1_company_size: toString(answers.m1_company_size, ""),
+
+    m2_core_needs: toStrArray(answers.m2_core_needs),
+    m2_core_needs_other: toString(answers.m2_core_needs_other, ""),
+    m2_had_compliance_issue: toString(answers.m2_had_compliance_issue, ""),
+    m2_issue_description: toString(answers.m2_issue_description, ""),
+    m2_deadline: toString(answers.m2_deadline, ""),
+    m2_deadline_detail: toString(answers.m2_deadline_detail, ""),
+
+    m3_processes_personal_info: toString(answers.m3_processes_personal_info, ""),
+    m3_personal_info_types: toStrArray(answers.m3_personal_info_types),
+    m3_processes_important_data: toString(answers.m3_processes_important_data, ""),
+    m3_important_data_types: toStrArray(answers.m3_important_data_types),
+    m3_important_data_types_other: toString(answers.m3_important_data_types_other, ""),
+    m3_data_sources: toStrArray(answers.m3_data_sources),
+    m3_data_sources_other: toString(answers.m3_data_sources_other, ""),
+    m3_processing_activities: toStrArray(answers.m3_processing_activities),
+    m3_data_volume_range: toString(answers.m3_data_volume_range, ""),
+    m3_processes_enterprise_public_data: toString(answers.m3_processes_enterprise_public_data, ""),
+    m3_enterprise_public_data_desc: toString(answers.m3_enterprise_public_data_desc, ""),
+    m3_retention_period: toString(answers.m3_retention_period, ""),
+    m3_retention_desc: toString(answers.m3_retention_desc, ""),
+
+    m4_share_to_third_party: toString(answers.m4_share_to_third_party, ""),
+    m4_third_party_types: toString(answers.m4_third_party_types, ""),
+    m4_cross_border_transfer: toString(answers.m4_cross_border_transfer, ""),
+    m4_cross_border_regions: toString(answers.m4_cross_border_regions, ""),
+    m4_commercialization: toString(answers.m4_commercialization, ""),
+    m4_commercialization_mode: toString(answers.m4_commercialization_mode, ""),
+    m4_entrusted_processing: toString(answers.m4_entrusted_processing, ""),
+    m4_entrusted_party_type: toString(answers.m4_entrusted_party_type, ""),
+    m4_authorization_method: toString(answers.m4_authorization_method, ""),
+
+    m5_systems: toStrArray(answers.m5_systems),
+    m5_systems_other: toString(answers.m5_systems_other, ""),
+    m5_security_measures: toStrArray(answers.m5_security_measures),
+    m5_security_measures_other: toString(answers.m5_security_measures_other, ""),
+    m5_compliance_docs: toStrArray(answers.m5_compliance_docs),
+    m5_compliance_docs_other: toString(answers.m5_compliance_docs_other, ""),
+    m5_penalty_or_complaint: toString(answers.m5_penalty_or_complaint, ""),
+    m5_penalty_time: toString(answers.m5_penalty_time, ""),
+    m5_penalty_reason: toString(answers.m5_penalty_reason, ""),
+    m5_penalty_result: toString(answers.m5_penalty_result, "")
   };
 };
 
@@ -1867,6 +2175,7 @@ void buildUserFacingResult;
 
 export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
+  const diagnosisStepTopRef = useRef<HTMLDivElement | null>(null);
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
   const [moduleKey, setModuleKey] = useState<ModuleKey>(taskSpace.module);
   const [payloadText, setPayloadText] = useState("");
@@ -2009,7 +2318,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const isCnFlowModule = moduleKey === "cn_flow";
   const isCpraModule = moduleKey === "cpra";
 
-  const updateDiagnosisValue = <K extends keyof DiagnosisFormValues>(name: K, value: DiagnosisFormValues[K]) => {
+  useEffect(() => {
+    if (!isDiagnosisModule) return;
+    const anchor = diagnosisStepTopRef.current;
+    if (!anchor) return;
+    const frame = requestAnimationFrame(() => {
+      anchor.scrollIntoView({ block: "start", behavior: "auto" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isDiagnosisModule, diagnosisStepIndex]);
+
+  const updateDiagnosisValue = (name: string, value: unknown) => {
     setDiagnosisValues((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -2699,19 +3018,113 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
-  const buildDiagnosisPayload = (): unknown => ({
-    company_name: diagnosisValues.company_name,
-    answers: {
-      q1_is_ciio: diagnosisValues.q1_is_ciio,
-      q2_has_important_data: diagnosisValues.q2_has_important_data,
-      q3_pii_count: diagnosisValues.q3_pii_count,
-      q4_spi_count: diagnosisValues.q4_spi_count,
-      q5_no_personal_info: diagnosisValues.q5_no_personal_info,
-      q6_scenario: diagnosisValues.q6_scenario,
-      q7_receiver_type: diagnosisValues.q7_receiver_type,
-      q8_purpose: diagnosisValues.q8_purpose
-    }
-  });
+  const buildDiagnosisPayload = (): unknown => {
+    const asText = (key: string): string => {
+      const value = diagnosisValues[key];
+      if (typeof value === "string") return value;
+      if (typeof value === "number") return String(value);
+      return "";
+    };
+    const asArray = (key: string): string[] => {
+      const value = diagnosisValues[key];
+      if (Array.isArray(value)) return value.map((item) => String(item));
+      if (typeof value === "string" && value.trim().length > 0) {
+        return value.split(/[,，\n]/).map((item) => item.trim()).filter((item) => item.length > 0);
+      }
+      return [];
+    };
+    const hasSensitivePi = asArray("m3_personal_info_types").some((item) =>
+      ["身份证", "人脸", "指纹", "声纹", "健康", "金融", "未成年人", "精准位置"].some((key) => item.includes(key))
+    );
+
+    const volume = asText("m3_data_volume_range");
+    const estimatedPiiCount =
+      volume === "1000万条以上" ? 10000000 :
+      volume === "100-1000万条" ? 2000000 :
+      volume === "10-100万条" ? 300000 :
+      volume === "10万条以下" ? 50000 : 0;
+    const estimatedSpiCount =
+      !hasSensitivePi ? 0 :
+      volume === "1000万条以上" ? 20000 :
+      volume === "100-1000万条" ? 12000 :
+      volume === "10-100万条" ? 6000 : 1000;
+
+    const personalInfoFlag = asText("m3_processes_personal_info");
+    const importantDataFlag = asText("m3_processes_important_data");
+    const noPersonalAndNoImportant = personalInfoFlag === "no" && importantDataFlag === "no";
+
+    const receiverType = asText("m4_share_to_third_party") === "yes" ? "third_party" : "intra_group";
+    const companyNameRaw = asText("company_name").trim();
+    const companyName = companyNameRaw.length >= 2 ? companyNameRaw : "未命名企业";
+
+    return {
+      company_name: companyName,
+      answers: {
+        q1_is_ciio: "unknown",
+        q2_has_important_data: importantDataFlag === "yes" ? "yes" : importantDataFlag === "no" ? "no" : "unknown",
+        q3_pii_count: personalInfoFlag === "yes" ? estimatedPiiCount : 0,
+        q4_spi_count: personalInfoFlag === "yes" ? estimatedSpiCount : 0,
+        q5_no_personal_info: noPersonalAndNoImportant ? "yes" : "no",
+        q6_scenario: "other",
+        q7_receiver_type: receiverType,
+        q8_purpose: asText("m2_core_needs_other"),
+
+        m1_enterprise_name: companyName,
+        m1_industry: asText("m1_industry"),
+        m1_business_channels: asArray("m1_business_channels"),
+        m1_service_targets: asText("m1_service_targets"),
+        m1_company_size: asText("m1_company_size"),
+
+        m2_core_needs: asArray("m2_core_needs"),
+        m2_had_compliance_issue: asText("m2_had_compliance_issue"),
+        m2_issue_description: asText("m2_issue_description"),
+        m2_deadline: asText("m2_deadline"),
+
+        m3_processes_personal_info: personalInfoFlag,
+        m3_personal_info_types: asArray("m3_personal_info_types"),
+        m3_sensitive_info_types: asArray("m3_personal_info_types").filter((item) =>
+          ["身份证", "人脸", "指纹", "声纹", "健康", "金融", "未成年人", "精准位置"].some((key) => item.includes(key))
+        ),
+        m3_processes_important_data: importantDataFlag,
+        m3_important_data_types: asArray("m3_important_data_types"),
+        m3_data_sources: asArray("m3_data_sources"),
+        m3_processing_activities: asArray("m3_processing_activities"),
+        m3_data_volume_range: volume,
+        m3_processes_enterprise_public_data: asText("m3_processes_enterprise_public_data"),
+        m3_enterprise_public_data_desc: asText("m3_enterprise_public_data_desc"),
+        m3_retention_period: asText("m3_retention_period"),
+        m3_retention_desc: asText("m3_retention_desc"),
+
+        m4_share_to_third_party: asText("m4_share_to_third_party"),
+        m4_third_party_types: asText("m4_third_party_types"),
+        m4_cross_border_transfer: asText("m4_cross_border_transfer"),
+        m4_cross_border_regions: asText("m4_cross_border_regions"),
+        m4_commercialization: asText("m4_commercialization"),
+        m4_commercialization_mode: asText("m4_commercialization_mode"),
+        m4_entrusted_processing: asText("m4_entrusted_processing"),
+        m4_entrusted_party_type: asText("m4_entrusted_party_type"),
+        m4_authorization_method: asText("m4_authorization_method"),
+
+        m5_systems: asArray("m5_systems"),
+        m5_security_measures: asArray("m5_security_measures"),
+        m5_compliance_docs: asArray("m5_compliance_docs"),
+        m5_penalty_or_complaint: asText("m5_penalty_or_complaint"),
+        m5_penalty_time: asText("m5_penalty_time"),
+        m5_penalty_reason: asText("m5_penalty_reason"),
+        m5_penalty_result: asText("m5_penalty_result"),
+
+        m1_industry_other: asText("m1_industry_other"),
+        m1_business_channels_other: asText("m1_business_channels_other"),
+        m2_core_needs_other: asText("m2_core_needs_other"),
+        m2_deadline_detail: asText("m2_deadline_detail"),
+        m3_important_data_types_other: asText("m3_important_data_types_other"),
+        m3_data_sources_other: asText("m3_data_sources_other"),
+        m5_systems_other: asText("m5_systems_other"),
+        m5_security_measures_other: asText("m5_security_measures_other"),
+        m5_compliance_docs_other: asText("m5_compliance_docs_other")
+      }
+    };
+  };
 
   const execute = async () => {
     let requestPayload: unknown;
@@ -2800,6 +3213,34 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const assessmentProgress = Math.round(((assessmentStepIndex + 1) / ASSESSMENT_STEPS.length) * 100);
   const currentDiagnosisStep = DIAGNOSIS_STEPS[diagnosisStepIndex];
   const diagnosisProgress = Math.round(((diagnosisStepIndex + 1) / DIAGNOSIS_STEPS.length) * 100);
+  const visibleDiagnosisFields = useMemo(() => {
+    const seen = new Set<string>();
+    const fields: DiagnosisFieldConfig[] = [];
+    for (const field of currentDiagnosisStep.fields) {
+      const visible = field.visibleWhen ? field.visibleWhen(diagnosisValues) : true;
+      if (!visible) continue;
+      if (seen.has(field.name)) continue;
+      seen.add(field.name);
+      fields.push(field);
+    }
+    return fields;
+  }, [currentDiagnosisStep.fields, diagnosisValues]);
+
+  const diagnosisFieldGroups = useMemo(() => {
+    const order: string[] = [];
+    const map = new Map<string, DiagnosisFieldConfig[]>();
+
+    for (const field of visibleDiagnosisFields) {
+      const groupName = field.group ?? "";
+      if (!map.has(groupName)) {
+        map.set(groupName, []);
+        order.push(groupName);
+      }
+      map.get(groupName)?.push(field);
+    }
+
+    return order.map((groupName) => ({ groupName, fields: map.get(groupName) ?? [] }));
+  }, [visibleDiagnosisFields]);
   const currentPipiaStep = PIPIA_STEPS[pipiaStepIndex];
   const pipiaProgress = Math.round(((pipiaStepIndex + 1) / PIPIA_STEPS.length) * 100);
   const currentDocumentReviewStep = DOCUMENT_REVIEW_STEPS[documentReviewStepIndex];
@@ -3134,9 +3575,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           </div>
         </section>
       ) : isDiagnosisModule ? (
-        <section className="schema-wizard">
+        <section className="schema-wizard schema-wizard--diagnosis">
+          <div ref={diagnosisStepTopRef} />
           <div className="schema-wizard-head">
-            <div className="runner-title">Diagnosis Wizard</div>
+            <div className="runner-title">业务数据合规需求诊断</div>
             <span>{diagnosisProgress}%</span>
           </div>
           <div className="schema-stepper">
@@ -3147,21 +3589,30 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 onClick={() => setDiagnosisStepIndex(index)}
                 type="button"
               >
-                {index + 1}. {localizeStepTitle(lang, step.title)}
+                {index + 1} {DIAGNOSIS_STEP_SHORT_TITLES[index] ?? localizeStepTitle(lang, step.title)}
               </button>
             ))}
           </div>
 
           <div className="schema-current-title">{localizeStepTitle(lang, currentDiagnosisStep.title)}</div>
-          <div className="schema-field-grid">
-            {currentDiagnosisStep.fields.map((field) => {
+          <div className="diagnosis-sections" key={`diagnosis-step-${diagnosisStepIndex}`}>
+            {diagnosisFieldGroups.map(({ groupName, fields }) => (
+              <section key={`diagnosis-group-${diagnosisStepIndex}-${groupName}`} className="diagnosis-section">
+                {groupName ? <h4 className="diagnosis-section-title">{groupName}</h4> : null}
+                <div className="schema-field-grid diagnosis-field-grid">
+                  {fields.map((field) => {
+              const selectedSingle = typeof diagnosisValues[field.name] === "string" ? String(diagnosisValues[field.name]) : "";
+              const selectedMulti = Array.isArray(diagnosisValues[field.name])
+                ? (diagnosisValues[field.name] as unknown[]).map((item) => String(item))
+                : [];
+
               if (field.type === "text") {
                 return (
                   <label key={String(field.name)} className="field-wrap">
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
-                      value={String(diagnosisValues[field.name])}
-                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                      value={typeof diagnosisValues[field.name] === "string" ? String(diagnosisValues[field.name]) : ""}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value)}
                     />
                   </label>
                 );
@@ -3173,45 +3624,105 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
                       className="runner-textarea schema-textarea"
-                      value={String(diagnosisValues[field.name])}
-                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
+                      value={typeof diagnosisValues[field.name] === "string" ? String(diagnosisValues[field.name]) : ""}
+                      onChange={(event) => updateDiagnosisValue(field.name, event.target.value)}
                     />
                   </label>
                 );
               }
 
-              if (field.type === "number") {
+              if (field.type === "single") {
                 return (
-                  <label key={String(field.name)} className="field-wrap">
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                    <input
-                      type="number"
-                      min={field.min}
-                      step={field.step}
-                      value={Number(diagnosisValues[field.name])}
-                      onChange={(event) => {
-                        const parsed = Number(event.target.value);
-                        updateDiagnosisValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
-                      }}
-                    />
+                  <label key={String(field.name)} className="field-wrap diagnosis-field">
+                    <span className="diagnosis-field-label">{localizeFieldLabel(lang, String(field.name), field.label)}</span>
+                    <div className={`diagnosis-option-grid ${field.name === "m1_business_channels" ? "diagnosis-option-grid--multiwide" : "diagnosis-option-grid--single"}`}>
+                      {(field.options ?? []).map((option) => (
+                        <label key={`${field.name}-${option.value}`} className="diagnosis-option-card">
+                          <input
+                            type="radio"
+                            name={field.name}
+                            checked={selectedSingle === option.value}
+                            onChange={() => updateDiagnosisValue(field.name, option.value)}
+                          />
+                          <span>{localizeOptionLabel(lang, option.value, option.label)}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {(field.options ?? [])
+                      .filter((option) => option.extraFieldId && selectedSingle === option.value)
+                      .map((option) => (
+                        <input
+                          key={`${field.name}-${option.extraFieldId}`}
+                          className="diagnosis-extra-input"
+                          value={typeof diagnosisValues[option.extraFieldId as string] === "string"
+                            ? String(diagnosisValues[option.extraFieldId as string])
+                            : ""}
+                          onChange={(event) => updateDiagnosisValue(option.extraFieldId as string, event.target.value)}
+                          placeholder={option.extraPlaceholder ?? "请补充说明"}
+                        />
+                      ))}
+                  </label>
+                );
+              }
+
+              if (field.type === "multi") {
+                return (
+                  <label key={String(field.name)} className="field-wrap diagnosis-field">
+                    <span className="diagnosis-field-label">{localizeFieldLabel(lang, String(field.name), field.label)}</span>
+                    <div className={`diagnosis-option-grid ${field.name === "m1_business_channels" ? "diagnosis-option-grid--multiwide" : "diagnosis-option-grid--multi"}`}>
+                      {(field.options ?? []).map((option) => {
+                        const checked = selectedMulti.includes(option.value);
+                        return (
+                          <label key={`${field.name}-${option.value}`} className="diagnosis-option-card">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(event) => {
+                                const next = event.target.checked
+                                  ? [...selectedMulti, option.value]
+                                  : selectedMulti.filter((item) => item !== option.value);
+                                updateDiagnosisValue(field.name, next);
+                                if (!event.target.checked && option.extraFieldId) {
+                                  updateDiagnosisValue(option.extraFieldId, "");
+                                }
+                              }}
+                            />
+                            <span>{localizeOptionLabel(lang, option.value, option.label)}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {(field.options ?? [])
+                      .filter((option) => option.extraFieldId && selectedMulti.includes(option.value))
+                      .map((option) => (
+                        <input
+                          key={`${field.name}-${option.extraFieldId}`}
+                          className="diagnosis-extra-input"
+                          value={typeof diagnosisValues[option.extraFieldId as string] === "string"
+                            ? String(diagnosisValues[option.extraFieldId as string])
+                            : ""}
+                          onChange={(event) => updateDiagnosisValue(option.extraFieldId as string, event.target.value)}
+                          placeholder={option.extraPlaceholder ?? "请补充说明"}
+                        />
+                      ))}
                   </label>
                 );
               }
 
               return (
-                <label key={String(field.name)} className="field-wrap">
-                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                  <select
-                    value={String(diagnosisValues[field.name])}
-                    onChange={(event) => updateDiagnosisValue(field.name, event.target.value as never)}
-                  >
-                    {(field.options ?? []).map((option) => (
-                      <option key={option.value} value={option.value}>{localizeOptionLabel(lang, String(option.value), option.label)}</option>
-                    ))}
-                  </select>
+                <label key={String(field.name)} className="field-wrap diagnosis-field">
+                  <span className="diagnosis-field-label">{localizeFieldLabel(lang, String(field.name), field.label)}</span>
+                  <input
+                    className="diagnosis-extra-input"
+                    value={typeof diagnosisValues[field.name] === "string" ? String(diagnosisValues[field.name]) : ""}
+                    onChange={(event) => updateDiagnosisValue(field.name, event.target.value)}
+                  />
                 </label>
               );
             })}
+                </div>
+              </section>
+            ))}
           </div>
 
           <div className="schema-actions-row">
