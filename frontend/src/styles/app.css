@@ -131,8 +131,8 @@
 }
 
 .global-brand-logo {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -146,15 +146,17 @@
 }
 
 .global-brand-title {
-  font-size: 1.02rem;
+  font-size: 1.18rem;
   font-weight: 700;
   color: #e9f3ff;
+  line-height: 1.1;
 }
 
 .global-brand-sub {
-  font-size: 0.92rem;
+  font-size: 1.04rem;
   font-weight: 700;
   color: #d3e6ff;
+  line-height: 1.1;
 }
 
 .global-nav-wrap.is-home .global-brand-sub {
@@ -174,11 +176,12 @@
   padding: 0.24rem 0.18rem;
   background: transparent;
   color: #c9ddf5;
-  font-size: 0.93rem;
+  font-size: 1.05rem;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s ease, opacity 0.2s ease;
   opacity: 0.9;
+  line-height: 1.2;
 }
 
 .global-nav-wrap.is-home .global-link {
@@ -311,7 +314,7 @@
 }
 
 .global-chip {
-  font-size: 0.86rem;
+  font-size: 0.96rem;
 }
 
 .global-chip.global-chip-with-icon {
@@ -7437,6 +7440,110 @@
   gap: 0.58rem;
 }
 
+.schema-wizard--diagnosis {
+  padding: 0.86rem;
+  gap: 0.82rem;
+}
+
+.schema-wizard--diagnosis .schema-wizard-head {
+  align-items: flex-end;
+}
+
+.schema-wizard--diagnosis .runner-title {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #244a74;
+}
+
+.schema-wizard--diagnosis .schema-current-title {
+  font-size: 1.08rem;
+  color: #173b64;
+}
+
+.diagnosis-sections {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.diagnosis-section {
+  border: 1px solid rgba(93, 130, 183, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.88rem;
+  display: grid;
+  gap: 0.78rem;
+}
+
+.diagnosis-section-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #214a74;
+}
+
+.diagnosis-field-grid {
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.diagnosis-field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.diagnosis-field-label {
+  color: #224a74;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.diagnosis-option-grid {
+  display: grid;
+  gap: 0.58rem;
+}
+
+.diagnosis-option-grid--single {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.diagnosis-option-grid--multi {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.diagnosis-option-grid--multiwide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.diagnosis-option-card {
+  border: 1px solid rgba(96, 132, 183, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #294f79;
+  padding: 0.58rem 0.65rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 52px;
+  line-height: 1.42;
+}
+
+.diagnosis-option-card input {
+  margin-top: 0.14rem;
+}
+
+.diagnosis-extra-input {
+  width: 100%;
+  border: 1px solid rgba(89, 127, 182, 0.28);
+  border-radius: 10px;
+  background: rgba(252, 255, 255, 0.95);
+  padding: 0.5rem 0.6rem;
+  color: #1d446f;
+}
+
 .schema-field-wide {
   grid-column: 1 / -1;
 }
@@ -9729,6 +9836,16 @@
   }
 
   .schema-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnosis-section {
+    padding: 0.74rem;
+  }
+
+  .diagnosis-option-grid--single,
+  .diagnosis-option-grid--multi,
+  .diagnosis-option-grid--multiwide {
     grid-template-columns: 1fr;
   }
 
