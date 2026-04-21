@@ -22,7 +22,7 @@ import {
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { extractArtifacts, extractConsistencyIssues, extractEvidenceHits, extractInsight } from "../../lib/workspace";
 import { AssistantPanel } from "./AssistantPanel";
-import { ResourcePanel } from "./ResourcePanel";
+import { ResourcePanel, type ResourceOpenTarget } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
@@ -56,6 +56,11 @@ type ReportPreviewSection = {
   content: string;
 };
 
+type OpenedResource =
+  | { kind: "output"; name: string; path: string; fileType: string }
+  | { kind: "input-file"; name: string; path: string; fileType: string }
+  | { kind: "input-form"; name: string; payload: unknown };
+
 const WORKSPACE_TABS: WorkspaceTopTab[] = [
   { id: "details", key: "workspaceTabDetails", closable: false },
   { id: "canvas", key: "workspaceTabCanvas", closable: true },
@@ -86,6 +91,11 @@ const getArtifactBaseName = (value: string): string => {
   const fileName = toFileName(value).toLowerCase();
   const dotIndex = fileName.lastIndexOf(".");
   return dotIndex === -1 ? fileName : fileName.slice(0, dotIndex);
+};
+
+const readFileType = (pathOrName: string): string => {
+  const ext = getArtifactExtension(pathOrName);
+  return ext ? ext.toUpperCase() : "FILE";
 };
 
 const isHtmlArtifact = (artifact: OutputArtifact): boolean =>
@@ -189,6 +199,12 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [artifactPreviewError, setArtifactPreviewError] = useState<string | null>(null);
   const [artifactPdfObjectUrl, setArtifactPdfObjectUrl] = useState<string | null>(null);
   const [artifactDownloadBusy, setArtifactDownloadBusy] = useState(false);
+  const [openedResource, setOpenedResource] = useState<OpenedResource | null>(null);
+  const [openedResourcePreview, setOpenedResourcePreview] = useState<ArtifactPreview | null>(null);
+  const [openedResourceLoading, setOpenedResourceLoading] = useState(false);
+  const [openedResourceError, setOpenedResourceError] = useState<string | null>(null);
+  const [openedResourcePdfObjectUrl, setOpenedResourcePdfObjectUrl] = useState<string | null>(null);
+  const [openedResourceDownloadBusy, setOpenedResourceDownloadBusy] = useState(false);
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -331,6 +347,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setSelectedArtifactPath(null);
     setArtifactPreview(null);
     setArtifactPreviewError(null);
+    setOpenedResource(null);
+    setOpenedResourcePreview(null);
+    setOpenedResourceError(null);
   }, [taskSpace.id]);
 
   useEffect(() => {
@@ -428,6 +447,88 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     };
   }, [artifactPreview, selectedArtifactPath]);
 
+  useEffect(() => {
+    if (!openedResource || openedResource.kind === "input-form") {
+      setOpenedResourcePreview(null);
+      setOpenedResourceError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setOpenedResourceLoading(true);
+    setOpenedResourceError(null);
+    fetchArtifactPreview(openedResource.path)
+      .then((preview) => {
+        if (cancelled) return;
+        setOpenedResourcePreview(preview);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setOpenedResourcePreview(null);
+        setOpenedResourceError(error instanceof Error ? error.message : "Failed to load resource preview");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setOpenedResourceLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openedResource]);
+
+  useEffect(() => {
+    if (!openedResourcePreview || openedResourcePreview.render_mode !== "pdf") {
+      setOpenedResourcePdfObjectUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
+      return;
+    }
+
+    const previewPath = openedResourcePreview.path;
+    if (!previewPath) return;
+
+    let cancelled = false;
+    let createdObjectUrl: string | null = null;
+    fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(previewPath)}`, {
+      headers: { ...getAuthHeaders() }
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load PDF (${response.status})`);
+        }
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+      })
+      .then((nextObjectUrl) => {
+        if (cancelled) {
+          URL.revokeObjectURL(nextObjectUrl);
+          return;
+        }
+        createdObjectUrl = nextObjectUrl;
+        setOpenedResourcePdfObjectUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return nextObjectUrl;
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setOpenedResourcePdfObjectUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return null;
+        });
+        setOpenedResourceError(
+          error instanceof Error ? error.message : "Failed to load PDF preview"
+        );
+      });
+
+    return () => {
+      cancelled = true;
+      if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
+    };
+  }, [openedResourcePreview]);
+
   const downloadArtifact = async (path: string) => {
     setArtifactDownloadBusy(true);
     try {
@@ -451,6 +552,15 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       setArtifactPreviewError(error instanceof Error ? error.message : "Download failed");
     } finally {
       setArtifactDownloadBusy(false);
+    }
+  };
+
+  const downloadOpenedResource = async (path: string) => {
+    setOpenedResourceDownloadBusy(true);
+    try {
+      await downloadArtifact(path);
+    } finally {
+      setOpenedResourceDownloadBusy(false);
     }
   };
 
@@ -580,6 +690,35 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setActiveTab("report");
   };
 
+  const handleOpenResource = (target: ResourceOpenTarget) => {
+    if (target.kind === "output") {
+      const path = target.artifact.path;
+      setSelectedArtifactPath(path);
+      setOpenedResource({
+        kind: "output",
+        name: toFileName(path),
+        path,
+        fileType: readFileType(path)
+      });
+    } else if (target.kind === "input-file") {
+      const path = target.entry.sourcePath;
+      setOpenedResource({
+        kind: "input-file",
+        name: target.entry.name || toFileName(path),
+        path,
+        fileType: readFileType(path)
+      });
+    } else {
+      setOpenedResource({
+        kind: "input-form",
+        name: target.entry.name,
+        payload: target.entry.payload
+      });
+    }
+    setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
+    setActiveTab("report");
+  };
+
   const renameTask = () => {
     setRenameDraft(taskSpace.name);
     setRenameModalOpen(true);
@@ -694,6 +833,99 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <h3>{t("workspaceTabReportTitle")}</h3>
           <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
         </header>
+        {openedResource ? (
+          <section className="workspace-resource-viewer">
+            <div className="workspace-resource-viewer-head">
+              <div>
+                <span>{lang === "zh" ? "资源目录 · 已打开文件" : "Resource Explorer · Opened File"}</span>
+                <strong>{openedResource.name}</strong>
+              </div>
+              <div className="workspace-resource-viewer-actions">
+                {openedResource.kind !== "input-form" ? (
+                  <>
+                    <em>{openedResource.fileType}</em>
+                    <button
+                      type="button"
+                      className="workspace-report-download-icon"
+                      onClick={() => void downloadOpenedResource(openedResource.path)}
+                      aria-label={lang === "zh" ? "下载文件" : "Download file"}
+                      title={lang === "zh" ? "下载文件" : "Download file"}
+                      disabled={openedResourceDownloadBusy}
+                    >
+                      <DownloadIcon width="16" height="16" />
+                    </button>
+                  </>
+                ) : (
+                  <em>JSON</em>
+                )}
+                <button
+                  type="button"
+                  className="pill-btn"
+                  onClick={() => {
+                    setOpenedResource(null);
+                    setOpenedResourcePreview(null);
+                    setOpenedResourceError(null);
+                  }}
+                >
+                  {lang === "zh" ? "关闭查看" : "Close"}
+                </button>
+              </div>
+            </div>
+            {openedResource.kind === "input-form" ? (
+              <article className="workspace-report-chapter workspace-report-preview-block">
+                <strong>{lang === "zh" ? "表单提交详情" : "Form Submission Detail"}</strong>
+                <pre className="workspace-resource-json">
+                  {JSON.stringify(openedResource.payload ?? {}, null, 2)}
+                </pre>
+              </article>
+            ) : (
+              <>
+                {openedResourceLoading ? (
+                  <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文件预览..." : "Loading file preview..."}</div>
+                ) : null}
+                {openedResourceError ? (
+                  <div className="workspace-report-preview-state workspace-report-preview-error">{openedResourceError}</div>
+                ) : null}
+                {openedResourcePreview ? (
+                  openedResourcePreview.render_mode === "html" ? (
+                    <div className="workspace-report-html-frame">
+                      <iframe
+                        title={openedResourcePreview.file_name}
+                        srcDoc={openedResourcePreview.content}
+                        sandbox="allow-same-origin"
+                      />
+                    </div>
+                  ) : openedResourcePreview.render_mode === "pdf" && openedResourcePdfObjectUrl ? (
+                    <div className="workspace-report-pdf-frame">
+                      <iframe title={openedResourcePreview.file_name} src={openedResourcePdfObjectUrl} />
+                    </div>
+                  ) : openedResourcePreview.render_mode === "text" ? (
+                    <article className="workspace-report-chapter workspace-report-preview-block">
+                      <strong>{lang === "zh" ? "文件内容预览" : "File Content Preview"}</strong>
+                      <div className="workspace-report-richtext">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {normalizeMarkdownForRender(openedResourcePreview.content)}
+                        </ReactMarkdown>
+                      </div>
+                    </article>
+                  ) : (
+                    <div className="workspace-report-preview-state">
+                      <button
+                        type="button"
+                        className="workspace-report-link-button"
+                        onClick={() => void openArtifactByBlob(openedResource.path)}
+                      >
+                        {lang === "zh"
+                          ? "当前文件暂不支持内嵌预览，点击打开原文件"
+                          : "Inline preview is not available for this file. Open the source file."}
+                      </button>
+                    </div>
+                  )
+                ) : null}
+              </>
+            )}
+          </section>
+        ) : null}
         <section className="workspace-report-kpi-row">
           <article>
             <span>{t("reportIssueCount")}</span>
@@ -895,7 +1127,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <ResourcePanel
             taskSpace={taskSpace}
             onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { leftOpen: false } })}
-            onSelectOutput={handleSelectArtifact}
+            onOpenResource={handleOpenResource}
             selectedOutputPath={selectedArtifactPath}
           />
         ) : null}

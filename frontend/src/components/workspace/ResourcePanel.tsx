@@ -7,9 +7,30 @@ import { ChevronToggleIcon, FileNodeIcon, FolderInputIcon, FolderOutputIcon } fr
 type ResourcePanelProps = {
   taskSpace: TaskSpace;
   onToggleCollapse: () => void;
-  onSelectOutput: (artifact: OutputArtifact) => void;
+  onOpenResource: (target: ResourceOpenTarget) => void;
   selectedOutputPath?: string | null;
 };
+
+export type ResourceOpenTarget =
+  | { kind: "output"; artifact: OutputArtifact }
+  | {
+      kind: "input-form";
+      entry: {
+        id: string;
+        name: string;
+        payload?: unknown;
+        createdAt: string;
+      };
+    }
+  | {
+      kind: "input-file";
+      entry: {
+        id: string;
+        name: string;
+        sourcePath: string;
+        createdAt: string;
+      };
+    };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -142,7 +163,7 @@ const parseTime = (value: string | undefined): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, selectedOutputPath }: ResourcePanelProps) {
+export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, selectedOutputPath }: ResourcePanelProps) {
   const { state } = useAppStore();
   const { lang, t } = useLang();
   const copy =
@@ -267,15 +288,10 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
     () => new Map(outputEntries.map((entry) => [entry.virtualPath, entry.artifact])),
     [outputEntries]
   );
-  const inputEntryById = useMemo(
-    () => new Map(inputEntries.map((entry) => [entry.id, entry])),
-    [inputEntries]
-  );
   const outputTree = useMemo(
     () => buildPathTree(outputEntries.map((entry) => entry.virtualPath), "tree-output"),
     [outputEntries]
   );
-  const selectedInputEntry = selectedInputId ? inputEntryById.get(selectedInputId) ?? null : null;
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolderIds((prev) => {
@@ -334,7 +350,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
               type="button"
               className={rowClass}
               style={{ ["--tree-depth" as string]: depth }}
-              onClick={() => onSelectOutput(artifact)}
+              onClick={() => onOpenResource({ kind: "output", artifact })}
             >
               {rowContent}
             </button>
@@ -386,7 +402,32 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
                             type="button"
                             className={`ide-tree-row ide-tree-row-file ${isActive ? "active" : ""}`}
                             style={{ ["--tree-depth" as string]: 1 }}
-                            onClick={() => setSelectedInputId(entry.id)}
+                            onClick={() => {
+                              setSelectedInputId(entry.id);
+                              if (entry.kind === "form") {
+                                onOpenResource({
+                                  kind: "input-form",
+                                  entry: {
+                                    id: entry.id,
+                                    name: entry.name,
+                                    payload: entry.payload,
+                                    createdAt: entry.createdAt
+                                  }
+                                });
+                                return;
+                              }
+                              if (entry.sourcePath) {
+                                onOpenResource({
+                                  kind: "input-file",
+                                  entry: {
+                                    id: entry.id,
+                                    name: entry.name,
+                                    sourcePath: entry.sourcePath,
+                                    createdAt: entry.createdAt
+                                  }
+                                });
+                              }
+                            }}
                           >
                             <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
                             <span className="ide-tree-icon">
@@ -429,24 +470,6 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
             </li>
           </ul>
         </section>
-        {selectedInputEntry ? (
-          <section className="schema-upload-card">
-            <div className="runner-title">
-              {selectedInputEntry.kind === "form"
-                ? (lang === "zh" ? "表单提交详情" : "Form Submission Detail")
-                : (lang === "zh" ? "输入文件详情" : "Input File Detail")}
-            </div>
-            {selectedInputEntry.kind === "form" ? (
-              <textarea
-                className="runner-textarea schema-textarea"
-                readOnly
-                value={JSON.stringify(selectedInputEntry.payload ?? {}, null, 2)}
-              />
-            ) : (
-              <div className="runner-empty-card">{selectedInputEntry.sourcePath}</div>
-            )}
-          </section>
-        ) : null}
       </div>
     </aside>
   );

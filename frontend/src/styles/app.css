@@ -7234,6 +7234,64 @@
   grid-template-columns: 1fr;
 }
 
+.workspace-resource-viewer {
+  border: 1px solid rgba(106, 141, 191, 0.25);
+  border-radius: 14px;
+  background: rgba(248, 252, 255, 0.95);
+  padding: 0.62rem;
+  display: grid;
+  gap: 0.52rem;
+}
+
+.workspace-resource-viewer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.workspace-resource-viewer-head span {
+  display: block;
+  color: #6483a4;
+  font-size: 0.75rem;
+  margin-bottom: 0.16rem;
+}
+
+.workspace-resource-viewer-head strong {
+  color: #21466f;
+  font-size: 1rem;
+}
+
+.workspace-resource-viewer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.workspace-resource-viewer-actions em {
+  color: #51739a;
+  font-size: 0.76rem;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.workspace-resource-json {
+  margin: 0;
+  width: 100%;
+  min-height: 180px;
+  max-height: min(56vh, 520px);
+  overflow: auto;
+  border: 1px solid rgba(47, 77, 121, 0.25);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0.75rem;
+  color: #143053;
+  font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-size: 0.79rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 .workspace-report-selected {
   display: grid;
   gap: 0.5rem;
