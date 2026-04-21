@@ -5,6 +5,8 @@ from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.schemas.review import (
     ReviewAnalyzeResponse,
+    ReviewGenerateRequest,
+    ReviewGenerateResponse,
     ReviewIssuesResponse,
     ReviewReportResponse,
     ReviewTaskCreateResponse,
@@ -13,6 +15,16 @@ from backend.schemas.review import (
 )
 
 router = APIRouter()
+
+
+@router.post("/generate", response_model=ReviewGenerateResponse)
+def generate_review(
+    payload: ReviewGenerateRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+    container=Depends(get_container),
+):
+    return container.review_service.generate_from_uploaded_paths(db, current_user.id, payload.uploaded_files)
 
 
 @router.post("/tasks", response_model=ReviewTaskCreateResponse)

@@ -46,6 +46,12 @@ const MODULES: ModuleDefinition[] = [
     asyncRetryEndpoint: (taskId) => `/api/v1/assessment/tasks/${taskId}/retry`
   },
   {
+    key: "review",
+    label: "Review",
+    jurisdiction: "CN",
+    syncEndpoint: "/api/v1/review/generate"
+  },
+  {
     key: "scc",
     label: "SCC",
     jurisdiction: "CN",
@@ -116,6 +122,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const LANG_KEY = "ai4law_ui_lang";
+const uiLang = (): "zh" | "en" => {
+  const value = globalThis.localStorage?.getItem(LANG_KEY);
+  return value === "zh" ? "zh" : "en";
+};
 
 function parseErrorMessage(data: unknown): string {
   if (!isRecord(data)) {
@@ -150,7 +161,11 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
     });
   } catch (error) {
     if (url.startsWith("/api/")) {
-      throw new Error("无法连接后端服务。请确认后端已启动（127.0.0.1:8000）后重试。");
+      throw new Error(
+        uiLang() === "zh"
+          ? "无法连接后端服务。请确认后端已启动（127.0.0.1:8000）后重试。"
+          : "Cannot connect to backend. Please ensure backend is running at 127.0.0.1:8000.",
+      );
     }
     throw error;
   }
@@ -174,7 +189,9 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
     }
     if (url.startsWith("/api/")) {
       throw new Error(
-        `后端请求失败（HTTP ${response.status}，空响应）。请确认后端已启动并监听 127.0.0.1:8000。`,
+        uiLang() === "zh"
+          ? `后端请求失败（HTTP ${response.status}，空响应）。请确认后端已启动并监听 127.0.0.1:8000。`
+          : `Backend request failed (HTTP ${response.status}, empty response). Please confirm backend is running on 127.0.0.1:8000.`,
       );
     }
     throw new Error(`HTTP ${response.status} from ${url}: empty response body`);

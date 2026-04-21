@@ -5,6 +5,7 @@ export type LaunchMode = "rapid" | "draft" | "matrix";
 export type ModuleKey =
   | "diagnosis"
   | "assessment"
+  | "review"
   | "scc"
   | "pipia"
   | "bcr"

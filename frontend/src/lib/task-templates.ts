@@ -59,7 +59,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   {
     id: "cn_document_review",
     jurisdiction: "CN",
-    module: "scc",
+    module: "review",
     workspaceStyle: "cn_document_review",
     title: { zh: "文档专项智能审查", en: "Document Compliance Review" },
     subtitle: {

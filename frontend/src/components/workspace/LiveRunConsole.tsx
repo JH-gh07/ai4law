@@ -26,6 +26,7 @@ type ModuleMeta = {
 const MODULES: ModuleMeta[] = [
   { key: "diagnosis", label: "Diagnosis", desc: "路径诊断并生成报告" },
   { key: "assessment", label: "Assessment", desc: "安全评估草案生成" },
+  { key: "review", label: "Review", desc: "文档专项智能审查" },
   { key: "scc", label: "SCC", desc: "标准合同条款审查" },
   { key: "pipia", label: "PIPIA", desc: "个人信息保护影响评估" },
   { key: "bcr", label: "BCR", desc: "集团内部规则审查" },

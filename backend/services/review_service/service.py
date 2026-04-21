@@ -1,4 +1,6 @@
 import asyncio
+import mimetypes
+from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -9,6 +11,7 @@ from backend.repositories.review_repository import ReviewRepository
 from backend.schemas.review import (
     AggregatedReview,
     ReviewAnalyzeResponse,
+    ReviewGenerateResponse,
     ReviewIssuesResponse,
     ReviewReportResponse,
     ReviewTaskCreateResponse,
@@ -79,6 +82,46 @@ class ReviewService:
         db.expire_all()
         refreshed = self._require_task(db, task_id, user_id)
         return ReviewAnalyzeResponse(id=refreshed.id, status=ReviewTaskStatus(refreshed.status), progress=refreshed.progress)
+
+    def generate_from_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewGenerateResponse:
+        normalized_paths = [self._resolve_uploaded_path(path) for path in uploaded_files]
+        if not normalized_paths:
+            raise HTTPException(status_code=400, detail="No files uploaded for review task")
+
+        task = self.repository.create_task(db, user_id)
+        for file_path in normalized_paths:
+            extracted_text = self.file_service.extract_text(file_path)
+            mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+            record = UploadedFileModel(
+                user_id=user_id,
+                task_id=task.id,
+                filename=file_path.name,
+                content_type=mime,
+                storage_path=str(file_path),
+                extracted_text=extracted_text,
+            )
+            self.repository.create_file(db, record)
+
+        self._run_pipeline(task.id, user_id)
+
+        refreshed = self._require_task(db, task.id, user_id)
+        if refreshed.status != ReviewTaskStatus.COMPLETED.value:
+            raise HTTPException(status_code=500, detail="Review generation failed")
+        report = self.report_service.get_owner_artifact(db, user_id, "review", task.id, "docx")
+        if not report:
+            raise HTTPException(status_code=404, detail="Review report not found")
+        summary = AggregatedReview.model_validate(loads(refreshed.summary_json, {}))
+        return ReviewGenerateResponse(
+            report_path=report.path,
+            output_files={"docx": report.path, "report": report.path},
+            risk_level=summary.overall_rating,
+            result={
+                "risk_level": summary.overall_rating,
+                "summary": summary.summary,
+                "issue_counts": summary.issue_counts,
+            },
+            consistency_issues=[],
+        )
 
     def get_status(self, db: Session, user_id: str, task_id: str) -> ReviewTaskStatusResponse:
         task = self._require_task(db, task_id, user_id)
@@ -160,6 +203,25 @@ class ReviewService:
         if not task:
             raise HTTPException(status_code=404, detail="Review task not found")
         return task
+
+    def _resolve_uploaded_path(self, uploaded_path: str) -> Path:
+        raw = Path(uploaded_path.strip())
+        if not raw.as_posix():
+            raise HTTPException(status_code=400, detail="Uploaded file path is empty")
+        if raw.is_absolute():
+            resolved = raw.resolve()
+        else:
+            resolved = (Path.cwd() / raw).resolve()
+
+        allowed_root = self.file_service.settings.storage_dir.resolve()
+        try:
+            resolved.relative_to(allowed_root)
+        except ValueError as exc:
+            raise HTTPException(status_code=403, detail="Uploaded file path is outside storage directory") from exc
+
+        if not resolved.exists() or not resolved.is_file():
+            raise HTTPException(status_code=404, detail=f"Uploaded file not found: {uploaded_path}")
+        return resolved
 
     def _publish_progress(self, task_id: str, status: str, progress: int) -> None:
         try:

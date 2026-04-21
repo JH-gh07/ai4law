@@ -29,6 +29,10 @@ const demoAssessment = () => ({
   uploaded_files: []
 });
 
+const demoReview = () => ({
+  uploaded_files: []
+});
+
 const demoScc = () => ({
   company_name: `DemoSCC${stamp()}`,
   receiver_name: "OceanStar Technology Inc.",
@@ -196,6 +200,8 @@ export function buildDemoPayload(module: ModuleKey): unknown {
       return demoDiagnosis();
     case "assessment":
       return demoAssessment();
+    case "review":
+      return demoReview();
     case "scc":
       return demoScc();
     case "pipia":

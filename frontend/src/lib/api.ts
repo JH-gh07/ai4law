@@ -4,6 +4,7 @@ import type { ModuleKey } from "./domain";
 const ENDPOINTS: Record<ModuleKey, string> = {
   diagnosis: "/api/v1/diagnosis/report",
   assessment: "/api/v1/assessment/generate",
+  review: "/api/v1/review/generate",
   scc: "/api/v1/scc/generate",
   pipia: "/api/v1/pipia/generate",
   bcr: "/api/v1/bcr/generate",

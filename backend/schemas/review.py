@@ -102,6 +102,18 @@ class ReviewAnalyzeResponse(BaseModel):
     progress: int
 
 
+class ReviewGenerateRequest(BaseModel):
+    uploaded_files: list[str] = Field(default_factory=list, min_length=1)
+
+
+class ReviewGenerateResponse(BaseModel):
+    report_path: str
+    output_files: dict[str, str] = Field(default_factory=dict)
+    risk_level: str
+    result: dict = Field(default_factory=dict)
+    consistency_issues: list[str] = Field(default_factory=list)
+
+
 class ReviewIssuesResponse(BaseModel):
     task_id: str
     issues: list[ReviewIssue]
