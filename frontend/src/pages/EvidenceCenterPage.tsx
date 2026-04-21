@@ -39,11 +39,9 @@ export function EvidenceCenterPage() {
       sourceTab: "法规与指南",
       caseTab: "实践案例",
       citationTab: "引用联动演示",
-      p0Only: "P0 条目",
       citationLinked: "已引用条目",
       sourceStat: "法规/指南条目",
       caseStat: "实践案例条目",
-      p0Stat: "P0 法规条目",
       currentStat: "当前命中",
       sourceListTitle: "法规与指南索引",
       sourceDetailTitle: "条目详情",
@@ -99,11 +97,9 @@ export function EvidenceCenterPage() {
       sourceTab: "Regulations & Guidance",
       caseTab: "Practice Cases",
       citationTab: "Citation Linkage Demo",
-      p0Only: "P0 Items",
       citationLinked: "Cited Items",
       sourceStat: "Regulation/Guide Items",
       caseStat: "Practice Case Items",
-      p0Stat: "P0 Regulation Items",
       currentStat: "Matched Items",
       sourceListTitle: "Regulations & Guidance Index",
       sourceDetailTitle: "Entry Detail",
@@ -445,10 +441,6 @@ export function EvidenceCenterPage() {
           <article className="kc-status-item">
             <div className="k">{copy.caseStat}</div>
             <div className="v">{summary.case_count}</div>
-          </article>
-          <article className="kc-status-item">
-            <div className="k">{copy.p0Stat}</div>
-            <div className="v">{summary.p0_source_count}</div>
           </article>
           <article className="kc-status-item">
             <div className="k">{copy.currentStat}</div>
