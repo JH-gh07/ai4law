@@ -7163,8 +7163,7 @@
   gap: 0.42rem;
 }
 
-.workspace-doc-item,
-.workspace-report-item {
+.workspace-doc-item {
   border: 1px solid rgba(106, 141, 191, 0.22);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
@@ -7182,26 +7181,34 @@
   width: 100%;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.18s ease, border-color 0.18s ease;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.6rem 0.12rem;
+  border-bottom: 1px solid rgba(121, 154, 199, 0.28);
+  color: #2f5884;
+  transition: background 0.16s ease, color 0.16s ease;
 }
 
 .workspace-report-item-button:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 14px 28px rgba(30, 72, 122, 0.16);
-  border-color: rgba(87, 131, 188, 0.46);
-  background: rgba(248, 252, 255, 0.99);
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(121, 154, 199, 0.42);
+  background: rgba(238, 247, 255, 0.62);
+  color: #19426e;
 }
 
 .workspace-report-item-button:active {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: 0 5px 12px rgba(30, 72, 122, 0.12);
-  border-color: rgba(81, 129, 191, 0.54);
-  background: rgba(240, 248, 255, 1);
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(121, 154, 199, 0.5);
+  background: rgba(229, 241, 255, 0.72);
 }
 
 .workspace-report-item-button.active {
-  background: rgba(234, 244, 255, 0.98);
-  box-shadow: inset 0 0 0 1px rgba(77, 123, 185, 0.26);
+  background: rgba(226, 240, 255, 0.72);
+  box-shadow: none;
+  color: #173c63;
 }
 
 .workspace-doc-item code,
@@ -7267,6 +7274,10 @@
 
 .workspace-report-list {
   grid-template-columns: 1fr;
+  border: 1px solid rgba(108, 143, 191, 0.22);
+  border-radius: 12px;
+  background: rgba(252, 255, 255, 0.84);
+  padding: 0 0.62rem;
 }
 
 .workspace-resource-viewer {

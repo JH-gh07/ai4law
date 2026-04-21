@@ -61,6 +61,12 @@ type OpenedResource =
   | { kind: "input-file"; name: string; path: string; fileType: string }
   | { kind: "input-form"; name: string; payload: unknown };
 
+type ResourcePreviewTab = {
+  id: string;
+  label: string;
+  resource: OpenedResource;
+};
+
 const WORKSPACE_TABS: WorkspaceTopTab[] = [
   { id: "details", key: "workspaceTabDetails", closable: false },
   { id: "canvas", key: "workspaceTabCanvas", closable: true },
@@ -96,6 +102,13 @@ const getArtifactBaseName = (value: string): string => {
 const readFileType = (pathOrName: string): string => {
   const ext = getArtifactExtension(pathOrName);
   return ext ? ext.toUpperCase() : "FILE";
+};
+
+const getResourceTabId = (resource: OpenedResource): string => {
+  if (resource.kind === "input-form") {
+    return `resource:input-form:${resource.name}`;
+  }
+  return `resource:${resource.kind}:${resource.path}`;
 };
 
 const isHtmlArtifact = (artifact: OutputArtifact): boolean =>
@@ -191,8 +204,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [renameDraft, setRenameDraft] = useState(taskSpace.name);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<WorkspaceTopTabId>("details");
+  const [activeTab, setActiveTab] = useState<string>("details");
   const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "report"]);
+  const [resourceTabs, setResourceTabs] = useState<ResourcePreviewTab[]>([]);
   const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null);
   const [artifactPreview, setArtifactPreview] = useState<ArtifactPreview | null>(null);
   const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
@@ -342,6 +356,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   useEffect(() => {
     setActiveTab("details");
     setOpenTabs(["details", "report"]);
+    setResourceTabs([]);
     setRenameDraft(taskSpace.name);
     setRenameModalOpen(false);
     setSelectedArtifactPath(null);
@@ -364,6 +379,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       return displayReportArtifacts[0]?.path ?? null;
     });
   }, [displayReportArtifacts]);
+
+  useEffect(() => {
+    const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);
+    setOpenedResource(activeResourceTab?.resource ?? null);
+  }, [activeTab, resourceTabs]);
 
   useEffect(() => {
     if (!selectedArtifactPath) {
@@ -601,6 +621,20 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     });
   };
 
+  const closeResourceTab = (tabId: string) => {
+    setResourceTabs((prev) => {
+      if (!prev.some((item) => item.id === tabId)) return prev;
+      const idx = prev.findIndex((item) => item.id === tabId);
+      const next = prev.filter((item) => item.id !== tabId);
+      setActiveTab((current) => {
+        if (current !== tabId) return current;
+        const fallback = next[idx]?.id ?? next[idx - 1]?.id ?? "details";
+        return fallback;
+      });
+      return next;
+    });
+  };
+
   const startResize = (side: "left" | "right", startX: number) => {
     const gridWidth = gridRef.current?.getBoundingClientRect().width ?? 0;
     if (!gridWidth) return;
@@ -684,39 +718,43 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
   };
 
-  const handleSelectArtifact = (artifact: OutputArtifact) => {
-    setSelectedArtifactPath(artifact.path);
-    setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
-    setActiveTab("report");
-  };
-
   const handleOpenResource = (target: ResourceOpenTarget) => {
+    let resource: OpenedResource;
     if (target.kind === "output") {
       const path = target.artifact.path;
       setSelectedArtifactPath(path);
-      setOpenedResource({
+      resource = {
         kind: "output",
         name: toFileName(path),
         path,
         fileType: readFileType(path)
-      });
+      };
     } else if (target.kind === "input-file") {
       const path = target.entry.sourcePath;
-      setOpenedResource({
+      resource = {
         kind: "input-file",
         name: target.entry.name || toFileName(path),
         path,
         fileType: readFileType(path)
-      });
+      };
     } else {
-      setOpenedResource({
+      resource = {
         kind: "input-form",
         name: target.entry.name,
         payload: target.entry.payload
-      });
+      };
     }
-    setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
-    setActiveTab("report");
+    const tabId = getResourceTabId(resource);
+    setResourceTabs((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === tabId);
+      if (existingIndex !== -1) {
+        const next = [...prev];
+        next[existingIndex] = { ...next[existingIndex], label: resource.name, resource };
+        return next;
+      }
+      return [...prev, { id: tabId, label: resource.name, resource }];
+    });
+    setActiveTab(tabId);
   };
 
   const renameTask = () => {
@@ -827,17 +865,18 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       );
     }
 
-    return (
-      <section className="workspace-tab-page workspace-tab-report">
-        <header className="workspace-tab-head">
-          <h3>{t("workspaceTabReportTitle")}</h3>
-          <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
-        </header>
-        {openedResource ? (
+    const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);
+    if (activeResourceTab && openedResource) {
+      return (
+        <section className="workspace-tab-page workspace-tab-report">
+          <header className="workspace-tab-head">
+            <h3>{lang === "zh" ? "资源预览" : "Resource Preview"}</h3>
+            <p>{lang === "zh" ? "资源目录打开的文件在独立工作区标签中预览。" : "Files opened from the resource explorer are previewed in independent workspace tabs."}</p>
+          </header>
           <section className="workspace-resource-viewer">
             <div className="workspace-resource-viewer-head">
               <div>
-                <span>{lang === "zh" ? "资源目录 · 已打开文件" : "Resource Explorer · Opened File"}</span>
+                <span>{lang === "zh" ? "当前打开" : "Opened Resource"}</span>
                 <strong>{openedResource.name}</strong>
               </div>
               <div className="workspace-resource-viewer-actions">
@@ -858,17 +897,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                 ) : (
                   <em>JSON</em>
                 )}
-                <button
-                  type="button"
-                  className="pill-btn"
-                  onClick={() => {
-                    setOpenedResource(null);
-                    setOpenedResourcePreview(null);
-                    setOpenedResourceError(null);
-                  }}
-                >
-                  {lang === "zh" ? "关闭查看" : "Close"}
-                </button>
               </div>
             </div>
             {openedResource.kind === "input-form" ? (
@@ -925,7 +953,20 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               </>
             )}
           </section>
-        ) : null}
+        </section>
+      );
+    }
+
+    if (activeTab !== "report") {
+      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} />;
+    }
+
+    return (
+      <section className="workspace-tab-page workspace-tab-report">
+        <header className="workspace-tab-head">
+          <h3>{t("workspaceTabReportTitle")}</h3>
+          <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
+        </header>
         <section className="workspace-report-kpi-row">
           <article>
             <span>{t("reportIssueCount")}</span>
@@ -1034,20 +1075,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         ) : (
           <p className="resource-empty">{t("reportNoData")}</p>
         )}
-        {displayReportArtifacts.length > 0 ? (
-          <section className="workspace-report-list">
-            {displayReportArtifacts.map((artifact) => (
-              <button
-                type="button"
-                key={artifact.id}
-                className={`workspace-report-item workspace-report-item-button ${selectedArtifactPath === artifact.path ? "active" : ""}`}
-                onClick={() => handleSelectArtifact(artifact)}
-              >
-                <span>{toFileName(artifact.path)}</span>
-              </button>
-            ))}
-          </section>
-        ) : null}
       </section>
     );
   };
@@ -1096,6 +1123,27 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               </button>
             );
           })}
+          {resourceTabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`workspace-browser-tab ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+              title={tab.label}
+            >
+              <span>{tab.label}</span>
+              <span
+                className="workspace-browser-tab-close"
+                role="button"
+                aria-label={`close-${tab.id}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  closeResourceTab(tab.id);
+                }}
+              >
+                ×
+              </span>
+            </button>
+          ))}
           {closedTabs.map((tab) => (
             <button
               key={`add-${tab.id}`}

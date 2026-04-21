@@ -213,14 +213,6 @@ export function ReportCenterPage() {
                 <small>{t("navReports")} · {remoteReports.length}</small>
                 <code>{t("reportDownloadHint")}</code>
               </div>
-              <div className="report-trace-list">
-                {remoteReports.slice(0, 10).map((item) => (
-                  <article key={`remote-${item.id}`} className="report-trace-item">
-                    <strong>{item.owner_id}</strong>
-                    <p>{item.file_path}</p>
-                  </article>
-                ))}
-              </div>
             </section>
           ) : null}
           {selectedSnapshot ? (
@@ -237,7 +229,6 @@ export function ReportCenterPage() {
               </div>
               <div className="report-download-box">
                 <small>{t("reportDownloadHint")}</small>
-                <code>{selectedSnapshot.artifactPath}</code>
                 <button className="pill-btn" onClick={() => copyPath(selectedSnapshot)}>
                   {copiedPath === selectedSnapshot.id ? t("reportPathCopied") : t("reportCopyPath")}
                 </button>
