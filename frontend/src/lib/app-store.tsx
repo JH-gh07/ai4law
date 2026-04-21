@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useReducer, useRef, type Dispatch, type ReactNode } from "react";
 import type {
   ConsistencyIssue,
   EvidenceHit,
@@ -8,6 +8,8 @@ import type {
   PanelState,
   TaskSpace
 } from "./domain";
+import { useAuth } from "./auth/AuthContext";
+import { fetchWorkspaceState, saveWorkspaceState } from "./me-api";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
 
 const STORAGE_KEY = "ai4law_app_state_v1";
@@ -31,6 +33,16 @@ type Action =
   | { type: "append_artifacts"; payload: OutputArtifact[] }
   | { type: "append_evidence"; payload: EvidenceHit[] }
   | { type: "append_issues"; payload: ConsistencyIssue[] }
+  | {
+      type: "hydrate_remote_state";
+      payload: {
+        taskSpaces: TaskSpace[];
+        moduleRuns: ModuleRun[];
+        artifacts: OutputArtifact[];
+        evidenceHits: EvidenceHit[];
+        issues: ConsistencyIssue[];
+      };
+    }
   | { type: "set_panel_state"; payload: Partial<PanelState> }
   | { type: "set_onboarding"; payload: Partial<OnboardingState> }
   | { type: "reset_all" };
@@ -124,6 +136,97 @@ const ensureTaskSpaces = (value: unknown): TaskSpace[] => {
   return normalized;
 };
 
+function normalizeModuleRun(raw: unknown): ModuleRun | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string") return null;
+  if (typeof raw.taskSpaceId !== "string") return null;
+  if (typeof raw.module !== "string") return null;
+  if (raw.runMode !== "sync" && raw.runMode !== "async") return null;
+  if (typeof raw.startedAt !== "string") return null;
+  return {
+    id: raw.id,
+    taskSpaceId: raw.taskSpaceId,
+    module: raw.module as ModuleRun["module"],
+    runMode: raw.runMode,
+    startedAt: raw.startedAt,
+    finishedAt: typeof raw.finishedAt === "string" ? raw.finishedAt : undefined,
+    success: !!raw.success,
+    request: raw.request,
+    response: raw.response,
+    error: typeof raw.error === "string" ? raw.error : undefined,
+    asyncTaskId: typeof raw.asyncTaskId === "string" ? raw.asyncTaskId : undefined,
+    asyncState: typeof raw.asyncState === "string" ? raw.asyncState : undefined
+  };
+}
+
+function normalizeOutputArtifact(raw: unknown): OutputArtifact | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string") return null;
+  if (typeof raw.taskSpaceId !== "string") return null;
+  if (typeof raw.module !== "string") return null;
+  if (typeof raw.kind !== "string") return null;
+  if (typeof raw.path !== "string") return null;
+  if (typeof raw.createdAt !== "string") return null;
+  return {
+    id: raw.id,
+    taskSpaceId: raw.taskSpaceId,
+    module: raw.module as OutputArtifact["module"],
+    kind: raw.kind,
+    path: raw.path,
+    createdAt: raw.createdAt
+  };
+}
+
+function normalizeEvidenceHit(raw: unknown): EvidenceHit | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string") return null;
+  if (typeof raw.taskSpaceId !== "string") return null;
+  if (typeof raw.module !== "string") return null;
+  if (typeof raw.source !== "string") return null;
+  if (typeof raw.title !== "string") return null;
+  if (typeof raw.snippet !== "string") return null;
+  if (typeof raw.createdAt !== "string") return null;
+  return {
+    id: raw.id,
+    taskSpaceId: raw.taskSpaceId,
+    module: raw.module as EvidenceHit["module"],
+    source: raw.source,
+    title: raw.title,
+    snippet: raw.snippet,
+    createdAt: raw.createdAt
+  };
+}
+
+function normalizeIssue(raw: unknown): ConsistencyIssue | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.id !== "string") return null;
+  if (typeof raw.taskSpaceId !== "string") return null;
+  if (typeof raw.module !== "string") return null;
+  if (raw.severity !== "high" && raw.severity !== "medium" && raw.severity !== "low") return null;
+  if (typeof raw.message !== "string") return null;
+  if (typeof raw.createdAt !== "string") return null;
+  return {
+    id: raw.id,
+    taskSpaceId: raw.taskSpaceId,
+    module: raw.module as ConsistencyIssue["module"],
+    severity: raw.severity,
+    message: raw.message,
+    createdAt: raw.createdAt
+  };
+}
+
+const ensureModuleRuns = (value: unknown): ModuleRun[] =>
+  Array.isArray(value) ? value.map(normalizeModuleRun).filter((item): item is ModuleRun => !!item) : [];
+
+const ensureArtifacts = (value: unknown): OutputArtifact[] =>
+  Array.isArray(value) ? value.map(normalizeOutputArtifact).filter((item): item is OutputArtifact => !!item) : [];
+
+const ensureEvidenceHits = (value: unknown): EvidenceHit[] =>
+  Array.isArray(value) ? value.map(normalizeEvidenceHit).filter((item): item is EvidenceHit => !!item) : [];
+
+const ensureIssues = (value: unknown): ConsistencyIssue[] =>
+  Array.isArray(value) ? value.map(normalizeIssue).filter((item): item is ConsistencyIssue => !!item) : [];
+
 function loadState(): AppState {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return initialState;
@@ -134,6 +237,10 @@ function loadState(): AppState {
       ...initialState,
       ...parsed,
       taskSpaces: ensureTaskSpaces(parsed.taskSpaces),
+      moduleRuns: ensureModuleRuns(parsed.moduleRuns),
+      artifacts: ensureArtifacts(parsed.artifacts),
+      evidenceHits: ensureEvidenceHits(parsed.evidenceHits),
+      issues: ensureIssues(parsed.issues),
       panelState: normalizePanelState(parsed.panelState),
       onboarding: { ...initialState.onboarding, ...(isRecord(parsed.onboarding) ? parsed.onboarding : {}) }
     } as AppState;
@@ -183,6 +290,15 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, evidenceHits: [...action.payload, ...state.evidenceHits] };
     case "append_issues":
       return { ...state, issues: [...action.payload, ...state.issues] };
+    case "hydrate_remote_state":
+      return {
+        ...state,
+        taskSpaces: action.payload.taskSpaces,
+        moduleRuns: action.payload.moduleRuns,
+        artifacts: action.payload.artifacts,
+        evidenceHits: action.payload.evidenceHits,
+        issues: action.payload.issues
+      };
     case "set_panel_state":
       return { ...state, panelState: { ...state.panelState, ...action.payload } };
     case "set_onboarding":
@@ -196,10 +312,63 @@ function reducer(state: AppState, action: Action): AppState {
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadState);
+  const { isAuthenticated, loading } = useAuth();
+  const hydratedRef = useRef(false);
+  const savingTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     persistState(state);
   }, [state]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!isAuthenticated) {
+      hydratedRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
+    fetchWorkspaceState().then((remote) => {
+      if (cancelled || !remote) return;
+      dispatch({
+        type: "hydrate_remote_state",
+        payload: {
+          taskSpaces: ensureTaskSpaces(remote.task_spaces),
+          moduleRuns: ensureModuleRuns(remote.module_runs),
+          artifacts: ensureArtifacts(remote.artifacts),
+          evidenceHits: ensureEvidenceHits(remote.evidence_hits),
+          issues: ensureIssues(remote.issues)
+        }
+      });
+      hydratedRef.current = true;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, loading]);
+
+  useEffect(() => {
+    if (loading || !isAuthenticated || !hydratedRef.current) return;
+    if (savingTimerRef.current) {
+      window.clearTimeout(savingTimerRef.current);
+    }
+    savingTimerRef.current = window.setTimeout(() => {
+      void saveWorkspaceState({
+        task_spaces: state.taskSpaces as unknown as Record<string, unknown>[],
+        module_runs: state.moduleRuns as unknown as Record<string, unknown>[],
+        artifacts: state.artifacts as unknown as Record<string, unknown>[],
+        evidence_hits: state.evidenceHits as unknown as Record<string, unknown>[],
+        issues: state.issues as unknown as Record<string, unknown>[]
+      });
+    }, 500);
+
+    return () => {
+      if (savingTimerRef.current) {
+        window.clearTimeout(savingTimerRef.current);
+      }
+    };
+  }, [isAuthenticated, loading, state]);
 
   return <AppStoreContext.Provider value={{ state, dispatch }}>{children}</AppStoreContext.Provider>;
 }

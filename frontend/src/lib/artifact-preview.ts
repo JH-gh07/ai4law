@@ -1,3 +1,5 @@
+import { getAuthHeaders } from "./auth/auth-service";
+
 export type ArtifactPreview = {
   path: string;
   file_name: string;
@@ -8,7 +10,7 @@ export type ArtifactPreview = {
 };
 
 export async function fetchArtifactPreview(path: string): Promise<ArtifactPreview> {
-  const response = await fetch(`/api/v1/artifacts/preview?path=${encodeURIComponent(path)}`);
+  const response = await fetch(`/api/v1/artifacts/preview?path=${encodeURIComponent(path)}`, { headers: { ...getAuthHeaders() } });
   const data = (await response.json()) as ArtifactPreview | { detail?: string };
   if (!response.ok) {
     throw new Error(typeof (data as { detail?: string }).detail === "string" ? (data as { detail: string }).detail : "Failed to load artifact preview");

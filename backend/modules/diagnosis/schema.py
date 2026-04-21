@@ -49,6 +49,53 @@ class DiagnosisAnswers(BaseModel):
         description="出境目的简述（供LLM生成专业说明使用）",
     )
 
+    # ── 问卷扩展：业务基础信息（模块1）──────────────────────────────
+    m1_enterprise_name: str = ""
+    m1_industry: str = ""
+    m1_business_channels: list[str] = Field(default_factory=list)
+    m1_service_targets: str = ""
+    m1_company_size: str = ""
+
+    # ── 问卷扩展：合规需求与现状（模块2）───────────────────────────
+    m2_core_needs: list[str] = Field(default_factory=list)
+    m2_had_compliance_issue: str = ""
+    m2_issue_description: str = ""
+    m2_deadline: str = ""
+
+    # ── 问卷扩展：数据处理核心信息（模块3）─────────────────────────
+    m3_processes_personal_info: str = ""
+    m3_personal_info_types: list[str] = Field(default_factory=list)
+    m3_sensitive_info_types: list[str] = Field(default_factory=list)
+    m3_processes_important_data: str = ""
+    m3_important_data_types: list[str] = Field(default_factory=list)
+    m3_data_sources: list[str] = Field(default_factory=list)
+    m3_processing_activities: list[str] = Field(default_factory=list)
+    m3_data_volume_range: str = ""
+    m3_processes_enterprise_public_data: str = ""
+    m3_enterprise_public_data_desc: str = ""
+    m3_retention_period: str = ""
+    m3_retention_desc: str = ""
+
+    # ── 问卷扩展：数据流转与共享情况（模块4）───────────────────────
+    m4_share_to_third_party: str = ""
+    m4_third_party_types: str = ""
+    m4_cross_border_transfer: str = ""
+    m4_cross_border_regions: str = ""
+    m4_commercialization: str = ""
+    m4_commercialization_mode: str = ""
+    m4_entrusted_processing: str = ""
+    m4_entrusted_party_type: str = ""
+    m4_authorization_method: str = ""
+
+    # ── 问卷扩展：业务系统与技术架构（模块5）───────────────────────
+    m5_systems: list[str] = Field(default_factory=list)
+    m5_security_measures: list[str] = Field(default_factory=list)
+    m5_compliance_docs: list[str] = Field(default_factory=list)
+    m5_penalty_or_complaint: str = ""
+    m5_penalty_time: str = ""
+    m5_penalty_reason: str = ""
+    m5_penalty_result: str = ""
+
 
 class DiagnosisResult(BaseModel):
     recommended_path: str
@@ -56,6 +103,11 @@ class DiagnosisResult(BaseModel):
     rationale: str
     action_items: list[str]
     risk_level: str
+    conclusion_source: str = Field(default="rule")
+    confidence: str = Field(default="HIGH")
+    matched_rule_id: str | None = None
+    final_explanation: str = ""
+    uncertainty_notes: list[str] = Field(default_factory=list)
 
 
 class DiagnosisReportRequest(BaseModel):

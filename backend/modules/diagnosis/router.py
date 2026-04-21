@@ -1,7 +1,11 @@
 import logging
+from types import SimpleNamespace
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from backend.api.artifact_registry import register_module_result_artifacts
+from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.modules.diagnosis.report_renderer import DiagnosisReportRenderer
 from backend.modules.diagnosis.schema import (
     DiagnosisAnswers,
@@ -9,6 +13,7 @@ from backend.modules.diagnosis.schema import (
     DiagnosisReportResponse,
     DiagnosisResult,
 )
+from backend.schemas.auth import AuthUser
 from backend.modules.diagnosis.service import DiagnosisService
 
 router = APIRouter(tags=["diagnosis"])
@@ -23,10 +28,22 @@ def evaluate(answers: DiagnosisAnswers) -> DiagnosisResult:
 
 
 @router.post("/diagnosis/report", response_model=DiagnosisReportResponse)
-def generate_report(payload: DiagnosisReportRequest) -> DiagnosisReportResponse:
+def generate_report(
+    payload: DiagnosisReportRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+    container=Depends(get_container),
+) -> DiagnosisReportResponse:
     try:
         result = service.evaluate(payload.answers)
         outputs = renderer.render(payload.company_name, payload.answers, result)
+        register_module_result_artifacts(
+            db=db,
+            container=container,
+            user=current_user,
+            module_key="diagnosis",
+            result=SimpleNamespace(report_path=str(outputs["html"]), output_files={k: str(v) for k, v in outputs.items()}),
+        )
         return DiagnosisReportResponse(
             report_path=str(outputs["html"]),
             html_report_path=str(outputs["html"]),

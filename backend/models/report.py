@@ -11,6 +11,7 @@ class ReportArtifactModel(Base):
     __tablename__ = "report_artifacts"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     owner_type: Mapped[str] = mapped_column(String(32))
     owner_id: Mapped[str] = mapped_column(String(36), index=True)
     artifact_type: Mapped[str] = mapped_column(String(32))

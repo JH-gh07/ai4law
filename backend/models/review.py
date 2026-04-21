@@ -11,6 +11,7 @@ class ReviewTaskModel(Base):
     __tablename__ = "review_tasks"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     status: Mapped[str] = mapped_column(String(32), default="CREATED")
     progress: Mapped[int] = mapped_column(default=0)
     summary_json: Mapped[str] = mapped_column(Text, default="{}")
@@ -27,6 +28,7 @@ class UploadedFileModel(Base):
     __tablename__ = "uploaded_files"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     task_id: Mapped[str] = mapped_column(String(36), index=True)
     filename: Mapped[str] = mapped_column(String(255))
     content_type: Mapped[str] = mapped_column(String(128), default="application/octet-stream")

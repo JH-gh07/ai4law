@@ -11,6 +11,7 @@ class DiagnosisSessionModel(Base):
     __tablename__ = "diagnosis_sessions"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     status: Mapped[str] = mapped_column(String(32), default="CREATED")
     answers_json: Mapped[str] = mapped_column(Text, default="{}")
     result_json: Mapped[str] = mapped_column(Text, default="{}")

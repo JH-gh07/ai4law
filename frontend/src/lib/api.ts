@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "./auth/auth-service";
 import type { ModuleKey } from "./domain";
 
 const ENDPOINTS: Record<ModuleKey, string> = {
@@ -39,7 +40,7 @@ const errorMessage = (data: unknown): string => {
 export async function runModuleRequest(module: ModuleKey, payload: unknown): Promise<unknown> {
   const response = await fetch(ENDPOINTS[module], {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
     body: JSON.stringify(payload)
   });
 

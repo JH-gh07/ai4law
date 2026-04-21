@@ -145,6 +145,60 @@ const normalizeMarkdownForRender = (value: string): string => {
     .trim();
 };
 
+const parseCsvRows = (source: string): string[][] => {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentCell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i];
+    const next = source[i + 1];
+
+    if (char === "\"") {
+      if (inQuotes && next === "\"") {
+        currentCell += "\"";
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      currentRow.push(currentCell.trim());
+      currentCell = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i += 1;
+      currentRow.push(currentCell.trim());
+      const hasValue = currentRow.some((cell) => cell.length > 0);
+      if (hasValue) rows.push(currentRow);
+      currentRow = [];
+      currentCell = "";
+      continue;
+    }
+
+    currentCell += char;
+  }
+
+  if (currentCell.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentCell.trim());
+    const hasValue = currentRow.some((cell) => cell.length > 0);
+    if (hasValue) rows.push(currentRow);
+  }
+
+  return rows;
+};
+
+const readPreviewExt = (preview: ArtifactPreview): string => {
+  const byName = getArtifactExtension(preview.file_name || "");
+  if (byName) return byName;
+  return String(preview.kind || "").toLowerCase();
+};
+
 const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): ReportPreviewSection[] => {
   if (!isRecord(response)) return [];
 
@@ -779,6 +833,91 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setRenameModalOpen(false);
   };
 
+  const renderTextArtifactPreview = (preview: ArtifactPreview) => {
+    const ext = readPreviewExt(preview);
+    const content = preview.content ?? "";
+
+    if (ext === "csv") {
+      const rows = parseCsvRows(content);
+      if (rows.length === 0) {
+        return <div className="workspace-report-preview-state">{lang === "zh" ? "CSV 内容为空。" : "CSV is empty."}</div>;
+      }
+      const header = rows[0] ?? [];
+      const body = rows.slice(1, 201);
+      return (
+        <article className="workspace-report-chapter workspace-report-preview-block">
+          <strong>{lang === "zh" ? "CSV 表格预览" : "CSV Table Preview"}</strong>
+          <div className="workspace-data-table-wrap">
+            <table className="workspace-data-table">
+              <thead>
+                <tr>
+                  {header.map((cell, index) => (
+                    <th key={`h-${index}`}>{cell || `Column ${index + 1}`}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {body.map((row, rowIndex) => (
+                  <tr key={`r-${rowIndex}`}>
+                    {header.map((_, colIndex) => (
+                      <td key={`r-${rowIndex}-c-${colIndex}`}>{row[colIndex] ?? ""}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {rows.length > 201 ? (
+            <p className="workspace-preview-note">
+              {lang === "zh"
+                ? `仅预览前 ${body.length} 行数据（不含表头）。`
+                : `Showing first ${body.length} rows (excluding header).`}
+            </p>
+          ) : null}
+        </article>
+      );
+    }
+
+    if (ext === "json") {
+      try {
+        const parsed = JSON.parse(content);
+        return (
+          <article className="workspace-report-chapter workspace-report-preview-block">
+            <strong>{lang === "zh" ? "JSON 结构化预览" : "JSON Structured Preview"}</strong>
+            <pre className="workspace-resource-json">{JSON.stringify(parsed, null, 2)}</pre>
+          </article>
+        );
+      } catch {
+        return (
+          <article className="workspace-report-chapter workspace-report-preview-block">
+            <strong>{lang === "zh" ? "JSON 文本预览（解析失败）" : "JSON Text Preview (Parse Failed)"}</strong>
+            <pre className="workspace-plain-preview">{content}</pre>
+          </article>
+        );
+      }
+    }
+
+    if (ext === "txt") {
+      return (
+        <article className="workspace-report-chapter workspace-report-preview-block">
+          <strong>{lang === "zh" ? "文本预览" : "Text Preview"}</strong>
+          <pre className="workspace-plain-preview">{content}</pre>
+        </article>
+      );
+    }
+
+    return (
+      <article className="workspace-report-chapter workspace-report-preview-block">
+        <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
+        <div className="workspace-report-richtext">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {normalizeMarkdownForRender(content)}
+          </ReactMarkdown>
+        </div>
+      </article>
+    );
+  };
+
   const renderTabSurface = () => {
     if (activeTab === "details") {
       return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} />;
@@ -928,14 +1067,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                       <iframe title={openedResourcePreview.file_name} src={openedResourcePdfObjectUrl} />
                     </div>
                   ) : openedResourcePreview.render_mode === "text" ? (
-                    <article className="workspace-report-chapter workspace-report-preview-block">
-                      <strong>{lang === "zh" ? "文件内容预览" : "File Content Preview"}</strong>
-                      <div className="workspace-report-richtext">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {normalizeMarkdownForRender(openedResourcePreview.content)}
-                        </ReactMarkdown>
-                      </div>
-                    </article>
+                    renderTextArtifactPreview(openedResourcePreview)
                   ) : (
                     <div className="workspace-report-preview-state">
                       <button
@@ -1038,14 +1170,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                 <iframe title={artifactPreview.file_name} src={artifactPdfObjectUrl} />
               </div>
             ) : artifactPreview.render_mode === "text" ? (
-              <article className="workspace-report-chapter workspace-report-preview-block">
-                <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
-                <div className="workspace-report-richtext">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {normalizeMarkdownForRender(artifactPreview.content)}
-                  </ReactMarkdown>
-                </div>
-              </article>
+              renderTextArtifactPreview(artifactPreview)
             ) : artifactPreview.file_url ? (
               <div className="workspace-report-preview-state">
                 <button

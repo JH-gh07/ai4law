@@ -73,12 +73,12 @@ class DiagnosisService:
         self.llm_client = llm_client
         self._citations = self._load_citations()
 
-    def create_session(self, db: Session) -> DiagnosisSessionCreateResponse:
-        record = self.repository.create(db)
+    def create_session(self, db: Session, user_id: str) -> DiagnosisSessionCreateResponse:
+        record = self.repository.create(db, user_id)
         return DiagnosisSessionCreateResponse(id=record.id, status=DiagnosisSessionStatus(record.status))
 
-    def submit_answers(self, db: Session, session_id: str, answers: DiagnosisAnswerSet) -> DiagnosisSessionResponse:
-        record = self._require_session(db, session_id)
+    def submit_answers(self, db: Session, user_id: str, session_id: str, answers: DiagnosisAnswerSet) -> DiagnosisSessionResponse:
+        record = self._require_session(db, session_id, user_id)
         result = self._evaluate(answers)
         record.status = DiagnosisSessionStatus.COMPLETED.value
         record.answers_json = dumps(answers.model_dump())
@@ -87,12 +87,12 @@ class DiagnosisService:
         record = self.repository.save(db, record)
         return self._to_response(record)
 
-    def get_result(self, db: Session, session_id: str) -> DiagnosisSessionResponse:
-        record = self._require_session(db, session_id)
+    def get_result(self, db: Session, user_id: str, session_id: str) -> DiagnosisSessionResponse:
+        record = self._require_session(db, session_id, user_id)
         return self._to_response(record)
 
-    def get_context(self, db: Session, session_id: str) -> DiagnosisContextResponse:
-        record = self._require_session(db, session_id)
+    def get_context(self, db: Session, user_id: str, session_id: str) -> DiagnosisContextResponse:
+        record = self._require_session(db, session_id, user_id)
         result = self._deserialize_result(record)
         answers = self._deserialize_answers(record)
         return DiagnosisContextResponse(
@@ -102,8 +102,8 @@ class DiagnosisService:
             prefill_context=loads(record.context_json, {}),
         )
 
-    def get_assessment_handoff(self, db: Session, session_id: str) -> AssessmentHandoffResponse:
-        record = self._require_session(db, session_id)
+    def get_assessment_handoff(self, db: Session, user_id: str, session_id: str) -> AssessmentHandoffResponse:
+        record = self._require_session(db, session_id, user_id)
         answers = self._deserialize_answers(record)
         result = self._deserialize_result(record)
         if not answers or not result:
@@ -111,8 +111,8 @@ class DiagnosisService:
         payload = self.session_service.build_assessment_handoff(record.id, result.outcome.value, answers.model_dump())
         return AssessmentHandoffResponse.model_validate(payload)
 
-    def get_scc_handoff(self, db: Session, session_id: str) -> SCCHandoffResponse:
-        record = self._require_session(db, session_id)
+    def get_scc_handoff(self, db: Session, user_id: str, session_id: str) -> SCCHandoffResponse:
+        record = self._require_session(db, session_id, user_id)
         answers = self._deserialize_answers(record)
         result = self._deserialize_result(record)
         if not answers or not result:
@@ -120,8 +120,8 @@ class DiagnosisService:
         payload = self.session_service.build_scc_handoff(record.id, result.outcome.value, answers.model_dump())
         return SCCHandoffResponse.model_validate(payload)
 
-    def generate_report(self, db: Session, session_id: str) -> DiagnosisReportResponse:
-        record = self._require_session(db, session_id)
+    def generate_report(self, db: Session, user_id: str, session_id: str) -> DiagnosisReportResponse:
+        record = self._require_session(db, session_id, user_id)
         answers = self._deserialize_answers(record)
         result = self._deserialize_result(record)
         if not answers or not result:
@@ -134,7 +134,7 @@ class DiagnosisService:
             "next_actions": result.next_actions,
         }
         html_report = self.report_service.create_html_report(
-            db, "diagnosis", record.id, "diagnosis_report.html", html, preview
+            db, user_id, "diagnosis", record.id, "diagnosis_report.html", html, preview
         )
         pdf_lines = [
             "AI4Law 合规路径诊断报告",
@@ -147,7 +147,7 @@ class DiagnosisService:
             *result.next_actions,
         ]
         pdf_report = self.report_service.create_pdf_report(
-            db, "diagnosis", record.id, "diagnosis_report.pdf", pdf_lines, preview
+            db, user_id, "diagnosis", record.id, "diagnosis_report.pdf", pdf_lines, preview
         )
         return DiagnosisReportResponse(html_report=html_report, pdf_report=pdf_report)
 
@@ -343,8 +343,8 @@ class DiagnosisService:
             "transfer_scenario": answers.transfer_scenario.value,
         }
 
-    def _require_session(self, db: Session, session_id: str) -> DiagnosisSessionModel:
-        record = self.repository.get(db, session_id)
+    def _require_session(self, db: Session, session_id: str, user_id: str) -> DiagnosisSessionModel:
+        record = self.repository.get(db, session_id, user_id)
         if not record:
             raise ValueError("Diagnosis session not found")
         return record

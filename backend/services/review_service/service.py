@@ -43,15 +43,16 @@ class ReviewService:
         self.aggregator = ReviewAggregator()
         self.renderer = ReviewReportRenderer()
 
-    def create_task(self, db: Session) -> ReviewTaskCreateResponse:
-        task = self.repository.create_task(db)
+    def create_task(self, db: Session, user_id: str) -> ReviewTaskCreateResponse:
+        task = self.repository.create_task(db, user_id)
         return ReviewTaskCreateResponse(id=task.id, status=ReviewTaskStatus(task.status), created_at=task.created_at)
 
-    def upload_file(self, db: Session, task_id: str, upload: UploadFile) -> UploadedFileResponse:
-        task = self._require_task(db, task_id)
+    def upload_file(self, db: Session, user_id: str, task_id: str, upload: UploadFile) -> UploadedFileResponse:
+        task = self._require_task(db, task_id, user_id)
         saved_path = self.file_service.save_upload(task_id, upload)
         extracted_text = self.file_service.extract_text(saved_path)
         record = UploadedFileModel(
+            user_id=user_id,
             task_id=task_id,
             filename=upload.filename or saved_path.name,
             content_type=upload.content_type or "application/octet-stream",
@@ -69,43 +70,43 @@ class ReviewService:
             content_type=created.content_type,
         )
 
-    def analyze(self, db: Session, task_id: str) -> ReviewAnalyzeResponse:
-        task = self._require_task(db, task_id)
-        files = self.repository.list_files(db, task_id)
+    def analyze(self, db: Session, user_id: str, task_id: str) -> ReviewAnalyzeResponse:
+        task = self._require_task(db, task_id, user_id)
+        files = self.repository.list_files(db, task_id, user_id)
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded for review task")
-        self.task_dispatcher.dispatch(self._run_pipeline, task_id)
+        self.task_dispatcher.dispatch(self._run_pipeline, task_id, user_id)
         db.expire_all()
-        refreshed = self._require_task(db, task_id)
+        refreshed = self._require_task(db, task_id, user_id)
         return ReviewAnalyzeResponse(id=refreshed.id, status=ReviewTaskStatus(refreshed.status), progress=refreshed.progress)
 
-    def get_status(self, db: Session, task_id: str) -> ReviewTaskStatusResponse:
-        task = self._require_task(db, task_id)
+    def get_status(self, db: Session, user_id: str, task_id: str) -> ReviewTaskStatusResponse:
+        task = self._require_task(db, task_id, user_id)
         raw_summary = loads(task.summary_json, {})
         summary = AggregatedReview.model_validate(raw_summary) if raw_summary else None
         return ReviewTaskStatusResponse(id=task.id, status=ReviewTaskStatus(task.status), progress=task.progress, summary=summary)
 
-    def get_issues(self, db: Session, task_id: str) -> ReviewIssuesResponse:
-        task = self._require_task(db, task_id)
+    def get_issues(self, db: Session, user_id: str, task_id: str) -> ReviewIssuesResponse:
+        task = self._require_task(db, task_id, user_id)
         raw_issues = loads(task.issues_json, [])
         issues = raw_issues
         return ReviewIssuesResponse(task_id=task_id, issues=issues)
 
-    def get_report(self, db: Session, task_id: str) -> ReviewReportResponse:
-        task = self._require_task(db, task_id)
+    def get_report(self, db: Session, user_id: str, task_id: str) -> ReviewReportResponse:
+        task = self._require_task(db, task_id, user_id)
         if task.status != ReviewTaskStatus.COMPLETED.value:
             raise HTTPException(status_code=400, detail="Review report is not ready")
-        report = self.report_service.get_owner_artifact(db, "review", task_id, "docx")
+        report = self.report_service.get_owner_artifact(db, user_id, "review", task_id, "docx")
         if not report:
             raise HTTPException(status_code=404, detail="Review report not found")
         summary = AggregatedReview.model_validate(loads(task.summary_json, {}))
         return ReviewReportResponse(report=report, review=summary)
 
-    def _run_pipeline(self, task_id: str) -> None:
+    def _run_pipeline(self, task_id: str, user_id: str) -> None:
         db = self.session_factory()
         try:
-            task = self._require_task(db, task_id)
-            files = self.repository.list_files(db, task_id)
+            task = self._require_task(db, task_id, user_id)
+            files = self.repository.list_files(db, task_id, user_id)
 
             self._update_task(db, task, ReviewTaskStatus.SEGMENTING, 25)
             clauses = []
@@ -127,6 +128,7 @@ class ReviewService:
             sections = self.renderer.build_sections(aggregated)
             self.report_service.create_docx_report(
                 db,
+                user_id,
                 "review",
                 task_id,
                 "review_report.docx",
@@ -139,7 +141,7 @@ class ReviewService:
             self._update_task(db, task, ReviewTaskStatus.COMPLETED, 100, persist=False)
             self.repository.save_task(db, task)
         except Exception:
-            task = self._require_task(db, task_id)
+            task = self._require_task(db, task_id, user_id)
             task.status = ReviewTaskStatus.FAILED.value
             self.repository.save_task(db, task)
             raise
@@ -153,8 +155,8 @@ class ReviewService:
             self.repository.save_task(db, task)
         self._publish_progress(task.id, status.value, progress)
 
-    def _require_task(self, db: Session, task_id: str) -> ReviewTaskModel:
-        task = self.repository.get_task(db, task_id)
+    def _require_task(self, db: Session, task_id: str, user_id: str) -> ReviewTaskModel:
+        task = self.repository.get_task(db, task_id, user_id)
         if not task:
             raise HTTPException(status_code=404, detail="Review task not found")
         return task

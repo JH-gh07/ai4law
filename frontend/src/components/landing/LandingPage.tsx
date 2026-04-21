@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OpenQuestModal } from "../modals/OpenQuestModal";
 import { useAppStore } from "../../lib/app-store";
+import { useAuth } from "../../lib/auth/AuthContext";
 import { useLang } from "../../lib/language";
 import type { Jurisdiction, LaunchMode } from "../../lib/domain";
 
@@ -99,6 +100,7 @@ function JurisdictionFlag({ code }: { code: Jurisdiction }) {
 
 export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }: LandingPageProps) {
   const { lang, t } = useLang();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { state } = useAppStore();
   const isZh = lang === "zh";
@@ -229,6 +231,14 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
         ]
       };
 
+  const navigateWithAuth = (targetPath: string) => {
+    if (isAuthenticated) {
+      navigate(targetPath);
+      return;
+    }
+    navigate(`/login?redirect=${encodeURIComponent(targetPath)}`);
+  };
+
   return (
     <section className="landing-blue-page">
       <div className="landing-blue-scroll">
@@ -253,12 +263,16 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
                   </h1>
                   <p className="landing-brand-subtitle">{heroTagline}</p>
                   <div className="landing-blue-actions" data-guide="home-start">
-                    <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
+                    <button className="pill-btn-primary" onClick={() => navigateWithAuth("/tasks")}>
                       {isZh ? "进入任务空间" : "Open Task Spaces"}
                     </button>
                     <button
                       className="pill-btn quest-open-btn"
                       onClick={() => {
+                        if (!isAuthenticated) {
+                          navigateWithAuth("/tasks");
+                          return;
+                        }
                         setOpenQuestQuery("");
                         setOpenQuestModalOpen(true);
                       }}
@@ -361,12 +375,16 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
               <h2>{isZh ? "从介绍到执行，直接进入任务空间" : "Move from narrative to execution"}</h2>
             </header>
             <div className="landing-blue-actions landing-blue-footer-actions">
-              <button className="pill-btn-primary" onClick={() => navigate("/tasks")}>
+              <button className="pill-btn-primary" onClick={() => navigateWithAuth("/tasks")}>
                 {isZh ? "进入任务空间" : "Open Task Spaces"}
               </button>
               <button
                 className="pill-btn quest-open-btn"
                 onClick={() => {
+                  if (!isAuthenticated) {
+                    navigateWithAuth("/tasks");
+                    return;
+                  }
                   setOpenQuestQuery("");
                   setOpenQuestModalOpen(true);
                 }}

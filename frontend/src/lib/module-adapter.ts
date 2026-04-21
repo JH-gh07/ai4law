@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "./auth/auth-service";
 import { buildDemoPayload } from "./demoPayloads";
 import type { ModuleKey, RunMode } from "./domain";
 
@@ -144,7 +145,7 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
   try {
     response = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: body === undefined ? undefined : JSON.stringify(body)
     });
   } catch (error) {
@@ -192,6 +193,7 @@ export async function uploadTaskFile(file: File): Promise<UploadedTaskFile> {
 
   const response = await fetch("/api/v0/files/upload", {
     method: "POST",
+    headers: { ...getAuthHeaders() },
     body: formData
   });
 

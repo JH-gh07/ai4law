@@ -10,7 +10,7 @@ import {
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
 import { extractInsight } from "../../lib/workspace";
-import { DEV_ACCEL_ENABLED, getAssessmentDevPreset } from "../../lib/dev-presets";
+import { DEV_ACCEL_ENABLED, getAssessmentDevPreset, getModuleDevPreset } from "../../lib/dev-presets";
 
 export type RunOutput = {
   module: ModuleKey;
@@ -34,6 +34,18 @@ type UserFacingResult = {
   deliverables: string[];
   highlights: string[];
   nextSteps: string[];
+};
+
+type AutoExtractResult = {
+  documentTitle: string;
+  documentType: DocumentReviewFormValues["document_type"];
+  reviewFocus: string;
+  transferPurpose: string;
+  sensitivePiDisclosed: boolean;
+  rightsChannelDisclosed: boolean;
+  crossborderRuleDisclosed: boolean;
+  contactChannel: string;
+  note: string;
 };
 
 type DiagnosisOption = {
@@ -1495,7 +1507,7 @@ const createDefaultPipiaValues = (): PipiaFormValues => {
       ? asRecord(demo.attachments[0])
       : {};
 
-  return {
+  const base: PipiaFormValues = {
     company_name: toString(companyProfile.company_name, ""),
     company_uscc: toString(companyProfile.company_uscc, ""),
     industry: toString(companyProfile.industry, ""),
@@ -1537,6 +1549,9 @@ const createDefaultPipiaValues = (): PipiaFormValues => {
     escalation_path: toString(emergencyPlan.escalation_path, ""),
     attachment_role: toAttachmentRole(firstAttachment.file_role)
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("pipia");
+  return { ...base, ...(preset.formDefaults as Partial<PipiaFormValues>) };
 };
 
 const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
@@ -1570,9 +1585,76 @@ const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
   };
 };
 
+const inferDocTypeFromFileName = (name: string): DocumentReviewFormValues["document_type"] => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("scc") || normalized.includes("标准合同")) return "scc_contract";
+  if (normalized.includes("dpa") || normalized.includes("数据处理协议")) return "dpa";
+  return "privacy_policy";
+};
+
+const inferReviewFocusFromText = (text: string): string => {
+  const normalized = text.toLowerCase();
+  const points: string[] = [];
+  if (normalized.includes("敏感") || normalized.includes("sensitive")) points.push("敏感个人信息处理边界");
+  if (normalized.includes("跨境") || normalized.includes("cross-border")) points.push("跨境传输告知与规则");
+  if (normalized.includes("同意") || normalized.includes("consent")) points.push("告知同意机制与撤回路径");
+  if (normalized.includes("删除") || normalized.includes("更正") || normalized.includes("访问")) points.push("用户权利响应机制");
+  if (normalized.includes("第三方") || normalized.includes("vendor")) points.push("第三方共享与委托处理条款");
+  if (points.length === 0) {
+    return "优先核查处理者身份披露、数据处理目的、权利救济与联系方式。";
+  }
+  return `优先核查：${points.slice(0, 4).join("、")}。`;
+};
+
+const buildAutoExtractResult = async (file: File): Promise<AutoExtractResult> => {
+  const fileName = file.name;
+  const extension = fileName.toLowerCase().includes(".")
+    ? fileName.toLowerCase().slice(fileName.toLowerCase().lastIndexOf(".") + 1)
+    : "";
+  const typeFromName = inferDocTypeFromFileName(fileName);
+  const titleFromName = fileName.replace(/\.[^.]+$/, "");
+
+  let text = "";
+  if (["txt", "md", "csv", "json"].includes(extension)) {
+    try {
+      text = await file.text();
+    } catch {
+      text = "";
+    }
+  }
+
+  const normalized = text.toLowerCase();
+  const extracted: AutoExtractResult = {
+    documentTitle: titleFromName || "待确认文档",
+    documentType: typeFromName,
+    reviewFocus: inferReviewFocusFromText(text || fileName),
+    transferPurpose:
+      normalized.includes("跨境") || normalized.includes("cross-border")
+        ? "根据文档内容，存在跨境传输相关描述，需重点核查出境规则。"
+        : "待确认跨境传输目的与业务必要性。",
+    sensitivePiDisclosed: normalized.includes("敏感") || normalized.includes("sensitive"),
+    rightsChannelDisclosed:
+      normalized.includes("联系") ||
+      normalized.includes("邮箱") ||
+      normalized.includes("email") ||
+      normalized.includes("电话"),
+    crossborderRuleDisclosed: normalized.includes("跨境") || normalized.includes("cross-border"),
+    contactChannel:
+      normalized.includes("邮箱") || normalized.includes("email")
+        ? "文档中可能已披露邮箱渠道，请复核。"
+        : "",
+    note:
+      text.length > 0
+        ? "已基于可读文本自动提取并回填，建议逐项复核。"
+        : "当前基于文件名进行初步回填（该格式暂不支持浏览器内全文解析）。",
+  };
+
+  return extracted;
+};
+
 const createDefaultEuSccValues = (): EuSccFormValues => {
   const demo = asRecord(getDefaultPayload("scc"));
-  return {
+  const base: EuSccFormValues = {
     exporter_name: toString(demo.company_name, ""),
     importer_name: toString(demo.receiver_name, ""),
     importer_country: toString(demo.receiver_country, ""),
@@ -1592,11 +1674,14 @@ const createDefaultEuSccValues = (): EuSccFormValues => {
     spi_count: toNumber(demo.spi_count, 0),
     has_scc_draft: toBoolean(demo.has_scc_draft, true)
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("scc");
+  return { ...base, ...(preset.formDefaults as Partial<EuSccFormValues>) };
 };
 
 const createDefaultBcrValues = (): BcrFormValues => {
   const demo = asRecord(getDefaultPayload("bcr"));
-  return {
+  const base: BcrFormValues = {
     company_name: toString(demo.company_name, ""),
     group_structure: "",
     applicant_entity: "",
@@ -1615,11 +1700,14 @@ const createDefaultBcrValues = (): BcrFormValues => {
     definitions_quality: "",
     review_focus: "优先检查第三国法律评估机制、第三方受益人权利和责任承担条款。"
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("bcr");
+  return { ...base, ...(preset.formDefaults as Partial<BcrFormValues>) };
 };
 
 const createDefaultDpiaValues = (): DpiaFormValues => {
   const demo = asRecord(getDefaultPayload("dpia"));
-  return {
+  const base: DpiaFormValues = {
     project_name: toString(demo.project_name, ""),
     project_goal: "",
     need_reason: "",
@@ -1655,6 +1743,9 @@ const createDefaultDpiaValues = (): DpiaFormValues => {
     review_schedule: "",
     attachment_role: "data_flow_diagram"
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("dpia");
+  return { ...base, ...(preset.formDefaults as Partial<DpiaFormValues>) };
 };
 
 const createDefaultTiaValues = (): TiaFormValues => {
@@ -1662,7 +1753,7 @@ const createDefaultTiaValues = (): TiaFormValues => {
   const transferToolRaw = toString(demo.transfer_tool, "scc");
   const transferTool: TiaFormValues["transfer_tool"] =
     transferToolRaw === "bcr" || transferToolRaw === "derogation" ? transferToolRaw : "scc";
-  return {
+  const base: TiaFormValues = {
     data_exporter_name: "",
     data_importer_name: "",
     importer_country_region: "",
@@ -1684,6 +1775,9 @@ const createDefaultTiaValues = (): TiaFormValues => {
     review_date: "",
     attachment_role: "country_law_analysis"
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("tia");
+  return { ...base, ...(preset.formDefaults as Partial<TiaFormValues>) };
 };
 
 const createDefaultCnFlowValues = (): CnFlowFormValues => {
@@ -2200,21 +2294,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [pipiaStepIndex, setPipiaStepIndex] = useState(0);
   const [pipiaValues, setPipiaValues] = useState<PipiaFormValues>(createDefaultPipiaValues);
   const [pipiaFiles, setPipiaFiles] = useState<File[]>([]);
-  const [documentReviewStepIndex, setDocumentReviewStepIndex] = useState(0);
+  const [pipiaDevFilePaths, setPipiaDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("pipia").backendFilePaths : []
+  );
   const [documentReviewValues, setDocumentReviewValues] = useState<DocumentReviewFormValues>(createDefaultDocumentReviewValues);
   const [documentReviewFiles, setDocumentReviewFiles] = useState<File[]>([]);
+  const [documentReviewSelectedFileIndex, setDocumentReviewSelectedFileIndex] = useState(0);
+  const [documentReviewPreviewUrl, setDocumentReviewPreviewUrl] = useState<string | null>(null);
+  const [documentReviewTextPreview, setDocumentReviewTextPreview] = useState("");
+  const [documentReviewAutoFillNote, setDocumentReviewAutoFillNote] = useState("");
+  const [documentReviewAutoFillLoading, setDocumentReviewAutoFillLoading] = useState(false);
+  const documentReviewParsedKeysRef = useRef<Set<string>>(new Set());
   const [euSccStepIndex, setEuSccStepIndex] = useState(0);
   const [euSccValues, setEuSccValues] = useState<EuSccFormValues>(createDefaultEuSccValues);
   const [euSccFiles, setEuSccFiles] = useState<File[]>([]);
+  const [euSccDevFilePaths, setEuSccDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("scc").backendFilePaths : []
+  );
   const [bcrStepIndex, setBcrStepIndex] = useState(0);
   const [bcrValues, setBcrValues] = useState<BcrFormValues>(createDefaultBcrValues);
   const [bcrFiles, setBcrFiles] = useState<File[]>([]);
+  const [bcrDevFilePaths, setBcrDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("bcr").backendFilePaths : []
+  );
   const [dpiaStepIndex, setDpiaStepIndex] = useState(0);
   const [dpiaValues, setDpiaValues] = useState<DpiaFormValues>(createDefaultDpiaValues);
   const [dpiaFiles, setDpiaFiles] = useState<File[]>([]);
+  const [dpiaDevFilePaths, setDpiaDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("dpia").backendFilePaths : []
+  );
   const [tiaStepIndex, setTiaStepIndex] = useState(0);
   const [tiaValues, setTiaValues] = useState<TiaFormValues>(createDefaultTiaValues);
   const [tiaFiles, setTiaFiles] = useState<File[]>([]);
+  const [tiaDevFilePaths, setTiaDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("tia").backendFilePaths : []
+  );
   const [cnFlowStepIndex, setCnFlowStepIndex] = useState(0);
   const [cnFlowValues, setCnFlowValues] = useState<CnFlowFormValues>(createDefaultCnFlowValues);
   const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
@@ -2273,31 +2387,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setPipiaStepIndex(0);
       setPipiaValues(createDefaultPipiaValues());
       setPipiaFiles([]);
+      setPipiaDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("pipia").backendFilePaths : []);
     }
     if (taskTemplate?.id === "cn_document_review") {
-      setDocumentReviewStepIndex(0);
       setDocumentReviewValues(createDefaultDocumentReviewValues());
       setDocumentReviewFiles([]);
+      setDocumentReviewSelectedFileIndex(0);
+      setDocumentReviewPreviewUrl(null);
+      setDocumentReviewTextPreview("");
+      setDocumentReviewAutoFillNote("");
+      setDocumentReviewAutoFillLoading(false);
+      documentReviewParsedKeysRef.current = new Set();
     }
     if (taskTemplate?.id === "eu_scc") {
       setEuSccStepIndex(0);
       setEuSccValues(createDefaultEuSccValues());
       setEuSccFiles([]);
+      setEuSccDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("scc").backendFilePaths : []);
     }
     if (moduleKey === "bcr") {
       setBcrStepIndex(0);
       setBcrValues(createDefaultBcrValues());
       setBcrFiles([]);
+      setBcrDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("bcr").backendFilePaths : []);
     }
     if (moduleKey === "dpia") {
       setDpiaStepIndex(0);
       setDpiaValues(createDefaultDpiaValues());
       setDpiaFiles([]);
+      setDpiaDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("dpia").backendFilePaths : []);
     }
     if (moduleKey === "tia") {
       setTiaStepIndex(0);
       setTiaValues(createDefaultTiaValues());
       setTiaFiles([]);
+      setTiaDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("tia").backendFilePaths : []);
     }
     if (moduleKey === "cn_flow") {
       setCnFlowStepIndex(0);
@@ -2356,6 +2480,28 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     value: DocumentReviewFormValues[K]
   ) => {
     setDocumentReviewValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const onSelectDocumentReviewFiles = (incomingFiles: FileList | null) => {
+    const next = Array.from(incomingFiles ?? []);
+    if (next.length === 0) return;
+    setDocumentReviewFiles((prev) => {
+      const merged = [...prev];
+      for (const file of next) {
+        const duplicate = merged.some(
+          (item) =>
+            item.name === file.name &&
+            item.size === file.size &&
+            item.lastModified === file.lastModified
+        );
+        if (!duplicate) {
+          merged.push(file);
+        }
+      }
+      return merged;
+    });
+    setDocumentReviewSelectedFileIndex((prev) => (documentReviewFiles.length === 0 ? 0 : prev));
+    setDocumentReviewAutoFillNote("");
   };
 
   const updateEuSccValue = <K extends keyof EuSccFormValues>(name: K, value: EuSccFormValues[K]) => {
@@ -2456,100 +2602,105 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const buildAssessmentPayload = async (): Promise<unknown> =>
     buildAssessmentPayloadFrom(assessmentValues, assessmentFiles, assessmentDevFilePaths);
 
-  const buildPipiaPayload = async (): Promise<unknown> => {
-    assertInput(hasText(pipiaValues.company_name), "请填写处理者名称。");
-    assertInput(hasText(pipiaValues.company_uscc, 8), "请填写统一社会信用代码（至少8位）。");
-    assertInput(hasText(pipiaValues.purpose), "请填写拟出境活动目的。");
-    assertInput(hasText(pipiaValues.recipient_name), "请填写境外接收方名称。");
-    assertInput(hasText(pipiaValues.recipient_country_region), "请填写接收方国家/地区。");
-    assertInput(hasText(pipiaValues.legal_basis), "请填写处理合法性基础。");
-    assertInput(splitCsv(pipiaValues.pi_categories).length > 0, "请至少填写一类拟出境个人信息。");
-    assertInput(hasText(pipiaValues.notice_mechanism), "请填写告知机制。");
-    assertInput(hasText(pipiaValues.consent_mechanism), "请填写单独同意机制。");
-    assertInput(hasText(pipiaValues.dsar_channel), "请填写个人权利请求渠道。");
-    assertInput(hasText(pipiaValues.retention_policy), "请填写保存与删除策略。");
-    assertInput(pipiaFiles.length > 0, "请上传至少1份PIPIA相关附件。");
-    if (pipiaValues.route_type === "scc_filing") {
+  const buildPipiaPayloadFrom = async (
+    values: PipiaFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.company_name), "请填写处理者名称。");
+    assertInput(hasText(values.company_uscc, 8), "请填写统一社会信用代码（至少8位）。");
+    assertInput(hasText(values.purpose), "请填写拟出境活动目的。");
+    assertInput(hasText(values.recipient_name), "请填写境外接收方名称。");
+    assertInput(hasText(values.recipient_country_region), "请填写接收方国家/地区。");
+    assertInput(hasText(values.legal_basis), "请填写处理合法性基础。");
+    assertInput(splitCsv(values.pi_categories).length > 0, "请至少填写一类拟出境个人信息。");
+    assertInput(hasText(values.notice_mechanism), "请填写告知机制。");
+    assertInput(hasText(values.consent_mechanism), "请填写单独同意机制。");
+    assertInput(hasText(values.dsar_channel), "请填写个人权利请求渠道。");
+    assertInput(hasText(values.retention_policy), "请填写保存与删除策略。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份PIPIA相关附件。");
+    if (values.route_type === "scc_filing") {
       assertInput(
-        pipiaValues.attachment_role === "scc_contract",
+        values.attachment_role === "scc_contract",
         "标准合同备案路径下，附件角色需选择为 scc_contract。"
       );
     }
 
-    const uploadedFiles = await uploadFiles(pipiaFiles);
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const trimOr = (value: string, fallback: string): string => {
       const trimmed = value.trim();
       return trimmed.length >= 2 ? trimmed : fallback;
     };
     const attachments = uploadedFiles.map((path) => ({
-      file_role: pipiaValues.attachment_role,
+      file_role: values.attachment_role,
       file_name: basenameFromPath(path),
       file_format: inferAttachmentFormat(path),
       storage_uri: path
     }));
 
     return {
-      route_type: pipiaValues.route_type,
+      route_type: values.route_type,
       company_profile: {
-        company_name: trimOr(pipiaValues.company_name, "待确认企业"),
-        company_uscc: pipiaValues.company_uscc.trim().length >= 8 ? pipiaValues.company_uscc.trim() : "91310000XXXXXXXXXX",
-        is_ciio: pipiaValues.is_ciio,
-        processing_person_count: pipiaValues.processing_person_count,
-        outbound_pi_count: pipiaValues.outbound_pi_count,
-        outbound_spi_count: pipiaValues.outbound_spi_count,
-        industry: trimOr(pipiaValues.industry, "未说明行业")
+        company_name: trimOr(values.company_name, "待确认企业"),
+        company_uscc: values.company_uscc.trim().length >= 8 ? values.company_uscc.trim() : "91310000XXXXXXXXXX",
+        is_ciio: values.is_ciio,
+        processing_person_count: values.processing_person_count,
+        outbound_pi_count: values.outbound_pi_count,
+        outbound_spi_count: values.outbound_spi_count,
+        industry: trimOr(values.industry, "未说明行业")
       },
       transfer_context: {
         purpose: trimOr(
           [
-            pipiaValues.purpose,
-            pipiaValues.outbound_scenario_name ? `场景：${pipiaValues.outbound_scenario_name}` : "",
-            pipiaValues.outbound_frequency ? `频率：${pipiaValues.outbound_frequency}` : "",
-            pipiaValues.transfer_method ? `方式：${pipiaValues.transfer_method}` : "",
-            pipiaValues.business_overview ? `业务概况：${pipiaValues.business_overview}` : "",
-            pipiaValues.processing_activity_overview ? `处理活动：${pipiaValues.processing_activity_overview}` : ""
+            values.purpose,
+            values.outbound_scenario_name ? `场景：${values.outbound_scenario_name}` : "",
+            values.outbound_frequency ? `频率：${values.outbound_frequency}` : "",
+            values.transfer_method ? `方式：${values.transfer_method}` : "",
+            values.business_overview ? `业务概况：${values.business_overview}` : "",
+            values.processing_activity_overview ? `处理活动：${values.processing_activity_overview}` : ""
           ].filter((item) => item.trim().length > 0).join("；"),
           "个人信息出境处理活动评估"
         ),
-        recipient_name: trimOr(pipiaValues.recipient_name, "待确认接收方"),
-        recipient_country_region: trimOr(pipiaValues.recipient_country_region, "待确认国家/地区"),
+        recipient_name: trimOr(values.recipient_name, "待确认接收方"),
+        recipient_country_region: trimOr(values.recipient_country_region, "待确认国家/地区"),
         legal_basis: trimOr(
           [
-            pipiaValues.legal_basis,
-            pipiaValues.legality_justification ? `合法性论证：${pipiaValues.legality_justification}` : "",
-            pipiaValues.necessity_justification ? `必要性论证：${pipiaValues.necessity_justification}` : ""
+            values.legal_basis,
+            values.legality_justification ? `合法性论证：${values.legality_justification}` : "",
+            values.necessity_justification ? `必要性论证：${values.necessity_justification}` : ""
           ].filter((item) => item.trim().length > 0).join("；"),
           "合同履行必要"
         )
       },
       personal_info_scope: {
-        pi_categories: splitCsv(pipiaValues.pi_categories).length > 0 ? splitCsv(pipiaValues.pi_categories) : ["账户信息"],
-        spi_categories: splitCsv(pipiaValues.spi_categories),
-        subject_volume: pipiaValues.subject_volume
+        pi_categories: splitCsv(values.pi_categories).length > 0 ? splitCsv(values.pi_categories) : ["账户信息"],
+        spi_categories: splitCsv(values.spi_categories),
+        subject_volume: values.subject_volume
       },
       rights_protection: {
-        notice_mechanism: trimOr(pipiaValues.notice_mechanism, "隐私政策告知"),
-        consent_mechanism: trimOr(pipiaValues.consent_mechanism, "单独同意"),
-        dsar_channel: trimOr(pipiaValues.dsar_channel, "privacy@example.com"),
+        notice_mechanism: trimOr(values.notice_mechanism, "隐私政策告知"),
+        consent_mechanism: trimOr(values.consent_mechanism, "单独同意"),
+        dsar_channel: trimOr(values.dsar_channel, "privacy@example.com"),
         retention_policy: trimOr(
           [
-            pipiaValues.retention_policy,
-            pipiaValues.domestic_storage ? `境内存储：${pipiaValues.domestic_storage}` : "",
-            pipiaValues.overseas_storage ? `境外存储：${pipiaValues.overseas_storage}` : ""
+            values.retention_policy,
+            values.domestic_storage ? `境内存储：${values.domestic_storage}` : "",
+            values.overseas_storage ? `境外存储：${values.overseas_storage}` : ""
           ].filter((item) => item.trim().length > 0).join("；"),
           "到期删除+最短必要"
         )
       },
       emergency_plan: {
-        incident_response_sla_hours: pipiaValues.incident_response_sla_hours,
+        incident_response_sla_hours: values.incident_response_sla_hours,
         escalation_path: trimOr(
           [
-            pipiaValues.escalation_path,
-            pipiaValues.transfer_link ? `链路：${pipiaValues.transfer_link}` : "",
-            pipiaValues.shareholding_structure ? `股权：${pipiaValues.shareholding_structure}` : "",
-            pipiaValues.actual_controller ? `控制人：${pipiaValues.actual_controller}` : "",
-            pipiaValues.overseas_investment ? `境内外投资：${pipiaValues.overseas_investment}` : "",
-            pipiaValues.org_structure_privacy_team ? `组织与个保机构：${pipiaValues.org_structure_privacy_team}` : ""
+            values.escalation_path,
+            values.transfer_link ? `链路：${values.transfer_link}` : "",
+            values.shareholding_structure ? `股权：${values.shareholding_structure}` : "",
+            values.actual_controller ? `控制人：${values.actual_controller}` : "",
+            values.overseas_investment ? `境内外投资：${values.overseas_investment}` : "",
+            values.org_structure_privacy_team ? `组织与个保机构：${values.org_structure_privacy_team}` : ""
           ].filter((item) => item.trim().length > 0).join("；"),
           "DPO -> 法务 -> 管理层"
         )
@@ -2557,6 +2708,9 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       attachments
     };
   };
+
+  const buildPipiaPayload = async (): Promise<unknown> =>
+    buildPipiaPayloadFrom(pipiaValues, pipiaFiles, pipiaDevFilePaths);
 
   const buildDocumentReviewPayload = async (): Promise<unknown> => {
     assertInput(
@@ -2610,56 +2764,69 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
-  const buildEuSccPayload = async (): Promise<unknown> => {
-    assertInput(hasText(euSccValues.exporter_name), "请填写数据出口方名称。");
-    assertInput(hasText(euSccValues.importer_name), "请填写数据进口方名称。");
-    assertInput(hasText(euSccValues.importer_country), "请填写进口方国家/地区。");
-    assertInput(hasText(euSccValues.transfer_purpose), "请填写传输目的。");
-    assertInput(hasText(euSccValues.data_categories), "请填写数据类别。");
-    assertInput(hasText(euSccValues.tom_summary), "请填写技术与组织措施（TOM）摘要。");
-    assertInput(hasText(euSccValues.rights_and_complaint), "请填写数据主体权利与投诉机制。");
-    assertInput(euSccFiles.length > 0, "请上传至少1份SCC文本或配套附件。");
+  const buildEuSccPayloadFrom = async (
+    values: EuSccFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.exporter_name), "请填写数据出口方名称。");
+    assertInput(hasText(values.importer_name), "请填写数据进口方名称。");
+    assertInput(hasText(values.importer_country), "请填写进口方国家/地区。");
+    assertInput(hasText(values.transfer_purpose), "请填写传输目的。");
+    assertInput(hasText(values.data_categories), "请填写数据类别。");
+    assertInput(hasText(values.tom_summary), "请填写技术与组织措施（TOM）摘要。");
+    assertInput(hasText(values.rights_and_complaint), "请填写数据主体权利与投诉机制。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份SCC文本或配套附件。");
 
-    const uploadedFiles = await uploadFiles(euSccFiles);
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const purposeContext = [
-      euSccValues.transfer_purpose.trim(),
-      `角色关系：${euSccValues.transfer_role}`,
-      `SCC版本：${euSccValues.scc_version}`,
-      `数据类别：${euSccValues.data_categories}`,
-      euSccValues.data_subject_categories ? `主体类别：${euSccValues.data_subject_categories}` : "",
-      `传输频率：${euSccValues.transfer_frequency}`,
-      euSccValues.retention_rule ? `保存规则：${euSccValues.retention_rule}` : "",
-      euSccValues.tom_summary ? `TOM：${euSccValues.tom_summary}` : "",
-      euSccValues.onward_transfer_control ? `再传输：${euSccValues.onward_transfer_control}` : "",
-      euSccValues.government_access_response ? `政府访问：${euSccValues.government_access_response}` : "",
-      euSccValues.supplementary_clause_review ? `补充条款：${euSccValues.supplementary_clause_review}` : "",
-      euSccValues.rights_and_complaint ? `权利救济：${euSccValues.rights_and_complaint}` : ""
+      values.transfer_purpose.trim(),
+      `角色关系：${values.transfer_role}`,
+      `SCC版本：${values.scc_version}`,
+      `数据类别：${values.data_categories}`,
+      values.data_subject_categories ? `主体类别：${values.data_subject_categories}` : "",
+      `传输频率：${values.transfer_frequency}`,
+      values.retention_rule ? `保存规则：${values.retention_rule}` : "",
+      values.tom_summary ? `TOM：${values.tom_summary}` : "",
+      values.onward_transfer_control ? `再传输：${values.onward_transfer_control}` : "",
+      values.government_access_response ? `政府访问：${values.government_access_response}` : "",
+      values.supplementary_clause_review ? `补充条款：${values.supplementary_clause_review}` : "",
+      values.rights_and_complaint ? `权利救济：${values.rights_and_complaint}` : ""
     ]
       .filter((item) => item.length > 0)
       .join("；");
 
     return {
-      company_name: euSccValues.exporter_name.trim(),
-      receiver_name: euSccValues.importer_name.trim(),
-      receiver_country: euSccValues.importer_country.trim(),
+      company_name: values.exporter_name.trim(),
+      receiver_name: values.importer_name.trim(),
+      receiver_country: values.importer_country.trim(),
       transfer_purpose: purposeContext,
-      pii_count: Math.max(0, euSccValues.pii_count),
-      spi_count: Math.max(0, euSccValues.spi_count),
-      has_scc_draft: euSccValues.has_scc_draft || uploadedFiles.length > 0,
+      pii_count: Math.max(0, values.pii_count),
+      spi_count: Math.max(0, values.spi_count),
+      has_scc_draft: values.has_scc_draft || uploadedFiles.length > 0,
       uploaded_files: uploadedFiles
     };
   };
 
-  const buildBcrPayload = async (): Promise<unknown> => {
-    assertInput(hasText(bcrValues.company_name), "请填写集团名称。");
-    assertInput(hasText(bcrValues.group_structure), "请填写集团结构与申请主体信息。");
-    assertInput(hasText(bcrValues.data_flow_scope), "请填写数据流与处理活动范围。");
-    assertInput(hasText(bcrValues.binding_mechanism), "请填写内部约束机制。");
-    assertInput(hasText(bcrValues.third_country_assessment), "请填写第三国法律评估机制。");
-    assertInput(hasText(bcrValues.government_access_process), "请填写政府访问请求处理机制。");
-    assertInput(bcrFiles.length > 0, "请上传至少1份BCR主文本或配套申请材料。");
+  const buildEuSccPayload = async (): Promise<unknown> =>
+    buildEuSccPayloadFrom(euSccValues, euSccFiles, euSccDevFilePaths);
 
-    const uploadedFiles = await uploadFiles(bcrFiles);
+  const buildBcrPayloadFrom = async (
+    values: BcrFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.company_name), "请填写集团名称。");
+    assertInput(hasText(values.group_structure), "请填写集团结构与申请主体信息。");
+    assertInput(hasText(values.data_flow_scope), "请填写数据流与处理活动范围。");
+    assertInput(hasText(values.binding_mechanism), "请填写内部约束机制。");
+    assertInput(hasText(values.third_country_assessment), "请填写第三国法律评估机制。");
+    assertInput(hasText(values.government_access_process), "请填写政府访问请求处理机制。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份BCR主文本或配套申请材料。");
+
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const attachments = uploadedFiles.map((path) => {
       const format = inferDocxPdfFormat(path);
       assertInput(!!format, `BCR附件仅支持 .docx 或 .pdf：${basenameFromPath(path)}`);
@@ -2671,16 +2838,16 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     });
 
     const evidenceTexts = [
-      `${bcrValues.binding_mechanism} ${bcrValues.lead_sa_rationale}`,
-      bcrValues.data_flow_scope,
-      bcrValues.third_party_beneficiary,
-      bcrValues.liability_compensation,
-      bcrValues.transparency_notice,
-      bcrValues.training_audit,
-      bcrValues.cooperation_with_sa,
-      bcrValues.dp_safeguards,
-      `${bcrValues.third_country_assessment} ${bcrValues.government_access_process}`,
-      `${bcrValues.update_mechanism} ${bcrValues.definitions_quality}`
+      `${values.binding_mechanism} ${values.lead_sa_rationale}`,
+      values.data_flow_scope,
+      values.third_party_beneficiary,
+      values.liability_compensation,
+      values.transparency_notice,
+      values.training_audit,
+      values.cooperation_with_sa,
+      values.dp_safeguards,
+      `${values.third_country_assessment} ${values.government_access_process}`,
+      `${values.update_mechanism} ${values.definitions_quality}`
     ];
 
     const review_items = BCR_REVIEW_ITEMS.map((item, index) => {
@@ -2692,37 +2859,45 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         score,
         finding: composeBcrFinding(score, evidence.slice(0, 180)),
         legal_basis: item.legal_basis,
-        recommendation: bcrValues.review_focus
-          ? `${item.recommendation} 本轮重点：${bcrValues.review_focus}`
+        recommendation: values.review_focus
+          ? `${item.recommendation} 本轮重点：${values.review_focus}`
           : item.recommendation,
         evidence
       };
     });
 
     return {
-      company_name: bcrValues.company_name.trim(),
+      company_name: values.company_name.trim(),
       review_items,
       attachments,
       uploaded_files: uploadedFiles
     };
   };
 
-  const buildDpiaPayload = async (): Promise<unknown> => {
-    assertInput(hasText(dpiaValues.project_name), "请填写项目名称。");
-    assertInput(hasText(dpiaValues.processing_description), "请填写处理活动描述。");
-    assertInput(hasText(dpiaValues.purpose_and_necessity), "请填写目的与必要性说明。");
-    assertInput(hasText(dpiaValues.lawful_basis), "请填写合法性基础。");
-    assertInput(hasText(dpiaValues.risk_assessment), "请填写风险评估。");
-    assertInput(hasText(dpiaValues.mitigation_measures), "请填写缓解措施。");
-    assertInput(hasText(dpiaValues.residual_risk), "请填写剩余风险结论。");
-    assertInput(dpiaFiles.length > 0, "请上传至少1份DPIA附件（流程图/制度/合同等）。");
+  const buildBcrPayload = async (): Promise<unknown> =>
+    buildBcrPayloadFrom(bcrValues, bcrFiles, bcrDevFilePaths);
 
-    const uploadedFiles = await uploadFiles(dpiaFiles);
+  const buildDpiaPayloadFrom = async (
+    values: DpiaFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.project_name), "请填写项目名称。");
+    assertInput(hasText(values.processing_description), "请填写处理活动描述。");
+    assertInput(hasText(values.purpose_and_necessity), "请填写目的与必要性说明。");
+    assertInput(hasText(values.lawful_basis), "请填写合法性基础。");
+    assertInput(hasText(values.risk_assessment), "请填写风险评估。");
+    assertInput(hasText(values.mitigation_measures), "请填写缓解措施。");
+    assertInput(hasText(values.residual_risk), "请填写剩余风险结论。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份DPIA附件（流程图/制度/合同等）。");
+
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const attachments = uploadedFiles.map((path) => {
       const format = inferDpiaAttachmentFormat(path);
       assertInput(!!format, `DPIA附件仅支持 .docx/.pdf/.png/.jpg：${basenameFromPath(path)}`);
       return {
-        file_role: dpiaValues.attachment_role,
+        file_role: values.attachment_role,
         file_name: basenameFromPath(path),
         file_format: format,
         storage_uri: path
@@ -2730,70 +2905,78 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     });
 
     return {
-      project_name: dpiaValues.project_name.trim(),
+      project_name: values.project_name.trim(),
       processing_description: [
-        dpiaValues.processing_description,
-        dpiaValues.project_goal ? `项目目标：${dpiaValues.project_goal}` : "",
-        dpiaValues.data_types ? `数据类型：${dpiaValues.data_types}` : "",
-        dpiaValues.subject_scale ? `主体规模：${dpiaValues.subject_scale}` : "",
-        dpiaValues.frequency ? `频率：${dpiaValues.frequency}` : "",
-        dpiaValues.retention_period ? `保存期限：${dpiaValues.retention_period}` : "",
-        dpiaValues.geo_scope ? `地理范围：${dpiaValues.geo_scope}` : "",
-        dpiaValues.data_source ? `数据来源：${dpiaValues.data_source}` : "",
-        dpiaValues.relationship_context ? `关系背景：${dpiaValues.relationship_context}` : "",
-        dpiaValues.includes_special_data ? "包含特殊类别数据" : "",
-        dpiaValues.has_crossborder_transfer ? "涉及跨境传输" : "",
-        dpiaValues.vulnerable_group ? `脆弱群体：${dpiaValues.vulnerable_group}` : "",
-        dpiaValues.novel_technology ? `新技术：${dpiaValues.novel_technology}` : ""
+        values.processing_description,
+        values.project_goal ? `项目目标：${values.project_goal}` : "",
+        values.data_types ? `数据类型：${values.data_types}` : "",
+        values.subject_scale ? `主体规模：${values.subject_scale}` : "",
+        values.frequency ? `频率：${values.frequency}` : "",
+        values.retention_period ? `保存期限：${values.retention_period}` : "",
+        values.geo_scope ? `地理范围：${values.geo_scope}` : "",
+        values.data_source ? `数据来源：${values.data_source}` : "",
+        values.relationship_context ? `关系背景：${values.relationship_context}` : "",
+        values.includes_special_data ? "包含特殊类别数据" : "",
+        values.has_crossborder_transfer ? "涉及跨境传输" : "",
+        values.vulnerable_group ? `脆弱群体：${values.vulnerable_group}` : "",
+        values.novel_technology ? `新技术：${values.novel_technology}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       purpose_and_necessity: [
-        dpiaValues.purpose_and_necessity,
-        dpiaValues.need_reason ? `触发理由：${dpiaValues.need_reason}` : "",
-        dpiaValues.expectation_control ? `合理预期：${dpiaValues.expectation_control}` : "",
-        dpiaValues.function_creep_control ? `防功能漂移：${dpiaValues.function_creep_control}` : "",
-        dpiaValues.minimization_quality ? `最小化与质量：${dpiaValues.minimization_quality}` : "",
-        dpiaValues.notice_plan ? `告知安排：${dpiaValues.notice_plan}` : "",
-        dpiaValues.rights_support ? `权利支持：${dpiaValues.rights_support}` : "",
-        dpiaValues.processor_management ? `处理者管理：${dpiaValues.processor_management}` : ""
+        values.purpose_and_necessity,
+        values.need_reason ? `触发理由：${values.need_reason}` : "",
+        values.expectation_control ? `合理预期：${values.expectation_control}` : "",
+        values.function_creep_control ? `防功能漂移：${values.function_creep_control}` : "",
+        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : "",
+        values.notice_plan ? `告知安排：${values.notice_plan}` : "",
+        values.rights_support ? `权利支持：${values.rights_support}` : "",
+        values.processor_management ? `处理者管理：${values.processor_management}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      lawful_basis: dpiaValues.lawful_basis.trim(),
+      lawful_basis: values.lawful_basis.trim(),
       risk_assessment: [
-        dpiaValues.risk_assessment,
-        dpiaValues.prior_concerns ? `历史风险：${dpiaValues.prior_concerns}` : ""
+        values.risk_assessment,
+        values.prior_concerns ? `历史风险：${values.prior_concerns}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       mitigation_measures: [
-        dpiaValues.mitigation_measures,
-        dpiaValues.signoff_owner ? `签署责任人：${dpiaValues.signoff_owner}` : "",
-        dpiaValues.controller_name ? `控制者：${dpiaValues.controller_name}` : "",
-        dpiaValues.dpo_role ? `DPO：${dpiaValues.dpo_role}` : "",
-        dpiaValues.contact_channel ? `联系渠道：${dpiaValues.contact_channel}` : "",
-        dpiaValues.dpo_advice ? `DPO意见：${dpiaValues.dpo_advice}` : ""
+        values.mitigation_measures,
+        values.signoff_owner ? `签署责任人：${values.signoff_owner}` : "",
+        values.controller_name ? `控制者：${values.controller_name}` : "",
+        values.dpo_role ? `DPO：${values.dpo_role}` : "",
+        values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
+        values.dpo_advice ? `DPO意见：${values.dpo_advice}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       residual_risk: [
-        dpiaValues.residual_risk,
-        dpiaValues.review_schedule ? `复审安排：${dpiaValues.review_schedule}` : ""
+        values.residual_risk,
+        values.review_schedule ? `复审安排：${values.review_schedule}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       attachments
     };
   };
 
-  const buildTiaPayload = async (): Promise<unknown> => {
-    assertInput(hasText(tiaValues.data_exporter_name), "请填写数据出口方名称。");
-    assertInput(hasText(tiaValues.data_importer_name), "请填写数据进口方名称。");
-    assertInput(hasText(tiaValues.importer_country_region), "请填写进口方国家/地区。");
-    assertInput(hasText(tiaValues.transfer_purpose), "请填写传输目的。");
-    assertInput(hasText(tiaValues.law_findings), "请填写第三国法律评估发现。");
-    assertInput(hasText(tiaValues.supplementary_technical), "请填写技术性补充措施。");
-    assertInput(hasText(tiaValues.post_effectiveness), "请填写补充措施后的有效性判断。");
-    assertInput(hasText(tiaValues.key_actions), "请填写关键行动项。");
-    assertInput(tiaFiles.length > 0, "请上传至少1份TIA附件。");
+  const buildDpiaPayload = async (): Promise<unknown> =>
+    buildDpiaPayloadFrom(dpiaValues, dpiaFiles, dpiaDevFilePaths);
 
-    const uploadedFiles = await uploadFiles(tiaFiles);
+  const buildTiaPayloadFrom = async (
+    values: TiaFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.data_exporter_name), "请填写数据出口方名称。");
+    assertInput(hasText(values.data_importer_name), "请填写数据进口方名称。");
+    assertInput(hasText(values.importer_country_region), "请填写进口方国家/地区。");
+    assertInput(hasText(values.transfer_purpose), "请填写传输目的。");
+    assertInput(hasText(values.law_findings), "请填写第三国法律评估发现。");
+    assertInput(hasText(values.supplementary_technical), "请填写技术性补充措施。");
+    assertInput(hasText(values.post_effectiveness), "请填写补充措施后的有效性判断。");
+    assertInput(hasText(values.key_actions), "请填写关键行动项。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份TIA附件。");
+
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const attachments = uploadedFiles.map((path) => {
       const format = inferDocxPdfFormat(path);
       assertInput(!!format, `TIA附件仅支持 .docx 或 .pdf：${basenameFromPath(path)}`);
       return {
-        file_role: tiaValues.attachment_role,
+        file_role: values.attachment_role,
         file_name: basenameFromPath(path),
         file_format: format,
         storage_uri: path
@@ -2801,38 +2984,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     });
 
     return {
-      transfer_tool: tiaValues.transfer_tool,
+      transfer_tool: values.transfer_tool,
       data_exporter_profile: [
-        tiaValues.data_exporter_name,
-        `传输目的：${tiaValues.transfer_purpose}`,
-        tiaValues.data_categories ? `数据类别：${tiaValues.data_categories}` : "",
-        tiaValues.data_subject_categories ? `数据主体：${tiaValues.data_subject_categories}` : "",
-        `频率：${tiaValues.transfer_frequency}`
+        values.data_exporter_name,
+        `传输目的：${values.transfer_purpose}`,
+        values.data_categories ? `数据类别：${values.data_categories}` : "",
+        values.data_subject_categories ? `数据主体：${values.data_subject_categories}` : "",
+        `频率：${values.transfer_frequency}`
       ].filter((item) => item.trim().length > 0).join("；"),
       data_importer_profile: [
-        tiaValues.data_importer_name,
-        `国家/地区：${tiaValues.importer_country_region}`,
-        tiaValues.sensitive_data_description ? `敏感数据：${tiaValues.sensitive_data_description}` : ""
+        values.data_importer_name,
+        `国家/地区：${values.importer_country_region}`,
+        values.sensitive_data_description ? `敏感数据：${values.sensitive_data_description}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       third_country_assessment: [
-        tiaValues.law_assessed ? "已完成法律评估" : "法律评估待完成",
-        tiaValues.law_findings,
-        tiaValues.pre_effectiveness ? `补充措施前判断：${tiaValues.pre_effectiveness}` : ""
+        values.law_assessed ? "已完成法律评估" : "法律评估待完成",
+        values.law_findings,
+        values.pre_effectiveness ? `补充措施前判断：${values.pre_effectiveness}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       supplementary_measures: [
-        `技术措施：${tiaValues.supplementary_technical}`,
-        tiaValues.supplementary_contractual ? `合同措施：${tiaValues.supplementary_contractual}` : "",
-        tiaValues.supplementary_organizational ? `组织措施：${tiaValues.supplementary_organizational}` : ""
+        `技术措施：${values.supplementary_technical}`,
+        values.supplementary_contractual ? `合同措施：${values.supplementary_contractual}` : "",
+        values.supplementary_organizational ? `组织措施：${values.supplementary_organizational}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       final_conclusion: [
-        tiaValues.post_effectiveness,
-        `关键行动：${tiaValues.key_actions}`,
-        tiaValues.dpo_opinion ? `DPO意见：${tiaValues.dpo_opinion}` : "",
-        tiaValues.review_date ? `复审日期：${tiaValues.review_date}` : ""
+        values.post_effectiveness,
+        `关键行动：${values.key_actions}`,
+        values.dpo_opinion ? `DPO意见：${values.dpo_opinion}` : "",
+        values.review_date ? `复审日期：${values.review_date}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
       attachments
     };
   };
+
+  const buildTiaPayload = async (): Promise<unknown> =>
+    buildTiaPayloadFrom(tiaValues, tiaFiles, tiaDevFilePaths);
 
   const buildCnFlowPayload = async (): Promise<unknown> => {
     assertInput(hasText(cnFlowValues.company_name), "请填写企业名称。");
@@ -3247,6 +3433,66 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     await runWithPayload(payload);
   };
 
+  const runPipiaDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isPipiaModule || loading) return;
+    const preset = getModuleDevPreset("pipia");
+    const nextValues: PipiaFormValues = { ...pipiaValues, ...(preset.formDefaults as Partial<PipiaFormValues>) };
+    setPipiaValues(nextValues);
+    setPipiaFiles([]);
+    setPipiaDevFilePaths(preset.backendFilePaths);
+    setPipiaStepIndex(PIPIA_STEPS.length - 1);
+    const payload = await buildPipiaPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runEuSccDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isEuSccTask || loading) return;
+    const preset = getModuleDevPreset("scc");
+    const nextValues: EuSccFormValues = { ...euSccValues, ...(preset.formDefaults as Partial<EuSccFormValues>) };
+    setEuSccValues(nextValues);
+    setEuSccFiles([]);
+    setEuSccDevFilePaths(preset.backendFilePaths);
+    setEuSccStepIndex(EU_SCC_STEPS.length - 1);
+    const payload = await buildEuSccPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runBcrDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isBcrModule || loading) return;
+    const preset = getModuleDevPreset("bcr");
+    const nextValues: BcrFormValues = { ...bcrValues, ...(preset.formDefaults as Partial<BcrFormValues>) };
+    setBcrValues(nextValues);
+    setBcrFiles([]);
+    setBcrDevFilePaths(preset.backendFilePaths);
+    setBcrStepIndex(BCR_STEPS.length - 1);
+    const payload = await buildBcrPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runDpiaDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isDpiaModule || loading) return;
+    const preset = getModuleDevPreset("dpia");
+    const nextValues: DpiaFormValues = { ...dpiaValues, ...(preset.formDefaults as Partial<DpiaFormValues>) };
+    setDpiaValues(nextValues);
+    setDpiaFiles([]);
+    setDpiaDevFilePaths(preset.backendFilePaths);
+    setDpiaStepIndex(DPIA_STEPS.length - 1);
+    const payload = await buildDpiaPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runTiaDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isTiaModule || loading) return;
+    const preset = getModuleDevPreset("tia");
+    const nextValues: TiaFormValues = { ...tiaValues, ...(preset.formDefaults as Partial<TiaFormValues>) };
+    setTiaValues(nextValues);
+    setTiaFiles([]);
+    setTiaDevFilePaths(preset.backendFilePaths);
+    setTiaStepIndex(TIA_STEPS.length - 1);
+    const payload = await buildTiaPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
   const currentAssessmentStep = ASSESSMENT_STEPS[assessmentStepIndex];
   const assessmentProgress = Math.round(((assessmentStepIndex + 1) / ASSESSMENT_STEPS.length) * 100);
   const currentDiagnosisStep = DIAGNOSIS_STEPS[diagnosisStepIndex];
@@ -3281,8 +3527,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   }, [visibleDiagnosisFields]);
   const currentPipiaStep = PIPIA_STEPS[pipiaStepIndex];
   const pipiaProgress = Math.round(((pipiaStepIndex + 1) / PIPIA_STEPS.length) * 100);
-  const currentDocumentReviewStep = DOCUMENT_REVIEW_STEPS[documentReviewStepIndex];
-  const documentReviewProgress = Math.round(((documentReviewStepIndex + 1) / DOCUMENT_REVIEW_STEPS.length) * 100);
   const currentEuSccStep = EU_SCC_STEPS[euSccStepIndex];
   const euSccProgress = Math.round(((euSccStepIndex + 1) / EU_SCC_STEPS.length) * 100);
   const currentBcrStep = BCR_STEPS[bcrStepIndex];
@@ -3299,6 +3543,88 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     isDocumentReviewTask && taskTemplate
       ? getTaskTemplateTitle(taskTemplate, lang)
       : definition.label;
+
+  const selectedDocumentReviewFile = documentReviewFiles[documentReviewSelectedFileIndex] ?? null;
+  const selectedDocumentReviewFileName = selectedDocumentReviewFile?.name.toLowerCase() ?? "";
+  const selectedDocumentReviewFileExt = selectedDocumentReviewFileName.includes(".")
+    ? selectedDocumentReviewFileName.slice(selectedDocumentReviewFileName.lastIndexOf(".") + 1)
+    : "";
+
+  useEffect(() => {
+    if (documentReviewFiles.length === 0) {
+      setDocumentReviewSelectedFileIndex(0);
+      return;
+    }
+    setDocumentReviewSelectedFileIndex((prev) => Math.min(prev, documentReviewFiles.length - 1));
+  }, [documentReviewFiles]);
+
+  useEffect(() => {
+    if (!selectedDocumentReviewFile) {
+      setDocumentReviewPreviewUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
+      setDocumentReviewTextPreview("");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(selectedDocumentReviewFile);
+    setDocumentReviewPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return objectUrl;
+    });
+
+    if (["txt", "md", "json", "csv"].includes(selectedDocumentReviewFileExt)) {
+      selectedDocumentReviewFile
+        .text()
+        .then((content) => setDocumentReviewTextPreview(content.slice(0, 8000)))
+        .catch(() => setDocumentReviewTextPreview(""));
+    } else {
+      setDocumentReviewTextPreview("");
+    }
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [selectedDocumentReviewFile, selectedDocumentReviewFileExt]);
+
+  useEffect(() => {
+    if (!selectedDocumentReviewFile) return;
+    const fileKey = `${selectedDocumentReviewFile.name}-${selectedDocumentReviewFile.size}-${selectedDocumentReviewFile.lastModified}`;
+    if (documentReviewParsedKeysRef.current.has(fileKey)) return;
+
+    let cancelled = false;
+    setDocumentReviewAutoFillLoading(true);
+    buildAutoExtractResult(selectedDocumentReviewFile)
+      .then((extracted) => {
+        if (cancelled) return;
+        setDocumentReviewValues((prev) => ({
+          ...prev,
+          document_title: extracted.documentTitle || prev.document_title,
+          document_type: extracted.documentType || prev.document_type,
+          review_focus: extracted.reviewFocus || prev.review_focus,
+          transfer_purpose: extracted.transferPurpose || prev.transfer_purpose,
+          sensitive_pi_disclosed: extracted.sensitivePiDisclosed,
+          rights_channel_disclosed: extracted.rightsChannelDisclosed,
+          crossborder_rule_disclosed: extracted.crossborderRuleDisclosed,
+          contact_channel: extracted.contactChannel || prev.contact_channel,
+        }));
+        setDocumentReviewAutoFillNote(extracted.note);
+        documentReviewParsedKeysRef.current.add(fileKey);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setDocumentReviewAutoFillNote("自动提取失败，请手动确认与填写。");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setDocumentReviewAutoFillLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDocumentReviewFile]);
 
   return (
     <section className="run-panel" data-guide="stage-run">
@@ -3337,139 +3663,122 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       )}
 
       {isDocumentReviewTask ? (
-        <section className="schema-wizard">
-          <div className="schema-wizard-head">
-            <div className="runner-title">Document Review Wizard</div>
-            <span>{documentReviewProgress}%</span>
-          </div>
-          <div className="schema-stepper">
-            {DOCUMENT_REVIEW_STEPS.map((step, index) => (
-              <button
-                key={localizeStepTitle(lang, step.title)}
-                className={`schema-step-dot ${index === documentReviewStepIndex ? "active" : ""}`}
-                onClick={() => setDocumentReviewStepIndex(index)}
-                type="button"
-              >
-                {index + 1}. {localizeStepTitle(lang, step.title)}
-              </button>
-            ))}
-          </div>
-
-          <div className="schema-current-title">{localizeStepTitle(lang, currentDocumentReviewStep.title)}</div>
-          <div className="schema-field-grid">
-            {currentDocumentReviewStep.fields.map((field) => {
-              if (field.type === "text") {
-                return (
-                  <label key={String(field.name)} className="field-wrap">
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                    <input
-                      value={String(documentReviewValues[field.name])}
-                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
-                    />
-                  </label>
-                );
-              }
-
-              if (field.type === "textarea") {
-                return (
-                  <label key={String(field.name)} className="field-wrap schema-field-wide">
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                    <textarea
-                      className="runner-textarea schema-textarea"
-                      value={String(documentReviewValues[field.name])}
-                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
-                    />
-                  </label>
-                );
-              }
-
-              if (field.type === "number") {
-                return (
-                  <label key={String(field.name)} className="field-wrap">
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                    <input
-                      type="number"
-                      min={field.min}
-                      step={field.step}
-                      value={Number(documentReviewValues[field.name])}
-                      onChange={(event) => {
-                        const parsed = Number(event.target.value);
-                        updateDocumentReviewValue(field.name, (Number.isFinite(parsed) ? parsed : 0) as never);
-                      }}
-                    />
-                  </label>
-                );
-              }
-
-              if (field.type === "select") {
-                return (
-                  <label key={String(field.name)} className="field-wrap">
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                    <select
-                      value={String(documentReviewValues[field.name])}
-                      onChange={(event) => updateDocumentReviewValue(field.name, event.target.value as never)}
-                    >
-                      {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>
-                      ))}
-                    </select>
-                  </label>
-                );
-              }
-
-              return (
-                <label key={String(field.name)} className="schema-checkbox-field">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(documentReviewValues[field.name])}
-                    onChange={(event) => updateDocumentReviewValue(field.name, event.target.checked as never)}
-                  />
-                  <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                </label>
-              );
-            })}
-          </div>
-
-          {documentReviewStepIndex === DOCUMENT_REVIEW_STEPS.length - 1 ? (
-            <section className="schema-upload-card">
-              <div className="runner-title">上传待审文本</div>
+        <section className="doc-review-workbench">
+          <aside className="doc-review-input-pane">
+            <div className="schema-wizard-head">
+              <div className="runner-title">文档输入区</div>
+              <span>{documentReviewFiles.length} 份</span>
+            </div>
+            <label className="doc-review-upload-drop">
+              <span>上传待审查文档</span>
+              <small>支持 pdf / docx / md / txt / csv / json / 图片</small>
               <input
                 type="file"
                 multiple
-                onChange={(event) => setDocumentReviewFiles(Array.from(event.target.files ?? []))}
+                onChange={(event) => onSelectDocumentReviewFiles(event.target.files)}
               />
-              <div className="schema-upload-list">
-                {documentReviewFiles.map((file) => (
-                  <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
+            </label>
+            <div className="doc-review-file-list">
+              {documentReviewFiles.length === 0 ? (
+                <p className="resource-empty">尚未上传文档</p>
+              ) : (
+                documentReviewFiles.map((file, index) => (
+                  <button
+                    type="button"
+                    key={`${file.name}-${file.size}-${file.lastModified}`}
+                    className={`doc-review-file-item ${index === documentReviewSelectedFileIndex ? "active" : ""}`}
+                    onClick={() => setDocumentReviewSelectedFileIndex(index)}
+                  >
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
-                  </article>
-                ))}
-                {documentReviewFiles.length === 0 ? <p className="resource-empty">请上传至少1份合同或政策文本后再执行。</p> : null}
-              </div>
-            </section>
-          ) : null}
+                  </button>
+                ))
+              )}
+            </div>
+          </aside>
 
-          <div className="schema-actions-row">
-            <button
-              className="pill-btn"
-              type="button"
-              onClick={() => setDocumentReviewStepIndex((prev) => Math.max(0, prev - 1))}
-              disabled={documentReviewStepIndex === 0}
-            >
-              上一步
-            </button>
-            <button
-              className="pill-btn"
-              type="button"
-              onClick={() => setDocumentReviewStepIndex((prev) => Math.min(DOCUMENT_REVIEW_STEPS.length - 1, prev + 1))}
-              disabled={documentReviewStepIndex === DOCUMENT_REVIEW_STEPS.length - 1}
-            >
-              下一步
-            </button>
-            <button className="pill-btn-primary" onClick={execute} disabled={loading}>
-              {loading ? t("runningNow") : "生成文档合规审查报告"}
-            </button>
+          <div className="doc-review-main-pane">
+            {!selectedDocumentReviewFile ? (
+              <article className="doc-review-empty-state">
+                <h3>上传文档后开始审查</h3>
+                <p>请先在左侧上传隐私政策、用户协议、标准合同或补充材料。</p>
+                <ul>
+                  <li>支持批量上传，上传后自动展示文档预览</li>
+                  <li>系统后续可基于文档自动解析并回填结构化字段</li>
+                  <li>你只需确认或修正提取结果，再执行专项审查</li>
+                </ul>
+              </article>
+            ) : (
+              <article className="doc-review-preview-card">
+                <header className="doc-review-preview-head">
+                  <div>
+                    <span>当前预览文档</span>
+                    <strong>{selectedDocumentReviewFile.name}</strong>
+                  </div>
+                  <em>{selectedDocumentReviewFileExt || "file"}</em>
+                </header>
+                <div className="doc-review-preview-body">
+                  {documentReviewPreviewUrl && selectedDocumentReviewFileExt === "pdf" ? (
+                    <iframe title={selectedDocumentReviewFile.name} src={documentReviewPreviewUrl} />
+                  ) : documentReviewPreviewUrl && ["png", "jpg", "jpeg", "gif", "webp", "bmp"].includes(selectedDocumentReviewFileExt) ? (
+                    <img src={documentReviewPreviewUrl} alt={selectedDocumentReviewFile.name} />
+                  ) : ["txt", "md", "json", "csv"].includes(selectedDocumentReviewFileExt) ? (
+                    <pre>{documentReviewTextPreview || "正在读取文本..."}</pre>
+                  ) : (
+                    <div className="doc-review-preview-fallback">
+                      <p>该文件类型暂不支持内嵌预览，请继续执行上传后自动解析流程。</p>
+                    </div>
+                  )}
+                </div>
+              </article>
+            )}
+
+            <article className="doc-review-confirm-card">
+              <header>
+                <h4>结构化确认（文档解析后回填）</h4>
+                <p>当前为确认界面占位，可在自动解析结果基础上修正后提交。预置确认分组：{DOCUMENT_REVIEW_STEPS.length} 组。</p>
+                {documentReviewAutoFillLoading ? <p className="doc-review-autofill-note">正在解析文档并自动回填字段...</p> : null}
+                {!documentReviewAutoFillLoading && documentReviewAutoFillNote ? (
+                  <p className="doc-review-autofill-note">{documentReviewAutoFillNote}</p>
+                ) : null}
+              </header>
+              <div className="schema-field-grid">
+                <label className="field-wrap">
+                  <span>{localizeFieldLabel(lang, "document_title", "文档名称")}</span>
+                  <input
+                    value={String(documentReviewValues.document_title)}
+                    onChange={(event) => updateDocumentReviewValue("document_title", event.target.value)}
+                  />
+                </label>
+                <label className="field-wrap">
+                  <span>{localizeFieldLabel(lang, "document_type", "文档类型")}</span>
+                  <select
+                    value={String(documentReviewValues.document_type)}
+                    onChange={(event) =>
+                      updateDocumentReviewValue("document_type", event.target.value as DocumentReviewFormValues["document_type"])
+                    }
+                  >
+                    <option value="privacy_policy">隐私政策</option>
+                    <option value="scc_contract">标准合同</option>
+                    <option value="dpa">数据处理协议</option>
+                    <option value="other">其他</option>
+                  </select>
+                </label>
+                <label className="field-wrap schema-field-wide">
+                  <span>{localizeFieldLabel(lang, "review_focus", "本次重点关注条款")}</span>
+                  <textarea
+                    className="runner-textarea schema-textarea"
+                    value={String(documentReviewValues.review_focus)}
+                    onChange={(event) => updateDocumentReviewValue("review_focus", event.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="schema-actions-row">
+                <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+                  {loading ? t("runningNow") : "执行专项审查并生成报告"}
+                </button>
+              </div>
+            </article>
           </div>
         </section>
       ) : isEuSccTask ? (
@@ -3567,18 +3876,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               <div className="runner-title">SCC文本与配套材料上传</div>
               <input type="file" multiple onChange={(event) => setEuSccFiles(Array.from(event.target.files ?? []))} />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && euSccDevFilePaths.length > 0 ? (
+                  <>
+                    {euSccDevFilePaths.map((path) => (
+                      <article key={`dev-scc-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {euSccFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {euSccFiles.length === 0 ? <p className="resource-empty">请上传至少1份SCC文本或附件后再提交。</p> : null}
+                {euSccFiles.length === 0 && (!DEV_ACCEL_ENABLED || euSccDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传至少1份SCC文本或附件后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runEuSccDevPreset}
+                disabled={loading}
+                title="开发期一键注入SCC预设并运行真实后端流程"
+              >
+                一键体验SCC
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -4043,18 +4375,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 onChange={(event) => setPipiaFiles(Array.from(event.target.files ?? []))}
               />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && pipiaDevFilePaths.length > 0 ? (
+                  <>
+                    {pipiaDevFilePaths.map((path) => (
+                      <article key={`dev-pipia-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {pipiaFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {pipiaFiles.length === 0 ? <p className="resource-empty">请上传至少1份PIPIA附件后再提交。</p> : null}
+                {pipiaFiles.length === 0 && (!DEV_ACCEL_ENABLED || pipiaDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传至少1份PIPIA附件后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runPipiaDevPreset}
+                disabled={loading}
+                title="开发期一键注入PIPIA预设并运行真实后端流程"
+              >
+                一键体验PIPIA
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -4142,18 +4497,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               <div className="runner-title">BCR主文本与配套材料上传（仅docx/pdf）</div>
               <input type="file" multiple onChange={(event) => setBcrFiles(Array.from(event.target.files ?? []))} />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && bcrDevFilePaths.length > 0 ? (
+                  <>
+                    {bcrDevFilePaths.map((path) => (
+                      <article key={`dev-bcr-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {bcrFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {bcrFiles.length === 0 ? <p className="resource-empty">请上传至少1份BCR材料后再提交。</p> : null}
+                {bcrFiles.length === 0 && (!DEV_ACCEL_ENABLED || bcrDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传至少1份BCR材料后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runBcrDevPreset}
+                disabled={loading}
+                title="开发期一键注入BCR预设并运行真实后端流程"
+              >
+                一键体验BCR
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -4253,18 +4631,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               <div className="runner-title">DPIA附件上传（docx/pdf/png/jpg）</div>
               <input type="file" multiple onChange={(event) => setDpiaFiles(Array.from(event.target.files ?? []))} />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && dpiaDevFilePaths.length > 0 ? (
+                  <>
+                    {dpiaDevFilePaths.map((path) => (
+                      <article key={`dev-dpia-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {dpiaFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {dpiaFiles.length === 0 ? <p className="resource-empty">请上传至少1份DPIA附件后再提交。</p> : null}
+                {dpiaFiles.length === 0 && (!DEV_ACCEL_ENABLED || dpiaDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传至少1份DPIA附件后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runDpiaDevPreset}
+                disabled={loading}
+                title="开发期一键注入DPIA预设并运行真实后端流程"
+              >
+                一键体验DPIA
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -4364,18 +4765,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               <div className="runner-title">TIA附件上传（docx/pdf）</div>
               <input type="file" multiple onChange={(event) => setTiaFiles(Array.from(event.target.files ?? []))} />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && tiaDevFilePaths.length > 0 ? (
+                  <>
+                    {tiaDevFilePaths.map((path) => (
+                      <article key={`dev-tia-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {tiaFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {tiaFiles.length === 0 ? <p className="resource-empty">请上传至少1份TIA附件后再提交。</p> : null}
+                {tiaFiles.length === 0 && (!DEV_ACCEL_ENABLED || tiaDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传至少1份TIA附件后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runTiaDevPreset}
+                disabled={loading}
+                title="开发期一键注入TIA预设并运行真实后端流程"
+              >
+                一键体验TIA
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"

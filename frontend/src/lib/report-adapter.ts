@@ -7,6 +7,7 @@ import type {
   TaskSpace,
   TraceLink
 } from "./domain";
+import { getAuthHeaders } from "./auth/auth-service";
 import { extractInsight } from "./workspace";
 
 type RemoteReportMetadata = {
@@ -115,7 +116,7 @@ export function buildTraceLinks(
 
 export async function fetchReportMetadata(taskId: string): Promise<RemoteReportMetadata | null> {
   try {
-    const response = await fetch(`/api/v1/reports/${taskId}/metadata`);
+    const response = await fetch(`/api/v1/reports/${taskId}/metadata`, { headers: { ...getAuthHeaders() } });
     if (!response.ok) return null;
     const data: unknown = await response.json();
     if (!isRecord(data)) return null;

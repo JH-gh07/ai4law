@@ -1,9 +1,10 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal";
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
 import { useLang } from "../lib/language";
+import { fetchMyTasks, type MyTaskItem } from "../lib/me-api";
 import {
   buildSuggestedTaskName,
   findTaskTemplate,
@@ -32,6 +33,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const [quickCreateDraft, setQuickCreateDraft] = useState<{ taskTemplateId: string; value: string; error: string } | null>(null);
   const [renameDraft, setRenameDraft] = useState<{ taskId: string; value: string } | null>(null);
   const [pendingDeleteTask, setPendingDeleteTask] = useState<{ taskId: string; name: string } | null>(null);
+  const [remoteTasks, setRemoteTasks] = useState<MyTaskItem[]>([]);
   const jurisdictionShowcase = [
     {
       code: "CN" as const,
@@ -82,6 +84,17 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     const now = Date.now();
     return state.taskSpaces.filter((task) => now - new Date(task.updatedAt).getTime() <= 24 * 3600 * 1000).length;
   }, [state.taskSpaces]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyTasks().then((items) => {
+      if (cancelled) return;
+      setRemoteTasks(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const renameTask = (taskId: string, currentName: string) => {
     setRenameDraft({ taskId, value: currentName });
@@ -187,8 +200,40 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
             <span>{t("tasksStatRuns")}</span>
             <strong>{state.moduleRuns.length}</strong>
           </article>
+          <article className="tasks-stat-card">
+            <span>{lang === "zh" ? "后端历史任务" : "Backend Tasks"}</span>
+            <strong>{remoteTasks.length}</strong>
+          </article>
         </div>
       </header>
+
+      {remoteTasks.length > 0 ? (
+        <section className="tasks-section">
+          <div className="tasks-section-head">
+            <h3>{lang === "zh" ? "后端历史任务" : "Backend Task History"}</h3>
+            <p>{lang === "zh" ? "以下列表来自当前登录账号在后端的真实任务记录。" : "The list below comes from backend records of the current account."}</p>
+          </div>
+          <div className="tasks-recent-shell">
+            <div className="task-grid tasks-grid">
+              {remoteTasks.slice(0, 8).map((task) => (
+                <article key={`remote-${task.source}-${task.id}`} className="task-card tasks-card">
+                  <div className="tasks-card-head">
+                    <h3>{task.id}</h3>
+                    <span className={`tasks-status-pill ${task.status === "COMPLETED" ? "ok" : task.status === "FAILED" ? "fail" : "idle"}`}>
+                      {task.status}
+                    </span>
+                  </div>
+                  <div className="tasks-meta-row">
+                    <span>{lang === "zh" ? "来源" : "Source"}: {task.source}</span>
+                    <span>{lang === "zh" ? "模块" : "Module"}: {task.module || "-"}</span>
+                  </div>
+                  <p className="tasks-updated">{t("tasksCardUpdated")}: {new Date(task.updated_at).toLocaleString()}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="tasks-section tasks-showcase-section">
         <div className="tasks-section-head">

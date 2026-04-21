@@ -52,14 +52,6 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
         </nav>
 
         <div className="global-actions">
-          {isAuthenticated ? (
-            <UserMenu />
-          ) : (
-            <Link className="global-auth-lite" to={`/login?redirect=${loginTarget}`}>
-              <span className="global-auth-lite-avatar" aria-hidden="true">·</span>
-              <span>{lang === "zh" ? "登录" : "Sign in"}</span>
-            </Link>
-          )}
           <Link to="/docs" className="global-chip global-chip-with-icon">
             <DocsIcon width="15" height="15" />
             <span>{t("navDocs")}</span>
@@ -81,6 +73,14 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
           >
             <GlobeIcon width="17" height="17" />
           </button>
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <Link className="global-auth-lite" to={`/login?redirect=${loginTarget}`}>
+              <span className="global-auth-lite-avatar" aria-hidden="true" />
+              <span>{lang === "zh" ? "登录" : "Sign in"}</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

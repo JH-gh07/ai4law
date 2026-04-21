@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TopNav } from "./components/common/TopNav";
 import { CreateWorkspaceModal } from "./components/modals/CreateWorkspaceModal";
 import { ModeSelectModal } from "./components/modals/ModeSelectModal";
 import { QuickStartModal } from "./components/modals/QuickStartModal";
 import { OnboardingOverlay } from "./components/onboarding/OnboardingOverlay";
+import { AuthProvider } from "./lib/auth/AuthContext";
 import type { Jurisdiction, LaunchMode } from "./lib/domain";
 import { AppStoreProvider, useAppStore } from "./lib/app-store";
 import { LanguageProvider } from "./lib/language";
@@ -13,6 +15,9 @@ import { DocsPlaceholderPage } from "./pages/DocsPlaceholderPage";
 import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { ReportCenterPage } from "./pages/ReportCenterPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SuperDesign002Page } from "./pages/SuperDesign002Page";
@@ -25,7 +30,8 @@ function AppShell() {
   const location = useLocation();
   const { state, dispatch } = useAppStore();
   const isWorkspaceRoute = location.pathname.startsWith("/workspace");
-  const hideGlobalTopNav = isWorkspaceRoute;
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
+  const hideGlobalTopNav = isWorkspaceRoute || isAuthRoute;
 
   const [modeModalOpen, setModeModalOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<LaunchMode | null>(null);
@@ -129,14 +135,80 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<HomePage onStart={startFlow} onQuickCreate={createTask} />} />
           <Route path="/jurisdictions/:code" element={<JurisdictionHubPage onStart={startFlow} />} />
-          <Route path="/tasks" element={<TaskSpacesPage onStart={startFlow} onQuickCreate={createTask} />} />
-          <Route path="/workspace" element={<WorkspacePage />} />
-          <Route path="/workspace/:taskId" element={<WorkspacePage />} />
-          <Route path="/reports" element={<ReportCenterPage />} />
-          <Route path="/evidence" element={<EvidenceCenterPage />} />
-          <Route path="/docs" element={<DocsPlaceholderPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/superdesign/002" element={<SuperDesign002Page />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TaskSpacesPage onStart={startFlow} onQuickCreate={createTask} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute>
+                <WorkspacePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace/:taskId"
+            element={
+              <ProtectedRoute>
+                <WorkspacePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence"
+            element={
+              <ProtectedRoute>
+                <EvidenceCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/docs"
+            element={
+              <ProtectedRoute>
+                <DocsPlaceholderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/superdesign/002"
+            element={
+              <ProtectedRoute>
+                <SuperDesign002Page />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -196,11 +268,13 @@ function AppShell() {
 export default function App() {
   return (
     <LanguageProvider>
-      <AppStoreProvider>
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
-      </AppStoreProvider>
+      <AuthProvider>
+        <AppStoreProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </AppStoreProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
