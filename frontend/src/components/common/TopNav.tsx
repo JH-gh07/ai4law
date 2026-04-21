@@ -1,4 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { UserMenu } from "../auth/UserMenu";
+import { useAuth } from "../../lib/auth/AuthContext";
 import { useLang } from "../../lib/language";
 import { DocsIcon, GlobeIcon, GuideIcon, SettingsIcon } from "./AppIcons";
 
@@ -9,9 +11,12 @@ type TopNavProps = {
 
 export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const { lang, setLang, t } = useLang();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const onHome = location.pathname === "/";
   const onWorkspace = location.pathname.startsWith("/workspace");
+  const redirect = `${location.pathname}${location.search}${location.hash}`;
+  const loginTarget = encodeURIComponent(redirect === "/" ? "/tasks" : redirect);
 
   const brandTitle = "DataComply Flow";
   const brandSub = "数规通";
@@ -47,6 +52,14 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
         </nav>
 
         <div className="global-actions">
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <Link className="global-auth-lite" to={`/login?redirect=${loginTarget}`}>
+              <span className="global-auth-lite-avatar" aria-hidden="true">·</span>
+              <span>{lang === "zh" ? "登录" : "Sign in"}</span>
+            </Link>
+          )}
           <Link to="/docs" className="global-chip global-chip-with-icon">
             <DocsIcon width="15" height="15" />
             <span>{t("navDocs")}</span>
