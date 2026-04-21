@@ -51,9 +51,7 @@ export function EvidenceCenterPage() {
       caseDetailTitle: "案例详情",
       sourceFilterLayer: "按 layer 过滤",
       sourceFilterPath: "按 path 过滤",
-      sourceFilterPriority: "按优先级过滤",
       caseFilterModule: "按模块过滤",
-      caseFilterPriority: "按优先级过滤",
       selectAll: "全选",
       clearAll: "清空",
       openSource: "打开来源链接",
@@ -113,9 +111,7 @@ export function EvidenceCenterPage() {
       caseDetailTitle: "Case Detail",
       sourceFilterLayer: "Filter by layer",
       sourceFilterPath: "Filter by path",
-      sourceFilterPriority: "Filter by priority",
       caseFilterModule: "Filter by module",
-      caseFilterPriority: "Filter by priority",
       selectAll: "Select All",
       clearAll: "Clear",
       openSource: "Open Source Link",
@@ -166,9 +162,7 @@ export function EvidenceCenterPage() {
   const [cases, setCases] = useState<KnowledgeRow[]>([]);
   const [sourceLayerOptions, setSourceLayerOptions] = useState<string[]>([]);
   const [sourcePathOptions, setSourcePathOptions] = useState<string[]>([]);
-  const [sourcePriorityOptions, setSourcePriorityOptions] = useState<string[]>([]);
   const [caseModuleOptions, setCaseModuleOptions] = useState<string[]>([]);
-  const [casePriorityOptions, setCasePriorityOptions] = useState<string[]>([]);
   const [summary, setSummary] = useState({ source_count: 0, case_count: 0, p0_source_count: 0 });
   const [syncMeta, setSyncMeta] = useState({
     synced_at: "",
@@ -184,9 +178,7 @@ export function EvidenceCenterPage() {
 
   const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
-  const [selectedSourcePriority, setSelectedSourcePriority] = useState<string[]>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
-  const [selectedCasePriority, setSelectedCasePriority] = useState<string[]>([]);
 
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState("");
@@ -216,15 +208,11 @@ export function EvidenceCenterPage() {
 
     setSourceLayerOptions(data.source_options.layers);
     setSourcePathOptions(data.source_options.paths);
-    setSourcePriorityOptions(data.source_options.priorities);
     setCaseModuleOptions(data.case_options.modules);
-    setCasePriorityOptions(data.case_options.priorities);
 
     setSelectedLayers(data.source_options.layers);
     setSelectedPaths(data.source_options.paths);
-    setSelectedSourcePriority(data.source_options.priorities);
     setSelectedModules(data.case_options.modules);
-    setSelectedCasePriority(data.case_options.priorities);
   };
 
   useEffect(() => {
@@ -256,14 +244,13 @@ export function EvidenceCenterPage() {
     return sources
       .filter((item) => includesWithSelection(rowText(item, "layer", ""), selectedLayers))
       .filter((item) => includesWithSelection(rowText(item, "path", ""), selectedPaths))
-      .filter((item) => includesWithSelection(rowText(item, "usage_priority", ""), selectedSourcePriority))
       .filter((item) => {
         if (!token) return true;
         return `${rowText(item, "title")} ${rowText(item, "source_org")} ${rowText(item, "path")}`
           .toLowerCase()
           .includes(token);
       });
-  }, [keyword, selectedLayers, selectedPaths, selectedSourcePriority, sources]);
+  }, [keyword, selectedLayers, selectedPaths, sources]);
 
   const filteredCases = useMemo(() => {
     const token = keyword.trim().toLowerCase();
@@ -272,14 +259,13 @@ export function EvidenceCenterPage() {
         const modules = splitModules(rowText(item, "expected_module", ""));
         return modules.some((module) => selectedModules.includes(module));
       })
-      .filter((item) => includesWithSelection(rowText(item, "priority", ""), selectedCasePriority))
       .filter((item) => {
         if (!token) return true;
         return `${rowText(item, "case_title")} ${rowText(item, "source_org")} ${rowText(item, "case_type")}`
           .toLowerCase()
           .includes(token);
       });
-  }, [cases, keyword, selectedCasePriority, selectedModules]);
+  }, [cases, keyword, selectedModules]);
 
   const selectedSource = useMemo(
     () => filteredSources.find((item) => rowText(item, "source_id") === selectedSourceId) ?? filteredSources[0] ?? null,
@@ -515,21 +501,6 @@ export function EvidenceCenterPage() {
                       <button className="ghost-btn" onClick={() => setSelectedPaths([])}>{copy.clearAll}</button>
                     </div>
                   </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterPriority}</small>
-                    <div className="knowledge-chip-row">
-                      {sourcePriorityOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedSourcePriority.includes(option) ? "active" : ""}`} onClick={() => setSelectedSourcePriority((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {sourcePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedSourcePriority(sourcePriorityOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedSourcePriority([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
                 </div>
                 <div className="evidence-hit-scroll kc-list-scroll">
                   {filteredSources.map((row) => {
@@ -563,21 +534,6 @@ export function EvidenceCenterPage() {
                     <div className="knowledge-filter-actions">
                       <button className="ghost-btn" onClick={() => setSelectedModules(caseModuleOptions)}>{copy.selectAll}</button>
                       <button className="ghost-btn" onClick={() => setSelectedModules([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.caseFilterPriority}</small>
-                    <div className="knowledge-chip-row">
-                      {casePriorityOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedCasePriority.includes(option) ? "active" : ""}`} onClick={() => setSelectedCasePriority((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {casePriorityOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedCasePriority(casePriorityOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedCasePriority([])}>{copy.clearAll}</button>
                     </div>
                   </div>
                 </div>
