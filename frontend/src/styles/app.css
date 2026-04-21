@@ -7133,7 +7133,7 @@
   border: 1px solid rgba(106, 141, 191, 0.22);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
-  padding: 0.54rem;
+  padding: 0.5rem 0.62rem;
   display: grid;
   gap: 0.26rem;
 }
@@ -7231,7 +7231,7 @@
 }
 
 .workspace-report-list {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .workspace-report-selected {
@@ -7257,13 +7257,6 @@
 .workspace-report-selected-head strong {
   color: #21466f;
   font-size: 1rem;
-}
-
-.workspace-report-selected-head em {
-  color: #51739a;
-  font-size: 0.76rem;
-  font-style: normal;
-  letter-spacing: 0.08em;
 }
 
 .workspace-report-selected-actions {

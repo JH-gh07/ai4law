@@ -3,6 +3,7 @@ import { ReportTaskTreeSidebar, type ReportTaskTreeNode } from "../components/re
 import { useAppStore } from "../lib/app-store";
 import type { ModuleRun, ReportReviewSnapshot } from "../lib/domain";
 import { useLang } from "../lib/language";
+import { fetchMyReports, type MyReportItem } from "../lib/me-api";
 import { buildReportSnapshots, buildTraceLinks, fetchReportMetadata } from "../lib/report-adapter";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -26,6 +27,7 @@ export function ReportCenterPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [remoteSummary, setRemoteSummary] = useState<Record<string, { summary?: string; version?: string; risk_level?: string }>>({});
   const [copiedPath, setCopiedPath] = useState("");
+  const [remoteReports, setRemoteReports] = useState<MyReportItem[]>([]);
 
   const taskMap = useMemo(
     () => new Map(state.taskSpaces.map((task) => [task.id, task])),
@@ -99,6 +101,17 @@ export function ReportCenterPage() {
   }, [filteredSnapshots, selectedId]);
 
   const selectedSnapshot = filteredSnapshots.find((item) => item.id === selectedId) ?? filteredSnapshots[0] ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyReports().then((items) => {
+      if (cancelled) return;
+      setRemoteReports(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedSnapshot) return;
@@ -194,6 +207,22 @@ export function ReportCenterPage() {
 
         <aside className="report-pane report-pane-trace">
           <div className="pane-title">{t("reportReviewTrace")}</div>
+          {remoteReports.length > 0 ? (
+            <section className="report-trace-stack">
+              <div className="report-download-box">
+                <small>{t("navReports")} · {remoteReports.length}</small>
+                <code>{t("reportDownloadHint")}</code>
+              </div>
+              <div className="report-trace-list">
+                {remoteReports.slice(0, 10).map((item) => (
+                  <article key={`remote-${item.id}`} className="report-trace-item">
+                    <strong>{item.owner_id}</strong>
+                    <p>{item.file_path}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {selectedSnapshot ? (
             <section className="report-trace-stack">
               <div className="report-trace-kpis">
@@ -217,7 +246,6 @@ export function ReportCenterPage() {
               <div className="report-trace-list">
                 {traceLinks.map((link) => (
                   <article key={link.id} className="report-trace-item">
-                    <small>{link.targetType.toUpperCase()}</small>
                     <strong>{link.title}</strong>
                     {link.excerpt ? <p>{link.excerpt}</p> : null}
                   </article>

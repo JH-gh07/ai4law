@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { ModuleRun, OutputArtifact, TaskSpace, WorkflowStepKey } from "../../lib/domain";
 import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
+import { getAuthHeaders } from "../../lib/auth/auth-service";
 import { useLang } from "../../lib/language";
 import {
   findTaskTemplate,
@@ -186,6 +187,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [artifactPreview, setArtifactPreview] = useState<ArtifactPreview | null>(null);
   const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
   const [artifactPreviewError, setArtifactPreviewError] = useState<string | null>(null);
+  const [artifactPdfObjectUrl, setArtifactPdfObjectUrl] = useState<string | null>(null);
+  const [artifactDownloadBusy, setArtifactDownloadBusy] = useState(false);
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -372,6 +375,101 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       cancelled = true;
     };
   }, [selectedArtifactPath]);
+
+  useEffect(() => {
+    if (!artifactPreview || artifactPreview.render_mode !== "pdf") {
+      setArtifactPdfObjectUrl((current) => {
+        if (current) URL.revokeObjectURL(current);
+        return null;
+      });
+      return;
+    }
+
+    const previewPath = artifactPreview.path || selectedArtifactPath;
+    if (!previewPath) return;
+
+    let cancelled = false;
+    let createdObjectUrl: string | null = null;
+    fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(previewPath)}`, {
+      headers: { ...getAuthHeaders() }
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load PDF (${response.status})`);
+        }
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+      })
+      .then((nextObjectUrl) => {
+        if (cancelled) {
+          URL.revokeObjectURL(nextObjectUrl);
+          return;
+        }
+        createdObjectUrl = nextObjectUrl;
+        setArtifactPdfObjectUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return nextObjectUrl;
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setArtifactPdfObjectUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return null;
+        });
+        setArtifactPreviewError(
+          error instanceof Error ? error.message : "Failed to load PDF preview"
+        );
+      });
+
+    return () => {
+      cancelled = true;
+      if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
+    };
+  }, [artifactPreview, selectedArtifactPath]);
+
+  const downloadArtifact = async (path: string) => {
+    setArtifactDownloadBusy(true);
+    try {
+      const response = await fetch(`/api/v1/artifacts/download?path=${encodeURIComponent(path)}`, {
+        headers: { ...getAuthHeaders() }
+      });
+      if (!response.ok) {
+        throw new Error(`Download failed (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = toFileName(path);
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error: unknown) {
+      setArtifactPreviewError(error instanceof Error ? error.message : "Download failed");
+    } finally {
+      setArtifactDownloadBusy(false);
+    }
+  };
+
+  const openArtifactByBlob = async (path: string) => {
+    try {
+      const response = await fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(path)}`, {
+        headers: { ...getAuthHeaders() }
+      });
+      if (!response.ok) {
+        throw new Error(`Open failed (${response.status})`);
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      window.open(objectUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (error: unknown) {
+      setArtifactPreviewError(error instanceof Error ? error.message : "Failed to open file");
+    }
+  };
 
   const openTab = (tabId: WorkspaceTopTabId) => {
     setOpenTabs((prev) => (prev.includes(tabId) ? prev : [...prev, tabId]));
@@ -630,14 +728,16 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <div className="workspace-report-selected-actions">
                 {artifactPreview.render_mode === "html" ? (
                   selectedHtmlPdfArtifact ? (
-                    <a
+                    <button
+                      type="button"
                       className="workspace-report-download-icon"
-                      href={`/api/v1/artifacts/download?path=${encodeURIComponent(selectedHtmlPdfArtifact.path)}`}
+                      onClick={() => void downloadArtifact(selectedHtmlPdfArtifact.path)}
                       aria-label={lang === "zh" ? "下载 PDF" : "Download PDF"}
                       title={lang === "zh" ? "下载 PDF" : "Download PDF"}
+                      disabled={artifactDownloadBusy}
                     >
                       <DownloadIcon width="16" height="16" />
-                    </a>
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -650,7 +750,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                     </button>
                   )
                 ) : null}
-                <em>{artifactPreview.kind.toUpperCase()}</em>
               </div>
             </div>
             {artifactPreview.render_mode === "html" ? (
@@ -661,9 +760,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                   sandbox="allow-same-origin"
                 />
               </div>
-            ) : artifactPreview.render_mode === "pdf" && artifactPreview.file_url ? (
+            ) : artifactPreview.render_mode === "pdf" && artifactPdfObjectUrl ? (
               <div className="workspace-report-pdf-frame">
-                <iframe title={artifactPreview.file_name} src={artifactPreview.file_url} />
+                <iframe title={artifactPreview.file_name} src={artifactPdfObjectUrl} />
               </div>
             ) : artifactPreview.render_mode === "text" ? (
               <article className="workspace-report-chapter workspace-report-preview-block">
@@ -676,9 +775,13 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               </article>
             ) : artifactPreview.file_url ? (
               <div className="workspace-report-preview-state">
-                <a href={artifactPreview.file_url} target="_blank" rel="noreferrer">
+                <button
+                  type="button"
+                  className="workspace-report-link-button"
+                  onClick={() => void openArtifactByBlob(artifactPreview.path)}
+                >
                   {lang === "zh" ? "当前文件暂不支持内嵌预览，点击打开原文件" : "Inline preview is not available for this file. Open the source file."}
-                </a>
+                </button>
               </div>
             ) : null}
           </section>
@@ -708,7 +811,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                 className={`workspace-report-item workspace-report-item-button ${selectedArtifactPath === artifact.path ? "active" : ""}`}
                 onClick={() => handleSelectArtifact(artifact)}
               >
-                <strong>{artifact.kind.toUpperCase()}</strong>
                 <span>{toFileName(artifact.path)}</span>
               </button>
             ))}
