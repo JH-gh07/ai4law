@@ -61,7 +61,6 @@ def build_regulation_index(settings: Settings, source_jsonl: Path | None = None,
             "doc_type": str(row.get("doc_type", "")),
             "source_url": str(row.get("source_url", "")),
             "snapshot_path": str(row.get("snapshot_path", "")),
-            "usage_priority": str(row.get("usage_priority", "P1")),
             "keywords": [str(item) for item in row.get("keywords", []) if str(item).strip()],
         }
         search_text = build_search_text(row)

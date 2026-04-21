@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ResourceItemRow } from "./ResourceItemRow";
 import type { ResourceItemData, ResourceSectionData } from "./types";
+import { useLang } from "../../../lib/language";
 
 type WorkspaceSectionProps = {
   section: ResourceSectionData;
@@ -8,6 +9,7 @@ type WorkspaceSectionProps = {
 };
 
 export function WorkspaceSection({ section, onSwitchWorkspace }: WorkspaceSectionProps) {
+  const { lang } = useLang();
   const [open, setOpen] = useState(section.defaultOpen ?? true);
 
   return (
@@ -15,7 +17,7 @@ export function WorkspaceSection({ section, onSwitchWorkspace }: WorkspaceSectio
       <header className="rx-section-head">
         <h4>{section.title}</h4>
         <button type="button" className="rx-section-toggle" onClick={() => setOpen((value) => !value)}>
-          {open ? "收起" : "展开"}
+          {open ? (lang === "zh" ? "收起" : "Collapse") : lang === "zh" ? "展开" : "Expand"}
         </button>
       </header>
       {open ? (
@@ -28,4 +30,3 @@ export function WorkspaceSection({ section, onSwitchWorkspace }: WorkspaceSectio
     </section>
   );
 }
-

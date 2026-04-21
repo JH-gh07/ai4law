@@ -4,18 +4,15 @@ from pydantic import BaseModel, Field
 class KnowledgeSummary(BaseModel):
     source_count: int
     case_count: int
-    p0_source_count: int
 
 
 class KnowledgeSourceOptions(BaseModel):
     layers: list[str] = Field(default_factory=list)
     paths: list[str] = Field(default_factory=list)
-    priorities: list[str] = Field(default_factory=list)
 
 
 class KnowledgeCaseOptions(BaseModel):
     modules: list[str] = Field(default_factory=list)
-    priorities: list[str] = Field(default_factory=list)
 
 
 class KnowledgeSyncMeta(BaseModel):
@@ -62,7 +59,6 @@ class KnowledgeSearchItem(BaseModel):
     jurisdiction: str = ""
     path: str = ""
     doc_type: str = ""
-    usage_priority: str = ""
     source_url: str = ""
     keywords: list[str] = Field(default_factory=list)
 

@@ -33,8 +33,7 @@ with col1:
 with col2:
     st.metric("实践案例条目", len(cases))
 with col3:
-    p0_count = sum(1 for row in sources if row.get("usage_priority") == "P0")
-    st.metric("P0 法规条目", p0_count)
+    st.metric("引用命中演示", "Ready")
 
 tab1, tab2, tab3 = st.tabs(["法规与指南", "实践案例", "引用联动演示"])
 
@@ -44,18 +43,14 @@ with tab1:
     else:
         layer_options = sorted({row.get("layer", "") for row in sources if row.get("layer")})
         path_options = sorted({row.get("path", "") for row in sources if row.get("path")})
-        priority_options = sorted({row.get("usage_priority", "") for row in sources if row.get("usage_priority")})
-
         selected_layers = st.multiselect("按 layer 过滤", layer_options, default=layer_options)
         selected_paths = st.multiselect("按 path 过滤", path_options, default=path_options)
-        selected_priority = st.multiselect("按优先级过滤", priority_options, default=priority_options)
 
         filtered_sources = [
             row
             for row in sources
             if row.get("layer") in selected_layers
             and row.get("path") in selected_paths
-            and row.get("usage_priority") in selected_priority
         ]
 
         st.write(f"命中条目：{len(filtered_sources)}")
@@ -70,7 +65,6 @@ with tab1:
                 "path",
                 "authority_level",
                 "publish_date",
-                "usage_priority",
                 "url",
             ],
         )
@@ -96,14 +90,11 @@ with tab2:
         st.info("未找到 practice_cases.csv")
     else:
         module_options = sorted({m for row in cases for m in row.get("expected_module", "").split("|") if m})
-        priority_options = sorted({row.get("priority", "") for row in cases if row.get("priority")})
-
         selected_modules = st.multiselect("按模块过滤", module_options, default=module_options)
-        selected_priority = st.multiselect("按优先级过滤", priority_options, default=priority_options)
 
         def _match_case(case_row: dict[str, str]) -> bool:
             modules = [m for m in case_row.get("expected_module", "").split("|") if m]
-            return any(m in selected_modules for m in modules) and case_row.get("priority") in selected_priority
+            return any(m in selected_modules for m in modules)
 
         filtered_cases = [row for row in cases if _match_case(row)]
 
@@ -117,7 +108,6 @@ with tab2:
                 "case_title",
                 "case_type",
                 "expected_module",
-                "priority",
                 "usable_for_validation",
                 "url",
             ],

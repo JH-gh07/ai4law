@@ -38,20 +38,20 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     {
       code: "CN" as const,
       tone: "cn" as const,
-      title: "中国任务包",
-      description: "点击具体类别后即创建新任务并进入工作区"
+      title: lang === "zh" ? "中国任务包" : "China Task Pack",
+      description: lang === "zh" ? "点击具体类别后即创建新任务并进入工作区" : "Create and enter a new task directly from category"
     },
     {
       code: "EU" as const,
       tone: "eu" as const,
-      title: "欧盟任务包",
-      description: "围绕 SCC / BCR / DPIA / TIA 的合规模块"
+      title: lang === "zh" ? "欧盟任务包" : "EU Task Pack",
+      description: lang === "zh" ? "围绕 SCC / BCR / DPIA / TIA 的合规模块" : "Compliance modules for SCC / BCR / DPIA / TIA"
     },
     {
       code: "US" as const,
       tone: "us" as const,
-      title: "美国任务包",
-      description: "覆盖 EO 14117 与 CPRA 的任务类别"
+      title: lang === "zh" ? "美国任务包" : "US Task Pack",
+      description: lang === "zh" ? "覆盖 EO 14117 与 CPRA 的任务类别" : "Task categories for EO 14117 and CPRA"
     }
   ];
 
@@ -178,9 +178,11 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
       <header className="tasks-hero tasks-hub-hero">
         <div>
           <p className="tasks-hub-kicker">TASK HUB</p>
-          <h2>任务空间</h2>
+          <h2>{lang === "zh" ? "任务空间" : "Task Space"}</h2>
           <p className="tasks-hero-subtitle">
-            点击法域下的具体类别，先命名再直接创建新任务进入工作区。每个任务空间已绑定后端可执行模块，可直接运行与回溯
+            {lang === "zh"
+              ? "点击法域下的具体类别，先命名再直接创建新任务进入工作区。每个任务空间已绑定后端可执行模块，可直接运行与回溯"
+              : "Select a category under each jurisdiction, name your task, and enter workspace directly. Each task space is wired to executable backend modules."}
           </p>
           <div className="tasks-hub-actions">
             <button className="pill-btn-primary" onClick={onStart}>{t("startCta")}</button>
@@ -237,8 +239,8 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
 
       <section className="tasks-section tasks-showcase-section">
         <div className="tasks-section-head">
-          <h3>法域差异化编排</h3>
-          <p>点击具体类别后直接创建新任务，不再经过法域中间层</p>
+          <h3>{lang === "zh" ? "法域差异化编排" : "Jurisdiction-Oriented Orchestration"}</h3>
+          <p>{lang === "zh" ? "点击具体类别后直接创建新任务，不再经过法域中间层" : "Create a task directly from category without an extra jurisdiction step."}</p>
         </div>
         <div className="tasks-showcase-grid">
           {jurisdictionShowcase.map((item) => (

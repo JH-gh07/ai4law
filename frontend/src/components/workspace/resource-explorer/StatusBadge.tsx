@@ -1,26 +1,28 @@
 import type { ExplorerStatus } from "./types";
+import { useLang } from "../../../lib/language";
 
 type StatusBadgeProps = {
   status: ExplorerStatus;
 };
 
-const STATUS_META: Record<ExplorerStatus, { label: string; tone: string }> = {
-  missing: { label: "缺失", tone: "danger" },
-  uploaded: { label: "已上传", tone: "success" },
-  parsed: { label: "已解析", tone: "info" },
-  optional: { label: "可选", tone: "neutral" },
-  in_progress: { label: "进行中", tone: "active" },
-  pending: { label: "待处理", tone: "pending" },
-  pending_generation: { label: "待生成", tone: "pending" },
-  blocked: { label: "阻塞", tone: "danger" },
-  opened: { label: "打开中", tone: "active" },
-  collapsed: { label: "收起", tone: "neutral" },
-  failed: { label: "失败", tone: "danger" },
-  completed: { label: "完成", tone: "success" },
-  editing: { label: "编辑中", tone: "active" }
+const STATUS_META: Record<ExplorerStatus, { label: { zh: string; en: string }; tone: string }> = {
+  missing: { label: { zh: "缺失", en: "Missing" }, tone: "danger" },
+  uploaded: { label: { zh: "已上传", en: "Uploaded" }, tone: "success" },
+  parsed: { label: { zh: "已解析", en: "Parsed" }, tone: "info" },
+  optional: { label: { zh: "可选", en: "Optional" }, tone: "neutral" },
+  in_progress: { label: { zh: "进行中", en: "In Progress" }, tone: "active" },
+  pending: { label: { zh: "待处理", en: "Pending" }, tone: "pending" },
+  pending_generation: { label: { zh: "待生成", en: "Pending" }, tone: "pending" },
+  blocked: { label: { zh: "阻塞", en: "Blocked" }, tone: "danger" },
+  opened: { label: { zh: "打开中", en: "Opened" }, tone: "active" },
+  collapsed: { label: { zh: "收起", en: "Collapsed" }, tone: "neutral" },
+  failed: { label: { zh: "失败", en: "Failed" }, tone: "danger" },
+  completed: { label: { zh: "完成", en: "Completed" }, tone: "success" },
+  editing: { label: { zh: "编辑中", en: "Editing" }, tone: "active" }
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { lang } = useLang();
   const meta = STATUS_META[status];
-  return <span className={`rx-badge rx-badge-${meta.tone}`}>{meta.label}</span>;
+  return <span className={`rx-badge rx-badge-${meta.tone}`}>{meta.label[lang]}</span>;
 }

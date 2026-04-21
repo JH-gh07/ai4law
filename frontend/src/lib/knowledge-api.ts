@@ -37,7 +37,6 @@ async function requestJson(url: string, init?: RequestInit): Promise<unknown> {
 export type KnowledgeSummary = {
   source_count: number;
   case_count: number;
-  p0_source_count: number;
 };
 
 export type KnowledgeSyncMeta = {
@@ -54,12 +53,10 @@ export type KnowledgeSyncMeta = {
 export type KnowledgeSourceOptions = {
   layers: string[];
   paths: string[];
-  priorities: string[];
 };
 
 export type KnowledgeCaseOptions = {
   modules: string[];
-  priorities: string[];
 };
 
 export type KnowledgeIndexData = {
@@ -96,7 +93,6 @@ const parseKnowledgeIndexData = (data: unknown): KnowledgeIndexData => {
     summary: {
       source_count: typeof summaryRaw.source_count === "number" ? summaryRaw.source_count : 0,
       case_count: typeof summaryRaw.case_count === "number" ? summaryRaw.case_count : 0,
-      p0_source_count: typeof summaryRaw.p0_source_count === "number" ? summaryRaw.p0_source_count : 0
     },
     sync_meta: {
       synced_at: typeof syncMetaRaw.synced_at === "string" ? syncMetaRaw.synced_at : "",
@@ -110,12 +106,10 @@ const parseKnowledgeIndexData = (data: unknown): KnowledgeIndexData => {
     },
     source_options: {
       layers: toStringList(sourceOptionsRaw.layers),
-      paths: toStringList(sourceOptionsRaw.paths),
-      priorities: toStringList(sourceOptionsRaw.priorities)
+      paths: toStringList(sourceOptionsRaw.paths)
     },
     case_options: {
-      modules: toStringList(caseOptionsRaw.modules),
-      priorities: toStringList(caseOptionsRaw.priorities)
+      modules: toStringList(caseOptionsRaw.modules)
     },
     sources: toStringRecordList(data.sources),
     cases: toStringRecordList(data.cases)
@@ -162,7 +156,6 @@ export type KnowledgeSearchItem = {
   jurisdiction: string;
   path: string;
   doc_type: string;
-  usage_priority: string;
   source_url: string;
   keywords: string[];
 };
@@ -187,7 +180,6 @@ const parseSearchItem = (item: unknown): KnowledgeSearchItem => {
     jurisdiction: typeof r.jurisdiction === "string" ? r.jurisdiction : "",
     path: typeof r.path === "string" ? r.path : "",
     doc_type: typeof r.doc_type === "string" ? r.doc_type : "",
-    usage_priority: typeof r.usage_priority === "string" ? r.usage_priority : "",
     source_url: typeof r.source_url === "string" ? r.source_url : "",
     keywords: toStringList(r.keywords),
   };

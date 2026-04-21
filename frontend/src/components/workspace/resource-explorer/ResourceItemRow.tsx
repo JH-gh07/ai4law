@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { StatusBadge } from "./StatusBadge";
 import type { ResourceItemData } from "./types";
+import { useLang } from "../../../lib/language";
 
 type ResourceItemRowProps = {
   item: ResourceItemData;
@@ -10,6 +11,7 @@ type ResourceItemRowProps = {
 };
 
 export function ResourceItemRow({ item, trailing, onClick, onUpload }: ResourceItemRowProps) {
+  const { lang } = useLang();
   return (
     <article className={`rx-item ${item.highlight ? "is-highlight" : ""} ${item.blocked ? "is-blocked" : ""}`}>
       <button type="button" className="rx-item-main" onClick={onClick}>
@@ -23,7 +25,7 @@ export function ResourceItemRow({ item, trailing, onClick, onUpload }: ResourceI
       <div className="rx-item-actions">
         {item.blocked && onUpload ? (
           <button type="button" className="rx-item-upload" onClick={onUpload}>
-            去上传
+            {lang === "zh" ? "去上传" : "Upload"}
           </button>
         ) : null}
         {trailing}
@@ -31,4 +33,3 @@ export function ResourceItemRow({ item, trailing, onClick, onUpload }: ResourceI
     </article>
   );
 }
-

@@ -19,7 +19,7 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
   const loginTarget = encodeURIComponent(redirect === "/" ? "/tasks" : redirect);
 
   const brandTitle = "DataComply Flow";
-  const brandSub = "数规通";
+  const brandSub = lang === "zh" ? "数规通" : "ShuGuiTong";
 
   return (
     <header className={`global-nav-wrap ${onHome ? "is-home" : ""} ${onWorkspace ? "is-workspace" : ""}`}>
@@ -58,7 +58,7 @@ export function TopNav({ onStart: _onStart, onReplayGuide }: TopNavProps) {
           </Link>
           <button className="global-chip global-chip-with-icon" onClick={onReplayGuide}>
             <GuideIcon width="15" height="15" />
-            <span>{lang === "zh" ? "引导" : "Guide"}</span>
+            <span>{t("navHelp")}</span>
           </button>
           {!onWorkspace ? (
             <Link to="/settings" className="global-icon-action" aria-label={t("navSettings")} title={t("navSettings")}>

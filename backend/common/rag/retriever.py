@@ -48,7 +48,6 @@ class RegulationDoc:
     doc_type: str = ""
     source_url: str = ""
     snapshot_path: str = ""
-    usage_priority: str = "P1"
     keywords: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -119,10 +118,6 @@ def _contains_any_hint(query_l: str, hints: tuple[str, ...]) -> bool:
 
 def _normalize(text: str) -> str:
     return normalize_text(text or "")
-
-
-def _priority_weight(priority: str) -> float:
-    return {"P0": 0.6, "P1": 0.3, "P2": 0.1}.get(priority or "", 0.0)
 
 
 def _extract_article_hint(query: str) -> Optional[str]:
@@ -264,11 +259,11 @@ class RegulationRAGService:
                 continue
             lexical_score = _lexical_score(query, doc)
             if mode == "vector":
-                base_score = vector_score + _priority_weight(doc.usage_priority)
+                base_score = vector_score
             elif mode == "lexical":
-                base_score = lexical_score + _priority_weight(doc.usage_priority)
+                base_score = lexical_score
             else:
-                base_score = vector_score * 0.7 + lexical_score * 0.3 + _priority_weight(doc.usage_priority)
+                base_score = vector_score * 0.7 + lexical_score * 0.3
             candidates.append(
                 RerankCandidate(
                     payload=entry.payload,
@@ -330,7 +325,6 @@ class RegulationRAGService:
             doc_type=str(payload.get("doc_type", "")),
             source_url=str(payload.get("source_url", "")),
             snapshot_path=str(payload.get("snapshot_path", "")),
-            usage_priority=str(payload.get("usage_priority", "P1")),
             keywords=tuple(str(item) for item in payload.get("keywords", [])),
         )
 
@@ -390,7 +384,6 @@ def retrieve_regulations(
                     jurisdiction=jurisdiction or "",
                     path=path or "all",
                     doc_type="external",
-                    usage_priority="P2",
                 )
             )
             existing_titles.add(_normalize(title))
@@ -460,7 +453,6 @@ def _log_rag_hits(
                 "doc_type": doc.doc_type,
                 "source_url": doc.source_url,
                 "snapshot_path": doc.snapshot_path,
-                "usage_priority": doc.usage_priority,
             }
             for doc in results
         ],

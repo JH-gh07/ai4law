@@ -12,6 +12,8 @@ type AuthResponse = {
 };
 
 const TOKEN_KEY = "ai4law_auth_token_v1";
+const LANG_KEY = "ai4law_ui_lang";
+const uiLang = (): "zh" | "en" => (globalThis.localStorage?.getItem(LANG_KEY) === "zh" ? "zh" : "en");
 
 function setToken(token: string, remember: boolean): void {
   if (remember) {
@@ -56,19 +58,21 @@ type ValidationDetailItem = {
   type?: string;
 };
 
-const FIELD_LABEL_MAP: Record<string, string> = {
-  username: "用户名",
-  email: "邮箱",
-  password: "密码",
-  identifier: "用户名或邮箱",
-  company_name: "企业名称",
-  remember: "记住我",
+const FIELD_LABEL_MAP: Record<string, { zh: string; en: string }> = {
+  username: { zh: "用户名", en: "Username" },
+  email: { zh: "邮箱", en: "Email" },
+  password: { zh: "密码", en: "Password" },
+  identifier: { zh: "用户名或邮箱", en: "Username or Email" },
+  company_name: { zh: "企业名称", en: "Company Name" },
+  remember: { zh: "记住我", en: "Remember Me" }
 };
 
 function toReadableField(loc?: Array<string | number>): string {
-  if (!Array.isArray(loc) || loc.length === 0) return "字段";
+  if (!Array.isArray(loc) || loc.length === 0) return uiLang() === "zh" ? "字段" : "Field";
   const last = String(loc[loc.length - 1]);
-  return FIELD_LABEL_MAP[last] ?? last;
+  const mapped = FIELD_LABEL_MAP[last];
+  if (!mapped) return last;
+  return uiLang() === "zh" ? mapped.zh : mapped.en;
 }
 
 function normalizeDetailMessage(detail: unknown): string | null {
@@ -81,8 +85,13 @@ function normalizeDetailMessage(detail: unknown): string | null {
       .map((item) => {
         const d = item as ValidationDetailItem;
         const field = toReadableField(d.loc);
-        const message = typeof d.msg === "string" && d.msg.trim().length > 0 ? d.msg : "输入不合法";
-        return `${field}：${message}`;
+        const message =
+          typeof d.msg === "string" && d.msg.trim().length > 0
+            ? d.msg
+            : uiLang() === "zh"
+              ? "输入不合法"
+              : "Invalid input";
+        return uiLang() === "zh" ? `${field}：${message}` : `${field}: ${message}`;
       })
       .filter((item) => item.trim().length > 0);
 
@@ -105,7 +114,7 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = normalizeDetailMessage(data?.detail);
-    throw new Error(message ?? `请求失败（${response.status}）`);
+    throw new Error(message ?? (uiLang() === "zh" ? `请求失败（${response.status}）` : `Request failed (${response.status})`));
   }
   return data as T;
 }

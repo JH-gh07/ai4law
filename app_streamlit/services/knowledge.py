@@ -106,10 +106,6 @@ def resolve_citation(citation: str, sources: list[dict[str, str]] | None = None)
         if "law" in doc_type or "administrative_regulation" in doc_type:
             score += 1
 
-        priority = row.get("usage_priority", "")
-        if priority == "P0":
-            score += 1
-
         if score > 0:
             scored.append((score, row))
 

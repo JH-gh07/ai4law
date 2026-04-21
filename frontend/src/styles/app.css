@@ -8287,19 +8287,36 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
   padding: 0.46rem 0.58rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
 }
 
 .schema-upload-item strong {
   color: #244a74;
   font-size: 0.85rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .schema-upload-item small {
   color: #52759c;
   font-size: 0.78rem;
+  justify-self: end;
+  max-width: min(40%, 12rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  border-radius: 999px;
+  padding: 0.14rem 0.48rem;
+  background: rgba(95, 128, 177, 0.12);
 }
 
 .schema-actions-row {
@@ -8311,27 +8328,57 @@
 
 .doc-review-workbench {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   gap: 0.7rem;
+  align-items: start;
 }
 
 .doc-review-input-pane {
   border: 1px solid rgba(96, 132, 183, 0.24);
   border-radius: 14px;
   background: rgba(247, 252, 255, 0.92);
-  padding: 0.62rem;
+  padding: 0.78rem;
   display: grid;
-  gap: 0.55rem;
+  gap: 0.7rem;
   align-content: start;
+  min-width: 0;
+}
+
+.doc-review-input-pane .schema-wizard-head {
+  min-width: 0;
+  align-items: center;
+  padding: 0 0.1rem;
+  flex-wrap: wrap;
+}
+
+.doc-review-input-pane .runner-title {
+  min-width: 0;
+  margin: 0;
+}
+
+.doc-review-count-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid rgba(96, 132, 183, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #5579a1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .doc-review-upload-drop {
   border: 1px dashed rgba(88, 126, 182, 0.42);
   border-radius: 12px;
   background: rgba(236, 246, 255, 0.92);
-  padding: 0.6rem;
+  padding: 0.72rem 0.76rem;
   display: grid;
-  gap: 0.24rem;
+  gap: 0.3rem;
   color: #2b517c;
 }
 
@@ -8346,14 +8393,33 @@
 }
 
 .doc-review-upload-drop input {
+  display: block;
   margin-top: 0.3rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .doc-review-file-list {
   display: grid;
-  gap: 0.38rem;
+  gap: 0.5rem;
   max-height: 460px;
   overflow: auto;
+  overflow-x: hidden;
+  padding-right: 0.18rem;
+}
+
+.doc-review-file-list .schema-upload-item,
+.doc-review-file-item {
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.doc-review-file-list .schema-upload-item small,
+.doc-review-file-item small {
+  max-width: min(45%, 8.5rem);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .doc-review-file-item {
@@ -8362,19 +8428,34 @@
   background: rgba(255, 255, 255, 0.94);
   color: #244a74;
   text-align: left;
-  padding: 0.48rem 0.58rem;
+  padding: 0.54rem 0.64rem;
   display: grid;
-  gap: 0.2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .doc-review-file-item strong {
   font-size: 0.82rem;
   line-height: 1.38;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .doc-review-file-item small {
   color: #5b7fa6;
   font-size: 0.74rem;
+  justify-self: end;
+  white-space: nowrap;
+  text-align: right;
+  border-radius: 999px;
+  padding: 0.13rem 0.48rem;
+  background: rgba(95, 128, 177, 0.12);
 }
 
 .doc-review-file-item.active {
@@ -8492,6 +8573,12 @@
   padding: 1rem;
   color: #5a7ea5;
   text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .doc-review-workbench {
+    grid-template-columns: 1fr;
+  }
 }
 
 .doc-review-confirm-card {
@@ -11302,6 +11389,83 @@
   color: #375f87;
 }
 
+.docs-example {
+  margin-top: 0.74rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgba(119, 160, 209, 0.32);
+  border-radius: 10px;
+  background: rgba(243, 249, 255, 0.82);
+}
+
+.docs-example h4 {
+  margin: 0 0 0.52rem;
+  color: #1f4b76;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.docs-example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.82rem;
+}
+
+.docs-example-grid strong {
+  display: inline-block;
+  margin-bottom: 0.26rem;
+  color: #1f4f7b;
+  font-size: 0.78rem;
+}
+
+.docs-example-grid ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.docs-matrix-wrap {
+  margin: 0.9rem 0 1.1rem;
+  overflow-x: auto;
+  border: 1px solid rgba(119, 160, 209, 0.28);
+  border-radius: 10px;
+  background: rgba(247, 252, 255, 0.82);
+}
+
+.docs-matrix-table {
+  width: 100%;
+  min-width: 1240px;
+  border-collapse: collapse;
+}
+
+.docs-matrix-table th,
+.docs-matrix-table td {
+  padding: 0.6rem 0.64rem;
+  border-bottom: 1px solid rgba(169, 194, 224, 0.35);
+  border-right: 1px solid rgba(169, 194, 224, 0.25);
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.84rem;
+  line-height: 1.58;
+  color: #2f5a82;
+}
+
+.docs-matrix-table th:last-child,
+.docs-matrix-table td:last-child {
+  border-right: none;
+}
+
+.docs-matrix-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(227, 241, 255, 0.95);
+  color: #1e4f79;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.docs-matrix-table tbody tr:hover {
+  background: rgba(224, 239, 255, 0.34);
+}
+
 @media (max-width: 1040px) {
   .docs-center-shell {
     grid-template-columns: 1fr;
@@ -11326,5 +11490,9 @@
 
   .docs-hero h1 {
     font-size: 1.34rem;
+  }
+
+  .docs-example-grid {
+    grid-template-columns: 1fr;
   }
 }

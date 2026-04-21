@@ -13,6 +13,9 @@ type BuildResourceExplorerDataInput = {
 };
 
 const STEP_KEY_ORDER = ["input_validation", "execution", "evidence_binding", "consistency_check", "report_export"] as const;
+const LANG_KEY = "ai4law_ui_lang";
+const isZh = () => globalThis.localStorage?.getItem(LANG_KEY) === "zh";
+const L = (zh: string, en: string) => (isZh() ? zh : en);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -75,9 +78,9 @@ export function buildResourceExplorerData({
     {
       id: "data_inventory",
       kind: "input",
-      label: "数据清单（data_inventory）",
+      label: L("数据清单（data_inventory）", "Data Inventory (data_inventory)"),
       status: hasDataInventory ? "uploaded" : "missing",
-      hint: hasDataInventory ? "已检测到上传文件。" : "请上传数据清单附件（data_inventory）",
+      hint: hasDataInventory ? L("已检测到上传文件。", "Upload detected.") : L("请上传数据清单附件（data_inventory）", "Please upload data inventory attachments (data_inventory)."),
       highlight: !hasDataInventory,
       blocked: !hasDataInventory,
       uploadKey: "data_inventory"
@@ -85,25 +88,25 @@ export function buildResourceExplorerData({
     {
       id: "external_entities",
       kind: "input",
-      label: "外部实体清单",
+      label: L("外部实体清单", "External Entity Inventory"),
       status: hasExternalEntities ? "uploaded" : "pending",
-      hint: hasExternalEntities ? "已上传，可继续下一步。" : "建议上传以完成实体核验。",
+      hint: hasExternalEntities ? L("已上传，可继续下一步。", "Uploaded. You can continue.") : L("建议上传以完成实体核验。", "Recommended for entity verification."),
       uploadKey: "external_entities"
     },
     {
       id: "internal_access",
       kind: "input",
-      label: "内部访问与材料",
+      label: L("内部访问与材料", "Internal Access & Materials"),
       status: hasInternalMaterials ? "uploaded" : "pending",
-      hint: hasInternalMaterials ? "已上传，可用于访问边界审查。" : "尚未上传，后续一致性检查可能受影响。",
+      hint: hasInternalMaterials ? L("已上传，可用于访问边界审查。", "Uploaded for access-boundary checks.") : L("尚未上传，后续一致性检查可能受影响。", "Not uploaded yet. Consistency checks may be affected."),
       uploadKey: "internal_access"
     },
     {
       id: "attachments",
       kind: "input",
-      label: "附件上传",
+      label: L("附件上传", "Attachments"),
       status: "optional",
-      hint: "可选补充合同台账、组织架构、股权结构等材料。",
+      hint: L("可选补充合同台账、组织架构、股权结构等材料。", "Optional: contract ledgers, org structure, shareholding documents."),
       uploadKey: "attachments"
     }
   ];
@@ -113,34 +116,34 @@ export function buildResourceExplorerData({
     {
       id: "step_1",
       kind: "step",
-      label: "1. 出境数据清单",
+      label: L("1. 出境数据清单", "1. Export Data Inventory"),
       status: !hasDataInventory ? "in_progress" : stepStatusToExplorerStatus(stepByKey.get("input_validation")?.status ?? "pending"),
-      hint: !hasDataInventory ? "当前步骤缺少关键材料。" : "可继续到外部实体清单。",
+      hint: !hasDataInventory ? L("当前步骤缺少关键材料。", "Critical materials missing for this step.") : L("可继续到外部实体清单。", "Proceed to external entity inventory."),
       stepKey: "input_validation",
       highlight: !hasDataInventory
     },
     {
       id: "step_2",
       kind: "step",
-      label: "2. 外部实体清单",
+      label: L("2. 外部实体清单", "2. External Entity Inventory"),
       status: "pending",
-      hint: "待处理",
+      hint: L("待处理", "Pending"),
       stepKey: "execution"
     },
     {
       id: "step_3",
       kind: "step",
-      label: "3. 内部访问与材料",
+      label: L("3. 内部访问与材料", "3. Internal Access & Materials"),
       status: "pending",
-      hint: "待处理",
+      hint: L("待处理", "Pending"),
       stepKey: "evidence_binding"
     },
     {
       id: "step_4",
       kind: "step",
-      label: "4. 附件上传",
+      label: L("4. 附件上传", "4. Attachments"),
       status: "pending",
-      hint: "待处理",
+      hint: L("待处理", "Pending"),
       stepKey: "consistency_check"
     }
   ];
@@ -149,31 +152,31 @@ export function buildResourceExplorerData({
     {
       id: "runtime_draft",
       kind: "runtime",
-      label: "当前表单草稿",
+      label: L("当前表单草稿", "Current Form Draft"),
       status: "editing",
-      hint: "编辑中",
-      meta: "点击可回到运行表单。"
+      hint: L("编辑中", "Editing"),
+      meta: L("点击可回到运行表单。", "Click to return to the run form.")
     },
     {
       id: "runtime_evidence",
       kind: "runtime",
-      label: "证据绑定",
+      label: L("证据绑定", "Evidence Binding"),
       status: evidenceCount > 0 ? "completed" : "pending",
-      hint: evidenceCount > 0 ? `已绑定 ${evidenceCount} 条` : "0，待处理"
+      hint: evidenceCount > 0 ? (isZh() ? `已绑定 ${evidenceCount} 条` : `${evidenceCount} linked`) : L("0，待处理", "0, pending")
     },
     {
       id: "runtime_consistency",
       kind: "runtime",
-      label: "一致性检查",
+      label: L("一致性检查", "Consistency Check"),
       status: issueCount > 0 ? "failed" : "pending",
-      hint: issueCount > 0 ? `存在 ${issueCount} 条告警` : "待处理"
+      hint: issueCount > 0 ? (isZh() ? `存在 ${issueCount} 条告警` : `${issueCount} alerts`) : L("待处理", "Pending")
     },
     {
       id: "runtime_logs",
       kind: "runtime",
-      label: "运行日志",
+      label: L("运行日志", "Run Logs"),
       status: "opened",
-      hint: "可查看"
+      hint: L("可查看", "Viewable")
     }
   ];
 
@@ -181,30 +184,30 @@ export function buildResourceExplorerData({
     {
       id: "output_report",
       kind: "output",
-      label: "14117 风险评估结论报告",
+      label: L("14117 风险评估结论报告", "14117 Risk Assessment Report"),
       status: artifactCount > 0 ? "completed" : "pending_generation",
-      hint: artifactCount > 0 ? "已生成，可进入报告审阅。" : "待生成"
+      hint: artifactCount > 0 ? L("已生成，可进入报告审阅。", "Generated. Ready for review.") : L("待生成", "Pending generation")
     },
     {
       id: "output_checklist",
       kind: "output",
-      label: "核验清单",
+      label: L("核验清单", "Verification Checklist"),
       status: "pending_generation",
-      hint: "待生成"
+      hint: L("待生成", "Pending generation")
     },
     {
       id: "output_matrix",
       kind: "output",
-      label: "风险匹配矩阵",
+      label: L("风险匹配矩阵", "Risk Mapping Matrix"),
       status: "pending_generation",
-      hint: "待生成"
+      hint: L("待生成", "Pending generation")
     },
     {
       id: "output_actions",
       kind: "output",
-      label: "整改建议",
+      label: L("整改建议", "Remediation Suggestions"),
       status: "pending_generation",
-      hint: "待生成"
+      hint: L("待生成", "Pending generation")
     }
   ];
 
@@ -227,11 +230,11 @@ export function buildResourceExplorerData({
 
   const summaryStatus = deriveSummaryStatus(inputMaterials, latestRun);
   const progress = summaryStatus === "blocked" ? 25 : Math.round((workflowSteps.filter((step) => step.status === "done").length / STEP_KEY_ORDER.length) * 100);
-  const blockedReason = !hasDataInventory ? "请上传数据清单附件（data_inventory）" : undefined;
+  const blockedReason = !hasDataInventory ? L("请上传数据清单附件（data_inventory）", "Please upload data inventory attachments (data_inventory).") : undefined;
 
   return {
     taskSummary: {
-      name: taskSpace.name || "14117 行政令合规 2026-04-11",
+      name: taskSpace.name || L("14117 行政令合规 2026-04-11", "14117 Executive Order Compliance 2026-04-11"),
       jurisdiction: taskSpace.jurisdiction,
       flow: taskSpace.mode.toUpperCase(),
       module: taskSpace.module.toUpperCase(),
@@ -243,35 +246,35 @@ export function buildResourceExplorerData({
     sections: {
       inputMaterials: {
         id: "inputs",
-        title: "输入材料",
+        title: L("输入材料", "Input Materials"),
         items: inputMaterials,
         collapsible: true,
         defaultOpen: true
       },
       taskSteps: {
         id: "steps",
-        title: "任务步骤",
+        title: L("任务步骤", "Task Steps"),
         items: taskSteps,
         collapsible: true,
         defaultOpen: true
       },
       runtimeResources: {
         id: "runtime",
-        title: "运行中资源",
+        title: L("运行中资源", "Runtime Resources"),
         items: runtimeResources,
         collapsible: true,
         defaultOpen: true
       },
       outputArtifacts: {
         id: "outputs",
-        title: "输出成果",
+        title: L("输出成果", "Output Artifacts"),
         items: outputArtifacts,
         collapsible: true,
         defaultOpen: true
       },
       workspaceViews: {
         id: "workspace",
-        title: "工作区视图",
+        title: L("工作区视图", "Workspace Views"),
         items: workspaceViews,
         collapsible: true,
         defaultOpen: true

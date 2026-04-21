@@ -1,7 +1,15 @@
 export const DEV_ACCEL_ENABLED =
   String(import.meta.env.VITE_ENABLE_DEV_ACCEL ?? "").toLowerCase() === "true";
 
-export type DevPresetModule = "assessment" | "pipia" | "dpia" | "tia" | "scc" | "bcr";
+export type DevPresetModule =
+  | "assessment"
+  | "pipia"
+  | "dpia"
+  | "tia"
+  | "scc"
+  | "bcr"
+  | "diagnosis"
+  | "document_review";
 
 export type ModuleDevPreset = {
   id: string;
@@ -19,6 +27,7 @@ export type AssessmentDevPreset = ModuleDevPreset & {
 
 const SHARED_DOCX_FILE = "storage/uploads/f_2cfeebc5e5c64b4e_CC源码分析.docx";
 const SHARED_TXT_FILE = "storage/uploads/regen_sample_scc.txt";
+const DOCUMENT_REVIEW_DOCX_FILE = "storage/uploads/dev_document_review_contract.docx";
 
 const ASSESSMENT_SECURITY_ASSESSMENT_PRESET: AssessmentDevPreset = {
   id: "assessment_cn_security_path",
@@ -240,6 +249,66 @@ const TIA_BASELINE_PRESET: ModuleDevPreset = {
   backendFilePaths: [SHARED_DOCX_FILE]
 };
 
+const DIAGNOSIS_BASELINE_PRESET: ModuleDevPreset = {
+  id: "diagnosis_cn_baseline",
+  module: "diagnosis",
+  title: "一键运行合规路径诊断",
+  scenarioDescription: "填充典型问卷答案并直接调用真实诊断后端流程。",
+  formDefaults: {
+    company_name: "华东云链科技（测试）",
+    m1_industry: "电商零售",
+    m1_business_channels: ["线上平台（APP / 小程序 / 官网）", "跨境服务（面向国外用户 / 业务涉及国外）"],
+    m1_service_targets: "个人用户和企业用户两者都有",
+    m1_company_size: "中型（51-200人）",
+    m2_core_needs: ["识别业务合规风险点", "制定合规文件（隐私政策 / 用户协议等）"],
+    m2_had_compliance_issue: "yes",
+    m2_issue_description: "曾收到用户对跨境隐私告知不充分的投诉。",
+    m2_deadline: "紧急需求（1个月内）",
+    m3_processes_personal_info: "yes",
+    m3_personal_info_types: ["姓名", "手机号", "交易信息", "身份证号", "精准位置信息"],
+    m3_processes_important_data: "yes",
+    m3_important_data_types: ["金融交易数据"],
+    m3_data_sources: ["用户主动提交", "设备自动采集"],
+    m3_processing_activities: ["收集", "存储", "传输", "跨境传输"],
+    m3_data_volume_range: "10-100万条",
+    m3_processes_enterprise_public_data: "yes",
+    m3_enterprise_public_data_desc: "处理商户经营数据用于风控建模",
+    m3_retention_period: "业务必要期限内留存",
+    m3_retention_desc: "跨境缓存保留30天",
+    m4_share_to_third_party: "yes",
+    m4_third_party_types: "境外客服与风控服务商",
+    m4_cross_border_transfer: "yes",
+    m4_cross_border_regions: "新加坡、香港",
+    m4_commercialization: "no",
+    m4_entrusted_processing: "yes",
+    m4_entrusted_party_type: "境外处理服务商",
+    m4_authorization_method: "单独点击“同意”按钮",
+    m5_systems: ["自有 APP", "官方网站"],
+    m5_security_measures: ["数据加密", "访问权限控制", "操作日志审计"],
+    m5_compliance_docs: ["隐私政策", "用户协议", "数据安全管理制度"],
+    m5_penalty_or_complaint: "收到过用户合规投诉"
+  },
+  backendFilePaths: []
+};
+
+const DOCUMENT_REVIEW_BASELINE_PRESET: ModuleDevPreset = {
+  id: "document_review_cn_baseline",
+  module: "document_review",
+  title: "一键运行文档专项智能审查",
+  scenarioDescription: "注入文档审查关键字段并加载预置文档，直接触发真实审查流程。",
+  formDefaults: {
+    company_name: "华东云链科技（测试）",
+    publisher_entity: "华东云链科技（测试）",
+    document_title: "跨境业务隐私政策（测试版）",
+    document_type: "privacy_policy",
+    receiver_name: "OceanStar Technology Pte. Ltd.",
+    receiver_country: "新加坡",
+    transfer_purpose: "跨境客服与风控协同处理",
+    review_focus: "重点核查跨境传输告知、敏感信息处理、用户权利行使路径与联系方式披露。"
+  },
+  backendFilePaths: [DOCUMENT_REVIEW_DOCX_FILE]
+};
+
 const PRESET_MAP = new Map<string, ModuleDevPreset>([
   [ASSESSMENT_SECURITY_ASSESSMENT_PRESET.id, ASSESSMENT_SECURITY_ASSESSMENT_PRESET],
   [PIPIA_BASELINE_PRESET.id, PIPIA_BASELINE_PRESET],
@@ -247,6 +316,8 @@ const PRESET_MAP = new Map<string, ModuleDevPreset>([
   [BCR_BASELINE_PRESET.id, BCR_BASELINE_PRESET],
   [DPIA_BASELINE_PRESET.id, DPIA_BASELINE_PRESET],
   [TIA_BASELINE_PRESET.id, TIA_BASELINE_PRESET],
+  [DIAGNOSIS_BASELINE_PRESET.id, DIAGNOSIS_BASELINE_PRESET],
+  [DOCUMENT_REVIEW_BASELINE_PRESET.id, DOCUMENT_REVIEW_BASELINE_PRESET],
 ]);
 
 const DEFAULT_PRESET_IDS: Record<DevPresetModule, string> = {
@@ -256,6 +327,8 @@ const DEFAULT_PRESET_IDS: Record<DevPresetModule, string> = {
   bcr: BCR_BASELINE_PRESET.id,
   dpia: DPIA_BASELINE_PRESET.id,
   tia: TIA_BASELINE_PRESET.id,
+  diagnosis: DIAGNOSIS_BASELINE_PRESET.id,
+  document_review: DOCUMENT_REVIEW_BASELINE_PRESET.id,
 };
 
 export function getModuleDevPreset(module: DevPresetModule, id?: string): ModuleDevPreset {

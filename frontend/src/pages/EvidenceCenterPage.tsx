@@ -159,7 +159,7 @@ export function EvidenceCenterPage() {
   const [sourceLayerOptions, setSourceLayerOptions] = useState<string[]>([]);
   const [sourcePathOptions, setSourcePathOptions] = useState<string[]>([]);
   const [caseModuleOptions, setCaseModuleOptions] = useState<string[]>([]);
-  const [summary, setSummary] = useState({ source_count: 0, case_count: 0, p0_source_count: 0 });
+  const [summary, setSummary] = useState({ source_count: 0, case_count: 0 });
   const [syncMeta, setSyncMeta] = useState({
     synced_at: "",
     cache_refreshed: false,
@@ -534,7 +534,7 @@ export function EvidenceCenterPage() {
                     const caseId = rowText(row, "case_id");
                     return (
                       <article key={caseId} className={`evidence-hit-item ${selectedCase?.case_id === caseId ? "active" : ""}`} onClick={() => setSelectedCaseId(caseId)}>
-                        <small>{rowText(row, "case_type")} · {rowText(row, "priority")}</small>
+                        <small>{rowText(row, "case_type")}</small>
                         <strong>{rowText(row, "case_title")}</strong>
                         <p>{rowText(row, "expected_module")}</p>
                       </article>
@@ -595,7 +595,7 @@ export function EvidenceCenterPage() {
                       className={`evidence-hit-item ${selectedArticle?.id === item.id ? "active" : ""}`}
                       onClick={() => setSelectedArticleId(item.id)}
                     >
-                      <small>{item.jurisdiction.toUpperCase()} · {item.usage_priority}</small>
+                      <small>{item.jurisdiction.toUpperCase()}</small>
                       <strong>{item.title}</strong>
                       <p>{item.article}</p>
                     </article>
@@ -644,7 +644,6 @@ export function EvidenceCenterPage() {
                   <div className="evidence-detail-meta">
                     <span>{selectedArticle.jurisdiction.toUpperCase()}</span>
                     <span>{selectedArticle.path}</span>
-                    <span>{selectedArticle.usage_priority}</span>
                     {selectedArticle.doc_type ? <span>{selectedArticle.doc_type}</span> : null}
                   </div>
                   <h4>{selectedArticle.title}</h4>
@@ -680,7 +679,6 @@ export function EvidenceCenterPage() {
                     <span>{rowText(selectedSource, "source_id")}</span>
                     <span>{rowText(selectedSource, "layer")}</span>
                     <span>{rowText(selectedSource, "path")}</span>
-                    <span>{rowText(selectedSource, "usage_priority")}</span>
                   </div>
                   <h4>{rowText(selectedSource, "title")}</h4>
                   <p>{rowText(selectedSource, "notes", "-")}</p>
@@ -696,7 +694,6 @@ export function EvidenceCenterPage() {
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
                     <span>{rowText(selectedCase, "case_id")}</span>
-                    <span>{rowText(selectedCase, "priority")}</span>
                     <span>{rowText(selectedCase, "jurisdiction")}</span>
                   </div>
                   <h4>{rowText(selectedCase, "case_title")}</h4>

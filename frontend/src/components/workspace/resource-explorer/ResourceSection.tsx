@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ResourceItemRow } from "./ResourceItemRow";
 import type { ResourceItemData, ResourceSectionData } from "./types";
+import { useLang } from "../../../lib/language";
 
 type ResourceSectionProps = {
   section: ResourceSectionData;
@@ -9,6 +10,7 @@ type ResourceSectionProps = {
 };
 
 export function ResourceSection({ section, onItemClick, onUploadMissing }: ResourceSectionProps) {
+  const { lang } = useLang();
   const [open, setOpen] = useState(section.defaultOpen ?? true);
 
   return (
@@ -17,7 +19,7 @@ export function ResourceSection({ section, onItemClick, onUploadMissing }: Resou
         <h4>{section.title}</h4>
         {section.collapsible !== false ? (
           <button type="button" className="rx-section-toggle" onClick={() => setOpen((value) => !value)}>
-            {open ? "收起" : "展开"}
+            {open ? (lang === "zh" ? "收起" : "Collapse") : lang === "zh" ? "展开" : "Expand"}
           </button>
         ) : null}
       </header>
@@ -36,4 +38,3 @@ export function ResourceSection({ section, onItemClick, onUploadMissing }: Resou
     </section>
   );
 }
-

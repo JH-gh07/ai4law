@@ -1284,9 +1284,81 @@ const splitCsv = (value: string): string[] =>
 
 const hasText = (value: string, minLength = 2): boolean => value.trim().length >= minLength;
 
+const UI_LANG_KEY = "ai4law_ui_lang";
+const currentUiLang = (): "zh" | "en" => (globalThis.localStorage?.getItem(UI_LANG_KEY) === "zh" ? "zh" : "en");
+const replaceAllText = (source: string, from: string, to: string): string => source.split(from).join(to);
+
+const toEnglishValidation = (message: string): string => {
+  let text = message;
+  const replacements: Array<[string, string]> = [
+    ["请填写", "Please provide "],
+    ["请至少填写一类", "Please provide at least one "],
+    ["请上传至少1份", "Please upload at least one "],
+    ["请上传", "Please upload "],
+    ["仅支持", "only supports"],
+    ["格式不正确，请使用 http(s) 链接。", "format is invalid. Please use an http(s) URL."],
+    ["企业名称", "company name"],
+    ["统一社会信用代码（至少8位）", "Unified Social Credit Code (at least 8 characters)"],
+    ["接收方国家/地区", "recipient country/region"],
+    ["出境目的", "cross-border transfer purpose"],
+    ["合法性基础", "legal basis"],
+    ["必要性说明", "necessity rationale"],
+    ["数据清单摘要", "data inventory summary"],
+    ["系统与出境链路说明", "system and transfer-chain description"],
+    ["安全评估附件材料", "security assessment attachments"],
+    ["处理者名称", "data processor name"],
+    ["拟出境活动目的", "intended transfer activity purpose"],
+    ["境外接收方名称", "overseas recipient name"],
+    ["处理合法性基础", "processing legal basis"],
+    ["拟出境个人信息", "personal information to be transferred"],
+    ["告知机制", "notice mechanism"],
+    ["单独同意机制", "separate consent mechanism"],
+    ["个人权利请求渠道", "data-subject rights request channel"],
+    ["保存与删除策略", "retention and deletion policy"],
+    ["文档名称", "document title"],
+    ["本次审查重点", "review focus"],
+    ["合同或政策文本后再执行审查", "contract/policy text before running review"],
+    ["数据出口方名称", "data exporter name"],
+    ["数据进口方名称", "data importer name"],
+    ["进口方国家/地区", "importer country/region"],
+    ["传输目的", "transfer purpose"],
+    ["数据类别", "data categories"],
+    ["技术与组织措施（TOM）摘要", "technical and organizational measures (TOM) summary"],
+    ["数据主体权利与投诉机制", "data-subject rights and complaint mechanism"],
+    ["集团名称", "group name"],
+    ["集团结构与申请主体信息", "group structure and applicant-entity information"],
+    ["数据流与处理活动范围", "data flow and processing scope"],
+    ["内部约束机制", "internal binding mechanism"],
+    ["第三国法律评估机制", "third-country legal assessment mechanism"],
+    ["政府访问请求处理机制", "government access request handling mechanism"],
+    ["项目名称", "project name"],
+    ["处理活动描述", "processing activity description"],
+    ["目的与必要性说明", "purpose and necessity statement"],
+    ["风险评估", "risk assessment"],
+    ["缓解措施", "mitigation measures"],
+    ["剩余风险结论", "residual risk conclusion"],
+    ["第三国法律评估发现", "third-country law assessment findings"],
+    ["技术性补充措施", "technical supplementary measures"],
+    ["补充措施后的有效性判断", "post-supplementary effectiveness assessment"],
+    ["关键行动项", "key action items"],
+    ["数据清单附件（data_inventory）", "data inventory attachment (data_inventory)"],
+    ["实体清单附件（entity_inventory）", "entity inventory attachment (entity_inventory)"],
+    ["隐私政策URL", "privacy policy URL"],
+    ["。", "."]
+  ];
+  for (const [from, to] of replacements) {
+    text = replaceAllText(text, from, to);
+  }
+
+  if (/[\u4e00-\u9fff]/.test(text)) {
+    text = "Invalid or missing required input. Please check required fields and attachments.";
+  }
+  return text;
+};
+
 const assertInput = (condition: boolean, message: string): void => {
   if (!condition) {
-    throw new Error(message);
+    throw new Error(currentUiLang() === "zh" ? message : toEnglishValidation(message));
   }
 };
 
@@ -1442,7 +1514,7 @@ const createDefaultDiagnosisValues = (): DiagnosisFormValues => {
     return [];
   };
 
-  return {
+  const base: DiagnosisFormValues = {
     company_name: toString(demo.company_name, ""),
     m1_industry: toString(answers.m1_industry, ""),
     m1_industry_other: toString(answers.m1_industry_other, ""),
@@ -1493,6 +1565,9 @@ const createDefaultDiagnosisValues = (): DiagnosisFormValues => {
     m5_penalty_reason: toString(answers.m5_penalty_reason, ""),
     m5_penalty_result: toString(answers.m5_penalty_result, "")
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("diagnosis");
+  return { ...base, ...(preset.formDefaults as Partial<DiagnosisFormValues>) };
 };
 
 const createDefaultPipiaValues = (): PipiaFormValues => {
@@ -1556,7 +1631,7 @@ const createDefaultPipiaValues = (): PipiaFormValues => {
 
 const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
   const demo = asRecord(getDefaultPayload("scc"));
-  return {
+  const base: DocumentReviewFormValues = {
     company_name: toString(demo.company_name, ""),
     document_title: "隐私政策",
     document_version: "v1.0",
@@ -1583,6 +1658,9 @@ const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
     has_scc_draft: toBoolean(demo.has_scc_draft, false),
     review_focus: "重点审查出境告知、敏感信息处理、个人权利与救济条款。"
   };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getModuleDevPreset("document_review");
+  return { ...base, ...(preset.formDefaults as Partial<DocumentReviewFormValues>) };
 };
 
 const inferDocTypeFromFileName = (name: string): DocumentReviewFormValues["document_type"] => {
@@ -2299,6 +2377,9 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   );
   const [documentReviewValues, setDocumentReviewValues] = useState<DocumentReviewFormValues>(createDefaultDocumentReviewValues);
   const [documentReviewFiles, setDocumentReviewFiles] = useState<File[]>([]);
+  const [documentReviewDevFilePaths, setDocumentReviewDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("document_review").backendFilePaths : []
+  );
   const [documentReviewSelectedFileIndex, setDocumentReviewSelectedFileIndex] = useState(0);
   const [documentReviewPreviewUrl, setDocumentReviewPreviewUrl] = useState<string | null>(null);
   const [documentReviewTextPreview, setDocumentReviewTextPreview] = useState("");
@@ -2392,6 +2473,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     if (taskTemplate?.id === "cn_document_review") {
       setDocumentReviewValues(createDefaultDocumentReviewValues());
       setDocumentReviewFiles([]);
+      setDocumentReviewDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("document_review").backendFilePaths : []);
       setDocumentReviewSelectedFileIndex(0);
       setDocumentReviewPreviewUrl(null);
       setDocumentReviewTextPreview("");
@@ -2712,57 +2794,65 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const buildPipiaPayload = async (): Promise<unknown> =>
     buildPipiaPayloadFrom(pipiaValues, pipiaFiles, pipiaDevFilePaths);
 
-  const buildDocumentReviewPayload = async (): Promise<unknown> => {
+  const buildDocumentReviewPayloadFrom = async (
+    values: DocumentReviewFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
     assertInput(
-      hasText(documentReviewValues.publisher_entity) || hasText(documentReviewValues.company_name),
+      hasText(values.publisher_entity) || hasText(values.company_name),
       "请填写企业名称或发布主体。"
     );
-    assertInput(hasText(documentReviewValues.document_title), "请填写文档名称。");
-    assertInput(hasText(documentReviewValues.review_focus), "请填写本次审查重点。");
-    assertInput(documentReviewFiles.length > 0, "请至少上传1份合同或政策文本后再执行审查。");
+    assertInput(hasText(values.document_title), "请填写文档名称。");
+    assertInput(hasText(values.review_focus), "请填写本次审查重点。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
+    assertInput(files.length > 0 || presetFilePaths.length > 0, "请至少上传1份合同或政策文本后再执行审查。");
 
-    const uploadedFiles = await uploadFiles(documentReviewFiles);
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const trimOr = (value: string, fallback: string): string => {
       const trimmed = value.trim();
       return trimmed.length >= 2 ? trimmed : fallback;
     };
     const reviewContext = [
-      documentReviewValues.document_title ? `文档：${documentReviewValues.document_title}` : "",
-      documentReviewValues.document_version ? `版本：${documentReviewValues.document_version}` : "",
-      documentReviewValues.effective_date ? `生效日期：${documentReviewValues.effective_date}` : "",
-      documentReviewValues.applicable_products ? `适用产品：${documentReviewValues.applicable_products}` : "",
-      documentReviewValues.applicable_scope ? `适用范围：${documentReviewValues.applicable_scope}` : "",
-      documentReviewValues.is_live_version ? "当前线上生效版本" : "非线上生效版本",
-      documentReviewValues.transfer_purpose.trim(),
-      `${DOCUMENT_TYPE_LABEL[documentReviewValues.document_type]}审查`,
-      documentReviewValues.processor_identity_disclosed ? "已披露处理者身份" : "未明确披露处理者身份",
-      documentReviewValues.scope_disclosed ? "已披露适用范围" : "未明确披露适用范围",
-      documentReviewValues.collection_purpose_disclosed ? "已披露收集与处理目的" : "未充分披露收集与处理目的",
-      documentReviewValues.processing_method_disclosed ? "已披露处理方式" : "未充分披露处理方式",
-      documentReviewValues.category_disclosed ? "已披露个人信息种类" : "未充分披露个人信息种类",
-      documentReviewValues.sensitive_pi_disclosed ? "已披露敏感信息处理" : "未充分披露敏感信息处理",
-      documentReviewValues.crossborder_rule_disclosed ? "已披露出境规则" : "未充分披露出境规则",
-      documentReviewValues.rights_channel_disclosed ? "已披露权利行使渠道" : "未充分披露权利行使渠道",
-      documentReviewValues.contact_channel ? `联系渠道：${documentReviewValues.contact_channel}` : "",
-      documentReviewValues.review_focus.trim()
+      values.document_title ? `文档：${values.document_title}` : "",
+      values.document_version ? `版本：${values.document_version}` : "",
+      values.effective_date ? `生效日期：${values.effective_date}` : "",
+      values.applicable_products ? `适用产品：${values.applicable_products}` : "",
+      values.applicable_scope ? `适用范围：${values.applicable_scope}` : "",
+      values.is_live_version ? "当前线上生效版本" : "非线上生效版本",
+      values.transfer_purpose.trim(),
+      `${DOCUMENT_TYPE_LABEL[values.document_type]}审查`,
+      values.processor_identity_disclosed ? "已披露处理者身份" : "未明确披露处理者身份",
+      values.scope_disclosed ? "已披露适用范围" : "未明确披露适用范围",
+      values.collection_purpose_disclosed ? "已披露收集与处理目的" : "未充分披露收集与处理目的",
+      values.processing_method_disclosed ? "已披露处理方式" : "未充分披露处理方式",
+      values.category_disclosed ? "已披露个人信息种类" : "未充分披露个人信息种类",
+      values.sensitive_pi_disclosed ? "已披露敏感信息处理" : "未充分披露敏感信息处理",
+      values.crossborder_rule_disclosed ? "已披露出境规则" : "未充分披露出境规则",
+      values.rights_channel_disclosed ? "已披露权利行使渠道" : "未充分披露权利行使渠道",
+      values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
+      values.review_focus.trim()
     ]
       .filter((item) => item.length > 0)
       .join("；");
 
     return {
-      company_name: trimOr(documentReviewValues.publisher_entity || documentReviewValues.company_name, "待确认企业"),
-      receiver_name: trimOr(documentReviewValues.receiver_name, "待确认接收方"),
-      receiver_country: trimOr(documentReviewValues.receiver_country, "待确认国家"),
+      company_name: trimOr(values.publisher_entity || values.company_name, "待确认企业"),
+      receiver_name: trimOr(values.receiver_name, "待确认接收方"),
+      receiver_country: trimOr(values.receiver_country, "待确认国家"),
       transfer_purpose: trimOr(
-        reviewContext || documentReviewValues.transfer_purpose,
+        reviewContext || values.transfer_purpose,
         "文档合规审查与跨境条款核验"
       ),
-      pii_count: Math.max(0, documentReviewValues.pii_count),
-      spi_count: Math.max(0, documentReviewValues.spi_count),
-      has_scc_draft: documentReviewValues.has_scc_draft || uploadedFiles.length > 0,
+      pii_count: Math.max(0, values.pii_count),
+      spi_count: Math.max(0, values.spi_count),
+      has_scc_draft: values.has_scc_draft || uploadedFiles.length > 0,
       uploaded_files: uploadedFiles
     };
   };
+
+  const buildDocumentReviewPayload = async (): Promise<unknown> =>
+    buildDocumentReviewPayloadFrom(documentReviewValues, documentReviewFiles, documentReviewDevFilePaths);
 
   const buildEuSccPayloadFrom = async (
     values: EuSccFormValues,
@@ -3223,15 +3313,15 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
-  const buildDiagnosisPayload = (): unknown => {
+  const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown => {
     const asText = (key: string): string => {
-      const value = diagnosisValues[key];
+      const value = values[key];
       if (typeof value === "string") return value;
       if (typeof value === "number") return String(value);
       return "";
     };
     const asArray = (key: string): string[] => {
-      const value = diagnosisValues[key];
+      const value = values[key];
       if (Array.isArray(value)) return value.map((item) => String(item));
       if (typeof value === "string" && value.trim().length > 0) {
         return value.split(/[,，\n]/).map((item) => item.trim()).filter((item) => item.length > 0);
@@ -3330,6 +3420,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       }
     };
   };
+
+  const buildDiagnosisPayload = (): unknown => buildDiagnosisPayloadFrom(diagnosisValues);
 
   const runWithPayload = async (requestPayload: unknown) => {
     setLoading(true);
@@ -3490,6 +3582,33 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setTiaDevFilePaths(preset.backendFilePaths);
     setTiaStepIndex(TIA_STEPS.length - 1);
     const payload = await buildTiaPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runDiagnosisDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isDiagnosisModule || loading) return;
+    const preset = getModuleDevPreset("diagnosis");
+    const nextValues: DiagnosisFormValues = {
+      ...diagnosisValues,
+      ...(preset.formDefaults as Partial<DiagnosisFormValues>)
+    };
+    setDiagnosisValues(nextValues);
+    setDiagnosisStepIndex(DIAGNOSIS_STEPS.length - 1);
+    const payload = buildDiagnosisPayloadFrom(nextValues);
+    await runWithPayload(payload);
+  };
+
+  const runDocumentReviewDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isDocumentReviewTask || loading) return;
+    const preset = getModuleDevPreset("document_review");
+    const nextValues: DocumentReviewFormValues = {
+      ...documentReviewValues,
+      ...(preset.formDefaults as Partial<DocumentReviewFormValues>)
+    };
+    setDocumentReviewValues(nextValues);
+    setDocumentReviewFiles([]);
+    setDocumentReviewDevFilePaths(preset.backendFilePaths);
+    const payload = await buildDocumentReviewPayloadFrom(nextValues, [], preset.backendFilePaths);
     await runWithPayload(payload);
   };
 
@@ -3667,7 +3786,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           <aside className="doc-review-input-pane">
             <div className="schema-wizard-head">
               <div className="runner-title">文档输入区</div>
-              <span>{documentReviewFiles.length} 份</span>
+              <span className="doc-review-count-badge">{documentReviewFiles.length} 份</span>
             </div>
             <label className="doc-review-upload-drop">
               <span>上传待审查文档</span>
@@ -3679,20 +3798,30 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
               />
             </label>
             <div className="doc-review-file-list">
-              {documentReviewFiles.length === 0 ? (
+              {documentReviewFiles.length === 0 && (!DEV_ACCEL_ENABLED || documentReviewDevFilePaths.length === 0) ? (
                 <p className="resource-empty">尚未上传文档</p>
               ) : (
-                documentReviewFiles.map((file, index) => (
-                  <button
-                    type="button"
-                    key={`${file.name}-${file.size}-${file.lastModified}`}
-                    className={`doc-review-file-item ${index === documentReviewSelectedFileIndex ? "active" : ""}`}
-                    onClick={() => setDocumentReviewSelectedFileIndex(index)}
-                  >
-                    <strong>{file.name}</strong>
-                    <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
-                  </button>
-                ))
+                <>
+                  {DEV_ACCEL_ENABLED && documentReviewDevFilePaths.length > 0 ? (
+                    documentReviewDevFilePaths.map((path) => (
+                      <article key={`dev-document-review-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>Dev preset</small>
+                      </article>
+                    ))
+                  ) : null}
+                  {documentReviewFiles.map((file, index) => (
+                    <button
+                      type="button"
+                      key={`${file.name}-${file.size}-${file.lastModified}`}
+                      className={`doc-review-file-item ${index === documentReviewSelectedFileIndex ? "active" : ""}`}
+                      onClick={() => setDocumentReviewSelectedFileIndex(index)}
+                    >
+                      <strong>{file.name}</strong>
+                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
+                    </button>
+                  ))}
+                </>
               )}
             </div>
           </aside>
@@ -3774,6 +3903,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 </label>
               </div>
               <div className="schema-actions-row">
+                {DEV_ACCEL_ENABLED ? (
+                  <button
+                    className="pill-btn"
+                    type="button"
+                    onClick={runDocumentReviewDevPreset}
+                    disabled={loading}
+                    title="开发期一键注入文档审查预设并运行真实后端流程"
+                  >
+                    一键体验文档审查
+                  </button>
+                ) : null}
                 <button className="pill-btn-primary" onClick={execute} disabled={loading}>
                   {loading ? t("runningNow") : "执行专项审查并生成报告"}
                 </button>
@@ -3881,7 +4021,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {euSccDevFilePaths.map((path) => (
                       <article key={`dev-scc-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>
@@ -4084,6 +4224,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
           </div>
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runDiagnosisDevPreset}
+                disabled={loading}
+                title="开发期一键注入诊断问卷预设并运行真实后端流程"
+              >
+                一键体验诊断
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -4221,7 +4372,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {assessmentDevFilePaths.map((path) => (
                       <article key={`dev-assessment-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>
@@ -4380,7 +4531,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {pipiaDevFilePaths.map((path) => (
                       <article key={`dev-pipia-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>
@@ -4502,7 +4653,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {bcrDevFilePaths.map((path) => (
                       <article key={`dev-bcr-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>
@@ -4636,7 +4787,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {dpiaDevFilePaths.map((path) => (
                       <article key={`dev-dpia-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>
@@ -4770,7 +4921,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                     {tiaDevFilePaths.map((path) => (
                       <article key={`dev-tia-file-${path}`} className="schema-upload-item">
                         <strong>{path.split("/").pop() || path}</strong>
-                        <small>dev preset · backend file</small>
+                        <small>Dev preset</small>
                       </article>
                     ))}
                   </>

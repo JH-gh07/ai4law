@@ -1,17 +1,19 @@
 import { StatusBadge } from "./StatusBadge";
 import type { TaskSummaryData } from "./types";
+import { useLang } from "../../../lib/language";
 
 type TaskSummaryCardProps = {
   summary: TaskSummaryData;
 };
 
 export function TaskSummaryCard({ summary }: TaskSummaryCardProps) {
+  const { lang } = useLang();
   const progressValue = Math.max(0, Math.min(100, summary.progress));
 
   return (
     <section className="rx-summary">
       <div className="rx-summary-head">
-        <h3>当前任务</h3>
+        <h3>{lang === "zh" ? "当前任务" : "Current Task"}</h3>
         <StatusBadge status={summary.status} />
       </div>
       <strong className="rx-summary-name">{summary.name}</strong>
@@ -22,7 +24,7 @@ export function TaskSummaryCard({ summary }: TaskSummaryCardProps) {
         <span>{summary.runBatch}</span>
       </div>
       <div className="rx-summary-progress">
-        <label>进度 {progressValue}%</label>
+        <label>{lang === "zh" ? "进度" : "Progress"} {progressValue}%</label>
         <div className="rx-progress-track">
           <span style={{ width: `${progressValue}%` }} />
         </div>
@@ -31,4 +33,3 @@ export function TaskSummaryCard({ summary }: TaskSummaryCardProps) {
     </section>
   );
 }
-
