@@ -5,6 +5,8 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent
 } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { ModuleRun, OutputArtifact, TaskSpace, WorkflowStepKey } from "../../lib/domain";
@@ -109,6 +111,15 @@ const readResponseChapters = (response: unknown): ResponseChapter[] => {
 
 const readStringList = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+
+const normalizeMarkdownForRender = (value: string): string => {
+  const normalized = value.replace(/\r\n?/g, "\n");
+  return normalized
+    .replace(/^(#{1,6})([^\s#])/gm, "$1 $2")
+    .replace(/^(\d+)\)\s+/gm, "$1. ")
+    .replace(/^\s*•\s+/gm, "- ")
+    .trim();
+};
 
 const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): ReportPreviewSection[] => {
   if (!isRecord(response)) return [];
@@ -561,18 +572,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <p>{new Date(taskSpace.updatedAt).toLocaleString()}</p>
             </article>
           </section>
-          <section className="workspace-doc-list">
-            {taskArtifacts.length > 0 ? (
-              taskArtifacts.map((artifact) => (
-                <article key={artifact.id} className="workspace-doc-item">
-                  <strong>{artifact.kind.toUpperCase()}</strong>
-                  <span>{toFileName(artifact.path)}</span>
-                </article>
-              ))
-            ) : (
-              <p className="resource-empty">{t("noArtifacts")}</p>
-            )}
-          </section>
         </section>
       );
     }
@@ -670,12 +669,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <article className="workspace-report-chapter workspace-report-preview-block">
                 <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
                 <div className="workspace-report-richtext">
-                  {artifactPreview.content
-                    .split("\n")
-                    .filter((line) => line.trim().length > 0)
-                    .map((line, index) => (
-                      <p key={`${artifactPreview.path}-${index}`}>{line}</p>
-                    ))}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {normalizeMarkdownForRender(artifactPreview.content)}
+                  </ReactMarkdown>
                 </div>
               </article>
             ) : artifactPreview.file_url ? (
@@ -693,12 +689,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
                 <strong>{section.title}</strong>
                 <div className="workspace-report-richtext">
-                  {section.content
-                    .split("\n")
-                    .filter((line) => line.trim().length > 0)
-                    .map((line, lineIndex) => (
-                      <p key={`${section.title}-${lineIndex}`}>{line}</p>
-                    ))}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {normalizeMarkdownForRender(section.content)}
+                  </ReactMarkdown>
                 </div>
               </article>
             ))}
