@@ -18,6 +18,8 @@ export function extractInsight(response: unknown): ResponseInsight {
     return { outputFiles: {}, consistencyIssues: [] };
   }
 
+  const resultRecord = isRecord(response.result) ? response.result : {};
+
   const outputFiles: Record<string, string> = {};
   if (isRecord(response.output_files)) {
     for (const [key, value] of Object.entries(response.output_files)) {
@@ -35,7 +37,7 @@ export function extractInsight(response: unknown): ResponseInsight {
   return {
     reportPath: readString(response.report_path),
     outputFiles,
-    riskLevel: readString(response.risk_level),
+    riskLevel: readString(response.risk_level) ?? readString(resultRecord.risk_level),
     recommendedPath: readString(response.recommended_path),
     consistencyIssues
   };

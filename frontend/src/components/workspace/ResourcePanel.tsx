@@ -417,7 +417,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
                   <FolderOutputIcon width="14" height="14" />
                 </span>
                 <span className="ide-tree-label">{copy.outputLabel}</span>
-                <small>{outputFiles.length}</small>
+                <small>{outputEntries.length}</small>
               </button>
               {expandedFolderIds.has("tree-root-output") ? (
                 outputTree.length > 0 ? (
