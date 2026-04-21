@@ -48,6 +48,11 @@ type AutoExtractResult = {
   note: string;
 };
 
+type DocumentReviewExtractState = {
+  status: "loading" | "done" | "error";
+  note: string;
+};
+
 type DiagnosisOption = {
   value: string;
   label: string;
@@ -1379,6 +1384,69 @@ const inferAttachmentFormat = (value: string): "doc" | "docx" | "pdf" | "txt" | 
   return "txt";
 };
 
+const getDocumentReviewFileKey = (file: File): string => `${file.name}-${file.size}-${file.lastModified}`;
+
+const getDocumentReviewFileExt = (name: string): string => {
+  const normalized = name.toLowerCase();
+  return normalized.includes(".") ? normalized.slice(normalized.lastIndexOf(".") + 1) : "";
+};
+
+const isDocumentReviewTextPreviewExt = (ext: string): boolean => ["txt", "md", "json", "csv"].includes(ext);
+
+const isDocumentReviewImagePreviewExt = (ext: string): boolean =>
+  ["png", "jpg", "jpeg", "gif", "webp", "bmp"].includes(ext);
+
+const canInlinePreviewDocumentReviewExt = (ext: string): boolean =>
+  ext === "pdf" || isDocumentReviewTextPreviewExt(ext) || isDocumentReviewImagePreviewExt(ext);
+
+const getDocumentReviewTypeLabel = (ext: string): string => {
+  if (ext === "pdf") return "PDF";
+  if (ext === "docx") return "DOCX";
+  if (ext === "doc") return "DOC";
+  if (ext === "md") return "Markdown";
+  if (ext === "txt") return "Text";
+  if (ext === "csv") return "CSV";
+  if (ext === "json") return "JSON";
+  if (["jpg", "jpeg"].includes(ext)) return "JPG";
+  if (ext === "png") return "PNG";
+  if (ext === "gif") return "GIF";
+  if (ext === "webp") return "WEBP";
+  if (ext === "bmp") return "BMP";
+  return ext ? ext.toUpperCase() : "FILE";
+};
+
+const formatDocumentReviewFileSize = (size: number): string => {
+  if (size >= 1024 * 1024) {
+    const value = size / (1024 * 1024);
+    return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} MB`;
+  }
+  return `${Math.max(1, Math.round(size / 1024))} KB`;
+};
+
+const formatDocumentReviewFileDate = (value: number, lang: "zh" | "en"): string =>
+  new Intl.DateTimeFormat(lang === "zh" ? "zh-CN" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+
+const getDocumentReviewDocTypeLabel = (value: DocumentReviewFormValues["document_type"]): string => {
+  if (value === "privacy_policy") return "隐私政策";
+  if (value === "scc_contract") return "标准合同";
+  if (value === "dpa") return "数据处理协议";
+  return "其他文档";
+};
+
+const getDocumentReviewExtractStatusMeta = (
+  state?: DocumentReviewExtractState
+): { label: string; tone: "neutral" | "loading" | "success" | "error" } => {
+  if (!state) return { label: "待解析", tone: "neutral" };
+  if (state.status === "loading") return { label: "解析中", tone: "loading" };
+  if (state.status === "done") return { label: "已回填", tone: "success" };
+  return { label: "需人工确认", tone: "error" };
+};
+
 const inferDocxPdfFormat = (value: string): "docx" | "pdf" | null => {
   const suffix = value.split(".").pop()?.toLowerCase();
   if (suffix === "docx") return "docx";
@@ -1729,6 +1797,13 @@ const buildAutoExtractResult = async (file: File): Promise<AutoExtractResult> =>
 
   return extracted;
 };
+
+const seedDocumentReviewValuesForFile = (base: DocumentReviewFormValues, file: File): DocumentReviewFormValues => ({
+  ...base,
+  document_title: file.name.replace(/\.[^.]+$/, "") || base.document_title,
+  document_type: inferDocTypeFromFileName(file.name),
+  review_focus: inferReviewFocusFromText(file.name)
+});
 
 const createDefaultEuSccValues = (): EuSccFormValues => {
   const demo = asRecord(getDefaultPayload("scc"));
@@ -2383,8 +2458,12 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [documentReviewSelectedFileIndex, setDocumentReviewSelectedFileIndex] = useState(0);
   const [documentReviewPreviewUrl, setDocumentReviewPreviewUrl] = useState<string | null>(null);
   const [documentReviewTextPreview, setDocumentReviewTextPreview] = useState("");
-  const [documentReviewAutoFillNote, setDocumentReviewAutoFillNote] = useState("");
-  const [documentReviewAutoFillLoading, setDocumentReviewAutoFillLoading] = useState(false);
+  const [documentReviewFileFormValues, setDocumentReviewFileFormValues] = useState<Record<string, DocumentReviewFormValues>>(
+    {}
+  );
+  const [documentReviewExtractStates, setDocumentReviewExtractStates] = useState<Record<string, DocumentReviewExtractState>>(
+    {}
+  );
   const documentReviewParsedKeysRef = useRef<Set<string>>(new Set());
   const [euSccStepIndex, setEuSccStepIndex] = useState(0);
   const [euSccValues, setEuSccValues] = useState<EuSccFormValues>(createDefaultEuSccValues);
@@ -2477,8 +2556,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setDocumentReviewSelectedFileIndex(0);
       setDocumentReviewPreviewUrl(null);
       setDocumentReviewTextPreview("");
-      setDocumentReviewAutoFillNote("");
-      setDocumentReviewAutoFillLoading(false);
+      setDocumentReviewFileFormValues({});
+      setDocumentReviewExtractStates({});
       documentReviewParsedKeysRef.current = new Set();
     }
     if (taskTemplate?.id === "eu_scc") {
@@ -2561,12 +2640,52 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     name: K,
     value: DocumentReviewFormValues[K]
   ) => {
-    setDocumentReviewValues((prev) => ({ ...prev, [name]: value }));
+    const nextValues = { ...documentReviewValues, [name]: value };
+    setDocumentReviewValues(nextValues);
+    const activeFile = documentReviewFiles[documentReviewSelectedFileIndex] ?? null;
+    if (activeFile) {
+      const fileKey = getDocumentReviewFileKey(activeFile);
+      setDocumentReviewFileFormValues((prev) => ({ ...prev, [fileKey]: nextValues }));
+    }
+  };
+
+  const syncDocumentReviewValuesForFile = (file: File) => {
+    const fileKey = getDocumentReviewFileKey(file);
+    const savedValues = documentReviewFileFormValues[fileKey];
+    if (savedValues) {
+      setDocumentReviewValues(savedValues);
+      return;
+    }
+
+    const defaultValues = createDefaultDocumentReviewValues();
+    const seededValues = seedDocumentReviewValuesForFile(
+      {
+        ...defaultValues,
+        company_name: documentReviewValues.company_name || defaultValues.company_name,
+        publisher_entity: documentReviewValues.publisher_entity || defaultValues.publisher_entity,
+        receiver_name: documentReviewValues.receiver_name || defaultValues.receiver_name,
+        receiver_country: documentReviewValues.receiver_country || defaultValues.receiver_country,
+        transfer_purpose: documentReviewValues.transfer_purpose || defaultValues.transfer_purpose,
+        pii_count: documentReviewValues.pii_count,
+        spi_count: documentReviewValues.spi_count,
+        has_scc_draft: documentReviewValues.has_scc_draft,
+        review_focus: documentReviewValues.review_focus || defaultValues.review_focus,
+        contact_channel: documentReviewValues.contact_channel || defaultValues.contact_channel,
+        sensitive_pi_disclosed: documentReviewValues.sensitive_pi_disclosed,
+        rights_channel_disclosed: documentReviewValues.rights_channel_disclosed,
+        crossborder_rule_disclosed: documentReviewValues.crossborder_rule_disclosed
+      },
+      file
+    );
+
+    setDocumentReviewValues(seededValues);
+    setDocumentReviewFileFormValues((prev) => ({ ...prev, [fileKey]: seededValues }));
   };
 
   const onSelectDocumentReviewFiles = (incomingFiles: FileList | null) => {
     const next = Array.from(incomingFiles ?? []);
     if (next.length === 0) return;
+    const hadNoUploadedFiles = documentReviewFiles.length === 0;
     setDocumentReviewFiles((prev) => {
       const merged = [...prev];
       for (const file of next) {
@@ -2582,8 +2701,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       }
       return merged;
     });
-    setDocumentReviewSelectedFileIndex((prev) => (documentReviewFiles.length === 0 ? 0 : prev));
-    setDocumentReviewAutoFillNote("");
+    if (hadNoUploadedFiles) {
+      setDocumentReviewSelectedFileIndex(0);
+      syncDocumentReviewValuesForFile(next[0]);
+    }
   };
 
   const updateEuSccValue = <K extends keyof EuSccFormValues>(name: K, value: EuSccFormValues[K]) => {
@@ -3664,10 +3785,28 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       : definition.label;
 
   const selectedDocumentReviewFile = documentReviewFiles[documentReviewSelectedFileIndex] ?? null;
-  const selectedDocumentReviewFileName = selectedDocumentReviewFile?.name.toLowerCase() ?? "";
-  const selectedDocumentReviewFileExt = selectedDocumentReviewFileName.includes(".")
-    ? selectedDocumentReviewFileName.slice(selectedDocumentReviewFileName.lastIndexOf(".") + 1)
+  const selectedDocumentReviewFileExt = selectedDocumentReviewFile
+    ? getDocumentReviewFileExt(selectedDocumentReviewFile.name)
     : "";
+  const selectedDocumentReviewFileKey = selectedDocumentReviewFile
+    ? getDocumentReviewFileKey(selectedDocumentReviewFile)
+    : "";
+  const selectedDocumentReviewExtractState = selectedDocumentReviewFileKey
+    ? documentReviewExtractStates[selectedDocumentReviewFileKey]
+    : undefined;
+  const documentReviewSourceCount = documentReviewFiles.length + documentReviewDevFilePaths.length;
+  const documentReviewPreviewableCount = documentReviewFiles.filter((file) =>
+    canInlinePreviewDocumentReviewExt(getDocumentReviewFileExt(file.name))
+  ).length;
+  const documentReviewParsedCount = documentReviewFiles.filter((file) =>
+    documentReviewParsedKeysRef.current.has(getDocumentReviewFileKey(file))
+  ).length;
+  const selectedDocumentReviewCanPreview = canInlinePreviewDocumentReviewExt(selectedDocumentReviewFileExt);
+  const selectedDocumentReviewTypeLabel = getDocumentReviewTypeLabel(selectedDocumentReviewFileExt);
+  const selectedDocumentReviewSummaryDate = selectedDocumentReviewFile
+    ? formatDocumentReviewFileDate(selectedDocumentReviewFile.lastModified, lang)
+    : "";
+  const selectedDocumentReviewExtractMeta = getDocumentReviewExtractStatusMeta(selectedDocumentReviewExtractState);
 
   useEffect(() => {
     if (documentReviewFiles.length === 0) {
@@ -3693,7 +3832,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       return objectUrl;
     });
 
-    if (["txt", "md", "json", "csv"].includes(selectedDocumentReviewFileExt)) {
+    if (isDocumentReviewTextPreviewExt(selectedDocumentReviewFileExt)) {
       selectedDocumentReviewFile
         .text()
         .then((content) => setDocumentReviewTextPreview(content.slice(0, 8000)))
@@ -3709,35 +3848,53 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   useEffect(() => {
     if (!selectedDocumentReviewFile) return;
-    const fileKey = `${selectedDocumentReviewFile.name}-${selectedDocumentReviewFile.size}-${selectedDocumentReviewFile.lastModified}`;
+    const fileKey = getDocumentReviewFileKey(selectedDocumentReviewFile);
     if (documentReviewParsedKeysRef.current.has(fileKey)) return;
 
     let cancelled = false;
-    setDocumentReviewAutoFillLoading(true);
+    setDocumentReviewExtractStates((prev) => ({
+      ...prev,
+      [fileKey]: {
+        status: "loading",
+        note: "正在解析文档并自动回填字段..."
+      }
+    }));
     buildAutoExtractResult(selectedDocumentReviewFile)
       .then((extracted) => {
         if (cancelled) return;
-        setDocumentReviewValues((prev) => ({
+        setDocumentReviewValues((prev) => {
+          const nextValues = {
+            ...prev,
+            document_title: extracted.documentTitle || prev.document_title,
+            document_type: extracted.documentType || prev.document_type,
+            review_focus: extracted.reviewFocus || prev.review_focus,
+            transfer_purpose: extracted.transferPurpose || prev.transfer_purpose,
+            sensitive_pi_disclosed: extracted.sensitivePiDisclosed,
+            rights_channel_disclosed: extracted.rightsChannelDisclosed,
+            crossborder_rule_disclosed: extracted.crossborderRuleDisclosed,
+            contact_channel: extracted.contactChannel || prev.contact_channel,
+          };
+          setDocumentReviewFileFormValues((saved) => ({ ...saved, [fileKey]: nextValues }));
+          return nextValues;
+        });
+        setDocumentReviewExtractStates((prev) => ({
           ...prev,
-          document_title: extracted.documentTitle || prev.document_title,
-          document_type: extracted.documentType || prev.document_type,
-          review_focus: extracted.reviewFocus || prev.review_focus,
-          transfer_purpose: extracted.transferPurpose || prev.transfer_purpose,
-          sensitive_pi_disclosed: extracted.sensitivePiDisclosed,
-          rights_channel_disclosed: extracted.rightsChannelDisclosed,
-          crossborder_rule_disclosed: extracted.crossborderRuleDisclosed,
-          contact_channel: extracted.contactChannel || prev.contact_channel,
+          [fileKey]: {
+            status: "done",
+            note: extracted.note
+          }
         }));
-        setDocumentReviewAutoFillNote(extracted.note);
         documentReviewParsedKeysRef.current.add(fileKey);
       })
       .catch(() => {
         if (cancelled) return;
-        setDocumentReviewAutoFillNote("自动提取失败，请手动确认与填写。");
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setDocumentReviewAutoFillLoading(false);
+        setDocumentReviewExtractStates((prev) => ({
+          ...prev,
+          [fileKey]: {
+            status: "error",
+            note: "自动提取失败，请手动确认与填写。"
+          }
+        }));
       });
 
     return () => {
@@ -3784,78 +3941,216 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       {isDocumentReviewTask ? (
         <section className="doc-review-workbench">
           <aside className="doc-review-input-pane">
-            <div className="schema-wizard-head">
-              <div className="runner-title">文档输入区</div>
-              <span className="doc-review-count-badge">{documentReviewFiles.length} 份</span>
-            </div>
+            <header className="doc-review-panel-head">
+              <div className="doc-review-panel-copy">
+                <span className="doc-review-kicker">Input Workspace</span>
+                <div className="schema-wizard-head">
+                  <div className="runner-title">文档输入管理</div>
+                  <span className="doc-review-count-badge">{documentReviewSourceCount} 份材料</span>
+                </div>
+                <p>集中管理上传材料、预置文件与解析进度。点击文件后，右侧立即切换到对应预览与确认状态。</p>
+              </div>
+              <div className="doc-review-panel-stats">
+                <article>
+                  <strong>{documentReviewFiles.length}</strong>
+                  <span>已上传</span>
+                </article>
+                <article>
+                  <strong>{documentReviewPreviewableCount}</strong>
+                  <span>可预览</span>
+                </article>
+                <article>
+                  <strong>{documentReviewParsedCount}</strong>
+                  <span>已回填</span>
+                </article>
+              </div>
+            </header>
+
             <label className="doc-review-upload-drop">
-              <span>上传待审查文档</span>
-              <small>支持 pdf / docx / md / txt / csv / json / 图片</small>
+              <div className="doc-review-upload-copy">
+                <span>上传待审查文档</span>
+                <p>建议上传隐私政策、用户协议、标准合同、DPA 或辅助证明材料，支持批量导入并自动去重。</p>
+              </div>
+              <div className="doc-review-upload-tags">
+                <span>PDF</span>
+                <span>DOCX</span>
+                <span>Markdown</span>
+                <span>CSV / JSON</span>
+                <span>图片</span>
+              </div>
               <input
                 type="file"
                 multiple
                 onChange={(event) => onSelectDocumentReviewFiles(event.target.files)}
               />
             </label>
-            <div className="doc-review-file-list">
-              {documentReviewFiles.length === 0 && (!DEV_ACCEL_ENABLED || documentReviewDevFilePaths.length === 0) ? (
-                <p className="resource-empty">尚未上传文档</p>
+
+            <section className="doc-review-source-section">
+              <div className="doc-review-source-head">
+                <strong>上传队列</strong>
+                <small>点击任一文件，可切换预览舞台与自动回填状态。</small>
+              </div>
+              {documentReviewFiles.length === 0 ? (
+                <article className="doc-review-queue-empty">
+                  <strong>上传后这里会形成统一文件队列</strong>
+                  <p>每个文件会显示格式、体积、可预览性与解析状态，方便你逐份核对并进入专项审查。</p>
+                </article>
               ) : (
-                <>
-                  {DEV_ACCEL_ENABLED && documentReviewDevFilePaths.length > 0 ? (
-                    documentReviewDevFilePaths.map((path) => (
-                      <article key={`dev-document-review-file-${path}`} className="schema-upload-item">
-                        <strong>{path.split("/").pop() || path}</strong>
-                        <small>Dev preset</small>
-                      </article>
-                    ))
-                  ) : null}
-                  {documentReviewFiles.map((file, index) => (
-                    <button
-                      type="button"
-                      key={`${file.name}-${file.size}-${file.lastModified}`}
-                      className={`doc-review-file-item ${index === documentReviewSelectedFileIndex ? "active" : ""}`}
-                      onClick={() => setDocumentReviewSelectedFileIndex(index)}
-                    >
-                      <strong>{file.name}</strong>
-                      <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
-                    </button>
-                  ))}
-                </>
+                <div className="doc-review-file-list">
+                  {documentReviewFiles.map((file, index) => {
+                    const fileKey = getDocumentReviewFileKey(file);
+                    const fileExt = getDocumentReviewFileExt(file.name);
+                    const fileStatus = getDocumentReviewExtractStatusMeta(documentReviewExtractStates[fileKey]);
+                    const canPreview = canInlinePreviewDocumentReviewExt(fileExt);
+                    return (
+                      <button
+                        type="button"
+                        key={fileKey}
+                        className={`doc-review-file-item ${index === documentReviewSelectedFileIndex ? "active" : ""}`}
+                        onClick={() => {
+                          setDocumentReviewSelectedFileIndex(index);
+                          syncDocumentReviewValuesForFile(file);
+                        }}
+                      >
+                        <div className="doc-review-file-item-main">
+                          <div className="doc-review-file-item-title-row">
+                            <strong>{file.name}</strong>
+                            {index === documentReviewSelectedFileIndex ? (
+                              <span className="doc-review-inline-flag">当前查看</span>
+                            ) : null}
+                          </div>
+                          <div className="doc-review-file-item-meta">
+                            <span className="doc-review-meta-pill">{getDocumentReviewTypeLabel(fileExt)}</span>
+                            <span className="doc-review-meta-pill">{formatDocumentReviewFileSize(file.size)}</span>
+                            <span className={`doc-review-meta-pill ${canPreview ? "is-success" : "is-neutral"}`}>
+                              {canPreview ? "可预览" : "不可内嵌预览"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="doc-review-file-item-side">
+                          <span className={`doc-review-status-pill is-${fileStatus.tone}`}>{fileStatus.label}</span>
+                          <small>{formatDocumentReviewFileDate(file.lastModified, lang)}</small>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </div>
+            </section>
+
+            {DEV_ACCEL_ENABLED && documentReviewDevFilePaths.length > 0 ? (
+              <section className="doc-review-source-section doc-review-source-section-muted">
+                <div className="doc-review-source-head">
+                  <strong>开发预置材料</strong>
+                  <small>用于快速体验真实审查链路，不占用本地上传队列。</small>
+                </div>
+                <div className="doc-review-preset-list">
+                  {documentReviewDevFilePaths.map((path) => {
+                    const fileName = path.split("/").pop() || path;
+                    return (
+                      <article key={`dev-document-review-file-${path}`} className="doc-review-preset-item">
+                        <div>
+                          <strong>{fileName}</strong>
+                          <div className="doc-review-file-item-meta">
+                            <span className="doc-review-meta-pill">{getDocumentReviewTypeLabel(getDocumentReviewFileExt(fileName))}</span>
+                            <span className="doc-review-meta-pill is-neutral">预置导入</span>
+                          </div>
+                        </div>
+                        <span className="doc-review-status-pill is-neutral">Dev preset</span>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
           </aside>
 
           <div className="doc-review-main-pane">
             {!selectedDocumentReviewFile ? (
               <article className="doc-review-empty-state">
-                <h3>上传文档后开始审查</h3>
-                <p>请先在左侧上传隐私政策、用户协议、标准合同或补充材料。</p>
-                <ul>
-                  <li>支持批量上传，上传后自动展示文档预览</li>
-                  <li>系统后续可基于文档自动解析并回填结构化字段</li>
-                  <li>你只需确认或修正提取结果，再执行专项审查</li>
-                </ul>
+                <div className="doc-review-empty-state-hero">
+                  <span className="doc-review-kicker">Preview Workspace</span>
+                  <h3>右侧会在选中文件后切换为完整的预览与状态面板</h3>
+                  <p>PDF、图片、文本可直接预览；DOC / DOCX 等格式也不会只停留在占位态，而会进入更明确的解析说明与下一步引导。</p>
+                </div>
+                <div className="doc-review-empty-state-grid">
+                  <article>
+                    <strong>1. 上传或使用预置材料</strong>
+                    <p>将审查对象纳入统一文件队列，建立本次工作台的输入集合。</p>
+                  </article>
+                  <article>
+                    <strong>2. 切换预览对象</strong>
+                    <p>点击任一文件，右侧立即显示预览、解析状态、格式能力与人工确认入口。</p>
+                  </article>
+                  <article>
+                    <strong>3. 确认字段并执行审查</strong>
+                    <p>核对自动回填结果后直接运行专项审查，输出条款级建议和审查报告。</p>
+                  </article>
+                </div>
+                <div className="doc-review-empty-state-footer">
+                  {documentReviewSourceCount > 0
+                    ? `当前已纳入 ${documentReviewSourceCount} 份材料，请从左侧选择一个文件开始。`
+                    : "当前还没有材料，先从左侧上传文档即可进入工作状态。"}
+                </div>
               </article>
             ) : (
               <article className="doc-review-preview-card">
                 <header className="doc-review-preview-head">
-                  <div>
-                    <span>当前预览文档</span>
+                  <div className="doc-review-preview-title-block">
+                    <span className="doc-review-kicker">Preview Stage</span>
                     <strong>{selectedDocumentReviewFile.name}</strong>
+                    <p>
+                      {selectedDocumentReviewCanPreview
+                        ? "当前格式支持内嵌预览，你可以边看正文边核对自动回填字段。"
+                        : "当前格式暂不支持内嵌预览，但仍可参与自动解析与专项审查，不会中断流程。"}
+                    </p>
                   </div>
-                  <em>{selectedDocumentReviewFileExt || "file"}</em>
+                  <div className="doc-review-preview-meta">
+                    <span className="doc-review-meta-pill">{selectedDocumentReviewTypeLabel}</span>
+                    <span className="doc-review-meta-pill">{formatDocumentReviewFileSize(selectedDocumentReviewFile.size)}</span>
+                    <span className="doc-review-meta-pill">{selectedDocumentReviewSummaryDate}</span>
+                    <span className={`doc-review-status-pill is-${selectedDocumentReviewCanPreview ? "success" : "neutral"}`}>
+                      {selectedDocumentReviewCanPreview ? "可预览" : "审查模式"}
+                    </span>
+                    <span className={`doc-review-status-pill is-${selectedDocumentReviewExtractMeta.tone}`}>
+                      {selectedDocumentReviewExtractMeta.label}
+                    </span>
+                  </div>
                 </header>
-                <div className="doc-review-preview-body">
+                <div className={`doc-review-preview-body ${selectedDocumentReviewCanPreview ? "" : "is-fallback"}`}>
                   {documentReviewPreviewUrl && selectedDocumentReviewFileExt === "pdf" ? (
-                    <iframe title={selectedDocumentReviewFile.name} src={documentReviewPreviewUrl} />
-                  ) : documentReviewPreviewUrl && ["png", "jpg", "jpeg", "gif", "webp", "bmp"].includes(selectedDocumentReviewFileExt) ? (
-                    <img src={documentReviewPreviewUrl} alt={selectedDocumentReviewFile.name} />
-                  ) : ["txt", "md", "json", "csv"].includes(selectedDocumentReviewFileExt) ? (
-                    <pre>{documentReviewTextPreview || "正在读取文本..."}</pre>
+                    <div className="doc-review-pdf-surface">
+                      <iframe title={selectedDocumentReviewFile.name} src={documentReviewPreviewUrl} />
+                    </div>
+                  ) : documentReviewPreviewUrl && isDocumentReviewImagePreviewExt(selectedDocumentReviewFileExt) ? (
+                    <div className="doc-review-image-surface">
+                      <img src={documentReviewPreviewUrl} alt={selectedDocumentReviewFile.name} />
+                    </div>
+                  ) : isDocumentReviewTextPreviewExt(selectedDocumentReviewFileExt) ? (
+                    <div className="doc-review-text-surface">
+                      <pre>{documentReviewTextPreview || "正在读取文本..."}</pre>
+                    </div>
                   ) : (
                     <div className="doc-review-preview-fallback">
-                      <p>该文件类型暂不支持内嵌预览，请继续执行上传后自动解析流程。</p>
+                      <div className="doc-review-preview-fallback-emblem">{selectedDocumentReviewTypeLabel}</div>
+                      <div className="doc-review-preview-fallback-copy">
+                        <strong>当前格式暂不支持内嵌预览</strong>
+                        <p>这不是失败态。文件仍会参与自动解析、字段回填与专项审查，你可以继续完成整套工作流。</p>
+                      </div>
+                      <div className="doc-review-preview-fallback-actions">
+                        <span className={`doc-review-status-pill is-${selectedDocumentReviewExtractMeta.tone}`}>
+                          {selectedDocumentReviewExtractMeta.label}
+                        </span>
+                        <span className="doc-review-meta-pill">{selectedDocumentReviewSummaryDate}</span>
+                      </div>
+                      <div className="doc-review-preview-next">
+                        <span>建议下一步</span>
+                        <ul>
+                          <li>先核对下方结构化字段与自动回填结果</li>
+                          <li>如需直观预览正文，可补充 PDF、图片或文本版本</li>
+                          <li>确认无误后，直接执行专项审查生成报告</li>
+                        </ul>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -3863,14 +4158,44 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
             )}
 
             <article className="doc-review-confirm-card">
-              <header>
-                <h4>结构化确认（文档解析后回填）</h4>
-                <p>当前为确认界面占位，可在自动解析结果基础上修正后提交。预置确认分组：{DOCUMENT_REVIEW_STEPS.length} 组。</p>
-                {documentReviewAutoFillLoading ? <p className="doc-review-autofill-note">正在解析文档并自动回填字段...</p> : null}
-                {!documentReviewAutoFillLoading && documentReviewAutoFillNote ? (
-                  <p className="doc-review-autofill-note">{documentReviewAutoFillNote}</p>
-                ) : null}
+              <header className="doc-review-confirm-head">
+                <div>
+                  <span className="doc-review-kicker">Review Controls</span>
+                  <h4>结构化确认与审查准备</h4>
+                  <p>系统会基于当前文档自动回填关键字段；你只需确认或修正，再执行专项审查生成报告。</p>
+                </div>
+                <div className="doc-review-confirm-head-side">
+                  <span className={`doc-review-status-pill is-${selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.tone : "neutral"}`}>
+                    {selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.label : "等待选择文件"}
+                  </span>
+                </div>
               </header>
+              <div className="doc-review-confirm-summary">
+                <article>
+                  <span>当前文档</span>
+                  <strong>{selectedDocumentReviewFile ? selectedDocumentReviewFile.name : "尚未选择"}</strong>
+                  <small>
+                    {selectedDocumentReviewFile
+                      ? `${selectedDocumentReviewTypeLabel} · ${getDocumentReviewDocTypeLabel(documentReviewValues.document_type)}`
+                      : "先从左侧文件队列选择一个对象"}
+                  </small>
+                </article>
+                <article>
+                  <span>回填状态</span>
+                  <strong>{selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.label : "等待解析"}</strong>
+                  <small>{selectedDocumentReviewFile ? "系统会自动尝试提取标题、类型与审查重点。" : "选择文件后自动启动解析。"}</small>
+                </article>
+                <article>
+                  <span>执行前动作</span>
+                  <strong>{selectedDocumentReviewFile ? "确认字段后执行专项审查" : "先完成文件选择"}</strong>
+                  <small>预置确认分组：{DOCUMENT_REVIEW_STEPS.length} 组。</small>
+                </article>
+              </div>
+              <p className={`doc-review-autofill-note is-${selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.tone : "neutral"}`}>
+                {selectedDocumentReviewFile
+                  ? selectedDocumentReviewExtractState?.note || "已选中文件，准备进入自动提取与人工确认。"
+                  : "选择文件后，这里会显示自动提取结果、风险提醒和下一步建议。"}
+              </p>
               <div className="schema-field-grid">
                 <label className="field-wrap">
                   <span>{localizeFieldLabel(lang, "document_title", "文档名称")}</span>
