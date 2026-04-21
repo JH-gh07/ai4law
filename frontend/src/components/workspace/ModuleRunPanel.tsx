@@ -3264,18 +3264,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
 
   return (
     <section className="run-panel" data-guide="stage-run">
-      <header className="run-panel-head">
-        <div>
-          <div className="runner-title">{t("runPanel")}</div>
-          <h3 className="font-display text-xl text-ink">{panelModuleLabel}</h3>
-          {taskTemplate ? (
-            <p className="run-panel-template-hint">
-              {getTaskTemplateTitle(taskTemplate, lang)}
-            </p>
-          ) : null}
-        </div>
-      </header>
-
       {!lockedModule ? (
         <div className="jurisdiction-tabs">
           {JURISDICTIONS.map((item) => (
