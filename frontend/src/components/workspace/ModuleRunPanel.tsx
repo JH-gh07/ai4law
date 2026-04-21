@@ -10,6 +10,7 @@ import {
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
 import { extractInsight } from "../../lib/workspace";
+import { DEV_ACCEL_ENABLED, getAssessmentDevPreset } from "../../lib/dev-presets";
 
 export type RunOutput = {
   module: ModuleKey;
@@ -1376,7 +1377,7 @@ const composeBcrFinding = (score: "compliant" | "partial" | "non_compliant", evi
 
 const createDefaultAssessmentValues = (): AssessmentFormValues => {
   const demo = asRecord(getDefaultPayload("assessment"));
-  return {
+  const base: AssessmentFormValues = {
     company_name: toString(demo.company_name, ""),
     company_uscc: "91310000XXXXXXXXXX",
     legal_representative: "",
@@ -1406,6 +1407,12 @@ const createDefaultAssessmentValues = (): AssessmentFormValues => {
     system_chain_summary: "",
     security_capability_summary: "",
     force_override_path: toBoolean(demo.force_override_path, true)
+  };
+  if (!DEV_ACCEL_ENABLED) return base;
+  const preset = getAssessmentDevPreset();
+  return {
+    ...base,
+    ...(preset.formDefaults as Partial<AssessmentFormValues>)
   };
 };
 
@@ -2187,6 +2194,9 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
   const [assessmentValues, setAssessmentValues] = useState<AssessmentFormValues>(createDefaultAssessmentValues);
   const [assessmentFiles, setAssessmentFiles] = useState<File[]>([]);
+  const [assessmentDevFilePaths, setAssessmentDevFilePaths] = useState<string[]>(() =>
+    DEV_ACCEL_ENABLED ? getAssessmentDevPreset().backendFilePaths : []
+  );
   const [pipiaStepIndex, setPipiaStepIndex] = useState(0);
   const [pipiaValues, setPipiaValues] = useState<PipiaFormValues>(createDefaultPipiaValues);
   const [pipiaFiles, setPipiaFiles] = useState<File[]>([]);
@@ -2257,6 +2267,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       setAssessmentStepIndex(0);
       setAssessmentValues(createDefaultAssessmentValues());
       setAssessmentFiles([]);
+      setAssessmentDevFilePaths(DEV_ACCEL_ENABLED ? getAssessmentDevPreset().backendFilePaths : []);
     }
     if (moduleKey === "pipia") {
       setPipiaStepIndex(0);
@@ -2381,61 +2392,69 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     return uploadedPaths;
   };
 
-  const buildAssessmentPayload = async (): Promise<unknown> => {
-    assertInput(hasText(assessmentValues.company_name), "请填写企业名称。");
-    assertInput(hasText(assessmentValues.company_uscc, 8), "请填写统一社会信用代码（至少8位）。");
-    assertInput(hasText(assessmentValues.receiver_country), "请填写接收方国家/地区。");
-    assertInput(hasText(assessmentValues.transfer_purpose), "请填写出境目的。");
-    assertInput(hasText(assessmentValues.legal_basis), "请填写合法性基础。");
-    assertInput(hasText(assessmentValues.necessity_basis), "请填写必要性说明。");
-    assertInput(hasText(assessmentValues.data_inventory_summary), "请填写数据清单摘要。");
-    assertInput(hasText(assessmentValues.system_chain_summary), "请填写系统与出境链路说明。");
+  const buildAssessmentPayloadFrom = async (
+    values: AssessmentFormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.company_name), "请填写企业名称。");
+    assertInput(hasText(values.company_uscc, 8), "请填写统一社会信用代码（至少8位）。");
+    assertInput(hasText(values.receiver_country), "请填写接收方国家/地区。");
+    assertInput(hasText(values.transfer_purpose), "请填写出境目的。");
+    assertInput(hasText(values.legal_basis), "请填写合法性基础。");
+    assertInput(hasText(values.necessity_basis), "请填写必要性说明。");
+    assertInput(hasText(values.data_inventory_summary), "请填写数据清单摘要。");
+    assertInput(hasText(values.system_chain_summary), "请填写系统与出境链路说明。");
+    const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
     assertInput(
-      assessmentFiles.length > 0,
+      files.length > 0 || presetFilePaths.length > 0,
       "请上传至少1份安全评估附件材料（如数据清单、系统链路图、制度文件）。"
     );
 
-    const uploadedFiles = await uploadFiles(assessmentFiles);
+    const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     const trimOr = (value: string, fallback: string): string => {
       const trimmed = value.trim();
       return trimmed.length >= 2 ? trimmed : fallback;
     };
     const purposeContext = [
-      assessmentValues.transfer_purpose.trim(),
-      assessmentValues.scenario_name ? `场景：${assessmentValues.scenario_name}` : "",
-      assessmentValues.legal_basis ? `合法性：${assessmentValues.legal_basis}` : "",
-      assessmentValues.necessity_basis ? `必要性：${assessmentValues.necessity_basis}` : "",
-      assessmentValues.data_inventory_summary ? `数据清单：${assessmentValues.data_inventory_summary}` : "",
-      assessmentValues.system_chain_summary ? `链路：${assessmentValues.system_chain_summary}` : "",
-      assessmentValues.security_capability_summary ? `保障能力：${assessmentValues.security_capability_summary}` : "",
-      assessmentValues.assessment_start_date || assessmentValues.assessment_end_date
-        ? `自评估周期：${assessmentValues.assessment_start_date || "未填"} 至 ${assessmentValues.assessment_end_date || "未填"}`
+      values.transfer_purpose.trim(),
+      values.scenario_name ? `场景：${values.scenario_name}` : "",
+      values.legal_basis ? `合法性：${values.legal_basis}` : "",
+      values.necessity_basis ? `必要性：${values.necessity_basis}` : "",
+      values.data_inventory_summary ? `数据清单：${values.data_inventory_summary}` : "",
+      values.system_chain_summary ? `链路：${values.system_chain_summary}` : "",
+      values.security_capability_summary ? `保障能力：${values.security_capability_summary}` : "",
+      values.assessment_start_date || values.assessment_end_date
+        ? `自评估周期：${values.assessment_start_date || "未填"} 至 ${values.assessment_end_date || "未填"}`
         : "",
-      assessmentValues.lead_department ? `牵头部门：${assessmentValues.lead_department}` : "",
-      assessmentValues.participant_departments ? `参与部门：${assessmentValues.participant_departments}` : "",
-      assessmentValues.third_party_support
-        ? `第三方支持：${assessmentValues.third_party_name || "已参与"}；${assessmentValues.third_party_scope || "范围未填"}`
+      values.lead_department ? `牵头部门：${values.lead_department}` : "",
+      values.participant_departments ? `参与部门：${values.participant_departments}` : "",
+      values.third_party_support
+        ? `第三方支持：${values.third_party_name || "已参与"}；${values.third_party_scope || "范围未填"}`
         : ""
     ]
       .filter((item) => item.length > 0)
       .join("；");
 
     return {
-      company_name: trimOr(assessmentValues.company_name, "待确认企业"),
+      company_name: trimOr(values.company_name, "待确认企业"),
       industry: trimOr(
-        [assessmentValues.industry, assessmentValues.company_nature].filter((item) => item.trim().length > 0).join(" / "),
+        [values.industry, values.company_nature].filter((item) => item.trim().length > 0).join(" / "),
         "未说明行业"
       ),
-      is_ciio: assessmentValues.is_ciio,
-      contains_important_data: assessmentValues.contains_important_data,
-      pii_count: Math.max(0, assessmentValues.pii_count),
-      spi_count: Math.max(0, assessmentValues.spi_count),
+      is_ciio: values.is_ciio,
+      contains_important_data: values.contains_important_data,
+      pii_count: Math.max(0, values.pii_count),
+      spi_count: Math.max(0, values.spi_count),
       transfer_purpose: trimOr(purposeContext, "数据出境场景评估与风险自评估"),
-      receiver_country: trimOr(assessmentValues.receiver_country, "待确认国家"),
-      force_override_path: assessmentValues.force_override_path,
+      receiver_country: trimOr(values.receiver_country, "待确认国家"),
+      force_override_path: values.force_override_path,
       uploaded_files: uploadedFiles
     };
   };
+
+  const buildAssessmentPayload = async (): Promise<unknown> =>
+    buildAssessmentPayloadFrom(assessmentValues, assessmentFiles, assessmentDevFilePaths);
 
   const buildPipiaPayload = async (): Promise<unknown> => {
     assertInput(hasText(pipiaValues.company_name), "请填写处理者名称。");
@@ -3126,6 +3145,31 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
+  const runWithPayload = async (requestPayload: unknown) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await runModule(definition, requestPayload, "sync");
+      setResponseData(result.response);
+      onRunDone({
+        module: moduleKey,
+        runMode: result.runMode,
+        request: requestPayload,
+        response: result.response,
+        success: true,
+        asyncTaskId: result.asyncTaskId,
+        asyncState: result.asyncState
+      });
+    } catch (runErr) {
+      const message = runErr instanceof Error ? runErr.message : "Request failed";
+      setResponseData(undefined);
+      setError(message);
+      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const execute = async () => {
     let requestPayload: unknown;
     try {
@@ -3185,28 +3229,22 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await runModule(definition, requestPayload, "sync");
-      setResponseData(result.response);
-      onRunDone({
-        module: moduleKey,
-        runMode: result.runMode,
-        request: requestPayload,
-        response: result.response,
-        success: true,
-        asyncTaskId: result.asyncTaskId,
-        asyncState: result.asyncState
-      });
-    } catch (runErr) {
-      const message = runErr instanceof Error ? runErr.message : "Request failed";
-      setResponseData(undefined);
-      setError(message);
-      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
-    } finally {
-      setLoading(false);
-    }
+    await runWithPayload(requestPayload);
+  };
+
+  const runAssessmentDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isAssessmentModule || loading) return;
+    const preset = getAssessmentDevPreset();
+    const nextValues: AssessmentFormValues = {
+      ...assessmentValues,
+      ...(preset.formDefaults as Partial<AssessmentFormValues>)
+    };
+    setAssessmentValues(nextValues);
+    setAssessmentFiles([]);
+    setAssessmentDevFilePaths(preset.backendFilePaths);
+    setAssessmentStepIndex(ASSESSMENT_STEPS.length - 1);
+    const payload = await buildAssessmentPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
   };
 
   const currentAssessmentStep = ASSESSMENT_STEPS[assessmentStepIndex];
@@ -3737,6 +3775,14 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         </section>
       ) : isAssessmentModule ? (
         <section className="schema-wizard">
+          {DEV_ACCEL_ENABLED ? (
+            <div className="schema-dev-banner">
+              <strong>开发测试模式</strong>
+              <span>
+                当前为测试模式数据，仅用于开发联调与功能演示，不用于正式提交或合规判断。
+              </span>
+            </div>
+          ) : null}
           <div className="schema-wizard-head">
             <div className="runner-title">Assessment Wizard</div>
             <span>{assessmentProgress}%</span>
@@ -3838,18 +3884,41 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                 onChange={(event) => setAssessmentFiles(Array.from(event.target.files ?? []))}
               />
               <div className="schema-upload-list">
+                {DEV_ACCEL_ENABLED && assessmentDevFilePaths.length > 0 ? (
+                  <>
+                    {assessmentDevFilePaths.map((path) => (
+                      <article key={`dev-assessment-file-${path}`} className="schema-upload-item">
+                        <strong>{path.split("/").pop() || path}</strong>
+                        <small>dev preset · backend file</small>
+                      </article>
+                    ))}
+                  </>
+                ) : null}
                 {assessmentFiles.map((file) => (
                   <article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item">
                     <strong>{file.name}</strong>
                     <small>{Math.max(1, Math.round(file.size / 1024))} KB</small>
                   </article>
                 ))}
-                {assessmentFiles.length === 0 ? <p className="resource-empty">请上传附件材料后再提交。</p> : null}
+                {assessmentFiles.length === 0 && (!DEV_ACCEL_ENABLED || assessmentDevFilePaths.length === 0) ? (
+                  <p className="resource-empty">请上传附件材料后再提交。</p>
+                ) : null}
               </div>
             </section>
           ) : null}
 
           <div className="schema-actions-row">
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runAssessmentDevPreset}
+                disabled={loading}
+                title="开发期一键注入预设数据并运行真实Assessment流程"
+              >
+                一键体验主流程
+              </button>
+            ) : null}
             <button
               className="pill-btn"
               type="button"
