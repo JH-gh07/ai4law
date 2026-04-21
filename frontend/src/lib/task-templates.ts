@@ -27,8 +27,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       zh: "通过智能问答快速识别安全评估/标准合同/认证路径",
       en: "Identify assessment/SCC/certification routes through guided Q&A"
     },
-    inputHint: { zh: "输入：动态问答", en: "Input: dynamic Q&A" },
-    outputHint: { zh: "输出：合规路径诊断报告", en: "Output: diagnosis report" }
+    inputHint: { zh: "一键诊断，明确合规路径", en: "Input: dynamic Q&A" },
+    outputHint: { zh: "", en: "Output: diagnosis report" }
   },
   {
     id: "cn_assessment",
@@ -40,8 +40,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       zh: "收集申报要件并生成《数据出境风险自评估报告》草案",
       en: "Collect filing inputs and draft security self-assessment report"
     },
-    inputHint: { zh: "输入：表单 + 附件材料", en: "Input: forms + supporting files" },
-    outputHint: { zh: "输出：风险自评估报告草案", en: "Output: risk self-assessment draft" }
+    inputHint: { zh: "一键生成风险评估报告草案", en: "Input: forms + supporting files" },
+    outputHint: { zh: "", en: "Output: risk self-assessment draft" }
   },
   {
     id: "cn_pipia",
@@ -53,8 +53,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       zh: "生成《个人信息保护影响评估（PIPIA）》草案",
       en: "Draft personal information protection impact assessment (PIPIA)"
     },
-    inputHint: { zh: "输入：处理活动与跨境说明", en: "Input: processing and transfer context" },
-    outputHint: { zh: "输出：PIPIA 报告草案", en: "Output: PIPIA draft report" }
+    inputHint: { zh: "一键生成个人信息保护评估报告", en: "Input: processing and transfer context" },
+    outputHint: { zh: "", en: "Output: PIPIA draft report" }
   },
   {
     id: "cn_document_review",
@@ -66,8 +66,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       zh: "审查隐私政策、标准合同、DPA 等并给出条款建议",
       en: "Review privacy policy, SCC, DPA and produce clause-level advice"
     },
-    inputHint: { zh: "输入：合同或政策文本", en: "Input: contracts/policy text" },
-    outputHint: { zh: "输出：文档合规审查报告", en: "Output: document compliance report" }
+    inputHint: { zh: "智能审阅合同、隐私政策等文件", en: "Input: contracts/policy text" },
+    outputHint: { zh: "", en: "Output: document compliance report" }
   },
   {
     id: "eu_scc",
@@ -76,8 +76,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     workspaceStyle: "eu_scc",
     title: { zh: "SCC 审查", en: "SCC Review" },
     subtitle: { zh: "按 GDPR SCC 模块进行条款审查", en: "Clause review aligned with GDPR SCC modules" },
-    inputHint: { zh: "输入：SCC 文本/附件", en: "Input: SCC text/attachments" },
-    outputHint: { zh: "输出：SCC 合规审查报告", en: "Output: SCC compliance report" }
+    inputHint: { zh: "审查跨境数据传输合同", en: "Input: SCC text/attachments" },
+    outputHint: { zh: "", en: "Output: SCC compliance report" }
   },
   {
     id: "eu_bcr",
@@ -86,8 +86,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     workspaceStyle: "eu_bcr",
     title: { zh: "BCR 审核", en: "BCR Review" },
     subtitle: { zh: "按 EDPB 要求识别高风险缺口并分级", en: "Identify and rank BCR gaps against EDPB guidance" },
-    inputHint: { zh: "输入：BCR 文本 + 集团信息", en: "Input: BCR text + group context" },
-    outputHint: { zh: "输出：BCR 审核报告", en: "Output: BCR review report" }
+    inputHint: { zh: "审查集团内部规则", en: "Input: BCR text + group context" },
+    outputHint: { zh: "", en: "Output: BCR review report" }
   },
   {
     id: "eu_dpia",
@@ -96,8 +96,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     workspaceStyle: "eu_dpia",
     title: { zh: "DPIA 草案生成", en: "DPIA Draft" },
     subtitle: { zh: "依据 GDPR 第35条生成 DPIA 草案", en: "Generate DPIA draft under GDPR Article 35" },
-    inputHint: { zh: "输入：处理活动风险问卷", en: "Input: processing risk questionnaire" },
-    outputHint: { zh: "输出：DPIA 草案", en: "Output: DPIA draft" }
+    inputHint: { zh: "一键生成数据保护影响评估草案", en: "Input: processing risk questionnaire" },
+    outputHint: { zh: "", en: "Output: DPIA draft" }
   },
   {
     id: "eu_tia",
@@ -109,8 +109,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
       zh: "评估第三国保护水平与补充措施",
       en: "Assess third-country protection level and supplemental measures"
     },
-    inputHint: { zh: "输入：国家 + 接收方 + 安全措施", en: "Input: country + recipient + safeguards" },
-    outputHint: { zh: "输出：TIA 草案", en: "Output: TIA draft" }
+    inputHint: { zh: "一键生成跨境传输影响评估草案", en: "Input: country + recipient + safeguards" },
+    outputHint: { zh: "", en: "Output: TIA draft" }
   },
   {
     id: "us_14117",
@@ -119,8 +119,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     workspaceStyle: "us_14117",
     title: { zh: "14117 行政令合规", en: "EO 14117 Compliance" },
     subtitle: { zh: "识别受关注国家/被覆盖对象并输出红黄绿灯结论", en: "Identify covered risks and output RAG conclusion" },
-    inputHint: { zh: "输入：数据清单 + 实体清单", en: "Input: data inventory + entity inventory" },
-    outputHint: { zh: "输出：14117 风险评估结论报告", en: "Output: EO 14117 risk conclusion report" }
+    inputHint: { zh: "评估敏感数据跨境风险", en: "Input: data inventory + entity inventory" },
+    outputHint: { zh: "", en: "Output: EO 14117 risk conclusion report" }
   },
   {
     id: "us_cpra",
@@ -129,8 +129,8 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     workspaceStyle: "us_cpra",
     title: { zh: "CPRA 合规", en: "CPRA Compliance" },
     subtitle: { zh: "完成数据映射、告知与合同机制检查", en: "Check mapping, notices, and contractual controls" },
-    inputHint: { zh: "输入：数据映射与制度材料", en: "Input: data mapping and governance materials" },
-    outputHint: { zh: "输出：CPRA 合规全景报告", en: "Output: CPRA panorama report" }
+    inputHint: { zh: "一键生成加州隐私法合规报告", en: "Input: data mapping and governance materials" },
+    outputHint: { zh: "", en: "Output: CPRA panorama report" }
   }
 ];
 

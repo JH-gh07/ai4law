@@ -251,14 +251,23 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
               <ul className="tasks-showcase-list">
                 {listTaskTemplatesByJurisdiction(item.code).map((template) => (
                   <li key={template.id}>
+                    {(() => {
+                      const inputHint = getTaskTemplateInputHint(template, lang).trim();
+                      const outputHint = getTaskTemplateOutputHint(template, lang).trim();
+                      const mergedHint = inputHint && outputHint
+                        ? `${inputHint} · ${outputHint}`
+                        : inputHint || outputHint;
+                      return (
                     <button
                       type="button"
                       className="tasks-showcase-entry"
                       onClick={() => quickCreateFromTemplate(template.id)}
                     >
                       <strong>{getTaskTemplateTitle(template, lang)}</strong>
-                      <span>{getTaskTemplateInputHint(template, lang)} · {getTaskTemplateOutputHint(template, lang)}</span>
+                      <span>{mergedHint}</span>
                     </button>
+                      );
+                    })()}
                   </li>
                 ))}
               </ul>
