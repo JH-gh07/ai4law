@@ -140,16 +140,49 @@ function parseErrorMessage(data: unknown): string {
 }
 
 async function requestJson(url: string, method: "GET" | "POST", body?: unknown): Promise<unknown> {
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
-
-  const data: unknown = await response.json();
-  if (!response.ok) {
-    throw new Error(parseErrorMessage(data));
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+  } catch (error) {
+    if (url.startsWith("/api/")) {
+      throw new Error("无法连接后端服务。请确认后端已启动（127.0.0.1:8000）后重试。");
+    }
+    throw error;
   }
+
+  const rawText = await response.text();
+  const hasBody = rawText.trim().length > 0;
+  let data: unknown = null;
+
+  if (hasBody) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      const hint = response.ok ? "invalid JSON payload" : `HTTP ${response.status}`;
+      throw new Error(`${hint} from ${url}: non-JSON or truncated response body`);
+    }
+  }
+
+  if (!response.ok) {
+    if (hasBody) {
+      throw new Error(parseErrorMessage(data));
+    }
+    if (url.startsWith("/api/")) {
+      throw new Error(
+        `后端请求失败（HTTP ${response.status}，空响应）。请确认后端已启动并监听 127.0.0.1:8000。`,
+      );
+    }
+    throw new Error(`HTTP ${response.status} from ${url}: empty response body`);
+  }
+
+  if (!hasBody) {
+    throw new Error(`Request succeeded but response body is empty: ${url}`);
+  }
+
   return data;
 }
 
