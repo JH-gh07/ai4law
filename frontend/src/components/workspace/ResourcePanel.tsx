@@ -40,6 +40,15 @@ type OutputTreeEntry = {
   artifact: OutputArtifact;
 };
 
+type InputEntry = {
+  id: string;
+  name: string;
+  kind: "file" | "form";
+  sourcePath?: string;
+  payload?: unknown;
+  createdAt: string;
+};
+
 type MutableTreeNode = TreeNode & {
   childrenMap: Map<string, MutableTreeNode>;
 };
@@ -100,9 +109,20 @@ const buildPathTree = (paths: string[], prefix: string): TreeNode[] => {
   return finalizeTree(Array.from(rootMap.values()));
 };
 
+const hasFileExtension = (value: string): boolean => /\.(docx?|pdf|md|html|txt|csv|xlsx?|png|jpg|jpeg|json)$/i.test(value);
+
+const looksLikeFilePath = (value: string): boolean => {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (hasFileExtension(trimmed)) return true;
+  if (/^(storage\/|outputs\/|uploads\/|\/|[a-zA-Z]:\\)/.test(trimmed)) return true;
+  if (/[\\/]/.test(trimmed) && !/\s\/\s/.test(trimmed)) return true;
+  return false;
+};
+
 function collectPaths(value: unknown, bag: Set<string>) {
   if (typeof value === "string") {
-    if (/[\\/]/.test(value) || /\.(docx?|pdf|md|html|txt|csv|xlsx?|png|jpg|jpeg)$/i.test(value)) {
+    if (looksLikeFilePath(value)) {
       bag.add(value);
     }
     return;
@@ -130,18 +150,19 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
       ? {
           inputLabel: "输入",
           outputLabel: "产物",
-          inputEmpty: "暂无已上传输入文件",
+          inputEmpty: "暂无输入记录",
           outputEmpty: "暂无已生成输出文件"
         }
       : {
           inputLabel: "INPUT",
           outputLabel: "OUTPUT",
-          inputEmpty: "No uploaded input files yet",
+          inputEmpty: "No input records yet",
           outputEmpty: "No generated output files yet"
         };
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(
     () => new Set(["tree-root-input", "tree-root-output"])
   );
+  const [selectedInputId, setSelectedInputId] = useState<string | null>(null);
 
   const relatedRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
@@ -155,6 +176,14 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
 
   const outputEntries = useMemo<OutputTreeEntry[]>(() => {
     if (outputFiles.length === 0) return [];
+
+    const uniqueOutputFiles: OutputArtifact[] = [];
+    const seenArtifactPaths = new Set<string>();
+    for (const artifact of outputFiles) {
+      if (seenArtifactPaths.has(artifact.path)) continue;
+      seenArtifactPaths.add(artifact.path);
+      uniqueOutputFiles.push(artifact);
+    }
 
     const runsWithTime = relatedRuns
       .map((run) => {
@@ -184,40 +213,69 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
       return "run-unknown";
     };
 
-    const duplicateCounter = new Map<string, number>();
-    return outputFiles.map((artifact) => {
+    return uniqueOutputFiles.map((artifact) => {
       const folder = toFolderPath(artifact.path);
       const fileName = toFileName(artifact.path);
       const runFolder = assignRunFolder(artifact);
-      const virtualBase = folder ? `${folder}/${runFolder}/${fileName}` : `${runFolder}/${fileName}`;
-      const count = (duplicateCounter.get(virtualBase) ?? 0) + 1;
-      duplicateCounter.set(virtualBase, count);
-      const virtualPath = count === 1 ? virtualBase : `${virtualBase}#${count}`;
+      const virtualPath = folder ? `${folder}/${runFolder}/${fileName}` : `${runFolder}/${fileName}`;
       return { virtualPath, artifact };
     });
   }, [outputFiles, relatedRuns]);
 
-  const inputFiles = useMemo(() => {
-    const bag = new Set<string>();
-    relatedRuns.forEach((run) => collectPaths(run.request, bag));
-    return Array.from(bag)
-      .filter((path) => !outputFiles.some((file) => file.path === path))
-      .map((path) => ({ id: path, name: toFileName(path), path }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+  const inputEntries = useMemo<InputEntry[]>(() => {
+    const sortedRuns = [...relatedRuns].sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+    const entries: InputEntry[] = [];
+    const usedNames = new Map<string, number>();
+    const seenPaths = new Set<string>();
+
+    const pickUniqueName = (baseName: string): string => {
+      const count = (usedNames.get(baseName) ?? 0) + 1;
+      usedNames.set(baseName, count);
+      return count === 1 ? baseName : `${baseName} (${count})`;
+    };
+
+    sortedRuns.forEach((run, index) => {
+      entries.push({
+        id: `input-form-${run.id}`,
+        name: pickUniqueName(`form_submission_${String(index + 1).padStart(3, "0")}.json`),
+        kind: "form",
+        payload: run.request,
+        createdAt: run.startedAt
+      });
+
+      const bag = new Set<string>();
+      collectPaths(run.request, bag);
+      Array.from(bag)
+        .filter((path) => !outputFiles.some((file) => file.path === path))
+        .forEach((path) => {
+          if (seenPaths.has(path)) return;
+          seenPaths.add(path);
+          entries.push({
+            id: `input-file-${path}`,
+            name: pickUniqueName(toFileName(path)),
+            kind: "file",
+            sourcePath: path,
+            createdAt: run.startedAt
+          });
+        });
+    });
+
+    return entries;
   }, [outputFiles, relatedRuns]);
 
   const outputFileMap = useMemo(
     () => new Map(outputEntries.map((entry) => [entry.virtualPath, entry.artifact])),
     [outputEntries]
   );
-  const inputTree = useMemo(
-    () => buildPathTree(inputFiles.map((file) => file.path), "tree-input"),
-    [inputFiles]
+  const inputEntryById = useMemo(
+    () => new Map(inputEntries.map((entry) => [entry.id, entry])),
+    [inputEntries]
   );
   const outputTree = useMemo(
     () => buildPathTree(outputEntries.map((entry) => entry.virtualPath), "tree-output"),
     [outputEntries]
   );
+  const selectedInputEntry = selectedInputId ? inputEntryById.get(selectedInputId) ?? null : null;
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolderIds((prev) => {
@@ -315,11 +373,31 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
                   <FolderInputIcon width="14" height="14" />
                 </span>
                 <span className="ide-tree-label">{copy.inputLabel}</span>
-                <small>{inputFiles.length}</small>
+                <small>{inputEntries.length}</small>
               </button>
               {expandedFolderIds.has("tree-root-input") ? (
-                inputTree.length > 0 ? (
-                  <ul className="ide-tree-list ide-tree-children">{renderTreeNodes(inputTree, 1, false)}</ul>
+                inputEntries.length > 0 ? (
+                  <ul className="ide-tree-list ide-tree-children">
+                    {inputEntries.map((entry) => {
+                      const isActive = selectedInputId === entry.id;
+                      return (
+                        <li key={entry.id}>
+                          <button
+                            type="button"
+                            className={`ide-tree-row ide-tree-row-file ${isActive ? "active" : ""}`}
+                            style={{ ["--tree-depth" as string]: 1 }}
+                            onClick={() => setSelectedInputId(entry.id)}
+                          >
+                            <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
+                            <span className="ide-tree-icon">
+                              <FileNodeIcon width="14" height="14" />
+                            </span>
+                            <span className="ide-tree-label">{entry.name}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 ) : (
                   <p className="ide-folder-empty">{copy.inputEmpty}</p>
                 )
@@ -351,6 +429,24 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onSelectOutput, sel
             </li>
           </ul>
         </section>
+        {selectedInputEntry ? (
+          <section className="schema-upload-card">
+            <div className="runner-title">
+              {selectedInputEntry.kind === "form"
+                ? (lang === "zh" ? "表单提交详情" : "Form Submission Detail")
+                : (lang === "zh" ? "输入文件详情" : "Input File Detail")}
+            </div>
+            {selectedInputEntry.kind === "form" ? (
+              <textarea
+                className="runner-textarea schema-textarea"
+                readOnly
+                value={JSON.stringify(selectedInputEntry.payload ?? {}, null, 2)}
+              />
+            ) : (
+              <div className="runner-empty-card">{selectedInputEntry.sourcePath}</div>
+            )}
+          </section>
+        ) : null}
       </div>
     </aside>
   );
