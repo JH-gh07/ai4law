@@ -1,5 +1,5 @@
 export const DEV_ACCEL_ENABLED =
-  import.meta.env.DEV && String(import.meta.env.VITE_ENABLE_DEV_ACCEL ?? "").toLowerCase() === "true";
+  String(import.meta.env.VITE_ENABLE_DEV_ACCEL ?? "").toLowerCase() === "true";
 
 export type DevPresetModule = "assessment" | "pipia" | "dpia" | "tia" | "scc" | "bcr";
 
