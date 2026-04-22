@@ -11,9 +11,9 @@ DELILEGAL_COMPETITION_APP_ID = "QthdBErlyaYvyXul"
 DELILEGAL_COMPETITION_SECRET = "EC5D455E6BD348CE8E18BE05926D2EBE"
 
 DEFAULT_LLM_MODELS = [
+    "hunyuan-lite",
     "hunyuan-turbos-latest",
     "hunyuan-standard",
-    "hunyuan-lite",
 ]
 
 

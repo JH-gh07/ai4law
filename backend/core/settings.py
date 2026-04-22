@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         ),
     )
     llm_model: str = Field(
-        default="hunyuan-2.0-instruct-20251111",
+        default="hunyuan-lite",
         validation_alias=AliasChoices("LLM_MODEL", "AI4LAW_LLM_MODEL"),
     )
 

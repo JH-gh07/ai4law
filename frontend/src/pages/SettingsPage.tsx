@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { RuntimeProvider, RuntimeSettingsPayload } from "../lib/system-settings-api";
 import { fetchRuntimeSettings, saveRuntimeSettings } from "../lib/system-settings-api";
 
-const FALLBACK_MODELS = ["hunyuan-turbos-latest", "hunyuan-standard", "hunyuan-lite"];
+const FALLBACK_MODELS = ["hunyuan-lite", "hunyuan-turbos-latest", "hunyuan-standard"];
 
 const emptyPayload: RuntimeSettingsPayload = {
   delilegal: {
@@ -15,7 +15,7 @@ const emptyPayload: RuntimeSettingsPayload = {
     provider: "tencent_hunyuan",
     api_key: "",
     api_url: "https://api.hunyuan.cloud.tencent.com/v1",
-    model: "hunyuan-turbos-latest",
+    model: "hunyuan-lite",
     model_options: FALLBACK_MODELS,
     enabled: false,
   },
