@@ -14,6 +14,7 @@ from backend.common.render.report import (
 )
 from backend.common.render.summary import attach_citations, dedup_if_same, summarize_for_slot
 from backend.common.workflow.evidence import EvidenceItem
+from backend.common.workflow.facts import FactItem
 from backend.common.workflow.issues import IssueItem
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
 
@@ -61,6 +62,8 @@ class AssessmentReportRenderer:
         evidence_chain: list[EvidenceItem] | None = None,
         attachment_notes: list[dict[str, str]] | None = None,
         trace_manifest_path: str | None = None,
+        facts: list[FactItem] | None = None,
+        diagnosis_result: dict | None = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -89,6 +92,15 @@ class AssessmentReportRenderer:
 
         if attachment_notes:
             result["material_checklist_xlsx"] = _write_material_checklist_xlsx(attachment_notes, output_dir)
+            result["material_checklist_json"] = _write_material_checklist_json(attachment_notes, output_dir)
+
+        if facts:
+            result["facts_json"] = _write_facts_json(facts, output_dir)
+
+        if diagnosis_result:
+            result["path_judgment_json"] = _write_path_judgment_json(
+                diagnosis_result, path_warning, output_dir
+            )
 
         if trace_manifest_path:
             dest = output_dir / "trace_manifest.json"
@@ -259,4 +271,46 @@ def _write_material_checklist_xlsx(attachment_notes: list[dict[str, str]], outpu
         ])
     path = output_dir / "material_checklist.xlsx"
     wb.save(path)
+    return str(path)
+
+
+# ---------------------------------------------------------------------------
+# Phase 8: additional intermediate artifact writers
+# ---------------------------------------------------------------------------
+
+
+def _write_facts_json(facts: list[FactItem], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "facts.json"
+    path.write_text(
+        json.dumps([fact.model_dump() for fact in facts], ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return str(path)
+
+
+def _write_path_judgment_json(diagnosis_result: dict, path_warning: str | None, output_dir: Path) -> str:
+    import json
+
+    payload = {
+        "recommended_path": diagnosis_result.get("recommended_path"),
+        "risk_level": diagnosis_result.get("risk_level"),
+        "rationale": diagnosis_result.get("rationale"),
+        "path_warning": path_warning,
+        "is_override": diagnosis_result.get("force_override_path", False),
+    }
+    path = output_dir / "path_judgment.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_material_checklist_json(attachment_notes: list[dict[str, str]], output_dir: Path) -> str:
+    import json
+
+    rows = [
+        {"source_ref": note.get("source_ref", ""), "summary": note.get("summary", ""), "status": "待补充"}
+        for note in attachment_notes
+    ]
+    path = output_dir / "material_checklist.json"
+    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)

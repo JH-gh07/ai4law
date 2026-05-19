@@ -11988,3 +11988,126 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Phase 8: Assessment Intermediates Panel
+   --------------------------------------------------------------------------- */
+
+.assessment-intermediates {
+  margin: 0.6rem 0 0;
+  border: 1px solid #e0e5ec;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+
+.assessment-intermediates-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e0e5ec;
+  background: #f4f6f9;
+  overflow-x: auto;
+}
+
+.assessment-intermediates-tab {
+  padding: 0.48rem 0.88rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #5a6a7e;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.assessment-intermediates-tab:hover {
+  color: #2f3e52;
+}
+
+.assessment-intermediates-tab.active {
+  color: #1e3a5f;
+  border-bottom-color: #1e3a5f;
+}
+
+.assessment-intermediates-body {
+  padding: 0.72rem;
+  min-height: 120px;
+}
+
+.assessment-intermediates-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.6rem 1rem;
+  color: #8a98a8;
+  font-size: 0.88rem;
+}
+
+.assessment-intermediates-error p {
+  color: #c0392b;
+}
+
+.assessment-intermediates-report {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.assessment-intermediates-markdown {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 0.82rem;
+  line-height: 1.58;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #2d3e50;
+  background: #fff;
+  padding: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #e0e5ec;
+}
+
+.assessment-intermediates-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.assessment-intermediates-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  line-height: 1.48;
+}
+
+.assessment-intermediates-table th {
+  position: sticky;
+  top: 0;
+  background: #f0f3f7;
+  font-weight: 600;
+  color: #3a4e64;
+  text-align: left;
+  padding: 0.44rem 0.6rem;
+  border-bottom: 1px solid #d5dce5;
+  white-space: nowrap;
+}
+
+.assessment-intermediates-table td {
+  padding: 0.36rem 0.6rem;
+  border-bottom: 1px solid #eef1f5;
+  color: #3b4b5c;
+  vertical-align: top;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assessment-intermediates-table tbody tr:hover {
+  background: #f7f9fc;
+}
+
+.assessment-intermediates-row-num {
+  color: #9aa8b8;
+  font-size: 0.74rem;
+  text-align: center;
+  width: 2rem;
+}

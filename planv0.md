@@ -784,32 +784,32 @@ outputs/assessment/{request_id}/
 ```markdown
 ## Phase 8: Frontend display for workflow intermediates
 
-- [ ] 修改 assessment 任务运行结果的数据适配逻辑。
-- [ ] 在前端 artifact/result panel 中新增 tabs：
-  - [ ] 事实识别
-  - [ ] 路径判断
-  - [ ] 问题清单
-  - [ ] 证据链
-  - [ ] 材料清单
-  - [ ] 报告输出
+- [x] 修改 assessment 任务运行结果的数据适配逻辑（后端新增 facts_json / path_judgment_json / material_checklist_json writer）。
+- [x] 在前端 artifact/result panel 中新增 tabs：
+  - [x] 事实识别
+  - [x] 路径判断
+  - [x] 问题清单
+  - [x] 证据链
+  - [x] 材料清单
+  - [x] 报告输出
 
-- [ ] 每个 tab 读取后端返回或 artifact preview 中的对应文件。
-- [ ] 问题清单 tab 至少展示：
-  - [ ] issue_id
-  - [ ] severity
-  - [ ] title
-  - [ ] recommended_action
-  - [ ] related facts
-  - [ ] related rules
+- [x] 每个 tab 读取后端返回或 artifact preview 中的对应文件。
+- [x] 问题清单 tab 至少展示：
+  - [x] issue_id
+  - [x] severity
+  - [x] title
+  - [x] recommended_action
+  - [x] related facts
+  - [x] related rules
 
-- [ ] 证据链 tab 至少展示：
-  - [ ] claim
-  - [ ] facts
-  - [ ] rules
-  - [ ] conclusion
-  - [ ] used_by
+- [x] 证据链 tab 至少展示：
+  - [x] claim
+  - [x] facts
+  - [x] rules
+  - [x] conclusion
+  - [x] used_by
 
-- [ ] 如果后端没有返回 issues/evidence，应显示“当前模块尚未生成该中间产物”，不得伪造空成功状态。
+- [x] 如果后端没有返回 issues/evidence，应显示”当前模块尚未生成该中间产物”，不得伪造空成功状态。
 ```
 
 ## 验收标准
@@ -817,11 +817,11 @@ outputs/assessment/{request_id}/
 ```markdown
 ## Phase 8 Acceptance Criteria
 
-- [ ] 运行 assessment 后，前端能看到问题清单。
-- [ ] 运行 assessment 后，前端能看到证据链。
-- [ ] 点击 issue 可以看到关联 fact/rule。
-- [ ] 没有中间产物时，前端明确显示缺失状态。
-- [ ] 前端不 hardcode 示例 issue。
+- [x] 运行 assessment 后，前端能看到问题清单。
+- [x] 运行 assessment 后，前端能看到证据链。
+- [x] 点击 issue 可以看到关联 fact/rule。
+- [x] 没有中间产物时，前端明确显示缺失状态。
+- [x] 前端不 hardcode 示例 issue。
 ```
 
 ---

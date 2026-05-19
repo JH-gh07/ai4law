@@ -21,6 +21,7 @@ import {
 } from "../../lib/task-templates";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { extractArtifacts, extractConsistencyIssues, extractEvidenceHits, extractInsight } from "../../lib/workspace";
+import { AssessmentIntermediatesPanel } from "./AssessmentIntermediatesPanel";
 import { AssistantPanel } from "./AssistantPanel";
 import { ResourcePanel, type ResourceOpenTarget } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
@@ -1117,6 +1118,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             <strong>{responseInsight.riskLevel ?? t("workflowPending")}</strong>
           </article>
         </section>
+        <AssessmentIntermediatesPanel outputFiles={responseInsight.outputFiles} lang={lang} />
         {artifactPreviewLoading ? (
           <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文档预览..." : "Loading artifact preview..."}</div>
         ) : null}

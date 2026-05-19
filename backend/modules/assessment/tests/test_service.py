@@ -116,6 +116,22 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
     for key in ("issue_list_json", "issue_list_xlsx", "evidence_chain_json", "evidence_chain_xlsx", "trace_manifest"):
         assert Path(result.output_files[key]).name in names
 
+    # Phase 8: facts, path judgment, material checklist JSON
+    assert result.output_files["facts_json"].endswith(".json")
+    assert result.output_files["path_judgment_json"].endswith(".json")
+    assert Path(result.output_files["facts_json"]).exists()
+    assert Path(result.output_files["path_judgment_json"]).exists()
+    for key in ("facts_json", "path_judgment_json"):
+        assert Path(result.output_files[key]).name in names
+
+    import json as _json
+    facts_data = _json.loads(Path(result.output_files["facts_json"]).read_text(encoding="utf-8"))
+    assert len(facts_data) > 0
+    assert "fact_id" in facts_data[0]
+    path_data = _json.loads(Path(result.output_files["path_judgment_json"]).read_text(encoding="utf-8"))
+    assert "recommended_path" in path_data
+    assert "risk_level" in path_data
+
     request_event = _read_trace_event(result.output_files["trace_manifest"], "assessment_request")
     assert request_event["payload"]["company_name"] == "测试公司"
     facts_event = _read_trace_event(result.output_files["trace_manifest"], "facts_built")

@@ -154,6 +154,8 @@ class AssessmentService:
                 evidence_chain=evidence_chain,
                 attachment_notes=attachment_notes,
                 trace_manifest_path=str(manifest),
+                facts=facts,
+                diagnosis_result=diagnosis.model_dump() if hasattr(diagnosis, "model_dump") else diagnosis,
             )
         finally:
             current_trace.reset(token)
