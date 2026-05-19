@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import json
+import uuid
 from pathlib import Path
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
+from backend.common.trace.context import current_trace
+from backend.common.trace.recorder import TraceRecorder
+from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.common.render.report import (
     format_date_stamp,
     render_docx_template,
@@ -15,6 +20,9 @@ from backend.common.render.report import (
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.modules.cn_flow.evidence_builder import build_cn_flow_evidence
+from backend.modules.cn_flow.fact_builder import build_cn_flow_facts
+from backend.modules.cn_flow.issue_builder import CN_FLOW_CHAPTER_KEYS, build_cn_flow_issues
 from backend.modules.cn_flow.schema import (
     CNFlowAsyncAccepted,
     CNFlowAsyncStatus,
@@ -46,33 +54,144 @@ class CNFlowService:
         self.tasks = InMemoryTaskManager(module="cn_flow")
 
     def generate_report(self, payload: CNFlowRequest) -> CNFlowResult:
+        task_id = str(uuid.uuid4())
+        trace_dir = Path("outputs/cn_flow") / task_id / "trace"
+        trace = TraceRecorder(trace_dir)
+        token = current_trace.set(trace)
+        try:
+            run_result = self._build_pipeline().run(payload=payload, task_id=task_id, trace=trace)
+        finally:
+            current_trace.reset(token)
+        return CNFlowResult(
+            report_path=run_result.outputs["docx"],
+            output_files=run_result.outputs,
+            company_name=payload.company_name,
+            risk_level=run_result.diagnosis.risk_level,
+            risk_items=run_result.diagnosis.risk_items,
+            chapters=run_result.chapters,
+            consistency_issues=run_result.consistency_issues,
+            attachment_notes=[
+                f"{item.get('source_ref', '')}: {item.get('summary', '')}"
+                for item in run_result.context_pack.attachment_notes
+            ],
+        )
+
+    def _build_pipeline(self) -> WorkflowPipeline:
+        return WorkflowPipeline(
+            extract_profile=lambda payload: payload,
+            evaluate_diagnosis=self._evaluate_diagnosis,
+            validate_path=lambda payload, path, rationale: None,
+            build_facts=self._build_facts,
+            retrieve_regulations=self._retrieve_regulations,
+            build_attachment_notes=self._extract_attachment_notes,
+            build_issues=self._build_issues,
+            build_evidence=self._build_evidence,
+            build_context_pack=self._build_context_pack,
+            generate_chapters=self._generate_chapters_from_pack,
+            check_consistency=self._check_consistency_with_context,
+            check_alignment=lambda content, profile: [],
+            render_artifacts=self._render_outputs,
+            request_event_name="cn_flow_request",
+            consistency_check_labels=["cn_flow_rules", "context_pack_references"],
+        )
+
+    def _evaluate_diagnosis(self, payload: CNFlowRequest):
         risk_items = self._build_risk_items(payload)
         risk_level = self._resolve_overall_level(risk_items)
-        regs = retrieve_regulations(
+        diagnosis = _CNFlowDiagnosis(risk_level=risk_level, risk_items=risk_items)
+        diagnosis.payload = payload
+        return diagnosis
+
+    def _build_facts(self, payload: CNFlowRequest, profile: CNFlowRequest, diagnosis: "_CNFlowDiagnosis"):
+        return build_cn_flow_facts(payload, risk_level=diagnosis.risk_level, risk_items=diagnosis.risk_items)
+
+    @staticmethod
+    def _retrieve_regulations(_: CNFlowRequest) -> list[dict]:
+        docs = retrieve_regulations(
             "EO 14117 US China data flow restricted transactions",
             top_k=4,
             jurisdiction="us",
             path="all",
         )
-        citations = [f"{item.title}{item.article}" for item in regs]
-        reg_snippet = "\n".join(
-            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
-            for item in regs
-        ) or "（暂无检索到相关法条）"
-        attachment_notes = self._extract_attachment_notes(payload)
-        chapters = self._generate_chapters(payload, risk_level, risk_items, citations, reg_snippet)
-        issues = self._check_consistency(payload, risk_items)
-        outputs = self._render(payload, chapters, risk_items, attachment_notes)
-        return CNFlowResult(
-            report_path=outputs["docx"],
-            output_files=outputs,
-            company_name=payload.company_name,
-            risk_level=risk_level,
-            risk_items=risk_items,
-            chapters=chapters,
-            consistency_issues=issues,
-            attachment_notes=attachment_notes,
+        return [
+            {
+                "source_id": item.id,
+                "title": item.title,
+                "article": item.article,
+                "snippet": item.content,
+            }
+            for item in docs
+        ]
+
+    def _build_issues(
+        self,
+        facts,
+        diagnosis: "_CNFlowDiagnosis",
+        regulations: list[dict],
+        attachment_notes: list[dict[str, str]],
+    ):
+        return build_cn_flow_issues(
+            diagnosis.payload,
+            facts,
+            diagnosis.risk_items,
+            regulations,
         )
+
+    @staticmethod
+    def _build_evidence(facts, issues, regulations, diagnosis: "_CNFlowDiagnosis"):
+        return build_cn_flow_evidence(facts, issues, regulations)
+
+    def _build_context_pack(
+        self,
+        *,
+        task_id: str,
+        diagnosis: "_CNFlowDiagnosis",
+        facts,
+        regulations,
+        issues,
+        evidence_chain,
+        path_warning: str | None,
+        attachment_notes: list[dict[str, str]],
+    ) -> GenerationContextPack:
+        return GenerationContextPack(
+            module_key="cn_flow",
+            request_id=task_id,
+            facts=facts,
+            diagnosis_result=diagnosis.model_dump(),
+            regulations=regulations,
+            issues=issues,
+            evidence_chain=evidence_chain,
+            path_warning=path_warning,
+            risk_summary={"risk_level": diagnosis.risk_level},
+            attachment_notes=attachment_notes,
+            output_requirements={"chapter_keys": list(CN_FLOW_CHAPTER_KEYS.values())},
+        )
+
+    def _generate_chapters_from_pack(
+        self,
+        payload: CNFlowRequest,
+        regulations: list[dict],
+        context_pack: GenerationContextPack,
+    ) -> list[CNFlowChapter]:
+        citations = [f"{item.get('title', '')}{item.get('article', '')}" for item in regulations]
+        chapters: list[CNFlowChapter] = []
+        for idx, title in enumerate(CN_FLOW_CHAPTERS, start=1):
+            chapter_id = CN_FLOW_CHAPTER_KEYS[title]
+            context_block = self._build_context_block_from_pack(payload, context_pack, chapter_id)
+            if self.llm_client and self.llm_client.enabled:
+                content = generate_chapter(self.llm_client, "cn_flow", title, context_block, citations=citations)
+            else:
+                content = f"（{title}：LLM未配置，此处为占位内容）"
+            chapters.append(
+                CNFlowChapter(
+                    chapter_no=idx,
+                    title=title,
+                    content=content,
+                    citations=citations,
+                    risk_level=context_pack.risk_summary.get("risk_level", "LOW") if context_pack.risk_summary else "LOW",
+                )
+            )
+        return chapters
 
     def submit_async(self, payload: CNFlowRequest) -> CNFlowAsyncAccepted:
         snapshot = self.tasks.submit(lambda: self.generate_report(payload))
@@ -175,80 +294,70 @@ class CNFlowService:
             )
         return items
 
-    def _extract_attachment_notes(self, payload: CNFlowRequest) -> list[str]:
-        notes: list[str] = []
+    def _extract_attachment_notes(self, payload: CNFlowRequest) -> list[dict[str, str]]:
+        notes: list[dict[str, str]] = []
         for item in payload.attachments:
             try:
                 text = self.parser.parse_text(item.storage_uri)
-                notes.append(f"{item.file_name}: {text[:160].replace(chr(10), ' ')}")
+                notes.append(
+                    {
+                        "source_ref": item.file_name,
+                        "summary": text[:160].replace(chr(10), " "),
+                    }
+                )
             except (FileNotFoundError, ValueError) as exc:
-                notes.append(f"{item.file_name}: [parse skipped] {exc}")
+                notes.append(
+                    {
+                        "source_ref": item.file_name,
+                        "summary": f"[parse skipped] {exc}",
+                    }
+                )
         return notes
 
-    def _generate_chapters(
-        self,
-        payload: CNFlowRequest,
-        level: str,
-        risk_items: list[CNFlowRiskItem],
-        citations: list[str],
-        reg_snippet: str,
-    ) -> list[CNFlowChapter]:
-        items_summary = "；".join(f"{item.risk_id}-{item.title}" for item in risk_items)
-        context_block = (
-            f"【企业信息】\n"
-            f"- 企业名称：{payload.company_name}\n"
-            f"- 传输目的：{payload.transfer_purpose}\n"
-            f"- 数据类别：{', '.join(payload.data_categories)}\n"
-            f"- 传输链路：{payload.transfer_chain}\n"
-            f"- 风险概要：{items_summary}\n"
-            f"- 风险等级：{level}\n"
-            f"\n【法规参考】\n{reg_snippet}\n"
-        )
-        chapters: list[CNFlowChapter] = []
-        for idx, title in enumerate(CN_FLOW_CHAPTERS, start=1):
-            if self.llm_client and self.llm_client.enabled:
-                content = generate_chapter(self.llm_client, "cn_flow", title, context_block, citations=citations)
-            else:
-                content = f"（{title}：LLM未配置，此处为占位内容）"
-            chapters.append(
-                CNFlowChapter(
-                    chapter_no=idx,
-                    title=title,
-                    content=content,
-                    citations=citations,
-                    risk_level=level,
-                )
-            )
-        return chapters
-
     @staticmethod
-    def _check_consistency(payload: CNFlowRequest, risk_items: list[CNFlowRiskItem]) -> list[str]:
+    def _check_consistency_with_context(payload: CNFlowRequest, chapters: list[CNFlowChapter], context_pack: GenerationContextPack) -> list[str]:
         issues: list[str] = []
         required_roles = {item.file_role for item in payload.attachments}
         if "data_inventory" not in required_roles:
             issues.append("Missing required attachment role: data_inventory")
         if "entity_inventory" not in required_roles:
             issues.append("Missing required attachment role: entity_inventory")
-        if any(item.risk_level == "HIGH" for item in risk_items):
+        if any(item.severity in {"HIGH", "BLOCKER"} for item in context_pack.issues):
             issues.append("Contains HIGH risk items; recommend legal escalation before execution.")
+        if any(not chapter.citations for chapter in chapters):
+            issues.append("Some chapters have no citation.")
         return issues
 
-    def _render(
+    def _render_outputs(
         self,
+        *,
+        task_id: str,
         payload: CNFlowRequest,
+        profile: CNFlowRequest,
+        regulations: list[dict],
         chapters: list[CNFlowChapter],
-        risk_items: list[CNFlowRiskItem],
-        attachment_notes: list[str],
+        path_warning: str | None,
+        alignment_warning: str | None,
+        issues,
+        evidence_chain,
+        attachment_notes: list[dict[str, str]],
+        trace_manifest_path: str,
+        facts,
+        diagnosis: "_CNFlowDiagnosis",
     ) -> dict[str, str]:
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
-            ("风险清单摘要", "\n".join(f"- {item.risk_id}: {item.title}" for item in risk_items)),
-            ("附件解析摘要", "\n".join(f"- {item}" for item in attachment_notes) or "- 无"),
+            ("风险清单摘要", "\n".join(f"- {item.risk_id}: {item.title}" for item in diagnosis.risk_items)),
+            (
+                "附件解析摘要",
+                "\n".join(f"- {item.get('source_ref', '')}: {item.get('summary', '')}" for item in attachment_notes) or "- 无",
+            ),
         ]
         for chapter in chapters:
             sections.append((f"第{chapter.chapter_no}章 {chapter.title}", chapter.content))
 
-        output_dir = Path("outputs/cn_flow")
+        output_dir = Path("outputs/cn_flow") / task_id / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
         date_stamp = format_date_stamp()
         base = safe_filename(payload.company_name)
         md_output = output_dir / f"{base}_14117_风险评估结论报告_草案_{date_stamp}.md"
@@ -257,7 +366,7 @@ class CNFlowService:
         xlsx_output = output_dir / f"{base}_14117_风险清单_草案_{date_stamp}.xlsx"
         zip_output = output_dir / f"{base}_14117_输出包_草案_{date_stamp}.zip"
 
-        mapping = _build_template_mapping(payload, chapters, risk_items)
+        mapping = _build_template_mapping(payload, chapters, diagnosis.risk_items)
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         render_pdf_report(pdf_output, "对华数据流动合规报告（草案）", sections)
@@ -271,16 +380,90 @@ class CNFlowService:
                 item.recommendation,
                 "; ".join(item.affected_entities),
             ]
-            for item in risk_items
+            for item in diagnosis.risk_items
         ]
         render_simple_xlsx(xlsx_output, headers=headers, rows=rows)
-        bundle_files(zip_output, [docx_output, md_output, pdf_output, xlsx_output])
+        issue_json = output_dir / "issue_list.json"
+        issue_json.write_text(json.dumps([item.model_dump() for item in issues], ensure_ascii=False, indent=2), encoding="utf-8")
+        evidence_json = output_dir / "evidence_chain.json"
+        evidence_json.write_text(
+            json.dumps([item.model_dump() for item in evidence_chain], ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        facts_json = output_dir / "facts.json"
+        facts_json.write_text(json.dumps([item.model_dump() for item in facts], ensure_ascii=False, indent=2), encoding="utf-8")
+        trace_manifest = output_dir / "trace_manifest.json"
+        trace_manifest.write_text(Path(trace_manifest_path).read_text(encoding="utf-8"), encoding="utf-8")
+        bundle_files(
+            zip_output,
+            [docx_output, md_output, pdf_output, xlsx_output, issue_json, evidence_json, facts_json, trace_manifest],
+        )
         return {
             "markdown": str(md_output),
             "docx": str(docx_output),
             "pdf": str(pdf_output),
             "xlsx": str(xlsx_output),
             "zip": str(zip_output),
+            "issue_list_json": str(issue_json),
+            "evidence_chain_json": str(evidence_json),
+            "facts_json": str(facts_json),
+            "trace_manifest": str(trace_manifest),
+        }
+
+    @staticmethod
+    def _build_context_block_from_pack(
+        payload: CNFlowRequest,
+        context_pack: GenerationContextPack,
+        chapter_id: str,
+    ) -> str:
+        matched_issues = [item for item in context_pack.issues if chapter_id in item.affects_outputs]
+        if not matched_issues:
+            matched_issues = [item for item in context_pack.issues if item.severity in {"HIGH", "BLOCKER"}]
+        issue_block = "\n".join(
+            f"- {item.issue_id} | {item.severity} | {item.title} | {item.recommended_action}"
+            for item in matched_issues
+        ) or "- 无"
+        reg_block = "\n".join(
+            f"- {item.get('source_id', 'unknown')} | {item.get('title', '')}{item.get('article', '')}: {str(item.get('snippet', ''))[:120]}"
+            for item in context_pack.regulations[:5]
+        ) or "- 无"
+        evidence_block = "\n".join(
+            f"- {item.evidence_id} | {item.claim} -> {item.conclusion}"
+            for item in context_pack.evidence_chain
+        ) or "- 无"
+        return (
+            f"【上下文包】\n"
+            f"- module_key: {context_pack.module_key}\n"
+            f"- request_id: {context_pack.request_id}\n"
+            f"- chapter_id: {chapter_id}\n"
+            f"- company_name: {payload.company_name}\n"
+            f"- transfer_purpose: {payload.transfer_purpose}\n"
+            f"- risk_level: {(context_pack.risk_summary or {}).get('risk_level', 'LOW')}\n"
+            f"\n【事实】\n"
+            + "\n".join(f"- {fact.field_path}: {fact.normalized_value}" for fact in context_pack.facts[:12])
+            + "\n\n【法规】\n"
+            + reg_block
+            + "\n\n【问题】\n"
+            + issue_block
+            + "\n\n【证据】\n"
+            + evidence_block
+        )
+
+
+class _CNFlowDiagnosis:
+    def __init__(self, *, risk_level: str, risk_items: list[CNFlowRiskItem]) -> None:
+        self.risk_level = risk_level
+        self.risk_items = risk_items
+        self.recommended_path = "cn_flow"
+        self.rationale = "Rule-based CN flow risk aggregation"
+        self.payload: CNFlowRequest | None = None
+
+    def model_dump(self) -> dict:
+        return {
+            "risk_level": self.risk_level,
+            "recommended_path": self.recommended_path,
+            "rationale": self.rationale,
+            "risk_items": [item.model_dump() for item in self.risk_items],
         }
 
 

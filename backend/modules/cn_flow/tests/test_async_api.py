@@ -1,57 +1,77 @@
 import time
+from pathlib import Path
 
-from fastapi.testclient import TestClient
+from docx import Document
 
-from backend.main import app
+from backend.modules.cn_flow import service as cn_flow_service
+from backend.modules.cn_flow.schema import CNFlowRequest
+from backend.modules.cn_flow.service import CNFlowService
 
-client = TestClient(app)
+
+class _DisabledLLM:
+    enabled = False
+
+
+def _install_test_templates() -> None:
+    tmp_dir = Path("outputs/cn_flow/_test_templates")
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    md_template = tmp_dir / "cn_flow_template.md"
+    md_template.write_text("# {{business_overview}}\n\n{{risk_rating}}\n", encoding="utf-8")
+    docx_template = tmp_dir / "cn_flow_template.docx"
+    document = Document()
+    document.add_heading("{{business_overview}}", level=1)
+    document.add_paragraph("{{risk_rating}}")
+    document.save(docx_template)
+    cn_flow_service.TEMPLATE_MD = md_template
+    cn_flow_service.TEMPLATE_PATH = docx_template
 
 
 def test_cn_flow_async_flow() -> None:
-    accepted = client.post(
-        "/api/v1/cn-flow/generate_async",
-        json={
-            "company_name": "AsyncCNFlow",
-            "transfer_purpose": "全球客服与风控",
-            "data_categories": ["账户信息", "设备信息"],
-            "sensitive_data_flags": ["生物识别"],
-            "recipient_entities": [
-                {
-                    "entity_name": "US ServiceCo",
-                    "country_region": "United States",
-                    "entity_role": "processor",
-                    "is_restricted_party": False,
-                }
-            ],
-            "transfer_chain": "CN -> US processor -> subprocessor",
-            "attachments": [
-                {
-                    "file_role": "data_inventory",
-                    "file_name": "data.csv",
-                    "file_format": "csv",
-                    "storage_uri": "storage://uploads/data.csv",
-                },
-                {
-                    "file_role": "entity_inventory",
-                    "file_name": "entity.csv",
-                    "file_format": "csv",
-                    "storage_uri": "storage://uploads/entity.csv",
-                },
-            ],
-        },
+    _install_test_templates()
+    service = CNFlowService(llm_client=_DisabledLLM())
+    accepted = service.submit_async(
+        CNFlowRequest.model_validate(
+            {
+                "company_name": "AsyncCNFlow",
+                "transfer_purpose": "全球客服与风控",
+                "data_categories": ["账户信息", "设备信息"],
+                "sensitive_data_flags": ["生物识别"],
+                "recipient_entities": [
+                    {
+                        "entity_name": "US ServiceCo",
+                        "country_region": "United States",
+                        "entity_role": "processor",
+                        "is_restricted_party": False,
+                    }
+                ],
+                "transfer_chain": "CN -> US processor -> subprocessor",
+                "attachments": [
+                    {
+                        "file_role": "data_inventory",
+                        "file_name": "data.csv",
+                        "file_format": "csv",
+                        "storage_uri": "storage://uploads/data.csv",
+                    },
+                    {
+                        "file_role": "entity_inventory",
+                        "file_name": "entity.csv",
+                        "file_format": "csv",
+                        "storage_uri": "storage://uploads/entity.csv",
+                    },
+                ],
+            }
+        )
     )
-    assert accepted.status_code == 200
-    task_id = accepted.json()["task_id"]
+    assert accepted.state in {"CREATED", "RUNNING"}
 
     for _ in range(200):
-        status = client.get(f"/api/v1/cn-flow/tasks/{task_id}")
-        assert status.status_code == 200
-        payload = status.json()
-        if payload["state"] == "COMPLETED":
-            assert payload["result"]["output_files"]["xlsx"].endswith(".xlsx")
+        status = service.get_async_status(accepted.task_id)
+        if status.state == "COMPLETED":
+            assert status.result is not None
+            assert status.result.output_files["xlsx"].endswith(".xlsx")
             return
-        if payload["state"] == "FAILED":
-            raise AssertionError(payload)
+        if status.state == "FAILED":
+            raise AssertionError(status.error)
         time.sleep(0.05)
 
     raise AssertionError("cn-flow async task timeout")

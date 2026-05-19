@@ -850,25 +850,25 @@ render_artifacts
 ```markdown
 ## Phase 9: Extract reusable workflow pipeline
 
-- [ ] 新增 `backend/common/workflow/pipeline.py`。
-- [ ] 定义 `WorkflowPipeline` 或 `BaseWorkflowRunner`。
-- [ ] 只抽象已经在 assessment 中真实跑通的步骤。
-- [ ] 不要提前设计未使用接口。
-- [ ] assessment 改为调用 pipeline，但业务规则仍保留在 assessment 自己的 builder 中：
-  - [ ] `assessment/fact_builder.py`
-  - [ ] `assessment/issue_builder.py`
-  - [ ] `assessment/evidence_builder.py`
+- [x] 新增 `backend/common/workflow/pipeline.py`。
+- [x] 定义 `WorkflowPipeline` 或 `BaseWorkflowRunner`。
+- [x] 只抽象已经在 assessment 中真实跑通的步骤。
+- [x] 不要提前设计未使用接口。
+- [x] assessment 改为调用 pipeline，但业务规则仍保留在 assessment 自己的 builder 中：
+  - [x] `assessment/fact_builder.py`
+  - [x] `assessment/issue_builder.py`
+  - [x] `assessment/evidence_builder.py`
 
-- [ ] pipeline 负责顺序编排：
-  - [ ] facts
-  - [ ] regulations
-  - [ ] issues
-  - [ ] evidence
-  - [ ] context_pack
-  - [ ] generation
-  - [ ] consistency
-  - [ ] rendering
-  - [ ] trace
+- [x] pipeline 负责顺序编排：
+  - [x] facts
+  - [x] regulations
+  - [x] issues
+  - [x] evidence
+  - [x] context_pack
+  - [x] generation
+  - [x] consistency
+  - [x] rendering
+  - [x] trace
 ```
 
 ## 验收标准
@@ -876,11 +876,11 @@ render_artifacts
 ```markdown
 ## Phase 9 Acceptance Criteria
 
-- [ ] assessment 行为与 Phase 8 保持一致。
-- [ ] pipeline 中没有空实现。
-- [ ] pipeline 中没有只 pass 的抽象方法。
-- [ ] 单元测试确认 pipeline 每一步都会产生真实产物。
-- [ ] 删除 issue_builder 后，assessment 测试失败，而不是静默跳过。
+- [x] assessment 行为与 Phase 8 保持一致。
+- [x] pipeline 中没有空实现。
+- [x] pipeline 中没有只 pass 的抽象方法。
+- [x] 单元测试确认 pipeline 每一步都会产生真实产物。
+- [x] 删除 issue_builder 后，assessment 测试失败，而不是静默跳过。
 ```
 
 ---
@@ -943,6 +943,18 @@ assessment → cn_flow → cpra → bcr → scc → dpia/tia/pipia
 - [ ] 原模块已有的 risk_items/gap_items/problems/findings 没有丢失。
 - [ ] 测试覆盖至少 2 个典型场景和 1 个缺失材料场景。
 ```
+
+### Phase 10 Progress: `cn_flow`（2026-05-20）
+
+- [x] 梳理当前模块中间产物并完成映射：`risk_items -> IssueItem`，`citations -> rule_refs`。
+- [x] 新增 `backend/modules/cn_flow/fact_builder.py`。
+- [x] 新增 `backend/modules/cn_flow/issue_builder.py`。
+- [x] 新增 `backend/modules/cn_flow/evidence_builder.py`。
+- [x] 接入 `GenerationContextPack` 并改造章节生成消费 context pack。
+- [x] 接入 `WorkflowPipeline`，按 `facts -> regulations -> issues -> evidence -> context -> generation -> consistency -> rendering -> trace` 顺序执行。
+- [x] 输出中间产物附件：`facts.json`、`issue_list.json`、`evidence_chain.json`、`trace_manifest.json`（随 zip 打包）。
+- [x] 模块级测试覆盖同步更新（同步场景 + 异步场景）。
+- [ ] 后续模块迁移（`cpra/bcr/scc/dpia/tia/pipia`）待继续推进。
 
 ---
 
