@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 from pathlib import Path
+from shutil import copy2
 from zipfile import ZIP_DEFLATED, ZipFile
+
+import openpyxl
 
 from backend.common.render.report import (
     format_date_stamp,
@@ -8,23 +13,57 @@ from backend.common.render.report import (
     safe_filename,
 )
 from backend.common.render.summary import attach_citations, dedup_if_same, summarize_for_slot
+from backend.common.workflow.evidence import EvidenceItem
+from backend.common.workflow.issues import IssueItem
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.docx")
 TEMPLATE_MD = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.md")
 
+_ISSUE_XLSX_HEADERS = [
+    "问题编号",
+    "标题",
+    "描述",
+    "类别",
+    "严重程度",
+    "事实引用",
+    "规则引用",
+    "证据引用",
+    "建议措施",
+    "影响输出",
+]
+
+_EVIDENCE_XLSX_HEADERS = [
+    "证据编号",
+    "主张",
+    "事实引用",
+    "规则引用",
+    "结论",
+    "置信度",
+    "被使用于",
+]
+
+_MATERIAL_XLSX_HEADERS = ["材料编号", "摘要", "状态"]
+
 
 class AssessmentReportRenderer:
+
     def render(
         self,
+        task_id: str,
         company_name: str,
         profile: CompanyProfile,
         regulations: list[RegulationHit],
         chapters: list[ChapterContent],
         path_warning: str | None = None,
         alignment_warning: str | None = None,
+        issues: list[IssueItem] | None = None,
+        evidence_chain: list[EvidenceItem] | None = None,
+        attachment_notes: list[dict[str, str]] | None = None,
+        trace_manifest_path: str | None = None,
     ) -> dict[str, str]:
-        output_dir = Path("outputs/assessment")
+        output_dir = Path("outputs/assessment") / task_id / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
         date_stamp = format_date_stamp()
         safe_company = safe_filename(company_name)
         md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
@@ -33,10 +72,38 @@ class AssessmentReportRenderer:
         mapping = _build_template_mapping(profile, regulations, chapters, date_stamp, path_warning, alignment_warning)
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+
+        result: dict[str, str] = {
+            "markdown": str(md_output),
+            "docx": str(docx_output),
+            "zip": str(zip_output),
+        }
+
+        if issues:
+            result["issue_list_json"] = _write_issue_list_json(issues, output_dir)
+            result["issue_list_xlsx"] = _write_issue_list_xlsx(issues, output_dir)
+
+        if evidence_chain:
+            result["evidence_chain_json"] = _write_evidence_chain_json(evidence_chain, output_dir)
+            result["evidence_chain_xlsx"] = _write_evidence_chain_xlsx(evidence_chain, output_dir)
+
+        if attachment_notes:
+            result["material_checklist_xlsx"] = _write_material_checklist_xlsx(attachment_notes, output_dir)
+
+        if trace_manifest_path:
+            dest = output_dir / "trace_manifest.json"
+            copy2(trace_manifest_path, dest)
+            result["trace_manifest"] = str(dest)
+
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
-            bundle.write(docx_output, arcname=docx_output.name)
-            bundle.write(md_output, arcname=md_output.name)
-        return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+            for key, path in result.items():
+                if key == "zip":
+                    continue
+                p = Path(path)
+                if p.exists():
+                    bundle.write(p, arcname=p.name)
+
+        return result
 
 
 def _build_template_mapping(
@@ -111,3 +178,85 @@ def _build_template_mapping(
         "remediation_items": attach_citations("详见风险识别与整改建议章节。", citations),
         "attachments": "- 无",
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: intermediate artifact writers
+# ---------------------------------------------------------------------------
+
+
+def _write_issue_list_json(issues: list[IssueItem], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "issue_list.json"
+    path.write_text(json.dumps([issue.model_dump() for issue in issues], ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_issue_list_xlsx(issues: list[IssueItem], output_dir: Path) -> str:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "问题清单"
+    ws.append(_ISSUE_XLSX_HEADERS)
+    for issue in issues:
+        ws.append([
+            issue.issue_id,
+            issue.title,
+            issue.description,
+            issue.category,
+            issue.severity,
+            "; ".join(issue.fact_refs),
+            "; ".join(issue.rule_refs),
+            "; ".join(issue.evidence_refs),
+            issue.recommended_action,
+            "; ".join(issue.affects_outputs),
+        ])
+    path = output_dir / "issue_list.xlsx"
+    wb.save(path)
+    return str(path)
+
+
+def _write_evidence_chain_json(evidence_chain: list[EvidenceItem], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "evidence_chain.json"
+    path.write_text(
+        json.dumps([ev.model_dump() for ev in evidence_chain], ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return str(path)
+
+
+def _write_evidence_chain_xlsx(evidence_chain: list[EvidenceItem], output_dir: Path) -> str:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "证据链"
+    ws.append(_EVIDENCE_XLSX_HEADERS)
+    for ev in evidence_chain:
+        ws.append([
+            ev.evidence_id,
+            ev.claim,
+            "; ".join(ev.fact_refs),
+            "; ".join(ev.rule_refs),
+            ev.conclusion,
+            ev.confidence,
+            "; ".join(ev.used_by),
+        ])
+    path = output_dir / "evidence_chain.xlsx"
+    wb.save(path)
+    return str(path)
+
+
+def _write_material_checklist_xlsx(attachment_notes: list[dict[str, str]], output_dir: Path) -> str:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "材料补充清单"
+    ws.append(_MATERIAL_XLSX_HEADERS)
+    for note in attachment_notes:
+        ws.append([
+            note.get("source_ref", ""),
+            note.get("summary", ""),
+            "待补充",
+        ])
+    path = output_dir / "material_checklist.xlsx"
+    wb.save(path)
+    return str(path)
