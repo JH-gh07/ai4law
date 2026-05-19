@@ -1012,3 +1012,11 @@ assessment → cn_flow → cpra → bcr → scc → dpia/tia/pipia
 这份文件的关键是：**每个 yes 都必须附代码位置、测试位置、示例输出文件路径**。否则就是口头 yes。
 
 ---
+
+## 总验收执行记录（2026-05-20）
+
+- [x] 已提交 `IMPLEMENTATION_VERIFICATION.md`。
+- [x] assessment 验收链路完成（facts/issues/evidence/context_pack/prompt/artifacts/tests）。
+- [x] cn_flow 验收链路完成（facts/issues/evidence/context_pack/prompt/artifacts/tests）。
+- [ ] `cpra/bcr/scc` 尚未迁移完成，模块覆盖仍为 no。
+- [ ] “删除 evidence_chain 后 trace 测试失败”负向测试尚未补齐。
