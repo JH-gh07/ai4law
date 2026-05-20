@@ -22,14 +22,25 @@ class Settings(BaseSettings):
     rag_rerank_candidate_count: int = 12
     rag_auto_build_index: bool = True
 
-    # OpenAI-compatible LLM config, supporting both legacy Tencent keys and generic LLM keys.
+    # OpenAI-compatible LLM config. Provider order in auto mode:
+    # generic LLM_* -> SiliconFlow -> legacy Tencent Hunyuan.
+    llm_provider: str = Field(
+        default="auto",
+        validation_alias=AliasChoices("LLM_PROVIDER", "AI4LAW_LLM_PROVIDER"),
+    )
+    llm_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LLM_API_KEY", "AI4LAW_LLM_API_KEY"),
+    )
+    llm_api_url: str = Field(
+        default="https://api.openai.com/v1",
+        validation_alias=AliasChoices("LLM_API_URL", "AI4LAW_LLM_API_URL"),
+    )
     tencent_api_key: str | None = Field(
         default=None,
         validation_alias=AliasChoices(
             "TENCENT_API_KEY",
             "AI4LAW_TENCENT_API_KEY",
-            "LLM_API_KEY",
-            "AI4LAW_LLM_API_KEY",
         ),
     )
     tencent_api_url: str = Field(
@@ -37,8 +48,33 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices(
             "TENCENT_API_URL",
             "AI4LAW_TENCENT_API_URL",
-            "LLM_API_URL",
-            "AI4LAW_LLM_API_URL",
+        ),
+    )
+    siliconflow_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SILICONFLOW_API_KEY",
+            "SICICONFLOW_API_KEY",
+            "AI4LAW_SILICONFLOW_API_KEY",
+            "AI4LAW_SICICONFLOW_API_KEY",
+        ),
+    )
+    siliconflow_api_url: str = Field(
+        default="https://api.siliconflow.cn/v1",
+        validation_alias=AliasChoices(
+            "SILICONFLOW_API_URL",
+            "SICICONFLOW_API_URL",
+            "AI4LAW_SILICONFLOW_API_URL",
+            "AI4LAW_SICICONFLOW_API_URL",
+        ),
+    )
+    siliconflow_model: str = Field(
+        default="Qwen/Qwen2.5-7B-Instruct",
+        validation_alias=AliasChoices(
+            "SILICONFLOW_MODEL",
+            "SICICONFLOW_MODEL",
+            "AI4LAW_SILICONFLOW_MODEL",
+            "AI4LAW_SICICONFLOW_MODEL",
         ),
     )
     llm_model: str = Field(
@@ -51,6 +87,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     @property
@@ -60,6 +97,54 @@ class Settings(BaseSettings):
     @property
     def report_dir(self) -> Path:
         return self.storage_dir / self.report_dir_name
+
+    @property
+    def resolved_llm_provider(self) -> str:
+        provider = (self.llm_provider or "auto").strip().lower()
+        if provider != "auto":
+            return provider
+        if self.llm_api_key:
+            return "generic"
+        if self.siliconflow_api_key:
+            return "siliconflow"
+        if self.tencent_api_key:
+            return "tencent_hunyuan"
+        return "none"
+
+    @property
+    def resolved_llm_api_key(self) -> str | None:
+        provider = self.resolved_llm_provider
+        if provider == "siliconflow":
+            return self.siliconflow_api_key or self.llm_api_key
+        if provider in {"tencent", "tencent_hunyuan"}:
+            return self.tencent_api_key or self.llm_api_key
+        if provider == "none":
+            return None
+        return self.llm_api_key or self.siliconflow_api_key or self.tencent_api_key
+
+    @property
+    def resolved_llm_api_url(self) -> str:
+        provider = self.resolved_llm_provider
+        if provider == "siliconflow":
+            return self._normalize_openai_base_url(self.siliconflow_api_url)
+        if provider in {"tencent", "tencent_hunyuan"}:
+            return self._normalize_openai_base_url(self.tencent_api_url)
+        return self._normalize_openai_base_url(self.llm_api_url)
+
+    @property
+    def resolved_llm_model(self) -> str:
+        provider = self.resolved_llm_provider
+        if provider == "siliconflow":
+            return self.siliconflow_model
+        return self.llm_model
+
+    @staticmethod
+    def _normalize_openai_base_url(url: str) -> str:
+        normalized = (url or "").strip().rstrip("/")
+        suffix = "/chat/completions"
+        if normalized.endswith(suffix):
+            normalized = normalized[: -len(suffix)]
+        return normalized
 
 
 @lru_cache

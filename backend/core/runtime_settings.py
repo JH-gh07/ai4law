@@ -14,6 +14,9 @@ DEFAULT_LLM_MODELS = [
     "hunyuan-lite",
     "hunyuan-turbos-latest",
     "hunyuan-standard",
+    "Qwen/Qwen2.5-7B-Instruct",
+    "Qwen/Qwen2.5-72B-Instruct",
+    "deepseek-ai/DeepSeek-V3",
 ]
 
 
@@ -46,10 +49,10 @@ def build_effective_runtime_payload(settings) -> dict[str, Any]:
             "secret": settings.delilegal_secret or DELILEGAL_COMPETITION_SECRET,
         },
         "llm": {
-            "provider": "tencent_hunyuan",
-            "api_key": settings.tencent_api_key or "",
-            "api_url": settings.tencent_api_url,
-            "model": settings.llm_model,
+            "provider": settings.resolved_llm_provider,
+            "api_key": settings.resolved_llm_api_key or "",
+            "api_url": settings.resolved_llm_api_url,
+            "model": settings.resolved_llm_model,
             "model_options": DEFAULT_LLM_MODELS,
         },
         "custom_providers": [],
@@ -77,9 +80,30 @@ def apply_runtime_payload(settings, payload: dict[str, Any]) -> dict[str, Any]:
     settings.delilegal_app_id = str(delilegal.get("app_id") or "").strip() or None
     settings.delilegal_secret = str(delilegal.get("secret") or "").strip() or None
 
-    settings.tencent_api_key = str(llm.get("api_key") or "").strip() or None
-    settings.tencent_api_url = str(llm.get("api_url") or settings.tencent_api_url).strip()
-    settings.llm_model = str(llm.get("model") or settings.llm_model).strip()
+    provider = str(llm.get("provider") or settings.resolved_llm_provider).strip() or "auto"
+    api_key = str(llm.get("api_key") or "").strip() or None
+    api_url = str(llm.get("api_url") or "").strip()
+    model = str(llm.get("model") or "").strip()
+
+    settings.llm_provider = provider
+    if provider == "siliconflow":
+        settings.siliconflow_api_key = api_key
+        if api_url:
+            settings.siliconflow_api_url = api_url
+        if model:
+            settings.siliconflow_model = model
+    elif provider in {"tencent", "tencent_hunyuan"}:
+        settings.tencent_api_key = api_key
+        if api_url:
+            settings.tencent_api_url = api_url
+        if model:
+            settings.llm_model = model
+    else:
+        settings.llm_api_key = api_key
+        if api_url:
+            settings.llm_api_url = api_url
+        if model:
+            settings.llm_model = model
 
     normalized = {
         "delilegal": {
@@ -88,10 +112,10 @@ def apply_runtime_payload(settings, payload: dict[str, Any]) -> dict[str, Any]:
             "secret": settings.delilegal_secret or "",
         },
         "llm": {
-            "provider": str(llm.get("provider") or "tencent_hunyuan"),
-            "api_key": settings.tencent_api_key or "",
-            "api_url": settings.tencent_api_url,
-            "model": settings.llm_model,
+            "provider": settings.resolved_llm_provider,
+            "api_key": settings.resolved_llm_api_key or "",
+            "api_url": settings.resolved_llm_api_url,
+            "model": settings.resolved_llm_model,
         },
         "custom_providers": payload.get("custom_providers", []),
     }

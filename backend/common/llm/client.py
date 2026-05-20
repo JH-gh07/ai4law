@@ -20,7 +20,7 @@ _FALLBACK_MESSAGE = "（LLM服务暂时不可用，请稍后重试）"
 
 
 class LLMClient:
-    """腾讯混元 LLM 客户端（OpenAI 兼容协议）。
+    """OpenAI-compatible LLM client.
 
     用法::
 
@@ -32,12 +32,15 @@ class LLMClient:
     """
 
     def __init__(self, settings: Settings) -> None:
-        self._model = settings.llm_model
-        self._enabled = bool(settings.tencent_api_key) and OpenAI is not None
+        self._provider = settings.resolved_llm_provider
+        self._model = settings.resolved_llm_model
+        self._api_key = settings.resolved_llm_api_key
+        self._api_url = settings.resolved_llm_api_url
+        self._enabled = bool(self._api_key) and OpenAI is not None
         if self._enabled:
             self._client = OpenAI(
-                api_key=settings.tencent_api_key,
-                base_url=settings.tencent_api_url,
+                api_key=self._api_key,
+                base_url=self._api_url,
                 timeout=60,
             )
         elif OpenAI is None:
@@ -59,7 +62,7 @@ class LLMClient:
         如果 API 未配置或调用失败，返回降级占位文本（不抛异常）。
         """
         if not self._enabled:
-            logger.warning("LLMClient: API key not configured, returning fallback text.")
+            logger.warning("LLMClient: API key not configured for provider %s, returning fallback text.", self._provider)
             return _FALLBACK_MESSAGE
 
         try:
