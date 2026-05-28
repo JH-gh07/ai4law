@@ -1,5 +1,6 @@
 import asyncio
 import mimetypes
+import re
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
@@ -11,6 +12,8 @@ from backend.repositories.review_repository import ReviewRepository
 from backend.schemas.review import (
     AggregatedReview,
     ReviewAnalyzeResponse,
+    ReviewAsyncAccepted,
+    ReviewAsyncStatus,
     ReviewGenerateResponse,
     ReviewIssuesResponse,
     ReviewReportResponse,
@@ -29,6 +32,47 @@ from backend.services.review_service.clause_segmenter import ClauseSegmenter
 from backend.services.review_service.rag_provider import LocalRegulationKnowledgeBase
 from backend.services.review_service.review_aggregator import ReviewAggregator
 from backend.services.review_service.review_report_renderer import ReviewReportRenderer
+
+
+_ENGLISH_REVIEW_SIGNAL_TERMS = (
+    "access",
+    "agree",
+    "agrees",
+    "breach",
+    "consent",
+    "delete",
+    "deletion",
+    "disclose",
+    "disclosure",
+    "encrypt",
+    "encrypted",
+    "encryption",
+    "ensure",
+    "implement",
+    "must",
+    "notify",
+    "notification",
+    "process",
+    "processing",
+    "protect",
+    "retain",
+    "retention",
+    "security",
+    "shall",
+    "transfer",
+    "transferred",
+    "withdraw",
+)
+
+_SHORT_STRUCTURAL_NOISE_PATTERNS = (
+    re.compile(r"^\d+([.)、]|\.\d+)*$"),
+    re.compile(r"^(第[一二三四五六七八九十百千万0-9]+[章节条]|[一二三四五六七八九十]+、)$"),
+    re.compile(r"^(article|section|clause)\s+\d+(\.\d+)*\.?$", re.IGNORECASE),
+    re.compile(r"^(table of contents|contents|目录)$", re.IGNORECASE),
+    re.compile(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$"),
+    re.compile(r"^(https?://|www\.)\S+$", re.IGNORECASE),
+    re.compile(r"^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}$"),
+)
 
 
 class ReviewService:
@@ -74,7 +118,7 @@ class ReviewService:
         )
 
     def analyze(self, db: Session, user_id: str, task_id: str) -> ReviewAnalyzeResponse:
-        task = self._require_task(db, task_id, user_id)
+        self._require_task(db, task_id, user_id)
         files = self.repository.list_files(db, task_id, user_id)
         if not files:
             raise HTTPException(status_code=400, detail="No files uploaded for review task")
@@ -83,45 +127,28 @@ class ReviewService:
         refreshed = self._require_task(db, task_id, user_id)
         return ReviewAnalyzeResponse(id=refreshed.id, status=ReviewTaskStatus(refreshed.status), progress=refreshed.progress)
 
+    def submit_async_from_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewAsyncAccepted:
+        task = self._create_task_with_uploaded_paths(db, user_id, uploaded_files)
+        self.task_dispatcher.dispatch(self._run_pipeline, task.id, user_id)
+        refreshed = self._require_task(db, task.id, user_id)
+        return self._to_async_accepted(refreshed)
+
     def generate_from_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewGenerateResponse:
-        normalized_paths = [self._resolve_uploaded_path(path) for path in uploaded_files]
-        if not normalized_paths:
-            raise HTTPException(status_code=400, detail="No files uploaded for review task")
-
-        task = self.repository.create_task(db, user_id)
-        for file_path in normalized_paths:
-            extracted_text = self.file_service.extract_text(file_path)
-            mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
-            record = UploadedFileModel(
-                user_id=user_id,
-                task_id=task.id,
-                filename=file_path.name,
-                content_type=mime,
-                storage_path=str(file_path),
-                extracted_text=extracted_text,
-            )
-            self.repository.create_file(db, record)
-
+        task = self._create_task_with_uploaded_paths(db, user_id, uploaded_files)
         self._run_pipeline(task.id, user_id)
 
         refreshed = self._require_task(db, task.id, user_id)
         if refreshed.status != ReviewTaskStatus.COMPLETED.value:
             raise HTTPException(status_code=500, detail="Review generation failed")
-        report = self.report_service.get_owner_artifact(db, user_id, "review", task.id, "docx")
-        if not report:
-            raise HTTPException(status_code=404, detail="Review report not found")
-        summary = AggregatedReview.model_validate(loads(refreshed.summary_json, {}))
-        return ReviewGenerateResponse(
-            report_path=report.path,
-            output_files={"docx": report.path, "report": report.path},
-            risk_level=summary.overall_rating,
-            result={
-                "risk_level": summary.overall_rating,
-                "summary": summary.summary,
-                "issue_counts": summary.issue_counts,
-            },
-            consistency_issues=[],
-        )
+        return self._build_generate_response(db, user_id, refreshed)
+
+    def get_async_status(self, db: Session, user_id: str, task_id: str) -> ReviewAsyncStatus:
+        task = self._require_task(db, task_id, user_id)
+        result = None
+        error = "Review generation failed" if task.status == ReviewTaskStatus.FAILED.value else None
+        if task.status == ReviewTaskStatus.COMPLETED.value:
+            result = self._build_generate_response(db, user_id, task)
+        return self._to_async_status(task, result=result, error=error)
 
     def get_status(self, db: Session, user_id: str, task_id: str) -> ReviewTaskStatusResponse:
         task = self._require_task(db, task_id, user_id)
@@ -161,8 +188,14 @@ class ReviewService:
 
             self._update_task(db, task, ReviewTaskStatus.REVIEWING, 70)
             issues = []
-            for clause in classified:
-                issues.extend(self.reviewer.review(clause))
+            reviewable = [clause for clause in classified if self._is_reviewable_clause(clause)]
+            llm_clause_ids = {clause.clause_id for clause in self._select_llm_candidates(reviewable)}
+            checkpoints = self._review_progress_checkpoints(len(reviewable))
+            for index, clause in enumerate(reviewable, start=1):
+                issues.extend(self.reviewer.review(clause, use_llm=clause.clause_id in llm_clause_ids))
+                if index in checkpoints:
+                    progress = 70 + int((index / len(reviewable)) * 14)
+                    self._update_task(db, task, ReviewTaskStatus.REVIEWING, min(progress, 84))
 
             self._update_task(db, task, ReviewTaskStatus.AGGREGATING, 85)
             aggregated = self.aggregator.aggregate(issues)
@@ -190,6 +223,137 @@ class ReviewService:
             raise
         finally:
             db.close()
+
+    def _create_task_with_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewTaskModel:
+        normalized_paths = [self._resolve_uploaded_path(path) for path in uploaded_files]
+        if not normalized_paths:
+            raise HTTPException(status_code=400, detail="No files uploaded for review task")
+
+        task = self.repository.create_task(db, user_id)
+        for file_path in normalized_paths:
+            extracted_text = self.file_service.extract_text(file_path)
+            mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+            record = UploadedFileModel(
+                user_id=user_id,
+                task_id=task.id,
+                filename=file_path.name,
+                content_type=mime,
+                storage_path=str(file_path),
+                extracted_text=extracted_text,
+            )
+            self.repository.create_file(db, record)
+        task.status = ReviewTaskStatus.UPLOADED.value
+        task.progress = 10
+        self.repository.save_task(db, task)
+        return task
+
+    def _build_generate_response(self, db: Session, user_id: str, task: ReviewTaskModel) -> ReviewGenerateResponse:
+        report = self.report_service.get_owner_artifact(db, user_id, "review", task.id, "docx")
+        if not report:
+            raise HTTPException(status_code=404, detail="Review report not found")
+        summary = AggregatedReview.model_validate(loads(task.summary_json, {}))
+        return ReviewGenerateResponse(
+            report_path=report.file_path,
+            output_files={"docx": report.file_path, "report": report.file_path},
+            risk_level=summary.overall_rating,
+            result={
+                "risk_level": summary.overall_rating,
+                "summary": summary.summary,
+                "issue_counts": summary.issue_counts,
+            },
+            consistency_issues=[],
+        )
+
+    @staticmethod
+    def _to_async_accepted(task: ReviewTaskModel) -> ReviewAsyncAccepted:
+        return ReviewAsyncAccepted(
+            task_id=task.id,
+            module="review",
+            state=task.status,
+            progress=task.progress,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+        )
+
+    @staticmethod
+    def _to_async_status(
+        task: ReviewTaskModel,
+        result: ReviewGenerateResponse | None = None,
+        error: str | None = None,
+    ) -> ReviewAsyncStatus:
+        return ReviewAsyncStatus(
+            task_id=task.id,
+            module="review",
+            state=task.status,
+            progress=task.progress,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+            error=error,
+            result=result,
+        )
+
+    @staticmethod
+    def _review_progress_checkpoints(total: int) -> set[int]:
+        if total <= 0:
+            return set()
+        if total <= 4:
+            return set(range(1, total + 1))
+        return {
+            max(1, total // 4),
+            max(1, total // 2),
+            max(1, (total * 3) // 4),
+            total,
+        }
+
+    @staticmethod
+    def _is_reviewable_clause(clause) -> bool:
+        text = clause.text.strip()
+        if not text:
+            return False
+        if ReviewService._looks_like_short_structural_noise(text):
+            return False
+        if clause.clause_type.value == "OTHER" and not clause.matched_keywords and len(text) < 120:
+            return ReviewService._has_english_review_signal(text)
+        return True
+
+    @staticmethod
+    def _has_english_review_signal(text: str) -> bool:
+        lowered = text.lower()
+        return any(re.search(rf"\b{re.escape(term)}\b", lowered) for term in _ENGLISH_REVIEW_SIGNAL_TERMS)
+
+    @staticmethod
+    def _looks_like_short_structural_noise(text: str) -> bool:
+        # English contracts can express material duties in very short sentences.
+        # Only skip short ASCII-like text when it clearly looks like structure, metadata, or navigation noise.
+        if len(text) >= 64 or ReviewService._has_english_review_signal(text):
+            return False
+        return any(pattern.fullmatch(text) for pattern in _SHORT_STRUCTURAL_NOISE_PATTERNS)
+
+    @staticmethod
+    def _select_llm_candidates(classified):
+        priority = {
+            "CROSS_BORDER_TRANSFER": 6,
+            "CONSENT_NOTICE": 5,
+            "SECURITY_MEASURES": 4,
+            "RIGHTS_REQUEST": 3,
+            "DATA_PROCESSING_SCOPE": 2,
+            "LIABILITY": 1,
+            "OTHER": 0,
+        }
+        ranked = [
+            clause
+            for clause in classified
+            if clause.clause_type.value != "OTHER" and len(clause.text.strip()) >= 80
+        ]
+        ranked.sort(
+            key=lambda clause: (
+                priority.get(clause.clause_type.value, 0),
+                len(clause.matched_keywords),
+                len(clause.text),
+            ),
+            reverse=True,
+        )
+        return ranked[:8]
 
     def _update_task(self, db: Session, task: ReviewTaskModel, status: ReviewTaskStatus, progress: int, persist: bool = True) -> None:
         task.status = status.value

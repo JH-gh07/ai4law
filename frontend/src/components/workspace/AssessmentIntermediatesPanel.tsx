@@ -227,6 +227,10 @@ const COLUMNS: Record<string, ColumnDef[]> = {
 };
 
 function DataTab({ tabId, data, lang }: { tabId: IntermediatesSubTab; data: unknown; lang: "zh" | "en" }) {
+  if (tabId === "issues") {
+    return <IssueTab data={data} lang={lang} />;
+  }
+
   const columns = COLUMNS[tabId] ?? [];
 
   if (!data) {
@@ -271,6 +275,107 @@ function DataTab({ tabId, data, lang }: { tabId: IntermediatesSubTab; data: unkn
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+type IssueRow = {
+  issue_id?: string;
+  severity?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  recommended_action?: string;
+  fact_refs?: string[];
+  rule_refs?: string[];
+  evidence_refs?: string[];
+};
+
+function IssueTab({ data, lang }: { data: unknown; lang: "zh" | "en" }) {
+  const rows: IssueRow[] = Array.isArray(data) ? (data as IssueRow[]) : [];
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(rows[0]?.issue_id ?? null);
+
+  useEffect(() => {
+    setSelectedIssueId(rows[0]?.issue_id ?? null);
+  }, [data]);
+
+  if (!rows.length) {
+    return (
+      <div className="assessment-intermediates-empty">
+        <p>{lang === "zh" ? MISSING_ZH : MISSING_EN}</p>
+      </div>
+    );
+  }
+
+  const selectedIssue = rows.find((row) => row.issue_id === selectedIssueId) ?? rows[0];
+  const issueTitle = selectedIssue.title || selectedIssue.issue_id || "-";
+
+  return (
+    <div className="assessment-intermediates-issue-layout">
+      <div className="assessment-intermediates-table-wrap">
+        <table className="assessment-intermediates-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              {COLUMNS.issues.map((col) => (
+                <th key={col.key}>{lang === "zh" ? col.labelZh : col.labelEn}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => {
+              const isSelected = row.issue_id === selectedIssue.issue_id;
+              return (
+                <tr
+                  key={row.issue_id ?? idx}
+                  className={isSelected ? "assessment-intermediates-row-active" : ""}
+                  onClick={() => setSelectedIssueId(row.issue_id ?? null)}
+                >
+                  <td className="assessment-intermediates-row-num">{idx + 1}</td>
+                  {COLUMNS.issues.map((col) => {
+                    const raw = row[col.key as keyof IssueRow];
+                    const display = col.render ? col.render(raw) : joinIfArray(raw);
+                    return <td key={col.key}>{display}</td>;
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <aside className="assessment-intermediates-issue-detail">
+        <header>
+          <span>{lang === "zh" ? "问题详情" : "Issue Detail"}</span>
+          <strong>{issueTitle}</strong>
+        </header>
+        <dl>
+          <div>
+            <dt>{lang === "zh" ? "问题编号" : "Issue ID"}</dt>
+            <dd>{selectedIssue.issue_id || "-"}</dd>
+          </div>
+          <div>
+            <dt>{lang === "zh" ? "描述" : "Description"}</dt>
+            <dd>{selectedIssue.description || "-"}</dd>
+          </div>
+          <div>
+            <dt>{lang === "zh" ? "建议措施" : "Recommended Action"}</dt>
+            <dd>{selectedIssue.recommended_action || "-"}</dd>
+          </div>
+          <div>
+            <dt>{lang === "zh" ? "关联事实" : "Related Facts"}</dt>
+            <dd>{joinIfArray(selectedIssue.fact_refs)}</dd>
+          </div>
+          <div>
+            <dt>{lang === "zh" ? "关联规则" : "Related Rules"}</dt>
+            <dd>{joinIfArray(selectedIssue.rule_refs)}</dd>
+          </div>
+          <div>
+            <dt>{lang === "zh" ? "关联证据" : "Related Evidence"}</dt>
+            <dd>{joinIfArray(selectedIssue.evidence_refs)}</dd>
+          </div>
+        </dl>
+      </aside>
     </div>
   );
 }

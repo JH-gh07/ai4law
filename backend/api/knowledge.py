@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app_streamlit.services.knowledge import (
+from backend.services.knowledge_index import (
     get_knowledge_sync_meta,
     load_practice_cases,
     load_sources_index,

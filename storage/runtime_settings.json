@@ -8,7 +8,7 @@
     "provider": "tencent_hunyuan",
     "api_key": "sk-DI1QPl1gE6mQHGmMYFzE8DhvXK4nIQQOZXArGEyjVfLIXpIq",
     "api_url": "https://api.hunyuan.cloud.tencent.com/v1",
-    "model": "hunyuan-2.0-instruct-20251111"
+    "model": "hunyuan-lite"
   },
   "custom_providers": [
     {

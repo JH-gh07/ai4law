@@ -47,27 +47,28 @@ export function extractArtifacts(taskSpaceId: string, module: ModuleKey, respons
   const insight = extractInsight(response);
   const now = new Date().toISOString();
   const entries: OutputArtifact[] = [];
+  const seenPaths = new Set<string>();
 
-  if (insight.reportPath) {
-    entries.push({
-      id: `${module}-report-${now}`,
-      taskSpaceId,
-      module,
-      kind: "report",
-      path: insight.reportPath,
-      createdAt: now
-    });
-  }
-
-  for (const [kind, path] of Object.entries(insight.outputFiles)) {
+  const appendArtifact = (kind: string, path: string | undefined) => {
+    const normalizedPath = path?.trim();
+    if (!normalizedPath || seenPaths.has(normalizedPath)) {
+      return;
+    }
+    seenPaths.add(normalizedPath);
     entries.push({
       id: `${module}-${kind}-${now}`,
       taskSpaceId,
       module,
       kind,
-      path,
+      path: normalizedPath,
       createdAt: now
     });
+  };
+
+  appendArtifact("report", insight.reportPath);
+
+  for (const [kind, path] of Object.entries(insight.outputFiles)) {
+    appendArtifact(kind, path);
   }
 
   return entries;

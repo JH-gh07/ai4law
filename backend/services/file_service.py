@@ -10,7 +10,7 @@ from backend.core.settings import Settings
 
 
 class FileService:
-    allowed_extensions = {".pdf", ".docx"}
+    allowed_extensions = {".pdf", ".docx", ".txt", ".md", ".json", ".csv"}
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -34,6 +34,8 @@ class FileService:
             return self._extract_docx(path)
         if ext == ".pdf":
             return self._extract_pdf(path)
+        if ext in {".txt", ".md", ".json", ".csv"}:
+            return self._extract_plain_text(path)
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
     def _extract_docx(self, path: Path) -> str:
@@ -49,6 +51,12 @@ class FileService:
         extracted = "\n".join(chunks).strip()
         if not extracted:
             raise HTTPException(status_code=400, detail="PDF text extraction failed; scanned OCR PDFs are not supported in MVP")
+        return extracted
+
+    def _extract_plain_text(self, path: Path) -> str:
+        extracted = path.read_text(encoding="utf-8", errors="ignore").strip()
+        if not extracted:
+            raise HTTPException(status_code=400, detail="Plain text extraction failed; file is empty")
         return extracted
 
     def split_lines(self, text: str) -> list[str]:

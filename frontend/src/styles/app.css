@@ -12105,9 +12105,75 @@
   background: #f7f9fc;
 }
 
+.assessment-intermediates-issue-layout .assessment-intermediates-table tbody tr {
+  cursor: pointer;
+}
+
+.assessment-intermediates-row-active {
+  background: #eef4fb;
+}
+
 .assessment-intermediates-row-num {
   color: #9aa8b8;
   font-size: 0.74rem;
   text-align: center;
   width: 2rem;
+}
+
+.assessment-intermediates-issue-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(260px, 1fr);
+  gap: 0.8rem;
+}
+
+.assessment-intermediates-issue-detail {
+  border: 1px solid #e0e5ec;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.8rem;
+}
+
+.assessment-intermediates-issue-detail header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.8rem;
+}
+
+.assessment-intermediates-issue-detail header span {
+  font-size: 0.74rem;
+  color: #7a8796;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.assessment-intermediates-issue-detail header strong {
+  color: #223448;
+  font-size: 0.92rem;
+}
+
+.assessment-intermediates-issue-detail dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.assessment-intermediates-issue-detail dt {
+  margin: 0 0 0.18rem;
+  font-size: 0.74rem;
+  color: #7a8796;
+}
+
+.assessment-intermediates-issue-detail dd {
+  margin: 0;
+  color: #324559;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+@media (max-width: 980px) {
+  .assessment-intermediates-issue-layout {
+    grid-template-columns: 1fr;
+  }
 }

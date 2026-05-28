@@ -119,9 +119,13 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
     # Phase 8: facts, path judgment, material checklist JSON
     assert result.output_files["facts_json"].endswith(".json")
     assert result.output_files["path_judgment_json"].endswith(".json")
+    assert result.output_files["material_checklist_json"].endswith(".json")
+    assert result.output_files["material_checklist_xlsx"].endswith(".xlsx")
     assert Path(result.output_files["facts_json"]).exists()
     assert Path(result.output_files["path_judgment_json"]).exists()
-    for key in ("facts_json", "path_judgment_json"):
+    assert Path(result.output_files["material_checklist_json"]).exists()
+    assert Path(result.output_files["material_checklist_xlsx"]).exists()
+    for key in ("facts_json", "path_judgment_json", "material_checklist_json", "material_checklist_xlsx"):
         assert Path(result.output_files[key]).name in names
 
     import json as _json
@@ -131,6 +135,10 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
     path_data = _json.loads(Path(result.output_files["path_judgment_json"]).read_text(encoding="utf-8"))
     assert "recommended_path" in path_data
     assert "risk_level" in path_data
+    assert path_data["is_override"] is False
+    materials_data = _json.loads(Path(result.output_files["material_checklist_json"]).read_text(encoding="utf-8"))
+    assert materials_data
+    assert materials_data[0]["status"] == "待补充"
 
     request_event = _read_trace_event(result.output_files["trace_manifest"], "assessment_request")
     assert request_event["payload"]["company_name"] == "测试公司"
@@ -198,6 +206,8 @@ def test_assessment_force_override_keeps_path_warning(monkeypatch, tmp_path) -> 
     path_event = _read_trace_event(result.output_files["trace_manifest"], "path_validation")
     assert path_event["payload"]["recommended_path"] == "scc_or_certification"
     assert "诊断推荐路径为" in path_event["payload"]["warning"]
+    path_data = json.loads(Path(result.output_files["path_judgment_json"]).read_text(encoding="utf-8"))
+    assert path_data["is_override"] is True
 
 
 def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None:
@@ -236,3 +246,33 @@ def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None
     assert "important data" in query
     assert captured["kwargs"]["jurisdiction"] == "cn"
     assert captured["kwargs"]["path"] == "assessment"
+
+
+def test_assessment_fails_when_issue_builder_is_unavailable(monkeypatch, tmp_path) -> None:
+    _disable_external_services(monkeypatch)
+    _install_test_templates(monkeypatch, tmp_path)
+    service = _build_service()
+
+    def _broken_issue_builder(*args, **kwargs):
+        raise RuntimeError("issue builder unavailable")
+
+    monkeypatch.setattr("backend.modules.assessment.service.build_assessment_issues", _broken_issue_builder)
+
+    payload = AssessmentRequest(
+        company_name="测试公司",
+        industry="医疗科技",
+        is_ciio=True,
+        contains_important_data=False,
+        pii_count=200000,
+        spi_count=300,
+        transfer_purpose="跨境客服",
+        receiver_country="Singapore",
+        force_override_path=False,
+        uploaded_files=[],
+    )
+
+    try:
+        service.generate_report(payload)
+        raise AssertionError("expected RuntimeError when issue builder is unavailable")
+    except RuntimeError as exc:
+        assert "issue builder unavailable" in str(exc)

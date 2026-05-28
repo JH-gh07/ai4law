@@ -64,6 +64,7 @@ class AssessmentReportRenderer:
         trace_manifest_path: str | None = None,
         facts: list[FactItem] | None = None,
         diagnosis_result: dict | None = None,
+        force_override: bool = False,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -90,16 +91,23 @@ class AssessmentReportRenderer:
             result["evidence_chain_json"] = _write_evidence_chain_json(evidence_chain, output_dir)
             result["evidence_chain_xlsx"] = _write_evidence_chain_xlsx(evidence_chain, output_dir)
 
-        if attachment_notes:
-            result["material_checklist_xlsx"] = _write_material_checklist_xlsx(attachment_notes, output_dir)
-            result["material_checklist_json"] = _write_material_checklist_json(attachment_notes, output_dir)
+        material_rows = _build_material_checklist_rows(
+            attachment_notes or [],
+            issues or [],
+            facts or [],
+        )
+        result["material_checklist_xlsx"] = _write_material_checklist_xlsx(material_rows, output_dir)
+        result["material_checklist_json"] = _write_material_checklist_json(material_rows, output_dir)
 
         if facts:
             result["facts_json"] = _write_facts_json(facts, output_dir)
 
         if diagnosis_result:
             result["path_judgment_json"] = _write_path_judgment_json(
-                diagnosis_result, path_warning, output_dir
+                diagnosis_result,
+                path_warning,
+                output_dir,
+                force_override=force_override,
             )
 
         if trace_manifest_path:
@@ -258,16 +266,16 @@ def _write_evidence_chain_xlsx(evidence_chain: list[EvidenceItem], output_dir: P
     return str(path)
 
 
-def _write_material_checklist_xlsx(attachment_notes: list[dict[str, str]], output_dir: Path) -> str:
+def _write_material_checklist_xlsx(material_rows: list[dict[str, str]], output_dir: Path) -> str:
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "材料补充清单"
     ws.append(_MATERIAL_XLSX_HEADERS)
-    for note in attachment_notes:
+    for note in material_rows:
         ws.append([
             note.get("source_ref", ""),
             note.get("summary", ""),
-            "待补充",
+            note.get("status", "待补充"),
         ])
     path = output_dir / "material_checklist.xlsx"
     wb.save(path)
@@ -289,7 +297,12 @@ def _write_facts_json(facts: list[FactItem], output_dir: Path) -> str:
     return str(path)
 
 
-def _write_path_judgment_json(diagnosis_result: dict, path_warning: str | None, output_dir: Path) -> str:
+def _write_path_judgment_json(
+    diagnosis_result: dict,
+    path_warning: str | None,
+    output_dir: Path,
+    force_override: bool = False,
+) -> str:
     import json
 
     payload = {
@@ -297,20 +310,68 @@ def _write_path_judgment_json(diagnosis_result: dict, path_warning: str | None, 
         "risk_level": diagnosis_result.get("risk_level"),
         "rationale": diagnosis_result.get("rationale"),
         "path_warning": path_warning,
-        "is_override": diagnosis_result.get("force_override_path", False),
+        "is_override": force_override,
     }
     path = output_dir / "path_judgment.json"
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)
 
 
-def _write_material_checklist_json(attachment_notes: list[dict[str, str]], output_dir: Path) -> str:
+def _write_material_checklist_json(material_rows: list[dict[str, str]], output_dir: Path) -> str:
     import json
 
-    rows = [
-        {"source_ref": note.get("source_ref", ""), "summary": note.get("summary", ""), "status": "待补充"}
-        for note in attachment_notes
-    ]
     path = output_dir / "material_checklist.json"
-    path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(material_rows, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)
+
+
+def _build_material_checklist_rows(
+    attachment_notes: list[dict[str, str]],
+    issues: list[IssueItem],
+    facts: list[FactItem],
+) -> list[dict[str, str]]:
+    if attachment_notes:
+        return [
+            {
+                "source_ref": note.get("source_ref", ""),
+                "summary": note.get("summary", ""),
+                "status": "待补充",
+            }
+            for note in attachment_notes
+        ]
+
+    uploaded_files_fact = next(
+        (fact for fact in facts if fact.field_path == "request.uploaded_files"),
+        None,
+    )
+    uploaded_files = uploaded_files_fact.normalized_value if uploaded_files_fact else []
+    if isinstance(uploaded_files, list) and uploaded_files:
+        return [
+            {
+                "source_ref": str(item),
+                "summary": "已提供附件路径，但尚未形成附件解析摘要，需补充材料审查结果。",
+                "status": "待解析",
+            }
+            for item in uploaded_files
+        ]
+
+    missing_attachments_issue = next(
+        (issue for issue in issues if issue.issue_id == "ISSUE-missing-attachments"),
+        None,
+    )
+    if missing_attachments_issue:
+        return [
+            {
+                "source_ref": "uploaded_files",
+                "summary": missing_attachments_issue.recommended_action,
+                "status": "待补充",
+            }
+        ]
+
+    return [
+        {
+            "source_ref": "attachment_summary",
+            "summary": "当前未形成附件解析摘要；如涉及申报材料，请补充数据清单、隐私政策、合同/协议与安全措施说明。",
+            "status": "待补充",
+        }
+    ]

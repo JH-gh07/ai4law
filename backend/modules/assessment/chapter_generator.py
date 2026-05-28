@@ -3,6 +3,7 @@ from __future__ import annotations
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import ensure_paragraph_citations
 from backend.common.risk.scoring import risk_level
+from backend.common.workflow import GenerationContextPack
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
 
 _SYSTEM_PROMPT = (
@@ -16,6 +17,8 @@ _STRICT_CONSTRAINT = (
     "写作约束：仅使用上下文提供的事实与法规条文，不得新增行业、国家/地区、主体、规模或场景。"
     "若上下文缺失，请写“未提供”。如需推测，请明确标注【推测】。"
     "每段末尾需引用至少一条法规依据，格式为“【依据：法规标题+条款】”；若无可引用，写“【依据：未检索到】”。"
+    "每个风险判断必须引用上下文中的 issue_id 或法规 citation。"
+    "对材料缺失只能写“需补充/待补充”，不得假设材料已经具备。"
 )
 
 _CHAPTER_PROMPTS: dict[str, str] = {
@@ -71,6 +74,17 @@ _CHAPTER_PROMPTS: dict[str, str] = {
     ),
 }
 
+ASSESSMENT_CHAPTER_KEYS: dict[str, str] = {
+    "出境活动概述": "overview",
+    "数据类型与规模": "data_scope",
+    "出境必要性与合法性基础": "necessity_legal_basis",
+    "境外接收方保障能力": "recipient_capability",
+    "个人信息权益影响分析": "rights_impact",
+    "安全措施与传输机制": "security_measures",
+    "剩余风险与整改建议": "risk_remediation",
+    "综合评估结论": "conclusion",
+}
+
 
 def _build_context_block(profile: CompanyProfile, hits: list[RegulationHit], level: str) -> str:
     reg_snippet = "\n".join(
@@ -91,24 +105,113 @@ def _build_context_block(profile: CompanyProfile, hits: list[RegulationHit], lev
     )
 
 
+def _format_fact_value(value: object) -> str:
+    if isinstance(value, list):
+        return "、".join(str(item) for item in value) if value else "未提供"
+    if value is True:
+        return "是"
+    if value is False:
+        return "否"
+    if value is None or value == "":
+        return "未提供"
+    return str(value)
+
+
+def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_id: str) -> str:
+    fact_lines = [
+        f"- {fact.field_path or fact.fact_id}：{_format_fact_value(fact.normalized_value)}"
+        for fact in context_pack.facts
+        if fact.source_type in {"schema", "diagnosis"}
+    ]
+    diagnosis = context_pack.diagnosis_result or {}
+    regulation_lines = [
+        "- {source_id} | {title}{article}：{snippet}".format(
+            source_id=item.get("source_id", "unknown"),
+            title=item.get("title", ""),
+            article=item.get("article", ""),
+            snippet=str(item.get("snippet", ""))[:160],
+        )
+        for item in context_pack.regulations[:5]
+    ] or ["- 未检索到法规依据"]
+
+    matched_issues = [
+        issue for issue in context_pack.issues if chapter_id in issue.affects_outputs
+    ]
+    if not matched_issues:
+        matched_issues = [
+            issue for issue in context_pack.issues if issue.severity in {"HIGH", "BLOCKER"}
+        ]
+    issue_lines = [
+        (
+            f"- {issue.issue_id} | {issue.severity} | {issue.title}："
+            f"{issue.description}；建议：{issue.recommended_action}"
+        )
+        for issue in matched_issues
+    ] or ["- 未识别到与本章节直接相关的问题项"]
+
+    attachment_lines = [
+        f"- {item.get('source_ref', 'attachment')}：{item.get('summary', '')}"
+        for item in context_pack.attachment_notes
+    ] or ["- 未提供附件解析摘要；如存在材料缺失，应写明需补充。"]
+
+    evidence_lines = [
+        f"- {item.evidence_id} | {item.claim} → {item.conclusion}"
+        for item in context_pack.evidence_chain
+    ] or ["- 本阶段尚未生成 evidence_chain"]
+
+    return (
+        "【统一生成上下文包】\n"
+        f"- module_key：{context_pack.module_key}\n"
+        f"- request_id：{context_pack.request_id}\n"
+        f"- chapter_id：{chapter_id}\n"
+        f"- recommended_path：{diagnosis.get('recommended_path', '未提供')}\n"
+        f"- path_warning：{context_pack.path_warning or '无'}\n"
+        f"- risk_summary：{context_pack.risk_summary or {}}\n"
+        "\n【企业事实与诊断事实】\n"
+        + ("\n".join(fact_lines) or "- 未提供")
+        + "\n\n【法规依据（使用 source_id 作为 rule_ref）】\n"
+        + "\n".join(regulation_lines)
+        + "\n\n【本章节相关问题清单】\n"
+        + "\n".join(issue_lines)
+        + "\n\n【附件解析摘要】\n"
+        + "\n".join(attachment_lines)
+        + "\n\n【证据链】\n"
+        + "\n".join(evidence_lines)
+    )
+
+
 class AssessmentChapterGenerator:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         self.llm = llm_client
 
-    def generate(self, profile: CompanyProfile, hits: list[RegulationHit]) -> list[ChapterContent]:
+    @staticmethod
+    def chapter_keys() -> dict[str, str]:
+        return dict(ASSESSMENT_CHAPTER_KEYS)
+
+    def generate(
+        self,
+        profile: CompanyProfile,
+        hits: list[RegulationHit],
+        context_pack: GenerationContextPack | None = None,
+    ) -> list[ChapterContent]:
         level = risk_level(
             is_ciio=profile.is_ciio,
             contains_important_data=profile.contains_important_data,
             pii_count=profile.pii_count,
             spi_count=profile.spi_count,
         )
-        context_block = _build_context_block(profile, hits, level)
         citation_keys = [f"{h.title}{h.article}" for h in hits[:5]]
 
         chapters: list[ChapterContent] = []
         for idx, (chapter_title, chapter_instruction) in enumerate(
             _CHAPTER_PROMPTS.items(), start=1
         ):
+            chapter_id = ASSESSMENT_CHAPTER_KEYS[chapter_title]
+            context_block = (
+                build_context_block_from_pack(context_pack, chapter_id)
+                if context_pack is not None
+                else _build_context_block(profile, hits, level)
+            )
             content = self._generate_chapter(chapter_title, chapter_instruction, context_block, citation_keys)
             chapters.append(
                 ChapterContent(

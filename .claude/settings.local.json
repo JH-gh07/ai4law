@@ -6,7 +6,18 @@
       "mcp__chrome-devtools__list_pages",
       "Bash(npm run *)",
       "mcp__chrome-devtools__navigate_page",
-      "mcp__chrome-devtools__take_snapshot"
+      "mcp__chrome-devtools__take_snapshot",
+      "Bash(python -c \"import openpyxl; print\\('openpyxl', openpyxl.__version__\\)\")",
+      "Bash(python -c \"import xlsxwriter; print\\('xlsxwriter', xlsxwriter.__version__\\)\")",
+      "Bash(python -m pytest backend/modules/assessment/tests -q)",
+      "Bash(python -m ruff check backend/modules/assessment/report_renderer.py backend/modules/assessment/service.py backend/modules/assessment/tests/test_service.py)",
+      "Bash(python -m pytest backend/common/workflow/tests backend/modules/assessment/tests -q)",
+      "Bash(git status *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npx tsc *)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts',{}\\), indent=2\\)\\)\")",
+      "Bash(/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/node_modules/.bin/tsc --noEmit --project /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tsconfig.json)"
     ]
   }
 }

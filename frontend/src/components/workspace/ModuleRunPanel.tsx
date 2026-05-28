@@ -3,6 +3,7 @@ import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
   findModule,
   getDefaultPayload,
+  hasAsync,
   listModules,
   runModule,
   uploadTaskFile
@@ -51,6 +52,11 @@ type AutoExtractResult = {
 type DocumentReviewExtractState = {
   status: "loading" | "done" | "error";
   note: string;
+};
+
+type AsyncRunProgressState = {
+  state: string;
+  progress?: number;
 };
 
 type DiagnosisOption = {
@@ -2427,6 +2433,18 @@ const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacing
 
 void buildUserFacingResult;
 
+const REVIEW_ASYNC_STATE_LABEL: Record<string, string> = {
+  created: "已创建任务",
+  uploaded: "文件已接收",
+  segmenting: "正在切分条款",
+  classifying: "正在识别条款类型",
+  reviewing: "正在专项审查",
+  aggregating: "正在汇总问题",
+  rendering: "正在生成报告",
+  completed: "已完成",
+  failed: "执行失败",
+};
+
 export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const diagnosisStepTopRef = useRef<HTMLDivElement | null>(null);
@@ -2436,6 +2454,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const [responseData, setResponseData] = useState<unknown>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [asyncRunProgress, setAsyncRunProgress] = useState<AsyncRunProgressState | null>(null);
   const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
   const [diagnosisValues, setDiagnosisValues] = useState<DiagnosisFormValues>(createDefaultDiagnosisValues);
   const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
@@ -3547,8 +3566,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
   const runWithPayload = async (requestPayload: unknown) => {
     setLoading(true);
     setError(null);
+    setAsyncRunProgress(null);
     try {
-      const result = await runModule(definition, requestPayload, "sync");
+      const preferredRunMode: RunMode = moduleKey === "review" && hasAsync(definition) ? "async" : "sync";
+      const timeoutMs = moduleKey === "review" ? 900000 : 180000;
+      const result = await runModule(
+        definition,
+        requestPayload,
+        preferredRunMode,
+        timeoutMs,
+        (progress) => setAsyncRunProgress(progress)
+      );
       setResponseData(result.response);
       onRunDone({
         module: moduleKey,
@@ -3563,7 +3591,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
       setResponseData(undefined);
       setError(message);
-      onRunDone({ module: moduleKey, runMode: "sync", request: requestPayload, success: false, error: message });
+      onRunDone({ module: moduleKey, runMode: moduleKey === "review" && hasAsync(definition) ? "async" : "sync", request: requestPayload, success: false, error: message });
     } finally {
       setLoading(false);
     }
@@ -4243,6 +4271,12 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
                   {loading ? t("runningNow") : "执行专项审查并生成报告"}
                 </button>
               </div>
+              {loading && asyncRunProgress ? (
+                <p className="doc-review-autofill-note is-loading">
+                  {REVIEW_ASYNC_STATE_LABEL[asyncRunProgress.state] ?? asyncRunProgress.state}
+                  {typeof asyncRunProgress.progress === "number" ? `（${asyncRunProgress.progress}%）` : ""}
+                </p>
+              ) : null}
             </article>
           </div>
         </section>

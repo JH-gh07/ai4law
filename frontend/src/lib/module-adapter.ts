@@ -20,6 +20,11 @@ export type ModuleRunResponse = {
   runMode: RunMode;
 };
 
+export type ModuleRunProgress = {
+  state: string;
+  progress?: number;
+};
+
 export type UploadedTaskFile = {
   fileId: string;
   fileName: string;
@@ -49,7 +54,9 @@ const MODULES: ModuleDefinition[] = [
     key: "review",
     label: "Review",
     jurisdiction: "CN",
-    syncEndpoint: "/api/v1/review/generate"
+    syncEndpoint: "/api/v1/review/generate",
+    asyncSubmitEndpoint: "/api/v1/review/generate_async",
+    asyncStatusEndpoint: (taskId) => `/api/v1/review/tasks/${taskId}`
   },
   {
     key: "scc",
@@ -256,7 +263,17 @@ function parseTaskState(data: unknown): string {
   if (isRecord(data) && typeof data.state === "string") {
     return data.state.toLowerCase();
   }
+  if (isRecord(data) && typeof data.status === "string") {
+    return data.status.toLowerCase();
+  }
   return "unknown";
+}
+
+function parseTaskProgress(data: unknown): number | undefined {
+  if (isRecord(data) && typeof data.progress === "number" && Number.isFinite(data.progress)) {
+    return data.progress;
+  }
+  return undefined;
 }
 
 function parseTaskResult(data: unknown): unknown {
@@ -290,7 +307,8 @@ export async function runModule(
   module: ModuleDefinition,
   payload: unknown,
   runMode: RunMode,
-  timeoutMs = 180000
+  timeoutMs = 180000,
+  onProgress?: (update: ModuleRunProgress) => void
 ): Promise<ModuleRunResponse> {
   if (runMode === "sync" || !hasAsync(module)) {
     const response = await requestJson(module.syncEndpoint, "POST", payload);
@@ -299,11 +317,13 @@ export async function runModule(
 
   const submitResponse = await requestJson(module.asyncSubmitEndpoint!, "POST", payload);
   const taskId = parseAsyncTaskId(submitResponse);
+  onProgress?.({ state: parseTaskState(submitResponse), progress: parseTaskProgress(submitResponse) });
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
     const statusResponse = await requestJson(module.asyncStatusEndpoint!(taskId), "GET");
     const state = parseTaskState(statusResponse);
+    onProgress?.({ state, progress: parseTaskProgress(statusResponse) });
 
     if (FINAL_STATES.has(state)) {
       const result = parseTaskResult(statusResponse);

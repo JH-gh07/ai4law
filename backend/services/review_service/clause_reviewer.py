@@ -27,9 +27,9 @@ class ClauseReviewer:
         self.knowledge_base = knowledge_base
         self.llm_client = llm_client
 
-    def review(self, clause: ClassifiedClause) -> list[ReviewIssue]:
-        config = self.knowledge_base.lookup(clause.clause_type, clause.text)
-        if self.llm_client and self.llm_client.enabled:
+    def review(self, clause: ClassifiedClause, use_llm: bool = True) -> list[ReviewIssue]:
+        config = self.knowledge_base.lookup(clause.clause_type, clause.text if use_llm else None, enrich=use_llm)
+        if use_llm and self.llm_client and self.llm_client.enabled:
             issues = self._review_with_llm(clause, config)
             if issues is not None:
                 return issues

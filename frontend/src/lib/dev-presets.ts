@@ -27,7 +27,7 @@ export type AssessmentDevPreset = ModuleDevPreset & {
 
 const SHARED_DOCX_FILE = "storage/uploads/f_2cfeebc5e5c64b4e_CC源码分析.docx";
 const SHARED_TXT_FILE = "storage/uploads/regen_sample_scc.txt";
-const DOCUMENT_REVIEW_DOCX_FILE = "storage/uploads/dev_document_review_contract.docx";
+const DOCUMENT_REVIEW_DOCX_FILE = "storage/uploads/dev_document_review_simple_contract.md";
 
 const ASSESSMENT_SECURITY_ASSESSMENT_PRESET: AssessmentDevPreset = {
   id: "assessment_cn_security_path",

@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from backend.common.trace.context import current_trace
+
 try:
     from openai import OpenAI, APIError
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
@@ -61,6 +63,20 @@ class LLMClient:
 
         如果 API 未配置或调用失败，返回降级占位文本（不抛异常）。
         """
+        trace = current_trace.get()
+        if trace is not None:
+            trace.record(
+                "llm_chat_request",
+                {
+                    "provider": self._provider,
+                    "model": self._model,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "system": system,
+                    "user": user,
+                },
+            )
+
         if not self._enabled:
             logger.warning("LLMClient: API key not configured for provider %s, returning fallback text.", self._provider)
             return _FALLBACK_MESSAGE
@@ -75,7 +91,10 @@ class LLMClient:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            return response.choices[0].message.content or ""
+            content = response.choices[0].message.content or ""
+            if trace is not None:
+                trace.record("llm_chat_response", {"content": content})
+            return content
         except APIError as exc:
             logger.error("LLMClient API error: %s", exc)
             return _FALLBACK_MESSAGE

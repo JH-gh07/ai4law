@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     storage_dir: Path = Path("storage")
     upload_dir_name: str = "uploads"
     report_dir_name: str = "reports"
-    task_mode: str = "inline"
+    task_mode: str = "threaded"
     delilegal_base_url: str = "https://openapi.delilegal.com"
     delilegal_app_id: str | None = None
     delilegal_secret: str | None = None

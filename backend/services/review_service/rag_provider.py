@@ -11,8 +11,14 @@ class LocalRegulationKnowledgeBase:
         path = Path(__file__).resolve().parents[2] / "data" / "review_rulebook.json"
         self.rulebook = json.loads(path.read_text(encoding="utf-8"))
         self.legal_api_service = legal_api_service
+        self._cache: dict[tuple[str, str, bool], dict] = {}
 
-    def lookup(self, clause_type: ClauseType, clause_text: str | None = None) -> dict:
+    def lookup(self, clause_type: ClauseType, clause_text: str | None = None, enrich: bool = True) -> dict:
+        cache_key = (clause_type.value, (clause_text or "")[:160], enrich)
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return dict(cached)
+
         if clause_type.value in self.rulebook:
             config = dict(self.rulebook[clause_type.value])
         else:
@@ -23,7 +29,8 @@ class LocalRegulationKnowledgeBase:
             }
 
         rag_citations: list[str] = []
-        if clause_text:
+        should_enrich = enrich and clause_type != ClauseType.OTHER and bool(clause_text and len(clause_text.strip()) >= 80)
+        if should_enrich:
             rag_hits = retrieve_regulations(
                 query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
                 top_k=3,
@@ -42,7 +49,7 @@ class LocalRegulationKnowledgeBase:
         if rag_citations:
             citations = list(dict.fromkeys([*citations, *rag_citations]))
 
-        if self.legal_api_service and self.legal_api_service.enabled and clause_text:
+        if self.legal_api_service and self.legal_api_service.enabled and should_enrich:
             hits = self.legal_api_service.search_cases(clause_text[:80], size=2)
             if hits:
                 external_citations = [
@@ -61,4 +68,5 @@ class LocalRegulationKnowledgeBase:
                 )
 
         config["citations"] = citations
-        return config
+        self._cache[cache_key] = dict(config)
+        return dict(config)

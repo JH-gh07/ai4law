@@ -114,6 +114,26 @@ class ReviewGenerateResponse(BaseModel):
     consistency_issues: list[str] = Field(default_factory=list)
 
 
+class ReviewAsyncAccepted(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    progress: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReviewAsyncStatus(BaseModel):
+    task_id: str
+    module: str
+    state: str
+    progress: int
+    created_at: datetime
+    updated_at: datetime
+    error: str | None = None
+    result: ReviewGenerateResponse | None = None
+
+
 class ReviewIssuesResponse(BaseModel):
     task_id: str
     issues: list[ReviewIssue]

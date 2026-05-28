@@ -46,15 +46,31 @@ def _resolve_artifact_path(raw_path: str, container) -> Path:
     raise HTTPException(status_code=403, detail="Artifact path is outside allowed preview scope.")
 
 
+def _candidate_artifact_paths(resolved: Path) -> set[str]:
+    candidates = {str(resolved), resolved.as_posix()}
+    cwd = Path.cwd().resolve()
+    try:
+        relative = resolved.relative_to(cwd)
+    except ValueError:
+        relative = None
+
+    if relative is not None:
+        relative_posix = relative.as_posix()
+        candidates.update({str(relative), relative_posix, f"./{relative_posix}"})
+
+    return {item for item in candidates if item}
+
+
 def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path, container) -> None:
     normalized = str(resolved)
+    candidate_paths = tuple(_candidate_artifact_paths(resolved))
     report_stmt = select(ReportArtifactModel.id).where(
         ReportArtifactModel.user_id == user.id,
-        ReportArtifactModel.file_path == normalized,
+        ReportArtifactModel.file_path.in_(candidate_paths),
     )
     upload_stmt = select(UploadedFileModel.id).where(
         UploadedFileModel.user_id == user.id,
-        UploadedFileModel.storage_path == normalized,
+        UploadedFileModel.storage_path.in_(candidate_paths),
     )
     report_hit = db.execute(report_stmt).scalar_one_or_none()
     upload_hit = db.execute(upload_stmt).scalar_one_or_none()

@@ -229,21 +229,24 @@ class DiagnosisService:
         return uncertain_flags or weak_volume_signal
 
     def _build_ai_inference_result(self, answers: DiagnosisAnswers) -> DiagnosisResult | None:
+        # 检查LLM客户端是否启用
         if not self._llm_client.enabled:
+            # 如果LLM客户端未启用，构建一个保守推测结果
             return self._build_result(
                 answers,
-                recommended_path="scc_or_certification",
-                legal_basis=self._tree["default"]["legal_basis"],
-                rationale="当前关键字段存在不确定项，暂按标准合同/认证路径进行保守推测，需人工复核。",
-                conclusion_source="ai_inference",
-                confidence="LOW",
-                matched_rule_id=None,
-                uncertainty_notes=[
+                recommended_path="scc_or_certification",  # 推荐路径设为标准合同/认证
+                legal_basis=self._tree["default"]["legal_basis"],  # 使用默认法律依据
+                rationale="当前关键字段存在不确定项，暂按标准合同/认证路径进行保守推测，需人工复核。",  # 推理说明
+                conclusion_source="ai_inference",  # 结论来源为AI推理
+                confidence="LOW",  # 置信度为低
+                matched_rule_id=None,  # 无匹配规则ID
+                uncertainty_notes=[  # 不确定性说明
                     "关键字段含 unknown 或缺乏规模信息。",
                     "LLM 未配置，未能生成更细化推测。",
                 ],
-                final_explanation="该结论为推测结论，不可直接作为最终法律意见，请补充信息后复判。",
+                final_explanation="该结论为推测结论，不可直接作为最终法律意见，请补充信息后复判。",  # 最终解释
             )
+        # 构建提示词，指导AI进行数据跨境合规分析
 
         prompt = (
             "你是中国数据跨境合规律师。请基于给定问答做“推测结论”，仅在规则不足时使用。"

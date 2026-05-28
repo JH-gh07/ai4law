@@ -218,8 +218,22 @@ function normalizeIssue(raw: unknown): ConsistencyIssue | null {
 const ensureModuleRuns = (value: unknown): ModuleRun[] =>
   Array.isArray(value) ? value.map(normalizeModuleRun).filter((item): item is ModuleRun => !!item) : [];
 
+function dedupeArtifacts(items: OutputArtifact[]): OutputArtifact[] {
+  const seen = new Set<string>();
+  const result: OutputArtifact[] = [];
+  for (const item of items) {
+    const key = `${item.taskSpaceId}::${item.module}::${item.path}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
 const ensureArtifacts = (value: unknown): OutputArtifact[] =>
-  Array.isArray(value) ? value.map(normalizeOutputArtifact).filter((item): item is OutputArtifact => !!item) : [];
+  Array.isArray(value)
+    ? dedupeArtifacts(value.map(normalizeOutputArtifact).filter((item): item is OutputArtifact => !!item))
+    : [];
 
 const ensureEvidenceHits = (value: unknown): EvidenceHit[] =>
   Array.isArray(value) ? value.map(normalizeEvidenceHit).filter((item): item is EvidenceHit => !!item) : [];
@@ -285,7 +299,7 @@ function reducer(state: AppState, action: Action): AppState {
     case "append_run":
       return { ...state, moduleRuns: [action.payload, ...state.moduleRuns] };
     case "append_artifacts":
-      return { ...state, artifacts: [...action.payload, ...state.artifacts] };
+      return { ...state, artifacts: dedupeArtifacts([...action.payload, ...state.artifacts]) };
     case "append_evidence":
       return { ...state, evidenceHits: [...action.payload, ...state.evidenceHits] };
     case "append_issues":
@@ -295,7 +309,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         taskSpaces: action.payload.taskSpaces,
         moduleRuns: action.payload.moduleRuns,
-        artifacts: action.payload.artifacts,
+        artifacts: dedupeArtifacts(action.payload.artifacts),
         evidenceHits: action.payload.evidenceHits,
         issues: action.payload.issues
       };

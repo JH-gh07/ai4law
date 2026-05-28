@@ -5,6 +5,8 @@ from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.schemas.review import (
     ReviewAnalyzeResponse,
+    ReviewAsyncAccepted,
+    ReviewAsyncStatus,
     ReviewGenerateRequest,
     ReviewGenerateResponse,
     ReviewIssuesResponse,
@@ -25,6 +27,26 @@ def generate_review(
     container=Depends(get_container),
 ):
     return container.review_service.generate_from_uploaded_paths(db, current_user.id, payload.uploaded_files)
+
+
+@router.post("/generate_async", response_model=ReviewAsyncAccepted)
+def generate_review_async(
+    payload: ReviewGenerateRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+    container=Depends(get_container),
+):
+    return container.review_service.submit_async_from_uploaded_paths(db, current_user.id, payload.uploaded_files)
+
+
+@router.get("/tasks/{task_id}", response_model=ReviewAsyncStatus)
+def get_review_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+    container=Depends(get_container),
+):
+    return container.review_service.get_async_status(db, current_user.id, task_id)
 
 
 @router.post("/tasks", response_model=ReviewTaskCreateResponse)
