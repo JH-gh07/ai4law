@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from backend.common.workflow.evidence import EvidenceItem
@@ -17,3 +19,6 @@ class GenerationContextPack(BaseModel):
     risk_summary: dict | None = None
     attachment_notes: list[dict] = Field(default_factory=list)
     output_requirements: dict = Field(default_factory=dict)
+    legal_grounding: dict[str, Any] | None = None
+    writing_strategy: dict[str, Any] | None = None
+    generation_basis_pack: dict[str, Any] | None = None

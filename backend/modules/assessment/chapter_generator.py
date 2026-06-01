@@ -15,10 +15,15 @@ _SYSTEM_PROMPT = (
 
 _STRICT_CONSTRAINT = (
     "写作约束：仅使用上下文提供的事实与法规条文，不得新增行业、国家/地区、主体、规模或场景。"
-    "若上下文缺失，请写“未提供”。如需推测，请明确标注【推测】。"
-    "每段末尾需引用至少一条法规依据，格式为“【依据：法规标题+条款】”；若无可引用，写“【依据：未检索到】”。"
+    "若上下文缺失，请写「未提供」。如需推测，请明确标注【推测】。"
+    "每段末尾需引用至少一条法规依据，格式为「【依据：法规标题+条款】」；若无可引用，写「【依据：未检索到】」。"
     "每个风险判断必须引用上下文中的 issue_id 或法规 citation。"
-    "对材料缺失只能写“需补充/待补充”，不得假设材料已经具备。"
+    "对材料缺失只能写「需补充/待补充」，不得假设材料已经具备。"
+    "\n\n表达策略硬约束（必须遵守）："
+    "\n1. 对外报告只能使用各 issue 的 external_expression 表述，不得使用 internal_expression。"
+    "\n2. 不得在报告中出现【全局禁用表达】中列出的任何措辞或近义表述。"
+    "\n3. 对于材料缺失/证据不足的 issue，采用审慎保守表述，不得作出正面承诺或确定性结论。"
+    "\n4. user_claim_only 类型的事实（标注 evidence_status=user_claim_only）不得作为外部正面结论的唯一依据。"
 )
 
 _CHAPTER_PROMPTS: dict[str, str] = {
@@ -159,6 +164,52 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         for item in context_pack.evidence_chain
     ] or ["- 本阶段尚未生成 evidence_chain"]
 
+    # Writing strategy constraints for this chapter
+    strategy_lines: list[str] = []
+    global_forbidden: list[str] = []
+    if context_pack.writing_strategy:
+        global_forbidden = context_pack.writing_strategy.get("global_forbidden_expressions", [])
+        strategies = context_pack.writing_strategy.get("strategies", [])
+        chapter_strategies = [
+            s for s in strategies
+            if chapter_id in (
+                s.get("issue_id", "") or ""
+            ) or any(
+                chapter_id in (i.get("affects_outputs", []) if isinstance(i, dict) else [])
+                for i in [s]
+            )
+        ]
+        # Get strategies for issues that affect this chapter
+        chapter_issue_ids = {issue.issue_id for issue in matched_issues}
+        chapter_strategies = [
+            s for s in strategies
+            if s.get("issue_id") in chapter_issue_ids
+        ]
+        strategy_lines = [
+            (
+                f"- {s['issue_id']} | external_expression: {s.get('external_expression', '')}"
+                f" | forbidden: {', '.join(s.get('forbidden_expressions', [])[:3])}"
+            )
+            for s in chapter_strategies
+        ] or ["- 本章节无特定表达策略约束"]
+    else:
+        strategy_lines = ["- 未启用表达策略约束"]
+
+    # Legal grounding for this chapter
+    grounding_lines: list[str] = []
+    if context_pack.legal_grounding:
+        by_issue = context_pack.legal_grounding.get("by_issue", {})
+        chapter_issue_ids = {issue.issue_id for issue in matched_issues}
+        for issue_id in chapter_issue_ids:
+            bindings = by_issue.get(issue_id, [])
+            for binding in bindings[:2]:
+                grounding_lines.append(
+                    f"- {issue_id} → {binding.get('title', '')} {binding.get('article', '')}"
+                    f" (confidence: {binding.get('confidence_score', 'N/A')})"
+                )
+    if not grounding_lines:
+        grounding_lines = ["- 本章节无精确法规绑定"]
+
     return (
         "【统一生成上下文包】\n"
         f"- module_key：{context_pack.module_key}\n"
@@ -177,6 +228,11 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         + "\n".join(attachment_lines)
         + "\n\n【证据链】\n"
         + "\n".join(evidence_lines)
+        + "\n\n【法规绑定（legal_grounding）】\n"
+        + "\n".join(grounding_lines)
+        + "\n\n【表达策略（writing_strategy）】\n"
+        + "\n".join(strategy_lines)
+        + f"\n\n【全局禁用表达】\n{', '.join(global_forbidden) if global_forbidden else '无'}"
     )
 
 

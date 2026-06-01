@@ -13,10 +13,13 @@ from backend.modules.assessment.chapter_generator import AssessmentChapterGenera
 from backend.modules.assessment.consistency_checker import ConsistencyChecker
 from backend.modules.assessment.evidence_builder import build_assessment_evidence
 from backend.modules.assessment.fact_builder import build_assessment_facts
+from backend.modules.assessment.generation_basis import build_generation_basis_pack
 from backend.modules.assessment.issue_builder import build_assessment_issues
+from backend.modules.assessment.legal_grounding import build_legal_grounding
 from backend.modules.assessment.profile_extractor import ProfileExtractor
 from backend.modules.assessment.report_renderer import AssessmentReportRenderer
 from backend.modules.assessment.retriever import AssessmentRetriever
+from backend.modules.assessment.writing_strategy_builder import build_writing_strategy
 from backend.modules.assessment.schema import (
     AssessmentAsyncAccepted,
     AssessmentAsyncStatus,
@@ -113,6 +116,24 @@ class AssessmentService:
         path_warning: str | None,
         attachment_notes: list[dict[str, str]],
     ) -> GenerationContextPack:
+        legal_grounding = build_legal_grounding(
+            issues=issues,
+            facts=facts,
+            regulations=regulations,
+        )
+        writing_strategy = build_writing_strategy(issues=issues)
+        generation_basis_pack = build_generation_basis_pack(
+            task_id=task_id,
+            facts=facts,
+            issues=issues,
+            evidence_chain=evidence_chain,
+            regulations=regulations,
+            attachment_notes=attachment_notes,
+            path_warning=path_warning,
+            legal_grounding=legal_grounding,
+            writing_strategy=writing_strategy,
+        )
+
         return GenerationContextPack(
             module_key="assessment",
             request_id=task_id,
@@ -129,6 +150,9 @@ class AssessmentService:
             },
             attachment_notes=attachment_notes,
             output_requirements={"chapter_keys": list(self.generator.chapter_keys().values())},
+            legal_grounding=legal_grounding,
+            writing_strategy=writing_strategy,
+            generation_basis_pack=generation_basis_pack,
         )
 
     @staticmethod
