@@ -1,64 +1,877 @@
 {
-  "DATA_PROCESSING_SCOPE": {
-    "display_name": "数据处理目的与范围",
-    "keywords": ["处理目的", "处理范围", "处理方式", "数据类型"],
-    "required_groups": [
-      ["处理目的", "目的"],
-      ["处理范围", "范围", "数据类型"],
-      ["处理方式", "方式"]
-    ],
-    "citations": ["《个人信息保护法》第13条", "《个人信息保护法》第17条"]
+  "meta": {
+    "version": "2.0",
+    "jurisdiction": "cn",
+    "description": "Enhanced review rulebook with 23 clause types, DSL checks, document checklists, and risk weights for Chinese data protection document review.",
+    "last_updated": "2025-06-02"
   },
-  "CONSENT_NOTICE": {
-    "display_name": "同意与告知",
-    "keywords": ["同意", "告知", "境外接收方", "联系方式", "单独同意"],
-    "required_groups": [
-      ["告知", "通知"],
-      ["境外接收方", "接收方"],
-      ["联系方式", "联系"],
-      ["同意", "单独同意"]
-    ],
-    "citations": ["《个人信息保护法》第39条"]
+
+  "clause_types": {
+
+    "DATA_PROCESSING_SCOPE": {
+      "display_name": "数据处理目的与范围",
+      "priority": 6,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["处理目的", "处理范围", "处理方式", "数据类型", "个人信息种类", "数据字段", "处理活动"],
+      "multi_label_keywords": {
+        "DATA_MINIMIZATION": ["最小必要", "最小化", "限于", "直接相关"],
+        "PURPOSE_LIMITATION": ["目的限制", "限定目的", "不超过", "未经同意不得用于其他目的"]
+      },
+      "required_groups": [
+        ["处理目的", "目的"],
+        ["处理范围", "范围", "数据类型", "个人信息种类"],
+        ["处理方式", "方式"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "vague_purpose",
+          "pattern": "根据需要|视情况|可能|必要时.*处理|包括但不限于.*目的",
+          "severity": "MEDIUM",
+          "problem_type": "AMBIGUOUS_LANGUAGE",
+          "title_template": "处理目的表述存在模糊空间",
+          "risk_analysis_template": "条款使用了模糊表述，可能导致处理目的超出用户合理预期或监管审查时无法明确界定处理范围。",
+          "recommendation_template": "建议将处理目的细化至具体业务场景，避免使用'可能'、'视情况'等不确定措辞。"
+        },
+        {
+          "id": "no_legal_basis",
+          "pattern_missing": ["依据", "法律", "同意", "合同", "法定", "第13条", "合法基础"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "缺少处理合法性基础说明",
+          "risk_analysis_template": "未找到个人信息处理的合法性基础引用。《个人信息保护法》第13条要求明确数据处理的法律基础。",
+          "recommendation_template": "应明确说明数据处理所依据的合法性基础，例如'履行合同所必需'或'取得个人同意'等。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第13条", "snippet": "符合下列情形之一的，个人信息处理者方可处理个人信息..."},
+        {"source": "个人信息保护法", "article": "第17条", "snippet": "个人信息处理者在处理个人信息前，应当以显著方式、清晰易懂的语言真实、准确、完整地向个人告知..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "CONSENT_NOTICE": {
+      "display_name": "同意与告知",
+      "priority": 6,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["同意", "告知", "境外接收方", "联系方式", "单独同意", "撤回", "知情", "授权", "通知", "提示"],
+      "multi_label_keywords": {
+        "SENSITIVE_PI": ["敏感个人信息", "单独同意", "个人敏感信息"],
+        "CROSS_BORDER_TRANSFER": ["境外", "跨境", "传输"]
+      },
+      "required_groups": [
+        ["告知", "通知", "提示"],
+        ["境外接收方", "接收方"],
+        ["联系方式", "联系"],
+        ["同意", "单独同意"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_withdrawal_mechanism",
+          "pattern_missing": ["撤回", "撤销", "取消同意", "退出"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "缺少撤回同意机制说明",
+          "risk_analysis_template": "未提供撤回同意的途径。《个人信息保护法》第15条要求提供便捷的撤回同意方式。",
+          "recommendation_template": "应明确说明撤回同意的具体操作路径和方式。"
+        },
+        {
+          "id": "no_separate_consent_vague",
+          "pattern": "默认.*同意|一经使用即视为同意|继续使用即表示同意|使用本服务即同意",
+          "severity": "HIGH",
+          "problem_type": "NON_COMPLIANT",
+          "title_template": "同意机制表述违反知情同意原则",
+          "risk_analysis_template": "条款使用了默认同意或默示同意表述，不符合《个人信息保护法》要求的充分知情、自愿、明确同意原则。",
+          "recommendation_template": "应改为明确、主动的同意机制，不得以默示方式获取同意。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第39条", "snippet": "个人信息处理者向中华人民共和国境外提供个人信息的，应当向个人告知..."},
+        {"source": "个人信息保护法", "article": "第15条", "snippet": "基于个人同意处理个人信息的，个人有权撤回其同意..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy", "scc_contract"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "SECURITY_MEASURES": {
+      "display_name": "安全措施",
+      "priority": 5,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["安全措施", "加密", "访问控制", "应急", "审计", "安全", "防护", "脱敏", "去标识化", "匿名化", "备份", "日志", "监控"],
+      "multi_label_keywords": {
+        "DATA_MINIMIZATION": ["脱敏", "匿名化", "去标识化", "最小化"],
+        "INCIDENT_RESPONSE": ["应急", "事件", "预案", "演练"]
+      },
+      "required_groups": [
+        ["安全措施", "安全"],
+        ["加密", "脱敏", "去标识化", "匿名化"],
+        ["访问控制", "权限"],
+        ["应急", "响应", "事件"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "vague_security",
+          "pattern": "合理.*安全|必要.*安全|适当.*安全|技术措施.*保障",
+          "severity": "MEDIUM",
+          "problem_type": "AMBIGUOUS_LANGUAGE",
+          "title_template": "安全措施描述过于笼统",
+          "risk_analysis_template": "未具体说明采取的技术和管理安全措施，仅使用'合理'、'必要'等笼统描述，无法评估安全保障的充分性。",
+          "recommendation_template": "建议列出具体的安全措施，如TLS传输加密、AES-256存储加密、基于角色的访问控制(RBAC)、定期安全审计等。"
+        },
+        {
+          "id": "no_encryption_specified",
+          "pattern_missing": ["加密", "TLS", "SSL", "HTTPS", "AES", "SM2", "SM4", "传输安全"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明数据加密措施",
+          "risk_analysis_template": "未找到数据传输和存储加密的明确说明，无法确认是否采取了必要的技术保护措施。",
+          "recommendation_template": "建议明确说明数据在传输和存储过程中采用的加密算法和协议。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第38条", "snippet": "个人信息处理者应当采取必要措施保障所处理的个人信息的安全..."},
+        {"source": "数据安全法", "article": "第27条", "snippet": "开展数据处理活动应当依照法律、法规的规定，建立健全全流程数据安全管理制度..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy", "scc_contract", "dpa"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "CROSS_BORDER_TRANSFER": {
+      "display_name": "数据出境",
+      "priority": 7,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["数据出境", "跨境", "境外", "存储地点", "传输", "出境", "域外", "管辖", "接收方"],
+      "multi_label_keywords": {
+        "ONWARD_TRANSFER": ["再转移", "第三方", "转委托", "子处理者"],
+        "GOVERNMENT_ACCESS": ["执法", "政府", "请求", "披露"],
+        "SUPPLEMENTARY_MEASURES": ["补充措施", "保护认证", "标准合同"]
+      },
+      "required_groups": [
+        ["境外", "跨境", "数据出境", "传输"],
+        ["存储地点", "存储", "服务器", "数据中心"],
+        ["传输", "接收方"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_legal_mechanism",
+          "pattern_missing": ["安全评估", "标准合同", "保护认证", "认证", "评估", "合同"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明出境合法机制",
+          "risk_analysis_template": "未找到数据出境的合法路径说明（安全评估/标准合同/保护认证），《个人信息保护法》第38条要求选择其中一种。",
+          "recommendation_template": "应明确说明数据出境所依据的合法机制。"
+        },
+        {
+          "id": "no_storage_location",
+          "pattern_missing": ["存储地点", "存储位置", "服务器位置", "数据中心", "境外服务器", "机房"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未明确境外存储地点",
+          "risk_analysis_template": "涉及数据出境但未明确境外数据的存储地点，无法评估接收方所在地法律环境和保护能力。",
+          "recommendation_template": "应明确境外数据存储的具体国家/地区和服务器位置。"
+        },
+        {
+          "id": "no_retention_period",
+          "pattern_missing": ["保存期限", "存储期限", "保存期间", "保留时间", "存储时间", "期限"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未约定境外数据保存期限",
+          "risk_analysis_template": "未约定境外数据的保存期限，违反《个人信息保护法》第19条关于保存期限的要求。",
+          "recommendation_template": "应明确境外数据的保存期限及到期后的处理方式。"
+        },
+        {
+          "id": "no_overseas_law_impact",
+          "pattern_missing": ["境外法律", "当地法律", "外国法律", "法律环境", "保护水平"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未评估境外法律环境影响",
+          "risk_analysis_template": "未评估境外接收方所在地法律环境对数据保护的影响。",
+          "recommendation_template": "建议补充对接收方所在地数据保护法律环境的评估。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第38条", "snippet": "个人信息处理者因业务等需要，确需向中华人民共和国境外提供个人信息的，应当具备下列条件之一..."},
+        {"source": "数据出境安全评估办法", "article": "第4条", "snippet": "数据处理者向境外提供数据，有下列情形之一的，应当通过所在地省级网信部门向国家网信部门申报数据出境安全评估..."}
+      ],
+      "checklist_requirement": {"document_type": ["scc_contract"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "RIGHTS_REQUEST": {
+      "display_name": "主体权利行使",
+      "priority": 5,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["权利", "查询", "复制", "更正", "删除", "撤回同意", "查阅", "转移", "解释说明", "投诉", "举报", "拒绝"],
+      "multi_label_keywords": {
+        "AUTOMATED_DECISION": ["自动化决策", "算法", "自动处理"],
+        "MINOR_PROTECTION": ["未成年", "儿童", "14岁"]
+      },
+      "required_groups": [
+        ["查询", "访问", "查阅"],
+        ["更正", "修改"],
+        ["删除"],
+        ["撤回同意", "撤回"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_response_time",
+          "pattern_missing": ["30日", "15日", "工作日", "及时", "合理期间", "15个工作日", "30个工作日"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明权利请求响应时限",
+          "risk_analysis_template": "未承诺响应个人信息主体权利请求的具体时限，依据《个人信息保护法》，一般应在15-30个工作日内响应。",
+          "recommendation_template": "建议明确权利请求的响应时限，如'将在15个工作日内响应'。"
+        },
+        {
+          "id": "no_transfer_right",
+          "pattern_missing": ["转移", "可携带", "导出"],
+          "severity": "LOW",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明数据可携带权",
+          "risk_analysis_template": "未说明个人信息的转移/可携带权，《个人信息保护法》第45条规定个人有权请求将个人信息转移至其指定的处理者。",
+          "recommendation_template": "建议补充数据可携带权的行使条件和方式。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第44条", "snippet": "个人对其个人信息的处理享有知情权、决定权，有权限制或者拒绝他人对其个人信息进行处理..."},
+        {"source": "个人信息保护法", "article": "第45条", "snippet": "个人有权向个人信息处理者查阅、复制其个人信息..."},
+        {"source": "个人信息保护法", "article": "第46条", "snippet": "个人发现其个人信息不准确或者不完整的，有权请求个人信息处理者更正、补充..."},
+        {"source": "个人信息保护法", "article": "第47条", "snippet": "有下列情形之一的，个人信息处理者应当主动删除个人信息..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "LIABILITY": {
+      "display_name": "违约责任与争议解决",
+      "priority": 4,
+      "document_applicability": ["scc_contract", "dpa"],
+      "keywords": ["违约责任", "赔偿", "责任承担", "免责", "争议解决", "管辖", "仲裁", "诉讼", "法律适用"],
+      "multi_label_keywords": {
+        "ONWARD_TRANSFER": ["第三方", "再转移", "转委托"],
+        "GOVERNMENT_ACCESS": ["政府", "执法", "披露"]
+      },
+      "required_groups": [
+        ["违约责任", "责任承担", "赔偿"],
+        ["争议解决", "管辖", "仲裁", "诉讼"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "foreign_court_jurisdiction",
+          "pattern": "香港.*法院|新加坡.*法院|美国.*法院|境外.*管辖|域外.*法院|外国.*法院|英国.*法院",
+          "severity": "HIGH",
+          "problem_type": "NON_COMPLIANT",
+          "title_template": "争议解决约定为境外法院管辖",
+          "risk_analysis_template": "条款约定境外法院管辖，对于标准合同，根据《个人信息出境标准合同办法》第五条，应选择中国内地有管辖权的法院或仲裁机构。",
+          "recommendation_template": "应将争议解决管辖修改为中国内地有管辖权的法院或仲裁机构。"
+        },
+        {
+          "id": "other_agreement_priority",
+          "pattern": "其他协议.*优先|优先.*商业.*协议|以.*商业合同.*为准|主协议.*优先|其他约定.*为准",
+          "severity": "HIGH",
+          "problem_type": "NON_COMPLIANT",
+          "title_template": "其他协议优先条款可能与标准合同正文冲突",
+          "risk_analysis_template": "标准合同正文要求其他约定不得与正文冲突。如有'其他协议优先'条款，可能削弱标准合同的约束力。",
+          "recommendation_template": "应删除或修改该条款，确保标准合同正文条款优先适用。"
+        },
+        {
+          "id": "liability_cap",
+          "pattern": "责任上限|赔偿上限|最高.*赔偿|责任.*限额|不超过.*合同金额",
+          "severity": "MEDIUM",
+          "problem_type": "NON_COMPLIANT",
+          "title_template": "责任上限条款需审慎评估",
+          "risk_analysis_template": "包含责任上限条款。需评估其是否不当地限制了数据主体的损害赔偿权利。",
+          "recommendation_template": "建议审查责任上限是否合理，确保不违反法律的强制性规定。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息出境标准合同办法", "article": "第五条", "snippet": "个人信息处理者与境外接收方约定争议解决方式时，应当选择中国内地有管辖权的法院或者仲裁机构..."},
+        {"source": "民法典", "article": "合同编相关条款", "snippet": ""}
+      ],
+      "checklist_requirement": {"document_type": [], "required": false, "missing_severity": "MEDIUM"}
+    },
+
+    "DATA_MINIMIZATION": {
+      "display_name": "数据最小化",
+      "priority": 4,
+      "document_applicability": ["privacy_policy", "dpa"],
+      "keywords": ["最小必要", "最小化", "限于", "直接相关", "必要范围", "充分必要", "无关", "过度收集"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["最小必要", "最小化", "必要"],
+        ["目的", "范围"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_minimization_statement",
+          "pattern_missing": ["最小必要", "最小化", "限于", "不收集", "仅限于", "直接相关"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未体现数据最小化原则",
+          "risk_analysis_template": "未说明数据收集遵循最小必要原则。《个人信息保护法》第6条要求收集个人信息应限于实现处理目的的最小范围。",
+          "recommendation_template": "建议补充数据最小化声明，说明仅收集实现处理目的所必需的最少数据。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第6条", "snippet": "收集个人信息，应当限于实现处理目的的最小范围，不得过度收集个人信息。"}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "MEDIUM"}
+    },
+
+    "PURPOSE_LIMITATION": {
+      "display_name": "目的限制",
+      "priority": 4,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["目的限制", "限定目的", "未经同意不得", "超出", "变更", "新增目的"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["目的", "用途"],
+        ["限制", "限定", "限于"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "purpose_change_no_consent",
+          "pattern": "变更.*目的|新增.*功能|调整为|改变.*用途",
+          "severity": "HIGH",
+          "problem_type": "NON_COMPLIANT",
+          "title_template": "处理目的变更条款需明确重新获取同意",
+          "risk_analysis_template": "条款涉及处理目的变更，但未说明变更后应重新获取个人信息主体的同意。",
+          "recommendation_template": "应明确处理目的发生变更时，需重新取得个人信息主体的明示同意。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第6条", "snippet": "处理个人信息应当具有明确、合理的目的，并应当与处理目的直接相关..."},
+        {"source": "个人信息保护法", "article": "第14条", "snippet": "个人信息的处理目的、处理方式和处理的个人信息种类发生变更的，应当重新取得个人同意。"}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "MEDIUM"}
+    },
+
+    "RETENTION_DELETION": {
+      "display_name": "保存期限与删除",
+      "priority": 5,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["保存期限", "存储期限", "保留", "删除", "销毁", "到期", "清除", "返还", "处置"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["保存期限", "存储期限", "保留"],
+        ["删除", "销毁", "清除", "返还"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_deletion_after_purpose",
+          "pattern_missing": ["目的实现", "目的达成", "处理目的", "不再需要"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明目的实现后的数据处理",
+          "risk_analysis_template": "《个人信息保护法》第19条要求处理目的已实现、无法实现或不再必要时，应当主动删除个人信息。",
+          "recommendation_template": "建议补充处理目的实现后的数据删除或匿名化处理机制。"
+        },
+        {
+          "id": "vague_retention",
+          "pattern": "法律法规.*保存|法律.*要求.*保留|合理.*保存|必要.*保存",
+          "severity": "MEDIUM",
+          "problem_type": "AMBIGUOUS_LANGUAGE",
+          "title_template": "保存期限表述笼统",
+          "risk_analysis_template": "保存期限仅笼统引用'法律法规要求'，未给出最短保存期限或确定标准。",
+          "recommendation_template": "建议明确具体的保存期限或提供确定期限的客观标准。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第19条", "snippet": "除法律、行政法规另有规定外，个人信息的保存期限应当为实现处理目的所必要的最短时间。"},
+        {"source": "个人信息保护法", "article": "第47条", "snippet": "有下列情形之一的，个人信息处理者应当主动删除个人信息..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy", "scc_contract"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "DATA_ACCURACY": {
+      "display_name": "数据准确性",
+      "priority": 3,
+      "document_applicability": ["dpa"],
+      "keywords": ["准确性", "完整", "更新", "质量", "错误", "纠正"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["准确性", "准确", "质量"]
+      ],
+      "dsl_checks": [],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第8条", "snippet": "处理个人信息应当保证个人信息的质量，避免因个人信息不准确、不完整对个人权益造成不利影响。"}
+      ],
+      "checklist_requirement": {"document_type": [], "required": false, "missing_severity": "LOW"}
+    },
+
+    "THIRD_PARTY_SHARING": {
+      "display_name": "第三方共享与转让",
+      "priority": 6,
+      "document_applicability": ["privacy_policy"],
+      "keywords": ["第三方", "共享", "提供", "转让", "委托处理", "公开披露", "SDK", "合作方"],
+      "multi_label_keywords": {
+        "CROSS_BORDER_TRANSFER": ["境外", "跨境"],
+        "ENTRUSTED_PROCESSING": ["委托", "受托方", "受托处理"]
+      },
+      "required_groups": [
+        ["第三方", "合作方", "SDK"],
+        ["共享", "提供", "转让", "披露"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "third_party_list_missing",
+          "pattern_missing": ["第三方", "SDK", "合作伙伴", "合作方", "接收方", "共享"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "缺少第三方共享清单",
+          "risk_analysis_template": "隐私政策未说明是否存在第三方数据共享，或未列出共享的第三方清单及各自处理目的和数据类型。",
+          "recommendation_template": "建议增加第三方共享清单，逐项列明第三方名称、共享目的、共享数据类型和联系方式。"
+        },
+        {
+          "id": "no_third_party_agreement",
+          "pattern_missing": ["协议", "合同", "约束", "安全评估"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明对第三方的约束措施",
+          "risk_analysis_template": "涉及第三方数据共享但未说明与第三方签署的协议类型和对第三方的约束措施。",
+          "recommendation_template": "建议补充与第三方签署的数据处理协议类型及对第三方的安全管理要求。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第23条", "snippet": "个人信息处理者向其他个人信息处理者提供其处理的个人信息的，应当向个人告知..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "ENTRUSTED_PROCESSING": {
+      "display_name": "委托处理",
+      "priority": 5,
+      "document_applicability": ["dpa"],
+      "keywords": ["委托", "受托方", "受托处理", "委托处理", "服务商", "供应商"],
+      "multi_label_keywords": {
+        "SECURITY_MEASURES": ["安全", "加密", "访问控制"],
+        "LIABILITY": ["责任", "违约", "赔偿"]
+      },
+      "required_groups": [
+        ["委托", "受托"],
+        ["处理目的", "目的"],
+        ["安全", "保护"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_processing_limit",
+          "pattern_missing": ["不得超出", "按照指示", "依指示", "处理目的", "约定范围"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未限定受托方处理范围",
+          "risk_analysis_template": "委托处理协议未明确约定受托方只能按照委托方的指示处理个人信息。",
+          "recommendation_template": "应在委托处理条款中明确受托方仅能按委托方书面指示处理数据，不得自行决定处理目的和方式。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第21条", "snippet": "个人信息处理者委托处理个人信息的，应当与受托人约定委托处理的目的、期限、处理方式、个人信息的种类、保护措施以及双方的权利和义务..."}
+      ],
+      "checklist_requirement": {"document_type": ["dpa"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "AUTOMATED_DECISION": {
+      "display_name": "自动化决策",
+      "priority": 4,
+      "document_applicability": ["privacy_policy"],
+      "keywords": ["自动化决策", "算法", "自动处理", "画像", "用户画像", "推荐", "评分", "机器决策"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["自动化", "算法", "画像"],
+        ["拒绝", "说明", "透明"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_opt_out",
+          "pattern_missing": ["拒绝", "不针对", "退出", "关闭"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未提供自动化决策的拒绝选项",
+          "risk_analysis_template": "涉及自动化决策但未说明用户是否有权拒绝仅通过自动化决策作出的决定。《个人信息保护法》第24条要求提供拒绝方式。",
+          "recommendation_template": "应说明用户有权拒绝仅通过自动化决策方式作出的决定，并说明拒绝的路径。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第24条", "snippet": "个人信息处理者利用个人信息进行自动化决策，应当保证决策的透明度和结果公平、公正..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": false, "missing_severity": "LOW"}
+    },
+
+    "SENSITIVE_PI": {
+      "display_name": "敏感个人信息",
+      "priority": 7,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["敏感个人信息", "个人敏感信息", "生物识别", "行踪轨迹", "健康", "金融账户", "宗教信仰", "特定身份", "不满十四周岁", "未成年人"],
+      "multi_label_keywords": {
+        "MINOR_PROTECTION": ["未成年人", "不满十四", "儿童", "14岁"],
+        "CONSENT_NOTICE": ["单独同意", "告知"]
+      },
+      "required_groups": [
+        ["敏感个人信息", "敏感"],
+        ["单独同意", "同意"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "spi_no_necessity",
+          "pattern_missing": ["必要性", "特定目的", "充分必要"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "敏感个人信息处理缺少必要性说明",
+          "risk_analysis_template": "涉及敏感个人信息处理，但未说明处理的特定目的和充分必要性。《个人信息保护法》第28条要求具有特定目的和充分必要性。",
+          "recommendation_template": "应明确说明处理敏感个人信息的特定目的和充分必要性。"
+        },
+        {
+          "id": "spi_no_separate_consent",
+          "pattern_missing": ["单独同意", "单独.*同意"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "敏感个人信息缺少单独同意机制",
+          "risk_analysis_template": "处理敏感个人信息但未说明获取个人信息主体单独同意的机制。",
+          "recommendation_template": "应明确说明处理敏感个人信息前需获得个人信息主体的单独同意。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第28条", "snippet": "敏感个人信息是一旦泄露或者非法使用，容易导致自然人的人格尊严受到侵害或者人身、财产安全受到危害的个人信息..."},
+        {"source": "个人信息保护法", "article": "第29条", "snippet": "处理敏感个人信息应当取得个人的单独同意..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "MINOR_PROTECTION": {
+      "display_name": "未成年人保护",
+      "priority": 6,
+      "document_applicability": ["privacy_policy"],
+      "keywords": ["未成年人", "儿童", "14岁", "十四周岁", "监护人", "父母", "青少年"],
+      "multi_label_keywords": {
+        "SENSITIVE_PI": ["敏感个人信息"],
+        "CONSENT_NOTICE": ["同意", "监护人同意"]
+      },
+      "required_groups": [
+        ["未成年", "儿童", "14岁"],
+        ["监护人", "父母", "同意"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_minor_age_threshold",
+          "pattern_missing": ["14岁", "十四周岁", "年龄"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未明确未成年人年龄门槛",
+          "risk_analysis_template": "处理未成年人信息但未明确14周岁以下的年龄标准。《个人信息保护法》规定处理不满14周岁未成年人个人信息需取得监护人同意。",
+          "recommendation_template": "建议明确说明处理不满14周岁未成年人个人信息的规则和监护人同意机制。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第31条", "snippet": "个人信息处理者处理不满十四周岁未成年人个人信息的，应当取得未成年人的父母或者其他监护人的同意..."},
+        {"source": "儿童个人信息网络保护规定", "article": "", "snippet": ""}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "MEDIUM"}
+    },
+
+    "INCIDENT_RESPONSE": {
+      "display_name": "安全事件应急响应",
+      "priority": 5,
+      "document_applicability": ["scc_contract", "dpa"],
+      "keywords": ["安全事件", "数据泄露", "应急预案", "通知", "报告"],
+      "multi_label_keywords": {
+        "DATA_BREACH_NOTIFICATION": ["通知", "报告", "72小时", "监管部门"]
+      },
+      "required_groups": [
+        ["安全事件", "数据泄露", "事件"],
+        ["通知", "报告", "响应"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_breach_notification_timeline",
+          "pattern_missing": ["72小时", "及时", "立即", "合理时间", "小时", "天"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未约定安全事件通知时限",
+          "risk_analysis_template": "未约定数据安全事件发生后的通知时限。依据相关法规，应在合理时限内通知，通常建议72小时内。",
+          "recommendation_template": "建议明确安全事件通知的具体时限，如'72小时内书面通知'。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第57条", "snippet": "发生或者可能发生个人信息泄露、篡改、丢失的，个人信息处理者应当立即采取补救措施，并通知..."},
+        {"source": "数据安全法", "article": "第29条", "snippet": "开展数据处理活动应当加强风险监测，发现数据安全缺陷、漏洞等风险时，应当立即采取补救措施..."}
+      ],
+      "checklist_requirement": {"document_type": ["scc_contract", "dpa"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "DATA_BREACH_NOTIFICATION": {
+      "display_name": "数据泄露通知",
+      "priority": 5,
+      "document_applicability": ["privacy_policy", "scc_contract", "dpa"],
+      "keywords": ["数据泄露", "泄露", "通知", "报告", "监管", "网信", "个人信息泄露"],
+      "multi_label_keywords": {
+        "INCIDENT_RESPONSE": ["应急", "事件", "响应"]
+      },
+      "required_groups": [
+        ["泄露", "事件"],
+        ["通知", "报告"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_notification_content",
+          "pattern_missing": ["泄露.*信息|通知.*内容|告知.*事项"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未说明个人信息泄露通知内容",
+          "risk_analysis_template": "未说明个人信息泄露后通知个人信息主体时应包含的内容。《个人信息保护法》第57条要求告知泄露的信息种类、原因、可能危害和已采取的补救措施等。",
+          "recommendation_template": "建议补充数据泄露通知应包含的具体内容。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第57条", "snippet": "个人信息处理者应当及时通知履行个人信息保护职责的部门和个人..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": true, "missing_severity": "MEDIUM"}
+    },
+
+    "DPIA_OBLIGATION": {
+      "display_name": "个人信息保护影响评估义务",
+      "priority": 4,
+      "document_applicability": ["scc_contract", "dpa"],
+      "keywords": ["影响评估", "风险评估", "保护影响评估", "PIA", "DPIA", "安全评估"],
+      "multi_label_keywords": {
+        "SENSITIVE_PI": ["敏感个人信息"],
+        "AUTOMATED_DECISION": ["自动化决策", "画像"]
+      },
+      "required_groups": [
+        ["评估", "影响"],
+        ["保护", "安全"]
+      ],
+      "dsl_checks": [],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第55条", "snippet": "有下列情形之一的，个人信息处理者应当事前进行个人信息保护影响评估..."},
+        {"source": "个人信息保护法", "article": "第56条", "snippet": "个人信息保护影响评估应当包括下列内容..."}
+      ],
+      "checklist_requirement": {"document_type": [], "required": false, "missing_severity": "LOW"}
+    },
+
+    "DPO_APPOINTMENT": {
+      "display_name": "数据保护负责人",
+      "priority": 3,
+      "document_applicability": ["privacy_policy"],
+      "keywords": ["数据保护官", "个人信息保护负责人", "DPO", "保护负责人", "负责人", "联系方式"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["负责人", "保护官", "DPO"],
+        ["联系"]
+      ],
+      "dsl_checks": [],
+      "citations": [
+        {"source": "个人信息保护法", "article": "第52条", "snippet": "处理个人信息达到国家网信部门规定数量的个人信息处理者应当指定个人信息保护负责人..."}
+      ],
+      "checklist_requirement": {"document_type": ["privacy_policy"], "required": false, "missing_severity": "LOW"}
+    },
+
+    "ONWARD_TRANSFER": {
+      "display_name": "再转移限制",
+      "priority": 6,
+      "document_applicability": ["scc_contract", "dpa"],
+      "keywords": ["再转移", "第三方", "转委托", "子处理者", "下级处理者", "进一步转移", "向第三方提供"],
+      "multi_label_keywords": {
+        "CROSS_BORDER_TRANSFER": ["境外", "跨境"],
+        "LIABILITY": ["责任", "违约"]
+      },
+      "required_groups": [
+        ["再转移", "转委托", "子处理者", "第三方"],
+        ["同意", "授权", "书面"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_subprocessor_consent",
+          "pattern_missing": ["书面同意", "事先同意", "授权", "通知"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "缺少再转移的事先同意要求",
+          "risk_analysis_template": "允许境外接收方将数据再转移给第三方，但未要求事先获得委托方的书面同意。",
+          "recommendation_template": "应明确境外接收方将数据再转移给第三方前需获得委托方的事先书面同意。"
+        },
+        {
+          "id": "no_subprocessor_obligation",
+          "pattern_missing": ["同等", "不低于", "相同.*保护", "约束"],
+          "severity": "HIGH",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "未要求再转移接收方承担同等保护义务",
+          "risk_analysis_template": "未要求再转移的接收方承担与原始境外接收方同等的个人信息保护义务。",
+          "recommendation_template": "应要求再转移接收方以合同或其他方式承担不低于原始境外接收方的保护义务。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息出境标准合同办法", "article": "第六条", "snippet": ""},
+        {"source": "个人信息保护法", "article": "第38条", "snippet": ""}
+      ],
+      "checklist_requirement": {"document_type": ["scc_contract"], "required": true, "missing_severity": "HIGH"}
+    },
+
+    "GOVERNMENT_ACCESS": {
+      "display_name": "政府机构访问披露",
+      "priority": 5,
+      "document_applicability": ["scc_contract"],
+      "keywords": ["政府", "执法", "请求", "披露", "命令", "法院", "监管", "强制"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["政府", "执法", "监管"],
+        ["披露", "通知", "告知"]
+      ],
+      "dsl_checks": [
+        {
+          "id": "no_gov_access_disclosure",
+          "pattern_missing": ["政府", "执法", "监管", "法院", "强制"],
+          "severity": "MEDIUM",
+          "problem_type": "MISSING_REQUIREMENT",
+          "title_template": "缺少政府机构访问披露条款",
+          "risk_analysis_template": "标准合同通常应包含境外接收方收到政府机构数据访问请求时的处理方式（及时通知、审查合法性等）。",
+          "recommendation_template": "建议补充境外接收方在收到政府机构数据访问请求时的通知和审查义务。"
+        }
+      ],
+      "citations": [
+        {"source": "个人信息出境标准合同", "article": "", "snippet": ""}
+      ],
+      "checklist_requirement": {"document_type": ["scc_contract"], "required": false, "missing_severity": "MEDIUM"}
+    },
+
+    "SUPPLEMENTARY_MEASURES": {
+      "display_name": "补充保护措施",
+      "priority": 5,
+      "document_applicability": ["scc_contract"],
+      "keywords": ["补充措施", "技术措施", "组织措施", "额外保护", "补充", "附加"],
+      "multi_label_keywords": {},
+      "required_groups": [
+        ["补充", "附加"],
+        ["措施", "保护"]
+      ],
+      "dsl_checks": [],
+      "citations": [
+        {"source": "个人信息出境标准合同办法", "article": "", "snippet": ""}
+      ],
+      "checklist_requirement": {"document_type": ["scc_contract"], "required": false, "missing_severity": "MEDIUM"}
+    }
   },
-  "SECURITY_MEASURES": {
-    "display_name": "安全措施",
-    "keywords": ["安全措施", "加密", "访问控制", "应急", "审计"],
-    "required_groups": [
-      ["安全措施", "安全"],
-      ["加密", "脱敏"],
-      ["访问控制", "权限"],
-      ["应急", "响应"]
-    ],
-    "citations": ["《个人信息保护法》第38条", "《数据安全法》相关条款"]
+
+  "document_type_checklists": {
+    "privacy_policy": {
+      "display_name": "隐私政策",
+      "description": "审查隐私政策的告知完整性和合规性",
+      "required_clause_types": [
+        "DATA_PROCESSING_SCOPE",
+        "CONSENT_NOTICE",
+        "SECURITY_MEASURES",
+        "RIGHTS_REQUEST",
+        "THIRD_PARTY_SHARING",
+        "SENSITIVE_PI",
+        "RETENTION_DELETION",
+        "CROSS_BORDER_TRANSFER",
+        "DATA_BREACH_NOTIFICATION"
+      ],
+      "recommended_clause_types": [
+        "DATA_MINIMIZATION",
+        "AUTOMATED_DECISION",
+        "MINOR_PROTECTION",
+        "DPO_APPOINTMENT"
+      ],
+      "specialized_reviewer": "privacy_policy"
+    },
+    "scc_contract": {
+      "display_name": "个人信息出境标准合同",
+      "description": "审查标准合同的条款完整性和合规性",
+      "required_clause_types": [
+        "DATA_PROCESSING_SCOPE",
+        "CROSS_BORDER_TRANSFER",
+        "SECURITY_MEASURES",
+        "LIABILITY",
+        "ONWARD_TRANSFER",
+        "RIGHTS_REQUEST",
+        "ENTRUSTED_PROCESSING",
+        "INCIDENT_RESPONSE",
+        "RETENTION_DELETION"
+      ],
+      "recommended_clause_types": [
+        "GOVERNMENT_ACCESS",
+        "SUPPLEMENTARY_MEASURES",
+        "DPIA_OBLIGATION"
+      ],
+      "specialized_reviewer": "scc_contract"
+    },
+    "dpa": {
+      "display_name": "数据处理协议",
+      "description": "审查委托处理协议的条款完整性和合规性",
+      "required_clause_types": [
+        "DATA_PROCESSING_SCOPE",
+        "ENTRUSTED_PROCESSING",
+        "SECURITY_MEASURES",
+        "THIRD_PARTY_SHARING",
+        "LIABILITY",
+        "INCIDENT_RESPONSE",
+        "CROSS_BORDER_TRANSFER",
+        "RETENTION_DELETION"
+      ],
+      "recommended_clause_types": [
+        "DATA_ACCURACY",
+        "DPIA_OBLIGATION"
+      ],
+      "specialized_reviewer": null
+    },
+    "other": {
+      "display_name": "其他文档",
+      "description": "通用审查",
+      "required_clause_types": [
+        "DATA_PROCESSING_SCOPE",
+        "CONSENT_NOTICE",
+        "SECURITY_MEASURES",
+        "CROSS_BORDER_TRANSFER",
+        "RIGHTS_REQUEST",
+        "LIABILITY"
+      ],
+      "recommended_clause_types": [],
+      "specialized_reviewer": null
+    }
   },
-  "CROSS_BORDER_TRANSFER": {
-    "display_name": "数据出境",
-    "keywords": ["数据出境", "跨境", "境外", "存储地点", "传输"],
-    "required_groups": [
-      ["境外", "跨境", "数据出境"],
-      ["存储地点", "存储"],
-      ["传输", "接收方"]
-    ],
-    "citations": ["《个人信息保护法》第38条", "《数据出境安全评估办法》第4条"]
+
+  "risk_weights": {
+    "CROSS_BORDER_TRANSFER": 8,
+    "SENSITIVE_PI": 8,
+    "MINOR_PROTECTION": 7,
+    "CONSENT_NOTICE": 7,
+    "ONWARD_TRANSFER": 7,
+    "LIABILITY": 6,
+    "SECURITY_MEASURES": 6,
+    "RETENTION_DELETION": 6,
+    "RIGHTS_REQUEST": 6,
+    "THIRD_PARTY_SHARING": 6,
+    "ENTRUSTED_PROCESSING": 5,
+    "INCIDENT_RESPONSE": 5,
+    "DATA_BREACH_NOTIFICATION": 5,
+    "DATA_PROCESSING_SCOPE": 5,
+    "PURPOSE_LIMITATION": 4,
+    "AUTOMATED_DECISION": 4,
+    "GOVERNMENT_ACCESS": 4,
+    "SUPPLEMENTARY_MEASURES": 4,
+    "DATA_MINIMIZATION": 4,
+    "DATA_ACCURACY": 3,
+    "DPIA_OBLIGATION": 3,
+    "DPO_APPOINTMENT": 2,
+    "OTHER": 2
   },
-  "RIGHTS_REQUEST": {
-    "display_name": "权利行使",
-    "keywords": ["权利", "查询", "复制", "更正", "删除", "撤回同意"],
-    "required_groups": [
-      ["查询", "访问"],
-      ["更正", "修改"],
-      ["删除"],
-      ["撤回同意", "撤回"]
-    ],
-    "citations": ["《个人信息保护法》第44条至第49条"]
+
+  "severity_weights": {
+    "HIGH": 10,
+    "MEDIUM": 5,
+    "LOW": 2
   },
-  "LIABILITY": {
-    "display_name": "违约责任",
-    "keywords": ["违约责任", "赔偿", "责任承担", "免责"],
-    "required_groups": [
-      ["违约责任", "责任承担"],
-      ["赔偿", "损失"]
-    ],
-    "citations": ["《民法典》合同编相关条款"]
-  }
+
+  "HIGH_PRIORITY_TYPES": [
+    "CROSS_BORDER_TRANSFER",
+    "SENSITIVE_PI",
+    "CONSENT_NOTICE",
+    "ONWARD_TRANSFER",
+    "MINOR_PROTECTION",
+    "RETENTION_DELETION"
+  ],
+
+  "MEDIUM_PRIORITY_TYPES": [
+    "LIABILITY",
+    "SECURITY_MEASURES",
+    "RIGHTS_REQUEST",
+    "THIRD_PARTY_SHARING",
+    "ENTRUSTED_PROCESSING",
+    "INCIDENT_RESPONSE",
+    "DATA_BREACH_NOTIFICATION",
+    "DATA_PROCESSING_SCOPE"
+  ]
 }
