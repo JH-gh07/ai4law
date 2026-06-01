@@ -1,6 +1,10 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from backend.modules.assessment.task_state import AssessmentTaskState
+
+PathCheckMode = Literal["generate_only", "warn_only", "block_on_mismatch"]
 
 
 class AssessmentRequest(BaseModel):
@@ -14,6 +18,7 @@ class AssessmentRequest(BaseModel):
     receiver_country: str = Field(min_length=2)
     force_override_path: bool = False
     uploaded_files: list[str] = Field(default_factory=list)
+    path_check_mode: PathCheckMode = "warn_only"
 
 
 class CompanyProfile(BaseModel):

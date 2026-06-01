@@ -174,6 +174,7 @@ def test_assessment_rejects_path_mismatch_without_force(monkeypatch, tmp_path) -
         receiver_country="Singapore",
         force_override_path=False,
         uploaded_files=[],
+        path_check_mode="block_on_mismatch",
     )
 
     try:

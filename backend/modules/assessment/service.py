@@ -253,6 +253,14 @@ class AssessmentService:
         if recommended_path == "security_assessment":
             return None
         warning = f"诊断推荐路径为 {recommended_path}：{rationale}"
+        mode = payload.path_check_mode
+        if mode == "generate_only":
+            return warning
+        if mode == "warn_only":
+            if not payload.force_override_path:
+                return warning
+            return warning
+        # block_on_mismatch (default legacy behavior when force_override_path is False)
         if not payload.force_override_path:
             raise ValueError(
                 f"Path mismatch: {warning}。如需继续生成安全评估报告，请设置 force_override_path=true。"

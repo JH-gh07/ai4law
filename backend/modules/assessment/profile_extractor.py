@@ -1,4 +1,5 @@
 from backend.common.storage.file_parser import FileParser
+from backend.modules.assessment.attachment_parser import parse_attachment_metadata
 from backend.modules.assessment.schema import AssessmentRequest, CompanyProfile
 
 
@@ -12,7 +13,15 @@ class ProfileExtractor:
             try:
                 content = self.parser.parse_text(file_path)
                 preview = content[:160].replace("\n", " ")
-                notes.append(f"{file_path}: {preview}")
+                note = f"{file_path}: {preview}"
+
+                meta = parse_attachment_metadata(file_path, content)
+                atype = meta.get("type", "other")
+                note += f" [type={atype}]"
+                if atype == "contract" and "missing_summary" in meta:
+                    note += f" | {meta['missing_summary']}"
+
+                notes.append(note)
             except (FileNotFoundError, ValueError) as exc:
                 notes.append(f"{file_path}: [parse skipped] {exc}")
 
