@@ -8,8 +8,10 @@ from backend.common.quality.alignment import check_cn_alignment
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.citation.registry import CitationRegistry
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.modules.assessment.chapter_generator import AssessmentChapterGenerator
+from backend.modules.assessment.citation_builder import build_citations
 from backend.modules.assessment.consistency_checker import ConsistencyChecker
 from backend.modules.assessment.evidence_builder import build_assessment_evidence
 from backend.modules.assessment.fact_builder import build_assessment_facts
@@ -134,6 +136,19 @@ class AssessmentService:
             writing_strategy=writing_strategy,
         )
 
+        # Build citation registry from pipeline data
+        regulation_dicts = [hit.model_dump() for hit in regulations]
+        citation_items = build_citations(
+            legal_grounding=legal_grounding,
+            regulations=regulation_dicts,
+            issues=issues,
+            facts=facts,
+            evidence_chain=evidence_chain,
+        )
+        citation_registry = CitationRegistry()
+        for item in citation_items:
+            citation_registry.register(item)
+
         return GenerationContextPack(
             module_key="assessment",
             request_id=task_id,
@@ -153,6 +168,7 @@ class AssessmentService:
             legal_grounding=legal_grounding,
             writing_strategy=writing_strategy,
             generation_basis_pack=generation_basis_pack,
+            citation_registry=citation_registry,
         )
 
     @staticmethod

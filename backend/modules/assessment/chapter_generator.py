@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import ensure_paragraph_citations
+from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations
 from backend.common.risk.scoring import risk_level
 from backend.common.workflow import GenerationContextPack
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
@@ -16,9 +16,14 @@ _SYSTEM_PROMPT = (
 _STRICT_CONSTRAINT = (
     "写作约束：仅使用上下文提供的事实与法规条文，不得新增行业、国家/地区、主体、规模或场景。"
     "若上下文缺失，请写「未提供」。如需推测，请明确标注【推测】。"
-    "每段末尾需引用至少一条法规依据，格式为「【依据：法规标题+条款】」；若无可引用，写「【依据：未检索到】」。"
     "每个风险判断必须引用上下文中的 issue_id 或法规 citation。"
     "对材料缺失只能写「需补充/待补充」，不得假设材料已经具备。"
+    "\n\n引用约束（必须遵守）："
+    "\n- 下方【可引用法规依据】提供了可用依据，每条格式为 {{CIT-xxx}} = 法规名 第X条"
+    "\n- 需要引用法规时，在句末使用 {{CIT-xxx}} 标记"
+    "\n- 禁止使用其他引用格式，禁止编造不在列表中的法规依据"
+    "\n- 一个观点可引用多条：{{CIT-xxx}}{{CIT-yyy}}"
+    "\n- 若无可引用，写「【依据：未检索到】」"
     "\n\n表达策略硬约束（必须遵守）："
     "\n1. 对外报告只能使用各 issue 的 external_expression 表述，不得使用 internal_expression。"
     "\n2. 不得在报告中出现【全局禁用表达】中列出的任何措辞或近义表述。"
@@ -210,6 +215,11 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
     if not grounding_lines:
         grounding_lines = ["- 本章节无精确法规绑定"]
 
+    # Citation marker list for LLM
+    citation_marker_section = "（未启用引用系统）"
+    if context_pack.citation_registry is not None:
+        citation_marker_section = context_pack.citation_registry.build_marker_list()
+
     return (
         "【统一生成上下文包】\n"
         f"- module_key：{context_pack.module_key}\n"
@@ -230,6 +240,8 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         + "\n".join(evidence_lines)
         + "\n\n【法规绑定（legal_grounding）】\n"
         + "\n".join(grounding_lines)
+        + "\n\n【可引用法规依据】\n"
+        + citation_marker_section
         + "\n\n【表达策略（writing_strategy）】\n"
         + "\n".join(strategy_lines)
         + f"\n\n【全局禁用表达】\n{', '.join(global_forbidden) if global_forbidden else '无'}"
@@ -268,7 +280,10 @@ class AssessmentChapterGenerator:
                 if context_pack is not None
                 else _build_context_block(profile, hits, level)
             )
-            content = self._generate_chapter(chapter_title, chapter_instruction, context_block, citation_keys)
+            citation_registry = context_pack.citation_registry if context_pack else None
+            content = self._generate_chapter(
+                chapter_title, chapter_instruction, context_block, citation_keys, citation_registry
+            )
             chapters.append(
                 ChapterContent(
                     chapter_no=idx,
@@ -286,6 +301,7 @@ class AssessmentChapterGenerator:
         instruction: str,
         context: str,
         citations: list[str] | None = None,
+        citation_registry: object = None,
     ) -> str:
         if self.llm and self.llm.enabled:
             user_prompt = (
@@ -299,6 +315,8 @@ class AssessmentChapterGenerator:
                 temperature=0.2,
                 max_tokens=800,
             )
+            if citation_registry is not None:
+                return convert_citation_markers(raw, citation_registry)
             return ensure_paragraph_citations(raw, citations)
         # 降级占位
         return f"（{title}：LLM未配置，此处为占位内容）"
