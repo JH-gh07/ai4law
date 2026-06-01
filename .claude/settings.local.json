@@ -25,7 +25,11 @@
       "Bash(env)",
       "Bash(unset all_proxy)",
       "Bash(python -c \"from backend.modules.assessment.service import *\")",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(.venv/bin/python -m pytest backend/modules/assessment/tests/ -v)",
+      "Bash(python3 -c \"import sys,json; [print\\(json.dumps\\({k: json.loads\\(line\\).get\\(k\\) for k in ['id','title','doc_type','jurisdiction','path']}, ensure_ascii=False\\)\\) for line in sys.stdin]\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import sys,json; d=json.loads\\(sys.stdin.read\\(\\)\\); print\\(json.dumps\\(d, ensure_ascii=False, indent=2\\)[:2000]\\)\")"
     ]
   }
 }
