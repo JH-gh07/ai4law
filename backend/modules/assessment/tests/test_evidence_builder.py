@@ -54,8 +54,9 @@ def test_ciio_issue_produces_evidence_with_ciio_fact_ref() -> None:
 
     evidence_ids = {evidence.evidence_id for evidence in evidence_chain}
     for issue in updated_issues:
-        assert issue.evidence_refs
-        assert set(issue.evidence_refs).issubset(evidence_ids)
+        if issue.fact_refs:
+            assert issue.evidence_refs
+            assert set(issue.evidence_refs).issubset(evidence_ids)
 
 
 def test_regulatory_evidence_has_rule_refs_material_evidence_can_omit_them() -> None:

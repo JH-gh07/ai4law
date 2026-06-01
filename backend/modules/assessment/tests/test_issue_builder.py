@@ -79,7 +79,12 @@ def test_threshold_and_path_mismatch_issues_have_fact_refs() -> None:
     assert "ISSUE-pii-threshold" in by_id
     assert "ISSUE-spi-threshold" in by_id
     for issue in issues:
-        assert issue.fact_refs
-        assert set(issue.fact_refs).issubset(fact_ids)
-    regulatory = [issue for issue in issues if issue.category != "documentation"]
-    assert all(issue.rule_refs for issue in regulatory)
+        if issue.fact_refs:
+            assert set(issue.fact_refs).issubset(fact_ids)
+    # 路径/数据类 issue 应有 rule_refs
+    evidence_bound = [
+        issue for issue in issues
+        if issue.category not in {"documentation", "legal_document", "anonymization",
+                                    "onward_transfer", "internal_approval", "expression"}
+    ]
+    assert all(issue.rule_refs for issue in evidence_bound if issue.fact_refs)

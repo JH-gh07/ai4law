@@ -28,8 +28,10 @@ def _schema_fact(field_path: str, value: Any, notes: str | None = None) -> FactI
         field_path=field_path,
         value=value,
         normalized_value=value,
-        confidence=1.0,
+        confidence=0.6,
         notes=notes,
+        evidence_status="user_claim_only",
+        can_support_external_positive_claim=False,
     )
 
 
@@ -42,6 +44,8 @@ def _diagnosis_fact(field_path: str, value: Any) -> FactItem:
         value=value,
         normalized_value=value,
         confidence=1.0 if value is not None else 0.6,
+        evidence_status="documented_evidence" if value is not None else "partial_evidence",
+        can_support_external_positive_claim=value is not None,
     )
 
 
@@ -67,15 +71,19 @@ def build_assessment_facts(
     ]
 
     for idx, note in enumerate(profile.extracted_notes, start=1):
+        source_ref = note.split(":", 1)[0]
         facts.append(
             FactItem(
                 fact_id=f"FACT-attachment-note-{idx}",
                 source_type="attachment",
-                source_ref=note.split(":", 1)[0],
+                source_ref=source_ref,
                 field_path=f"profile.extracted_notes[{idx - 1}]",
                 value=note,
                 normalized_value=note,
                 confidence=0.8,
+                evidence_status="partial_evidence",
+                supporting_material_refs=[source_ref],
+                can_support_external_positive_claim=False,
             )
         )
 

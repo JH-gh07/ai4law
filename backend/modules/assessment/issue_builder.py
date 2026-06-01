@@ -212,4 +212,142 @@ def build_assessment_issues(
             )
         )
 
+    # ── Document audit dimension issues (gap 5) ──
+
+    # 数据定性模糊
+    if spi_fact and int(spi_fact.normalized_value or 0) > 0:
+        issues.append(
+            _issue(
+                issue_id="ISSUE-spi-classification-uncertain",
+                title="敏感个人信息定性需进一步确认",
+                description="存在敏感个人信息出境，但未提供具体敏感类型清单和分类依据。",
+                category="data_classification",
+                severity="HIGH",
+                fact_refs=[spi_fact.fact_id],
+                rule_refs=legal_rule_refs,
+                recommended_action="补充敏感个人信息类型清单、分类依据和合法基础说明。",
+                affects_outputs=["data_scope", "rights_impact", "conclusion"],
+            )
+        )
+
+    # 必要性论证过泛
+    issues.append(
+        _issue(
+            issue_id="ISSUE-necessity-argument-generic",
+            title="出境必要性论证可能过于泛化",
+            description="当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。",
+            category="necessity",
+            severity="MEDIUM",
+            fact_refs=[purpose_fact.fact_id] if purpose_fact and purpose_fact.fact_id else [],
+            rule_refs=legal_rule_refs,
+            recommended_action="补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。",
+            affects_outputs=["necessity_legal_basis", "risk_remediation"],
+        )
+    )
+
+    # 接收方安全能力证明不足
+    issues.append(
+        _issue(
+            issue_id="ISSUE-recipient-security-evidence-missing",
+            title="境外接收方安全保障能力证明不足",
+            description="当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足，无法充分证明其保障能力。",
+            category="recipient",
+            severity="HIGH",
+            fact_refs=[receiver_fact.fact_id] if receiver_fact and receiver_fact.fact_id else [],
+            rule_refs=legal_rule_refs,
+            recommended_action="补充境外接收方安全管理制度、认证证明或第三方审计材料。",
+            affects_outputs=["recipient_capability", "risk_remediation", "conclusion"],
+        )
+    )
+
+    # 法律文件条款缺失
+    issues.append(
+        _issue(
+            issue_id="ISSUE-legal-document-gaps",
+            title="法律文件核心条款可能存在缺失",
+            description="与境外接收方签署的法律文件未验证是否包含处理目的、保存期限、再转移约束、安全事件处置和违约责任等核心条款。",
+            category="legal_document",
+            severity="HIGH",
+            fact_refs=[],
+            rule_refs=regulation_refs[:3],
+            recommended_action="核验法律文件是否覆盖六项核心条款，补充缺失内容。",
+            affects_outputs=["recipient_capability", "security_measures", "risk_remediation", "conclusion"],
+        )
+    )
+
+    # 再转移约束不明确
+    issues.append(
+        _issue(
+            issue_id="ISSUE-onward-transfer-unclear",
+            title="再转移约束条款不明确",
+            description="未验证法律文件是否明确约束境外接收方不得将数据再转移至第三方。",
+            category="onward_transfer",
+            severity="MEDIUM",
+            fact_refs=[],
+            rule_refs=regulation_refs[:3],
+            recommended_action="补充再转移约束条款，明确接收方未经同意不得向第三方提供数据。",
+            affects_outputs=["recipient_capability", "security_measures", "risk_remediation"],
+        )
+    )
+
+    # 同意记录证据不足
+    issues.append(
+        _issue(
+            issue_id="ISSUE-consent-evidence-missing",
+            title="个人信息出境单独同意记录证据不足",
+            description="涉及个人信息出境时，未验证是否已取得个人信息主体的单独同意及同意记录。",
+            category="consent",
+            severity="HIGH",
+            fact_refs=[],
+            rule_refs=legal_rule_refs,
+            recommended_action="补充告知和单独同意记录，或说明适用的豁免情形。",
+            affects_outputs=["necessity_legal_basis", "rights_impact", "risk_remediation", "conclusion"],
+        )
+    )
+
+    # 匿名化有效性不明
+    issues.append(
+        _issue(
+            issue_id="ISSUE-anonymization-uncertain",
+            title="匿名化或去标识化有效性未验证",
+            description="如拟主张数据已匿名化或去标识化，需补充技术验证、重识别风险评估或第三方审计材料。",
+            category="anonymization",
+            severity="MEDIUM",
+            fact_refs=[],
+            rule_refs=regulation_refs[:3],
+            recommended_action="补充匿名化/去标识化技术方案和有效性验证材料；材料补足前采用审慎表述。",
+            affects_outputs=["data_scope", "security_measures", "risk_remediation"],
+        )
+    )
+
+    # 缺失材料补充建议
+    issues.append(
+        _issue(
+            issue_id="ISSUE-material-checklist-incomplete",
+            title="申报支撑材料清单不完整",
+            description="当前仅根据输入字段推断材料需求，未基于完整申报材料清单逐项核验。",
+            category="documentation",
+            severity="MEDIUM",
+            fact_refs=[],
+            rule_refs=[],
+            recommended_action="对照安全评估申报材料清单逐项核验，补充数据清单、隐私政策、合同、安全措施说明等材料。",
+            affects_outputs=["overview", "risk_remediation", "conclusion"],
+        )
+    )
+
+    # 内部审批和监控机制缺失
+    issues.append(
+        _issue(
+            issue_id="ISSUE-internal-approval-missing",
+            title="内部审批和数据出境监控机制未体现",
+            description="未体现企业内部数据出境审批流程、定期监控机制和责任人信息。",
+            category="internal_approval",
+            severity="MEDIUM",
+            fact_refs=[],
+            rule_refs=[],
+            recommended_action="补充内部数据出境管理制度、审批流程和定期安全评估机制说明。",
+            affects_outputs=["security_measures", "risk_remediation"],
+        )
+    )
+
     return issues
