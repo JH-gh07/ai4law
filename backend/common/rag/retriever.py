@@ -180,6 +180,7 @@ def _passes_filter(
     jurisdiction: Optional[str],
     path: Optional[str],
     doc_type: Optional[str],
+    source: Optional[str] = None,
 ) -> bool:
     if jurisdiction and doc.jurisdiction and _normalize(doc.jurisdiction) != _normalize(jurisdiction):
         return False
@@ -187,6 +188,11 @@ def _passes_filter(
         return False
     if doc_type and doc.doc_type and _normalize(doc_type) not in _normalize(doc.doc_type):
         return False
+    if source and doc.doc_type:
+        if source == "regulatory" and doc.doc_type == "external":
+            return False
+        if source == "user" and doc.doc_type == "external":
+            return True
     return True
 
 
@@ -254,6 +260,7 @@ class RegulationRAGService:
         jurisdiction: Optional[str] = None,
         path: Optional[str] = None,
         doc_type: Optional[str] = None,
+        source: Optional[str] = None,
         mode: str = "hybrid",
         score_floor: Optional[float] = None,
     ) -> list[RegulationDoc]:
@@ -264,6 +271,7 @@ class RegulationRAGService:
                 jurisdiction=jurisdiction,
                 path=path,
                 doc_type=doc_type,
+                source=source,
             )
         if _is_off_topic_query(query) or _is_jurisdiction_mismatch(query, jurisdiction):
             return []
@@ -278,7 +286,7 @@ class RegulationRAGService:
         candidates: list[RerankCandidate] = []
         for vector_score, entry in vector_hits:
             doc = self._payload_to_doc(entry.payload)
-            if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type):
+            if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type, source=source):
                 continue
             lexical_score = _lexical_score(query, doc)
             if mode == "vector":
@@ -363,6 +371,7 @@ def retrieve_regulations(
     jurisdiction: Optional[str] = None,
     path: Optional[str] = None,
     doc_type: Optional[str] = None,
+    source: Optional[str] = None,
     mode: str = "hybrid",
     score_floor: Optional[float] = None,
     legal_service: Optional["DeliLegalService"] = None,
@@ -382,6 +391,7 @@ def retrieve_regulations(
         jurisdiction=jurisdiction,
         path=path,
         doc_type=doc_type,
+        source=source,
         mode=mode,
         score_floor=score_floor,
     )

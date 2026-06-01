@@ -118,7 +118,7 @@ class EnhancedHybridRetriever:
                 path=str(payload.get("path", "")),
                 doc_type=str(payload.get("doc_type", "")),
             )
-            if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type):
+            if not _passes_filter(doc, jurisdiction=jurisdiction, path=path, doc_type=doc_type, source=source):
                 continue
             lexical_score = _lexical_score(query, doc)
             candidates.append(

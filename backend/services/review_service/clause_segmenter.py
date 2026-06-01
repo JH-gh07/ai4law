@@ -15,10 +15,6 @@ _CN_CLAUSE_PATTERN = re.compile(
     r"(?=(?:第[一二三四五六七八九十百千万0-9]+条|[0-9]+[\.、]|[一二三四五六七八九十]+、))"
 )
 
-_CN_CHAPTER_PATTERN = re.compile(
-    r"^(第[一二三四五六七八九十百千万0-9]+章|第[一二三四五六七八九十百千万0-9]+节)"
-)
-
 _CN_APPENDIX_PATTERN = re.compile(
     r"^(附件[一二三四五六七八九十0-9]*|附录[一二三四五六七八九十0-9]*|附表[一二三四五六七八九十0-9]*)",
     re.IGNORECASE,
@@ -31,12 +27,6 @@ _EN_CLAUSE_PATTERN = re.compile(
     r"(?=(?:Article\s+\d+|Section\s+\d+|Clause\s+\d+|Appendix\s+[A-Z0-9]+)[\.:\s\)])",
     re.IGNORECASE,
 )
-
-_EN_NUMBERED_LIST_PATTERN = re.compile(
-    r"^(\d{1,2})\.\s+[A-Z]",
-    re.MULTILINE,
-)
-
 
 # ── Sub‑clause splitting ────────────────────────────────────────────────
 

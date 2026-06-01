@@ -2987,7 +2987,28 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       pii_count: Math.max(0, values.pii_count),
       spi_count: Math.max(0, values.spi_count),
       has_scc_draft: values.has_scc_draft || uploadedFiles.length > 0,
-      uploaded_files: uploadedFiles
+      uploaded_files: uploadedFiles,
+      // NEW: Enhanced review context fields for backend pipeline
+      document_type: values.document_type || "other",
+      review_focus: values.review_focus?.trim() || "",
+      scenario_context: {
+        company_name: trimOr(values.publisher_entity || values.company_name, ""),
+        document_title: values.document_title?.trim() || "",
+        document_version: values.document_version?.trim() || "",
+        publisher_entity: trimOr(values.publisher_entity, ""),
+        receiver_name: trimOr(values.receiver_name, ""),
+        receiver_country: trimOr(values.receiver_country, ""),
+        transfer_purpose: values.transfer_purpose?.trim() || "",
+        pii_count: Math.max(0, values.pii_count),
+        spi_count: Math.max(0, values.spi_count),
+        has_scc_draft: values.has_scc_draft || false,
+        review_focus: values.review_focus?.trim() || "",
+      },
+      review_config: {
+        review_depth: "standard",
+        max_llm_clauses: 20,
+        enable_cross_document_check: false,
+      },
     };
   };
 

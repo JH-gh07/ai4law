@@ -32,6 +32,26 @@ from backend.services.review_service.clause_segmenter import ClauseSegmenter
 from backend.services.review_service.rag_provider import LocalRegulationKnowledgeBase
 from backend.services.review_service.review_aggregator import ReviewAggregator
 from backend.services.review_service.review_report_renderer import ReviewReportRenderer
+from backend.services.review_service.rulebook_loader import RulebookLoader
+from backend.services.review_service.document_classifier import DocumentClassifier
+from backend.services.review_service.scenario_extractor import ScenarioExtractor
+from backend.services.review_service.missing_item_checker import MissingItemChecker
+from backend.services.review_service.risk_scorer import RiskScorer
+from backend.services.review_service.consistency_checker import (
+    CrossDocConsistencyChecker,
+    DocumentWithClauses,
+)
+from backend.services.review_service.specialized_reviewers.privacy_policy_reviewer import (
+    PrivacyPolicyReviewer,
+)
+from backend.services.review_service.specialized_reviewers.scc_contract_reviewer import (
+    SccContractReviewer,
+)
+from backend.schemas.review import (
+    ReviewScenarioContext,
+    ReviewTaskConfig,
+    ReviewMethod,
+)
 
 
 _ENGLISH_REVIEW_SIGNAL_TERMS = (
@@ -83,11 +103,31 @@ class ReviewService:
         self.task_dispatcher = task_dispatcher
         self.websocket_manager = websocket_manager
         self.session_factory = session_factory
+
+        # ── Enhanced pipeline components ──
+        self.rulebook = RulebookLoader()
         self.segmenter = ClauseSegmenter()
-        self.classifier = ClauseClassifier()
+        self.classifier = ClauseClassifier(rulebook_loader=self.rulebook, llm_client=llm_client)
         self.knowledge_base = LocalRegulationKnowledgeBase(legal_api_service)
-        self.reviewer = ClauseReviewer(self.knowledge_base, llm_client=llm_client)
-        self.aggregator = ReviewAggregator()
+        self.document_classifier = DocumentClassifier(llm_client=llm_client)
+        self.scenario_extractor = ScenarioExtractor(llm_client=llm_client)
+        self.specialized_reviewers = {
+            "privacy_policy": PrivacyPolicyReviewer(rulebook_loader=self.rulebook),
+            "scc_contract": SccContractReviewer(rulebook_loader=self.rulebook),
+        }
+        self.reviewer = ClauseReviewer(
+            self.knowledge_base,
+            llm_client=llm_client,
+            rulebook_loader=self.rulebook,
+            specialized_reviewers=self.specialized_reviewers,
+        )
+        self.risk_scorer = RiskScorer(rulebook_loader=self.rulebook)
+        self.missing_checker = MissingItemChecker(rulebook_loader=self.rulebook)
+        self.cross_doc_checker = CrossDocConsistencyChecker(llm_client=llm_client)
+        self.aggregator = ReviewAggregator(
+            risk_scorer=self.risk_scorer,
+            rulebook_loader=self.rulebook,
+        )
         self.renderer = ReviewReportRenderer()
 
     def create_task(self, db: Session, user_id: str) -> ReviewTaskCreateResponse:
@@ -173,33 +213,132 @@ class ReviewService:
         return ReviewReportResponse(report=report, review=summary)
 
     def _run_pipeline(self, task_id: str, user_id: str) -> None:
+        """Enhanced 8‑stage pipeline: PREPARING → SEGMENTING → CLASSIFYING →
+        MISSING_CHECK → REVIEWING → CROSS_DOC_CHECK → AGGREGATING → RENDERING."""
         db = self.session_factory()
         try:
             task = self._require_task(db, task_id, user_id)
             files = self.repository.list_files(db, task_id, user_id)
 
-            self._update_task(db, task, ReviewTaskStatus.SEGMENTING, 25)
+            # ── Stage 0: PREPARING (0‑10%) — doc classification + scenario extraction ──
+            self._update_task(db, task, ReviewTaskStatus.PREPARING, 2)
+
+            # Parse request context from task metadata (if available)
+            raw_ctx = loads(task.summary_json, {})
+            scenario_ctx = None
+            doc_type = raw_ctx.get("document_type") or "other"
+            review_config = ReviewTaskConfig(
+                review_depth=raw_ctx.get("review_depth", "standard"),
+                max_llm_clauses=raw_ctx.get("max_llm_clauses", 20),
+            )
+
+            # Classify first document's text if user didn't specify type
+            if files:
+                combined_text = "\n\n".join(f.extracted_text or "" for f in files)[:6000]
+                first_file = files[0]
+
+                if doc_type == "other" or not doc_type:
+                    classification = self.document_classifier.classify(
+                        combined_text,
+                        user_document_type=doc_type if doc_type != "other" else None,
+                        filename=first_file.filename,
+                    )
+                    doc_type = classification.document_type.value
+                else:
+                    classification = self.document_classifier.classify(
+                        combined_text,
+                        user_document_type=doc_type,
+                        filename=first_file.filename,
+                    )
+
+                scenario_ctx = self.scenario_extractor.extract(
+                    combined_text,
+                    user_context=(
+                        ReviewScenarioContext(**raw_ctx.get("scenario_context", {}))
+                        if raw_ctx.get("scenario_context") else None
+                    ),
+                    document_classification=classification,
+                )
+
+            self._update_task(db, task, ReviewTaskStatus.PREPARING, 10)
+
+            # ── Stage 1: SEGMENTING (10‑25%) ──
+            self._update_task(db, task, ReviewTaskStatus.SEGMENTING, 12)
             clauses = []
             for file in files:
                 clauses.extend(self.segmenter.segment(file.id, file.extracted_text))
+            self._update_task(db, task, ReviewTaskStatus.SEGMENTING, 25)
 
-            self._update_task(db, task, ReviewTaskStatus.CLASSIFYING, 45)
+            # ── Stage 2: CLASSIFYING (25‑45%) ──
+            self._update_task(db, task, ReviewTaskStatus.CLASSIFYING, 28)
             classified = [self.classifier.classify(clause) for clause in clauses]
+            self._update_task(db, task, ReviewTaskStatus.CLASSIFYING, 45)
 
-            self._update_task(db, task, ReviewTaskStatus.REVIEWING, 70)
+            # ── Stage 3: MISSING_CHECK (45‑55%) [NEW] ──
+            self._update_task(db, task, ReviewTaskStatus.MISSING_CHECK, 48)
+            missing_items = self.missing_checker.check(classified, doc_type)
+            self._update_task(db, task, ReviewTaskStatus.MISSING_CHECK, 55)
+
+            # ── Stage 4: REVIEWING (55‑80%) — risk‑triggered LLM ──
+            self._update_task(db, task, ReviewTaskStatus.REVIEWING, 57)
             issues = []
-            reviewable = [clause for clause in classified if self._is_reviewable_clause(clause)]
-            llm_clause_ids = {clause.clause_id for clause in self._select_llm_candidates(reviewable)}
+            reviewable = [c for c in classified if self._is_reviewable_clause(c)]
+            llm_clause_ids = self._select_llm_candidates(reviewable, review_config)
+
+            # Build scenario dict for reviewer
+            scenario_dict = scenario_ctx.model_dump() if scenario_ctx else None
+
             checkpoints = self._review_progress_checkpoints(len(reviewable))
             for index, clause in enumerate(reviewable, start=1):
-                issues.extend(self.reviewer.review(clause, use_llm=clause.clause_id in llm_clause_ids))
+                use_llm = clause.clause_id in llm_clause_ids
+                issues.extend(
+                    self.reviewer.review(
+                        clause,
+                        use_llm=use_llm,
+                        document_type=doc_type,
+                        scenario_context=scenario_dict,
+                    )
+                )
                 if index in checkpoints:
-                    progress = 70 + int((index / len(reviewable)) * 14)
-                    self._update_task(db, task, ReviewTaskStatus.REVIEWING, min(progress, 84))
+                    progress = 57 + int((index / max(len(reviewable), 1)) * 22)
+                    self._update_task(db, task, ReviewTaskStatus.REVIEWING, min(progress, 79))
 
-            self._update_task(db, task, ReviewTaskStatus.AGGREGATING, 85)
-            aggregated = self.aggregator.aggregate(issues)
+            self._update_task(db, task, ReviewTaskStatus.REVIEWING, 80)
 
+            # ── Stage 5: CROSS_DOC_CHECK (80‑85%) [NEW] ──
+            self._update_task(db, task, ReviewTaskStatus.CROSS_DOC_CHECK, 82)
+            consistency_warnings: list[str] = []
+            if review_config.enable_cross_document_check and len(files) > 1:
+                docs_with_clauses = [
+                    DocumentWithClauses(
+                        file_id=f.id,
+                        filename=f.filename,
+                        document_type=doc_type,
+                        clauses=[c for c in classified if c.file_id == f.id],
+                        issues=[i for i in issues if i.file_id == f.id],
+                    )
+                    for f in files
+                ]
+                consistency_warnings = self.cross_doc_checker.check(docs_with_clauses)
+            self._update_task(db, task, ReviewTaskStatus.CROSS_DOC_CHECK, 85)
+
+            # ── Stage 6: AGGREGATING (85‑92%) ──
+            self._update_task(db, task, ReviewTaskStatus.AGGREGATING, 87)
+            review_mode = "llm" if (self.reviewer.llm_client and self.reviewer.llm_client.enabled) else "rule_only"
+            aggregated = self.aggregator.aggregate(
+                issues,
+                missing_items=missing_items,
+                consistency_warnings=consistency_warnings,
+                classified_clauses=classified,
+                document_type=doc_type,
+                document_title=(
+                    scenario_ctx.document_title if scenario_ctx else None
+                ),
+                review_mode=review_mode,
+            )
+            self._update_task(db, task, ReviewTaskStatus.AGGREGATING, 92)
+
+            # ── Stage 7: RENDERING (92‑100%) ──
             self._update_task(db, task, ReviewTaskStatus.RENDERING, 95)
             sections = self.renderer.build_sections(aggregated)
             self.report_service.create_docx_report(
@@ -209,7 +348,13 @@ class ReviewService:
                 task_id,
                 "review_report.docx",
                 sections,
-                preview={"overall_rating": aggregated.overall_rating, "summary": aggregated.summary},
+                preview={
+                    "overall_rating": aggregated.overall_rating,
+                    "overall_risk_score": aggregated.overall_risk_score,
+                    "summary": aggregated.summary,
+                    "document_type": doc_type,
+                    "review_mode": review_mode,
+                },
             )
 
             task.issues_json = dumps([issue.model_dump() for issue in aggregated.issues])
@@ -330,30 +475,52 @@ class ReviewService:
         return any(pattern.fullmatch(text) for pattern in _SHORT_STRUCTURAL_NOISE_PATTERNS)
 
     @staticmethod
-    def _select_llm_candidates(classified):
-        priority = {
-            "CROSS_BORDER_TRANSFER": 6,
-            "CONSENT_NOTICE": 5,
-            "SECURITY_MEASURES": 4,
-            "RIGHTS_REQUEST": 3,
-            "DATA_PROCESSING_SCOPE": 2,
-            "LIABILITY": 1,
-            "OTHER": 0,
-        }
-        ranked = [
-            clause
-            for clause in classified
-            if clause.clause_type.value != "OTHER" and len(clause.text.strip()) >= 80
-        ]
-        ranked.sort(
-            key=lambda clause: (
-                priority.get(clause.clause_type.value, 0),
-                len(clause.matched_keywords),
-                len(clause.text),
-            ),
-            reverse=True,
-        )
-        return ranked[:8]
+    def _select_llm_candidates(self, classified: list, review_config: ReviewTaskConfig | None = None) -> set[str]:
+        """Risk‑triggered LLM selection (replaces top‑8 approach).
+
+        Returns clause_ids that should get LLM review.
+        Always sends:
+        - All HIGH_PRIORITY_TYPES clauses (CROSS_BORDER_TRANSFER, SENSITIVE_PI, etc.)
+        - MEDIUM_PRIORITY_TYPES clauses with text ≥ 120 chars
+        - All clauses when review_depth=deep (up to max_llm_clauses cap)
+        """
+        high_types = set(self.rulebook.get_high_priority_types())
+        medium_types = set(self.rulebook.get_medium_priority_types())
+        max_cap = (review_config.max_llm_clauses if review_config else 20) or 20
+
+        candidates: list[tuple[str, int]] = []  # (clause_id, priority_score)
+
+        for clause in classified:
+            if clause.clause_type.value == "OTHER":
+                continue
+            text_len = len(clause.text.strip())
+            if text_len < 40:
+                continue
+
+            ct = clause.clause_type.value
+            if ct in high_types:
+                priority = 10
+            elif ct in medium_types and text_len >= 120:
+                priority = 5
+            elif review_config and review_config.review_depth.value == "deep":
+                priority = 3
+            else:
+                priority = 1
+
+            candidates.append((clause.clause_id, priority))
+
+        # Sort by priority (desc), then by clause_type weight
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        selected = {cid for cid, _ in candidates[:max_cap]}
+
+        # Always include deep mode: also add medium types regardless of length
+        if review_config and review_config.review_depth.value == "deep":
+            for clause in classified:
+                ct = clause.clause_type.value
+                if ct in medium_types and len(clause.text.strip()) >= 80:
+                    selected.add(clause.clause_id)
+
+        return selected
 
     def _update_task(self, db: Session, task: ReviewTaskModel, status: ReviewTaskStatus, progress: int, persist: bool = True) -> None:
         task.status = status.value

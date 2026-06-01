@@ -111,6 +111,7 @@ def search_regulations(
     q: str = Query(default=""),
     jurisdiction: str | None = Query(default=None),
     path: str | None = Query(default=None),
+    source: str | None = Query(default=None),
     top_k: int = Query(default=8, ge=1, le=20),
     mode: str = Query(default="hybrid"),
 ) -> KnowledgeSearchResponse:
@@ -123,6 +124,7 @@ def search_regulations(
         top_k=top_k,
         jurisdiction=jurisdiction or None,
         path=path or None,
+        source=source or None,
         mode=mode,
     )
 
