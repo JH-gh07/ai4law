@@ -230,6 +230,21 @@ class RegulationRAGService:
         self.embedder = HashingEmbedder(settings.rag_embedding_dimension)
         self.vector_store = LocalVectorStore(settings.rag_index_path, self.embedder)
         self.reranker = HeuristicReranker()
+        self._enhanced_retriever = None
+
+    def _get_enhanced_retriever(self):
+        if self._enhanced_retriever is None:
+            from backend.common.rag.hybrid_retriever import EnhancedHybridRetriever
+            from backend.core.db import build_engine, build_session_factory
+            try:
+                engine = build_engine(self.settings.database_url)
+                session_factory = build_session_factory(engine)
+                self._enhanced_retriever = EnhancedHybridRetriever(
+                    self.settings, db_session=session_factory()
+                )
+            except Exception:
+                self._enhanced_retriever = EnhancedHybridRetriever(self.settings, db_session=None)
+        return self._enhanced_retriever
 
     def retrieve(
         self,
@@ -242,6 +257,14 @@ class RegulationRAGService:
         mode: str = "hybrid",
         score_floor: Optional[float] = None,
     ) -> list[RegulationDoc]:
+        if mode == "hybrid_enhanced":
+            return self._get_enhanced_retriever().search(
+                query,
+                top_k=top_k,
+                jurisdiction=jurisdiction,
+                path=path,
+                doc_type=doc_type,
+            )
         if _is_off_topic_query(query) or _is_jurisdiction_mismatch(query, jurisdiction):
             return []
 
