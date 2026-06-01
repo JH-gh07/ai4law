@@ -181,6 +181,7 @@ class AssessmentService:
         trace_manifest_path: str,
         facts,
         diagnosis,
+        context_pack: GenerationContextPack | None = None,
     ) -> dict[str, str]:
         return self.renderer.render(
             task_id,
@@ -197,6 +198,9 @@ class AssessmentService:
             facts=facts,
             diagnosis_result=diagnosis.model_dump() if hasattr(diagnosis, "model_dump") else diagnosis,
             force_override=payload.force_override_path,
+            writing_strategy=context_pack.writing_strategy if context_pack else None,
+            generation_basis_pack=context_pack.generation_basis_pack if context_pack else None,
+            legal_grounding=context_pack.legal_grounding if context_pack else None,
         )
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:

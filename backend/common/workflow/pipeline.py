@@ -142,6 +142,7 @@ class WorkflowPipeline:
             trace_manifest_path=str(manifest),
             facts=facts,
             diagnosis=diagnosis,
+            context_pack=context_pack,
         )
 
         return WorkflowRunResult(

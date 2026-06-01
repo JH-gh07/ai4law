@@ -13,9 +13,15 @@ from backend.common.render.report import (
     safe_filename,
 )
 from backend.common.render.summary import attach_citations, dedup_if_same, summarize_for_slot
+from typing import Any
+
 from backend.common.workflow.evidence import EvidenceItem
 from backend.common.workflow.facts import FactItem
 from backend.common.workflow.issues import IssueItem
+from backend.modules.assessment.internal_review_generator import (
+    build_internal_review_payload,
+    generate_internal_review_markdown,
+)
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.docx")
@@ -65,6 +71,9 @@ class AssessmentReportRenderer:
         facts: list[FactItem] | None = None,
         diagnosis_result: dict | None = None,
         force_override: bool = False,
+        writing_strategy: dict[str, Any] | None = None,
+        generation_basis_pack: dict[str, Any] | None = None,
+        legal_grounding: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -114,6 +123,26 @@ class AssessmentReportRenderer:
             dest = output_dir / "trace_manifest.json"
             copy2(trace_manifest_path, dest)
             result["trace_manifest"] = str(dest)
+
+        # Enhanced outputs: internal review, legal grounding, writing strategy, generation basis pack
+        if issues and writing_strategy and generation_basis_pack:
+            internal_review_md = _write_internal_review(
+                issues=issues,
+                writing_strategy=writing_strategy,
+                generation_basis_pack=generation_basis_pack,
+                material_rows=material_rows,
+                output_dir=output_dir,
+            )
+            result["internal_review_md"] = str(internal_review_md)
+
+        if legal_grounding:
+            result["legal_grounding_json"] = _write_legal_grounding_json(legal_grounding, output_dir)
+
+        if writing_strategy:
+            result["writing_strategy_json"] = _write_writing_strategy_json(writing_strategy, output_dir)
+
+        if generation_basis_pack:
+            result["generation_basis_pack_json"] = _write_generation_basis_pack_json(generation_basis_pack, output_dir)
 
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             for key, path in result.items():
@@ -375,3 +404,52 @@ def _build_material_checklist_rows(
             "status": "待补充",
         }
     ]
+
+
+# ---------------------------------------------------------------------------
+# Batch 3: enhanced output artifact writers
+# ---------------------------------------------------------------------------
+
+
+def _write_internal_review(
+    *,
+    issues: list[IssueItem],
+    writing_strategy: dict[str, Any],
+    generation_basis_pack: dict[str, Any],
+    material_rows: list[dict[str, str]],
+    output_dir: Path,
+) -> Path:
+    payload = build_internal_review_payload(
+        issues=issues,
+        writing_strategy=writing_strategy,
+        generation_basis_pack=generation_basis_pack,
+        material_rows=material_rows,
+    )
+    content = generate_internal_review_markdown(payload=payload, llm_client=None)
+    path = output_dir / "internal_ai_review.md"
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+def _write_legal_grounding_json(legal_grounding: dict[str, Any], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "legal_grounding.json"
+    path.write_text(json.dumps(legal_grounding, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_writing_strategy_json(writing_strategy: dict[str, Any], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "writing_strategy.json"
+    path.write_text(json.dumps(writing_strategy, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_generation_basis_pack_json(generation_basis_pack: dict[str, Any], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "generation_basis_pack.json"
+    path.write_text(json.dumps(generation_basis_pack, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)

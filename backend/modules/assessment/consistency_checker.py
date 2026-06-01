@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from backend.common.workflow import GenerationContextPack
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile
 
@@ -94,6 +98,80 @@ def check_report_against_context(report_content: str, context_pack: GenerationCo
     return issues
 
 
+# ---------------------------------------------------------------------------
+# Batch 3: expression integrity checks
+# ---------------------------------------------------------------------------
+
+
+def _collect_forbidden_expressions(context_pack: GenerationContextPack) -> list[str]:
+    ws = context_pack.writing_strategy or {}
+    global_forbidden: list[str] = list(ws.get("global_forbidden_expressions", []))
+    issue_forbidden: list[str] = []
+    for strategy in ws.get("strategies", []):
+        if isinstance(strategy, dict):
+            issue_forbidden.extend(strategy.get("forbidden_expressions", []))
+    return sorted(set(global_forbidden + issue_forbidden))
+
+
+def check_forbidden_expressions(report_content: str, context_pack: GenerationContextPack) -> list[str]:
+    """Detect forbidden expressions in the external report."""
+    issues: list[str] = []
+    forbidden = _collect_forbidden_expressions(context_pack)
+    for expr in forbidden:
+        if expr in report_content:
+            issues.append(f"Forbidden expression in external report: '{expr}'.")
+    return issues
+
+
+def check_internal_expression_leakage(report_content: str, context_pack: GenerationContextPack) -> list[str]:
+    """Check that internal_expression content does not leak into the external report."""
+    issues: list[str] = []
+    ws = context_pack.writing_strategy or {}
+    for strategy in ws.get("strategies", []):
+        if not isinstance(strategy, dict):
+            continue
+        internal = strategy.get("internal_expression", "")
+        # Check if a meaningful fragment of internal_expression appears in report
+        # Skip short fragments (< 15 chars) to avoid false positives
+        for sentence in internal.replace("；", "。").split("。"):
+            sentence = sentence.strip()
+            if len(sentence) >= 15 and sentence in report_content:
+                issues.append(
+                    f"Internal expression leaked into external report for {strategy.get('issue_id', '?')}: "
+                    f"'{sentence[:60]}...'"
+                )
+    return issues
+
+
+def check_user_claim_positive_statement(report_content: str, context_pack: GenerationContextPack) -> list[str]:
+    """Check that user_claim_only facts are not used as sole basis for positive conclusions."""
+    issues: list[str] = []
+    positive_markers = ["已充分证明", "完全合规", "材料齐备", "无风险", "必然合法", "确认不涉及", "充分保障"]
+
+    user_claim_facts = [
+        fact for fact in context_pack.facts
+        if fact.evidence_status == "user_claim_only"
+    ]
+
+    for fact in user_claim_facts:
+        fact_value = str(fact.normalized_value or fact.value or "")
+        if not fact_value or len(fact_value) < 5:
+            continue
+        for marker in positive_markers:
+            if marker in report_content and fact_value[:20] in report_content:
+                # Only flag if both the fact value and a positive marker appear near each other
+                idx_value = report_content.find(fact_value[:20])
+                idx_marker = report_content.find(marker)
+                if abs(idx_value - idx_marker) < 500:
+                    issues.append(
+                        f"Positive claim '{marker}' may be based on user_claim_only fact "
+                        f"{fact.fact_id} (evidence_status=user_claim_only)."
+                    )
+                    break
+
+    return issues
+
+
 class ConsistencyChecker:
     def check(self, profile: CompanyProfile, chapters: list[ChapterContent]) -> list[str]:
         issues: list[str] = []
@@ -121,4 +199,7 @@ class ConsistencyChecker:
             *self.check(profile, chapters),
             *check_context_pack_consistency(context_pack),
             *check_report_against_context(report_content, context_pack),
+            *check_forbidden_expressions(report_content, context_pack),
+            *check_internal_expression_leakage(report_content, context_pack),
+            *check_user_claim_positive_statement(report_content, context_pack),
         ]
