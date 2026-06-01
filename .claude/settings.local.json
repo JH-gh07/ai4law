@@ -17,7 +17,15 @@
       "Bash(git commit -m ' *)",
       "Bash(npx tsc *)",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts',{}\\), indent=2\\)\\)\")",
-      "Bash(/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/node_modules/.bin/tsc --noEmit --project /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tsconfig.json)"
+      "Bash(/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/node_modules/.bin/tsc --noEmit --project /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tsconfig.json)",
+      "Bash(python3 -c \"import fastapi; print\\('fastapi OK'\\)\")",
+      "Read(//Users/oujiazhan/.local/share/uv/python/cpython-3.11.15-macos-x86_64-none/bin/**)",
+      "Bash(.venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(curl -s http://localhost:8000/docs -o /dev/null -w \"%{http_code}\")",
+      "Bash(env)",
+      "Bash(unset all_proxy)",
+      "Bash(python -c \"from backend.modules.assessment.service import *\")",
+      "Bash(python *)"
     ]
   }
 }
