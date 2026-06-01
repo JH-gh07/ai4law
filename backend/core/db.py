@@ -18,6 +18,7 @@ def build_session_factory(engine):
 
 def init_db(engine) -> None:
     from backend.models import auth, diagnosis, report, review, workspace  # noqa: F401
+    import backend.common.knowledge.models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _ensure_legacy_columns(engine)
