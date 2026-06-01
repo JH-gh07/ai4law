@@ -8,6 +8,7 @@ from backend.common.quality.alignment import check_cn_alignment
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.citation.audit import log_citations_created
 from backend.common.citation.registry import CitationRegistry
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.modules.assessment.chapter_generator import AssessmentChapterGenerator
@@ -148,6 +149,12 @@ class AssessmentService:
         citation_registry = CitationRegistry()
         for item in citation_items:
             citation_registry.register(item)
+
+        log_citations_created(
+            [item.citation_id for item in citation_items],
+            task_id=task_id,
+            report_id=task_id,
+        )
 
         return GenerationContextPack(
             module_key="assessment",
