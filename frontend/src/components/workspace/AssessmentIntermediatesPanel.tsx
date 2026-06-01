@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
+import {
+  fetchCitationMap,
+  type CitationDetail,
+} from "../../lib/citation-api";
+import { CitationPopover } from "../citation/CitationPopover";
+import { CitationSourceCard } from "../citation/CitationSourceCard";
 
 type IntermediatesSubTab =
   | "facts"
@@ -132,7 +138,7 @@ export function AssessmentIntermediatesPanel({ outputFiles, lang }: Props) {
             <p>{activeState.error}</p>
           </div>
         ) : activeSubTab === "report" ? (
-          <ReportTab preview={activeState.preview} lang={lang} />
+          <ReportTab preview={activeState.preview} lang={lang} filePath={filePath} />
         ) : (
           <DataTab tabId={activeSubTab} data={activeState.data} lang={lang} />
         )}
@@ -142,10 +148,28 @@ export function AssessmentIntermediatesPanel({ outputFiles, lang }: Props) {
 }
 
 // ---------------------------------------------------------------------------
-// Report tab — renders markdown content
+// Report tab — renders markdown content with citation markers
 // ---------------------------------------------------------------------------
 
-function ReportTab({ preview, lang }: { preview: ArtifactPreview | null; lang: "zh" | "en" }) {
+function extractTaskId(filePath: string | undefined): string | null {
+  if (!filePath) return null;
+  const match = filePath.match(/outputs\/assessment\/([a-f0-9-]+)/i);
+  return match ? match[1] : null;
+}
+
+function ReportTab({ preview, lang, filePath }: { preview: ArtifactPreview | null; lang: "zh" | "en"; filePath?: string }) {
+  const [citationMap, setCitationMap] = useState<Record<string, CitationDetail>>({});
+  const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
+
+  const taskId = extractTaskId(filePath);
+
+  useEffect(() => {
+    if (!taskId) return;
+    fetchCitationMap(taskId)
+      .then((res) => setCitationMap(res.footnote_map))
+      .catch(() => setCitationMap({}));
+  }, [taskId]);
+
   if (!preview || !preview.content) {
     return (
       <div className="assessment-intermediates-empty">
@@ -154,9 +178,50 @@ function ReportTab({ preview, lang }: { preview: ArtifactPreview | null; lang: "
     );
   }
 
+  // Split content on citation markers like [1], [2], etc.
+  const citationRegex = /\[(\d+)\]/g;
+  const parts: (string | number)[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = citationRegex.exec(preview.content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(preview.content.slice(lastIndex, match.index));
+    }
+    parts.push(parseInt(match[1], 10));
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < preview.content.length) {
+    parts.push(preview.content.slice(lastIndex));
+  }
+
   return (
     <article className="assessment-intermediates-report">
-      <pre className="assessment-intermediates-markdown">{preview.content}</pre>
+      <pre className="assessment-intermediates-markdown">
+        {parts.map((part, i) => {
+          if (typeof part === "number") {
+            const citation = citationMap[String(part)];
+            if (citation) {
+              return (
+                <span
+                  key={i}
+                  onClick={() => setSelectedCitation(citation)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <CitationPopover footnoteNumber={part} citation={citation} />
+                </span>
+              );
+            }
+            return <span key={i}>[{part}]</span>;
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </pre>
+      {selectedCitation && (
+        <CitationSourceCard
+          citation={selectedCitation}
+          onClose={() => setSelectedCitation(null)}
+        />
+      )}
     </article>
   );
 }

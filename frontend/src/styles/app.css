@@ -12177,3 +12177,203 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Citation marker, popover, and source card styles
+   --------------------------------------------------------------------------- */
+
+.citation-marker {
+  position: relative;
+  display: inline-flex;
+}
+
+.citation-sup {
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 0.82em;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.citation-sup:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.citation-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: max-content;
+  max-width: 320px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.citation-marker:hover .citation-popover {
+  display: flex;
+}
+
+.citation-popover-header {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.citation-popover-header strong {
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.citation-article {
+  color: #64748b;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.citation-popover-snippet {
+  color: #475569;
+  font-size: 0.78rem;
+  border-left: 2px solid #e2e8f0;
+  padding-left: 8px;
+}
+
+.citation-popover-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.citation-type-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.citation-type-law_article {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.citation-type-official_guide {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.citation-type-template_requirement {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.citation-type-standard_clause {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.citation-type-user_material {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.citation-authority-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.citation-authority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.citation-authority-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.citation-authority-low {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Citation detail grid (inside modal) */
+.citation-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 16px;
+  font-size: 0.88rem;
+}
+
+.citation-detail-grid dt {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.citation-detail-grid dd {
+  color: #0f172a;
+}
+
+.citation-detail-grid code {
+  font-size: 0.78rem;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #334155;
+}
+
+.citation-footnote-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.78rem;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.citation-detail-full {
+  grid-column: 1 / -1;
+}
+
+.citation-detail-quote {
+  background: #f8fafc;
+  border-left: 3px solid #e2e8f0;
+  padding: 8px 10px;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.citation-detail-mono {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.citation-detail-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.citation-detail-list code {
+  font-size: 0.72rem;
+}

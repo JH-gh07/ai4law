@@ -32,24 +32,15 @@ def ensure_paragraph_citations(
 def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
     """Convert {{CIT-xxx}} markers to [1], [2] footnotes in text.
 
-    Footnote numbers are assigned by first-appearance order within the text.
+    Uses global footnote numbering from the registry so a citation always
+    receives the same number across all chapters.
     """
     if not text:
         return text
 
-    # Build footnote map to determine numbering
-    footnote_map = registry.build_footnote_map(text)
-    if not footnote_map:
-        return text
-
-    # Create reverse lookup: citation_id → footnote_number
-    cid_to_num: dict[str, int] = {}
-    for num, item in footnote_map.items():
-        cid_to_num[item.citation_id] = num
-
     def _replace_marker(match: re.Match) -> str:
         cid = match.group(1)
-        num = cid_to_num.get(cid)
+        num = registry.assign_footnote_number(cid)
         if num is not None:
             return f"[{num}]"
         return ""

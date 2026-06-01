@@ -13,7 +13,7 @@ from backend.common.render.report import (
     safe_filename,
 )
 from backend.common.render.summary import attach_citations, dedup_if_same, summarize_for_slot
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from backend.common.workflow.evidence import EvidenceItem
 from backend.common.workflow.facts import FactItem
@@ -23,6 +23,9 @@ from backend.modules.assessment.internal_review_generator import (
     generate_internal_review_markdown,
 )
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
+
+if TYPE_CHECKING:
+    from backend.common.citation.registry import CitationRegistry
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.docx")
 TEMPLATE_MD = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.md")
@@ -74,6 +77,7 @@ class AssessmentReportRenderer:
         writing_strategy: dict[str, Any] | None = None,
         generation_basis_pack: dict[str, Any] | None = None,
         legal_grounding: dict[str, Any] | None = None,
+        citation_registry: "CitationRegistry | None" = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -82,7 +86,10 @@ class AssessmentReportRenderer:
         md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
         docx_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.docx"
         zip_output = output_dir / f"{safe_company}_安全评估路径输出包_草案_{date_stamp}.zip"
-        mapping = _build_template_mapping(profile, regulations, chapters, date_stamp, path_warning, alignment_warning)
+        mapping = _build_template_mapping(
+            profile, regulations, chapters, date_stamp, path_warning, alignment_warning,
+            citation_registry=citation_registry,
+        )
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
 
@@ -144,6 +151,9 @@ class AssessmentReportRenderer:
         if generation_basis_pack:
             result["generation_basis_pack_json"] = _write_generation_basis_pack_json(generation_basis_pack, output_dir)
 
+        if citation_registry is not None:
+            result["citation_map_json"] = _write_citation_map_json(citation_registry, output_dir)
+
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             for key, path in result.items():
                 if key == "zip":
@@ -162,6 +172,7 @@ def _build_template_mapping(
     date_stamp: str,
     path_warning: str | None = None,
     alignment_warning: str | None = None,
+    citation_registry: "CitationRegistry | None" = None,
 ) -> dict[str, str]:
     def pick(title: str) -> str:
         for chapter in chapters:
@@ -226,6 +237,7 @@ def _build_template_mapping(
         "overall_conclusion": conclusion,
         "remediation_items": attach_citations("详见风险识别与整改建议章节。", citations),
         "attachments": "- 无",
+        "citation_map": citation_registry.build_citation_map_section() if citation_registry else "",
     }
 
 
@@ -452,4 +464,19 @@ def _write_generation_basis_pack_json(generation_basis_pack: dict[str, Any], out
 
     path = output_dir / "generation_basis_pack.json"
     path.write_text(json.dumps(generation_basis_pack, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_citation_map_json(citation_registry: "CitationRegistry", output_dir: Path) -> str:
+    import json
+
+    footnote_map = citation_registry.get_footnote_map()
+    payload = {
+        "footnote_map": {
+            str(num): item.to_dict() for num, item in footnote_map.items()
+        },
+        "all_items": citation_registry.to_list(),
+    }
+    path = output_dir / "citation_map.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)

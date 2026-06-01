@@ -46,6 +46,7 @@ class ChapterContent(BaseModel):
     content: str
     citations: list[str] = Field(default_factory=list)
     risk_level: str
+    footnote_map: dict | None = None
 
 
 class AssessmentResult(BaseModel):

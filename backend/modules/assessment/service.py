@@ -217,6 +217,7 @@ class AssessmentService:
             writing_strategy=context_pack.writing_strategy if context_pack else None,
             generation_basis_pack=context_pack.generation_basis_pack if context_pack else None,
             legal_grounding=context_pack.legal_grounding if context_pack else None,
+            citation_registry=context_pack.citation_registry if context_pack else None,
         )
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:
