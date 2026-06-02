@@ -144,7 +144,7 @@ def build_assessment_issues(
     if recommended_path and recommended_path != "security_assessment" and recommended_path_fact:
         issues.append(
             _issue(
-                issue_id="ISSUE-path-mismatch",
+                issue_id="ISSUE-recommended-path-mismatch",
                 title="诊断路径与安全评估报告不匹配",
                 description=f"诊断模块推荐路径为 {recommended_path}，当前仍在生成安全评估报告。",
                 category="path",
@@ -176,7 +176,7 @@ def build_assessment_issues(
     if important_data_fact and important_data_fact.normalized_value is True:
         issues.append(
             _issue(
-                issue_id="ISSUE-important-data",
+                issue_id="ISSUE-important-data-security-assessment",
                 title="重要数据触发高风险路径",
                 description="输入事实显示本次出境涉及重要数据，应按安全评估口径处理。",
                 category="data_scope",

@@ -50,10 +50,10 @@ def test_ciio_important_data_and_missing_attachment_issues() -> None:
     by_id = {issue.issue_id: issue for issue in issues}
 
     assert "ISSUE-ciio-security-assessment" in by_id
-    assert "ISSUE-important-data" in by_id
+    assert "ISSUE-important-data-security-assessment" in by_id
     assert "ISSUE-missing-attachments" in by_id
     assert by_id["ISSUE-ciio-security-assessment"].rule_refs[0] == "diagnosis:ciio"
-    assert "reg-pipl-40" in by_id["ISSUE-important-data"].rule_refs
+    assert "reg-pipl-40" in by_id["ISSUE-important-data-security-assessment"].rule_refs
 
 
 def test_threshold_and_path_mismatch_issues_have_fact_refs() -> None:
@@ -75,7 +75,7 @@ def test_threshold_and_path_mismatch_issues_have_fact_refs() -> None:
     by_id = {issue.issue_id: issue for issue in issues}
     fact_ids = {fact.fact_id for fact in _facts(request, diagnosis)}
 
-    assert "ISSUE-path-mismatch" in by_id
+    assert "ISSUE-recommended-path-mismatch" in by_id
     assert "ISSUE-pii-threshold" in by_id
     assert "ISSUE-spi-threshold" in by_id
     for issue in issues:

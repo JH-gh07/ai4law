@@ -312,6 +312,13 @@ class ReviewService:
                             if field_value and field_name not in scenario_ctx.auto_extracted_facts:
                                 scenario_ctx.auto_extracted_facts[f"appendix_{field_name}"] = field_value
 
+            detected_jurisdiction = (
+                (scenario_ctx.auto_extracted_facts.get("detected_jurisdiction") if scenario_ctx else None)
+                or (classification.detected_jurisdiction if files else None)
+                or raw_ctx.get("target_jurisdiction")
+                or "cn"
+            )
+
             self._update_task(db, task, ReviewTaskStatus.PREPARING, 10)
 
             # ── Stage 1: SEGMENTING (10‑25%) ──
@@ -351,6 +358,7 @@ class ReviewService:
                         use_llm=use_llm,
                         document_type=doc_type,
                         scenario_context=scenario_dict,
+                        jurisdiction=str(detected_jurisdiction),
                     )
                 )
                 if index in checkpoints:

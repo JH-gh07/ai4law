@@ -39,6 +39,15 @@ class AssessmentRetriever:
                 path="assessment",
             )
         )
+        orchestrated_hits = [
+            RegulationHit(
+                source_id=chunk.source_id,
+                title=chunk.title,
+                article=chunk.citation_anchor or chunk.article_no,
+                snippet=chunk.content,
+            )
+            for chunk in self.last_bundle.legal_grounding
+        ]
         docs = retrieve_regulations(
             query,
             top_k=top_k,
@@ -47,7 +56,7 @@ class AssessmentRetriever:
             legal_service=self.legal_service,
             source=source,
         )
-        return [
+        fallback_hits = [
             RegulationHit(
                 source_id=doc.id,
                 title=doc.title,
@@ -56,3 +65,12 @@ class AssessmentRetriever:
             )
             for doc in docs
         ]
+        merged: list[RegulationHit] = []
+        seen: set[str] = set()
+        for item in [*orchestrated_hits, *fallback_hits]:
+            key = item.source_id or f"{item.title}:{item.article}"
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(item)
+        return merged

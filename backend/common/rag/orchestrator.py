@@ -312,6 +312,24 @@ class RetrievalOrchestrator:
                     environment=request.environment,
                 ).chunks
             )
+            if request.task_stage == "issue_discovery":
+                standard = self._search_index(
+                    "standard_clause_index_eu",
+                    request.query,
+                    top_k=max(3, request.top_k),
+                    filters={"module": request.module},
+                )
+                bundle.standard_clauses = UsagePolicyFilter.filter(
+                    standard,
+                    usage="legal_grounding",
+                    environment=request.environment,
+                ).chunks
+                bundle.legal_grounding = self._dedupe_chunks(
+                    [
+                        *bundle.legal_grounding,
+                        *self._legal_by_reference_ids_for_index(bundle.standard_clauses, "legal_index_eu"),
+                    ]
+                )
         if request.task_stage == "clause_compare":
             standard = self._search_index(
                 "standard_clause_index_eu",
@@ -381,6 +399,24 @@ class RetrievalOrchestrator:
                     environment=request.environment,
                 ).chunks
             )
+            if request.task_stage == "issue_discovery":
+                standard = self._search_index(
+                    "standard_clause_index_us",
+                    request.query,
+                    top_k=max(3, request.top_k),
+                    filters={"module": request.module},
+                )
+                bundle.standard_clauses = UsagePolicyFilter.filter(
+                    standard,
+                    usage="legal_grounding",
+                    environment=request.environment,
+                ).chunks
+                bundle.legal_grounding = self._dedupe_chunks(
+                    [
+                        *bundle.legal_grounding,
+                        *self._legal_by_reference_ids_for_index(bundle.standard_clauses, "legal_index_us"),
+                    ]
+                )
         if request.task_stage == "clause_compare":
             standard = self._search_index(
                 "standard_clause_index_us",

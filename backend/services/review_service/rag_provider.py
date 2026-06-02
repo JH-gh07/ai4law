@@ -16,8 +16,19 @@ class LocalRegulationKnowledgeBase:
         self._cache: dict[tuple[str, str, bool], dict] = {}
         self.orchestrator = RetrievalOrchestrator()
 
-    def lookup(self, clause_type: ClauseType, clause_text: str | None = None, enrich: bool = True) -> dict:
-        cache_key = (clause_type.value, (clause_text or "")[:160], enrich)
+    def lookup(
+        self,
+        clause_type: ClauseType,
+        clause_text: str | None = None,
+        enrich: bool = True,
+        *,
+        jurisdiction: str | None = None,
+        module: str | None = None,
+        document_type: str = "other",
+    ) -> dict:
+        resolved_jurisdiction = self._resolve_jurisdiction(clause_text or "", jurisdiction)
+        resolved_module = self._resolve_module(clause_type, clause_text or "", resolved_jurisdiction, module, document_type)
+        cache_key = (f"{resolved_jurisdiction}:{resolved_module}:{clause_type.value}", (clause_text or "")[:160], enrich)
         cached = self._cache.get(cache_key)
         if cached is not None:
             return dict(cached)
@@ -36,37 +47,38 @@ class LocalRegulationKnowledgeBase:
         structured_citations: list[dict] = []
         workflow_rules: list[dict] = []
         standard_clause_candidates: list[dict] = []
-        should_enrich = enrich and clause_type != ClauseType.OTHER and bool(clause_text and len(clause_text.strip()) >= 80)
+        should_enrich = enrich and clause_type != ClauseType.OTHER and bool(clause_text and len(clause_text.strip()) >= 40)
         if should_enrich:
+            path = "review"
             issue_bundle = self.orchestrator.retrieve(
                 RetrievalRequest(
-                    module="cn_review",
+                    module=resolved_module,
                     task_stage="issue_discovery",
                     query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
-                    document_type="other",
+                    document_type=document_type,
                     environment="production",
                     top_k=4,
-                    jurisdiction="cn",
-                    path="review",
+                    jurisdiction=resolved_jurisdiction,
+                    path=path,
                 )
             )
             compare_bundle = self.orchestrator.retrieve(
                 RetrievalRequest(
-                    module="cn_review",
+                    module=resolved_module,
                     task_stage="clause_compare",
                     query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
-                    document_type="other",
+                    document_type=document_type,
                     environment="production",
                     top_k=4,
-                    jurisdiction="cn",
-                    path="review",
+                    jurisdiction=resolved_jurisdiction,
+                    path=path,
                 )
             )
             rag_hits = issue_bundle.legal_grounding or retrieve_regulations(
                 query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
                 top_k=3,
-                jurisdiction="cn",
-                path="review",
+                jurisdiction=resolved_jurisdiction,
+                path=path,
                 mode="hybrid",
                 legal_service=self.legal_api_service,
             )
@@ -129,9 +141,47 @@ class LocalRegulationKnowledgeBase:
         config["workflow_rules"] = workflow_rules
         config["standard_clause_candidates"] = standard_clause_candidates
         config["usage_policy_debug"] = {
+            "jurisdiction": resolved_jurisdiction,
+            "module": resolved_module,
             "workflow_rule_count": len(workflow_rules),
             "standard_clause_candidate_count": len(standard_clause_candidates),
             "structured_citation_count": len(structured_citations),
         }
         self._cache[cache_key] = dict(config)
         return dict(config)
+
+    @staticmethod
+    def _resolve_jurisdiction(clause_text: str, explicit: str | None) -> str:
+        if explicit in {"cn", "eu", "us"}:
+            return explicit
+        lowered = clause_text.lower()
+        if any(token in lowered for token in ("gdpr", "edpb", "binding corporate rules", "bcr", "scc", "onward transfer")):
+            return "eu"
+        if any(token in lowered for token in ("cpra", "ccpa", "privacy notice", "vendor agreement", "eo 14117", "data brokerage")):
+            return "us"
+        return "cn"
+
+    @staticmethod
+    def _resolve_module(
+        clause_type: ClauseType,
+        clause_text: str,
+        jurisdiction: str,
+        explicit: str | None,
+        document_type: str,
+    ) -> str:
+        if explicit:
+            return explicit
+        lowered = clause_text.lower()
+        if jurisdiction == "cn":
+            return "cn_review"
+        if jurisdiction == "eu":
+            if "binding corporate rules" in lowered or "bcr" in lowered:
+                return "eu_bcr"
+            if clause_type == ClauseType.SUPPLEMENTARY_MEASURES:
+                return "eu_tia"
+            return "eu_scc" if document_type == "scc_contract" or clause_type in {ClauseType.ONWARD_TRANSFER, ClauseType.GOVERNMENT_ACCESS} else "eu_bcr"
+        if "eo 14117" in lowered or "data brokerage" in lowered or document_type == "vendor_agreement":
+            return "us_eo14117"
+        if document_type == "privacy_policy" or clause_type in {ClauseType.RIGHTS_REQUEST, ClauseType.SENSITIVE_PI}:
+            return "us_privacy_review"
+        return "us_vendor_review"

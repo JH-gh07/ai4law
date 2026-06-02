@@ -535,15 +535,6 @@ def build_legal_chunks_eu() -> list[KnowledgeChunkV2]:
     if not NORMALIZED_JSONL.exists():
         return chunks
 
-    module_by_path = {
-        "scc": "eu_scc",
-        "bcr": "eu_bcr",
-        "dpia": "eu_dpia",
-        "tia": "eu_tia",
-        "scc|tia": "eu_tia",
-        "all": "eu_scc",
-    }
-
     with NORMALIZED_JSONL.open("r", encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
@@ -557,42 +548,46 @@ def build_legal_chunks_eu() -> list[KnowledgeChunkV2]:
             source_row = source_rows.get(source_id, {})
             title = str(row.get("law_name") or source_row.get("title") or "")
             path = str(row.get("path") or source_row.get("path") or "all")
-            module = module_by_path.get(path, "eu_scc")
             source_kind = registry_entry.source_kind if registry_entry is not None else "law_article"
             allowed_usage = list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"]
-            chunks.append(
-                KnowledgeChunkV2(
-                    chunk_id=str(row.get("article_id") or ""),
-                    source_id=source_id,
-                    title=title,
-                    content=str(row.get("content") or ""),
-                    layer="L1_regulatory_evidence",
-                    template_type="none",
-                    source_kind=str(source_kind),
-                    module=module,
-                    jurisdiction="eu",
-                    doc_type=str(row.get("doc_type") or source_row.get("doc_type") or "law"),
-                    authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
-                    binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
-                    allowed_usage=allowed_usage,
-                    can_be_cited=True,
-                    can_enter_external_report=True,
-                    reference_ids=[],
-                    citation_anchor=str(row.get("article_ref") or ""),
-                    scenario_tags=[path],
-                    chunk_strategy="article_split",
-                    article_no=str(row.get("article_ref") or ""),
-                    path=path,
-                    source_url=str(row.get("source_url") or source_row.get("url") or ""),
-                    snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
-                    keywords=[str(item) for item in row.get("keywords", [])],
-                    structured_payload={
-                        "status": str(row.get("status") or source_row.get("status") or "effective"),
-                        "publish_date": str(row.get("publish_date") or ""),
-                        "effective_date": str(row.get("effective_date") or ""),
-                    },
+            modules = [
+                item for item in (registry_entry.modules if registry_entry is not None else [])
+                if str(item).startswith("eu_")
+            ] or ["eu_scc"]
+            for module in modules:
+                chunks.append(
+                    KnowledgeChunkV2(
+                        chunk_id=f"{row.get('article_id') or ''}::{module}",
+                        source_id=source_id,
+                        title=title,
+                        content=str(row.get("content") or ""),
+                        layer="L1_regulatory_evidence",
+                        template_type="none",
+                        source_kind=str(source_kind),
+                        module=module,
+                        jurisdiction="eu",
+                        doc_type=str(row.get("doc_type") or source_row.get("doc_type") or "law"),
+                        authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
+                        binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
+                        allowed_usage=allowed_usage,
+                        can_be_cited=True,
+                        can_enter_external_report=True,
+                        reference_ids=[],
+                        citation_anchor=str(row.get("article_ref") or ""),
+                        scenario_tags=[path, module],
+                        chunk_strategy="article_split",
+                        article_no=str(row.get("article_ref") or ""),
+                        path=path,
+                        source_url=str(row.get("source_url") or source_row.get("url") or ""),
+                        snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
+                        keywords=[str(item) for item in row.get("keywords", [])],
+                        structured_payload={
+                            "status": str(row.get("status") or source_row.get("status") or "effective"),
+                            "publish_date": str(row.get("publish_date") or ""),
+                            "effective_date": str(row.get("effective_date") or ""),
+                        },
+                    )
                 )
-            )
     return chunks
 
 
@@ -917,13 +912,6 @@ def build_legal_chunks_us() -> list[KnowledgeChunkV2]:
     if not NORMALIZED_JSONL.exists():
         return chunks
 
-    module_by_path = {
-        "eo14117": "us_eo14117",
-        "vendor": "us_vendor_review",
-        "privacy": "us_privacy_review",
-        "all": "us_vendor_review",
-    }
-
     with NORMALIZED_JSONL.open("r", encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
@@ -937,42 +925,46 @@ def build_legal_chunks_us() -> list[KnowledgeChunkV2]:
             source_row = source_rows.get(source_id, {})
             title = str(row.get("law_name") or source_row.get("title") or "")
             path = str(row.get("path") or source_row.get("path") or "all")
-            module = module_by_path.get(path, "us_vendor_review")
             source_kind = registry_entry.source_kind if registry_entry is not None else "law_article"
             allowed_usage = list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"]
-            chunks.append(
-                KnowledgeChunkV2(
-                    chunk_id=str(row.get("article_id") or ""),
-                    source_id=source_id,
-                    title=title,
-                    content=str(row.get("content") or ""),
-                    layer="L1_regulatory_evidence",
-                    template_type="none",
-                    source_kind=str(source_kind),
-                    module=module,
-                    jurisdiction="us",
-                    doc_type=str(row.get("doc_type") or source_row.get("doc_type") or "law"),
-                    authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
-                    binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
-                    allowed_usage=allowed_usage,
-                    can_be_cited=True,
-                    can_enter_external_report=True,
-                    reference_ids=[],
-                    citation_anchor=str(row.get("article_ref") or ""),
-                    scenario_tags=[path],
-                    chunk_strategy="article_split",
-                    article_no=str(row.get("article_ref") or ""),
-                    path=path,
-                    source_url=str(row.get("source_url") or source_row.get("url") or ""),
-                    snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
-                    keywords=[str(item) for item in row.get("keywords", [])],
-                    structured_payload={
-                        "status": str(row.get("status") or source_row.get("status") or "effective"),
-                        "publish_date": str(row.get("publish_date") or ""),
-                        "effective_date": str(row.get("effective_date") or ""),
-                    },
+            modules = [
+                item for item in (registry_entry.modules if registry_entry is not None else [])
+                if str(item).startswith("us_")
+            ] or ["us_vendor_review"]
+            for module in modules:
+                chunks.append(
+                    KnowledgeChunkV2(
+                        chunk_id=f"{row.get('article_id') or ''}::{module}",
+                        source_id=source_id,
+                        title=title,
+                        content=str(row.get("content") or ""),
+                        layer="L1_regulatory_evidence",
+                        template_type="none",
+                        source_kind=str(source_kind),
+                        module=module,
+                        jurisdiction="us",
+                        doc_type=str(row.get("doc_type") or source_row.get("doc_type") or "law"),
+                        authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
+                        binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
+                        allowed_usage=allowed_usage,
+                        can_be_cited=True,
+                        can_enter_external_report=True,
+                        reference_ids=[],
+                        citation_anchor=str(row.get("article_ref") or ""),
+                        scenario_tags=[path, module],
+                        chunk_strategy="article_split",
+                        article_no=str(row.get("article_ref") or ""),
+                        path=path,
+                        source_url=str(row.get("source_url") or source_row.get("url") or ""),
+                        snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
+                        keywords=[str(item) for item in row.get("keywords", [])],
+                        structured_payload={
+                            "status": str(row.get("status") or source_row.get("status") or "effective"),
+                            "publish_date": str(row.get("publish_date") or ""),
+                            "effective_date": str(row.get("effective_date") or ""),
+                        },
+                    )
                 )
-            )
     return chunks
 
 

@@ -88,7 +88,7 @@ class StandardClauseDiffer:
         risky: list[str] = []
 
         token_hints = {
-            "standard_contract_priority": ["标准合同", "优先", "不一致"],
+            "standard_contract_priority": ["标准合同优先", "标准合同正文优先", "以标准合同为准"],
             "no_conflicting_master_agreement": ["主服务协议", "不一致", "为准"],
             "timely_response": ["及时", "响应", "处理"],
             "no_unbounded_delay": ["暂缓", "视情况", "酌情"],
@@ -108,6 +108,10 @@ class StandardClauseDiffer:
             hints = token_hints.get(obligation, [obligation])
             if not any(hint.lower() in lower_text for hint in hints):
                 missing.append(obligation)
+            if obligation == "standard_contract_priority":
+                if any(marker.lower() in lower_text for marker in ("主服务协议为准", "其他优先条款", "优先适用顺序")):
+                    if obligation not in missing:
+                        missing.append(obligation)
             if obligation in {"no_unbounded_delay", "no_excessive_liability_cap", "no_full_responsibility_shift"}:
                 if any(hint.lower() in lower_text for hint in hints):
                     weakened.append(obligation)

@@ -15,7 +15,7 @@ _MATERIAL_ISSUE_IDS = {
 
 
 _EVIDENCE_WORDING: dict[str, tuple[str, str]] = {
-    "ISSUE-path-mismatch": (
+    "ISSUE-recommended-path-mismatch": (
         "诊断路径与安全评估报告不匹配",
         "诊断模块推荐路径与当前生成的安全评估报告不一致，需标注为强制生成的参考草案。",
     ),
@@ -23,7 +23,7 @@ _EVIDENCE_WORDING: dict[str, tuple[str, str]] = {
         "CIIO 事实触发安全评估路径判断",
         "企业被标记为 CIIO，应按安全评估路径准备申报和自评估材料。",
     ),
-    "ISSUE-important-data": (
+    "ISSUE-important-data-security-assessment": (
         "重要数据事实触发安全评估路径判断",
         "本次出境涉及重要数据，应按安全评估高风险口径处理。",
     ),

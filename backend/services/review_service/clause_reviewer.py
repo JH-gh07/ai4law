@@ -22,12 +22,18 @@ from backend.schemas.review import (
 from backend.services.review_service.rag_provider import LocalRegulationKnowledgeBase
 from backend.services.review_service.rulebook_loader import RulebookLoader
 from backend.services.review_service.standard_clause import StandardClauseDiffer, StandardClauseLocator
+from backend.common.knowledge.v2 import KnowledgeChunkV2
+from backend.common.knowledge.registry import ensure_source_registry
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
     from backend.services.review_service.specialized_reviewers.base_reviewer import BaseSpecializedReviewer
 
 logger = logging.getLogger(__name__)
+_SOURCE_TITLE_TO_IDS = {
+    entry.title.replace("《", "").replace("》", ""): entry.source_id
+    for entry in ensure_source_registry()
+}
 
 _REVIEW_SYSTEM_PROMPT = (
     "你是一名专注于中国个人信息保护合规的资深律师，深度掌握《个人信息保护法》"
@@ -81,13 +87,20 @@ class ClauseReviewer:
         use_llm: bool = True,
         document_type: str = "other",
         scenario_context: dict | None = None,
+        jurisdiction: str = "cn",
+        module: str | None = None,
     ) -> list[ReviewIssue]:
         """Review a single classified clause.
 
         Returns list of ReviewIssue (may be empty if no issues found).
         """
         config = self.knowledge_base.lookup(
-            clause.clause_type, clause.text if use_llm else None, enrich=use_llm,
+            clause.clause_type,
+            clause.text,
+            enrich=bool(clause.text and clause.text.strip()),
+            jurisdiction=jurisdiction,
+            module=module,
+            document_type=document_type,
         )
 
         issues: list[ReviewIssue] = []
@@ -147,15 +160,17 @@ class ClauseReviewer:
         candidate_dicts = config.get("standard_clause_candidates", []) or []
         if not candidate_dicts:
             return []
-        from backend.common.knowledge.v2 import KnowledgeChunkV2
-
         candidates = [KnowledgeChunkV2.model_validate(item) for item in candidate_dicts]
         matched = self.standard_clause_locator.locate(clause, candidates)
         diff = self.standard_clause_differ.diff(clause, matched)
         if not diff.matched_chunk:
             return []
 
-        citations = self._build_structured_citations(config.get("citations", []), config.get("structured_citations", []))
+        citations = self._build_structured_citations(
+            config.get("citations", []),
+            config.get("structured_citations", []),
+            standard_clause=diff.matched_chunk,
+        )
         issues: list[ReviewIssue] = []
 
         if diff.missing_obligations:
@@ -492,11 +507,25 @@ class ClauseReviewer:
     # ------------------------------------------------------------------
 
     def _build_structured_citations(
-        self, raw_citations: list[str], structured_seed: list[dict] | None = None,
+        self,
+        raw_citations: list[str],
+        structured_seed: list[dict] | None = None,
+        standard_clause: KnowledgeChunkV2 | None = None,
     ) -> list[StructuredCitation]:
         """Convert raw citation strings into StructuredCitation objects."""
         result: list[StructuredCitation] = []
         seen: set[str] = set()
+        if standard_clause is not None:
+            standard_citation = StructuredCitation(
+                source_id=standard_clause.source_id,
+                source_title=standard_clause.title,
+                article=standard_clause.citation_anchor or standard_clause.article_no,
+                snippet=standard_clause.content[:200],
+                source_type=str(standard_clause.source_kind or "standard_clause"),
+            )
+            key = f"{standard_citation.source_title}::{standard_citation.article}"
+            seen.add(key)
+            result.append(standard_citation)
         for item in structured_seed or []:
             citation = StructuredCitation(
                 source_id=str(item.get("source_id", "")),
@@ -530,13 +559,20 @@ class ClauseReviewer:
             seen.add(key)
 
             result.append(StructuredCitation(
-                source_id=f"cite-{hash(raw) & 0xFFFFFFFF:08x}",
+                source_id=self._canonical_source_id(source_title, raw),
                 source_title=source_title,
                 article=article,
                 snippet=raw[:200],
                 source_type="statute",
             ))
         return result
+
+    @staticmethod
+    def _canonical_source_id(source_title: str, raw: str) -> str:
+        clean_title = source_title.replace("《", "").replace("》", "").strip()
+        if clean_title in _SOURCE_TITLE_TO_IDS:
+            return _SOURCE_TITLE_TO_IDS[clean_title]
+        return f"cite-{hash(raw) & 0xFFFFFFFF:08x}"
 
     @staticmethod
     def _severity_for(clause_type: ClauseType) -> ReviewSeverity:

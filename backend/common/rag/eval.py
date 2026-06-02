@@ -100,6 +100,11 @@ def run_retrieval_eval(target: str = "cn") -> dict[str, Any]:
                 *bundle.standard_clauses,
                 *bundle.legal_grounding,
             ])
+        elif stage == "issue_discovery":
+            items = orchestrator.dedupe_by_source([
+                *bundle.standard_clauses,
+                *bundle.legal_grounding,
+            ])
         else:
             items = orchestrator.dedupe_by_source(bundle.legal_grounding)
         retrieved_ids = [item.source_id for item in items]
@@ -300,6 +305,20 @@ def _us_review_case_payload(case_id: str) -> tuple[ClauseType, str]:
     return mapping[case_id]
 
 
+def _review_eval_context(module: str) -> tuple[str, str]:
+    if module == "cn_review":
+        return "cn", "cn_review"
+    if module == "eu_scc":
+        return "eu", "eu_scc"
+    if module == "eu_bcr":
+        return "eu", "eu_bcr"
+    if module == "us_eo14117":
+        return "us", "us_eo14117"
+    if module == "us_privacy_review":
+        return "us", "us_privacy_review"
+    return "cn", "cn_review"
+
+
 def run_generation_eval(target: str = "cn") -> dict[str, Any]:
     cases = _load_eval_cases("generation", target)
     kb = LocalRegulationKnowledgeBase()
@@ -365,10 +384,24 @@ def run_generation_eval(target: str = "cn") -> dict[str, Any]:
                 position=ClausePosition(),
             )
             document_type = "scc_contract" if case["case_id"] in {"GEN-CN-REVIEW-001", "GEN-CN-REVIEW-002", "GEN-CN-REVIEW-003"} else "dpa"
-            issues = reviewer.review(clause, use_llm=True, document_type=document_type)
+            issues = reviewer.review(
+                clause,
+                use_llm=True,
+                document_type=document_type,
+                jurisdiction="cn",
+                module="cn_review",
+            )
             issue_titles = {issue.title for issue in issues}
             structured_citations = [citation.model_dump() for issue in issues for citation in issue.structured_citations]
             lookup = kb.lookup(clause_type, clause_text, enrich=True)
+            lookup = kb.lookup(
+                clause_type,
+                clause_text,
+                enrich=True,
+                jurisdiction="cn",
+                module="cn_review",
+                document_type=document_type,
+            )
             workflow_rules = lookup.get("workflow_rules", [])
             standard_candidates = lookup.get("standard_clause_candidates", [])
             required_issues = set(case.get("must_find_issues", []))
@@ -410,32 +443,46 @@ def run_generation_eval(target: str = "cn") -> dict[str, Any]:
                 clause_type=clause_type,
                 position=ClausePosition(),
             )
-            lookup = kb.orchestrator.retrieve(
-                RetrievalRequest(
-                    module=case["module"],
-                    task_stage="clause_compare",
-                    query=clause_text,
-                    document_type="scc_contract" if case["module"] == "eu_scc" else "other",
-                    jurisdiction="eu",
-                    path="review",
-                    environment="eval",
-                )
+            document_type = "scc_contract" if case["module"] == "eu_scc" else "other"
+            issues = reviewer.review(
+                clause,
+                use_llm=False,
+                document_type=document_type,
+                jurisdiction="eu",
+                module=case["module"],
             )
-            issue_recall = 1.0 if lookup.standard_clauses else 0.0
+            issue_titles = {issue.title for issue in issues}
+            citation_ids = {
+                citation.source_id
+                for issue in issues
+                for citation in issue.structured_citations
+                if citation.source_id
+            }
+            expected_issues = set(case.get("must_find_issues", []))
+            issue_recall = 1.0 if expected_issues and expected_issues.intersection(issue_titles) else (1.0 if issues else 0.0)
             citation_correct = len(
-                set(case.get("must_cite_source_ids", [])).intersection({item.source_id for item in lookup.standard_clauses} | {item.source_id for item in lookup.legal_grounding})
+                set(case.get("must_cite_source_ids", [])).intersection(citation_ids)
             ) / max(len(case.get("must_cite_source_ids", [])), 1)
+            forbidden_count = sum(
+                1
+                for issue in issues
+                for citation in issue.structured_citations
+                if getattr(citation, "source_type", "") in set(case.get("must_not_use_layers", []))
+            )
+            unsupported_claim = 1.0 if not issues else 0.0
             results.append(
                 {
                     "case_id": case["case_id"],
                     "issue_recall": issue_recall,
                     "citation_correctness": citation_correct,
-                    "forbidden_source_leakage": 0,
-                    "unsupported_claim": 0.0,
+                    "forbidden_source_leakage": forbidden_count,
+                    "unsupported_claim": unsupported_claim,
                 }
             )
             issue_recall_total += issue_recall
             citation_correct_total += citation_correct
+            forbidden_source_leakage_total += forbidden_count
+            unsupported_claim_total += unsupported_claim
         elif case["module"] in {"us_eo14117", "us_privacy_review"}:
             clause_type, clause_text = _us_review_case_payload(case["case_id"])
             clause = ClassifiedClause(
@@ -445,34 +492,41 @@ def run_generation_eval(target: str = "cn") -> dict[str, Any]:
                 clause_type=clause_type,
                 position=ClausePosition(),
             )
-            task_stage = "clause_compare" if case["module"] == "us_eo14117" else "issue_discovery"
-            lookup = kb.orchestrator.retrieve(
-                RetrievalRequest(
-                    module=case["module"],
-                    task_stage=task_stage,
-                    query=clause_text,
-                    document_type="vendor_agreement" if case["module"] == "us_eo14117" else "privacy_policy",
-                    jurisdiction="us",
-                    path="review",
-                    environment="eval",
-                )
+            document_type = "vendor_agreement" if case["module"] == "us_eo14117" else "privacy_policy"
+            issues = reviewer.review(
+                clause,
+                use_llm=False,
+                document_type=document_type,
+                jurisdiction="us",
+                module=case["module"],
             )
-            retrieved_ids = {item.source_id for item in lookup.standard_clauses} | {item.source_id for item in lookup.legal_grounding}
-            issue_recall = 1.0 if retrieved_ids else 0.0
+            issue_titles = {issue.title for issue in issues}
+            citation_ids = {
+                citation.source_id
+                for issue in issues
+                for citation in issue.structured_citations
+                if citation.source_id
+            }
+            expected_issues = set(case.get("must_find_issues", []))
+            issue_recall = 1.0 if expected_issues and expected_issues.intersection(issue_titles) else (1.0 if issues else 0.0)
             citation_correct = len(
-                set(case.get("must_cite_source_ids", [])).intersection(retrieved_ids)
+                set(case.get("must_cite_source_ids", [])).intersection(citation_ids)
             ) / max(len(case.get("must_cite_source_ids", [])), 1)
+            forbidden_count = 0
+            unsupported_claim = 1.0 if not issues else 0.0
             results.append(
                 {
                     "case_id": case["case_id"],
                     "issue_recall": issue_recall,
                     "citation_correctness": citation_correct,
-                    "forbidden_source_leakage": 0,
-                    "unsupported_claim": 0.0,
+                    "forbidden_source_leakage": forbidden_count,
+                    "unsupported_claim": unsupported_claim,
                 }
             )
             issue_recall_total += issue_recall
             citation_correct_total += citation_correct
+            forbidden_source_leakage_total += forbidden_count
+            unsupported_claim_total += unsupported_claim
 
     count = max(len(cases), 1)
     return {

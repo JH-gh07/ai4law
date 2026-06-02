@@ -33,9 +33,26 @@ def test_eu_retrieval_eval_runs() -> None:
     result = run_retrieval_eval(target="eu")
     assert result["target"] == "eu"
     assert result["case_count"] >= 2
+    assert result["Cross-jurisdiction contamination rate"] == 0.0
+
+
+def test_eu_generation_eval_runs() -> None:
+    result = run_generation_eval(target="eu")
+    assert result["target"] == "eu"
+    assert result["case_count"] >= 2
+    assert result["Citation correctness"] > 0
 
 
 def test_us_retrieval_eval_runs() -> None:
     result = run_retrieval_eval(target="us")
     assert result["target"] == "us"
     assert result["case_count"] >= 2
+    assert result["Recall@K"] > 0
+    assert result["Cross-jurisdiction contamination rate"] == 0.0
+
+
+def test_us_generation_eval_runs() -> None:
+    result = run_generation_eval(target="us")
+    assert result["target"] == "us"
+    assert result["case_count"] >= 2
+    assert result["Citation correctness"] > 0
