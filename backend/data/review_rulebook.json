@@ -150,6 +150,15 @@
       ],
       "dsl_checks": [
         {
+          "id": "vague_purpose_cb",
+          "pattern": "根据需要|视情况|可能.*处理|包括但不限于|根据.*业务.*需要|基于.*业务.*需求",
+          "severity": "MEDIUM",
+          "problem_type": "AMBIGUOUS_LANGUAGE",
+          "title_template": "处理目的表述存在模糊空间",
+          "risk_analysis_template": "条款使用了模糊表述，可能导致处理目的超出用户合理预期或监管审查时无法明确界定处理范围。",
+          "recommendation_template": "建议将处理目的细化至具体业务场景，避免使用'可能'、'视情况'等不确定措辞。"
+        },
+        {
           "id": "no_legal_mechanism",
           "pattern_missing": ["安全评估", "标准合同", "保护认证", "认证", "评估", "合同"],
           "severity": "HIGH",

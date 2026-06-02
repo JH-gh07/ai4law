@@ -145,8 +145,15 @@ class ClauseReviewer:
 
         dsl_checks = config.get("dsl_checks", [])
         if not dsl_checks:
-            # Try loading from rulebook directly
+            # Try loading from rulebook directly (primary type)
             dsl_checks = self.rulebook.get_dsl_checks(clause.clause_type.value)
+
+        # ── Also check DSL rules from secondary types ──
+        for st in clause.secondary_types:
+            secondary_dsl = self.rulebook.get_dsl_checks(st.value)
+            for ck in secondary_dsl:
+                if ck not in dsl_checks:
+                    dsl_checks.append(ck)
 
         for check in dsl_checks:
             triggered = False

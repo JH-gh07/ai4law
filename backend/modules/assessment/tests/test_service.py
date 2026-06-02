@@ -159,6 +159,7 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
     assert "report_against_context" in consistency_event["payload"]["checks"]
 
 
+
 def test_assessment_rejects_path_mismatch_without_force(monkeypatch, tmp_path) -> None:
     _disable_external_services(monkeypatch)
     _install_test_templates(monkeypatch, tmp_path)

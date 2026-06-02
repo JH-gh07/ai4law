@@ -41,6 +41,15 @@ from backend.services.review_service.consistency_checker import (
     CrossDocConsistencyChecker,
     DocumentWithClauses,
 )
+from backend.services.review_service.structured_document_parser import (
+    StructuredDocumentParser,
+)
+from backend.services.review_service.citation_relevance_checker import (
+    CitationRelevanceChecker,
+)
+from backend.services.review_service.annotated_docx_builder import (
+    AnnotatedDocxBuilder,
+)
 from backend.services.review_service.specialized_reviewers.privacy_policy_reviewer import (
     PrivacyPolicyReviewer,
 )
@@ -147,6 +156,9 @@ class ReviewService:
             rulebook_loader=self.rulebook,
         )
         self.renderer = ReviewReportRenderer()
+        self.structured_parser = StructuredDocumentParser()
+        self.citation_checker = CitationRelevanceChecker()
+        self.annotated_builder = AnnotatedDocxBuilder()
 
     def create_task(self, db: Session, user_id: str) -> ReviewTaskCreateResponse:
         task = self.repository.create_task(db, user_id)
@@ -251,8 +263,23 @@ class ReviewService:
             )
 
             # Classify first document's text if user didn't specify type
+            structured_docs: dict[str, object] = {}
             if files:
-                combined_text = "\n\n".join(f.extracted_text or "" for f in files)[:6000]
+                # ── StructuredDocumentParser: extract tables, appendix fields ──
+                combined_text_parts: list[str] = []
+                for f in files:
+                    try:
+                        storage_path = Path(f.storage_path) if f.storage_path else None
+                        if storage_path and storage_path.exists():
+                            sdoc = self.structured_parser.parse(f.id, storage_path)
+                            structured_docs[f.id] = sdoc
+                            combined_text_parts.append(sdoc.plain_text)
+                        else:
+                            combined_text_parts.append(f.extracted_text or "")
+                    except Exception:
+                        combined_text_parts.append(f.extracted_text or "")
+
+                combined_text = "\n\n".join(combined_text_parts)[:6000]
                 first_file = files[0]
 
                 if doc_type == "other" or not doc_type:
@@ -277,6 +304,13 @@ class ReviewService:
                     ),
                     document_classification=classification,
                 )
+
+                # ── Inject structured appendix fields into scenario ──
+                for sdoc in structured_docs.values():
+                    if hasattr(sdoc, "appendix_fields") and sdoc.appendix_fields:
+                        for field_name, field_value in sdoc.appendix_fields.items():
+                            if field_value and field_name not in scenario_ctx.auto_extracted_facts:
+                                scenario_ctx.auto_extracted_facts[f"appendix_{field_name}"] = field_value
 
             self._update_task(db, task, ReviewTaskStatus.PREPARING, 10)
 
@@ -322,6 +356,14 @@ class ReviewService:
                 if index in checkpoints:
                     progress = 57 + int((index / max(len(reviewable), 1)) * 22)
                     self._update_task(db, task, ReviewTaskStatus.REVIEWING, min(progress, 79))
+
+            # ── Citation relevance check ──
+            for issue in issues:
+                relevance = self.citation_checker.check(issue)
+                if not relevance.get("relevant", True):
+                    issue.risk_analysis += (
+                        f" ｜ 引用相关性警告：{'; '.join(relevance.get('issues', []))}"
+                    )
 
             self._update_task(db, task, ReviewTaskStatus.REVIEWING, 80)
 
@@ -376,6 +418,22 @@ class ReviewService:
                     "review_mode": review_mode,
                 },
             )
+
+            # ── Annotated DOCX (source doc with inline comments) ──
+            annotated_output_dir = Path("outputs/review") / task_id / "outputs"
+            annotated_output_dir.mkdir(parents=True, exist_ok=True)
+            for f in files:
+                try:
+                    storage_path = Path(f.storage_path) if f.storage_path else None
+                    if storage_path and storage_path.exists() and storage_path.suffix == ".docx":
+                        annotated_path = annotated_output_dir / f"annotated_{f.filename}"
+                        self.annotated_builder.build(
+                            source_docx_path=storage_path,
+                            issues=[i for i in aggregated.issues if i.file_id == f.id],
+                            output_path=annotated_path,
+                        )
+                except Exception:
+                    pass  # Annotated DOCX is best-effort; don't fail the whole pipeline
 
             task.issues_json = dumps([issue.model_dump() for issue in aggregated.issues])
             task.summary_json = dumps(aggregated.model_dump())
