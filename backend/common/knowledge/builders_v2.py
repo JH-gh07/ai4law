@@ -526,3 +526,43 @@ def build_testcase_chunks_cn() -> list[KnowledgeChunkV2]:
             )
         )
     return chunks
+
+
+def build_legal_chunks_eu() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_workflow_chunks_eu() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_standard_clause_chunks_eu() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_template_chunks_eu() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_testcase_chunks_eu() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_legal_chunks_us() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_workflow_chunks_us() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_standard_clause_chunks_us() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_template_chunks_us() -> list[KnowledgeChunkV2]:
+    return []
+
+
+def build_testcase_chunks_us() -> list[KnowledgeChunkV2]:
+    return []

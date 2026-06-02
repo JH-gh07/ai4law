@@ -19,16 +19,91 @@ DEFAULT_MODULE_CATALOG = {
             "indexes": ["workflow_index_cn", "legal_index_cn"],
             "stages": ["path_diagnosis", "legal_grounding"],
             "default_usage_scopes": ["internal_review", "legal_grounding"],
+            "jurisdiction": "cn",
+            "production_enabled": True,
+            "requires_standard_clause_index": False,
+            "template_policy": "official_only",
         },
         "cn_assessment": {
             "indexes": ["workflow_index_cn", "legal_index_cn", "template_index_cn", "testcase_index_cn"],
             "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
             "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "cn",
+            "production_enabled": True,
+            "requires_standard_clause_index": False,
+            "template_policy": "official_only",
         },
         "cn_review": {
             "indexes": ["workflow_index_cn", "legal_index_cn", "standard_clause_index_cn", "template_index_cn", "testcase_index_cn"],
             "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
             "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "cn",
+            "production_enabled": True,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
+        },
+        "eu_scc": {
+            "indexes": ["workflow_index_eu", "legal_index_eu", "standard_clause_index_eu", "template_index_eu", "testcase_index_eu"],
+            "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "eu",
+            "production_enabled": False,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
+        },
+        "eu_bcr": {
+            "indexes": ["workflow_index_eu", "legal_index_eu", "standard_clause_index_eu", "template_index_eu", "testcase_index_eu"],
+            "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "eu",
+            "production_enabled": False,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
+        },
+        "eu_dpia": {
+            "indexes": ["workflow_index_eu", "legal_index_eu", "template_index_eu", "testcase_index_eu"],
+            "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "eu",
+            "production_enabled": False,
+            "requires_standard_clause_index": False,
+            "template_policy": "official_only",
+        },
+        "eu_tia": {
+            "indexes": ["workflow_index_eu", "legal_index_eu", "template_index_eu", "testcase_index_eu"],
+            "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "eu",
+            "production_enabled": False,
+            "requires_standard_clause_index": False,
+            "template_policy": "official_only",
+        },
+        "us_eo14117": {
+            "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+            "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "us",
+            "production_enabled": False,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
+        },
+        "us_vendor_review": {
+            "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+            "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "us",
+            "production_enabled": False,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
+        },
+        "us_privacy_review": {
+            "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+            "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+            "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+            "jurisdiction": "us",
+            "production_enabled": False,
+            "requires_standard_clause_index": True,
+            "template_policy": "official_only",
         },
     },
 }
@@ -64,6 +139,37 @@ def _authority_level_from_row(row: dict[str, str]) -> str:
     return "low"
 
 
+def _modules_for_row(jurisdiction: str, path: str) -> list[str]:
+    if jurisdiction == "cn":
+        modules = ["cn_diagnosis"]
+        if path in {"assessment", "all"}:
+            modules.append("cn_assessment")
+        if path in {"review", "all", "scc"}:
+            modules.append("cn_review")
+        return modules
+    if jurisdiction == "eu":
+        modules: list[str] = []
+        if path in {"review", "all", "scc"}:
+            modules.append("eu_scc")
+        if path in {"review", "all", "bcr"}:
+            modules.append("eu_bcr")
+        if path in {"assessment", "all", "dpia"}:
+            modules.append("eu_dpia")
+        if path in {"assessment", "all", "tia"}:
+            modules.append("eu_tia")
+        return modules or ["eu_scc"]
+    if jurisdiction == "us":
+        modules: list[str] = []
+        if path in {"review", "all", "eo14117"}:
+            modules.append("us_eo14117")
+        if path in {"review", "all", "vendor"}:
+            modules.append("us_vendor_review")
+        if path in {"review", "all", "privacy"}:
+            modules.append("us_privacy_review")
+        return modules or ["us_vendor_review"]
+    return []
+
+
 def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
     if not SOURCES_CSV.exists():
         return []
@@ -72,24 +178,21 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
     with SOURCES_CSV.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            if (row.get("jurisdiction") or "").strip().lower() != "cn":
+            jurisdiction = (row.get("jurisdiction") or "").strip().lower()
+            if jurisdiction not in {"cn", "eu", "us"}:
                 continue
             source_id = (row.get("source_id") or "").strip()
             title = (row.get("title") or "").strip()
             if not source_id or not title:
                 continue
             path = (row.get("path") or "all").strip()
-            modules = ["cn_diagnosis"]
-            if path in {"assessment", "all"}:
-                modules.append("cn_assessment")
-            if path in {"review", "all", "scc"}:
-                modules.append("cn_review")
+            modules = _modules_for_row(jurisdiction, path)
             entries.append(
                 SourceRegistryEntry(
                     source_id=source_id,
                     title=title,
                     aliases=[],
-                    jurisdiction="cn",
+                    jurisdiction=jurisdiction,
                     modules=modules,
                     layer="L1_regulatory_evidence",
                     source_kind=_source_kind_from_row(row),

@@ -82,3 +82,35 @@ def test_dedupe_by_source_keeps_first_chunk_per_source() -> None:
     ]
     deduped = orchestrator.dedupe_by_source(chunks)
     assert [item.chunk_id for item in deduped] == ["A-1", "B-1"]
+
+
+def test_eu_module_returns_scaffold_debug_bundle() -> None:
+    orchestrator = RetrievalOrchestrator()
+    bundle = orchestrator.retrieve(
+        RetrievalRequest(
+            module="eu_scc",
+            task_stage="clause_compare",
+            query="SCC clause priority",
+            path="review",
+            jurisdiction="eu",
+        )
+    )
+    assert bundle.legal_grounding == []
+    assert bundle.debug["jurisdiction"] == "eu"
+    assert bundle.debug["status"] == "scaffold_only"
+
+
+def test_us_module_returns_scaffold_debug_bundle() -> None:
+    orchestrator = RetrievalOrchestrator()
+    bundle = orchestrator.retrieve(
+        RetrievalRequest(
+            module="us_eo14117",
+            task_stage="issue_discovery",
+            query="restricted transaction agreement",
+            path="review",
+            jurisdiction="us",
+        )
+    )
+    assert bundle.workflow_rules == []
+    assert bundle.debug["jurisdiction"] == "us"
+    assert bundle.debug["status"] == "scaffold_only"

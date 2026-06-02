@@ -11,6 +11,8 @@ def test_module_catalog_uses_static_file_when_present() -> None:
     assert "modules" in catalog
     assert "cn_assessment" in catalog["modules"]
     assert "default_usage_scopes" in catalog["modules"]["cn_review"]
+    assert "eu_scc" in catalog["modules"]
+    assert "us_eo14117" in catalog["modules"]
 
 
 def test_module_catalog_rebuilds_when_missing(tmp_path, monkeypatch) -> None:
@@ -27,3 +29,9 @@ def test_module_catalog_rebuilds_when_missing(tmp_path, monkeypatch) -> None:
 def test_knowledge_sync_meta_accepts_module_catalog_fields() -> None:
     meta = KnowledgeSyncMeta.model_validate(get_knowledge_sync_meta(cache_refreshed=False))
     assert meta.module_catalog_path.endswith("module_catalog.v1.json")
+
+
+def test_module_catalog_marks_non_cn_modules_as_disabled_by_default() -> None:
+    catalog = registry_module.load_module_catalog()
+    assert catalog["modules"]["eu_scc"]["production_enabled"] is False
+    assert catalog["modules"]["us_vendor_review"]["production_enabled"] is False

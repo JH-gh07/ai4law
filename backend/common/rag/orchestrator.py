@@ -7,10 +7,20 @@ from typing import Iterable
 
 from backend.common.knowledge.builders_v2 import (
     build_legal_chunks_cn,
+    build_legal_chunks_eu,
+    build_legal_chunks_us,
     build_standard_clause_chunks_cn,
+    build_standard_clause_chunks_eu,
+    build_standard_clause_chunks_us,
     build_template_chunks_cn,
+    build_template_chunks_eu,
+    build_template_chunks_us,
     build_testcase_chunks_cn,
+    build_testcase_chunks_eu,
+    build_testcase_chunks_us,
     build_workflow_chunks_cn,
+    build_workflow_chunks_eu,
+    build_workflow_chunks_us,
 )
 from backend.common.knowledge.usage_policy import UsagePolicyFilter
 from backend.common.knowledge.v2 import KnowledgeChunkV2, RetrievalBundle, RetrievalRequest
@@ -24,6 +34,16 @@ INDEX_NAMES = (
     "standard_clause_index_cn",
     "template_index_cn",
     "testcase_index_cn",
+    "legal_index_eu",
+    "workflow_index_eu",
+    "standard_clause_index_eu",
+    "template_index_eu",
+    "testcase_index_eu",
+    "legal_index_us",
+    "workflow_index_us",
+    "standard_clause_index_us",
+    "template_index_us",
+    "testcase_index_us",
 )
 
 
@@ -84,6 +104,10 @@ class RetrievalOrchestrator:
             return self._retrieve_cn_assessment(request)
         if request.module == "cn_review":
             return self._retrieve_cn_review(request)
+        if request.module in {"eu_scc", "eu_bcr", "eu_dpia", "eu_tia"}:
+            return self._retrieve_eu(request)
+        if request.module in {"us_eo14117", "us_vendor_review", "us_privacy_review"}:
+            return self._retrieve_us(request)
         return RetrievalBundle(debug={"unsupported_module": request.module})
 
     def retrieve_legal_chunks(
@@ -259,6 +283,26 @@ class RetrievalOrchestrator:
             ).chunks
         return bundle
 
+    def _retrieve_eu(self, request: RetrievalRequest) -> RetrievalBundle:
+        return RetrievalBundle(
+            debug={
+                "stage": request.task_stage,
+                "module": request.module,
+                "jurisdiction": "eu",
+                "status": "scaffold_only",
+            }
+        )
+
+    def _retrieve_us(self, request: RetrievalRequest) -> RetrievalBundle:
+        return RetrievalBundle(
+            debug={
+                "stage": request.task_stage,
+                "module": request.module,
+                "jurisdiction": "us",
+                "status": "scaffold_only",
+            }
+        )
+
     def _index_path(self, name: str) -> Path:
         return self.rag_dir / f"{name}.vector.json"
 
@@ -376,4 +420,14 @@ def build_chunk_sets() -> dict[str, list[KnowledgeChunkV2]]:
         "standard_clause_index_cn": build_standard_clause_chunks_cn(),
         "template_index_cn": build_template_chunks_cn(),
         "testcase_index_cn": build_testcase_chunks_cn(),
+        "legal_index_eu": build_legal_chunks_eu(),
+        "workflow_index_eu": build_workflow_chunks_eu(),
+        "standard_clause_index_eu": build_standard_clause_chunks_eu(),
+        "template_index_eu": build_template_chunks_eu(),
+        "testcase_index_eu": build_testcase_chunks_eu(),
+        "legal_index_us": build_legal_chunks_us(),
+        "workflow_index_us": build_workflow_chunks_us(),
+        "standard_clause_index_us": build_standard_clause_chunks_us(),
+        "template_index_us": build_template_chunks_us(),
+        "testcase_index_us": build_testcase_chunks_us(),
     }

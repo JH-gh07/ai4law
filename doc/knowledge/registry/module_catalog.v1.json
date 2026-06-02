@@ -4,17 +4,92 @@
     "cn_diagnosis": {
       "indexes": ["workflow_index_cn", "legal_index_cn"],
       "stages": ["path_diagnosis", "legal_grounding"],
-      "default_usage_scopes": ["internal_review", "legal_grounding"]
+      "default_usage_scopes": ["internal_review", "legal_grounding"],
+      "jurisdiction": "cn",
+      "production_enabled": true,
+      "requires_standard_clause_index": false,
+      "template_policy": "official_only"
     },
     "cn_assessment": {
       "indexes": ["workflow_index_cn", "legal_index_cn", "template_index_cn", "testcase_index_cn"],
       "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
-      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"]
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "cn",
+      "production_enabled": true,
+      "requires_standard_clause_index": false,
+      "template_policy": "official_only"
     },
     "cn_review": {
       "indexes": ["workflow_index_cn", "legal_index_cn", "standard_clause_index_cn", "template_index_cn", "testcase_index_cn"],
       "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
-      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"]
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "cn",
+      "production_enabled": true,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
+    },
+    "eu_scc": {
+      "indexes": ["workflow_index_eu", "legal_index_eu", "standard_clause_index_eu", "template_index_eu", "testcase_index_eu"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "eu",
+      "production_enabled": false,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
+    },
+    "eu_bcr": {
+      "indexes": ["workflow_index_eu", "legal_index_eu", "standard_clause_index_eu", "template_index_eu", "testcase_index_eu"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "eu",
+      "production_enabled": false,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
+    },
+    "eu_dpia": {
+      "indexes": ["workflow_index_eu", "legal_index_eu", "template_index_eu", "testcase_index_eu"],
+      "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "eu",
+      "production_enabled": false,
+      "requires_standard_clause_index": false,
+      "template_policy": "official_only"
+    },
+    "eu_tia": {
+      "indexes": ["workflow_index_eu", "legal_index_eu", "template_index_eu", "testcase_index_eu"],
+      "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "eu",
+      "production_enabled": false,
+      "requires_standard_clause_index": false,
+      "template_policy": "official_only"
+    },
+    "us_eo14117": {
+      "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "us",
+      "production_enabled": false,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
+    },
+    "us_vendor_review": {
+      "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "us",
+      "production_enabled": false,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
+    },
+    "us_privacy_review": {
+      "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "us",
+      "production_enabled": false,
+      "requires_standard_clause_index": true,
+      "template_policy": "official_only"
     }
   }
 }

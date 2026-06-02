@@ -1,0 +1,275 @@
+{
+  "meta": {"version": "1.0", "jurisdiction": "eu", "last_updated": "2025-06-03"},
+
+  "bcr_type_classification": {
+    "bcr_c_signals": [
+      "controller", "controllers", "determines purposes", "data controller",
+      "joint controller", "joint controllership", "as controller", "Binding Corporate Rules (Controllers)",
+      "BCR-C", "BCR for Controllers", "data exporter", "group as controller"
+    ],
+    "bcr_p_signals": [
+      "processor", "processors", "on behalf of", "according to instructions",
+      "client controller", "representing", "Article 28", "data processor",
+      "Binding Corporate Rules (Processors)", "BCR-P", "BCR for Processors",
+      "process personal data on behalf", "following documented instructions",
+      "as a processor", "acting as processor", "sub-processor"
+    ],
+    "module_mismatch_rules": [
+      {"title_pattern": "Controller", "body_pattern": "on behalf of.*client", "risk": "HIGH"},
+      {"title_pattern": "Controller", "body_pattern": "Article 28", "risk": "HIGH"},
+      {"title_pattern": "Controller", "body_pattern": "processor.*representing", "risk": "HIGH"}
+    ]
+  },
+
+  "bcr_c_requirements": [
+    {
+      "requirement_id": "BCR-C-1.1",
+      "title": "Binding nature (internal and external)",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(1)(a)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["binding", "legally binding", "enforceable", "internal agreement", "intra-group agreement"],
+      "check_structure": ["binding mechanism", "internal agreement"]
+    },
+    {
+      "requirement_id": "BCR-C-1.2",
+      "title": "Third-party beneficiary rights",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(1)(b)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["third party beneficiary", "third-party beneficiary", "enforce", "right to enforce", "data subject may enforce"],
+      "check_structure": ["third party", "beneficiary", "enforcement"]
+    },
+    {
+      "requirement_id": "BCR-C-1.3",
+      "title": "EU liable entity designation",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(f)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["liable entity", "EU entity", "European Union representative", "designated entity", "accepts liability", "responsibility for breaches"],
+      "check_structure": ["liable", "liability", "representative"]
+    },
+    {
+      "requirement_id": "BCR-C-1.4",
+      "title": "Data protection principles",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(a)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["data protection principles", "lawfulness", "fairness", "transparency", "purpose limitation", "data minimization", "accuracy", "storage limitation", "integrity", "confidentiality"],
+      "check_structure": ["data protection", "principles"]
+    },
+    {
+      "requirement_id": "BCR-C-1.5",
+      "title": "Data subject rights",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(b)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["data subject rights", "access", "rectification", "erasure", "restriction", "portability", "object", "automated decision", "right to information"],
+      "check_structure": ["data subject", "rights"]
+    },
+    {
+      "requirement_id": "BCR-C-1.6",
+      "title": "Complaint handling mechanism",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(e)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["complaint", "complaints", "handle", "handling procedure", "investigate", "respond", "timeline", "contact point"],
+      "check_structure": ["complaint", "complaints"]
+    },
+    {
+      "requirement_id": "BCR-C-1.7",
+      "title": "Cooperation with supervisory authorities",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(f)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["cooperation", "supervisory authority", "supervisory authorities", "DPA", "data protection authority", "cooperate"],
+      "check_structure": ["cooperation", "supervisory"]
+    },
+    {
+      "requirement_id": "BCR-C-1.8",
+      "title": "Onward transfer restrictions",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Chapter V",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["onward transfer", "further transfer", "third party transfer", "external transfer", "adequate level of protection", "appropriate safeguards", "derogation"],
+      "check_structure": ["onward", "transfer", "third party"]
+    },
+    {
+      "requirement_id": "BCR-C-1.9",
+      "title": "Third country law assessment (TIA)",
+      "source": "EDPB Recommendations 01/2020",
+      "gdpr_basis": "Schrems II, EDPB 01/2020",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["third country laws", "local law", "law of the country", "legal assessment", "transfer impact assessment", "TIA", "government access", "surveillance", "national security"],
+      "check_structure": ["third country", "law", "assessment", "TIA"]
+    },
+    {
+      "requirement_id": "BCR-C-1.10",
+      "title": "Audit and training mechanisms",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(h)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["audit", "audits", "training", "awareness", "regular audit", "compliance audit", "data protection training"],
+      "check_structure": ["audit", "training"]
+    },
+    {
+      "requirement_id": "BCR-C-1.11",
+      "title": "Update mechanism",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(i)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["update", "updates", "amendment", "modification", "notify changes", "communicate changes", "annual review"],
+      "check_structure": ["update", "amendment", "modification"]
+    },
+    {
+      "requirement_id": "BCR-C-1.12",
+      "title": "Termination and exit provisions",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(j)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["termination", "exit", "withdrawal", "cease", "end", "dissolution"],
+      "check_structure": ["termination", "exit", "withdrawal"]
+    },
+    {
+      "requirement_id": "BCR-C-1.13",
+      "title": "Liability and compensation",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(f), Article 82",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["liability", "compensation", "damages", "remedy", "redress", "financial", "indemnify"],
+      "check_structure": ["liability", "compensation", "damages"]
+    },
+    {
+      "requirement_id": "BCR-C-1.14",
+      "title": "Scope and member list",
+      "source": "EDPB Recommendations 1/2022",
+      "gdpr_basis": "GDPR Article 47(2)(d)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["scope", "member", "members", "group", "entity", "entities", "subsidiary", "affiliate", "list of members"],
+      "check_structure": ["scope", "member", "group"]
+    }
+  ],
+
+  "bcr_p_requirements": [
+    {
+      "requirement_id": "BCR-P-1.1",
+      "title": "Processing only on documented instructions",
+      "source": "EDPB Recommendations 2/2022",
+      "gdpr_basis": "GDPR Article 28(3)(a)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["documented instructions", "controller instructions", "only process", "instructions of the controller", "as instructed"],
+      "check_structure": ["instructions", "controller"]
+    },
+    {
+      "requirement_id": "BCR-P-1.2",
+      "title": "Assistance to controller",
+      "source": "EDPB Recommendations 2/2022",
+      "gdpr_basis": "GDPR Article 28(3)(e)(f)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["assist", "assistance", "help", "support", "DPIA", "prior consultation"],
+      "check_structure": ["assist", "assistance", "controller"]
+    },
+    {
+      "requirement_id": "BCR-P-1.3",
+      "title": "Sub-processor engagement rules",
+      "source": "EDPB Recommendations 2/2022",
+      "gdpr_basis": "GDPR Article 28(2)(4)",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["sub-processor", "subprocessor", "prior authorisation", "written authorisation", "general authorisation", "sub-processing"],
+      "check_structure": ["sub-processor", "subprocessor"]
+    },
+    {
+      "requirement_id": "BCR-P-1.4",
+      "title": "Return or deletion of data",
+      "source": "EDPB Recommendations 2/2022",
+      "gdpr_basis": "GDPR Article 28(3)(g)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["return", "delete", "deletion", "destroy", "erase", "end of services", "termination"],
+      "check_structure": ["return", "delete", "deletion"]
+    },
+    {
+      "requirement_id": "BCR-P-1.5",
+      "title": "Audit and inspection rights",
+      "source": "EDPB Recommendations 2/2022",
+      "gdpr_basis": "GDPR Article 28(3)(h)",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["audit", "inspection", "audits", "on-site audit", "inspection right"],
+      "check_structure": ["audit", "inspection"]
+    }
+  ],
+
+  "shared_requirements": [
+    {
+      "requirement_id": "BCR-SHARED-1",
+      "title": "Security measures",
+      "source": "GDPR Article 32",
+      "severity_if_missing": "HIGH",
+      "check_keywords": ["security", "technical", "organisational", "organizational", "measures", "encryption", "pseudonymisation", "confidentiality", "resilience", "restore"],
+      "check_structure": ["security", "measures"]
+    },
+    {
+      "requirement_id": "BCR-SHARED-2",
+      "title": "Personal data breach notification",
+      "source": "GDPR Article 33, 34",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["breach", "personal data breach", "notification", "notify", "72 hours", "without undue delay"],
+      "check_structure": ["breach", "notification"]
+    },
+    {
+      "requirement_id": "BCR-SHARED-3",
+      "title": "Government access request handling",
+      "source": "EDPB Recommendations 01/2020, 1/2022",
+      "severity_if_missing": "MEDIUM",
+      "check_keywords": ["government", "law enforcement", "national security", "disclosure", "request", "order", "compelled", "notification to controller"],
+      "check_structure": ["government", "access", "disclosure"]
+    }
+  ],
+
+  "document_structure_checklist": {
+    "bcr_c_required_sections": [
+      "definitions", "scope", "member list",
+      "binding nature", "third party beneficiary rights", "eu liable entity",
+      "data protection principles", "data subject rights", "complaint handling",
+      "cooperation", "onward transfer", "third country law assessment",
+      "audit and training", "update mechanism", "termination",
+      "liability and compensation"
+    ],
+    "bcr_p_required_sections": [
+      "definitions", "scope", "member list",
+      "documented instructions", "assistance to controller",
+      "sub-processor rules", "return or deletion",
+      "audit and inspection", "security measures",
+      "breach notification", "onward transfer"
+    ]
+  },
+
+  "risk_weights": {
+    "BCR_TYPE_MISMATCH": 10,
+    "BCR-C-1.1": 9,
+    "BCR-C-1.2": 9,
+    "BCR-C-1.3": 9,
+    "BCR-C-1.4": 7,
+    "BCR-C-1.5": 8,
+    "BCR-C-1.6": 5,
+    "BCR-C-1.7": 5,
+    "BCR-C-1.8": 8,
+    "BCR-C-1.9": 8,
+    "BCR-C-1.10": 5,
+    "BCR-C-1.11": 4,
+    "BCR-C-1.12": 4,
+    "BCR-C-1.13": 8,
+    "BCR-C-1.14": 5,
+    "BCR-P-1.1": 8,
+    "BCR-P-1.2": 5,
+    "BCR-P-1.3": 7,
+    "BCR-P-1.4": 5,
+    "BCR-P-1.5": 4,
+    "BCR-SHARED-1": 7,
+    "BCR-SHARED-2": 5,
+    "BCR-SHARED-3": 5
+  },
+
+  "severity_weights": {
+    "HIGH": 10, "MEDIUM": 5, "LOW": 2
+  }
+}

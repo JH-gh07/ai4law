@@ -323,7 +323,7 @@ def run_generation_eval() -> dict[str, Any]:
             )
             forbidden_count = sum(
                 1
-                for item in workflow_rules
+                for item in structured_citations
                 if item.get("layer") in set(case.get("must_not_use_layers", []))
             )
             unsupported_claim = 1.0 if not issues else 0.0

@@ -37,7 +37,18 @@ UsageScope = Literal[
 
 EnvironmentType = Literal["production", "dev", "eval"]
 
-ModuleKey = Literal["cn_diagnosis", "cn_assessment", "cn_review"]
+ModuleKey = Literal[
+    "cn_diagnosis",
+    "cn_assessment",
+    "cn_review",
+    "eu_scc",
+    "eu_bcr",
+    "eu_dpia",
+    "eu_tia",
+    "us_eo14117",
+    "us_vendor_review",
+    "us_privacy_review",
+]
 
 TaskStage = Literal[
     "path_diagnosis",
