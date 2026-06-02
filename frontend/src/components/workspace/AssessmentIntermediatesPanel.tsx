@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
-import {
-  fetchCitationMap,
-  type CitationDetail,
-} from "../../lib/citation-api";
-import { CitationPopover } from "../citation/CitationPopover";
-import { CitationSourceCard } from "../citation/CitationSourceCard";
+import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 
 type IntermediatesSubTab =
   | "facts"
@@ -148,7 +143,7 @@ export function AssessmentIntermediatesPanel({ outputFiles, lang }: Props) {
 }
 
 // ---------------------------------------------------------------------------
-// Report tab — renders markdown content with citation markers
+// Report tab — renders markdown content with interactive citation markers
 // ---------------------------------------------------------------------------
 
 function extractTaskId(filePath: string | undefined): string | null {
@@ -158,17 +153,7 @@ function extractTaskId(filePath: string | undefined): string | null {
 }
 
 function ReportTab({ preview, lang, filePath }: { preview: ArtifactPreview | null; lang: "zh" | "en"; filePath?: string }) {
-  const [citationMap, setCitationMap] = useState<Record<string, CitationDetail>>({});
-  const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
-
   const taskId = extractTaskId(filePath);
-
-  useEffect(() => {
-    if (!taskId) return;
-    fetchCitationMap(taskId)
-      .then((res) => setCitationMap(res.footnote_map))
-      .catch(() => setCitationMap({}));
-  }, [taskId]);
 
   if (!preview || !preview.content) {
     return (
@@ -178,50 +163,17 @@ function ReportTab({ preview, lang, filePath }: { preview: ArtifactPreview | nul
     );
   }
 
-  // Split content on citation markers like [1], [2], etc.
-  const citationRegex = /\[(\d+)\]/g;
-  const parts: (string | number)[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = citationRegex.exec(preview.content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(preview.content.slice(lastIndex, match.index));
-    }
-    parts.push(parseInt(match[1], 10));
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < preview.content.length) {
-    parts.push(preview.content.slice(lastIndex));
+  if (!taskId) {
+    return (
+      <article className="assessment-intermediates-report">
+        <pre className="assessment-intermediates-markdown">{preview.content}</pre>
+      </article>
+    );
   }
 
   return (
     <article className="assessment-intermediates-report">
-      <pre className="assessment-intermediates-markdown">
-        {parts.map((part, i) => {
-          if (typeof part === "number") {
-            const citation = citationMap[String(part)];
-            if (citation) {
-              return (
-                <span
-                  key={i}
-                  onClick={() => setSelectedCitation(citation)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <CitationPopover footnoteNumber={part} citation={citation} />
-                </span>
-              );
-            }
-            return <span key={i}>[{part}]</span>;
-          }
-          return <span key={i}>{part}</span>;
-        })}
-      </pre>
-      {selectedCitation && (
-        <CitationSourceCard
-          citation={selectedCitation}
-          onClose={() => setSelectedCitation(null)}
-        />
-      )}
+      <CitationMarkdownRenderer markdown={preview.content} taskId={taskId} />
     </article>
   );
 }

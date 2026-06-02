@@ -71,3 +71,19 @@ class KnowledgeSearchResponse(BaseModel):
     top_k: int = 8
     hit_count: int
     items: list[KnowledgeSearchItem] = Field(default_factory=list)
+
+
+class ArticleDetailResponse(BaseModel):
+    source_id: str
+    title: str
+    article_no: str
+    article_content: str = ""
+    prev_article_no: str | None = None
+    prev_article_content: str = ""
+    next_article_no: str | None = None
+    next_article_content: str = ""
+    source_url: str = ""
+    authority_level: str = "medium"
+    binding_force: str = "recommended"
+    jurisdiction: str = "cn"
+    doc_type: str = "law"

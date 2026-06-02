@@ -225,3 +225,46 @@ export async function fetchKnowledgeCitation(query: string): Promise<KnowledgeCi
     preview: typeof data.preview === "string" ? data.preview : ""
   };
 }
+
+export interface ArticleDetail {
+  source_id: string;
+  title: string;
+  article_no: string;
+  article_content: string;
+  prev_article_no: string | null;
+  prev_article_content: string;
+  next_article_no: string | null;
+  next_article_content: string;
+  source_url: string;
+  authority_level: string;
+  binding_force: string;
+  jurisdiction: string;
+  doc_type: string;
+}
+
+export async function fetchArticleDetail(
+  sourceId: string,
+  articleNo: string,
+): Promise<ArticleDetail> {
+  const data = await requestJson(
+    `/api/v1/knowledge/sources/${encodeURIComponent(sourceId)}/articles/${encodeURIComponent(articleNo)}`,
+  );
+  if (!isRecord(data)) {
+    throw new Error("Invalid article detail payload");
+  }
+  return {
+    source_id: typeof data.source_id === "string" ? data.source_id : "",
+    title: typeof data.title === "string" ? data.title : "",
+    article_no: typeof data.article_no === "string" ? data.article_no : "",
+    article_content: typeof data.article_content === "string" ? data.article_content : "",
+    prev_article_no: typeof data.prev_article_no === "string" ? data.prev_article_no : null,
+    prev_article_content: typeof data.prev_article_content === "string" ? data.prev_article_content : "",
+    next_article_no: typeof data.next_article_no === "string" ? data.next_article_no : null,
+    next_article_content: typeof data.next_article_content === "string" ? data.next_article_content : "",
+    source_url: typeof data.source_url === "string" ? data.source_url : "",
+    authority_level: typeof data.authority_level === "string" ? data.authority_level : "medium",
+    binding_force: typeof data.binding_force === "string" ? data.binding_force : "recommended",
+    jurisdiction: typeof data.jurisdiction === "string" ? data.jurisdiction : "cn",
+    doc_type: typeof data.doc_type === "string" ? data.doc_type : "law",
+  };
+}

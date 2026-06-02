@@ -15,6 +15,7 @@ import { DocsPlaceholderPage } from "./pages/DocsPlaceholderPage";
 import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
+import { LawViewerPage } from "./pages/LawViewerPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -174,6 +175,14 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <EvidenceCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/knowledge/laws/:sourceId"
+            element={
+              <ProtectedRoute>
+                <LawViewerPage />
               </ProtectedRoute>
             }
           />

@@ -50,6 +50,11 @@ def _build_detail(item: dict, footnote_number: int | None = None) -> CitationDet
         related_evidence_ids=item.get("related_evidence_ids", []),
         confidence_score=item.get("confidence_score", 0.0),
         footnote_number=footnote_number,
+        source_kind=item.get("source_kind", "law_article"),
+        allowed_usage=item.get("allowed_usage", []),
+        can_enter_external_report=item.get("can_enter_external_report", True),
+        external_report_allowed=item.get("external_report_allowed", True),
+        confidence_threshold=item.get("confidence_threshold", 0.20),
     )
 
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.services.knowledge_index import (
+    get_article_detail,
     get_knowledge_sync_meta,
     load_practice_cases,
     load_sources_index,
@@ -10,6 +11,7 @@ from backend.services.knowledge_index import (
 )
 from backend.common.rag.retriever import retrieve_regulations
 from backend.schemas.knowledge import (
+    ArticleDetailResponse,
     KnowledgeCaseDetailResponse,
     KnowledgeCaseOptions,
     KnowledgeCitationResponse,
@@ -168,3 +170,20 @@ def match_citation(query: str = Query(default="")) -> KnowledgeCitationResponse:
     matched = _sanitize_knowledge_row(matched)
     preview = read_text_preview(matched.get("snapshot_path", ""), limit=600)
     return KnowledgeCitationResponse(query=query, matched=matched, preview=preview)
+
+
+@router.get("/sources/{source_id}/articles/{article_no}", response_model=ArticleDetailResponse)
+def get_source_article(source_id: str, article_no: str) -> ArticleDetailResponse:
+    """Retrieve a specific article from a knowledge source by source_id and article number.
+
+    Returns the full article text with surrounding context (previous/next article)
+    for in-context reading. Used by the citation display system when a user clicks
+    a citation marker to view the original legal text.
+    """
+    detail = get_article_detail(source_id, article_no)
+    if detail is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Article {article_no} not found in source {source_id}",
+        )
+    return ArticleDetailResponse(**detail)

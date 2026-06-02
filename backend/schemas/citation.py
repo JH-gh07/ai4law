@@ -17,6 +17,11 @@ class CitationDetailResponse(BaseModel):
     related_evidence_ids: list[str] = Field(default_factory=list)
     confidence_score: float = 0.0
     footnote_number: int | None = None
+    source_kind: str = "law_article"
+    allowed_usage: list[str] = Field(default_factory=list)
+    can_enter_external_report: bool = True
+    external_report_allowed: bool = True
+    confidence_threshold: float = 0.20
 
 
 class CitationMapResponse(BaseModel):

@@ -12,6 +12,11 @@ export interface CitationDetail {
   related_evidence_ids: string[];
   confidence_score: number;
   footnote_number: number | null;
+  source_kind: string;
+  allowed_usage: string[];
+  can_enter_external_report: boolean;
+  external_report_allowed: boolean;
+  confidence_threshold: number;
 }
 
 export interface CitationMapResponse {
