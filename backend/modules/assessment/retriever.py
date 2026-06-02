@@ -13,7 +13,7 @@ class AssessmentRetriever:
     def __init__(self, legal_service: DeliLegalService | None = None) -> None:
         self.legal_service = legal_service
 
-    def search(self, profile: CompanyProfile, top_k: int = 8) -> list[RegulationHit]:
+    def search(self, profile: CompanyProfile, top_k: int = 8, source: str | None = None) -> list[RegulationHit]:
         query = " ".join(
             [
                 profile.industry,
@@ -29,6 +29,7 @@ class AssessmentRetriever:
             jurisdiction="cn",
             path="assessment",
             legal_service=self.legal_service,
+            source=source,
         )
         return [
             RegulationHit(

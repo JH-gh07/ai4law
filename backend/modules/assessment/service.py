@@ -86,6 +86,7 @@ class AssessmentService:
             build_attachment_notes=_attachment_notes_from_profile,
             build_issues=build_assessment_issues,
             build_evidence=build_assessment_evidence,
+            retrieve_per_issue=self._retrieve_per_issue,
             build_context_pack=self._build_context_pack,
             generate_chapters=self.generator.generate,
             check_consistency=self.checker.check_with_context,
@@ -107,6 +108,21 @@ class AssessmentService:
             )
         )
 
+    def _retrieve_per_issue(self, *, issues, profile, regulations) -> dict[str, dict]:
+        """为每个 HIGH/BLOCKER issue 调用 DeliLegal search_laws + search_cases。"""
+        enriched: dict[str, dict] = {}
+        if not self.legal_service or not self.legal_service.enabled:
+            return enriched
+        for issue in issues:
+            if issue.severity not in {"HIGH", "BLOCKER"}:
+                continue
+            query = f"{issue.title} {issue.description}"
+            laws = self.legal_service.search_laws(query, size=3)
+            cases = self.legal_service.search_cases(query, size=2)
+            if laws or cases:
+                enriched[issue.issue_id] = {"laws": laws, "cases": cases}
+        return enriched
+
     def _build_context_pack(
         self,
         *,
@@ -118,11 +134,13 @@ class AssessmentService:
         evidence_chain,
         path_warning: str | None,
         attachment_notes: list[dict[str, str]],
+        per_issue_rag: dict[str, dict] | None = None,
     ) -> GenerationContextPack:
         legal_grounding = build_legal_grounding(
             issues=issues,
             facts=facts,
             regulations=regulations,
+            per_issue_rag=per_issue_rag,
         )
         writing_strategy = build_writing_strategy(issues=issues)
         generation_basis_pack = build_generation_basis_pack(
@@ -293,6 +311,26 @@ class AssessmentService:
 
 
 def _attachment_notes_from_profile(profile) -> list[dict[str, str]]:
+    if profile.attachment_metadata:
+        notes: list[dict[str, str]] = []
+        for meta in profile.attachment_metadata:
+            entry: dict[str, str] = {
+                "source_ref": meta.get("filename", ""),
+                "type": meta.get("type", "other"),
+            }
+            if "contract_clauses" in meta:
+                clauses = meta["contract_clauses"]
+                entry["six_core_clauses_coverage"] = str(clauses.get("six_core_clauses_coverage", {}))
+                entry["missing_core_clauses"] = ", ".join(clauses.get("missing_core_clauses", []))
+                entry["all_covered"] = str(clauses.get("all_covered", False))
+            if "missing_summary" in meta:
+                entry["summary"] = meta["missing_summary"]
+            elif meta.get("char_count", 0) > 0:
+                entry["summary"] = f"已解析 {meta['char_count']} 字符"
+            notes.append(entry)
+        return notes
+
+    # Fallback to legacy string parsing
     notes: list[dict[str, str]] = []
     for raw_note in profile.extracted_notes:
         source_ref, _, summary = raw_note.partition(":")

@@ -9,6 +9,7 @@ class ProfileExtractor:
 
     def extract(self, payload: AssessmentRequest) -> CompanyProfile:
         notes: list[str] = []
+        attachment_metadata: list[dict] = []
         for file_path in payload.uploaded_files:
             try:
                 content = self.parser.parse_text(file_path)
@@ -22,6 +23,7 @@ class ProfileExtractor:
                     note += f" | {meta['missing_summary']}"
 
                 notes.append(note)
+                attachment_metadata.append(meta)
             except (FileNotFoundError, ValueError) as exc:
                 notes.append(f"{file_path}: [parse skipped] {exc}")
 
@@ -35,4 +37,5 @@ class ProfileExtractor:
             transfer_purpose=payload.transfer_purpose,
             receiver_country=payload.receiver_country,
             extracted_notes=notes,
+            attachment_metadata=attachment_metadata,
         )

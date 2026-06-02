@@ -12,7 +12,7 @@ from backend.schemas.review import Clause, ClausePosition
 # ── Chinese numbering patterns ──────────────────────────────────────────
 
 _CN_CLAUSE_PATTERN = re.compile(
-    r"(?=(?:第[一二三四五六七八九十百千万0-9]+条|[0-9]+[\.、]|[一二三四五六七八九十]+、))"
+    r"(?=(?:第[一二三四五六七八九十百千万0-9]+条|[0-9]+[\.、]|[一二三四五六七八九十]+、|附录[一二三四五六七八九十]))"
 )
 
 _CN_APPENDIX_PATTERN = re.compile(

@@ -128,9 +128,13 @@ class DataSecurityAgreementReviewer(BaseSpecializedReviewer):
 
         # ── Dispute resolution fairness ──
         if ct == "LIABILITY":
-            if any(term in text for term in ["香港.*管辖", "新加坡.*管辖",
-                                               "受托方.*所在地.*法院", "境外.*仲裁",
-                                               "外国.*法院"]):
+            import re as _re
+            if any(_re.search(p, text) for p in [
+                r"香港.*管辖|新加坡.*管辖|境外.*管辖",
+                r"受托方.*所在地.*法院|乙方.*所在地.*法院|接收方.*所在地.*法院",
+                r"境外.*仲裁|外国.*仲裁",
+                r"外国.*法院|域外.*法院",
+            ]):
                 issues.append(self._make_issue(
                     clause, "dsa_unfair_jurisdiction",
                     severity="HIGH",

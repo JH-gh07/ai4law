@@ -128,92 +128,159 @@ def _format_fact_value(value: object) -> str:
 
 
 def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_id: str) -> str:
-    fact_lines = [
-        f"- {fact.field_path or fact.fact_id}：{_format_fact_value(fact.normalized_value)}"
-        for fact in context_pack.facts
-        if fact.source_type in {"schema", "diagnosis"}
-    ]
+    # Try to use per-section pack from generation_basis_pack first
+    section_pack = None
+    if context_pack.generation_basis_pack:
+        section_packs = context_pack.generation_basis_pack.get("section_packs", [])
+        for sp in section_packs:
+            if sp.get("section_id") == chapter_id:
+                section_pack = sp
+                break
+
     diagnosis = context_pack.diagnosis_result or {}
-    regulation_lines = [
-        "- {source_id} | {title}{article}：{snippet}".format(
-            source_id=item.get("source_id", "unknown"),
-            title=item.get("title", ""),
-            article=item.get("article", ""),
-            snippet=str(item.get("snippet", ""))[:160],
-        )
-        for item in context_pack.regulations[:5]
-    ] or ["- 未检索到法规依据"]
 
-    matched_issues = [
-        issue for issue in context_pack.issues if chapter_id in issue.affects_outputs
-    ]
-    if not matched_issues:
+    if section_pack:
+        # Use per-section filtered data from generation_basis_pack
+        fact_lines = [
+            f"- {fact.get('field_path', fact.get('fact_id', ''))}：{_format_fact_value(fact.get('value'))}"
+            for fact in section_pack.get("confirmed_facts", [])
+        ] or ["- 本章节无确认事实"]
+        regulation_lines = [
+            "- {rule_id} | {title}{article}：{snippet}".format(
+                source_id=item.get("rule_id", "unknown"),
+                title=item.get("title", ""),
+                article=item.get("article", ""),
+                snippet=str(item.get("snippet", ""))[:160],
+            )
+            for item in section_pack.get("legal_basis", [])[:5]
+        ] or ["- 未检索到法规依据"]
+
         matched_issues = [
-            issue for issue in context_pack.issues if issue.severity in {"HIGH", "BLOCKER"}
+            issue for issue in context_pack.issues if chapter_id in issue.affects_outputs
         ]
-    issue_lines = [
-        (
-            f"- {issue.issue_id} | {issue.severity} | {issue.title}："
-            f"{issue.description}；建议：{issue.recommended_action}"
-        )
-        for issue in matched_issues
-    ] or ["- 未识别到与本章节直接相关的问题项"]
+        if not matched_issues:
+            matched_issues = [
+                issue for issue in context_pack.issues if issue.severity in {"HIGH", "BLOCKER"}
+            ]
+        issue_lines = [
+            (
+                f"- {issue.issue_id} | {issue.severity} | {issue.title}："
+                f"{issue.description}；建议：{issue.recommended_action}"
+            )
+            for issue in matched_issues
+        ] or ["- 未识别到与本章节直接相关的问题项"]
 
-    attachment_lines = [
-        f"- {item.get('source_ref', 'attachment')}：{item.get('summary', '')}"
-        for item in context_pack.attachment_notes
-    ] or ["- 未提供附件解析摘要；如存在材料缺失，应写明需补充。"]
+        # Writing strategies from section pack
+        chapter_issue_ids = {issue.issue_id for issue in matched_issues}
+        ws_items = section_pack.get("writing_strategies", [])
+        strategy_lines = [
+            (
+                f"- {s.get('issue_id', '')} | external_expression: {s.get('external_expression', '')}"
+                f" | forbidden: {', '.join(s.get('forbidden_expressions', [])[:3])}"
+            )
+            for s in ws_items if s.get("issue_id") in chapter_issue_ids
+        ] or ["- 本章节无特定表达策略约束"]
+        global_forbidden: list[str] = (
+            context_pack.writing_strategy.get("global_forbidden_expressions", [])
+            if context_pack.writing_strategy else []
+        )
+
+        # Legal grounding from section pack
+        grounding_lines: list[str] = []
+        lg_items = section_pack.get("legal_grounding", [])
+        for binding in lg_items[:4]:
+            grounding_lines.append(
+                f"- {binding.get('issue_id', '')} → {binding.get('title', '')} "
+                f"{binding.get('article', '')}"
+                f" (confidence: {binding.get('confidence_score', 'N/A')})"
+            )
+        if not grounding_lines:
+            grounding_lines = ["- 本章节无精确法规绑定"]
+    else:
+        # Fallback: build from global context_pack fields
+        fact_lines = [
+            f"- {fact.field_path or fact.fact_id}：{_format_fact_value(fact.normalized_value)}"
+            for fact in context_pack.facts
+            if fact.source_type in {"schema", "diagnosis"}
+        ]
+        regulation_lines = [
+            "- {source_id} | {title}{article}：{snippet}".format(
+                source_id=item.get("source_id", "unknown"),
+                title=item.get("title", ""),
+                article=item.get("article", ""),
+                snippet=str(item.get("snippet", ""))[:160],
+            )
+            for item in context_pack.regulations[:5]
+        ] or ["- 未检索到法规依据"]
+
+        matched_issues = [
+            issue for issue in context_pack.issues if chapter_id in issue.affects_outputs
+        ]
+        if not matched_issues:
+            matched_issues = [
+                issue for issue in context_pack.issues if issue.severity in {"HIGH", "BLOCKER"}
+            ]
+        issue_lines = [
+            (
+                f"- {issue.issue_id} | {issue.severity} | {issue.title}："
+                f"{issue.description}；建议：{issue.recommended_action}"
+            )
+            for issue in matched_issues
+        ] or ["- 未识别到与本章节直接相关的问题项"]
+
+        # Fallback writing strategy
+        strategy_lines: list[str] = []
+        global_forbidden: list[str] = []
+        if context_pack.writing_strategy:
+            global_forbidden = context_pack.writing_strategy.get("global_forbidden_expressions", [])
+            strategies = context_pack.writing_strategy.get("strategies", [])
+            chapter_issue_ids = {issue.issue_id for issue in matched_issues}
+            chapter_strategies = [
+                s for s in strategies
+                if s.get("issue_id") in chapter_issue_ids
+            ]
+            strategy_lines = [
+                (
+                    f"- {s['issue_id']} | external_expression: {s.get('external_expression', '')}"
+                    f" | forbidden: {', '.join(s.get('forbidden_expressions', [])[:3])}"
+                )
+                for s in chapter_strategies
+            ] or ["- 本章节无特定表达策略约束"]
+        else:
+            strategy_lines = ["- 未启用表达策略约束"]
+
+        # Fallback legal grounding
+        grounding_lines: list[str] = []
+        if context_pack.legal_grounding:
+            by_issue = context_pack.legal_grounding.get("by_issue", {})
+            chapter_issue_ids = {issue.issue_id for issue in matched_issues}
+            for issue_id in chapter_issue_ids:
+                bindings = by_issue.get(issue_id, [])
+                for binding in bindings[:2]:
+                    grounding_lines.append(
+                        f"- {issue_id} → {binding.get('title', '')} {binding.get('article', '')}"
+                        f" (confidence: {binding.get('confidence_score', 'N/A')})"
+                    )
+        if not grounding_lines:
+            grounding_lines = ["- 本章节无精确法规绑定"]
+
+    attachment_lines: list[str] = []
+    for item in context_pack.attachment_notes:
+        source_ref = item.get("source_ref", "attachment")
+        atype = item.get("type", "")
+        type_tag = f"[{atype}] " if atype and atype != "other" else ""
+        summary = item.get("summary", "")
+        line = f"- {source_ref}：{type_tag}{summary}"
+        if item.get("missing_core_clauses"):
+            line += f" (缺失条款: {item['missing_core_clauses']})"
+        attachment_lines.append(line)
+    if not attachment_lines:
+        attachment_lines = ["- 未提供附件解析摘要；如存在材料缺失，应写明需补充。"]
 
     evidence_lines = [
         f"- {item.evidence_id} | {item.claim} → {item.conclusion}"
         for item in context_pack.evidence_chain
     ] or ["- 本阶段尚未生成 evidence_chain"]
-
-    # Writing strategy constraints for this chapter
-    strategy_lines: list[str] = []
-    global_forbidden: list[str] = []
-    if context_pack.writing_strategy:
-        global_forbidden = context_pack.writing_strategy.get("global_forbidden_expressions", [])
-        strategies = context_pack.writing_strategy.get("strategies", [])
-        chapter_strategies = [
-            s for s in strategies
-            if chapter_id in (
-                s.get("issue_id", "") or ""
-            ) or any(
-                chapter_id in (i.get("affects_outputs", []) if isinstance(i, dict) else [])
-                for i in [s]
-            )
-        ]
-        # Get strategies for issues that affect this chapter
-        chapter_issue_ids = {issue.issue_id for issue in matched_issues}
-        chapter_strategies = [
-            s for s in strategies
-            if s.get("issue_id") in chapter_issue_ids
-        ]
-        strategy_lines = [
-            (
-                f"- {s['issue_id']} | external_expression: {s.get('external_expression', '')}"
-                f" | forbidden: {', '.join(s.get('forbidden_expressions', [])[:3])}"
-            )
-            for s in chapter_strategies
-        ] or ["- 本章节无特定表达策略约束"]
-    else:
-        strategy_lines = ["- 未启用表达策略约束"]
-
-    # Legal grounding for this chapter
-    grounding_lines: list[str] = []
-    if context_pack.legal_grounding:
-        by_issue = context_pack.legal_grounding.get("by_issue", {})
-        chapter_issue_ids = {issue.issue_id for issue in matched_issues}
-        for issue_id in chapter_issue_ids:
-            bindings = by_issue.get(issue_id, [])
-            for binding in bindings[:2]:
-                grounding_lines.append(
-                    f"- {issue_id} → {binding.get('title', '')} {binding.get('article', '')}"
-                    f" (confidence: {binding.get('confidence_score', 'N/A')})"
-                )
-    if not grounding_lines:
-        grounding_lines = ["- 本章节无精确法规绑定"]
 
     # Citation marker list for LLM
     citation_marker_section = "（未启用引用系统）"

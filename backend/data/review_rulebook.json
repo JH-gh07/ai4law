@@ -25,7 +25,7 @@
       "dsl_checks": [
         {
           "id": "vague_purpose",
-          "pattern": "根据需要|视情况|可能|必要时.*处理|包括但不限于.*目的",
+          "pattern": "根据需要|视情况|可能|必要时.*处理|包括但不限于.*目的|根据.*业务.*需要.*处理|基于.*业务.*需求",
           "severity": "MEDIUM",
           "problem_type": "AMBIGUOUS_LANGUAGE",
           "title_template": "处理目的表述存在模糊空间",
@@ -363,7 +363,7 @@
         },
         {
           "id": "vague_retention",
-          "pattern": "法律法规.*保存|法律.*要求.*保留|合理.*保存|必要.*保存",
+          "pattern": "法律法规.*保存|法律.*要求.*保留|合理.*保存|必要.*保存|长期.*保存|直到.*不再.*需要|业务.*不再.*需要|永久.*保存",
           "severity": "MEDIUM",
           "problem_type": "AMBIGUOUS_LANGUAGE",
           "title_template": "保存期限表述笼统",
@@ -819,8 +819,73 @@
         "LIABILITY"
       ],
       "recommended_clause_types": [],
-      "specialized_reviewer": null
+      "specialized_reviewer": "other"
     }
+  },
+
+  "conditional_required": {
+    "description": "Scenario-driven required clause types. When scenario conditions are met, these types become required regardless of the static checklist.",
+    "rules": [
+      {
+        "id": "cond_cross_border",
+        "condition_field": "has_cross_border",
+        "condition_value": true,
+        "required_types": [
+          "CROSS_BORDER_TRANSFER",
+          "ONWARD_TRANSFER",
+          "RETENTION_DELETION",
+          "RIGHTS_REQUEST"
+        ],
+        "severity": "HIGH"
+      },
+      {
+        "id": "cond_sensitive_pi",
+        "condition_field": "has_sensitive_pi",
+        "condition_value": true,
+        "required_types": [
+          "SENSITIVE_PI",
+          "CONSENT_NOTICE"
+        ],
+        "severity": "HIGH"
+      },
+      {
+        "id": "cond_minor_data",
+        "condition_field": "has_minor_data",
+        "condition_value": true,
+        "required_types": [
+          "MINOR_PROTECTION"
+        ],
+        "severity": "HIGH"
+      },
+      {
+        "id": "cond_third_party",
+        "condition_field": "has_third_party_sharing",
+        "condition_value": true,
+        "required_types": [
+          "THIRD_PARTY_SHARING"
+        ],
+        "severity": "MEDIUM"
+      },
+      {
+        "id": "cond_automated_decision",
+        "condition_field": "has_automated_decision",
+        "condition_value": true,
+        "required_types": [
+          "AUTOMATED_DECISION"
+        ],
+        "severity": "MEDIUM"
+      },
+      {
+        "id": "cond_entrusted_processing",
+        "condition_field": "has_entrusted_processing",
+        "condition_value": true,
+        "required_types": [
+          "ENTRUSTED_PROCESSING",
+          "DATA_PROCESSING_SCOPE"
+        ],
+        "severity": "HIGH"
+      }
+    ]
   },
 
   "risk_weights": {

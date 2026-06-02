@@ -31,6 +31,7 @@ class CompanyProfile(BaseModel):
     transfer_purpose: str
     receiver_country: str
     extracted_notes: list[str] = Field(default_factory=list)
+    attachment_metadata: list[dict] = Field(default_factory=list)
 
 
 class RegulationHit(BaseModel):

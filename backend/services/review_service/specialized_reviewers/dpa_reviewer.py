@@ -139,9 +139,12 @@ class DpaReviewer(BaseSpecializedReviewer):
                 ))
 
         # ── Liability mis‑allocation ──
-        if ct == "LIABILITY":
-            if any(term in text for term in ["由.*受托方.*负责.*合规", "受托方.*承担.*法律",
-                                               "乙方.*负责.*合规手续", "由乙方.*完成.*合规"]):
+        if ct in ("LIABILITY", "CROSS_BORDER_TRANSFER", "ENTRUSTED_PROCESSING", "OTHER"):
+            import re as _re
+            if any(_re.search(p, text) for p in [
+                r"(受托方|乙方).*(负责|完成|承担).*(合规|安全评估|标准合同|保护认证)",
+                r"由.*(受托方|乙方).*负责.*(申报|订立|完成)",
+            ]):
                 issues.append(self._make_issue(
                     clause, "dpa_liability_misalloc",
                     severity="HIGH",
@@ -149,6 +152,19 @@ class DpaReviewer(BaseSpecializedReviewer):
                     problem_type="NON_COMPLIANT",
                     risk_analysis="条款将数据出境的法定合规责任（如安全评估申报、标准合同订立）全部或主要转移至受托方。根据《个人信息保护法》，个人信息处理者是合规义务的法定责任主体。",
                     recommendation="应明确委托方作为个人信息处理者的法定合规责任，受托方仅承担协助配合义务。",
+                ))
+
+        # ── Standard contract body conflict (DPA may reference SCC) ──
+        if any(term in text for term in ["标准合同", "个人信息出境标准合同", "SCC"]):
+            if any(term in text for term in ["不一致.*为准", "以.*为准", "优先.*适用",
+                                               "优先于", "以本合同为准"]):
+                issues.append(self._make_issue(
+                    clause, "dpa_scc_priority_conflict",
+                    severity="HIGH",
+                    title="条款与标准合同正文可能存在优先冲突",
+                    problem_type="NON_COMPLIANT",
+                    risk_analysis="协议约定自身优先于标准合同正文条款，这可能违反《个人信息出境标准合同办法》关于其他约定不得与标准合同正文冲突的规定。",
+                    recommendation="应删除或修改此条款，确保不与标准合同正文冲突并在冲突时以标准合同正文为准。",
                 ))
 
         return issues

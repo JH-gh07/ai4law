@@ -283,8 +283,13 @@ class ReviewService:
             self._update_task(db, task, ReviewTaskStatus.CLASSIFYING, 45)
 
             # ── Stage 3: MISSING_CHECK (45‑55%) [NEW] ──
+            # Build scenario dict for checker + reviewer
+            scenario_dict = scenario_ctx.model_dump() if scenario_ctx else {}
+
             self._update_task(db, task, ReviewTaskStatus.MISSING_CHECK, 48)
-            missing_items = self.missing_checker.check(classified, doc_type)
+            missing_items = self.missing_checker.check(
+                classified, doc_type, scenario=scenario_dict,
+            )
             self._update_task(db, task, ReviewTaskStatus.MISSING_CHECK, 55)
 
             # ── Stage 4: REVIEWING (55‑80%) — risk‑triggered LLM ──
@@ -292,9 +297,6 @@ class ReviewService:
             issues = []
             reviewable = [c for c in classified if self._is_reviewable_clause(c)]
             llm_clause_ids = self._select_llm_candidates(reviewable, review_config)
-
-            # Build scenario dict for reviewer
-            scenario_dict = scenario_ctx.model_dump() if scenario_ctx else None
 
             checkpoints = self._review_progress_checkpoints(len(reviewable))
             for index, clause in enumerate(reviewable, start=1):

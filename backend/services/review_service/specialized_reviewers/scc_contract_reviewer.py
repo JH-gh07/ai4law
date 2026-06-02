@@ -40,7 +40,7 @@ class SccContractReviewer(BaseSpecializedReviewer):
     _ANNEX_II_CONFLICT_CHECKS: list[dict] = [
         {
             "id": "scc_liability_cap",
-            "pattern": "责任上限|赔偿上限|最高.*赔偿|责任.*限额",
+            "pattern": "责任上限|赔偿上限|最高.*赔偿|责任.*限额|赔偿.*总额.*不超过|不超过.*服务费|责任.*不超过",
             "severity": "MEDIUM",
             "title": "责任上限条款可能与标准合同正文冲突",
             "problem_type": "NON_COMPLIANT",
@@ -49,16 +49,16 @@ class SccContractReviewer(BaseSpecializedReviewer):
         },
         {
             "id": "scc_foreign_court",
-            "pattern": "香港.*法院|新加坡.*法院|美国.*法院|境外.*管辖|域外.*法院|外国.*法院|英国.*法院",
+            "pattern": "香港.*法院|新加坡.*法院|美国.*法院|境外.*管辖|域外.*法院|外国.*法院|英国.*法院|香港.*仲裁|境外.*仲裁|外国.*仲裁机构",
             "severity": "HIGH",
-            "title": "争议解决约定为境外法院管辖",
+            "title": "争议解决约定为境外管辖或仲裁",
             "problem_type": "NON_COMPLIANT",
             "risk_analysis": "根据《个人信息出境标准合同办法》第五条，争议解决应选择中国内地有管辖权的法院或仲裁机构。",
             "recommendation": "应修改争议解决条款，选择中国内地有管辖权的法院或仲裁机构。",
         },
         {
             "id": "scc_other_agreement_priority",
-            "pattern": "其他协议.*优先|优先.*商业.*协议|以.*商业合同.*为准|主协议.*优先",
+            "pattern": "其他协议.*优先|优先.*商业.*协议|以.*商业合同.*为准|主协议.*优先|主协议.*为准|不一致.*为准|协议.*优先适用",
             "severity": "HIGH",
             "title": "其他协议优先条款可能削弱标准合同约束力",
             "problem_type": "NON_COMPLIANT",
@@ -67,7 +67,7 @@ class SccContractReviewer(BaseSpecializedReviewer):
         },
         {
             "id": "scc_suspend_rights",
-            "pattern": "暂缓.*请求|暂停.*处理.*请求|延迟.*主体.*权利",
+            "pattern": "暂缓.*请求|暂缓.*处理|暂停.*处理.*请求|延迟.*主体.*权利|视情况.*暂缓|视情况.*处理|可视.*情况",
             "severity": "HIGH",
             "title": "暂缓处理主体请求条款可能削弱权利保障",
             "problem_type": "NON_COMPLIANT",
@@ -76,7 +76,7 @@ class SccContractReviewer(BaseSpecializedReviewer):
         },
         {
             "id": "scc_weaken_recipient",
-            "pattern": "免除.*责任|豁免.*义务|免除.*赔偿",
+            "pattern": "免除.*责任|豁免.*义务|免除.*赔偿|削弱.*义务|减轻.*责任",
             "severity": "MEDIUM",
             "title": "可能存在削弱境外接收方义务的条款",
             "problem_type": "NON_COMPLIANT",
@@ -105,10 +105,11 @@ class SccContractReviewer(BaseSpecializedReviewer):
                         recommendation=f"请在附录一中补充{field_label}的具体内容。",
                     ))
 
-        # ── Annex II conflict checks ──
+        # ── Annex II conflict checks (run on ALL clauses for SCC docs) ──
         for cc in self._ANNEX_II_CONFLICT_CHECKS:
             try:
-                if cc["pattern"] in text:
+                import re
+                if re.search(cc["pattern"], text):
                     issues.append(self._make_issue(
                         clause, cc["id"],
                         severity=cc["severity"],

@@ -82,6 +82,7 @@ def build_legal_grounding(
     facts: list[FactItem],
     regulations: list[RegulationHit],
     source_version: str = "local-regulation-index-v2",
+    per_issue_rag: dict[str, dict] | None = None,
 ) -> dict[str, Any]:
     facts_by_id = {fact.fact_id: fact for fact in facts}
     by_issue: dict[str, list[dict[str, Any]]] = {}
@@ -105,11 +106,42 @@ def build_legal_grounding(
                     "query_context": query,
                 }
             )
+
+        # Merge per-issue DeliLegal results
+        if per_issue_rag and issue.issue_id in per_issue_rag:
+            rag_result = per_issue_rag[issue.issue_id]
+            for law in rag_result.get("laws", []):
+                candidates.append(
+                    {
+                        "issue_id": issue.issue_id,
+                        "rule_id": f"delilegal-law-{law.get('title', 'unknown')}",
+                        "title": law.get("title", "未知法规"),
+                        "article": "",
+                        "confidence_score": 0.85,
+                        "relevance_reason": f"DeliLegal 法规检索：{law.get('summary', '')[:80]}",
+                        "source_version": "delilegal-api",
+                        "query_context": query,
+                    }
+                )
+            for case in rag_result.get("cases", []):
+                candidates.append(
+                    {
+                        "issue_id": issue.issue_id,
+                        "rule_id": f"delilegal-case-{case.get('title', 'unknown')}",
+                        "title": case.get("title", "未命名案例"),
+                        "article": "",
+                        "confidence_score": 0.75,
+                        "relevance_reason": f"DeliLegal 案例检索：{case.get('summary', '')[:80]}",
+                        "source_version": "delilegal-api",
+                        "query_context": query,
+                    }
+                )
+
         candidates.sort(key=lambda item: item["confidence_score"], reverse=True)
-        by_issue[issue.issue_id] = candidates[:3]
+        by_issue[issue.issue_id] = candidates[:5]
 
     return {
-        "grounding_version": "v1",
+        "grounding_version": "v2",
         "source_version": source_version,
         "by_issue": by_issue,
     }

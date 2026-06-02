@@ -34,6 +34,7 @@ class WorkflowPipeline:
         build_issues: Callable[[list[Any], Any, list[Any], list[dict[str, str]]], list[Any]],
         build_evidence: Callable[[list[Any], list[Any], list[Any], Any], tuple[list[Any], list[Any]]],
         build_context_pack: Callable[..., GenerationContextPack],
+        retrieve_per_issue: Callable[..., Any] | None = None,
         generate_chapters: Callable[[Any, list[Any], GenerationContextPack], list[Any]],
         check_consistency: Callable[[Any, list[Any], GenerationContextPack], list[str]],
         check_alignment: Callable[[str, Any], list[str]],
@@ -50,6 +51,7 @@ class WorkflowPipeline:
         self.build_issues = build_issues
         self.build_evidence = build_evidence
         self.build_context_pack = build_context_pack
+        self.retrieve_per_issue = retrieve_per_issue
         self.generate_chapters = generate_chapters
         self.check_consistency = check_consistency
         self.check_alignment = check_alignment
@@ -93,6 +95,15 @@ class WorkflowPipeline:
             },
         )
 
+        per_issue_rag = None
+        if self.retrieve_per_issue is not None:
+            per_issue_rag = self.retrieve_per_issue(
+                issues=issues,
+                profile=profile,
+                regulations=regulations,
+            )
+            trace.record("per_issue_rag", {"issue_count": len(per_issue_rag) if per_issue_rag else 0})
+
         context_pack = self.build_context_pack(
             task_id=task_id,
             diagnosis=diagnosis,
@@ -102,6 +113,7 @@ class WorkflowPipeline:
             evidence_chain=evidence_chain,
             path_warning=path_warning,
             attachment_notes=attachment_notes,
+            per_issue_rag=per_issue_rag,
         )
         trace.record("context_pack_built", context_pack.model_dump())
 

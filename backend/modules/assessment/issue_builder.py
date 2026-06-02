@@ -57,6 +57,47 @@ def _issue(
     )
 
 
+def _attachment_evidence(attachment_notes: list) -> dict[str, bool]:
+    """Scan attachment_notes for structured evidence to inform issue suppression."""
+    result: dict[str, bool] = {
+        "has_contract_clauses": False,
+        "contract_all_covered": False,
+        "has_consent_records": False,
+        "has_certification": False,
+        "has_onward_transfer_clause": False,
+        "has_anonymization_claim": False,
+    }
+    for item in attachment_notes:
+        if isinstance(item, dict):
+            atype = item.get("type", "")
+            if atype == "contract":
+                result["has_contract_clauses"] = True
+                all_covered = item.get("all_covered", "False")
+                result["contract_all_covered"] = all_covered in (True, "True")
+                missing_str = item.get("missing_core_clauses", "")
+                if "onward_transfer" not in missing_str:
+                    result["has_onward_transfer_clause"] = True
+            if atype == "consent_record":
+                result["has_consent_records"] = True
+            if atype == "certification":
+                result["has_certification"] = True
+            summary = item.get("summary", "")
+            if any(kw in summary for kw in ("匿名化", "去标识化", "anonymization", "de-identification")):
+                result["has_anonymization_claim"] = True
+
+        elif isinstance(item, str):
+            item_lower = item.lower()
+            if any(kw in item_lower for kw in ("合同", "协议", "contract", "agreement")):
+                result["has_contract_clauses"] = True
+            if any(kw in item_lower for kw in ("同意", "consent", "告知")):
+                result["has_consent_records"] = True
+            if any(kw in item_lower for kw in ("认证", "certif", "审计", "audit")):
+                result["has_certification"] = True
+            if any(kw in item_lower for kw in ("匿名化", "去标识化", "anonymization")):
+                result["has_anonymization_claim"] = True
+    return result
+
+
 def build_assessment_issues(
     facts: list[FactItem],
     diagnosis_result: object | None,
@@ -68,6 +109,7 @@ def build_assessment_issues(
     regulation_refs = _regulation_refs(regulations)
     diagnosis_rule_ref = _diagnosis_rule_ref(diagnosis_result)
     legal_rule_refs = [diagnosis_rule_ref, *regulation_refs[:3]]
+    evidence = _attachment_evidence(attachment_notes)
 
     recommended_path = _diagnosis_value(diagnosis_result, "recommended_path")
     recommended_path_fact = field_facts.get("diagnosis_result.recommended_path")
@@ -231,13 +273,20 @@ def build_assessment_issues(
         )
 
     # 必要性论证过泛
+    _necessity_severity = "MEDIUM"
+    _purpose_text = (
+        str(purpose_fact.normalized_value) if purpose_fact and purpose_fact.normalized_value is not None
+        else ""
+    )
+    if len(_purpose_text.strip()) > 50:
+        _necessity_severity = "LOW"
     issues.append(
         _issue(
             issue_id="ISSUE-necessity-argument-generic",
             title="出境必要性论证可能过于泛化",
             description="当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。",
             category="necessity",
-            severity="MEDIUM",
+            severity=_necessity_severity,
             fact_refs=[purpose_fact.fact_id] if purpose_fact and purpose_fact.fact_id else [],
             rule_refs=legal_rule_refs,
             recommended_action="补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。",
@@ -246,79 +295,85 @@ def build_assessment_issues(
     )
 
     # 接收方安全能力证明不足
-    issues.append(
-        _issue(
-            issue_id="ISSUE-recipient-security-evidence-missing",
-            title="境外接收方安全保障能力证明不足",
-            description="当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足，无法充分证明其保障能力。",
-            category="recipient",
-            severity="HIGH",
-            fact_refs=[receiver_fact.fact_id] if receiver_fact and receiver_fact.fact_id else [],
-            rule_refs=legal_rule_refs,
-            recommended_action="补充境外接收方安全管理制度、认证证明或第三方审计材料。",
-            affects_outputs=["recipient_capability", "risk_remediation", "conclusion"],
+    if not evidence.get("has_certification"):
+        issues.append(
+            _issue(
+                issue_id="ISSUE-recipient-security-evidence-missing",
+                title="境外接收方安全保障能力证明不足",
+                description="当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足，无法充分证明其保障能力。",
+                category="recipient",
+                severity="HIGH",
+                fact_refs=[receiver_fact.fact_id] if receiver_fact and receiver_fact.fact_id else [],
+                rule_refs=legal_rule_refs,
+                recommended_action="补充境外接收方安全管理制度、认证证明或第三方审计材料。",
+                affects_outputs=["recipient_capability", "risk_remediation", "conclusion"],
+            )
         )
-    )
 
     # 法律文件条款缺失
-    issues.append(
-        _issue(
-            issue_id="ISSUE-legal-document-gaps",
-            title="法律文件核心条款可能存在缺失",
-            description="与境外接收方签署的法律文件未验证是否包含处理目的、保存期限、再转移约束、安全事件处置和违约责任等核心条款。",
-            category="legal_document",
-            severity="HIGH",
-            fact_refs=[],
-            rule_refs=regulation_refs[:3],
-            recommended_action="核验法律文件是否覆盖六项核心条款，补充缺失内容。",
-            affects_outputs=["recipient_capability", "security_measures", "risk_remediation", "conclusion"],
+    if not evidence.get("contract_all_covered"):
+        _legal_severity = "LOW" if evidence.get("has_contract_clauses") else "HIGH"
+        issues.append(
+            _issue(
+                issue_id="ISSUE-legal-document-gaps",
+                title="法律文件核心条款可能存在缺失",
+                description="与境外接收方签署的法律文件未验证是否包含处理目的、保存期限、再转移约束、安全事件处置和违约责任等核心条款。",
+                category="legal_document",
+                severity=_legal_severity,
+                fact_refs=[],
+                rule_refs=regulation_refs[:3],
+                recommended_action="核验法律文件是否覆盖六项核心条款，补充缺失内容。",
+                affects_outputs=["recipient_capability", "security_measures", "risk_remediation", "conclusion"],
+            )
         )
-    )
 
     # 再转移约束不明确
-    issues.append(
-        _issue(
-            issue_id="ISSUE-onward-transfer-unclear",
-            title="再转移约束条款不明确",
-            description="未验证法律文件是否明确约束境外接收方不得将数据再转移至第三方。",
-            category="onward_transfer",
-            severity="MEDIUM",
-            fact_refs=[],
-            rule_refs=regulation_refs[:3],
-            recommended_action="补充再转移约束条款，明确接收方未经同意不得向第三方提供数据。",
-            affects_outputs=["recipient_capability", "security_measures", "risk_remediation"],
+    if not evidence.get("has_onward_transfer_clause"):
+        issues.append(
+            _issue(
+                issue_id="ISSUE-onward-transfer-unclear",
+                title="再转移约束条款不明确",
+                description="未验证法律文件是否明确约束境外接收方不得将数据再转移至第三方。",
+                category="onward_transfer",
+                severity="MEDIUM",
+                fact_refs=[],
+                rule_refs=regulation_refs[:3],
+                recommended_action="补充再转移约束条款，明确接收方未经同意不得向第三方提供数据。",
+                affects_outputs=["recipient_capability", "security_measures", "risk_remediation"],
+            )
         )
-    )
 
     # 同意记录证据不足
-    issues.append(
-        _issue(
-            issue_id="ISSUE-consent-evidence-missing",
-            title="个人信息出境单独同意记录证据不足",
-            description="涉及个人信息出境时，未验证是否已取得个人信息主体的单独同意及同意记录。",
-            category="consent",
-            severity="HIGH",
-            fact_refs=[],
-            rule_refs=legal_rule_refs,
-            recommended_action="补充告知和单独同意记录，或说明适用的豁免情形。",
-            affects_outputs=["necessity_legal_basis", "rights_impact", "risk_remediation", "conclusion"],
+    if not evidence.get("has_consent_records"):
+        issues.append(
+            _issue(
+                issue_id="ISSUE-consent-evidence-missing",
+                title="个人信息出境单独同意记录证据不足",
+                description="涉及个人信息出境时，未验证是否已取得个人信息主体的单独同意及同意记录。",
+                category="consent",
+                severity="HIGH",
+                fact_refs=[],
+                rule_refs=legal_rule_refs,
+                recommended_action="补充告知和单独同意记录，或说明适用的豁免情形。",
+                affects_outputs=["necessity_legal_basis", "rights_impact", "risk_remediation", "conclusion"],
+            )
         )
-    )
 
     # 匿名化有效性不明
-    issues.append(
-        _issue(
-            issue_id="ISSUE-anonymization-uncertain",
-            title="匿名化或去标识化有效性未验证",
-            description="如拟主张数据已匿名化或去标识化，需补充技术验证、重识别风险评估或第三方审计材料。",
-            category="anonymization",
-            severity="MEDIUM",
-            fact_refs=[],
-            rule_refs=regulation_refs[:3],
-            recommended_action="补充匿名化/去标识化技术方案和有效性验证材料；材料补足前采用审慎表述。",
-            affects_outputs=["data_scope", "security_measures", "risk_remediation"],
+    if not evidence.get("has_anonymization_claim"):
+        issues.append(
+            _issue(
+                issue_id="ISSUE-anonymization-uncertain",
+                title="匿名化或去标识化有效性未验证",
+                description="如拟主张数据已匿名化或去标识化，需补充技术验证、重识别风险评估或第三方审计材料。",
+                category="anonymization",
+                severity="MEDIUM",
+                fact_refs=[],
+                rule_refs=regulation_refs[:3],
+                recommended_action="补充匿名化/去标识化技术方案和有效性验证材料；材料补足前采用审慎表述。",
+                affects_outputs=["data_scope", "security_measures", "risk_remediation"],
+            )
         )
-    )
 
     # 缺失材料补充建议
     issues.append(
