@@ -47,6 +47,12 @@ from backend.services.review_service.specialized_reviewers.privacy_policy_review
 from backend.services.review_service.specialized_reviewers.scc_contract_reviewer import (
     SccContractReviewer,
 )
+from backend.services.review_service.specialized_reviewers.dpa_reviewer import (
+    DpaReviewer,
+)
+from backend.services.review_service.specialized_reviewers.data_security_agreement_reviewer import (
+    DataSecurityAgreementReviewer,
+)
 from backend.schemas.review import (
     ReviewScenarioContext,
     ReviewTaskConfig,
@@ -114,6 +120,8 @@ class ReviewService:
         self.specialized_reviewers = {
             "privacy_policy": PrivacyPolicyReviewer(rulebook_loader=self.rulebook),
             "scc_contract": SccContractReviewer(rulebook_loader=self.rulebook),
+            "dpa": DpaReviewer(rulebook_loader=self.rulebook),
+            "other": DataSecurityAgreementReviewer(rulebook_loader=self.rulebook),
         }
         self.reviewer = ClauseReviewer(
             self.knowledge_base,
