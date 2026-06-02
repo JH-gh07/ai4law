@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 IssueCategory = Literal[
+    # ── CN assessment ──
     "path",
     "data_scope",
     "data_classification",
@@ -20,6 +21,25 @@ IssueCategory = Literal[
     "internal_approval",
     "remediation",
     "expression",
+    # ── EU DPIA ──
+    "dpia_trigger",
+    "automated_decision",
+    "profiling",
+    "special_category",
+    "large_scale",
+    "systematic_monitoring",
+    "data_matching",
+    "new_technology",
+    "vulnerable_subjects",
+    "necessity_proportionality",
+    "lawful_basis",
+    "transparency",
+    "discrimination",
+    "function_creep",
+    "cross_border",
+    "mitigation_gap",
+    "prior_consultation",
+    # ── fallback ──
     "other",
 ]
 IssueSeverity = Literal["LOW", "MEDIUM", "HIGH", "BLOCKER"]
