@@ -51,12 +51,14 @@ export type KnowledgeSyncMeta = {
 };
 
 export type KnowledgeSourceOptions = {
-  layers: string[];
-  paths: string[];
+  categories: string[];
+  jurisdictions: string[];
+  usages: string[];
 };
 
 export type KnowledgeCaseOptions = {
-  modules: string[];
+  jurisdictions: string[];
+  scenarios: string[];
 };
 
 export type KnowledgeIndexData = {
@@ -105,11 +107,13 @@ const parseKnowledgeIndexData = (data: unknown): KnowledgeIndexData => {
       cases_csv_mtime: typeof syncMetaRaw.cases_csv_mtime === "string" ? syncMetaRaw.cases_csv_mtime : ""
     },
     source_options: {
-      layers: toStringList(sourceOptionsRaw.layers),
-      paths: toStringList(sourceOptionsRaw.paths)
+      categories: toStringList(sourceOptionsRaw.categories),
+      jurisdictions: toStringList(sourceOptionsRaw.jurisdictions),
+      usages: toStringList(sourceOptionsRaw.usages),
     },
     case_options: {
-      modules: toStringList(caseOptionsRaw.modules)
+      jurisdictions: toStringList(caseOptionsRaw.jurisdictions),
+      scenarios: toStringList(caseOptionsRaw.scenarios),
     },
     sources: toStringRecordList(data.sources),
     cases: toStringRecordList(data.cases)

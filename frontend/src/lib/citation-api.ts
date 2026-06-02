@@ -13,6 +13,7 @@ export interface CitationDetail {
   confidence_score: number;
   footnote_number: number | null;
   source_kind: string;
+  source_url?: string;
   allowed_usage: string[];
   can_enter_external_report: boolean;
   external_report_allowed: boolean;

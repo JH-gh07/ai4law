@@ -27,14 +27,12 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   template: "模板文件",
 };
 
-/**
- * Plan B — LawViewerPage
- *
- * Standalone full-law browser for the knowledge base. Shows a complete law document
- * with article-level navigation, metadata, and the target article scrolled into view.
- *
- * Route: /knowledge/laws/:sourceId?article=39
- */
+const JURISDICTION_LABELS: Record<string, string> = {
+  cn: "中国",
+  eu: "欧盟",
+  us: "美国",
+};
+
 export function LawViewerPage() {
   const { sourceId } = useParams<{ sourceId: string }>();
   const [searchParams] = useSearchParams();
@@ -131,6 +129,11 @@ export function LawViewerPage() {
   const publishDate = sourceMeta.publish_date || "";
   const effectiveDate = sourceMeta.effective_date || "";
   const sourceOrg = sourceMeta.source_org || "";
+  const summary = sourceMeta.summary || "";
+  const suitableFor = sourceMeta.suitable_for || "";
+  const reportUsage = sourceMeta.report_usage || "";
+  const category = sourceMeta.category || "";
+  const jurisdictionLabel = JURISDICTION_LABELS[jurisdiction] ?? jurisdiction.toUpperCase();
 
   return (
     <div className="law-viewer-page">
@@ -144,6 +147,12 @@ export function LawViewerPage() {
           </button>
 
           <h1 className="law-viewer-title">{title}</h1>
+
+          {(category || suitableFor) && (
+            <p className="law-viewer-preview-text" style={{ marginTop: "0.25rem", marginBottom: "1rem" }}>
+              {[category, suitableFor].filter(Boolean).join(" · ")}
+            </p>
+          )}
 
           <div className="law-viewer-meta-grid">
             {sourceOrg && (
@@ -167,11 +176,15 @@ export function LawViewerPage() {
             <div className="law-viewer-meta-item">
               <dt>{t("法域", "Jurisdiction")}</dt>
               <dd className="law-viewer-jurisdiction">
-                {jurisdiction.toUpperCase()}
+                {jurisdictionLabel}
               </dd>
             </div>
             <div className="law-viewer-meta-item">
-              <dt>{t("文件类型", "Doc Type")}</dt>
+              <dt>{t("内容类型", "Category")}</dt>
+              <dd>{category || t("法规依据", "Legal Source")}</dd>
+            </div>
+            <div className="law-viewer-meta-item">
+              <dt>{t("文件类型", "Document Type")}</dt>
               <dd>
                 <span className={`citation-type-badge citation-type-${docType}`}>
                   {DOC_TYPE_LABELS[docType] ?? docType}
@@ -194,7 +207,19 @@ export function LawViewerPage() {
                 </span>
               </dd>
             </div>
+            {reportUsage && (
+              <div className="law-viewer-meta-item">
+                <dt>{t("正式报告使用", "Report Usage")}</dt>
+                <dd>{reportUsage}</dd>
+              </div>
+            )}
           </div>
+
+          {summary && (
+            <p className="law-viewer-preview-text" style={{ marginTop: "1rem" }}>
+              {summary}
+            </p>
+          )}
 
           {sourceUrl && (
             <a
@@ -225,7 +250,7 @@ export function LawViewerPage() {
                 <h3>
                   {t("第", "Article ")}{article.article_no}{t("条", "")}
                   <span className="law-viewer-article-highlight-badge">
-                    {t("引用条文", "Cited Article")}
+                    {t("当前查看条文", "Current Article")}
                   </span>
                 </h3>
                 <p>{article.article_content}</p>
@@ -241,8 +266,8 @@ export function LawViewerPage() {
           ) : (
             <p className="law-viewer-preview-text">
               {(sourceMeta as Record<string, string>).snapshot_path
-                ? t("法规全文已加载。请选择条文查看。", "Full text loaded. Select an article to view.")
-                : t("该法规暂无本地快照文本。", "No local snapshot available for this law.")}
+                ? t("该来源已接入知识库。你可以从报告引用或条文定位入口直接跳转到具体条文。", "This source is available in the knowledge center. Open a specific article from citations or article search.")
+                : t("该来源已登记，但暂未提供可直接浏览的本地条文正文。", "This source is registered, but no local article text is currently available for direct browsing.")}
             </p>
           )}
         </div>

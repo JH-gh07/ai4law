@@ -3,13 +3,18 @@ from fastapi import APIRouter, HTTPException, Query
 from backend.services.knowledge_index import (
     get_article_detail,
     get_knowledge_sync_meta,
-    load_practice_cases,
-    load_sources_index,
-    read_text_preview,
     refresh_knowledge_cache,
-    resolve_citation,
 )
-from backend.common.rag.retriever import retrieve_regulations
+from backend.services.knowledge_projection import (
+    build_user_case_catalog,
+    build_user_source_catalog,
+    get_user_case_detail,
+    get_user_case_preview,
+    get_user_source_detail,
+    get_user_source_preview,
+    resolve_user_citation,
+    search_user_articles,
+)
 from backend.schemas.knowledge import (
     ArticleDetailResponse,
     KnowledgeCaseDetailResponse,
@@ -37,21 +42,27 @@ def _sanitize_knowledge_row(row: dict[str, str]) -> dict[str, str]:
 
 def _build_source_options(rows: list[dict[str, str]]) -> KnowledgeSourceOptions:
     return KnowledgeSourceOptions(
-        layers=sorted({row.get("layer", "") for row in rows if row.get("layer")}),
-        paths=sorted({row.get("path", "") for row in rows if row.get("path")}),
+        categories=sorted({row.get("category", "") for row in rows if row.get("category")}),
+        jurisdictions=sorted({row.get("jurisdiction", "") for row in rows if row.get("jurisdiction")}),
+        usages=sorted({row.get("usage", "") for row in rows if row.get("usage")}),
     )
 
 
 def _build_case_options(rows: list[dict[str, str]]) -> KnowledgeCaseOptions:
-    modules: set[str] = set()
+    jurisdictions: set[str] = set()
+    scenarios: set[str] = set()
     for row in rows:
-        for module in row.get("expected_module", "").split("|"):
-            module = module.strip()
-            if module:
-                modules.add(module)
+        jurisdiction = row.get("jurisdiction", "").strip()
+        if jurisdiction:
+            jurisdictions.add(jurisdiction)
+        for scenario in row.get("suitable_for", "").split("、"):
+            scenario = scenario.strip()
+            if scenario:
+                scenarios.add(scenario)
 
     return KnowledgeCaseOptions(
-        modules=sorted(modules),
+        jurisdictions=sorted(jurisdictions),
+        scenarios=sorted(scenarios),
     )
 
 
@@ -67,8 +78,8 @@ def sync_knowledge_index() -> KnowledgeIndexResponse:
 
 
 def _build_index_response(*, cache_refreshed: bool) -> KnowledgeIndexResponse:
-    sources = [_sanitize_knowledge_row(row) for row in load_sources_index()]
-    cases = [_sanitize_knowledge_row(row) for row in load_practice_cases()]
+    sources = [_sanitize_knowledge_row(row) for row in build_user_source_catalog()]
+    cases = [_sanitize_knowledge_row(row) for row in build_user_case_catalog()]
 
     summary = KnowledgeSummary(
         source_count=len(sources),
@@ -88,24 +99,22 @@ def _build_index_response(*, cache_refreshed: bool) -> KnowledgeIndexResponse:
 
 @router.get("/sources/{source_id}", response_model=KnowledgeSourceDetailResponse)
 def get_source_detail(source_id: str) -> KnowledgeSourceDetailResponse:
-    sources = [_sanitize_knowledge_row(row) for row in load_sources_index()]
-    item = _find_by_id(sources, key="source_id", value=source_id)
+    item = get_user_source_detail(source_id)
     if not item:
         raise HTTPException(status_code=404, detail=f"Source not found: {source_id}")
 
-    preview = read_text_preview(item.get("snapshot_path", ""), limit=600)
-    return KnowledgeSourceDetailResponse(item=item, preview=preview)
+    preview = get_user_source_preview(source_id, limit=600)
+    return KnowledgeSourceDetailResponse(item=_sanitize_knowledge_row(item), preview=preview)
 
 
 @router.get("/cases/{case_id}", response_model=KnowledgeCaseDetailResponse)
 def get_case_detail(case_id: str) -> KnowledgeCaseDetailResponse:
-    cases = [_sanitize_knowledge_row(row) for row in load_practice_cases()]
-    item = _find_by_id(cases, key="case_id", value=case_id)
+    item = get_user_case_detail(case_id)
     if not item:
         raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
 
-    preview = read_text_preview(item.get("snapshot_path", ""), limit=600)
-    return KnowledgeCaseDetailResponse(item=item, preview=preview)
+    preview = get_user_case_preview(case_id, limit=600)
+    return KnowledgeCaseDetailResponse(item=_sanitize_knowledge_row(item), preview=preview)
 
 
 @router.get("/search", response_model=KnowledgeSearchResponse)
@@ -121,28 +130,26 @@ def search_regulations(
     if not query:
         return KnowledgeSearchResponse(query=q, hit_count=0)
 
-    docs = retrieve_regulations(
+    chunks = search_user_articles(
         query,
-        top_k=top_k,
         jurisdiction=jurisdiction or None,
         path=path or None,
-        source=source or None,
-        mode=mode,
+        top_k=top_k,
     )
 
     items = [
         KnowledgeSearchItem(
-            id=doc.id,
-            title=doc.title,
-            article=doc.article,
-            content=doc.content,
-            jurisdiction=doc.jurisdiction,
-            path=doc.path,
-            doc_type=doc.doc_type,
-            source_url=doc.source_url,
-            keywords=list(doc.keywords),
+            id=chunk.chunk_id,
+            title=chunk.title,
+            article=chunk.article_no or chunk.citation_anchor,
+            content=chunk.content,
+            jurisdiction=chunk.jurisdiction,
+            path=chunk.path,
+            doc_type=chunk.doc_type,
+            source_url=chunk.source_url,
+            keywords=list(chunk.keywords),
         )
-        for doc in docs
+        for chunk in chunks
     ]
 
     return KnowledgeSearchResponse(
@@ -162,13 +169,12 @@ def match_citation(query: str = Query(default="")) -> KnowledgeCitationResponse:
     if not text:
         return KnowledgeCitationResponse(query=query, matched=None, preview="")
 
-    sources = load_sources_index()
-    matched = resolve_citation(text, sources=sources)
+    matched = resolve_user_citation(text)
     if not matched:
         return KnowledgeCitationResponse(query=query, matched=None, preview="")
 
     matched = _sanitize_knowledge_row(matched)
-    preview = read_text_preview(matched.get("snapshot_path", ""), limit=600)
+    preview = get_user_source_preview(matched.get("source_id", ""), limit=600)
     return KnowledgeCitationResponse(query=query, matched=matched, preview=preview)
 
 

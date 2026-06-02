@@ -14,19 +14,35 @@ import {
 type KnowledgeRow = Record<string, string>;
 type KnowledgeTab = "sources" | "cases" | "citation" | "articles";
 
-const splitModules = (value: string): string[] =>
-  value
-    .split("|")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
 const includesWithSelection = (value: string, selected: string[]) => selected.includes(value);
 
 const toggleValue = (items: string[], value: string): string[] =>
   items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
 
 const rowText = (row: KnowledgeRow, key: string, fallback = "-"): string => row[key] || fallback;
-const toFileName = (value: string): string => value.replace(/\\/g, "/").split("/").pop() || value;
+
+const ARTICLE_SCENARIO_OPTIONS = [
+  { value: "all", zh: "通用法规", en: "General Sources" },
+  { value: "assessment", zh: "评估申报", en: "Assessment Filing" },
+  { value: "cn_flow", zh: "路径判断", en: "Path Diagnosis" },
+  { value: "scc", zh: "标准合同", en: "Standard Contract" },
+  { value: "bcr", zh: "BCR", en: "BCR" },
+  { value: "tia", zh: "TIA", en: "TIA" },
+  { value: "dpia", zh: "DPIA", en: "DPIA" },
+  { value: "cpra", zh: "美国州法", en: "US State Privacy" },
+];
+
+const articleScenarioLabel = (value: string, lang: "zh" | "en"): string => {
+  const matched = ARTICLE_SCENARIO_OPTIONS.find((item) => item.value === value);
+  if (matched) return lang === "zh" ? matched.zh : matched.en;
+  return value;
+};
+
+const articleScenarioSummary = (value: string, lang: "zh" | "en"): string => {
+  const parts = value.split("|").map((item) => item.trim()).filter(Boolean);
+  if (parts.length === 0) return lang === "zh" ? "通用法规" : "General Sources";
+  return parts.map((item) => articleScenarioLabel(item, lang)).join(" / ");
+};
 
 export function EvidenceCenterPage() {
   const { lang } = useLang();
@@ -34,119 +50,127 @@ export function EvidenceCenterPage() {
   const copy = lang === "zh"
     ? {
       title: "知识库中心",
-      searchPlaceholder: "搜索标题、来源机构、路径…",
+      searchPlaceholder: "搜索法规、案例、模板或适用主题…",
       searchNow: "搜索",
-      sourceTab: "法规与指南",
-      caseTab: "实践案例",
-      citationTab: "引用联动演示",
-      citationLinked: "已引用条目",
-      sourceStat: "法规/指南条目",
-      caseStat: "实践案例条目",
+      sourceTab: "法规与依据",
+      caseTab: "典型案例",
+      citationTab: "引用联动",
+      citationLinked: "引用联动",
+      sourceStat: "依据条目",
+      caseStat: "案例条目",
       currentStat: "当前命中",
-      sourceListTitle: "法规与指南索引",
-      sourceDetailTitle: "条目详情",
-      caseListTitle: "实践案例索引",
+      sourceListTitle: "法规、指南与模板",
+      sourceDetailTitle: "知识详情",
+      caseListTitle: "典型案例列表",
       caseDetailTitle: "案例详情",
-      sourceFilterLayer: "按 layer 过滤",
-      sourceFilterPath: "按 path 过滤",
-      caseFilterModule: "按模块过滤",
+      sourceFilterCategory: "按内容分类",
+      sourceFilterJurisdiction: "按适用法域",
+      sourceFilterUsage: "按使用方式",
+      caseFilterJurisdiction: "按法域过滤",
+      caseFilterScenario: "按适用场景过滤",
       selectAll: "全选",
       clearAll: "清空",
       openSource: "打开来源链接",
       openCase: "打开案例来源",
-      snapshotPath: "快照路径",
-      previewTitle: "本地快照文本预览",
-      casePreviewTitle: "案例快照文本预览",
+      previewTitle: "内容预览",
+      casePreviewTitle: "案例内容预览",
       citationInputLabel: "输入引用文本",
       citationPlaceholder: "例如：数据出境安全评估办法第4条",
-      citationSummaryTitle: "结构化匹配详情",
-      sourceId: "source_id",
-      layer: "层级",
-      path: "路径",
+      citationSummaryTitle: "引用识别结果",
+      category: "内容分类",
+      usage: "使用方式",
+      suitableFor: "适用场景",
+      authority: "权威级别",
+      bindingForce: "约束力",
+      reportUsage: "正式报告使用",
+      publisher: "发布机构",
+      summaryTitle: "内容简介",
       noData: "暂无数据。",
       loading: "加载中…",
       matchEmpty: "未匹配到知识库条目。",
-      optionsEmpty: "暂无可选项"
-      ,
-      syncNow: "同步后端知识库",
+      optionsEmpty: "暂无可选项",
+      syncNow: "同步知识内容",
       syncing: "同步中…",
-      syncAt: "最近同步",
-      syncMode: "同步模式",
-      syncSourceFile: "法规源文件",
-      syncCaseFile: "案例源文件",
-      syncStatus: "文件状态",
-      syncReady: "已加载",
-      syncMissing: "缺失",
-      syncForced: "强制刷新缓存",
-      syncNormal: "常规读取",
+      syncAt: "最近更新",
+      syncStatus: "内容状态",
+      syncReady: "内容可用",
+      syncMissing: "部分内容缺失",
       articlesTab: "条文检索",
       articlesPlaceholder: "输入关键词检索法规条文，如：标准合同备案",
       articlesFilterJurisdiction: "法域",
-      articlesFilterPath: "路径",
+      articlesFilterPath: "适用主题",
       articlesSearching: "检索中…",
       articlesEmpty: "未检索到相关条文。",
       articlesHitCount: "命中条文",
       articlesDetailTitle: "条文详情",
       articlesContentLabel: "条文内容",
       articlesSourceLink: "查看来源",
+      articlesBrowseSource: "进入法规阅读页",
+      userGuideTitle: "使用说明",
+      citationHint: "输入报告或页面中的引用文本，系统会为你定位对应知识条目。",
+      citationPreviewTitle: "关联依据摘要",
     }
     : {
       title: "Knowledge Center",
-      searchPlaceholder: "Search title, source org, path...",
+      searchPlaceholder: "Search laws, cases, templates, or topics...",
       searchNow: "Search",
-      sourceTab: "Regulations & Guidance",
-      caseTab: "Practice Cases",
-      citationTab: "Citation Linkage Demo",
-      citationLinked: "Cited Items",
-      sourceStat: "Regulation/Guide Items",
-      caseStat: "Practice Case Items",
+      sourceTab: "Legal Sources",
+      caseTab: "Cases",
+      citationTab: "Citation Linkage",
+      citationLinked: "Citation Linkage",
+      sourceStat: "Source Items",
+      caseStat: "Case Items",
       currentStat: "Matched Items",
-      sourceListTitle: "Regulations & Guidance Index",
-      sourceDetailTitle: "Entry Detail",
-      caseListTitle: "Practice Case Index",
+      sourceListTitle: "Laws, Guidance, and Templates",
+      sourceDetailTitle: "Knowledge Detail",
+      caseListTitle: "Case List",
       caseDetailTitle: "Case Detail",
-      sourceFilterLayer: "Filter by layer",
-      sourceFilterPath: "Filter by path",
-      caseFilterModule: "Filter by module",
+      sourceFilterCategory: "Filter by category",
+      sourceFilterJurisdiction: "Filter by jurisdiction",
+      sourceFilterUsage: "Filter by usage",
+      caseFilterJurisdiction: "Filter by jurisdiction",
+      caseFilterScenario: "Filter by scenario",
       selectAll: "Select All",
       clearAll: "Clear",
       openSource: "Open Source Link",
       openCase: "Open Case Source",
-      snapshotPath: "Snapshot Path",
-      previewTitle: "Local Snapshot Preview",
-      casePreviewTitle: "Case Snapshot Preview",
+      previewTitle: "Preview",
+      casePreviewTitle: "Case Preview",
       citationInputLabel: "Enter citation text",
       citationPlaceholder: "e.g. Data Export Security Assessment Measures Article 4",
-      citationSummaryTitle: "Structured Match Detail",
-      sourceId: "source_id",
-      layer: "Layer",
-      path: "Path",
+      citationSummaryTitle: "Citation Match",
+      category: "Category",
+      usage: "Usage",
+      suitableFor: "Suitable For",
+      authority: "Authority",
+      bindingForce: "Binding Force",
+      reportUsage: "Report Usage",
+      publisher: "Publisher",
+      summaryTitle: "Summary",
       noData: "No data.",
       loading: "Loading...",
       matchEmpty: "No knowledge entry matched.",
-      optionsEmpty: "No options"
-      ,
-      syncNow: "Sync Backend Knowledge",
+      optionsEmpty: "No options",
+      syncNow: "Sync Knowledge",
       syncing: "Syncing...",
-      syncAt: "Last Synced",
-      syncMode: "Sync Mode",
-      syncSourceFile: "Source File",
-      syncCaseFile: "Case File",
-      syncStatus: "File Status",
-      syncReady: "Loaded",
-      syncMissing: "Missing",
-      syncForced: "Forced Cache Refresh",
-      syncNormal: "Normal Read",
+      syncAt: "Last Updated",
+      syncStatus: "Content Status",
+      syncReady: "Ready",
+      syncMissing: "Partially Missing",
       articlesTab: "Article Search",
       articlesPlaceholder: "Search regulation articles, e.g. standard contract filing",
       articlesFilterJurisdiction: "Jurisdiction",
-      articlesFilterPath: "Path",
+      articlesFilterPath: "Topic",
       articlesSearching: "Searching...",
       articlesEmpty: "No articles found.",
       articlesHitCount: "Articles Found",
       articlesDetailTitle: "Article Detail",
       articlesContentLabel: "Content",
       articlesSourceLink: "View Source",
+      articlesBrowseSource: "Open Law Reader",
+      userGuideTitle: "How to Use",
+      citationHint: "Paste a citation from a report or page and the system will locate the matching knowledge entry.",
+      citationPreviewTitle: "Linked Source Summary",
     };
 
   const [tab, setTab] = useState<KnowledgeTab>("sources");
@@ -156,9 +180,11 @@ export function EvidenceCenterPage() {
 
   const [sources, setSources] = useState<KnowledgeRow[]>([]);
   const [cases, setCases] = useState<KnowledgeRow[]>([]);
-  const [sourceLayerOptions, setSourceLayerOptions] = useState<string[]>([]);
-  const [sourcePathOptions, setSourcePathOptions] = useState<string[]>([]);
-  const [caseModuleOptions, setCaseModuleOptions] = useState<string[]>([]);
+  const [sourceCategoryOptions, setSourceCategoryOptions] = useState<string[]>([]);
+  const [sourceJurisdictionOptions, setSourceJurisdictionOptions] = useState<string[]>([]);
+  const [sourceUsageOptions, setSourceUsageOptions] = useState<string[]>([]);
+  const [caseJurisdictionOptions, setCaseJurisdictionOptions] = useState<string[]>([]);
+  const [caseScenarioOptions, setCaseScenarioOptions] = useState<string[]>([]);
   const [summary, setSummary] = useState({ source_count: 0, case_count: 0 });
   const [syncMeta, setSyncMeta] = useState({
     synced_at: "",
@@ -172,9 +198,11 @@ export function EvidenceCenterPage() {
   });
   const [syncing, setSyncing] = useState(false);
 
-  const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
-  const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
-  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSourceJurisdictions, setSelectedSourceJurisdictions] = useState<string[]>([]);
+  const [selectedUsages, setSelectedUsages] = useState<string[]>([]);
+  const [selectedCaseJurisdictions, setSelectedCaseJurisdictions] = useState<string[]>([]);
+  const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
 
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState("");
@@ -202,13 +230,17 @@ export function EvidenceCenterPage() {
     setSummary(data.summary);
     setSyncMeta(data.sync_meta);
 
-    setSourceLayerOptions(data.source_options.layers);
-    setSourcePathOptions(data.source_options.paths);
-    setCaseModuleOptions(data.case_options.modules);
+    setSourceCategoryOptions(data.source_options.categories);
+    setSourceJurisdictionOptions(data.source_options.jurisdictions);
+    setSourceUsageOptions(data.source_options.usages);
+    setCaseJurisdictionOptions(data.case_options.jurisdictions);
+    setCaseScenarioOptions(data.case_options.scenarios);
 
-    setSelectedLayers(data.source_options.layers);
-    setSelectedPaths(data.source_options.paths);
-    setSelectedModules(data.case_options.modules);
+    setSelectedCategories(data.source_options.categories);
+    setSelectedSourceJurisdictions(data.source_options.jurisdictions);
+    setSelectedUsages(data.source_options.usages);
+    setSelectedCaseJurisdictions(data.case_options.jurisdictions);
+    setSelectedScenarios(data.case_options.scenarios);
   };
 
   useEffect(() => {
@@ -238,30 +270,29 @@ export function EvidenceCenterPage() {
   const filteredSources = useMemo(() => {
     const token = keyword.trim().toLowerCase();
     return sources
-      .filter((item) => includesWithSelection(rowText(item, "layer", ""), selectedLayers))
-      .filter((item) => includesWithSelection(rowText(item, "path", ""), selectedPaths))
+      .filter((item) => includesWithSelection(rowText(item, "category", ""), selectedCategories))
+      .filter((item) => includesWithSelection(rowText(item, "jurisdiction", ""), selectedSourceJurisdictions))
+      .filter((item) => includesWithSelection(rowText(item, "usage", ""), selectedUsages))
       .filter((item) => {
         if (!token) return true;
-        return `${rowText(item, "title")} ${rowText(item, "source_org")} ${rowText(item, "path")}`
+        return `${rowText(item, "title")} ${rowText(item, "publisher")} ${rowText(item, "summary")} ${rowText(item, "suitable_for")}`
           .toLowerCase()
           .includes(token);
       });
-  }, [keyword, selectedLayers, selectedPaths, sources]);
+  }, [keyword, selectedCategories, selectedSourceJurisdictions, selectedUsages, sources]);
 
   const filteredCases = useMemo(() => {
     const token = keyword.trim().toLowerCase();
     return cases
-      .filter((item) => {
-        const modules = splitModules(rowText(item, "expected_module", ""));
-        return modules.some((module) => selectedModules.includes(module));
-      })
+      .filter((item) => includesWithSelection(rowText(item, "jurisdiction", ""), selectedCaseJurisdictions))
+      .filter((item) => includesWithSelection(rowText(item, "suitable_for", ""), selectedScenarios))
       .filter((item) => {
         if (!token) return true;
-        return `${rowText(item, "case_title")} ${rowText(item, "source_org")} ${rowText(item, "case_type")}`
+        return `${rowText(item, "title")} ${rowText(item, "publisher")} ${rowText(item, "summary")} ${rowText(item, "suitable_for")}`
           .toLowerCase()
           .includes(token);
       });
-  }, [cases, keyword, selectedModules]);
+  }, [cases, keyword, selectedCaseJurisdictions, selectedScenarios]);
 
   const selectedSource = useMemo(
     () => filteredSources.find((item) => rowText(item, "source_id") === selectedSourceId) ?? filteredSources[0] ?? null,
@@ -392,7 +423,7 @@ export function EvidenceCenterPage() {
   const syncTimeLabel = syncMeta.synced_at
     ? new Date(syncMeta.synced_at).toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { hour12: false })
     : "-";
-  const syncFileStatusLabel = `${syncMeta.sources_csv_exists ? copy.syncReady : copy.syncMissing} / ${syncMeta.cases_csv_exists ? copy.syncReady : copy.syncMissing}`;
+  const syncFileStatusLabel = syncMeta.sources_csv_exists && syncMeta.cases_csv_exists ? copy.syncReady : copy.syncMissing;
 
   const handleSyncNow = async () => {
     setSyncing(true);
@@ -464,33 +495,48 @@ export function EvidenceCenterPage() {
               <>
                 <div className="knowledge-filter-grid">
                   <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterLayer}</small>
+                    <small>{copy.sourceFilterCategory}</small>
                     <div className="knowledge-chip-row">
-                      {sourceLayerOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedLayers.includes(option) ? "active" : ""}`} onClick={() => setSelectedLayers((prev) => toggleValue(prev, option))}>
+                      {sourceCategoryOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedCategories.includes(option) ? "active" : ""}`} onClick={() => setSelectedCategories((prev) => toggleValue(prev, option))}>
                           {option}
                         </button>
                       ))}
-                      {sourceLayerOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                      {sourceCategoryOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
                     </div>
                     <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedLayers(sourceLayerOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedLayers([])}>{copy.clearAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedCategories(sourceCategoryOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedCategories([])}>{copy.clearAll}</button>
                     </div>
                   </div>
                   <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterPath}</small>
+                    <small>{copy.sourceFilterJurisdiction}</small>
                     <div className="knowledge-chip-row">
-                      {sourcePathOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedPaths.includes(option) ? "active" : ""}`} onClick={() => setSelectedPaths((prev) => toggleValue(prev, option))}>
+                      {sourceJurisdictionOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedSourceJurisdictions.includes(option) ? "active" : ""}`} onClick={() => setSelectedSourceJurisdictions((prev) => toggleValue(prev, option))}>
                           {option}
                         </button>
                       ))}
-                      {sourcePathOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                      {sourceJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
                     </div>
                     <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedPaths(sourcePathOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedPaths([])}>{copy.clearAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions(sourceJurisdictionOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions([])}>{copy.clearAll}</button>
+                    </div>
+                  </div>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.sourceFilterUsage}</small>
+                    <div className="knowledge-chip-row">
+                      {sourceUsageOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedUsages.includes(option) ? "active" : ""}`} onClick={() => setSelectedUsages((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {sourceUsageOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedUsages(sourceUsageOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedUsages([])}>{copy.clearAll}</button>
                     </div>
                   </div>
                 </div>
@@ -499,9 +545,9 @@ export function EvidenceCenterPage() {
                     const sourceId = rowText(row, "source_id");
                     return (
                       <article key={sourceId} className={`evidence-hit-item ${selectedSource?.source_id === sourceId ? "active" : ""}`} onClick={() => setSelectedSourceId(sourceId)}>
-                        <small>{rowText(row, "layer")} · {rowText(row, "path")}</small>
+                        <small>{rowText(row, "category")} · {rowText(row, "jurisdiction")}</small>
                         <strong>{rowText(row, "title")}</strong>
-                        <p>{rowText(row, "source_org")}</p>
+                        <p>{rowText(row, "summary")}</p>
                       </article>
                     );
                   })}
@@ -514,18 +560,33 @@ export function EvidenceCenterPage() {
               <>
                 <div className="knowledge-filter-grid">
                   <div className="knowledge-filter-group">
-                    <small>{copy.caseFilterModule}</small>
+                    <small>{copy.caseFilterJurisdiction}</small>
                     <div className="knowledge-chip-row">
-                      {caseModuleOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedModules.includes(option) ? "active" : ""}`} onClick={() => setSelectedModules((prev) => toggleValue(prev, option))}>
+                      {caseJurisdictionOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedCaseJurisdictions.includes(option) ? "active" : ""}`} onClick={() => setSelectedCaseJurisdictions((prev) => toggleValue(prev, option))}>
                           {option}
                         </button>
                       ))}
-                      {caseModuleOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                      {caseJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
                     </div>
                     <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedModules(caseModuleOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedModules([])}>{copy.clearAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions(caseJurisdictionOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions([])}>{copy.clearAll}</button>
+                    </div>
+                  </div>
+                  <div className="knowledge-filter-group">
+                    <small>{copy.caseFilterScenario}</small>
+                    <div className="knowledge-chip-row">
+                      {caseScenarioOptions.map((option) => (
+                        <button key={option} className={`chip-btn ${selectedScenarios.includes(option) ? "active" : ""}`} onClick={() => setSelectedScenarios((prev) => toggleValue(prev, option))}>
+                          {option}
+                        </button>
+                      ))}
+                      {caseScenarioOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                    </div>
+                    <div className="knowledge-filter-actions">
+                      <button className="ghost-btn" onClick={() => setSelectedScenarios(caseScenarioOptions)}>{copy.selectAll}</button>
+                      <button className="ghost-btn" onClick={() => setSelectedScenarios([])}>{copy.clearAll}</button>
                     </div>
                   </div>
                 </div>
@@ -534,9 +595,9 @@ export function EvidenceCenterPage() {
                     const caseId = rowText(row, "case_id");
                     return (
                       <article key={caseId} className={`evidence-hit-item ${selectedCase?.case_id === caseId ? "active" : ""}`} onClick={() => setSelectedCaseId(caseId)}>
-                        <small>{rowText(row, "case_type")}</small>
-                        <strong>{rowText(row, "case_title")}</strong>
-                        <p>{rowText(row, "expected_module")}</p>
+                        <small>{rowText(row, "jurisdiction")} · {rowText(row, "suitable_for")}</small>
+                        <strong>{rowText(row, "title")}</strong>
+                        <p>{rowText(row, "summary")}</p>
                       </article>
                     );
                   })}
@@ -565,13 +626,13 @@ export function EvidenceCenterPage() {
                   <div className="knowledge-filter-group">
                     <small>{copy.articlesFilterPath}</small>
                     <div className="knowledge-chip-row">
-                      {["assessment", "scc", "all"].map((p) => (
+                      {ARTICLE_SCENARIO_OPTIONS.map((option) => (
                         <button
-                          key={p}
-                          className={`chip-btn ${articlesPath === p ? "active" : ""}`}
-                          onClick={() => setArticlesPath((prev) => prev === p ? "" : p)}
+                          key={option.value}
+                          className={`chip-btn ${articlesPath === option.value ? "active" : ""}`}
+                          onClick={() => setArticlesPath((prev) => prev === option.value ? "" : option.value)}
                         >
-                          {p}
+                          {lang === "zh" ? option.zh : option.en}
                         </button>
                       ))}
                     </div>
@@ -595,7 +656,9 @@ export function EvidenceCenterPage() {
                       className={`evidence-hit-item ${selectedArticle?.id === item.id ? "active" : ""}`}
                       onClick={() => setSelectedArticleId(item.id)}
                     >
-                      <small>{item.jurisdiction.toUpperCase()}</small>
+                      <small>
+                        {item.jurisdiction.toUpperCase()} · {articleScenarioSummary(item.path, lang)}
+                      </small>
                       <strong>{item.title}</strong>
                       <p>{item.article}</p>
                     </article>
@@ -617,12 +680,18 @@ export function EvidenceCenterPage() {
                   <article className="citation-match-card">
                     <h4>{copy.citationSummaryTitle}</h4>
                     <div className="citation-kv-grid">
-                      <div className="citation-kv-row"><span>{copy.sourceId}</span><strong>{rowText(citationMatch, "source_id")}</strong></div>
-                      <div className="citation-kv-row"><span>{copy.layer}</span><strong>{rowText(citationMatch, "layer")}</strong></div>
-                      <div className="citation-kv-row"><span>{copy.path}</span><strong>{rowText(citationMatch, "path")}</strong></div>
+                      <div className="citation-kv-row"><span>{copy.category}</span><strong>{rowText(citationMatch, "category")}</strong></div>
+                      <div className="citation-kv-row"><span>{copy.authority}</span><strong>{rowText(citationMatch, "authority")}</strong></div>
+                      <div className="citation-kv-row"><span>{copy.reportUsage}</span><strong>{rowText(citationMatch, "report_usage")}</strong></div>
                     </div>
                     <p className="citation-title">{rowText(citationMatch, "title")}</p>
-                    <small>{copy.snapshotPath}: <code>{rowText(citationMatch, "snapshot_path", "-")}</code></small>
+                    <p>{rowText(citationMatch, "summary")}</p>
+                    {citationPreview ? (
+                      <div className="knowledge-preview-block">
+                        <strong>{copy.citationPreviewTitle}</strong>
+                        <p>{citationPreview}</p>
+                      </div>
+                    ) : null}
                   </article>
                 ) : null}
               </div>
@@ -643,8 +712,7 @@ export function EvidenceCenterPage() {
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
                     <span>{selectedArticle.jurisdiction.toUpperCase()}</span>
-                    <span>{selectedArticle.path}</span>
-                    {selectedArticle.doc_type ? <span>{selectedArticle.doc_type}</span> : null}
+                    <span>{articleScenarioSummary(selectedArticle.path, lang)}</span>
                   </div>
                   <h4>{selectedArticle.title}</h4>
                   <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{selectedArticle.article}</p>
@@ -652,11 +720,19 @@ export function EvidenceCenterPage() {
                     <strong>{copy.articlesContentLabel}</strong>
                     <p style={{ whiteSpace: "pre-wrap" }}>{selectedArticle.content}</p>
                   </div>
-                  {selectedArticle.source_url ? (
-                    <a className="ghost-btn link-btn" href={selectedArticle.source_url} target="_blank" rel="noreferrer">
-                      {copy.articlesSourceLink}
+                  <div className="knowledge-chip-row" style={{ marginTop: "0.75rem" }}>
+                    <a
+                      className="ghost-btn link-btn"
+                      href={`/knowledge/laws/${encodeURIComponent(selectedArticle.id.split("::")[0])}?article=${encodeURIComponent(selectedArticle.article.replace(/^第|条$/g, "").trim())}`}
+                    >
+                      {copy.articlesBrowseSource}
                     </a>
-                  ) : null}
+                    {selectedArticle.source_url ? (
+                      <a className="ghost-btn link-btn" href={selectedArticle.source_url} target="_blank" rel="noreferrer">
+                        {copy.articlesSourceLink}
+                      </a>
+                    ) : null}
+                  </div>
                   {selectedArticle.keywords.length > 0 ? (
                     <div className="knowledge-chip-row" style={{ marginTop: "0.75rem" }}>
                       {selectedArticle.keywords.map((kw) => (
@@ -676,14 +752,23 @@ export function EvidenceCenterPage() {
               selectedSource ? (
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
-                    <span>{rowText(selectedSource, "source_id")}</span>
-                    <span>{rowText(selectedSource, "layer")}</span>
-                    <span>{rowText(selectedSource, "path")}</span>
+                    <span>{rowText(selectedSource, "category")}</span>
+                    <span>{rowText(selectedSource, "jurisdiction")}</span>
                   </div>
                   <h4>{rowText(selectedSource, "title")}</h4>
-                  <p>{rowText(selectedSource, "notes", "-")}</p>
+                  <div className="citation-kv-grid">
+                    <div className="citation-kv-row"><span>{copy.publisher}</span><strong>{rowText(selectedSource, "publisher")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.authority}</span><strong>{rowText(selectedSource, "authority")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.bindingForce}</span><strong>{rowText(selectedSource, "binding_force")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.suitableFor}</span><strong>{rowText(selectedSource, "suitable_for")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.usage}</span><strong>{rowText(selectedSource, "usage")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.reportUsage}</span><strong>{rowText(selectedSource, "report_usage")}</strong></div>
+                  </div>
+                  <div className="knowledge-preview-block">
+                    <strong>{copy.summaryTitle}</strong>
+                    <p>{rowText(selectedSource, "summary", "-")}</p>
+                  </div>
                   {selectedSource.url ? <a className="ghost-btn link-btn" href={selectedSource.url} target="_blank" rel="noreferrer">{copy.openSource}</a> : null}
-                  <small>{copy.snapshotPath}: <code>{rowText(selectedSource, "snapshot_path", "-")}</code></small>
                   {sourcePreview ? <div className="knowledge-preview-block"><strong>{copy.previewTitle}</strong><p>{sourcePreview}</p></div> : null}
                 </article>
               ) : <p className="resource-empty">{copy.noData}</p>
@@ -693,14 +778,24 @@ export function EvidenceCenterPage() {
               selectedCase ? (
                 <article className="evidence-detail-card">
                   <div className="evidence-detail-meta">
-                    <span>{rowText(selectedCase, "case_id")}</span>
                     <span>{rowText(selectedCase, "jurisdiction")}</span>
+                    <span>{rowText(selectedCase, "suitable_for")}</span>
                   </div>
-                  <h4>{rowText(selectedCase, "case_title")}</h4>
-                  <p>{rowText(selectedCase, "limitations", "-")}</p>
-                  <p>{rowText(selectedCase, "available_artifacts", "-")}</p>
+                  <h4>{rowText(selectedCase, "title")}</h4>
+                  <div className="citation-kv-grid">
+                    <div className="citation-kv-row"><span>{copy.publisher}</span><strong>{rowText(selectedCase, "publisher")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.suitableFor}</span><strong>{rowText(selectedCase, "suitable_for")}</strong></div>
+                    <div className="citation-kv-row"><span>{copy.usage}</span><strong>{rowText(selectedCase, "usage")}</strong></div>
+                  </div>
+                  <div className="knowledge-preview-block">
+                    <strong>{copy.summaryTitle}</strong>
+                    <p>{rowText(selectedCase, "summary", "-")}</p>
+                  </div>
+                  <div className="knowledge-preview-block">
+                    <strong>{lang === "zh" ? "适用限制" : "Limitations"}</strong>
+                    <p>{rowText(selectedCase, "limitations", "-")}</p>
+                  </div>
                   {selectedCase.url ? <a className="ghost-btn link-btn" href={selectedCase.url} target="_blank" rel="noreferrer">{copy.openCase}</a> : null}
-                  <small>{copy.snapshotPath}: <code>{rowText(selectedCase, "snapshot_path", "-")}</code></small>
                   {casePreview ? <div className="knowledge-preview-block"><strong>{copy.casePreviewTitle}</strong><p>{casePreview}</p></div> : null}
                 </article>
               ) : <p className="resource-empty">{copy.noData}</p>
@@ -722,16 +817,18 @@ export function EvidenceCenterPage() {
 
         <aside className="kc-col">
           <header className="kc-col-head">
-            <span>{lang === "zh" ? "联动与状态" : "Linkage & Status"}</span>
+            <span>{lang === "zh" ? "引用与说明" : "Citation & Guidance"}</span>
           </header>
           <div className="kc-col-body">
             <section className="kc-sync-box">
               <div className="kc-sync-row"><small>{copy.syncAt}</small><strong>{syncTimeLabel}</strong></div>
-              <div className="kc-sync-row"><small>{copy.syncMode}</small><strong>{syncMeta.cache_refreshed ? copy.syncForced : copy.syncNormal}</strong></div>
-              <div className="kc-sync-row"><small>{copy.syncSourceFile}</small><strong>{syncMeta.sources_csv_path ? toFileName(syncMeta.sources_csv_path) : "-"}</strong></div>
-              <div className="kc-sync-row"><small>{copy.syncCaseFile}</small><strong>{syncMeta.cases_csv_path ? toFileName(syncMeta.cases_csv_path) : "-"}</strong></div>
               <div className="kc-sync-row"><small>{copy.syncStatus}</small><strong>{syncFileStatusLabel}</strong></div>
             </section>
+
+            <article className="knowledge-preview-block">
+              <strong>{copy.userGuideTitle}</strong>
+              <p>{copy.citationHint}</p>
+            </article>
 
             <article className="citation-query-card">
               <label className="field-wrap">
@@ -745,12 +842,12 @@ export function EvidenceCenterPage() {
               <article className="citation-match-card">
                 <h4>{copy.citationSummaryTitle}</h4>
                 <div className="citation-kv-grid">
-                  <div className="citation-kv-row"><span>{copy.sourceId}</span><strong>{rowText(citationMatch, "source_id")}</strong></div>
-                  <div className="citation-kv-row"><span>{copy.layer}</span><strong>{rowText(citationMatch, "layer")}</strong></div>
-                  <div className="citation-kv-row"><span>{copy.path}</span><strong>{rowText(citationMatch, "path")}</strong></div>
+                  <div className="citation-kv-row"><span>{copy.category}</span><strong>{rowText(citationMatch, "category")}</strong></div>
+                  <div className="citation-kv-row"><span>{copy.usage}</span><strong>{rowText(citationMatch, "usage")}</strong></div>
+                  <div className="citation-kv-row"><span>{copy.reportUsage}</span><strong>{rowText(citationMatch, "report_usage")}</strong></div>
                 </div>
                 <p className="citation-title">{rowText(citationMatch, "title")}</p>
-                <small>{copy.snapshotPath}: <code>{rowText(citationMatch, "snapshot_path", "-")}</code></small>
+                <p>{rowText(citationMatch, "summary")}</p>
               </article>
             ) : null}
             {!citationLoading && !citationMatch ? <article className="citation-empty-card"><p>{copy.matchEmpty}</p></article> : null}

@@ -23,13 +23,6 @@ interface Props {
   onClose: () => void;
 }
 
-/**
- * Plan A — CitationArticleDrawer
- *
- * Side drawer that slides in from the right. Shows the full text of the cited
- * legal article from the knowledge base, with previous/next article context.
- * Includes a "view in standalone page" link to the LawViewerPage (Plan B).
- */
 export function CitationArticleDrawer({ citation, onClose }: Props) {
   const navigate = useNavigate();
   const [article, setArticle] = useState<ArticleDetail | null>(null);
@@ -76,7 +69,7 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
             ×
           </button>
           <h3 className="citation-drawer-title">
-            {citation.title || "引用原文"}
+            {citation.title || "依据原文"}
           </h3>
           {citation.article_no && (
             <span className="citation-drawer-article-label">
@@ -95,25 +88,28 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
 
         <div className="citation-drawer-body">
           {loading ? (
-            <p className="citation-drawer-status">加载条文原文中…</p>
+            <p className="citation-drawer-status">正在载入依据原文…</p>
           ) : error ? (
             <p className="citation-drawer-error">{error}</p>
           ) : article ? (
             <article className="citation-article-view">
               {article.prev_article_no && article.prev_article_content && (
                 <section className="citation-article-context">
+                  <small>上文</small>
                   <h5>第{article.prev_article_no}条</h5>
                   <p>{article.prev_article_content}</p>
                 </section>
               )}
 
               <section className="citation-article-target">
+                <small>当前引用位置</small>
                 <h4>第{article.article_no}条</h4>
                 <p>{article.article_content}</p>
               </section>
 
               {article.next_article_no && article.next_article_content && (
                 <section className="citation-article-context">
+                  <small>下文</small>
                   <h5>第{article.next_article_no}条</h5>
                   <p>{article.next_article_content}</p>
                 </section>
@@ -130,14 +126,14 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
               rel="noopener noreferrer"
               className="citation-drawer-source-link"
             >
-              在官方来源查看
+              查看官方发布版本
             </a>
           )}
           <button
             className="citation-drawer-view-full"
             onClick={handleViewFullLaw}
           >
-            在独立页面浏览完整法规
+            在知识库中继续阅读
           </button>
         </footer>
       </div>

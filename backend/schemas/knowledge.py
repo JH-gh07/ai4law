@@ -7,12 +7,14 @@ class KnowledgeSummary(BaseModel):
 
 
 class KnowledgeSourceOptions(BaseModel):
-    layers: list[str] = Field(default_factory=list)
-    paths: list[str] = Field(default_factory=list)
+    categories: list[str] = Field(default_factory=list)
+    jurisdictions: list[str] = Field(default_factory=list)
+    usages: list[str] = Field(default_factory=list)
 
 
 class KnowledgeCaseOptions(BaseModel):
-    modules: list[str] = Field(default_factory=list)
+    jurisdictions: list[str] = Field(default_factory=list)
+    scenarios: list[str] = Field(default_factory=list)
 
 
 class KnowledgeSyncMeta(BaseModel):
