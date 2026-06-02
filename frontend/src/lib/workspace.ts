@@ -11,7 +11,14 @@ export type ResponseInsight = {
   riskLevel?: string;
   recommendedPath?: string;
   consistencyIssues: string[];
+  citations: CitationSummary[];
 };
+
+export interface CitationSummary {
+  source_title: string;
+  article: string;
+  snippet: string;
+}
 
 export function extractInsight(response: unknown): ResponseInsight {
   if (!isRecord(response)) {
@@ -34,12 +41,32 @@ export function extractInsight(response: unknown): ResponseInsight {
     ? consistencyIssuesRaw.filter((item): item is string => typeof item === "string")
     : [];
 
+  // Extract citations from issues array (for review module)
+  const citations: CitationSummary[] = [];
+  const issuesRaw = resultRecord.issues || responseRecord.issues;
+  if (Array.isArray(issuesRaw)) {
+    for (const issue of issuesRaw) {
+      if (!isRecord(issue)) continue;
+      const scList = issue.structured_citations || [];
+      for (const sc of Array.isArray(scList) ? scList : []) {
+        if (!isRecord(sc)) continue;
+        const title = String(sc.source_title || "");
+        const article = String(sc.article || "");
+        const snippet = String(sc.snippet || "");
+        if (title || article) {
+          citations.push({ source_title: title, article, snippet });
+        }
+      }
+    }
+  }
+
   return {
     reportPath: readString(response.report_path),
     outputFiles,
     riskLevel: readString(response.risk_level) ?? readString(resultRecord.risk_level),
     recommendedPath: readString(response.recommended_path),
-    consistencyIssues
+    consistencyIssues,
+    citations,
   };
 }
 

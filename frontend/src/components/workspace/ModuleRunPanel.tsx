@@ -2419,6 +2419,15 @@ const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacing
       .slice(0, 3);
     if (topTitles.length > 0) highlights.push(topTitles.join("；"));
   }
+  // Citation highlights (for review module structured_citations)
+  if (insight.citations.length > 0) {
+    const topCitations = insight.citations.slice(0, 5).map(
+      (c) => `《${c.source_title}》${c.article}`.trim()
+    );
+    if (topCitations.length > 0) {
+      highlights.push(`${lang === "zh" ? "审查引用法规" : "Cited Regulations"}：${topCitations.join("、")}`);
+    }
+  }
 
   const nextSteps = actionItems.length > 0 ? actionItems.slice(0, 4) : [copy.defaultStep1, copy.defaultStep2];
 
