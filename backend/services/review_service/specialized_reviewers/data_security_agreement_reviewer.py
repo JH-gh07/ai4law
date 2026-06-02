@@ -126,8 +126,8 @@ class DataSecurityAgreementReviewer(BaseSpecializedReviewer):
                     recommendation="建议要求受托方确保接触数据的人员签署保密协议，并实施最小权限访问控制。",
                 ))
 
-        # ── Dispute resolution fairness ──
-        if ct == "LIABILITY":
+        # ── Dispute resolution fairness (broad type matching after obligation split) ──
+        if ct in ("LIABILITY", "CROSS_BORDER_TRANSFER", "OTHER"):
             import re as _re
             if any(_re.search(p, text) for p in [
                 r"香港.*管辖|新加坡.*管辖|境外.*管辖",

@@ -21,11 +21,13 @@ _OBLIGATION_TRIGGERS = [
     "应", "确保", "保障", "采取",
 ]
 
-# ── Split pattern — look for sentence boundary before a trigger word ────
+# ── Split patterns — try trigger‑word split first, fall back to sentence boundary ──
 
-_SPLIT_PATTERN = re.compile(
+_SPLIT_ON_TRIGGER = re.compile(
     r"(?<=[。；;])\s*(?=" + "|".join(_OBLIGATION_TRIGGERS) + ")",
 )
+
+_SPLIT_ON_SEMICOLON = re.compile(r"[；;]")  # split on semicolons only (more conservative)
 
 
 class ObligationUnit:
@@ -52,12 +54,12 @@ class ObligationSplitter:
     def split_clause(self, clause: Clause) -> list[ObligationUnit]:
         """Split a clause into multiple obligation units."""
         text = clause.text
-        if len(text) < 150:
+        if len(text) < 50:
             return [self._make_unit(text, clause)]
 
-        # Split at sentence boundaries before obligation triggers
-        parts = _SPLIT_PATTERN.split(text)
-        parts = [p.strip() for p in parts if p.strip() and len(p.strip()) >= 30]
+        # Split on semicolons (Chinese  ； or ASCII ;) — conservative boundary
+        parts = _SPLIT_ON_SEMICOLON.split(text)
+        parts = [p.strip() for p in parts if p.strip() and len(p.strip()) >= 10]
 
         if len(parts) < 2:
             return [self._make_unit(text, clause)]

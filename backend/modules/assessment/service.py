@@ -321,11 +321,38 @@ def _attachment_notes_from_profile(profile) -> list[dict[str, str]]:
                 "source_ref": meta.get("filename", ""),
                 "type": meta.get("type", "other"),
             }
+            # Contract clauses (existing)
             if "contract_clauses" in meta:
                 clauses = meta["contract_clauses"]
                 entry["six_core_clauses_coverage"] = str(clauses.get("six_core_clauses_coverage", {}))
                 entry["missing_core_clauses"] = ", ".join(clauses.get("missing_core_clauses", []))
                 entry["all_covered"] = str(clauses.get("all_covered", False))
+            # Certification
+            if "certification" in meta:
+                cert = meta["certification"]
+                entry["cert_types"] = ", ".join(cert.get("cert_types_found", []))
+                entry["cert_validity"] = cert.get("validity_status", "unknown")
+            # Consent record
+            if "consent_record" in meta:
+                consent = meta["consent_record"]
+                entry["consent_all_covered"] = str(consent.get("all_covered", False))
+                entry["consent_missing"] = ", ".join(consent.get("missing_elements", []))
+            # Audit report
+            if "audit_report" in meta:
+                audit = meta["audit_report"]
+                entry["audit_types"] = ", ".join(audit.get("audit_types", []))
+                entry["audit_scope"] = ", ".join(audit.get("scope_areas", []))
+            # Data inventory
+            if "data_inventory" in meta:
+                inventory = meta["data_inventory"]
+                present_cats = [cat for cat, found in inventory.get("data_categories", {}).items() if found]
+                entry["inventory_categories"] = ", ".join(present_cats)
+            # Policy document
+            if "policy_doc" in meta:
+                policy = meta["policy_doc"]
+                entry["policy_types"] = ", ".join(policy.get("policy_types_found", []))
+                entry["policy_requirements_met"] = str(policy.get("all_requirements_met", False))
+
             if "missing_summary" in meta:
                 entry["summary"] = meta["missing_summary"]
             elif meta.get("char_count", 0) > 0:

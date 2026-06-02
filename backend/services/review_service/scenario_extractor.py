@@ -11,6 +11,9 @@ from backend.schemas.review import (
     DocumentType,
     ReviewScenarioContext,
 )
+from backend.services.review_service.scenario_graph_builder import (
+    ScenarioGraphBuilder,
+)
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
@@ -99,6 +102,7 @@ class ScenarioExtractor:
 
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         self.llm_client = llm_client
+        self.graph_builder = ScenarioGraphBuilder(llm_client=llm_client)
 
     def extract(
         self,
@@ -139,6 +143,28 @@ class ScenarioExtractor:
 
         # Uncertain facts
         base.uncertain_facts = self._extract_uncertain_facts(text)
+
+        # ── Scenario graph (structured actor‑data flow graph) ──
+        graph = self.graph_builder.build(text)
+        # Inject graph facts into auto_extracted_facts for downstream use
+        if graph.actors:
+            base.auto_extracted_facts["scenario_actors"] = str(
+                [a["name"] for a in graph.actors]
+            )
+        if graph.data_flows:
+            base.auto_extracted_facts["scenario_data_flows"] = str(
+                [f"{f['from_actor']}→{f['to_actor_or_location']}" for f in graph.data_flows[:3]]
+            )
+        if graph.legal_grounds:
+            base.auto_extracted_facts["scenario_legal_grounds"] = "、".join(graph.legal_grounds)
+        # Merge cross-border indicators from graph
+        for ind in graph.cross_border_indicators:
+            if ind not in base.cross_border_indicators:
+                base.cross_border_indicators.append(ind)
+        # Merge uncertain facts from graph
+        for f in graph.uncertain_facts:
+            if f not in base.uncertain_facts:
+                base.uncertain_facts.append(f)
 
         return base
 

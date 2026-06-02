@@ -7,6 +7,7 @@ import re
 from uuid import uuid4
 
 from backend.schemas.review import Clause, ClausePosition
+from backend.services.review_service.obligation_splitter import ObligationSplitter
 
 
 # ── Chinese numbering patterns ──────────────────────────────────────────
@@ -87,8 +88,10 @@ class ClauseSegmenter:
     # Public patterns for external use (e.g. service.py noise filter)
     split_pattern = _CN_CLAUSE_PATTERN
 
-    def __init__(self) -> None:
+    def __init__(self, enable_obligation_split: bool = True) -> None:
         self._current_hierarchy: list[str] = []
+        self.enable_obligation_split = enable_obligation_split
+        self._obligation_splitter = ObligationSplitter() if enable_obligation_split else None
 
     # ------------------------------------------------------------------
     # Public API
@@ -141,6 +144,19 @@ class ClauseSegmenter:
                         is_appendix_content=is_appendix,
                     )
                 )
+
+        # ── Post‑segmentation: split compound clauses into obligation units ──
+        if self.enable_obligation_split and self._obligation_splitter:
+            split_clauses: list[Clause] = []
+            for clause in clauses:
+                if len(clause.text) >= 50 and ("；" in clause.text or "。" in clause.text):
+                    units = self._obligation_splitter.split_clause(clause)
+                    split_clauses.extend(
+                        self._obligation_splitter.convert_to_clauses(clause, units)
+                    )
+                else:
+                    split_clauses.append(clause)
+            return split_clauses
 
         return clauses
 

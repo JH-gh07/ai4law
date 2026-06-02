@@ -58,18 +58,28 @@ def _issue(
 
 
 def _attachment_evidence(attachment_notes: list) -> dict[str, bool]:
-    """Scan attachment_notes for structured evidence to inform issue suppression."""
+    """Scan attachment_notes for structured evidence to inform issue suppression.
+
+    Reads structured fields from all 6 extractor types (contract, certification,
+    consent_record, audit_report, data_inventory, policy_doc).
+    """
     result: dict[str, bool] = {
         "has_contract_clauses": False,
         "contract_all_covered": False,
         "has_consent_records": False,
+        "consent_all_covered": False,
         "has_certification": False,
+        "certification_valid": False,
+        "has_audit_report": False,
+        "has_data_inventory": False,
+        "has_policy_doc": False,
         "has_onward_transfer_clause": False,
         "has_anonymization_claim": False,
     }
     for item in attachment_notes:
         if isinstance(item, dict):
             atype = item.get("type", "")
+
             if atype == "contract":
                 result["has_contract_clauses"] = True
                 all_covered = item.get("all_covered", "False")
@@ -77,10 +87,27 @@ def _attachment_evidence(attachment_notes: list) -> dict[str, bool]:
                 missing_str = item.get("missing_core_clauses", "")
                 if "onward_transfer" not in missing_str:
                     result["has_onward_transfer_clause"] = True
-            if atype == "consent_record":
+
+            elif atype == "consent_record":
                 result["has_consent_records"] = True
-            if atype == "certification":
+                consent_all = item.get("consent_all_covered", "False")
+                result["consent_all_covered"] = consent_all in (True, "True")
+
+            elif atype == "certification":
                 result["has_certification"] = True
+                validity = item.get("cert_validity", "unknown")
+                result["certification_valid"] = validity == "valid"
+
+            elif atype == "audit_report":
+                result["has_audit_report"] = True
+
+            elif atype == "data_inventory":
+                result["has_data_inventory"] = True
+
+            elif atype == "policy_doc":
+                result["has_policy_doc"] = True
+
+            # Anonymization check from summary text
             summary = item.get("summary", "")
             if any(kw in summary for kw in ("匿名化", "去标识化", "anonymization", "de-identification")):
                 result["has_anonymization_claim"] = True
@@ -95,6 +122,7 @@ def _attachment_evidence(attachment_notes: list) -> dict[str, bool]:
                 result["has_certification"] = True
             if any(kw in item_lower for kw in ("匿名化", "去标识化", "anonymization")):
                 result["has_anonymization_claim"] = True
+
     return result
 
 
