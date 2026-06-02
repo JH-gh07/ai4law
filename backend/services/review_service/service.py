@@ -90,6 +90,16 @@ _ENGLISH_REVIEW_SIGNAL_TERMS = (
     "withdraw",
 )
 
+_HIGH_RISK_SHORT_PHRASES = (
+    # Short phrases that always warrant LLM deep review regardless of length
+    "香港法院", "境外法院", "外国法院", "境外仲裁",
+    "其他协议优先", "以本协议为准", "以本合同为准",
+    "责任总额不超过", "赔偿上限", "不承担间接损失",
+    "暂缓处理", "自行判断", "无需另行同意",
+    "由乙方负责完成合规手续", "受托方负责.*合规",
+    "不适用", "免除.*全部.*责任",
+)
+
 _SHORT_STRUCTURAL_NOISE_PATTERNS = (
     re.compile(r"^\d+([.)、]|\.\d+)*$"),
     re.compile(r"^(第[一二三四五六七八九十百千万0-9]+[章节条]|[一二三四五六七八九十]+、)$"),
@@ -501,14 +511,22 @@ class ReviewService:
         candidates: list[tuple[str, int]] = []  # (clause_id, priority_score)
 
         for clause in classified:
-            if clause.clause_type.value == "OTHER":
-                continue
+            ct = clause.clause_type.value
             text_len = len(clause.text.strip())
-            if text_len < 40:
+
+            # High‑risk short phrase check — override length threshold
+            has_high_risk_phrase = any(
+                re.search(phrase, clause.text) for phrase in _HIGH_RISK_SHORT_PHRASES
+            )
+
+            if ct == "OTHER" and not has_high_risk_phrase:
+                continue
+            if text_len < 40 and not has_high_risk_phrase:
                 continue
 
-            ct = clause.clause_type.value
-            if ct in high_types:
+            if has_high_risk_phrase:
+                priority = 12  # highest priority
+            elif ct in high_types:
                 priority = 10
             elif ct in medium_types and text_len >= 120:
                 priority = 5

@@ -115,13 +115,17 @@ class ReviewReportRenderer:
         citation_lines = self._collect_citations(review.issues)
         sections.append(("八、法规依据汇总", citation_lines or ["未检索到法规依据。"]))
 
-        # 九、附录
+        # 九、审查边界与置信度说明
+        sections.append(("九、审查边界与置信度说明", self._build_boundary_section(review)))
+
+        # 十、附录
         appendix_lines = [
             "审查限制说明：",
             "1. 本报告由自动化审查系统生成，仅供参考，不构成正式法律意见。",
             "2. 基于规则检查的发现（标注 review_method=rule）置信度较低，建议人工复核。",
             "3. 若当前审查未启用LLM深度审查（review_mode=RULE_ONLY），审查结果可能不完整。",
             "4. 全局缺失项检测基于文档类型检查清单，实际缺失情况可能更复杂。",
+            "5. 自动化审查无法替代律师对具体事实的调查和判断。",
             "",
             f"审查完成时间：{review.review_metadata.get('review_completed_at', '未知')}",
             f"审查模式：{review.review_metadata.get('review_mode', '未知')}",
@@ -176,6 +180,44 @@ class ReviewReportRenderer:
             lines.append(f"    法规依据：{'；'.join(item.legal_basis)}")
         if item.recommendation:
             lines.append(f"    建议：{item.recommendation}")
+        return lines
+
+    @staticmethod
+    def _build_boundary_section(review: AggregatedReview) -> list[str]:
+        """Build the review boundary and confidence explanation section."""
+        lines = [
+            "本报告基于以下方法生成，请阅读以下说明以正确理解报告内容：",
+            "",
+        ]
+
+        # 1. Confirmed issues
+        confirmed = [i for i in review.issues if not i.facts_uncertain and i.review_confidence >= 0.7]
+        lines.append(f"一、已确认问题（{len(confirmed)} 项）")
+        lines.append("   基于文档原文和法规规则直接识别的合规问题，具有较高置信度。")
+        lines.append("   这些问题通常有明确的法规条文支撑，可直接作为合规整改依据。")
+
+        # 2. Uncertain risks
+        uncertain = [i for i in review.issues if i.facts_uncertain]
+        lines.append(f"二、待确认风险（{len(uncertain)} 项）")
+        lines.append("   基于条件性表述、缺失信息或用户补充背景推断的风险。")
+        lines.append("   需要企业进一步确认相关事实后才能确定性判断。")
+        for i in uncertain[:3]:
+            lines.append(f"   - {i.title}: {i.uncertainty_rationale or '需补充信息'}")
+
+        # 3. Low confidence issues
+        low_conf = [i for i in review.issues if i.review_confidence < 0.7 and not i.facts_uncertain]
+        lines.append(f"三、低置信度问题（{len(low_conf)} 项）")
+        lines.append("   由规则兜底或LLM低置信度生成，建议人工复核后决定是否采纳。")
+        meta = review.review_metadata
+        if meta.get("review_mode") == "rule_only":
+            lines.append("   ⚠ 当前审查模式为RULE_ONLY，所有发现均基于规则匹配，未经过LLM深度审查。")
+            lines.append("   建议启用LLM审查以获得更准确的合规分析。")
+
+        # 4. Not covered
+        lines.append("四、未覆盖范围")
+        lines.append("   本报告不替代律师正式法律意见，不对未上传文件作事实认定。")
+        lines.append("   审查范围限于已上传文档的文本内容，无法核查事实真伪或未提供的信息。")
+
         return lines
 
     @staticmethod

@@ -36,25 +36,41 @@ class RiskScorer:
         """Calculate 0–100 risk score for a single issue."""
         clause_type = issue.clause_type.value
 
-        base = (
-            self.rulebook.get_risk_weight(clause_type)
-            * self.rulebook.get_severity_weight(issue.severity.value)
-        )
+        base_weight = self.rulebook.get_risk_weight(clause_type)
+        sev_weight = self.rulebook.get_severity_weight(issue.severity.value)
+        base = base_weight * sev_weight
 
-        # Bonuses
         bonus = 0
+        bonus_reasons: list[str] = []
         if clause_type in self.CROSS_BORDER_TYPES:
             bonus += 15
+            bonus_reasons.append("涉及数据出境")
         if clause_type in self.SENSITIVE_DATA_TYPES:
             bonus += 15
+            bonus_reasons.append("涉及敏感个人信息")
         if clause_type in self.MINOR_TYPES:
             bonus += 15
-        if clause_type in self.SCC_CONFLICT_TYPES and "境外法院" in issue.title:
+            bonus_reasons.append("涉及未成年人信息")
+        if clause_type in self.SCC_CONFLICT_TYPES and ("境外法院" in issue.title or "境外" in issue.title):
             bonus += 20
+            bonus_reasons.append("标准合同正文冲突")
 
-        # Normalize to 0–100 (max possible base: 8 * 10 = 80, max bonus: 65)
         raw = base + bonus
-        return min(round(raw, 1), 100.0)
+        score = min(round(raw, 1), 100.0)
+
+        # Attach breakdown to issue
+        issue.risk_score = score
+        if not hasattr(issue, '_risk_breakdown') or issue._risk_breakdown is None:
+            issue._risk_breakdown = {
+                "base_weight": base_weight,
+                "severity_weight": sev_weight,
+                "base_score": base,
+                "bonus": bonus,
+                "bonus_reasons": bonus_reasons,
+                "formula": f"{base_weight}×{sev_weight} + {bonus}",
+            }
+
+        return score
 
     # ------------------------------------------------------------------
     # Overall scoring
