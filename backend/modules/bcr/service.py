@@ -26,8 +26,9 @@ from backend.modules.bcr.bcr_type_classifier import BCRTypeClassifier
 from backend.modules.bcr.bcr_tia_checker import BCRTiaChecker
 from backend.modules.bcr.bcr_onward_transfer_checker import BCROnwardTransferChecker
 from backend.modules.bcr.bcr_liability_checker import BCRLiabilityChecker
+from backend.modules.bcr.agents import create_agents
 from backend.modules.bcr.schema import (
-    BCRAsyncAccepted, BCRAsyncStatus, BCRChapter, BCRProblem, BCRRequest, BCRResult, BCRScore,
+    BCRAsyncAccepted, BCRAsyncStatus, BCRChapter, BCRFinding, BCRProblem, BCRRequest, BCRResult, BCRScore,
 )
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/3.2_bcr_review_template_v0.docx")
@@ -56,6 +57,7 @@ class BCRService:
         self.tia_checker = BCRTiaChecker()
         self.onward_checker = BCROnwardTransferChecker()
         self.liability_checker = BCRLiabilityChecker()
+        self.agents = create_agents(llm_client)
 
     # ------------------------------------------------------------------
     # Public API
@@ -99,10 +101,30 @@ class BCRService:
         type_class = self.type_classifier.classify(combined_text, declared_type)
         bcr_type = type_class.actual_bcr_type if type_class.actual_bcr_type != "unknown" else "BCR-C"
 
+        # Agent 1: Type reasoning — when uncertain or mismatch
+        if bcr_type == "BCR-C" and type_class.actual_bcr_type == "unknown":
+            c_ev = type_class.evidence
+            agent_type = self.agents["type_reasoning"].run(
+                text=combined_text, declared_type=declared_type or "BCR-C",
+                c_score=sum(1 for e in c_ev if "BCR-C" in e),
+                p_score=sum(1 for e in c_ev if "BCR-P" in e),
+                c_evidence=c_ev, p_evidence=c_ev,
+            )
+            if agent_type.get("type_judgment") in ("BCR-C", "BCR-P"):
+                bcr_type = agent_type["type_judgment"]
+            type_class.risk_level = agent_type.get("risk_level", "MEDIUM")
+
         # Stage 3: SCENARIO_EXTRACTION
         scenario = self.scenario_extractor.extract(
             combined_text, doc=main_doc, user_context=payload.scenario_context,
         )
+
+        # Agent 3: Actor role — identify EU liable entity beyond regex
+        if main_doc:
+            entities = [{"name": scenario.company_name or "unknown", "context": combined_text[:200]}]
+            agent_roles = self.agents["actor_role"].run(text=combined_text, entities=entities)
+            if agent_roles.get("eu_liable_entity") and not scenario.eu_liable_entity:
+                scenario.eu_liable_entity = agent_roles["eu_liable_entity"]
 
         # Stage 4: CHECKLIST_CHECKING
         findings, missing = self.checklist_checker.check(main_doc, bcr_type)
@@ -111,6 +133,63 @@ class BCRService:
         findings.extend(self.tia_checker.check(main_doc))
         findings.extend(self.onward_checker.check(main_doc))
         findings.extend(self.liability_checker.check(main_doc))
+
+        # Agent 2: Coverage — for PARTIALLY_COVERED / VAGUE requirements
+        requirements = self.rulebook.get_all_requirements(bcr_type)
+        for req in requirements:
+            status = req.get("_coverage_status", "")  # set by checker
+            if status in ("PARTIALLY_COVERED", "VAGUE") and req.get("severity_if_missing") in ("HIGH",):
+                matched = [ch.content for ch in main_doc.chapters
+                          if any(kw.lower() in ch.content.lower() for kw in req.get("check_keywords", [])[:2])]
+                agent_cov = self.agents["coverage"].run(
+                    requirement_id=req["requirement_id"], requirement_title=req["title"],
+                    matched_clauses=matched[:3], coverage_status=status,
+                    legal_basis=[req.get("gdpr_basis", ""), req.get("source", "")], bcr_type=bcr_type,
+                )
+                if agent_cov.get("should_generate_finding"):
+                    findings.append(BCRFinding(
+                        finding_id=f"BCR-AGENT-COV-{req['requirement_id']}",
+                        requirement_id=req["requirement_id"],
+                        title=req["title"],
+                        risk_level=agent_cov.get("risk_level", "MEDIUM"),
+                        finding=agent_cov.get("finding_text", ""),
+                        recommendation=agent_cov.get("recommendation", ""),
+                    ))
+
+        # Agent 4: Onward Transfer — when weak standard detected
+        onward_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["onward", "transfer"]))
+        if onward_text:
+            agent_ot = self.agents["onward_transfer"].run(
+                clause_text=onward_text, has_scc=False, has_adequacy=False,
+                has_derogation=False, bcr_type=bcr_type,
+            )
+            if agent_ot.get("finding_type") == "ONWARD_TRANSFER_WEAK_STANDARD":
+                findings.append(BCRFinding(
+                    finding_id="BCR-AGENT-OT-01",
+                    requirement_id="BCR-C-1.8",
+                    title=agent_ot.get("finding", "Onward Transfer protection standard may be insufficient"),
+                    risk_level=agent_ot.get("risk_level", "MEDIUM"),
+                    finding=agent_ot.get("finding", ""),
+                    recommendation=agent_ot.get("recommendation", ""),
+                ))
+
+        # Agent 5: TIA completeness
+        tia_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["third country", "tia", "local law"]))
+        gov_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["government", "access"]))
+        if tia_text:
+            agent_tia = self.agents["tia_reasoning"].run(
+                tia_section=tia_text, gov_access_section=gov_text,
+                legal_refs=["Schrems II", "EDPB 01/2020"],
+            )
+            if agent_tia.get("tia_completeness") != "complete":
+                findings.append(BCRFinding(
+                    finding_id="BCR-AGENT-TIA-01",
+                    requirement_id="BCR-C-1.9",
+                    title=f"TIA completeness: {agent_tia.get('tia_completeness', 'incomplete')}",
+                    risk_level=agent_tia.get("risk_level", "MEDIUM"),
+                    finding=agent_tia.get("finding_summary", "TIA assessment is incomplete."),
+                    recommendation=agent_tia.get("recommendation", ""),
+                ))
 
         # Stage 5: CLAUSE_REVIEWING
         requirements = self.rulebook.get_all_requirements(bcr_type)
@@ -135,6 +214,17 @@ class BCRService:
         agg = self.risk_aggregator.aggregate(deduped, missing, type_class)
         rating = agg["overall_rating"]
         score = agg["overall_score"]
+
+        # Agent 9: Approval risk — beyond formula
+        finding_dicts = [{"title": f.title, "risk_level": f.risk_level,
+                          "finding": f.finding, "requirement_id": f.requirement_id}
+                         for f in deduped]
+        agent_risk = self.agents["approval_risk"].run(
+            findings=finding_dicts, rating=rating, score=score,
+            type_consistency=type_class.type_consistency, bcr_type=bcr_type,
+        )
+        if agent_risk.get("rating_adjustment") == "HIGH" and rating != "高风险":
+            rating = "高风险"
 
         metadata = {
             "completed_at": datetime.datetime.now().isoformat(),
