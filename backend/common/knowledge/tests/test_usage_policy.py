@@ -76,3 +76,28 @@ def test_usage_policy_distinguishes_official_and_example_templates() -> None:
     scoped = UsagePolicyFilter.filter([official, example], usage="structure_control", environment="production")
     assert [item.chunk_id for item in scoped.chunks] == ["tpl-official"]
     assert scoped.rejected_chunk_ids == ["tpl-example"]
+
+
+def test_usage_policy_blocks_cross_jurisdiction_chunks() -> None:
+    eu_chunk = KnowledgeChunkV2(
+        chunk_id="eu-law",
+        source_id="EU-LAW-001",
+        title="GDPR",
+        content="Article 35",
+        layer="L1_regulatory_evidence",
+        source_kind="law_article",
+        module="eu_dpia",
+        jurisdiction="eu",
+        allowed_usage=["legal_grounding", "external_report", "internal_review"],
+        can_be_cited=True,
+        can_enter_external_report=True,
+        chunk_strategy="test",
+    )
+    scoped = UsagePolicyFilter.filter(
+        [eu_chunk],
+        usage="legal_grounding",
+        environment="production",
+        jurisdiction="us",
+    )
+    assert scoped.chunks == []
+    assert scoped.rejected_chunk_ids == ["eu-law"]

@@ -34,7 +34,8 @@
       "Bash(.venv/bin/python -m pytest backend/common/citation/ backend/modules/assessment/tests/test_issue_builder.py backend/modules/assessment/tests/test_legal_grounding.py backend/modules/assessment/tests/test_chapter_context.py backend/modules/assessment/tests/test_generation_basis.py -v)",
       "Bash(.venv/bin/python -m pytest backend/modules/assessment/tests/test_fact_builder.py backend/modules/assessment/tests/test_evidence_builder.py backend/modules/assessment/tests/test_citation_builder.py backend/modules/assessment/tests/test_consistency_checker.py backend/modules/assessment/tests/test_internal_external_isolation.py backend/modules/assessment/tests/test_internal_review_coverage.py -v)",
       "Bash(codex --version)",
-      "Bash(opus --version)"
+      "Bash(opus --version)",
+      "Bash(find /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/backend/common/workflow* -type f)"
     ]
   }
 }

@@ -1,8 +1,258 @@
 {
   "metadata": {
     "index_name": "standard_clause_index_us",
-    "entry_count": 0,
-    "schema_version": "v3"
+    "entry_count": 3,
+    "schema_version": "v3.1"
   },
-  "entries": []
+  "entries": [
+    {
+      "doc_id": "STD-US-EO14117-VENDOR",
+      "payload": {
+        "chunk_id": "STD-US-EO14117-VENDOR",
+        "source_id": "STD-US-EO14117-VENDOR",
+        "title": "Vendor agreement exception must stay within scope",
+        "content": "Vendor agreements should not be drafted to disguise restricted transactions or permit onward transfers outside the service relationship.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "us_eo14117",
+        "jurisdiction": "us",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "US-FED-001"
+        ],
+        "citation_anchor": "Vendor agreement exception must stay within scope",
+        "scenario_tags": [
+          "vendor_agreement",
+          "restricted_transaction"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "eo14117",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "vendor_exception_scope",
+          "no_disguised_data_brokerage",
+          "service_relationship_limit"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-US-EO14117-VENDOR",
+          "clause_title": "Vendor agreement exception must stay within scope",
+          "clause_type": "DATA_PROCESSING_SCOPE",
+          "protected_obligations": [
+            "vendor_exception_scope",
+            "no_disguised_data_brokerage",
+            "service_relationship_limit"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "Vendor agreement exception must stay within scope Vendor agreements should not be drafted to disguise restricted transactions or permit onward transfers outside the service relationship. Vendor agreement exception must stay within scope US-FED-001 vendor_agreement restricted_transaction vendor_exception_scope no_disguised_data_brokerage service_relationship_limit",
+      "embedding": {
+        "303": 0.47140452079103173,
+        "346": 0.3535533905932738,
+        "371": 0.23570226039551587,
+        "352": 0.23570226039551587,
+        "69": 0.23570226039551587,
+        "347": 0.3535533905932738,
+        "200": 0.23570226039551587,
+        "126": 0.11785113019775793,
+        "217": 0.11785113019775793,
+        "145": 0.11785113019775793,
+        "214": 0.11785113019775793,
+        "328": 0.11785113019775793,
+        "154": 0.11785113019775793,
+        "11": 0.11785113019775793,
+        "308": 0.11785113019775793,
+        "281": 0.11785113019775793,
+        "305": 0.11785113019775793,
+        "118": 0.11785113019775793,
+        "66": 0.23570226039551587,
+        "130": 0.11785113019775793,
+        "296": 0.11785113019775793,
+        "13": 0.11785113019775793,
+        "195": 0.11785113019775793,
+        "139": 0.11785113019775793,
+        "354": 0.11785113019775793,
+        "342": 0.11785113019775793
+      }
+    },
+    {
+      "doc_id": "STD-US-VENDOR-SECURITY",
+      "payload": {
+        "chunk_id": "STD-US-VENDOR-SECURITY",
+        "source_id": "STD-US-VENDOR-SECURITY",
+        "title": "Vendor must restrict onward disclosure and preserve security controls",
+        "content": "Vendor agreements should define use limitation, onward disclosure restriction, security controls and termination handling.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "us_vendor_review",
+        "jurisdiction": "us",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "US-FED-001",
+          "US-CA-001"
+        ],
+        "citation_anchor": "Vendor must restrict onward disclosure and preserve security controls",
+        "scenario_tags": [
+          "vendor_agreement"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "vendor",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "use_limitation",
+          "onward_disclosure_restriction",
+          "security_controls",
+          "termination_handling"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-US-VENDOR-SECURITY",
+          "clause_title": "Vendor must restrict onward disclosure and preserve security controls",
+          "clause_type": "SECURITY_MEASURES",
+          "protected_obligations": [
+            "use_limitation",
+            "onward_disclosure_restriction",
+            "security_controls",
+            "termination_handling"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "Vendor must restrict onward disclosure and preserve security controls Vendor agreements should define use limitation, onward disclosure restriction, security controls and termination handling. Vendor must restrict onward disclosure and preserve security controls US-FED-001 US-CA-001 vendor_agreement use_limitation onward_disclosure_restriction security_controls termination_handling",
+      "embedding": {
+        "303": 0.3333333333333333,
+        "352": 0.2222222222222222,
+        "307": 0.2222222222222222,
+        "305": 0.3333333333333333,
+        "204": 0.3333333333333333,
+        "323": 0.3333333333333333,
+        "327": 0.2222222222222222,
+        "39": 0.3333333333333333,
+        "246": 0.3333333333333333,
+        "126": 0.1111111111111111,
+        "217": 0.1111111111111111,
+        "14": 0.1111111111111111,
+        "154": 0.1111111111111111,
+        "50": 0.1111111111111111,
+        "240": 0.1111111111111111,
+        "149": 0.1111111111111111,
+        "348": 0.1111111111111111,
+        "195": 0.1111111111111111,
+        "168": 0.1111111111111111,
+        "139": 0.1111111111111111,
+        "283": 0.1111111111111111,
+        "332": 0.1111111111111111,
+        "87": 0.1111111111111111,
+        "316": 0.1111111111111111
+      }
+    },
+    {
+      "doc_id": "STD-US-CPRA-RIGHTS",
+      "payload": {
+        "chunk_id": "STD-US-CPRA-RIGHTS",
+        "source_id": "STD-US-CPRA-RIGHTS",
+        "title": "CPRA consumer rights and SPI limitation",
+        "content": "Privacy notices must explain consumer rights to know, delete, correct, opt out and limit use of sensitive personal information.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "us_privacy_review",
+        "jurisdiction": "us",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "US-CA-001"
+        ],
+        "citation_anchor": "CPRA consumer rights and SPI limitation",
+        "scenario_tags": [
+          "privacy_policy"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "privacy",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "notice_at_collection",
+          "know_delete_correct",
+          "limit_sensitive_pi",
+          "opt_out"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-US-CPRA-RIGHTS",
+          "clause_title": "CPRA consumer rights and SPI limitation",
+          "clause_type": "RIGHTS_REQUEST",
+          "protected_obligations": [
+            "notice_at_collection",
+            "know_delete_correct",
+            "limit_sensitive_pi",
+            "opt_out"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "CPRA consumer rights and SPI limitation Privacy notices must explain consumer rights to know, delete, correct, opt out and limit use of sensitive personal information. CPRA consumer rights and SPI limitation US-CA-001 privacy_policy notice_at_collection know_delete_correct limit_sensitive_pi opt_out",
+      "embedding": {
+        "119": 0.25607375986579195,
+        "93": 0.3841106397986879,
+        "374": 0.3841106397986879,
+        "323": 0.3841106397986879,
+        "269": 0.25607375986579195,
+        "50": 0.25607375986579195,
+        "216": 0.12803687993289598,
+        "256": 0.12803687993289598,
+        "352": 0.12803687993289598,
+        "328": 0.12803687993289598,
+        "346": 0.12803687993289598,
+        "23": 0.12803687993289598,
+        "284": 0.12803687993289598,
+        "59": 0.12803687993289598,
+        "62": 0.12803687993289598,
+        "6": 0.12803687993289598,
+        "239": 0.12803687993289598,
+        "154": 0.12803687993289598,
+        "379": 0.12803687993289598,
+        "357": 0.12803687993289598,
+        "237": 0.12803687993289598,
+        "324": 0.12803687993289598,
+        "168": 0.12803687993289598,
+        "242": 0.12803687993289598,
+        "126": 0.12803687993289598,
+        "185": 0.12803687993289598,
+        "315": 0.12803687993289598,
+        "277": 0.12803687993289598
+      }
+    }
+  ]
 }

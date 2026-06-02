@@ -2,7 +2,7 @@ from backend.common.rag.eval import run_all_evals, run_generation_eval, run_retr
 
 
 def test_retrieval_eval_runs_and_reports_metrics() -> None:
-    result = run_retrieval_eval()
+    result = run_retrieval_eval(target="cn")
     assert result["case_count"] >= 10
     assert "Recall@K" in result
     assert "MRR" in result
@@ -13,7 +13,7 @@ def test_retrieval_eval_runs_and_reports_metrics() -> None:
 
 
 def test_generation_eval_runs_and_reports_metrics() -> None:
-    result = run_generation_eval()
+    result = run_generation_eval(target="cn")
     assert result["case_count"] >= 10
     assert "Issue recall" in result
     assert "Citation correctness" in result
@@ -24,6 +24,18 @@ def test_generation_eval_runs_and_reports_metrics() -> None:
 
 
 def test_run_all_evals_returns_both_sections() -> None:
-    result = run_all_evals()
+    result = run_all_evals(target="cn")
     assert "retrieval" in result
     assert "generation" in result
+
+
+def test_eu_retrieval_eval_runs() -> None:
+    result = run_retrieval_eval(target="eu")
+    assert result["target"] == "eu"
+    assert result["case_count"] >= 2
+
+
+def test_us_retrieval_eval_runs() -> None:
+    result = run_retrieval_eval(target="us")
+    assert result["target"] == "us"
+    assert result["case_count"] >= 2

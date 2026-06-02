@@ -300,8 +300,6 @@ class AssessmentService:
         )
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:
-        diagnosis = self._evaluate_diagnosis(payload)
-        self._validate_path(payload, diagnosis.recommended_path, diagnosis.rationale)
         snapshot = self.tasks.submit(lambda: self.generate_report(payload))
         return self._snapshot_to_accepted(snapshot)
 
@@ -353,11 +351,8 @@ class AssessmentService:
         if mode == "generate_only":
             return warning
         if mode == "warn_only":
-            if not payload.force_override_path:
-                return warning
             return warning
-        # block_on_mismatch (default legacy behavior when force_override_path is False)
-        if not payload.force_override_path:
+        if mode == "block_on_mismatch" and not payload.force_override_path:
             raise ValueError(
                 f"Path mismatch: {warning}。如需继续生成安全评估报告，请设置 force_override_path=true。"
             )

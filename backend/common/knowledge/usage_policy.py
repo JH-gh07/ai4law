@@ -12,12 +12,18 @@ class UsagePolicyFilter:
         *,
         usage: UsageScope | str,
         environment: EnvironmentType = "production",
+        jurisdiction: str | None = None,
     ) -> UsageScopedContext:
         accepted: list[KnowledgeChunkV2] = []
         rejected: list[str] = []
 
         for chunk in chunks:
-            if not UsagePolicyFilter._is_allowed(chunk, usage=usage, environment=environment):
+            if not UsagePolicyFilter._is_allowed(
+                chunk,
+                usage=usage,
+                environment=environment,
+                jurisdiction=jurisdiction,
+            ):
                 rejected.append(chunk.chunk_id)
                 continue
             accepted.append(chunk)
@@ -30,6 +36,7 @@ class UsagePolicyFilter:
             debug={
                 "requested_usage": usage,
                 "environment": environment,
+                "jurisdiction": jurisdiction or "",
                 "accepted_count": len(accepted),
                 "rejected_count": len(rejected),
             },
@@ -41,7 +48,11 @@ class UsagePolicyFilter:
         *,
         usage: UsageScope | str,
         environment: EnvironmentType,
+        jurisdiction: str | None,
     ) -> bool:
+        if jurisdiction and chunk.jurisdiction and chunk.jurisdiction != jurisdiction:
+            return False
+
         if environment == "production" and chunk.layer == "L3_testcase":
             return False
 

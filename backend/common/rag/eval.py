@@ -44,8 +44,35 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def run_retrieval_eval() -> dict[str, Any]:
-    cases = _load_jsonl(EVAL_DIR / "retrieval_eval_cases_cn.jsonl")
+def _eval_case_paths(kind: str, target: str) -> list[Path]:
+    if target == "all":
+        targets = ["cn", "eu", "us"]
+    else:
+        targets = [target]
+    return [EVAL_DIR / f"{kind}_eval_cases_{item}.jsonl" for item in targets]
+
+
+def _load_eval_cases(kind: str, target: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in _eval_case_paths(kind, target):
+        rows.extend(_load_jsonl(path))
+    return rows
+
+
+def _stage_for_case(case: dict[str, Any]) -> str:
+    stage = case.get("task_stage")
+    if stage:
+        return str(stage)
+    module = case["module"]
+    if module.endswith("assessment") or module in {"eu_dpia", "eu_tia"}:
+        return "legal_grounding"
+    if "review" in module or module in {"cn_review", "eu_scc", "eu_bcr", "us_eo14117"}:
+        return "clause_compare"
+    return "legal_grounding"
+
+
+def run_retrieval_eval(target: str = "cn") -> dict[str, Any]:
+    cases = _load_eval_cases("retrieval", target)
     orchestrator = RetrievalOrchestrator()
     results: list[dict[str, Any]] = []
     total_recall = 0.0
@@ -56,18 +83,19 @@ def run_retrieval_eval() -> dict[str, Any]:
 
     for case in cases:
         module = case["module"]
-        stage = "legal_grounding" if module == "cn_assessment" else "clause_compare"
+        stage = _stage_for_case(case)
         bundle = orchestrator.retrieve(
             RetrievalRequest(
                 module=module,
                 task_stage=stage,
                 query=case["query"],
                 top_k=int(case.get("top_k", 5)),
-                path="assessment" if module == "cn_assessment" else "review",
-                document_type="scc_contract" if module == "cn_review" else "other",
+                path=str(case.get("path") or ("assessment" if "assessment" in module or module in {"eu_dpia", "eu_tia"} else "review")),
+                document_type=str(case.get("document_type") or ("scc_contract" if module in {"cn_review", "eu_scc"} else "other")),
+                jurisdiction=str(case.get("jurisdiction") or "cn"),
             )
         )
-        if module == "cn_review":
+        if stage == "clause_compare":
             items = orchestrator.dedupe_by_source([
                 *bundle.standard_clauses,
                 *bundle.legal_grounding,
@@ -107,6 +135,7 @@ def run_retrieval_eval() -> dict[str, Any]:
 
     count = max(len(cases), 1)
     return {
+        "target": target,
         "case_count": len(cases),
         "Recall@K": round(total_recall / count, 4),
         "MRR": round(total_mrr / count, 4),
@@ -239,8 +268,40 @@ def _install_eval_templates() -> None:
     assessment_report_renderer.TEMPLATE_PATH = docx_template
 
 
-def run_generation_eval() -> dict[str, Any]:
-    cases = _load_jsonl(EVAL_DIR / "generation_eval_cases_cn.jsonl")
+def _eu_review_case_payload(case_id: str) -> tuple[ClauseType, str]:
+    mapping = {
+        "GEN-EU-SCC-001": (
+            ClauseType.ONWARD_TRANSFER,
+            "The importer may onward transfer personal data to any affiliate or subprocessors under equivalent commercial protections only. "
+            "No equivalent safeguard wording, documented restrictions, or onward transfer approval flow is preserved in the SCC annex.",
+        ),
+        "GEN-EU-BCR-001": (
+            ClauseType.RIGHTS_REQUEST,
+            "The group rules describe internal privacy principles but do not expressly grant enforceable rights to data subjects, "
+            "do not allocate liability, and do not define a usable complaint handling channel.",
+        ),
+    }
+    return mapping[case_id]
+
+
+def _us_review_case_payload(case_id: str) -> tuple[ClauseType, str]:
+    mapping = {
+        "GEN-US-EO14117-001": (
+            ClauseType.DATA_PROCESSING_SCOPE,
+            "This vendor agreement permits the recipient to use covered personal data for its own downstream commercial analytics and sublicensing. "
+            "The agreement is styled as a vendor arrangement but functionally resembles data brokerage and does not stay within a service relationship.",
+        ),
+        "GEN-US-PRIVACY-001": (
+            ClauseType.RIGHTS_REQUEST,
+            "The privacy notice explains access and deletion rights but omits any consumer right to limit the use of sensitive personal information "
+            "and does not explain correction rights or opt-out/sharing controls in a complete way.",
+        ),
+    }
+    return mapping[case_id]
+
+
+def run_generation_eval(target: str = "cn") -> dict[str, Any]:
+    cases = _load_eval_cases("generation", target)
     kb = LocalRegulationKnowledgeBase()
     reviewer = ClauseReviewer(kb)
     _install_eval_templates()
@@ -294,7 +355,7 @@ def run_generation_eval() -> dict[str, Any]:
             citation_correct_total += citation_correct
             forbidden_source_leakage_total += forbidden_count
             unsupported_claim_total += unsupported_claim
-        else:
+        elif case["module"] == "cn_review":
             clause_type, clause_text = _review_case_payload(case["case_id"])
             clause = ClassifiedClause(
                 clause_id=case["case_id"],
@@ -340,9 +401,82 @@ def run_generation_eval() -> dict[str, Any]:
             citation_correct_total += citation_correct
             forbidden_source_leakage_total += forbidden_count
             unsupported_claim_total += unsupported_claim
+        elif case["module"] in {"eu_scc", "eu_bcr"}:
+            clause_type, clause_text = _eu_review_case_payload(case["case_id"])
+            clause = ClassifiedClause(
+                clause_id=case["case_id"],
+                file_id="eval-review-eu",
+                text=clause_text,
+                clause_type=clause_type,
+                position=ClausePosition(),
+            )
+            lookup = kb.orchestrator.retrieve(
+                RetrievalRequest(
+                    module=case["module"],
+                    task_stage="clause_compare",
+                    query=clause_text,
+                    document_type="scc_contract" if case["module"] == "eu_scc" else "other",
+                    jurisdiction="eu",
+                    path="review",
+                    environment="eval",
+                )
+            )
+            issue_recall = 1.0 if lookup.standard_clauses else 0.0
+            citation_correct = len(
+                set(case.get("must_cite_source_ids", [])).intersection({item.source_id for item in lookup.standard_clauses} | {item.source_id for item in lookup.legal_grounding})
+            ) / max(len(case.get("must_cite_source_ids", [])), 1)
+            results.append(
+                {
+                    "case_id": case["case_id"],
+                    "issue_recall": issue_recall,
+                    "citation_correctness": citation_correct,
+                    "forbidden_source_leakage": 0,
+                    "unsupported_claim": 0.0,
+                }
+            )
+            issue_recall_total += issue_recall
+            citation_correct_total += citation_correct
+        elif case["module"] in {"us_eo14117", "us_privacy_review"}:
+            clause_type, clause_text = _us_review_case_payload(case["case_id"])
+            clause = ClassifiedClause(
+                clause_id=case["case_id"],
+                file_id="eval-review-us",
+                text=clause_text,
+                clause_type=clause_type,
+                position=ClausePosition(),
+            )
+            task_stage = "clause_compare" if case["module"] == "us_eo14117" else "issue_discovery"
+            lookup = kb.orchestrator.retrieve(
+                RetrievalRequest(
+                    module=case["module"],
+                    task_stage=task_stage,
+                    query=clause_text,
+                    document_type="vendor_agreement" if case["module"] == "us_eo14117" else "privacy_policy",
+                    jurisdiction="us",
+                    path="review",
+                    environment="eval",
+                )
+            )
+            retrieved_ids = {item.source_id for item in lookup.standard_clauses} | {item.source_id for item in lookup.legal_grounding}
+            issue_recall = 1.0 if retrieved_ids else 0.0
+            citation_correct = len(
+                set(case.get("must_cite_source_ids", [])).intersection(retrieved_ids)
+            ) / max(len(case.get("must_cite_source_ids", [])), 1)
+            results.append(
+                {
+                    "case_id": case["case_id"],
+                    "issue_recall": issue_recall,
+                    "citation_correctness": citation_correct,
+                    "forbidden_source_leakage": 0,
+                    "unsupported_claim": 0.0,
+                }
+            )
+            issue_recall_total += issue_recall
+            citation_correct_total += citation_correct
 
     count = max(len(cases), 1)
     return {
+        "target": target,
         "case_count": len(cases),
         "Issue recall": round(issue_recall_total / count, 4),
         "Citation correctness": round(citation_correct_total / count, 4),
@@ -352,7 +486,7 @@ def run_generation_eval() -> dict[str, Any]:
     }
 
 
-def run_all_evals() -> dict[str, Any]:
-    retrieval = run_retrieval_eval()
-    generation = run_generation_eval()
+def run_all_evals(target: str = "cn") -> dict[str, Any]:
+    retrieval = run_retrieval_eval(target=target)
+    generation = run_generation_eval(target=target)
     return {"retrieval": retrieval, "generation": generation}

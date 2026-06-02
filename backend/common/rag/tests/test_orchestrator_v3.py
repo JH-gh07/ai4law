@@ -90,14 +90,14 @@ def test_eu_module_returns_scaffold_debug_bundle() -> None:
         RetrievalRequest(
             module="eu_scc",
             task_stage="clause_compare",
-            query="SCC clause priority",
+            query="onward transfer equivalent safeguards",
             path="review",
             jurisdiction="eu",
         )
     )
-    assert bundle.legal_grounding == []
+    assert bundle.standard_clauses
     assert bundle.debug["jurisdiction"] == "eu"
-    assert bundle.debug["status"] == "scaffold_only"
+    assert any(item.module == "eu_scc" for item in bundle.standard_clauses)
 
 
 def test_us_module_returns_scaffold_debug_bundle() -> None:
@@ -106,11 +106,11 @@ def test_us_module_returns_scaffold_debug_bundle() -> None:
         RetrievalRequest(
             module="us_eo14117",
             task_stage="issue_discovery",
-            query="restricted transaction agreement",
+            query="restricted transaction vendor agreement data brokerage",
             path="review",
             jurisdiction="us",
         )
     )
-    assert bundle.workflow_rules == []
+    assert bundle.workflow_rules
     assert bundle.debug["jurisdiction"] == "us"
-    assert bundle.debug["status"] == "scaffold_only"
+    assert any(item.module == "us_eo14117" for item in bundle.workflow_rules)

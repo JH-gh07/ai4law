@@ -24,6 +24,7 @@ from backend.common.knowledge.builders_v2 import (
 )
 from backend.common.knowledge.usage_policy import UsagePolicyFilter
 from backend.common.knowledge.v2 import KnowledgeChunkV2, RetrievalBundle, RetrievalRequest
+from backend.common.rag.constants import MULTI_INDEX_SCHEMA_VERSION
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
 from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
 from backend.core.settings import Settings, get_settings
@@ -284,24 +285,142 @@ class RetrievalOrchestrator:
         return bundle
 
     def _retrieve_eu(self, request: RetrievalRequest) -> RetrievalBundle:
-        return RetrievalBundle(
-            debug={
-                "stage": request.task_stage,
-                "module": request.module,
-                "jurisdiction": "eu",
-                "status": "scaffold_only",
-            }
-        )
+        bundle = RetrievalBundle(debug={"stage": request.task_stage, "module": request.module, "jurisdiction": "eu"})
+        if request.task_stage in {"issue_discovery", "legal_grounding"}:
+            workflow = self._search_index(
+                "workflow_index_eu",
+                request.query,
+                top_k=max(4, request.top_k),
+                filters={"module": request.module},
+            )
+            bundle.workflow_rules = UsagePolicyFilter.filter(
+                workflow,
+                usage="internal_review",
+                environment=request.environment,
+            ).chunks
+            legal = self._search_index(
+                "legal_index_eu",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            legal.extend(self._legal_by_reference_ids_for_index(bundle.workflow_rules, "legal_index_eu"))
+            bundle.legal_grounding = self._dedupe_chunks(
+                UsagePolicyFilter.filter(
+                    self._dedupe_chunks(legal),
+                    usage="legal_grounding",
+                    environment=request.environment,
+                ).chunks
+            )
+        if request.task_stage == "clause_compare":
+            standard = self._search_index(
+                "standard_clause_index_eu",
+                request.query,
+                top_k=max(3, request.top_k),
+                filters={"module": request.module},
+            )
+            bundle.standard_clauses = UsagePolicyFilter.filter(
+                standard,
+                usage="legal_grounding",
+                environment=request.environment,
+            ).chunks
+            bundle.legal_grounding = self._dedupe_chunks(
+                self._legal_by_reference_ids_for_index(bundle.standard_clauses, "legal_index_eu")
+            )
+        if request.task_stage == "report_generation":
+            templates = self._search_index(
+                "template_index_eu",
+                request.query or "EU template structure",
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            bundle.templates = UsagePolicyFilter.filter(
+                templates,
+                usage="structure_control",
+                environment=request.environment,
+            ).chunks
+        if request.task_stage == "evaluation":
+            testcases = self._search_index(
+                "testcase_index_eu",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            bundle.testcases = UsagePolicyFilter.filter(
+                testcases,
+                usage="evaluator",
+                environment=request.environment,
+            ).chunks
+        return bundle
 
     def _retrieve_us(self, request: RetrievalRequest) -> RetrievalBundle:
-        return RetrievalBundle(
-            debug={
-                "stage": request.task_stage,
-                "module": request.module,
-                "jurisdiction": "us",
-                "status": "scaffold_only",
-            }
-        )
+        bundle = RetrievalBundle(debug={"stage": request.task_stage, "module": request.module, "jurisdiction": "us"})
+        if request.task_stage in {"issue_discovery", "legal_grounding"}:
+            workflow = self._search_index(
+                "workflow_index_us",
+                request.query,
+                top_k=max(4, request.top_k),
+                filters={"module": request.module},
+            )
+            bundle.workflow_rules = UsagePolicyFilter.filter(
+                workflow,
+                usage="internal_review",
+                environment=request.environment,
+            ).chunks
+            legal = self._search_index(
+                "legal_index_us",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            legal.extend(self._legal_by_reference_ids_for_index(bundle.workflow_rules, "legal_index_us"))
+            bundle.legal_grounding = self._dedupe_chunks(
+                UsagePolicyFilter.filter(
+                    self._dedupe_chunks(legal),
+                    usage="legal_grounding",
+                    environment=request.environment,
+                ).chunks
+            )
+        if request.task_stage == "clause_compare":
+            standard = self._search_index(
+                "standard_clause_index_us",
+                request.query,
+                top_k=max(3, request.top_k),
+                filters={"module": request.module},
+            )
+            bundle.standard_clauses = UsagePolicyFilter.filter(
+                standard,
+                usage="legal_grounding",
+                environment=request.environment,
+            ).chunks
+            bundle.legal_grounding = self._dedupe_chunks(
+                self._legal_by_reference_ids_for_index(bundle.standard_clauses, "legal_index_us")
+            )
+        if request.task_stage == "report_generation":
+            templates = self._search_index(
+                "template_index_us",
+                request.query or "US template structure",
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            bundle.templates = UsagePolicyFilter.filter(
+                templates,
+                usage="structure_control",
+                environment=request.environment,
+            ).chunks
+        if request.task_stage == "evaluation":
+            testcases = self._search_index(
+                "testcase_index_us",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": request.module},
+            )
+            bundle.testcases = UsagePolicyFilter.filter(
+                testcases,
+                usage="evaluator",
+                environment=request.environment,
+            ).chunks
+        return bundle
 
     def _index_path(self, name: str) -> Path:
         return self.rag_dir / f"{name}.vector.json"
@@ -309,10 +428,21 @@ class RetrievalOrchestrator:
     def _ensure_multi_indexes(self) -> None:
         from backend.common.rag.ingest import build_multi_index_v3
 
-        if all(self._index_path(name).exists() for name in INDEX_NAMES):
+        if all(self._is_index_current(name) for name in INDEX_NAMES):
             return
         build_multi_index_v3(self.settings)
         self._load_entries.cache_clear()  # type: ignore[attr-defined]
+
+    def _is_index_current(self, name: str) -> bool:
+        index_path = self._index_path(name)
+        if not index_path.exists():
+            return False
+        try:
+            payload = json.loads(index_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return False
+        metadata = payload.get("metadata", {})
+        return metadata.get("schema_version") == MULTI_INDEX_SCHEMA_VERSION
 
     @lru_cache(maxsize=None)
     def _load_entries(self, name: str) -> tuple[VectorIndexEntry, ...]:
@@ -378,10 +508,13 @@ class RetrievalOrchestrator:
         return True
 
     def _legal_by_reference_ids(self, chunks: Iterable[KnowledgeChunkV2]) -> list[KnowledgeChunkV2]:
+        return self._legal_by_reference_ids_for_index(chunks, "legal_index_cn")
+
+    def _legal_by_reference_ids_for_index(self, chunks: Iterable[KnowledgeChunkV2], index_name: str) -> list[KnowledgeChunkV2]:
         ref_ids = {ref for chunk in chunks for ref in chunk.reference_ids}
         if not ref_ids:
             return []
-        entries = self._load_entries("legal_index_cn")
+        entries = self._load_entries(index_name)
         results: list[KnowledgeChunkV2] = []
         for entry in entries:
             chunk = _payload_to_chunk(entry.payload)

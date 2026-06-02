@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from backend.common.rag.constants import MULTI_INDEX_SCHEMA_VERSION
 from backend.common.rag.orchestrator import INDEX_NAMES, build_chunk_sets
 from backend.common.rag.embedding import HashingEmbedder
 from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
@@ -124,7 +125,7 @@ def build_multi_index_v3(settings: Settings) -> dict[str, Path]:
             metadata={
                 "index_name": index_name,
                 "entry_count": len(entries),
-                "schema_version": "v3",
+                "schema_version": MULTI_INDEX_SCHEMA_VERSION,
             },
         )
         jsonl_path.write_text(

@@ -39,6 +39,21 @@ _OTHER_SIGNALS = [
     "网络安全等级保护", "等保", "incident response plan",
 ]
 
+_EU_JURISDICTION_SIGNALS = [
+    "gdpr", "edpb", "eea", "european union", "binding corporate rules",
+    "bcr", "schrems", "article 46", "supplementary measures",
+]
+
+_US_JURISDICTION_SIGNALS = [
+    "cpra", "ccpa", "california", "privacy notice", "vendor agreement",
+    "data brokerage", "eo 14117", "doj rule", "sensitive personal information",
+]
+
+_CN_JURISDICTION_SIGNALS = [
+    "个人信息保护法", "数据安全法", "网络安全法", "标准合同", "数据出境",
+    "个人信息出境", "国家网信部门", "重要数据",
+]
+
 
 class DocumentClassifier:
     """Classify document type from text content, filename, and optional user hint.
@@ -63,9 +78,11 @@ class DocumentClassifier:
         if user_document_type:
             conf = self._confidence_for(text, user_document_type)
             if conf >= 0.5:
+                detected_jurisdiction = self._detect_jurisdiction(text, filename, user_document_type)
                 return self._build_result(
                     user_document_type, conf,
                     [f"用户选择: {user_document_type}"],
+                    detected_jurisdiction=detected_jurisdiction,
                 )
 
         # 2. Keyword heuristics
@@ -74,21 +91,37 @@ class DocumentClassifier:
 
         if best_score >= 3:
             evidence = self._list_evidence(text, best_type)
-            return self._build_result(best_type, min(0.5 + best_score * 0.08, 0.95), evidence)
+            return self._build_result(
+                best_type,
+                min(0.5 + best_score * 0.08, 0.95),
+                evidence,
+                detected_jurisdiction=self._detect_jurisdiction(text, filename, best_type),
+            )
 
         # 3. LLM fallback for ambiguous cases
         if self.llm_client and self.llm_client.enabled and len(text) >= 200:
             llm_type = self._classify_with_llm(text, filename)
             if llm_type:
-                return self._build_result(llm_type, 0.6, ["LLM 辅助判断"])
+                return self._build_result(
+                    llm_type,
+                    0.6,
+                    ["LLM 辅助判断"],
+                    detected_jurisdiction=self._detect_jurisdiction(text, filename, llm_type),
+                )
 
         # 4. Default
         if best_score > 0:
-            return self._build_result(best_type, 0.4, ["低置信度关键词匹配"])
+            return self._build_result(
+                best_type,
+                0.4,
+                ["低置信度关键词匹配"],
+                detected_jurisdiction=self._detect_jurisdiction(text, filename, best_type),
+            )
         return DocumentClassification(
             document_type=DocumentType.OTHER,
             confidence=0.3,
             evidence=["无法确定文档类型"],
+            detected_jurisdiction=self._detect_jurisdiction(text, filename, None),
         )
 
     # ------------------------------------------------------------------
@@ -170,7 +203,12 @@ class DocumentClassifier:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_result(doc_type: str, confidence: float, evidence: list[str]) -> DocumentClassification:
+    def _build_result(
+        doc_type: str,
+        confidence: float,
+        evidence: list[str],
+        detected_jurisdiction: str,
+    ) -> DocumentClassification:
         try:
             dt = DocumentType(doc_type)
         except ValueError:
@@ -179,8 +217,25 @@ class DocumentClassifier:
             document_type=dt,
             confidence=round(confidence, 2),
             evidence=evidence,
-            detected_jurisdiction="cn",
+            detected_jurisdiction=detected_jurisdiction,
         )
+
+    @staticmethod
+    def _detect_jurisdiction(
+        text: str,
+        filename: str | None,
+        doc_type: str | None,
+    ) -> str:
+        combined = f"{text[:6000]} {(filename or '')} {(doc_type or '')}".lower()
+        if any(signal in combined for signal in _CN_JURISDICTION_SIGNALS):
+            return "cn"
+        if any(signal in combined for signal in _EU_JURISDICTION_SIGNALS):
+            return "eu"
+        if any(signal in combined for signal in _US_JURISDICTION_SIGNALS):
+            return "us"
+        if any("\u4e00" <= char <= "\u9fff" for char in combined):
+            return "cn"
+        return "eu" if doc_type == DocumentType.SCC_CONTRACT.value else "us"
 
     # ------------------------------------------------------------------
     # LLM classification (lightweight)
