@@ -29,7 +29,18 @@
       "gdpr_basis": "GDPR Article 47(1)(a)",
       "severity_if_missing": "HIGH",
       "check_keywords": ["binding", "legally binding", "enforceable", "internal agreement", "intra-group agreement"],
-      "check_structure": ["binding mechanism", "internal agreement"]
+      "check_structure": ["binding mechanism", "internal agreement"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "binding_mechanism_vague", "pattern": "(?:members.*agree|agree.*comply|members.*shall.*comply)", "pattern_type": "match",
+         "severity": "MEDIUM", "title": "法律约束力表述空洞",
+         "finding": "仅使用'成员同意遵守'等概括性表述，未具体说明法律约束力的来源和机制",
+         "recommendation": "应明确说明BCR通过集团内协议或其他具有法律约束力的机制对所有成员强制执行"},
+        {"id": "binding_mechanism_missing", "pattern": "(?:intra-group agreement|internal binding agreement|binding corporate instrument)",
+         "pattern_type": "missing", "severity": "HIGH", "title": "缺少法律约束力机制具体说明",
+         "finding": "未提及集团内协议或其他具有法律约束力的内部文书",
+         "recommendation": "应说明BCR通过何种法律文书对所有成员产生约束力"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.2",
@@ -38,7 +49,14 @@
       "gdpr_basis": "GDPR Article 47(1)(b)",
       "severity_if_missing": "HIGH",
       "check_keywords": ["third party beneficiary", "third-party beneficiary", "enforce", "right to enforce", "data subject may enforce"],
-      "check_structure": ["third party", "beneficiary", "enforcement"]
+      "check_structure": ["third party", "beneficiary", "enforcement"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "third_party_missing_enforce", "pattern": "(?:data subject.*may.*enforce|enforce.*these BCR|enforce.*the BCR|right to enforce|beneficiary.*right)",
+         "pattern_type": "missing", "severity": "HIGH", "title": "未赋予数据主题可执行的第三方受益人权利",
+         "finding": "文本未包含数据主体可直接强制执行BCR的第三方受益人权利描述",
+         "recommendation": "应增加独立条款，明确数据主体作为第三方受益人有权强制执行BCR"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.3",
@@ -47,7 +65,18 @@
       "gdpr_basis": "GDPR Article 47(2)(f)",
       "severity_if_missing": "HIGH",
       "check_keywords": ["liable entity", "EU entity", "European Union representative", "designated entity", "accepts liability", "responsibility for breaches"],
-      "check_structure": ["liable", "liability", "representative"]
+      "check_structure": ["liable", "liability", "representative"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "eu_liable_missing_name", "pattern": "(?:established in|located in|registered in|seat in).*(?:EU|European Union|Germany|France|Ireland|Netherlands|Spain|Italy|Belgium|Austria|Poland|Sweden|Denmark|Finland|Portugal|Greece|Czech|Hungary|Romania|Croatia|Slovakia|Bulgaria|Slovenia|Lithuania|Latvia|Estonia|Cyprus|Malta|Luxembourg)",
+         "pattern_type": "missing", "severity": "HIGH", "title": "未指定欧盟境内的责任主体",
+         "finding": "未指定一个在欧盟境内设立的实体作为承担BCR合规责任的主体",
+         "recommendation": "应明确指定一个在欧盟境内设立的实体，由其承担非欧盟成员违反BCR的责任"},
+        {"id": "eu_liable_accept_compensation", "pattern": "(?:accept.*liability|liable.*for.*breach|compensat|redress|remedy|damage)",
+         "pattern_type": "missing", "severity": "MEDIUM", "title": "EU责任主体未明确承诺赔偿/补救",
+         "finding": "未明确说明EU责任主体是否接受对数据主体的赔偿责任",
+         "recommendation": "应明确EU责任主体将对非欧盟成员的违规行为承担赔偿责任"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.4",
@@ -74,7 +103,18 @@
       "gdpr_basis": "GDPR Article 47(2)(e)",
       "severity_if_missing": "MEDIUM",
       "check_keywords": ["complaint", "complaints", "handle", "handling procedure", "investigate", "respond", "timeline", "contact point"],
-      "check_structure": ["complaint", "complaints"]
+      "check_structure": ["complaint", "complaints"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "complaint_timeline_vague", "pattern": "(?:one month|30 days|without undue delay|specified.*time|specific.*timeline)",
+         "pattern_type": "missing", "severity": "MEDIUM", "title": "投诉处理时限未明确",
+         "finding": "未明确投诉处理的时限（如一个月内）",
+         "recommendation": "应明确承诺在一个月内响应和调查投诉"},
+        {"id": "complaint_as_appropriate", "pattern": "as appropriate|where feasible|as soon as reasonably practicable",
+         "pattern_type": "match", "severity": "MEDIUM", "title": "投诉处理表述存在模糊空间",
+         "finding": "投诉处理条款使用'as appropriate'等模糊表述，无法保证有效处理",
+         "recommendation": "建议替换模糊表述为具体的处理时限和流程"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.7",
@@ -92,7 +132,18 @@
       "gdpr_basis": "GDPR Chapter V",
       "severity_if_missing": "HIGH",
       "check_keywords": ["onward transfer", "further transfer", "third party transfer", "external transfer", "adequate level of protection", "appropriate safeguards", "derogation"],
-      "check_structure": ["onward", "transfer", "third party"]
+      "check_structure": ["onward", "transfer", "third party"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "onward_safeguards_vague", "pattern": "(?:adequate safeguards|appropriate safeguards|sufficient safeguards|SCC|standard contractual clauses|BCR|adequacy decision|derogation)",
+         "pattern_type": "missing", "severity": "HIGH", "title": "未明确Onward Transfer的保护工具",
+         "finding": "未说明向非BCR成员传输时采用的保护措施（如SCC、充分性认定等）",
+         "recommendation": "应明确列举允许的Onward Transfer法律工具"},
+        {"id": "onward_transfer_weak", "pattern": "substantially similar|essentially equivalent|adequate level of protection",
+         "pattern_type": "match", "severity": "MEDIUM", "title": "Onward Transfer保护标准模糊",
+         "finding": "使用'substantially similar'等笼统表述定义保护标准，未指向具体GDPR保护水平或SCC",
+         "recommendation": "应将保护标准明确为GDPR等效保护水平，并说明如何确保"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.9",
@@ -101,7 +152,22 @@
       "gdpr_basis": "Schrems II, EDPB 01/2020",
       "severity_if_missing": "HIGH",
       "check_keywords": ["third country laws", "local law", "law of the country", "legal assessment", "transfer impact assessment", "TIA", "government access", "surveillance", "national security"],
-      "check_structure": ["third country", "law", "assessment", "TIA"]
+      "check_structure": ["third country", "law", "assessment", "TIA"],
+      "coverage_thresholds": {"keywords_min": 2, "structure_match": true},
+      "dsl_checks": [
+        {"id": "tia_as_appropriate", "pattern": "as appropriate|where feasible|may be assessed|shall be assessed as appropriate",
+         "pattern_type": "match", "severity": "MEDIUM", "title": "TIA表述模糊，未体现强制性",
+         "finding": "使用'as appropriate'等弱化表述，未承诺将系统性地进行第三国法律评估",
+         "recommendation": "应明确承诺对每个第三国进行基于EDPB 01/2020的结构化法律评估"},
+        {"id": "tia_incomplete_method", "pattern": "(?:EDPB.*method|six.?step|structured.*assessment|transfer impact assessment|periodic.*review|supplementary.*measures)",
+         "pattern_type": "missing", "severity": "MEDIUM", "title": "TIA评估方法不够完整",
+         "finding": "未说明使用EDPB六步法或其他结构化方法进行TIA",
+         "recommendation": "应涵盖EDPB六步法、周期性审查、补充措施和当地法律实践评估"},
+        {"id": "tia_periodic_update", "pattern": "(?:periodic|regular.*review|annual|update.*assessment|review.*law)",
+         "pattern_type": "missing", "severity": "MEDIUM", "title": "TIA缺少定期更新机制",
+         "finding": "未说明TIA的定期审查和更新频率",
+         "recommendation": "应承诺定期（至少每两年或法律重大变化时）更新TIA"}
+      ]
     },
     {
       "requirement_id": "BCR-C-1.10",

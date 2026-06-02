@@ -23,6 +23,9 @@ from backend.modules.bcr.bcr_risk_aggregator import BCRRiskAggregator
 from backend.modules.bcr.bcr_rulebook_loader import BCRRulebookLoader
 from backend.modules.bcr.bcr_scenario_extractor import BCRScenarioExtractor
 from backend.modules.bcr.bcr_type_classifier import BCRTypeClassifier
+from backend.modules.bcr.bcr_tia_checker import BCRTiaChecker
+from backend.modules.bcr.bcr_onward_transfer_checker import BCROnwardTransferChecker
+from backend.modules.bcr.bcr_liability_checker import BCRLiabilityChecker
 from backend.modules.bcr.schema import (
     BCRAsyncAccepted, BCRAsyncStatus, BCRChapter, BCRProblem, BCRRequest, BCRResult, BCRScore,
 )
@@ -50,6 +53,9 @@ class BCRService:
         self.legal_retriever = BCRLegalRetriever()
         self.risk_aggregator = BCRRiskAggregator(rulebook=self.rulebook)
         self.report_renderer = BCRReportRenderer()
+        self.tia_checker = BCRTiaChecker()
+        self.onward_checker = BCROnwardTransferChecker()
+        self.liability_checker = BCRLiabilityChecker()
 
     # ------------------------------------------------------------------
     # Public API
@@ -100,6 +106,11 @@ class BCRService:
 
         # Stage 4: CHECKLIST_CHECKING
         findings, missing = self.checklist_checker.check(main_doc, bcr_type)
+
+        # Stage 4.5: SPECIALIZED CHECKERS (TIA, Onward Transfer, Liability)
+        findings.extend(self.tia_checker.check(main_doc))
+        findings.extend(self.onward_checker.check(main_doc))
+        findings.extend(self.liability_checker.check(main_doc))
 
         # Stage 5: CLAUSE_REVIEWING
         requirements = self.rulebook.get_all_requirements(bcr_type)
