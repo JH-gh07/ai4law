@@ -1,0 +1,102 @@
+{
+  "report_type": "data_export_risk_self_assessment",
+  "report_title": "数据出境风险自评估报告",
+  "version": "1.0",
+  "sections": [
+    {
+      "section_id": "1",
+      "number": "一",
+      "title": "自评估工作情况",
+      "description": "说明本次自评估的组织实施情况、评估周期、评估方法和评估范围",
+      "required_inputs": [],
+      "generation_hint": "从系统运行参数和诊断结果中提取评估工作说明",
+      "mapped_chapters": ["overview"]
+    },
+    {
+      "section_id": "2",
+      "number": "二",
+      "title": "出境活动整体情况",
+      "description": "",
+      "subsections": [
+        {
+          "section_id": "2.1",
+          "number": "（一）",
+          "title": "数据处理者基本情况",
+          "description": "企业基本信息、业务情况、数据处理角色",
+          "required_inputs": ["request.company_name", "request.industry"],
+          "mapped_chapters": ["overview"]
+        },
+        {
+          "section_id": "2.2",
+          "number": "（二）",
+          "title": "拟出境数据情况",
+          "description": "出境数据的类型、规模、范围、目的、接收方、传输方式",
+          "required_inputs": [
+            "request.transfer_purpose",
+            "request.receiver_country",
+            "request.pii_count",
+            "request.spi_count",
+            "request.contains_important_data"
+          ],
+          "mapped_chapters": ["data_scope"]
+        },
+        {
+          "section_id": "2.3",
+          "number": "（三）",
+          "title": "数据处理者数据安全保障能力情况",
+          "description": "数据安全管理制度、技术措施、应急响应能力",
+          "required_inputs": [
+            "request.is_ciio"
+          ],
+          "mapped_chapters": ["security_measures"]
+        },
+        {
+          "section_id": "2.4",
+          "number": "（四）",
+          "title": "境外接收方情况",
+          "description": "境外接收方基本信息、所在国家/地区法律环境、数据保护能力",
+          "required_inputs": ["request.receiver_country"],
+          "mapped_chapters": ["recipient_capability"]
+        },
+        {
+          "section_id": "2.5",
+          "number": "（五）",
+          "title": "法律文件约定数据安全保护责任义务的情况",
+          "description": "与境外接收方签署的法律文件中关于数据保护责任义务的约定",
+          "required_issues": [
+            "ISSUE-legal-document-gaps",
+            "ISSUE-onward-transfer-unclear"
+          ],
+          "required_inputs": [],
+          "mapped_chapters": ["necessity_legal_basis", "recipient_capability"]
+        },
+        {
+          "section_id": "2.6",
+          "number": "（六）",
+          "title": "其他情况",
+          "description": "其他需要说明的情况",
+          "required_inputs": [],
+          "mapped_chapters": []
+        }
+      ]
+    },
+    {
+      "section_id": "3",
+      "number": "三",
+      "title": "出境活动风险自评估情况及结论",
+      "description": "综合风险自评估结果、整改建议和总体结论",
+      "required_inputs": [],
+      "mapped_chapters": ["rights_impact", "risk_remediation", "conclusion"]
+    }
+  ],
+  "data_source_mapping": {
+    "request.company_name": {"source": "AssessmentRequest", "field": "company_name", "fallback": "未提供"},
+    "request.industry": {"source": "AssessmentRequest", "field": "industry", "fallback": "未提供"},
+    "request.transfer_purpose": {"source": "AssessmentRequest", "field": "transfer_purpose", "fallback": "未提供"},
+    "request.receiver_country": {"source": "AssessmentRequest", "field": "receiver_country", "fallback": "未提供"},
+    "request.pii_count": {"source": "AssessmentRequest", "field": "pii_count", "fallback": "未提供"},
+    "request.spi_count": {"source": "AssessmentRequest", "field": "spi_count", "fallback": "未提供"},
+    "request.is_ciio": {"source": "AssessmentRequest", "field": "is_ciio", "fallback": "未提供"},
+    "request.contains_important_data": {"source": "AssessmentRequest", "field": "contains_important_data", "fallback": "未提供"}
+  }
+}

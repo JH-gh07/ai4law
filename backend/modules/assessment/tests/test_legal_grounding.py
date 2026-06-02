@@ -33,7 +33,7 @@ def test_legal_grounding_binds_issue_to_direct_rule_refs() -> None:
         )
     ]
 
-    grounding = build_legal_grounding(issues=[issue], facts=facts, regulations=regulations)
+    grounding, _case_grounding = build_legal_grounding(issues=[issue], facts=facts, regulations=regulations)
     items = grounding["by_issue"]["ISSUE-legal-document-gaps"]
 
     assert items
@@ -73,7 +73,7 @@ def test_legal_grounding_uses_issue_facts_in_query_context() -> None:
         )
     ]
 
-    grounding = build_legal_grounding(issues=[issue], facts=facts, regulations=regulations)
+    grounding, _case_grounding = build_legal_grounding(issues=[issue], facts=facts, regulations=regulations)
     items = grounding["by_issue"]["ISSUE-consent-evidence-missing"]
 
     assert items

@@ -172,6 +172,47 @@ def check_user_claim_positive_statement(report_content: str, context_pack: Gener
     return issues
 
 
+def check_case_references_in_external_report(
+    report_content: str, context_pack: GenerationContextPack
+) -> list[str]:
+    """Detect case references that should not appear in external reports.
+
+    Checks both CitationItem markers and case_grounding titles for leakage.
+    """
+    issues: list[str] = []
+
+    # Check CitationRegistry for case items
+    registry = getattr(context_pack, "citation_registry", None)
+    if registry is not None:
+        for item in registry:
+            if not item.can_enter_external_report:
+                # Check if citation marker appears in report
+                if item.citation_id in report_content:
+                    issues.append(
+                        f"Case reference '{item.title}' ({item.citation_id}) "
+                        f"leaked into external report — cases must not appear in external reports."
+                    )
+                # Check if case title appears in report (fuzzy)
+                if item.title and len(item.title) >= 8 and item.title in report_content:
+                    issues.append(
+                        f"Case reference title '{item.title}' appears in external report "
+                        f"— cases must not appear in external reports."
+                    )
+
+    # Check case_grounding titles for leakage
+    case_grounding = getattr(context_pack, "case_grounding", None) or {}
+    for issue_id, bindings in case_grounding.get("by_issue", {}).items():
+        for binding in bindings:
+            case_title = str(binding.get("title", ""))
+            if case_title and len(case_title) >= 8 and case_title in report_content:
+                issues.append(
+                    f"Case reference '{case_title}' from case_grounding {issue_id} "
+                    f"appears in external report — cases must not appear in external reports."
+                )
+
+    return issues
+
+
 class ConsistencyChecker:
     def check(self, profile: CompanyProfile, chapters: list[ChapterContent]) -> list[str]:
         issues: list[str] = []
@@ -202,4 +243,5 @@ class ConsistencyChecker:
             *check_forbidden_expressions(report_content, context_pack),
             *check_internal_expression_leakage(report_content, context_pack),
             *check_user_claim_positive_statement(report_content, context_pack),
+            *check_case_references_in_external_report(report_content, context_pack),
         ]

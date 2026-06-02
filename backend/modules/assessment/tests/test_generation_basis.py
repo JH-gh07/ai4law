@@ -49,7 +49,7 @@ def test_generation_basis_pack_includes_issue_level_legal_grounding() -> None:
         )
     ]
 
-    grounding = build_legal_grounding(issues=issues, facts=facts, regulations=regulations)
+    grounding, _case_grounding = build_legal_grounding(issues=issues, facts=facts, regulations=regulations)
     pack = build_generation_basis_pack(
         task_id="task-1",
         facts=facts,

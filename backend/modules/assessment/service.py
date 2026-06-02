@@ -136,7 +136,7 @@ class AssessmentService:
         attachment_notes: list[dict[str, str]],
         per_issue_rag: dict[str, dict] | None = None,
     ) -> GenerationContextPack:
-        legal_grounding = build_legal_grounding(
+        legal_grounding, case_grounding = build_legal_grounding(
             issues=issues,
             facts=facts,
             regulations=regulations,
@@ -163,6 +163,7 @@ class AssessmentService:
             issues=issues,
             facts=facts,
             evidence_chain=evidence_chain,
+            case_grounding=case_grounding,
         )
         citation_registry = CitationRegistry()
         for item in citation_items:
@@ -191,6 +192,7 @@ class AssessmentService:
             attachment_notes=attachment_notes,
             output_requirements={"chapter_keys": list(self.generator.chapter_keys().values())},
             legal_grounding=legal_grounding,
+            case_grounding=case_grounding,
             writing_strategy=writing_strategy,
             generation_basis_pack=generation_basis_pack,
             citation_registry=citation_registry,
@@ -242,6 +244,7 @@ class AssessmentService:
             writing_strategy=context_pack.writing_strategy if context_pack else None,
             generation_basis_pack=context_pack.generation_basis_pack if context_pack else None,
             legal_grounding=context_pack.legal_grounding if context_pack else None,
+            case_grounding=context_pack.case_grounding if context_pack else None,
             citation_registry=context_pack.citation_registry if context_pack else None,
         )
 

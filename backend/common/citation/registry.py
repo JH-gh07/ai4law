@@ -96,6 +96,7 @@ class CitationRegistry:
             "official_guide": "官方指南",
             "template_requirement": "模板要求",
             "standard_clause": "标准条款",
+            "case_reference": "案例参考",
             "user_material": "用户材料",
         }
         for num in sorted(footnote_map):
@@ -111,6 +112,46 @@ class CitationRegistry:
                 lines.append(f"    > {snippet}")
             lines.append("")
         return "\n".join(lines)
+
+    def build_external_citation_map_section(self) -> str:
+        """Build citation map section with only external-report-allowed citations."""
+        footnote_map = self.get_footnote_map()
+        if not footnote_map:
+            return "（本报告未引用法规依据索引）"
+
+        external_items = {
+            num: item
+            for num, item in footnote_map.items()
+            if item.can_enter_external_report
+        }
+        if not external_items:
+            return "（本报告未引用外部可用法规依据索引）"
+
+        type_labels: dict[str, str] = {
+            "law_article": "法律条文",
+            "official_guide": "官方指南",
+            "template_requirement": "模板要求",
+            "standard_clause": "标准条款",
+            "user_material": "用户材料",
+        }
+        lines: list[str] = ["## 引用依据索引", ""]
+        for num in sorted(external_items):
+            item = external_items[num]
+            type_label = type_labels.get(item.citation_type, item.citation_type)
+            article_hint = f" 第{item.article_no}条" if item.article_no else ""
+            lines.append(
+                f"[{num}] **{item.title}**{article_hint} "
+                f"（{type_label}，权威等级：{item.authority_level}）"
+            )
+            if item.quote_text:
+                snippet = item.quote_text[:200].replace("\n", " ")
+                lines.append(f"    > {snippet}")
+            lines.append("")
+        return "\n".join(lines)
+
+    def get_external_citation_items(self) -> list[CitationItem]:
+        """Return only CitationItems allowed in external reports."""
+        return [item for item in self._items.values() if item.can_enter_external_report]
 
     def to_list(self) -> list[dict]:
         return [item.to_dict() for item in self._items.values()]

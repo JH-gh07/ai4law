@@ -8,6 +8,7 @@ CitationType = Literal[
     "official_guide",
     "template_requirement",
     "standard_clause",
+    "case_reference",
     "user_material",
 ]
 
@@ -17,7 +18,7 @@ BindingForce = Literal["mandatory", "recommended", "reference"]
 
 @dataclass
 class CitationItem:
-    """A single citable reference — law article, guide clause, standard, or user material.
+    """A single citable reference — law article, guide clause, standard, case, or user material.
 
     Stored in-memory per report via CitationRegistry; not an ORM model.
     """
@@ -37,6 +38,9 @@ class CitationItem:
     confidence_score: float = 0.0
     authority_level: AuthorityLevel = "medium"
     binding_force: BindingForce = "recommended"
+    source_kind: str = "law_article"
+    allowed_usage: list[str] = field(default_factory=lambda: ["external_report", "internal_review"])
+    can_enter_external_report: bool = True
 
     def to_dict(self) -> dict:
         return {
@@ -55,4 +59,7 @@ class CitationItem:
             "confidence_score": self.confidence_score,
             "authority_level": self.authority_level,
             "binding_force": self.binding_force,
+            "source_kind": self.source_kind,
+            "allowed_usage": self.allowed_usage,
+            "can_enter_external_report": self.can_enter_external_report,
         }

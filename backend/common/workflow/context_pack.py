@@ -20,6 +20,7 @@ class GenerationContextPack(BaseModel):
     attachment_notes: list[dict] = Field(default_factory=list)
     output_requirements: dict = Field(default_factory=dict)
     legal_grounding: dict[str, Any] | None = None
+    case_grounding: dict[str, Any] | None = None
     writing_strategy: dict[str, Any] | None = None
     generation_basis_pack: dict[str, Any] | None = None
     citation_registry: Any = None

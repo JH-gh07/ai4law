@@ -1,8 +1,17 @@
-"""CrossDocConsistencyChecker — detect inconsistencies across multiple documents."""
+"""CrossDocConsistencyChecker — detect inconsistencies across multiple documents.
+
+9 comparison fields: cross_border_mentioned, retention_period, dispute_jurisdiction,
+data_types, processing_purpose, third_party_sharing, rights_response_time,
+incident_timeline, storage_location.
+
+Comparison strategy: extract short, normalized key values per field, then
+compare across documents via simple string equality.
+"""
 
 from __future__ import annotations
 
 import logging
+import re as _re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -16,8 +25,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DocumentWithClauses:
-    """A document with its classified clauses for cross‑document comparison."""
-
     file_id: str
     filename: str
     document_type: str
@@ -26,157 +33,194 @@ class DocumentWithClauses:
 
 
 class CrossDocConsistencyChecker:
-    """Check for consistency across multiple uploaded documents.
-
-    Detects:
-    - Contradictory retention periods
-    - Contradictory security measure descriptions
-    - Jurisdiction / dispute resolution conflicts
-    - Cross‑border disclosure contradictions (privacy policy says no, SCC says yes)
-    - Third‑party sharing list gaps
-    """
 
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         self.llm_client = llm_client
 
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
     def check(self, documents: list[DocumentWithClauses]) -> list[str]:
-        """Check cross‑document consistency, returning warning messages."""
         if len(documents) < 2:
             return []
 
         warnings: list[str] = []
-
-        # 1. Extract key fields from each document
         profiles = [self._extract_profile(doc) for doc in documents]
 
-        # 2. Cross‑border contradiction: privacy policy vs contract
         pp = next((p for p in profiles if p.get("doc_type") == "privacy_policy"), None)
         scc = next((p for p in profiles if p.get("doc_type") == "scc_contract"), None)
         dpa = next((p for p in profiles if p.get("doc_type") == "dpa"), None)
 
+        # 1. Cross-border contradiction
         if pp and (scc or dpa):
             contract = scc or dpa
-            # If privacy policy says "we don't transfer data overseas" but SCC/DPA exists
-            pp_cb = pp.get("cross_border_mentioned", "unknown")
-            if pp_cb == "false" and contract:
+            if pp.get("cross_border_mentioned") == "false":
                 warnings.append(
-                    f"隐私政策（{pp['filename']}）未提及数据出境，"
-                    f"但{contract['filename']}涉及数据出境传输。"
-                    "建议在隐私政策中同步披露数据出境情况。"
+                    f"Privacy policy ({pp['filename']}) does not mention cross-border "
+                    f"transfer, but {contract['filename']} involves it."
                 )
 
-        # 3. Retention period consistency
-        retention_periods = {}
-        for p in profiles:
-            rp = p.get("retention_period")
-            if rp:
-                retention_periods[p["filename"]] = rp
-        if len(retention_periods) >= 2:
-            periods = set(retention_periods.values())
-            if len(periods) > 1:
+        # 2-9. Key-value field consistency (compare normalized short values)
+        fields = [
+            ("retention_period", "retention period"),
+            ("dispute_jurisdiction", "dispute jurisdiction"),
+            ("data_types", "data types"),
+            ("processing_purpose", "processing purpose"),
+            ("rights_response_time", "rights response time"),
+            ("incident_timeline", "incident notification timeline"),
+            ("storage_location", "storage location"),
+        ]
+        for field, label in fields:
+            warnings.extend(self._check_key_value(profiles, field, label))
+
+        # 10. Third-party sharing coverage (structural)
+        if pp and (scc or dpa):
+            contract = scc or dpa
+            if pp.get("third_party_sharing") and not contract.get("third_party_sharing"):
                 warnings.append(
-                    f"不同文档中的保存期限约定不一致: "
-                    + "; ".join(f"{fn}: {rp}" for fn, rp in retention_periods.items())
+                    f"Privacy policy ({pp['filename']}) mentions third-party sharing, "
+                    f"but {contract['filename']} does not list the same recipients."
                 )
 
-        # 4. Jurisdiction conflicts
-        jurisdictions = {}
-        for p in profiles:
-            jur = p.get("dispute_jurisdiction")
-            if jur:
-                jurisdictions[p["filename"]] = jur
-        if len(jurisdictions) >= 2:
-            j_set = set(jurisdictions.values())
-            if len(j_set) > 1:
-                warnings.append(
-                    f"不同文档中的争议解决管辖约定不一致: "
-                    + "; ".join(f"{fn}: {jur}" for fn, jur in jurisdictions.items())
-                )
-
-        # 5. LLM deep check if available
+        # 11. LLM deep check
         if self.llm_client and self.llm_client.enabled and len(warnings) < 5:
-            llm_warnings = self._llm_consistency_check(documents)
-            if llm_warnings:
-                warnings.extend(llm_warnings)
+            llm_w = self._llm_consistency_check(documents)
+            if llm_w:
+                warnings.extend(llm_w)
 
-        return list(dict.fromkeys(warnings))  # dedup preserve order
+        return list(dict.fromkeys(warnings))
 
     # ------------------------------------------------------------------
-    # Profile extraction
+    # Key-value comparison
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _check_key_value(
+        profiles: list[dict], field: str, label: str,
+    ) -> list[str]:
+        """Compare normalized key values across docs; flag if >=2 differ."""
+        vals: dict[str, str] = {}
+        for p in profiles:
+            v = p.get(field)
+            if v:
+                vals[p["filename"]] = str(v)
+        if len(vals) < 2:
+            return []
+        unique = set(vals.values())
+        if len(unique) > 1:
+            items = "; ".join(f"{fn}: {v}" for fn, v in vals.items())
+            return [f"Inconsistent {label}: {items}"]
+        return []
+
+    # ------------------------------------------------------------------
+    # Profile extraction (9 fields, each produces a normalized key value)
     # ------------------------------------------------------------------
 
     @staticmethod
     def _extract_profile(doc: DocumentWithClauses) -> dict[str, str]:
-        """Extract key comparison fields from a document."""
-        combined_text = " ".join(c.text for c in doc.clauses)[:4000]
-        profile: dict[str, str] = {
-            "filename": doc.filename,
-            "doc_type": doc.document_type,
-        }
+        t = " ".join(c.text for c in doc.clauses)[:6000]
+        p: dict[str, str] = {"filename": doc.filename, "doc_type": doc.document_type}
 
-        # Cross‑border mention
-        if any(kw in combined_text for kw in ["出境", "跨境", "境外", "overseas", "cross-border"]):
-            profile["cross_border_mentioned"] = "true"
+        # 1. cross_border_mentioned
+        p["cross_border_mentioned"] = (
+            "true" if any(kw in t for kw in ["出境", "跨境", "境外", "overseas", "cross-border"])
+            else "false"
+        )
+
+        # 2. retention_period → normalized number
+        m = _re.search(r"(?:保存期限|存储期限|保留.{0,3}期限).{0,15}?(\d+)\s*([年个月天])", t)
+        if m:
+            p["retention_period"] = f"{m.group(1)}{m.group(2)}"
+
+        # 3. dispute_jurisdiction → entity name only (tight proximity)
+        m = _re.search(
+            r"(北京|上海|深圳|广州|杭州|中国|香港|新加坡|美国|英国|内地|日本|韩国|德国|法国|澳大利亚)"
+            r"(?:法院|仲裁|管辖)",
+            t,
+        )
+        if m:
+            p["dispute_jurisdiction"] = m.group(1)
         else:
-            profile["cross_border_mentioned"] = "false"
+            m = _re.search(
+                r"(?:管辖|仲裁|诉讼|法院)"
+                r"(北京|上海|深圳|广州|杭州|中国|香港|新加坡|美国|英国|内地|日本|韩国|德国|法国|澳大利亚)",
+                t,
+            )
+            if m:
+                p["dispute_jurisdiction"] = m.group(1)
 
-        # Retention period
-        import re
-        m = re.search(
-            r"(?:保存期限|存储期限|保留.*期限|保存.{0,5}期).{0,20}?(\d+[年个月天]|[0-9]{4}[-/][0-9]{1,2})",
-            combined_text,
+        # 4. data_types → first 3 type keywords
+        types: list[str] = []
+        for kw in ["消费记录", "门禁", "行踪", "生物识别", "金融", "健康", "教育",
+                     "浏览记录", "支付", "身份信息", "通信", "位置", "图书"]:
+            if kw in t:
+                types.append(kw)
+        if types:
+            p["data_types"] = "/".join(types[:5])
+
+        # 5. processing_purpose → first 30 meaningful chars
+        m = _re.search(r"(?:处理目的|出境目的|使用目的)[：:\s]*([^。；\n]{4,100})", t)
+        if m:
+            val = m.group(1).strip()
+            # Normalize: keep first 30 chars
+            p["processing_purpose"] = val[:30]
+
+        # 6. third_party_sharing
+        if any(kw in t for kw in ["第三方", "共享", "SDK", "合作伙伴", "转让", "公开披露"]):
+            p["third_party_sharing"] = "detected"
+
+        # 7. rights_response_time → number only
+        m = _re.search(r"(\d+)\s*[日个天]\s*(?:内|之内|以内).{0,10}?(?:处理|响应|回复)", t)
+        if m:
+            p["rights_response_time"] = f"{m.group(1)}日"
+
+        # 8. incident_timeline → number + unit
+        m = _re.search(r"(\d+)\s*(小时|日|天).{0,10}?(?:通知|报告)", t)
+        if m:
+            p["incident_timeline"] = f"{m.group(1)}{m.group(2)}"
+
+        # 9. storage_location → country/region name only
+        m = _re.search(
+            r"(?:存储地点|保存地点|数据中心|服务器).{0,30}?"
+            r"(中国|香港|新加坡|美国|英国|日本|韩国|德国|法国|澳大利亚|印度|马来西亚|泰国|开曼)",
+            t,
         )
         if m:
-            profile["retention_period"] = m.group(0)[:60]
+            p["storage_location"] = m.group(1)
 
-        # Jurisdiction
-        m = re.search(
-            r"(?:管辖|仲裁|诉讼|争议解决).{0,20}?(中国|香港|新加坡|美国|英国|内地)",
-            combined_text,
-        )
-        if m:
-            profile["dispute_jurisdiction"] = m.group(1)
-
-        return profile
+        return p
 
     # ------------------------------------------------------------------
-    # LLM‑based deep check
+    # LLM deep check
     # ------------------------------------------------------------------
 
-    def _llm_consistency_check(
-        self, documents: list[DocumentWithClauses],
-    ) -> list[str]:
-        """Use LLM to detect subtle cross‑document inconsistencies."""
+    def _llm_consistency_check(self, documents: list[DocumentWithClauses]) -> list[str]:
         if not self.llm_client or not self.llm_client.enabled:
             return []
-
         docs_summary = []
         for doc in documents:
             issues_text = "、".join(i.title[:60] for i in doc.issues[:5])
             docs_summary.append(
                 f"{doc.filename} ({doc.document_type}): "
-                f"{len(doc.clauses)}个条款, 发现{len(doc.issues)}个问题"
-                + (f", 如: {issues_text}" if issues_text else "")
+                f"{len(doc.clauses)} clauses, {len(doc.issues)} issues"
+                + (f", e.g.: {issues_text}" if issues_text else "")
             )
-
         prompt = (
-            "以下是同一企业提交的多份文档的审查摘要。"
-            "请检查是否存在跨文档的矛盾或不一致。仅输出发现的不一致项，无问题则输出'无'。\n\n"
+            "Below are review summaries for multiple documents from the same company. "
+            "Check for cross-document contradictions. Output only the inconsistencies found, "
+            "or output 'NONE' if there are none.\n\n"
             + "\n".join(docs_summary)
         )
-
         try:
             raw = self.llm_client.chat(
-                system="你是一名数据合规审查专家。分析跨文档一致性。",
-                user=prompt,
-                temperature=0.1,
-                max_tokens=300,
+                system="You are a data compliance review expert. Analyze cross-document consistency.",
+                user=prompt, temperature=0.1, max_tokens=300,
             )
-            if raw.strip() == "无":
+            if raw.strip() == "NONE":
                 return []
-            # Split by newlines or numbered items
-            lines = [l.strip("- 123456789.、") for l in raw.split("\n") if l.strip() and l.strip() != "无"]
+            lines = [l.strip("- 123456789.、") for l in raw.split("\n") if l.strip() and l.strip() != "NONE"]
             return [l for l in lines if len(l) > 20]
         except Exception as exc:
-            logger.warning("LLM cross‑doc check failed: %s", exc)
+            logger.warning("LLM cross-doc check failed: %s", exc)
             return []

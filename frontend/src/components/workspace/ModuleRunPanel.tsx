@@ -3012,8 +3012,16 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     };
   };
 
-  const buildDocumentReviewPayload = async (): Promise<unknown> =>
-    buildDocumentReviewPayloadFrom(documentReviewValues, documentReviewFiles, documentReviewDevFilePaths);
+  const VALID_DOC_TYPES = ["privacy_policy", "scc_contract", "dpa", "other"];
+  const buildDocumentReviewPayload = async (): Promise<unknown> => {
+    const payload = await buildDocumentReviewPayloadFrom(documentReviewValues, documentReviewFiles, documentReviewDevFilePaths) as Record<string, unknown>;
+    const docType = String(payload.document_type || "");
+    if (!VALID_DOC_TYPES.includes(docType)) {
+      console.warn(`[documentReview] unexpected document_type: "${docType}", defaulting to "other"`);
+      payload.document_type = "other";
+    }
+    return payload;
+  };
 
   const buildEuSccPayloadFrom = async (
     values: EuSccFormValues,

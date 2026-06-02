@@ -22,6 +22,11 @@ from backend.modules.assessment.internal_review_generator import (
     build_internal_review_payload,
     generate_internal_review_markdown,
 )
+from backend.modules.assessment.external_report_generator import (
+    TemplateMissingError,
+    build_official_report_mapping,
+    render_official_report_md,
+)
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
 
 if TYPE_CHECKING:
@@ -29,6 +34,9 @@ if TYPE_CHECKING:
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.docx")
 TEMPLATE_MD = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.md")
+
+OFFICIAL_TEMPLATE_DIR = Path(__file__).parent / "templates"
+OFFICIAL_MD_TEMPLATE = OFFICIAL_TEMPLATE_DIR / "official_risk_self_assessment_template.md"
 
 _ISSUE_XLSX_HEADERS = [
     "问题编号",
@@ -77,6 +85,7 @@ class AssessmentReportRenderer:
         writing_strategy: dict[str, Any] | None = None,
         generation_basis_pack: dict[str, Any] | None = None,
         legal_grounding: dict[str, Any] | None = None,
+        case_grounding: dict[str, Any] | None = None,
         citation_registry: "CitationRegistry | None" = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
@@ -90,14 +99,58 @@ class AssessmentReportRenderer:
             profile, regulations, chapters, date_stamp, path_warning, alignment_warning,
             citation_registry=citation_registry,
         )
-        render_markdown_template(md_output, TEMPLATE_MD, mapping)
-        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+
+        # Render internal (8-chapter) report
+        internal_md_output = output_dir / f"{safe_company}_内部风险分析报告_{date_stamp}.md"
+        render_markdown_template(internal_md_output, TEMPLATE_MD, mapping)
+        docx_rendered = False
+        if TEMPLATE_PATH.exists():
+            render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+            docx_rendered = True
+
+        # Render official (3-section) external report
+        official_md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
+        official_docx_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.docx"
+        official_mapping = None
+        try:
+            official_mapping = build_official_report_mapping(
+                profile=profile,
+                chapters=chapters,
+                date_stamp=date_stamp,
+                report_id=task_id,
+                path_warning=path_warning,
+                alignment_warning=alignment_warning,
+                context_pack=None,
+                citation_registry=citation_registry,
+                request_payload={
+                    "company_name": company_name,
+                    "industry": profile.industry,
+                    "transfer_purpose": profile.transfer_purpose,
+                    "receiver_country": profile.receiver_country,
+                    "pii_count": profile.pii_count,
+                    "spi_count": profile.spi_count,
+                    "is_ciio": profile.is_ciio,
+                    "contains_important_data": profile.contains_important_data,
+                },
+            )
+            render_official_report_md(official_md_output, official_mapping)
+        except TemplateMissingError as exc:
+            official_md_output = None
+            official_mapping = {"_template_missing": str(exc)}
 
         result: dict[str, str] = {
-            "markdown": str(md_output),
-            "docx": str(docx_output),
+            "markdown": str(internal_md_output),
             "zip": str(zip_output),
         }
+        if docx_rendered:
+            result["docx"] = str(docx_output)
+        if official_md_output and OFFICIAL_MD_TEMPLATE.exists():
+            result["official_markdown"] = str(official_md_output)
+        else:
+            result["official_markdown_warning"] = (
+                "官方报告模板不存在，无法生成对外正式文书。"
+                "请将 official_risk_self_assessment_template.md 放入 backend/modules/assessment/templates/ 目录。"
+            )
 
         if issues:
             result["issue_list_json"] = _write_issue_list_json(issues, output_dir)
