@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from backend.common.rag.orchestrator import INDEX_NAMES, build_chunk_sets
 from backend.common.rag.embedding import HashingEmbedder
 from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
 
@@ -82,3 +83,53 @@ def build_regulation_index(settings: Settings, source_jsonl: Path | None = None,
         },
     )
     return index_path
+
+
+def build_multi_index_v3(settings: Settings) -> dict[str, Path]:
+    rag_dir = settings.rag_v3_dir
+    rag_dir.mkdir(parents=True, exist_ok=True)
+    embedder = HashingEmbedder(settings.rag_embedding_dimension)
+    chunk_sets = build_chunk_sets()
+    outputs: dict[str, Path] = {}
+
+    for index_name in INDEX_NAMES:
+        chunks = chunk_sets.get(index_name, [])
+        vector_path = rag_dir / f"{index_name}.vector.json"
+        jsonl_path = rag_dir / f"{index_name}.jsonl"
+        entries: list[VectorIndexEntry] = []
+        rows: list[dict] = []
+        for chunk in chunks:
+            payload = chunk.to_payload()
+            rows.append(payload)
+            search_text = " ".join(
+                [
+                    chunk.title,
+                    chunk.content,
+                    chunk.citation_anchor,
+                    " ".join(chunk.reference_ids),
+                    " ".join(chunk.scenario_tags),
+                    " ".join(chunk.keywords),
+                ]
+            ).strip()
+            entries.append(
+                VectorIndexEntry(
+                    doc_id=chunk.chunk_id,
+                    payload=payload,
+                    search_text=search_text,
+                    embedding=embedder.embed(search_text),
+                )
+            )
+        LocalVectorStore(index_path=vector_path, embedder=embedder).save(
+            entries,
+            metadata={
+                "index_name": index_name,
+                "entry_count": len(entries),
+                "schema_version": "v3",
+            },
+        )
+        jsonl_path.write_text(
+            "\n".join(json.dumps(row, ensure_ascii=False) for row in rows),
+            encoding="utf-8",
+        )
+        outputs[index_name] = vector_path
+    return outputs

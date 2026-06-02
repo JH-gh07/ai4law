@@ -100,6 +100,8 @@ def _build_citation_from_binding(
     # Use source_kind from binding if present, otherwise infer from title
     source_kind = str(binding.get("source_kind", _infer_source_kind_from_title(title)))
     allowed_usage, can_enter_external = _usage_policy_for_kind(source_kind)
+    confidence_threshold = float(binding.get("confidence_threshold", 0.20))
+    external_report_allowed = bool(binding.get("external_report_allowed", can_enter_external))
 
     abbr = resolve_abbreviation(title)
     citation_id = generate_citation_id(
@@ -131,6 +133,8 @@ def _build_citation_from_binding(
         source_kind=source_kind,
         allowed_usage=allowed_usage,
         can_enter_external_report=can_enter_external,
+        confidence_threshold=confidence_threshold,
+        external_report_allowed=external_report_allowed,
     )
 
 

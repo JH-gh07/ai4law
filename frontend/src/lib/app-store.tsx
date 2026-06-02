@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useReducer, useRef, type Dispatch
 import type {
   ConsistencyIssue,
   EvidenceHit,
+  Jurisdiction,
   ModuleRun,
   OnboardingState,
   OutputArtifact,
@@ -9,7 +10,7 @@ import type {
   TaskSpace
 } from "./domain";
 import { useAuth } from "./auth/AuthContext";
-import { fetchWorkspaceState, saveWorkspaceState } from "./me-api";
+import { fetchMyReports, fetchMyTasks, fetchWorkspaceState, saveWorkspaceState, type MyReportItem, type MyTaskItem } from "./me-api";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
 
 const STORAGE_KEY = "ai4law_app_state_v1";
@@ -82,6 +83,32 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const MODULE_TEMPLATE_ID_MAP: Record<string, string> = {
+  diagnosis: "cn_diagnosis",
+  assessment: "cn_assessment",
+  pipia: "cn_pipia",
+  review: "cn_document_review",
+  scc: "eu_scc",
+  bcr: "eu_bcr",
+  dpia: "eu_dpia",
+  tia: "eu_tia",
+  cn_flow: "us_14117",
+  cpra: "us_cpra"
+};
+
+const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
+  diagnosis: "CN",
+  assessment: "CN",
+  pipia: "CN",
+  review: "CN",
+  scc: "EU",
+  bcr: "EU",
+  dpia: "EU",
+  tia: "EU",
+  cn_flow: "US",
+  cpra: "US"
+};
 
 function normalizePanelState(raw: unknown): PanelState {
   if (!isRecord(raw)) {
@@ -241,6 +268,119 @@ const ensureEvidenceHits = (value: unknown): EvidenceHit[] =>
 const ensureIssues = (value: unknown): ConsistencyIssue[] =>
   Array.isArray(value) ? value.map(normalizeIssue).filter((item): item is ConsistencyIssue => !!item) : [];
 
+const hasWorkspaceData = (state: Pick<AppState, "taskSpaces" | "moduleRuns" | "artifacts" | "evidenceHits" | "issues">): boolean =>
+  state.taskSpaces.length > 0 ||
+  state.moduleRuns.length > 0 ||
+  state.artifacts.length > 0 ||
+  state.evidenceHits.length > 0 ||
+  state.issues.length > 0;
+
+const dedupeById = <T extends { id: string }>(items: T[]): T[] => {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    result.push(item);
+  }
+  return result;
+};
+
+const mergeTaskSpaces = (...groups: TaskSpace[][]): TaskSpace[] => {
+  const seen = new Set<string>();
+  const result: TaskSpace[] = [];
+  for (const group of groups) {
+    for (const item of group) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      result.push(item);
+    }
+  }
+  return result.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+};
+
+const inferModuleKey = (item: MyTaskItem): string => {
+  if (typeof item.module === "string" && item.module.length > 0) {
+    return item.module;
+  }
+  return item.source;
+};
+
+const inferJurisdiction = (module: string): Jurisdiction => MODULE_JURISDICTION_MAP[module] ?? "CN";
+
+const resolveTaskTemplate = (module: string, jurisdiction: Jurisdiction) => {
+  const templateId = MODULE_TEMPLATE_ID_MAP[module];
+  return findTaskTemplate(templateId) ?? getDefaultTaskTemplate(jurisdiction);
+};
+
+const buildRecoveredTaskName = (item: MyTaskItem, module: string, jurisdiction: Jurisdiction): string => {
+  const template = resolveTaskTemplate(module, jurisdiction);
+  const stamp = item.updated_at.slice(0, 10);
+  return `${template.title.zh} ${stamp}`;
+};
+
+function buildRecoveredWorkspaceState(tasks: MyTaskItem[], reports: MyReportItem[]) {
+  const taskSpacesFromTasks = tasks.map((item) => {
+    const module = inferModuleKey(item);
+    const jurisdiction = inferJurisdiction(module);
+    const template = resolveTaskTemplate(module, jurisdiction);
+    return {
+      id: item.id,
+      name: buildRecoveredTaskName(item, module, jurisdiction),
+      mode: "rapid" as const,
+      jurisdiction,
+      taskTemplateId: template.id,
+      module: template.module,
+      workspaceStyle: template.workspaceStyle,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at
+    };
+  });
+
+  const taskSpacesFromReports = reports
+    .filter((item) => typeof item.owner_type === "string" && item.owner_type.length > 0)
+    .map((item) => {
+      const module = item.owner_type;
+      const jurisdiction = inferJurisdiction(module);
+      const template = resolveTaskTemplate(module, jurisdiction);
+      return {
+        id: item.owner_id,
+        name: `${template.title.zh} ${item.created_at.slice(0, 10)}`,
+        mode: "rapid" as const,
+        jurisdiction,
+        taskTemplateId: template.id,
+        module: template.module,
+        workspaceStyle: template.workspaceStyle,
+        createdAt: item.created_at,
+        updatedAt: item.created_at
+      };
+    });
+
+  const taskSpaces = mergeTaskSpaces(taskSpacesFromTasks, taskSpacesFromReports);
+
+  const taskIds = new Set(taskSpaces.map((item) => item.id));
+  const artifacts = dedupeArtifacts(
+    reports
+      .filter((item) => taskIds.has(item.owner_id) && typeof item.owner_type === "string" && item.owner_type.length > 0)
+      .map((item) => ({
+        id: item.id,
+        taskSpaceId: item.owner_id,
+        module: (item.owner_type || "diagnosis") as OutputArtifact["module"],
+        kind: item.artifact_type,
+        path: item.file_path,
+        createdAt: item.created_at
+      }))
+  );
+
+  return {
+    taskSpaces,
+    moduleRuns: [] as ModuleRun[],
+    artifacts,
+    evidenceHits: [] as EvidenceHit[],
+    issues: [] as ConsistencyIssue[]
+  };
+}
+
 function loadState(): AppState {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return initialState;
@@ -329,6 +469,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
   const hydratedRef = useRef(false);
   const savingTimerRef = useRef<number | null>(null);
+  const localSnapshotRef = useRef<AppState>(state);
+
+  useEffect(() => {
+    localSnapshotRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     persistState(state);
@@ -342,18 +487,67 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false;
-    fetchWorkspaceState().then((remote) => {
-      if (cancelled || !remote) return;
-      dispatch({
-        type: "hydrate_remote_state",
-        payload: {
-          taskSpaces: ensureTaskSpaces(remote.task_spaces),
-          moduleRuns: ensureModuleRuns(remote.module_runs),
-          artifacts: ensureArtifacts(remote.artifacts),
-          evidenceHits: ensureEvidenceHits(remote.evidence_hits),
-          issues: ensureIssues(remote.issues)
-        }
-      });
+    Promise.all([fetchWorkspaceState(), fetchMyTasks(), fetchMyReports()]).then(([remote, myTasks, myReports]) => {
+      if (cancelled) return;
+
+      const localSnapshot = localSnapshotRef.current;
+      const normalizedRemote = remote
+        ? {
+            taskSpaces: ensureTaskSpaces(remote.task_spaces),
+            moduleRuns: ensureModuleRuns(remote.module_runs),
+            artifacts: ensureArtifacts(remote.artifacts),
+            evidenceHits: ensureEvidenceHits(remote.evidence_hits),
+            issues: ensureIssues(remote.issues)
+          }
+        : {
+            taskSpaces: [],
+            moduleRuns: [],
+            artifacts: [],
+            evidenceHits: [],
+            issues: []
+          };
+      const recovered = buildRecoveredWorkspaceState(myTasks, myReports);
+
+      const mergedTaskSpaces = mergeTaskSpaces(
+        normalizedRemote.taskSpaces,
+        localSnapshot.taskSpaces,
+        recovered.taskSpaces
+      );
+      const mergedModuleRuns = dedupeById([
+        ...normalizedRemote.moduleRuns,
+        ...localSnapshot.moduleRuns,
+        ...recovered.moduleRuns
+      ]);
+      const mergedArtifacts = dedupeArtifacts([
+        ...normalizedRemote.artifacts,
+        ...localSnapshot.artifacts,
+        ...recovered.artifacts
+      ]);
+      const mergedEvidenceHits = dedupeById([
+        ...normalizedRemote.evidenceHits,
+        ...localSnapshot.evidenceHits,
+        ...recovered.evidenceHits
+      ]);
+      const mergedIssues = dedupeById([
+        ...normalizedRemote.issues,
+        ...localSnapshot.issues,
+        ...recovered.issues
+      ]);
+
+      const mergedState = {
+        taskSpaces: mergedTaskSpaces,
+        moduleRuns: mergedModuleRuns,
+        artifacts: mergedArtifacts,
+        evidenceHits: mergedEvidenceHits,
+        issues: mergedIssues
+      };
+
+      if (hasWorkspaceData(mergedState)) {
+        dispatch({
+          type: "hydrate_remote_state",
+          payload: mergedState
+        });
+      }
       hydratedRef.current = true;
     });
 

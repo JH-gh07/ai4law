@@ -22,9 +22,10 @@ export interface CitationSummary {
 
 export function extractInsight(response: unknown): ResponseInsight {
   if (!isRecord(response)) {
-    return { outputFiles: {}, consistencyIssues: [] };
+    return { outputFiles: {}, consistencyIssues: [], citations: [] };
   }
 
+  const responseRecord = response;
   const resultRecord = isRecord(response.result) ? response.result : {};
 
   const outputFiles: Record<string, string> = {};

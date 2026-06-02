@@ -24,3 +24,7 @@ class GenerationContextPack(BaseModel):
     writing_strategy: dict[str, Any] | None = None
     generation_basis_pack: dict[str, Any] | None = None
     citation_registry: Any = None
+    legal_grounding_context: list[dict[str, Any]] = Field(default_factory=list)
+    workflow_rule_context: list[dict[str, Any]] = Field(default_factory=list)
+    template_context: list[dict[str, Any]] = Field(default_factory=list)
+    evaluation_context: list[dict[str, Any]] = Field(default_factory=list)

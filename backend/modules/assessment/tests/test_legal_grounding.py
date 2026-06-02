@@ -79,3 +79,50 @@ def test_legal_grounding_uses_issue_facts_in_query_context() -> None:
     assert items
     assert "未提供同意日志" in items[0]["query_context"]
     assert items[0]["confidence_score"] > 0
+
+
+def test_legal_grounding_rejects_non_l1_context_items() -> None:
+    issue = IssueItem(
+        issue_id="ISSUE-path",
+        title="路径判断",
+        description="业务规则不应进入正式法律依据。",
+        category="path",
+        severity="HIGH",
+        fact_refs=["FACT-path"],
+        rule_refs=["wf-rule-1"],
+        recommended_action="引用法规而不是业务规则。",
+        affects_outputs=["conclusion"],
+    )
+    facts = [
+        FactItem(
+            fact_id="FACT-path",
+            source_type="schema",
+            field_path="request.is_ciio",
+            value=True,
+            normalized_value=True,
+        )
+    ]
+    regulations = [
+        RegulationHit(
+            source_id="wf-rule-1",
+            title="内部工作流规则",
+            article="步骤一",
+            snippet="如果 CIIO=true，则进入安全评估。",
+        )
+    ]
+    grounding, _ = build_legal_grounding(
+        issues=[issue],
+        facts=facts,
+        regulations=regulations,
+        legal_grounding_context=[
+            {
+                "source_id": "wf-rule-1",
+                "chunk_id": "wf-rule-1",
+                "layer": "L2_business_rule",
+                "source_kind": "workflow_rule",
+                "can_be_cited": False,
+                "allowed_usage": ["internal_review"],
+            }
+        ],
+    )
+    assert grounding["by_issue"]["ISSUE-path"] == []

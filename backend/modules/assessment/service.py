@@ -10,6 +10,7 @@ from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
 from backend.common.citation.audit import log_citations_created
 from backend.common.citation.registry import CitationRegistry
+from backend.common.knowledge.v2 import RetrievalRequest
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.modules.assessment.chapter_generator import AssessmentChapterGenerator
 from backend.modules.assessment.citation_builder import build_citations
@@ -20,6 +21,7 @@ from backend.modules.assessment.generation_basis import build_generation_basis_p
 from backend.modules.assessment.issue_builder import build_assessment_issues
 from backend.modules.assessment.legal_grounding import build_legal_grounding
 from backend.modules.assessment.profile_extractor import ProfileExtractor
+from backend.modules.assessment.repair_generator import run_repair_pass
 from backend.modules.assessment.report_renderer import AssessmentReportRenderer
 from backend.modules.assessment.retriever import AssessmentRetriever
 from backend.modules.assessment.writing_strategy_builder import build_writing_strategy
@@ -47,11 +49,12 @@ class AssessmentService:
         if legal_api_service is None:
             from backend.services.legal_api_service import DeliLegalService as _DeliLegalService
             legal_api_service = _DeliLegalService(get_settings())
+        self.legal_service = legal_api_service
         self.extractor = ProfileExtractor()
         self.retriever = AssessmentRetriever(legal_service=legal_api_service)
         self.generator = AssessmentChapterGenerator(llm_client=llm_client)
         self.checker = ConsistencyChecker()
-        self.renderer = AssessmentReportRenderer()
+        self.renderer = AssessmentReportRenderer(llm_client=llm_client)
         self.tasks = InMemoryTaskManager(module="assessment")
 
     def generate_report(self, payload: AssessmentRequest) -> AssessmentResult:
@@ -91,6 +94,7 @@ class AssessmentService:
             generate_chapters=self.generator.generate,
             check_consistency=self.checker.check_with_context,
             check_alignment=self._check_alignment,
+            repair_chapters=self._repair_chapters,
             render_artifacts=self._render_outputs,
         )
 
@@ -136,11 +140,34 @@ class AssessmentService:
         attachment_notes: list[dict[str, str]],
         per_issue_rag: dict[str, dict] | None = None,
     ) -> GenerationContextPack:
+        retrieval_bundle = getattr(self.retriever, "last_bundle", None)
+        legal_grounding_context = [
+            chunk.model_dump()
+            for chunk in getattr(retrieval_bundle, "legal_grounding", []) or []
+        ]
+        workflow_rule_context = [
+            chunk.model_dump()
+            for chunk in getattr(retrieval_bundle, "workflow_rules", []) or []
+        ]
+        template_bundle = self.retriever._orchestrator.retrieve(  # noqa: SLF001
+            RetrievalRequest(
+                module="cn_assessment",
+                task_stage="report_generation",
+                query="安全评估 模板 章节 结构",
+                facts={fact.fact_id: fact.normalized_value if fact.normalized_value is not None else fact.value for fact in facts},
+                environment="production",
+                top_k=8,
+                jurisdiction="cn",
+                path="assessment",
+            )
+        )
+        template_context = [chunk.model_dump() for chunk in template_bundle.templates]
         legal_grounding, case_grounding = build_legal_grounding(
             issues=issues,
             facts=facts,
             regulations=regulations,
             per_issue_rag=per_issue_rag,
+            legal_grounding_context=legal_grounding_context,
         )
         writing_strategy = build_writing_strategy(issues=issues)
         generation_basis_pack = build_generation_basis_pack(
@@ -153,6 +180,8 @@ class AssessmentService:
             path_warning=path_warning,
             legal_grounding=legal_grounding,
             writing_strategy=writing_strategy,
+            workflow_rules=workflow_rule_context,
+            template_context=template_context,
         )
 
         # Build citation registry from pipeline data
@@ -196,6 +225,10 @@ class AssessmentService:
             writing_strategy=writing_strategy,
             generation_basis_pack=generation_basis_pack,
             citation_registry=citation_registry,
+            legal_grounding_context=legal_grounding_context,
+            workflow_rule_context=workflow_rule_context,
+            template_context=template_context,
+            evaluation_context=[],
         )
 
     @staticmethod
@@ -206,6 +239,24 @@ class AssessmentService:
             is_ciio=profile.is_ciio,
             contains_important_data=profile.contains_important_data,
             receiver_country=profile.receiver_country,
+        )
+
+    def _repair_chapters(
+        self,
+        *,
+        chapters,
+        consistency_issues: list[str],
+        profile,
+        context_pack,
+    ) -> tuple[list, list[str], bool]:
+        """Run the repair pass: fix repairable issues, re-check, block if unfixable."""
+        return run_repair_pass(
+            chapters=chapters,
+            consistency_issues=consistency_issues,
+            profile=profile,
+            context_pack=context_pack,
+            llm_client=self.generator.llm_client if hasattr(self.generator, 'llm_client') else None,
+            max_retries=3,
         )
 
     def _render_outputs(

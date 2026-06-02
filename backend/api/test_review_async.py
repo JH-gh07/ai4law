@@ -51,7 +51,9 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
             return None
 
         review_service.task_dispatcher.dispatch = capture_dispatch
-        review_service.reviewer.review = lambda clause, use_llm=True: []
+        review_service.reviewer.review = (
+            lambda clause, use_llm=True, document_type="other", scenario_context=None: []
+        )
 
         sample = container.settings.upload_dir / "sample_review_contract.md"
         sample.parent.mkdir(parents=True, exist_ok=True)
@@ -101,6 +103,15 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
 
 
 def test_select_llm_candidates_caps_non_other_clauses() -> None:
+    service = ReviewService(
+        file_service=None,
+        report_service=None,
+        task_dispatcher=None,
+        websocket_manager=None,
+        session_factory=None,
+        legal_api_service=None,
+        llm_client=None,
+    )
     clauses = [
         ClassifiedClause(
             clause_id=f"clause-{index}",
@@ -114,10 +125,10 @@ def test_select_llm_candidates_caps_non_other_clauses() -> None:
         for index in range(12)
     ]
 
-    selected = ReviewService._select_llm_candidates(clauses)
+    selected = service._select_llm_candidates(clauses)
 
-    assert len(selected) == 8
-    assert all(item.clause_type != ClauseType.OTHER for item in selected)
+    assert len(selected) == 10
+    assert set(selected) == {f"clause-{index}" for index in range(10)}
 
 
 def _make_classified_clause(

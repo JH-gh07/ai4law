@@ -20,10 +20,13 @@ class KnowledgeSyncMeta(BaseModel):
     cache_refreshed: bool = False
     sources_csv_path: str
     cases_csv_path: str
+    module_catalog_path: str = ""
     sources_csv_exists: bool
     cases_csv_exists: bool
+    module_catalog_exists: bool = False
     sources_csv_mtime: str = ""
     cases_csv_mtime: str = ""
+    module_catalog_mtime: str = ""
 
 
 class KnowledgeIndexResponse(BaseModel):

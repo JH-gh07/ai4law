@@ -114,7 +114,12 @@ class CitationRegistry:
         return "\n".join(lines)
 
     def build_external_citation_map_section(self) -> str:
-        """Build citation map section with only external-report-allowed citations."""
+        """Build citation map section with only external-report-allowed citations.
+
+        Filters by:
+        - can_enter_external_report=True (excludes case references)
+        - external_report_allowed=True (excludes low-confidence citations)
+        """
         footnote_map = self.get_footnote_map()
         if not footnote_map:
             return "（本报告未引用法规依据索引）"
@@ -122,9 +127,16 @@ class CitationRegistry:
         external_items = {
             num: item
             for num, item in footnote_map.items()
-            if item.can_enter_external_report
+            if item.can_enter_external_report and item.external_report_allowed
         }
-        if not external_items:
+
+        low_confidence_items = {
+            num: item
+            for num, item in footnote_map.items()
+            if item.can_enter_external_report and not item.external_report_allowed
+        }
+
+        if not external_items and not low_confidence_items:
             return "（本报告未引用外部可用法规依据索引）"
 
         type_labels: dict[str, str] = {
@@ -135,6 +147,7 @@ class CitationRegistry:
             "user_material": "用户材料",
         }
         lines: list[str] = ["## 引用依据索引", ""]
+
         for num in sorted(external_items):
             item = external_items[num]
             type_label = type_labels.get(item.citation_type, item.citation_type)
@@ -147,6 +160,22 @@ class CitationRegistry:
                 snippet = item.quote_text[:200].replace("\n", " ")
                 lines.append(f"    > {snippet}")
             lines.append("")
+
+        # Annotate low-confidence citations that were excluded
+        if low_confidence_items:
+            lines.append("### 引用置信度不足条目（未纳入正式引用索引）")
+            lines.append("")
+            lines.append("以下法规依据相关性评分低于最低置信阈值，未作为正式引用依据，仅供参考：")
+            lines.append("")
+            for num in sorted(low_confidence_items):
+                item = low_confidence_items[num]
+                article_hint = f" 第{item.article_no}条" if item.article_no else ""
+                lines.append(
+                    f"- **{item.title}**{article_hint} "
+                    f"（置信度 {item.confidence_score:.2f} < 阈值 {item.confidence_threshold:.0%}）【待验证】"
+                )
+            lines.append("")
+
         return "\n".join(lines)
 
     def get_external_citation_items(self) -> list[CitationItem]:

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from backend.common.knowledge.v2 import RetrievalRequest
+from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.rag.retriever import retrieve_regulations
 from backend.modules.assessment.schema import CompanyProfile, RegulationHit
 
@@ -12,6 +14,8 @@ if TYPE_CHECKING:
 class AssessmentRetriever:
     def __init__(self, legal_service: DeliLegalService | None = None) -> None:
         self.legal_service = legal_service
+        self._orchestrator = RetrievalOrchestrator()
+        self.last_bundle = None
 
     def search(self, profile: CompanyProfile, top_k: int = 8, source: str | None = None) -> list[RegulationHit]:
         query = " ".join(
@@ -22,6 +26,18 @@ class AssessmentRetriever:
                 "CIIO" if profile.is_ciio else "non-CIIO",
                 "important data" if profile.contains_important_data else "personal information",
             ]
+        )
+        self.last_bundle = self._orchestrator.retrieve(
+            RetrievalRequest(
+                module="cn_assessment",
+                task_stage="legal_grounding",
+                query=query,
+                facts=profile.model_dump(),
+                environment="production",
+                top_k=top_k,
+                jurisdiction="cn",
+                path="assessment",
+            )
         )
         docs = retrieve_regulations(
             query,

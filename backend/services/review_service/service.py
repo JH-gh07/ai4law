@@ -552,7 +552,6 @@ class ReviewService:
             return False
         return any(pattern.fullmatch(text) for pattern in _SHORT_STRUCTURAL_NOISE_PATTERNS)
 
-    @staticmethod
     def _select_llm_candidates(self, classified: list, review_config: ReviewTaskConfig | None = None) -> set[str]:
         """Risk‑triggered LLM selection (replaces top‑8 approach).
 

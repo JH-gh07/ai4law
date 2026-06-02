@@ -210,6 +210,30 @@ def test_assessment_force_override_keeps_path_warning(monkeypatch, tmp_path) -> 
     assert "诊断推荐路径为" in path_event["payload"]["warning"]
     path_data = json.loads(Path(result.output_files["path_judgment_json"]).read_text(encoding="utf-8"))
     assert path_data["is_override"] is True
+    report_text = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
+    assert "路径不匹配警示" in report_text or "路径不匹配说明" in report_text
+
+
+def test_assessment_zip_has_no_duplicate_names(monkeypatch, tmp_path) -> None:
+    _disable_external_services(monkeypatch)
+    _install_test_templates(monkeypatch, tmp_path)
+    service = _build_service()
+    payload = AssessmentRequest(
+        company_name="测试公司",
+        industry="医疗科技",
+        is_ciio=True,
+        contains_important_data=False,
+        pii_count=200000,
+        spi_count=300,
+        transfer_purpose="跨境客服",
+        receiver_country="Singapore",
+        force_override_path=False,
+        uploaded_files=[],
+    )
+    result = service.generate_report(payload)
+    with ZipFile(result.output_files["zip"]) as bundle:
+        names = bundle.namelist()
+    assert len(names) == len(set(names))
 
 
 def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None:

@@ -1,0 +1,29 @@
+import json
+from pathlib import Path
+
+from backend.common.knowledge import registry as registry_module
+from backend.schemas.knowledge import KnowledgeSyncMeta
+from backend.services.knowledge_index import get_knowledge_sync_meta
+
+
+def test_module_catalog_uses_static_file_when_present() -> None:
+    catalog = registry_module.load_module_catalog()
+    assert "modules" in catalog
+    assert "cn_assessment" in catalog["modules"]
+    assert "default_usage_scopes" in catalog["modules"]["cn_review"]
+
+
+def test_module_catalog_rebuilds_when_missing(tmp_path, monkeypatch) -> None:
+    module_catalog = tmp_path / "module_catalog.v1.json"
+    monkeypatch.setattr(registry_module, "MODULE_CATALOG_PATH", module_catalog)
+    monkeypatch.setattr(registry_module, "REGISTRY_DIR", tmp_path)
+    catalog = registry_module.load_module_catalog()
+    assert module_catalog.exists()
+    loaded = json.loads(module_catalog.read_text(encoding="utf-8"))
+    assert loaded["modules"]["cn_diagnosis"]["indexes"] == ["workflow_index_cn", "legal_index_cn"]
+    assert catalog["modules"]["cn_assessment"]["stages"][-1] == "evaluation"
+
+
+def test_knowledge_sync_meta_accepts_module_catalog_fields() -> None:
+    meta = KnowledgeSyncMeta.model_validate(get_knowledge_sync_meta(cache_refreshed=False))
+    assert meta.module_catalog_path.endswith("module_catalog.v1.json")

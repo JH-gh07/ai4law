@@ -21,6 +21,7 @@ def build_internal_review_payload(
     writing_strategy: dict[str, Any],
     generation_basis_pack: dict[str, Any],
     material_rows: list[dict[str, str]],
+    case_grounding: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     high_risk = [issue for issue in issues if issue.severity in {"HIGH", "BLOCKER"}]
     strategy_items = writing_strategy.get("strategies", [])
@@ -33,6 +34,19 @@ def build_internal_review_payload(
             if isinstance(item, str)
         }
     )
+
+    # Build case reference summary for internal review
+    case_summary: list[dict[str, Any]] = []
+    if case_grounding:
+        for issue_id, bindings in case_grounding.get("by_issue", {}).items():
+            for binding in bindings:
+                case_summary.append({
+                    "issue_id": issue_id,
+                    "case_title": binding.get("title", ""),
+                    "relevance": binding.get("relevance_reason", ""),
+                    "confidence": binding.get("confidence_score", 0),
+                })
+
     return {
         "module": "assessment",
         "overall_risk": "HIGH" if high_risk else ("MEDIUM" if issues else "LOW"),
@@ -48,6 +62,12 @@ def build_internal_review_payload(
             "regulation_count": len(generation_basis_pack.get("regulations", [])),
         },
         "legal_grounding": generation_basis_pack.get("legal_grounding", {"by_issue": {}}),
+        "case_grounding": case_summary,
+        "case_grounding_summary": (
+            f"共检索到 {len(case_summary)} 条相关案例参考，"
+            f"涉及 {len(case_grounding.get('by_issue', {})) if case_grounding else 0} 个问题。"
+            f"注意：案例仅供参考内部审查，不得出现在对外正式文书中。"
+        ) if case_summary else "本次未检索到相关案例参考。",
     }
 
 
@@ -107,5 +127,18 @@ def generate_internal_review_markdown(
         lines.append(f"- **{strategy.get('issue_id', '')}**")
         lines.append(f"  - 内部说明：{strategy.get('internal_expression', '')}")
         lines.append(f"  - 对外表达：{strategy.get('external_expression', '')}")
+
+    lines.extend(["", "## 案例参考（仅供内部审查，不得写入对外文书）", ""])
+    case_grounding = payload.get("case_grounding", [])
+    if case_grounding:
+        lines.append(payload.get("case_grounding_summary", ""))
+        lines.append("")
+        for case_item in case_grounding:
+            lines.append(f"- **{case_item.get('case_title', '未命名案例')}**")
+            lines.append(f"  - 关联问题：{case_item.get('issue_id', '')}")
+            lines.append(f"  - 相关性：{case_item.get('relevance', '')}")
+            lines.append(f"  - 置信度：{case_item.get('confidence', 0)}")
+    else:
+        lines.append("- 本次评估未检索到相关案例参考。")
 
     return "\n".join(lines).strip() + "\n"

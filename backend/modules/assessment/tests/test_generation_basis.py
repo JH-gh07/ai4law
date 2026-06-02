@@ -107,3 +107,20 @@ def test_generation_basis_pack_maps_section_to_writing_strategy() -> None:
     assert section["writing_strategy_refs"] == ["ISSUE-consent-evidence-missing"]
     assert section["writing_strategies"][0]["issue_id"] == "ISSUE-consent-evidence-missing"
     assert "单独同意" in section["writing_strategies"][0]["external_expression"]
+
+
+def test_generation_basis_pack_separates_workflow_rules_from_regulations() -> None:
+    pack = build_generation_basis_pack(
+        task_id="task-2",
+        facts=[],
+        issues=[],
+        evidence_chain=[],
+        regulations=[],
+        attachment_notes=[],
+        path_warning=None,
+        workflow_rules=[{"chunk_id": "WF-1", "title": "安全评估规则"}],
+        template_context=[{"chunk_id": "TPL-1", "title": "正式模板"}],
+    )
+    assert pack["regulations"] == []
+    assert pack["workflow_rules"] == [{"chunk_id": "WF-1", "title": "安全评估规则"}]
+    assert pack["template_context"] == [{"chunk_id": "TPL-1", "title": "正式模板"}]

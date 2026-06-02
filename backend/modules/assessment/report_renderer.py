@@ -31,6 +31,7 @@ from backend.modules.assessment.schema import ChapterContent, CompanyProfile, Re
 
 if TYPE_CHECKING:
     from backend.common.citation.registry import CitationRegistry
+    from backend.common.llm.client import LLMClient
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.docx")
 TEMPLATE_MD = Path("doc/v2/assets/templates/2.2_risk_assessment_template_v0.md")
@@ -65,6 +66,9 @@ _MATERIAL_XLSX_HEADERS = ["材料编号", "摘要", "状态"]
 
 
 class AssessmentReportRenderer:
+
+    def __init__(self, llm_client: "LLMClient | None" = None) -> None:
+        self.llm_client = llm_client
 
     def render(
         self,
@@ -139,9 +143,10 @@ class AssessmentReportRenderer:
             official_mapping = {"_template_missing": str(exc)}
 
         result: dict[str, str] = {
-            "markdown": str(internal_md_output),
+            "markdown": str(official_md_output) if official_md_output else str(md_output),
             "zip": str(zip_output),
         }
+        result["internal_markdown"] = str(internal_md_output)
         if docx_rendered:
             result["docx"] = str(docx_output)
         if official_md_output and OFFICIAL_MD_TEMPLATE.exists():
@@ -191,7 +196,9 @@ class AssessmentReportRenderer:
                 writing_strategy=writing_strategy,
                 generation_basis_pack=generation_basis_pack,
                 material_rows=material_rows,
+                case_grounding=case_grounding,
                 output_dir=output_dir,
+                llm_client=self.llm_client,
             )
             result["internal_review_md"] = str(internal_review_md)
 
@@ -208,12 +215,17 @@ class AssessmentReportRenderer:
             result["citation_map_json"] = _write_citation_map_json(citation_registry, output_dir)
 
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
+            seen_arcnames: set[str] = set()
             for key, path in result.items():
                 if key == "zip":
                     continue
                 p = Path(path)
                 if p.exists():
-                    bundle.write(p, arcname=p.name)
+                    arcname = p.name
+                    if arcname in seen_arcnames:
+                        continue
+                    seen_arcnames.add(arcname)
+                    bundle.write(p, arcname=arcname)
 
         return result
 
@@ -482,15 +494,18 @@ def _write_internal_review(
     writing_strategy: dict[str, Any],
     generation_basis_pack: dict[str, Any],
     material_rows: list[dict[str, str]],
+    case_grounding: dict[str, Any] | None = None,
     output_dir: Path,
+    llm_client: "LLMClient | None" = None,
 ) -> Path:
     payload = build_internal_review_payload(
         issues=issues,
         writing_strategy=writing_strategy,
         generation_basis_pack=generation_basis_pack,
         material_rows=material_rows,
+        case_grounding=case_grounding,
     )
-    content = generate_internal_review_markdown(payload=payload, llm_client=None)
+    content = generate_internal_review_markdown(payload=payload, llm_client=llm_client)
     path = output_dir / "internal_ai_review.md"
     path.write_text(content, encoding="utf-8")
     return path

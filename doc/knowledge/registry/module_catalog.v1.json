@@ -1,0 +1,20 @@
+{
+  "version": "v1",
+  "modules": {
+    "cn_diagnosis": {
+      "indexes": ["workflow_index_cn", "legal_index_cn"],
+      "stages": ["path_diagnosis", "legal_grounding"],
+      "default_usage_scopes": ["internal_review", "legal_grounding"]
+    },
+    "cn_assessment": {
+      "indexes": ["workflow_index_cn", "legal_index_cn", "template_index_cn", "testcase_index_cn"],
+      "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"]
+    },
+    "cn_review": {
+      "indexes": ["workflow_index_cn", "legal_index_cn", "standard_clause_index_cn", "template_index_cn", "testcase_index_cn"],
+      "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"]
+    }
+  }
+}

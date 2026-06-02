@@ -99,6 +99,8 @@ def build_generation_basis_pack(
     path_warning: str | None,
     legal_grounding: dict[str, Any] | None = None,
     writing_strategy: dict[str, Any] | None = None,
+    workflow_rules: list[dict[str, Any]] | None = None,
+    template_context: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build the audit pack explaining what the generator is allowed to rely on."""
 
@@ -158,10 +160,12 @@ def build_generation_basis_pack(
         "path_warning": path_warning,
         "user_facts": [_fact_summary(fact) for fact in facts],
         "regulations": [_regulation_summary(hit) for hit in regulations],
+        "workflow_rules": list(workflow_rules or []),
         "issues": [_issue_summary(issue) for issue in issues],
         "evidence_chain": [_evidence_summary(evidence) for evidence in evidence_chain],
         "legal_grounding": legal_grounding or {"by_issue": {}},
         "writing_strategy": writing_strategy or {"strategies": []},
         "attachment_summaries": list(attachment_notes),
+        "template_context": list(template_context or []),
         "section_packs": section_packs,
     }

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Optional
 
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
 from backend.common.rag.ingest import build_regulation_index
+from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.rag.reranker import HeuristicReranker, RerankCandidate
 from backend.common.rag.vector_store import LocalVectorStore
 from backend.core.settings import Settings, get_settings
@@ -377,6 +378,49 @@ def retrieve_regulations(
     legal_service: Optional["DeliLegalService"] = None,
     min_local: int = 3,
 ) -> list[RegulationDoc]:
+    module_hint = "cn_assessment"
+    if path == "review":
+        module_hint = "cn_review"
+    elif path in {"all", "general", None}:
+        module_hint = "cn_diagnosis"
+
+    if jurisdiction == "cn":
+        orchestrator = RetrievalOrchestrator(get_settings())
+        chunks = orchestrator.retrieve_legal_chunks(
+            query=query,
+            top_k=top_k,
+            path=path or "all",
+            module=module_hint,
+        )
+        if chunks:
+            docs = [
+                RegulationDoc(
+                    id=chunk.source_id or chunk.chunk_id,
+                    title=chunk.title,
+                    article=chunk.citation_anchor or chunk.article_no,
+                    content=chunk.content,
+                    jurisdiction=chunk.jurisdiction,
+                    path=chunk.path,
+                    doc_type=chunk.doc_type,
+                    source_url=chunk.source_url,
+                    snapshot_path=chunk.snapshot_path,
+                    keywords=tuple(chunk.keywords),
+                )
+                for chunk in chunks
+            ]
+            _log_rag_hits(
+                query=query,
+                rewritten_query=query,
+                jurisdiction=jurisdiction,
+                path=path,
+                doc_type=doc_type,
+                mode=f"{mode}_v3",
+                score_floor=score_floor,
+                top_k=top_k,
+                results=docs,
+            )
+            return docs[:top_k]
+
     rewritten_query = _rewrite_query(query, jurisdiction, path)
     if _is_off_topic_query(rewritten_query):
         return []

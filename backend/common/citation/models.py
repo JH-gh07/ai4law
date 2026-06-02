@@ -41,6 +41,8 @@ class CitationItem:
     source_kind: str = "law_article"
     allowed_usage: list[str] = field(default_factory=lambda: ["external_report", "internal_review"])
     can_enter_external_report: bool = True
+    confidence_threshold: float = 0.20
+    external_report_allowed: bool = True
 
     def to_dict(self) -> dict:
         return {
@@ -62,4 +64,6 @@ class CitationItem:
             "source_kind": self.source_kind,
             "allowed_usage": self.allowed_usage,
             "can_enter_external_report": self.can_enter_external_report,
+            "confidence_threshold": self.confidence_threshold,
+            "external_report_allowed": self.external_report_allowed,
         }

@@ -21,6 +21,7 @@ from backend.schemas.review import (
 )
 from backend.services.review_service.rag_provider import LocalRegulationKnowledgeBase
 from backend.services.review_service.rulebook_loader import RulebookLoader
+from backend.services.review_service.standard_clause import StandardClauseDiffer, StandardClauseLocator
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
@@ -67,6 +68,8 @@ class ClauseReviewer:
         self.llm_client = llm_client
         self.rulebook = rulebook_loader or RulebookLoader()
         self.specialized_reviewers = specialized_reviewers or {}
+        self.standard_clause_locator = StandardClauseLocator()
+        self.standard_clause_differ = StandardClauseDiffer()
 
     # ------------------------------------------------------------------
     # Public API
@@ -92,6 +95,10 @@ class ClauseReviewer:
         # 1. DSL rule checks (always run, even with LLM)
         dsl_issues = self._evaluate_dsl_checks(clause, config)
         issues.extend(dsl_issues)
+
+        # 1.5 Standard clause diff checks
+        diff_issues = self._evaluate_standard_clause_diff(clause, config)
+        issues.extend(diff_issues)
 
         # 2. Specialized reviewer (document‑type‑specific checks)
         reviewer = self.specialized_reviewers.get(document_type)
@@ -130,6 +137,90 @@ class ClauseReviewer:
                     for c in issue.structured_citations
                 ]
 
+        return issues
+
+    def _evaluate_standard_clause_diff(
+        self,
+        clause: ClassifiedClause,
+        config: dict,
+    ) -> list[ReviewIssue]:
+        candidate_dicts = config.get("standard_clause_candidates", []) or []
+        if not candidate_dicts:
+            return []
+        from backend.common.knowledge.v2 import KnowledgeChunkV2
+
+        candidates = [KnowledgeChunkV2.model_validate(item) for item in candidate_dicts]
+        matched = self.standard_clause_locator.locate(clause, candidates)
+        diff = self.standard_clause_differ.diff(clause, matched)
+        if not diff.matched_chunk:
+            return []
+
+        citations = self._build_structured_citations(config.get("citations", []), config.get("structured_citations", []))
+        issues: list[ReviewIssue] = []
+
+        if diff.missing_obligations:
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"STD-MISS-{uuid4().hex[:10]}",
+                    clause_id=clause.clause_id,
+                    file_id=clause.file_id,
+                    clause_type=clause.clause_type,
+                    severity=ReviewSeverity.HIGH,
+                    title="标准条款义务缺失",
+                    problem_type="MISSING_REQUIREMENT",
+                    risk_analysis=f"当前条款未覆盖以下标准义务：{', '.join(diff.missing_obligations)}。",
+                    original_excerpt=clause.text[:240],
+                    recommendation="建议补齐对应的标准义务，不应以概括性文字替代核心保护要求。",
+                    position=clause.position,
+                    structured_citations=citations,
+                    citation_sources=[f"《{c.source_title}》{c.article}".strip() for c in citations],
+                    review_method=ReviewMethod.HYBRID,
+                    review_confidence=0.88,
+                    review_depth=ReviewDepth.STANDARD,
+                )
+            )
+        if diff.weakened_obligations:
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"STD-WEAK-{uuid4().hex[:10]}",
+                    clause_id=clause.clause_id,
+                    file_id=clause.file_id,
+                    clause_type=clause.clause_type,
+                    severity=ReviewSeverity.HIGH,
+                    title="标准条款义务被弱化",
+                    problem_type="NON_COMPLIANT",
+                    risk_analysis=f"当前条款可能弱化以下标准义务：{', '.join(diff.weakened_obligations)}。",
+                    original_excerpt=clause.text[:240],
+                    recommendation="建议恢复标准条款的完整义务，不得通过酌情、暂缓、责任上限等表述削弱保护强度。",
+                    position=clause.position,
+                    structured_citations=citations,
+                    citation_sources=[f"《{c.source_title}》{c.article}".strip() for c in citations],
+                    review_method=ReviewMethod.HYBRID,
+                    review_confidence=0.9,
+                    review_depth=ReviewDepth.STANDARD,
+                )
+            )
+        if diff.added_risky_modifications:
+            issues.append(
+                ReviewIssue(
+                    issue_id=f"STD-RISK-{uuid4().hex[:10]}",
+                    clause_id=clause.clause_id,
+                    file_id=clause.file_id,
+                    clause_type=clause.clause_type,
+                    severity=ReviewSeverity.HIGH,
+                    title="标准条款中存在高风险新增修改",
+                    problem_type="NON_COMPLIANT",
+                    risk_analysis=f"识别到以下高风险修改信号：{', '.join(diff.added_risky_modifications)}。",
+                    original_excerpt=clause.text[:240],
+                    recommendation="建议移除与标准义务冲突的优先级、免责、延迟处理或责任限制性表述。",
+                    position=clause.position,
+                    structured_citations=citations,
+                    citation_sources=[f"《{c.source_title}》{c.article}".strip() for c in citations],
+                    review_method=ReviewMethod.HYBRID,
+                    review_confidence=0.9,
+                    review_depth=ReviewDepth.STANDARD,
+                )
+            )
         return issues
 
     # ------------------------------------------------------------------
@@ -271,7 +362,7 @@ class ClauseReviewer:
             return None
 
         issues: list[ReviewIssue] = []
-        citations = self._build_structured_citations(config.get("citations", []))
+        citations = self._build_structured_citations(config.get("citations", []), config.get("structured_citations", []))
 
         for item in parsed:
             if not isinstance(item, dict):
@@ -328,7 +419,7 @@ class ClauseReviewer:
         """Rule‑based review (fallback path)."""
         issues: list[ReviewIssue] = []
         text = clause.text
-        citations = self._build_structured_citations(config.get("citations", []))
+        citations = self._build_structured_citations(config.get("citations", []), config.get("structured_citations", []))
 
         # 1. Required keyword group checks
         for group in config.get("required_groups", []):
@@ -401,15 +492,27 @@ class ClauseReviewer:
     # ------------------------------------------------------------------
 
     def _build_structured_citations(
-        self, raw_citations: list[str],
+        self, raw_citations: list[str], structured_seed: list[dict] | None = None,
     ) -> list[StructuredCitation]:
         """Convert raw citation strings into StructuredCitation objects."""
         result: list[StructuredCitation] = []
         seen: set[str] = set()
+        for item in structured_seed or []:
+            citation = StructuredCitation(
+                source_id=str(item.get("source_id", "")),
+                source_title=str(item.get("source_title", "")),
+                article=str(item.get("article", "")),
+                snippet=str(item.get("snippet", "")),
+                source_type=str(item.get("source_type", "statute")),
+            )
+            key = f"{citation.source_title}::{citation.article}"
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(citation)
         for raw in raw_citations:
             if not raw or raw in seen:
                 continue
-            seen.add(raw)
 
             # Parse "《source》article" format
             source_title = ""
@@ -420,6 +523,11 @@ class ClauseReviewer:
                 article = m.group(2).strip()
             else:
                 source_title = raw[:80]
+
+            key = f"{source_title}::{article}"
+            if key in seen:
+                continue
+            seen.add(key)
 
             result.append(StructuredCitation(
                 source_id=f"cite-{hash(raw) & 0xFFFFFFFF:08x}",

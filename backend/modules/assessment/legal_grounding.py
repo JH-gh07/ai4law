@@ -140,6 +140,19 @@ _BINDING_FORCE_WEIGHTS: dict[str, float] = {
     "reference": 0.02,
 }
 
+# ── Minimum confidence thresholds for external report inclusion ──
+# Bindings below these thresholds are flagged as "confidence_low" and
+# either excluded from the external citation index or annotated [待验证].
+_MIN_CONFIDENCE_THRESHOLDS: dict[SourceKind, float] = {
+    "law_article": 0.20,
+    "regulation": 0.20,
+    "official_guide": 0.30,
+    "template_requirement": 0.25,
+    "standard_clause": 0.30,
+    "case_reference": 0.40,  # cases are already excluded from external, but gate for internal
+    "user_material": 0.15,
+}
+
 
 def _tokens(value: str) -> set[str]:
     text = re.sub(r"[\s,，。；;：:（）()\[\]【】\"'“”]", " ", value or "").lower()
@@ -303,12 +316,36 @@ def _score_regulation(issue: IssueItem, query: str, regulation: RegulationHit) -
 
 
 def _annotate_binding(binding: dict[str, Any], source_kind: SourceKind) -> dict[str, Any]:
-    """Annotate a binding dict with source_kind, allowed_usage, and can_enter_external_report."""
+    """Annotate a binding dict with source_kind, allowed_usage, can_enter_external_report,
+    and confidence threshold check."""
     policy = _SOURCE_USAGE_POLICY.get(source_kind, _SOURCE_USAGE_POLICY["regulation"])
+    threshold = _MIN_CONFIDENCE_THRESHOLDS.get(source_kind, 0.30)
+    score = binding.get("confidence_score", 0.0)
+
     binding["source_kind"] = source_kind
     binding["allowed_usage"] = policy["allowed_usage"]
     binding["can_enter_external_report"] = policy["can_enter_external_report"]
+    binding["confidence_threshold"] = threshold
+    binding["confidence_passed"] = score >= threshold
+    # external_report_allowed = can enter external report AND passes confidence threshold
+    binding["external_report_allowed"] = (
+        policy["can_enter_external_report"] and score >= threshold
+    )
     return binding
+
+
+def _context_binding_lookup(
+    legal_grounding_context: list[dict[str, Any]] | None,
+) -> dict[str, dict[str, Any]]:
+    by_rule: dict[str, dict[str, Any]] = {}
+    for item in legal_grounding_context or []:
+        source_id = str(item.get("source_id") or "")
+        chunk_id = str(item.get("chunk_id") or "")
+        if source_id:
+            by_rule[source_id] = item
+        if chunk_id:
+            by_rule[chunk_id] = item
+    return by_rule
 
 
 def build_legal_grounding(
@@ -318,6 +355,7 @@ def build_legal_grounding(
     regulations: list[RegulationHit],
     source_version: str = "local-regulation-index-v2",
     per_issue_rag: dict[str, dict] | None = None,
+    legal_grounding_context: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build legal grounding and case grounding for assessment issues.
 
@@ -329,6 +367,7 @@ def build_legal_grounding(
         (can_enter_external_report=False).
     """
     facts_by_id = {fact.fact_id: fact for fact in facts}
+    context_by_rule = _context_binding_lookup(legal_grounding_context)
     by_issue_legal: dict[str, list[dict[str, Any]]] = {}
     by_issue_case: dict[str, list[dict[str, Any]]] = {}
 
@@ -341,7 +380,8 @@ def build_legal_grounding(
             confidence, reason = _score_regulation(issue, query, regulation)
             if confidence <= 0:
                 continue
-            source_kind = _infer_source_kind(regulation.title)
+            context_item = context_by_rule.get(regulation.source_id)
+            source_kind = str(context_item.get("source_kind")) if context_item else _infer_source_kind(regulation.title)
             binding = _annotate_binding(
                 {
                     "issue_id": issue.issue_id,
@@ -352,9 +392,18 @@ def build_legal_grounding(
                     "relevance_reason": reason,
                     "source_version": source_version,
                     "query_context": query,
+                    "authority_level": context_item.get("authority_level") if context_item else _infer_authority(regulation.title),
+                    "binding_force": context_item.get("binding_force") if context_item else _infer_binding(regulation.title),
+                    "can_be_cited": bool(context_item.get("can_be_cited", True)) if context_item else True,
+                    "allowed_usage": list(context_item.get("allowed_usage", [])) if context_item else [],
+                    "layer": context_item.get("layer") if context_item else "L1_regulatory_evidence",
                 },
                 source_kind,
             )
+            if not binding.get("can_be_cited", True):
+                continue
+            if binding.get("layer") != "L1_regulatory_evidence":
+                continue
             legal_candidates.append(binding)
 
         # Merge per-issue DeliLegal results, splitting by source_kind

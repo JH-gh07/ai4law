@@ -147,7 +147,7 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         ] or ["- 本章节无确认事实"]
         regulation_lines = [
             "- {rule_id} | {title}{article}：{snippet}".format(
-                source_id=item.get("rule_id", "unknown"),
+                rule_id=item.get("rule_id", "unknown"),
                 title=item.get("title", ""),
                 article=item.get("article", ""),
                 snippet=str(item.get("snippet", ""))[:160],

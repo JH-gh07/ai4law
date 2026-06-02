@@ -1,0 +1,536 @@
+{
+  "version": "v1",
+  "generated_from": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/doc/knowledge/index/sources.csv",
+  "entries": [
+    {
+      "source_id": "CN-LAW-001",
+      "title": "中华人民共和国网络安全法（2025修正）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "law",
+        "source_org": "CAC",
+        "publish_date": "2025-12-29",
+        "effective_date": "2025-12-29",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2025_12_29_cybersecurity_law.html",
+        "source_url": "https://www.cac.gov.cn/2025-12/29/c_1768735112911946.htm"
+      }
+    },
+    {
+      "source_id": "CN-LAW-002",
+      "title": "中华人民共和国数据安全法",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "law",
+        "source_org": "CAC",
+        "publish_date": "2021-06-11",
+        "effective_date": "2021-09-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2021_06_11_data_security_law.html",
+        "source_url": "https://www.cac.gov.cn/2021-06/11/c_1624994566919140.htm"
+      }
+    },
+    {
+      "source_id": "CN-LAW-003",
+      "title": "中华人民共和国个人信息保护法",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "law",
+        "source_org": "CAC",
+        "publish_date": "2021-08-20",
+        "effective_date": "2021-11-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2021_08_20_pipl.html",
+        "source_url": "https://www.cac.gov.cn/2021-08/20/c_1631050028355286.htm"
+      }
+    },
+    {
+      "source_id": "CN-REG-004",
+      "title": "数据出境安全评估办法",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "assessment",
+        "doc_type": "administrative_regulation",
+        "source_org": "CAC",
+        "publish_date": "2022-07-07",
+        "effective_date": "2022-09-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2022_07_07_security_assessment_measures.html",
+        "source_url": "https://www.cac.gov.cn/2022-07/07/c_1658811536594644.htm"
+      }
+    },
+    {
+      "source_id": "CN-REG-005",
+      "title": "个人信息出境标准合同办法",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "scc",
+        "doc_type": "administrative_regulation",
+        "source_org": "CAC",
+        "publish_date": "2023-02-24",
+        "effective_date": "2023-06-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2023_02_24_standard_contract_measures.html",
+        "source_url": "https://www.cac.gov.cn/2023-02/24/c_1678884831596384.htm"
+      }
+    },
+    {
+      "source_id": "CN-REG-006",
+      "title": "促进和规范数据跨境流动规定（发布页）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "administrative_regulation",
+        "source_org": "CAC",
+        "publish_date": "2024-03-22",
+        "effective_date": "2024-03-22",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2024_03_22_crossborder_regulation_release.html",
+        "source_url": "https://www.cac.gov.cn/2024-03/22/c_1712776612187994.htm"
+      }
+    },
+    {
+      "source_id": "CN-REG-007",
+      "title": "促进和规范数据跨境流动规定（全文页）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "administrative_regulation",
+        "source_org": "CAC",
+        "publish_date": "2024-03-22",
+        "effective_date": "2024-03-22",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2024_03_22_crossborder_regulation_fulltext.html",
+        "source_url": "https://www.cac.gov.cn/2024-03/22/c_1712776611775634.htm"
+      }
+    },
+    {
+      "source_id": "CN-REG-008",
+      "title": "网络数据安全管理条例",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "all",
+        "doc_type": "administrative_regulation",
+        "source_org": "CAC",
+        "publish_date": "2024-09-30",
+        "effective_date": "2025-01-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2024_09_30_network_data_security_regulation.html",
+        "source_url": "https://www.cac.gov.cn/2024-09/30/c_1729384452307680.htm"
+      }
+    },
+    {
+      "source_id": "CN-GUIDE-009",
+      "title": "数据出境安全评估申报指南（第三版）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "official_guide",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "assessment",
+        "doc_type": "guide",
+        "source_org": "CAC",
+        "publish_date": "2025-06-27",
+        "effective_date": "2025-06-27",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2025_06_27_assessment_guide_v3_release.html",
+        "source_url": "https://www.cac.gov.cn/2025-06/27/c_1752652339765002.htm"
+      }
+    },
+    {
+      "source_id": "CN-GUIDE-010",
+      "title": "个人信息出境标准合同备案指南（第二版）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "official_guide",
+      "authority_level": "low",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "scc",
+        "doc_type": "guide",
+        "source_org": "TJCAC(转载中国网信网)",
+        "publish_date": "2024-08-23",
+        "effective_date": "2024-08-23",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/tjcac_2024_08_standard_contract_filing_guide_v2.html",
+        "source_url": "https://www.tjcac.gov.cn/wsfw/sjkj/grxxcjbzht/202408/t20240823_6705573.html"
+      }
+    },
+    {
+      "source_id": "CN-QA-011",
+      "title": "《个人信息出境标准合同办法》答记者问",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "scc",
+        "doc_type": "qa",
+        "source_org": "CAC",
+        "publish_date": "2023-02-24",
+        "effective_date": "2023-02-24",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2023_02_24_standard_contract_qa.html",
+        "source_url": "https://www.cac.gov.cn/2023-02/24/c_1678884829601935.htm"
+      }
+    },
+    {
+      "source_id": "CN-QA-012",
+      "title": "数据出境安全管理政策问答（2025年4月）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "reference",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "assessment",
+        "doc_type": "qa",
+        "source_org": "CAC",
+        "publish_date": "2025-04-09",
+        "effective_date": "2025-04-09",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2025_04_09_policy_qa.html",
+        "source_url": "https://www.cac.gov.cn/2025-04/09/c_1745906286623776.htm"
+      }
+    },
+    {
+      "source_id": "CN-QA-013",
+      "title": "数据出境安全管理政策问答（2025年5月）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "reference",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "assessment",
+        "doc_type": "qa",
+        "source_org": "CAC",
+        "publish_date": "2025-05-30",
+        "effective_date": "2025-05-30",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2025_05_30_policy_qa.html",
+        "source_url": "https://www.cac.gov.cn/2025-05/30/c_1750315283722063.htm"
+      }
+    },
+    {
+      "source_id": "CN-OPS-014",
+      "title": "各地省级网信部门申报/备案联系方式",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "reference",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "assessment|scc",
+        "doc_type": "contact_list",
+        "source_org": "CAC",
+        "publish_date": "2023-11-03",
+        "effective_date": "2023-11-03",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/cac_2023_11_03_contact_list.html",
+        "source_url": "https://www.cac.gov.cn/2023-11/03/c_1700672263791309.htm"
+      }
+    },
+    {
+      "source_id": "CN-GOV-015",
+      "title": "个人信息出境标准合同办法（中国政府网转载）",
+      "aliases": [],
+      "jurisdiction": "cn",
+      "modules": [
+        "cn_diagnosis",
+        "cn_review"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "scc",
+        "doc_type": "gov_republish",
+        "source_org": "gov.cn",
+        "publish_date": "2023-11-11",
+        "effective_date": "2023-06-01",
+        "snapshot_path": "doc/knowledge/raw/cn_regulations/govcn_2023_standard_contract_measures.html",
+        "source_url": "https://www.gov.cn/zhengce/202311/content_6917770.htm"
+      }
+    }
+  ]
+}

@@ -84,3 +84,6 @@ def test_review_knowledge_base_appends_vector_citations(tmp_path: Path, monkeypa
     )
 
     assert any("个人信息保护法" in citation for citation in result["citations"])
+    assert "workflow_rules" in result
+    assert "standard_clause_candidates" in result
+    assert "usage_policy_debug" in result

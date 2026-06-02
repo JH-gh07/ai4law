@@ -38,6 +38,7 @@ class WorkflowPipeline:
         generate_chapters: Callable[[Any, list[Any], GenerationContextPack], list[Any]],
         check_consistency: Callable[[Any, list[Any], GenerationContextPack], list[str]],
         check_alignment: Callable[[str, Any], list[str]],
+        repair_chapters: Callable[..., tuple[list[Any], list[str], bool]] | None = None,
         render_artifacts: Callable[..., dict[str, str]],
         request_event_name: str = "assessment_request",
         consistency_check_labels: list[str] | None = None,
@@ -55,6 +56,7 @@ class WorkflowPipeline:
         self.generate_chapters = generate_chapters
         self.check_consistency = check_consistency
         self.check_alignment = check_alignment
+        self.repair_chapters = repair_chapters
         self.render_artifacts = render_artifacts
         self.request_event_name = request_event_name
         self.consistency_check_labels = consistency_check_labels or [
@@ -136,6 +138,34 @@ class WorkflowPipeline:
         if alignment_issues:
             consistency_issues.extend(alignment_issues)
         if path_warning:
+            consistency_issues.append(path_warning)
+
+        # ── Repair pass: fix → recheck → block if unfixable ──
+        repair_blocked = False
+        if self.repair_chapters is not None and consistency_issues:
+            issues_before_repair = list(consistency_issues)
+            chapters, consistency_issues, repair_blocked = self.repair_chapters(
+                chapters=chapters,
+                consistency_issues=consistency_issues,
+                profile=profile,
+                context_pack=context_pack,
+            )
+            trace.record(
+                "repair_pass",
+                {
+                    "issues_before_count": len(issues_before_repair),
+                    "issues_after_count": len(consistency_issues),
+                    "issues_after": list(consistency_issues),
+                    "blocked": repair_blocked,
+                },
+            )
+            if repair_blocked:
+                consistency_issues.append(
+                    "REPAIR_BLOCKED: 存在无法自动修复的一致性问题，报告输出已阻断。"
+                    "请检查输入材料完整性或人工介入修复。"
+                )
+
+        if path_warning and path_warning not in consistency_issues:
             consistency_issues.append(path_warning)
 
         manifest = trace.write_manifest()

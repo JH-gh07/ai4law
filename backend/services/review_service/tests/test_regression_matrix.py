@@ -247,3 +247,16 @@ def test_regression_case_3_scc():
     for pattern, found in hits.items():
         print(f"    {'✓' if found else '✗'} {pattern}")
     assert hit_count >= 4, f"Expected ≥4 hits, got {hit_count}"
+
+
+def test_review_knowledge_base_returns_standard_clause_candidates() -> None:
+    rulebook = RulebookLoader()
+    reviewer = _make_reviewer(rulebook)
+    clause = ClauseSegmenter().segment("f1", _TEST_CASE_3)[-1]
+    classified = ClauseClassifier(rulebook_loader=rulebook).classify(clause)
+    config = reviewer.knowledge_base.lookup(
+        classified.clause_type,
+        classified.text,
+        enrich=False,
+    )
+    assert "standard_clause_candidates" in config
