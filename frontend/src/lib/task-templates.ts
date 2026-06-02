@@ -115,11 +115,11 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   {
     id: "us_14117",
     jurisdiction: "US",
-    module: "cn_flow",
+    module: "us_14117",
     workspaceStyle: "us_14117",
     title: { zh: "14117 行政令合规", en: "EO 14117 Compliance" },
-    subtitle: { zh: "识别受关注国家/被覆盖对象并输出红黄绿灯结论", en: "Identify covered risks and output RAG conclusion" },
-    inputHint: { zh: "评估敏感数据跨境风险", en: "Input: data inventory + entity inventory" },
+    subtitle: { zh: "识别涵盖人员/受关注国家 输出红黄绿结论", en: "Identify covered persons and output RED/YELLOW/GREEN" },
+    inputHint: { zh: "输入数据清单、实体清单、交易信息", en: "Input: data inventory + entity inventory + transaction details" },
     outputHint: { zh: "", en: "Output: EO 14117 risk conclusion report" }
   },
   {

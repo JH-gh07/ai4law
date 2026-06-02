@@ -113,6 +113,15 @@ const MODULES: ModuleDefinition[] = [
     asyncRetryEndpoint: (taskId) => `/api/v1/cn-flow/tasks/${taskId}/retry`
   },
   {
+    key: "us_14117",
+    label: "US_14117",
+    jurisdiction: "US",
+    syncEndpoint: "/api/v1/us_14117/generate",
+    asyncSubmitEndpoint: "/api/v1/us_14117/generate_async",
+    asyncStatusEndpoint: (taskId) => `/api/v1/us_14117/tasks/${taskId}`,
+    asyncRetryEndpoint: (taskId) => `/api/v1/us_14117/tasks/${taskId}/retry`
+  },
+  {
     key: "cpra",
     label: "CPRA",
     jurisdiction: "US",

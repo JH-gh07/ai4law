@@ -11,7 +11,8 @@ const ENDPOINTS: Record<ModuleKey, string> = {
   dpia: "/api/v1/dpia/generate",
   tia: "/api/v1/tia/generate",
   cn_flow: "/api/v1/cn-flow/generate",
-  cpra: "/api/v1/cpra/generate"
+  cpra: "/api/v1/cpra/generate",
+  us_14117: "/api/v1/us_14117/generate"
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

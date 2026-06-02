@@ -12,7 +12,8 @@ export type ModuleKey =
   | "dpia"
   | "tia"
   | "cn_flow"
-  | "cpra";
+  | "cpra"
+  | "us_14117";
 
 export type RunMode = "sync" | "async";
 

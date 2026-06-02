@@ -8,6 +8,7 @@ from backend.modules.diagnosis.router import router as diagnosis_router
 from backend.modules.pipia.router import router as pipia_router
 from backend.modules.scc.router import router as scc_router
 from backend.modules.tia.router import router as tia_router
+from backend.modules.us_14117.router import router as us_14117_router
 from backend.modules.v0_task_gateway.router import router as v0_task_gateway_router
 
 app = create_app()
@@ -21,4 +22,5 @@ app.include_router(dpia_router, prefix="/api/v1")
 app.include_router(tia_router, prefix="/api/v1")
 app.include_router(cn_flow_router, prefix="/api/v1")
 app.include_router(cpra_router, prefix="/api/v1")
+app.include_router(us_14117_router, prefix="/api/v1")
 app.include_router(v0_task_gateway_router, prefix="/api/v0")

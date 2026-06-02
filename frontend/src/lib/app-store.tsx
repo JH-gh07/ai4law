@@ -94,7 +94,8 @@ const MODULE_TEMPLATE_ID_MAP: Record<string, string> = {
   dpia: "eu_dpia",
   tia: "eu_tia",
   cn_flow: "us_14117",
-  cpra: "us_cpra"
+  cpra: "us_cpra",
+  us_14117: "us_14117",
 };
 
 const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
@@ -107,7 +108,8 @@ const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
   dpia: "EU",
   tia: "EU",
   cn_flow: "US",
-  cpra: "US"
+  cpra: "US",
+  us_14117: "US",
 };
 
 function normalizePanelState(raw: unknown): PanelState {

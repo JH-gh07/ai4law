@@ -270,6 +270,83 @@ const demoCpra = () => ({
   ]
 });
 
+const demoUs14117 = () => ({
+  project_name: `EO14117评估${stamp()}`,
+  transaction_description: "通过供应商协议向中国AI公司提供150,000名美国人的精确地理位置数据用于算法训练",
+  transaction_type: "vendor_agreement",
+  data_items: [
+    {
+      data_item_name: "精确GPS轨迹数据",
+      data_description: "150,000名美国人的实时GPS轨迹数据（精度<10米）",
+      business_context: "AI模型训练——位置预测算法",
+      is_personal_info: true,
+      is_sensitive_personal_info: true,
+      us_person_count: 150000,
+      data_subject_type: "consumer",
+      doj_data_category: "precise_geolocation_data",
+      precision_level: "raw",
+      is_government_related: false,
+      export_necessity: "算法训练所需训练数据"
+    },
+    {
+      data_item_name: "用户邮箱地址",
+      data_description: "150,000个用户的电子邮箱地址",
+      business_context: "账号关联与通知",
+      is_personal_info: true,
+      is_sensitive_personal_info: false,
+      us_person_count: 150000,
+      data_subject_type: "consumer",
+      doj_data_category: "",
+      precision_level: "",
+      is_government_related: false,
+      export_necessity: "账号体系必须"
+    }
+  ],
+  recipient_entities: [
+    {
+      entity_name: "深度洞察人工智能有限公司",
+      country_of_registration: "China",
+      tax_id: "",
+      ownership_structure: "创始人持股60%，中国风投资本40%",
+      governing_law: "中华人民共和国法律",
+      government_control: false,
+      government_investment: "",
+      parent_company: "",
+      entity_role: "processor"
+    }
+  ],
+  access_persons: [
+    {
+      person_name: "王芳",
+      nationality: "中国",
+      country_of_residence: "中国",
+      department: "AI研发部",
+      position: "机器学习工程师",
+      employer: "深度洞察人工智能有限公司",
+      has_actual_access: true,
+      access_type: "remote"
+    }
+  ],
+  security_measures: [
+    {
+      measure_name: "logical_isolation_of_covered_data",
+      category: "access_control",
+      status: "missing",
+      description: "尚未建立隔离工作区"
+    },
+    {
+      measure_name: "encryption_at_rest",
+      category: "encryption",
+      status: "planned",
+      description: "计划部署AES-256静态加密"
+    }
+  ],
+  onward_transfer: false,
+  onward_transfer_description: "",
+  attachments: [],
+  company_name: `DemoFlow${stamp()}`
+});
+
 export function buildDemoPayload(module: ModuleKey): unknown {
   switch (module) {
     case "diagnosis":
@@ -290,6 +367,8 @@ export function buildDemoPayload(module: ModuleKey): unknown {
       return demoTia();
     case "cn_flow":
       return demoCnFlow();
+    case "us_14117":
+      return demoUs14117();
     case "cpra":
       return demoCpra();
     default:
