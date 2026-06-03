@@ -40,7 +40,13 @@ class DataProcessingMethod(str, Enum):
 
 PathType = Literal["security_assessment", "standard_contract", "certification", "exemption", "uncertain"]
 EvidenceStrength = Literal["user_claim_only", "partial_evidence", "documented_evidence", "verified_evidence"]
-RiskLevel = Literal["LOW", "MEDIUM", "HIGH", "BLOCKER"]
+
+
+class RiskLevel(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    BLOCKER = "BLOCKER"
 
 
 # ── Field-level data classification ──

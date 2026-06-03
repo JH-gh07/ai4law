@@ -154,7 +154,7 @@ def build_scc_issues(
                     issue_id=next_id(),
                     title=f"合法性基础论证不充分：{review.legal_basis}",
                     description=f"合法性基础'{review.legal_basis}'的论证强度为'{review.status}'。{review.reason}",
-                    category="legal_basis",
+                    category="lawful_basis",
                     severity=severity,
                     recommended_action=review.recommended_adjustment,
                     missing_materials=review.evidence_missing,

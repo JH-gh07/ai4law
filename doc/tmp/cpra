@@ -1478,3 +1478,432 @@ SPI/出售共享 Agent：复核高风险组合
 ```
 
 这才是和预期功能最匹配的 Agent 化方向。
+
+---
+
+# 十四、严格落实计划
+
+下面这一部分不是“方向建议”，而是 **从当前代码出发的正式执行方案**。后续实现必须严格按这里的顺序、边界、验收标准推进，避免再次回到“先堆功能、后补结构”的状态。
+
+## 14.1 落实目标
+
+本次落实目标不是一次性把所有 Agent 全部做完，而是把 CPRA 模块从当前的：
+
+```text
+附件正则提取
++ 10 条规则
++ 域级 RAG
++ 6 章报告生成
+```
+
+严格升级为：
+
+```text
+结构化事实增强
+→ 规则前 Agent 输入增强
+→ 规则后高风险复核
+→ gap 级法规证据匹配
+→ 整改路线图增强
+→ 报告一致性审校
+```
+
+并且要求：
+
+```text
+规则仍然是主判断来源；
+Agent 只做事实增强、复杂推理、证据匹配和一致性复核；
+任何 Agent 失败都必须静默降级，不能阻塞主流程；
+每一阶段都必须有测试、验收标准和回退路径。
+```
+
+---
+
+## 14.2 严格范围
+
+### 本次必须落地
+
+```text
+1. CPRAFactExtractionAgent
+2. CPRASPISharingRiskAgent
+3. CPRAVendorContractAgent
+4. CPRAConsistencyReviewAgent
+5. service.py 主流程重构
+6. schema.py 的中间产物结构扩展
+7. tests/ 下新增针对 Agent 接入后的单测与服务测试
+```
+
+### 本次明确不做
+
+```text
+1. 不改 router.py 的 API 形态
+2. 不改异步任务管理模型
+3. 不把风险汇总改成 Agent 决策
+4. 不把 DOCX/PDF/XLSX/ZIP 渲染逻辑 Agent 化
+5. 不引入通用 Agent Runtime，仍采用模块内受限 agent 结构
+```
+
+---
+
+## 14.3 代码落点
+
+本次落实必须严格落在以下位置：
+
+```text
+backend/modules/cpra/
+├── service.py
+├── schema.py
+├── attachment_extractor.py
+├── gap_rules.py
+├── legal_retriever.py
+├── agents/
+│   ├── __init__.py
+│   ├── fact_extraction_agent.py
+│   ├── spi_sharing_risk_agent.py
+│   ├── vendor_contract_agent.py
+│   └── consistency_review_agent.py
+├── fact_merger.py                  ← 新增，负责把附件事实并回 payload
+├── gap_merger.py                   ← 新增，负责 gap 去重/排序/合并
+└── tests/
+    ├── test_service.py
+    ├── test_gap_rules.py
+    ├── test_fact_merger.py         ← 新增
+    ├── test_agents_fact.py         ← 新增
+    ├── test_agents_spi.py          ← 新增
+    ├── test_agents_vendor.py       ← 新增
+    └── test_agents_consistency.py  ← 新增
+```
+
+要求：
+
+```text
+Agent 逻辑必须放在 agents/ 下；
+payload 合并逻辑不能散落在 service.py 中，必须抽到 fact_merger.py / gap_merger.py；
+service.py 只保留编排，不继续膨胀成大杂烩。
+```
+
+---
+
+## 14.4 分阶段执行顺序
+
+## 第一阶段：先把 Agent 基础骨架搭起来
+
+目标：
+
+```text
+先把 CPRA agent 层建好，并和现有 service.py 接通，但不追求第一版就覆盖全部复杂语义。
+```
+
+必须完成：
+
+```text
+1. 新建 backend/modules/cpra/agents/__init__.py
+2. 定义 CPRAAgentBase
+3. 统一 system prompt、JSON 输出、失败降级逻辑
+4. 提供 create_cpra_agents(llm_client)
+5. 在 service.py 初始化 self.agents
+```
+
+验收标准：
+
+```text
+service.py 能成功初始化 agents；
+LLM 未配置时所有 agent 返回 fallback 结构；
+现有 CPRA 流程不报错、不降功能。
+```
+
+---
+
+## 第二阶段：先落 FactExtractionAgent，不允许跳过
+
+这一阶段优先级最高，必须先做，因为后续 SPI、Vendor、Consistency 都依赖增强后的事实。
+
+必须完成：
+
+```text
+1. 实现 CPRAFactExtractionAgent
+2. 为 privacy_policy / rights_sop / data_map / vendor_list 四类附件输出结构化增强事实
+3. 新增 evidence_spans / extraction_warnings 结构
+4. 新增 fact_merger.py，把 agent 事实并回 payload
+5. service.py 在 run_all_rules() 前执行 fact merge
+```
+
+严格要求：
+
+```text
+原 attachment_extractor.py 不删除，保留为规则前基础提取器；
+Agent 输出是增强层，不直接替代底层 extractor；
+任何合并都必须遵守“显式用户输入优先，Agent 推断次之，正则兜底再次之”。
+```
+
+验收标准：
+
+```text
+当 payload.data_items 为空但 data_map 附件可解析时，规则引擎能获得补全后的 data_items；
+当 payload.dsr_mechanism 为空但 rights_sop 附件可解析时，规则引擎能获得补全后的 dsr；
+当 vendor_list 中识别出 DPA / opt-out / audit 等条款时，vendors 字段能被增强；
+服务测试中 gap_items 数量和内容相较现状有可解释增强，而不是随机波动。
+```
+
+---
+
+## 第三阶段：落 SPISharingRiskAgent
+
+这一阶段负责把规则后复核真正做起来。
+
+必须完成：
+
+```text
+1. 实现 CPRASPISharingRiskAgent
+2. 输入使用增强后的 data_items / vendors / dsr / consent_ui / attachment facts
+3. 输出 risk_chains、gap_candidates、data_item_patches、vendor_patches
+4. 新增 gap_merger.py，统一合并规则产物和 agent gap
+5. service.py 在 run_all_rules() 后接入该 agent
+```
+
+严格要求：
+
+```text
+Agent 只能补充 gap 或补丁，不能删除规则已命中的 HIGH gap；
+若 Agent 产生 payload patch，必须明确是否二次跑规则；
+涉及 SPI + 广告 + 第三方共享 + 缺失 opt-out / limit SPI 的组合，必须可稳定命中。
+```
+
+验收标准：
+
+```text
+健康数据 + 广告/保险推荐 + 第三方共享能生成 HIGH gap；
+存在 SPI 但缺少 limit SPI 入口能生成 HIGH gap；
+cross-context advertising 但缺少 Do Not Sell or Share 入口能生成 HIGH gap；
+相关用例在测试中稳定复现，不依赖随机模型措辞。
+```
+
+---
+
+## 第四阶段：落 VendorContractAgent
+
+这一阶段负责把“有没有 DPA”升级成“DPA 是否满足 CPRA 义务”。
+
+必须完成：
+
+```text
+1. 实现 CPRAVendorContractAgent
+2. 对每个 vendor 输出 vendor_patches
+3. 对合同缺口输出 contract_gaps
+4. service.py 在规则前合并 vendor patch，在规则后合并 contract gaps
+```
+
+严格要求：
+
+```text
+vendor_type、receives_spi、sale_or_share、dpa_honors_opt_out、dpa_requires_audit、dpa_requires_dsr_assist 这些字段必须进入 patch 逻辑；
+广告网络、数据经纪商、保险合作方不能简单一律视为 service_provider；
+合同缺口必须带 evidence_source。
+```
+
+验收标准：
+
+```text
+“提到 DPA 但没有 opt-out / audit / deletion / purpose limitation”时，能被识别为不完整；
+广告合作合同缺少承接消费者 opt-out / GPC 义务时，能生成 HIGH gap；
+service provider 场景下能区分“角色成立”和“合同义务仍缺失”。
+```
+
+---
+
+## 第五阶段：落 ConsistencyReviewAgent
+
+这一阶段最后接，因为它依赖前面所有中间产物稳定下来。
+
+必须完成：
+
+```text
+1. 实现 CPRAConsistencyReviewAgent
+2. 检查 payload、attachment facts、gap_items、chapters 之间是否冲突
+3. 输出 issues / warnings / suggested_fixes
+4. 在章节生成后接入 consistency review
+```
+
+严格要求：
+
+```text
+该 Agent 只做复核，不改规则结论；
+若发现章节弱化 HIGH 风险、遗漏关键义务、引用和事实冲突，必须产出 issues；
+如需修改章节，只能通过追加 warning 或触发 repair 逻辑，不允许 silently rewrite 核心结论。
+```
+
+验收标准：
+
+```text
+规则已判 HIGH，但章节写成“总体风险可控”时能报错；
+gap 提到 SPI 风险，但报告未提 limit SPI 时能报错；
+vendor contract gap 存在，但行动清单漏写合同时能报错。
+```
+
+---
+
+## 14.5 service.py 必须重构成固定编排顺序
+
+最终 `generate_report()` 必须严格收敛成下面这个顺序：
+
+```text
+1. 基础附件提取
+2. FactExtractionAgent
+3. fact merge，生成 enhanced_payload
+4. run_all_rules()
+5. SPISharingRiskAgent
+6. VendorContractAgent
+7. gap merge / 去重 / 排序
+8. 法规检索与证据绑定
+9. 生成上下文
+10. 生成 6 章报告
+11. ConsistencyReviewAgent
+12. 最终 consistency issues 合并
+13. render 输出
+```
+
+不允许出现的情况：
+
+```text
+Agent 调用顺序来回穿插；
+规则前后混在一起；
+gap 合并逻辑写成多个 if scattered 在 service.py；
+章节生成后再反向修改事实。
+```
+
+---
+
+## 14.6 schema.py 必须补的结构
+
+为了让这套逻辑可持续，schema 不能只保留现有 request/result。
+
+本次必须补充中间结构，至少包括：
+
+```text
+CPRAFactPack
+CPRAEvidenceSpan
+CPRAAgentWarning
+CPRARiskChain
+CPRAVendorPatch
+CPRADataItemPatch
+CPRAConsistencyIssue
+```
+
+严格要求：
+
+```text
+这些结构先服务模块内部也可以，但必须定义为 schema/model，而不是临时 dict 拼装；
+如果第一版不想暴露到 API 返回体，也至少要在模块内有稳定类型；
+禁止继续扩大“dict[str, Any] 到处流动”的实现方式。
+```
+
+---
+
+## 14.7 测试要求
+
+本次落实必须同步补测试，不能先上逻辑、后补测试。
+
+最少要覆盖：
+
+```text
+1. Agent 关闭 / LLM 不可用时的 fallback
+2. 附件事实增强后规则输入是否变化
+3. SPI + 高风险用途 + 第三方共享组合
+4. vendor 合同缺口识别
+5. 报告一致性问题检测
+6. 老输入结构的 backward compatibility
+```
+
+至少补以下测试场景：
+
+```text
+TrendyGoods：广告 Cookie / opt-out / 广告合作方合同缺口
+FitLife AI：健康数据 / SPI / 第三方推荐 / dark pattern
+DataFlow Analytics：SaaS / service provider / 客户合同义务
+```
+
+严格要求：
+
+```text
+每个 Agent 至少有 1 个单测；
+service.py 至少有 2 个集成测试；
+原 test_gap_rules.py 不得因重构失效；
+新增逻辑若改变 gap 输出，必须同步更新断言，不允许放宽成“只要不报错”。
+```
+
+---
+
+## 14.8 验收标准
+
+这一轮不是“代码能跑”就算完成，必须同时满足：
+
+```text
+1. CPRA agent 层存在且接入主流程
+2. service.py 主流程顺序清晰
+3. 结构化事实能被材料主动增强
+4. 高风险组合能被稳定识别
+5. 供应商合同义务缺口能被识别
+6. 报告与事实/规则冲突能被识别
+7. 全部新增测试通过
+8. 原有 API 和输出产物不破坏
+```
+
+如果上述 8 条有任意一条不满足，就不能视为“CPRA 方案已落实”。
+
+---
+
+## 14.9 实施纪律
+
+后续实现必须遵守下面这些纪律：
+
+```text
+1. 先搭骨架，再逐个 Agent 接入，不准同时并行乱改
+2. 先补 schema 和 merger，再写 service 编排
+3. 先写 fallback，再写 LLM 分支
+4. 先有测试，再扩大规则和 Agent 语义
+5. 不允许把业务判断重新塞回自由文本 prompt
+6. 不允许让 Agent 直接改最终风险等级
+7. 不允许删除已有规则兜底
+```
+
+---
+
+## 14.10 具体执行顺序
+
+严格执行顺序如下：
+
+```text
+第 1 步：新增 agents/__init__.py + CPRAAgentBase
+第 2 步：补 schema 中间结构
+第 3 步：新增 fact_merger.py / gap_merger.py
+第 4 步：接入 CPRAFactExtractionAgent
+第 5 步：改造 service.py 使用 enhanced_payload
+第 6 步：接入 CPRASPISharingRiskAgent
+第 7 步：接入 CPRAVendorContractAgent
+第 8 步：补法规证据绑定到 gap 级
+第 9 步：接入 CPRAConsistencyReviewAgent
+第 10 步：补全单测和集成测试
+第 11 步：回归现有输出产物
+```
+
+这 11 步必须按顺序执行，不建议跳步，不建议先做报告层再补事实层。
+
+---
+
+## 14.11 当前开始执行的第一落点
+
+从当前仓库状态出发，第一批实际改造就应该是：
+
+```text
+1. 新建 backend/modules/cpra/agents/__init__.py
+2. 新建 backend/modules/cpra/agents/fact_extraction_agent.py
+3. 新建 backend/modules/cpra/fact_merger.py
+4. 扩展 backend/modules/cpra/schema.py
+5. 改 backend/modules/cpra/service.py，把 FactExtractionAgent 接到 run_all_rules() 前
+6. 新增对应测试
+```
+
+原因只有一个：
+
+```text
+没有 enhanced facts，后面的 SPI / Vendor / Consistency 都只能继续在弱输入上做补丁，收益会被严重削弱。
+```

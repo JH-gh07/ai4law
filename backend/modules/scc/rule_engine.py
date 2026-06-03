@@ -99,7 +99,7 @@ def evaluate_hard_thresholds(inp: PathDiagnosisInput) -> RuleEngineResult:
         )
 
     # ── Exemption assessment (Step 3) ──
-    result.hr_exemption_posible = _check_hr_exemption(inp)
+    result.hr_exemption_possible = _check_hr_exemption(inp)
     result.contract_necessity_possible = _check_contract_necessity(inp)
     result.legal_obligation_possible = _check_legal_obligation(inp)
     result.vital_interest_possible = _check_vital_interest(inp)
