@@ -1,7 +1,90 @@
-from backend.common.workflow.context_pack import GenerationContextPack
-from backend.common.workflow.evidence import EvidenceItem
-from backend.common.workflow.facts import EvidenceStatus, FactItem
-from backend.common.workflow.issues import IssueItem
-from backend.common.workflow.pipeline import WorkflowPipeline
+"""L1 Platform workflow models.
 
-__all__ = ["EvidenceItem", "EvidenceStatus", "FactItem", "GenerationContextPack", "IssueItem", "WorkflowPipeline"]
+These are the platform's shared data types — every module consumes and produces
+objects from this namespace.  No module should define its own Fact, Issue,
+Evidence, or Action model; they should use (and optionally extend) these.
+
+Architecture layers:
+    facts      →  what we know and how we know it
+    issues     →  what's wrong and how certain we are
+    evidence   →  which laws / documents support each conclusion
+    action     →  what to do about it (remediation, materials, roadmap)
+    expression →  what language is safe for external reports
+    trace      →  auditable record of every decision
+"""
+
+from backend.common.workflow.action import (
+    ActionPlan,
+    MaterialItem,
+    RemediationAction,
+    StagePlan,
+)
+from backend.common.workflow.context_pack import GenerationContextPack
+from backend.common.workflow.evidence import (
+    CitationBinding,
+    DocumentRef,
+    EvidenceItem,
+    EvidencePack,
+)
+from backend.common.workflow.expression import (
+    ExpressionStrategy,
+    ForbiddenExpressionRule,
+    cn_forbidden_expressions,
+)
+from backend.common.workflow.facts import (
+    EvidenceStatus,
+    FactMergeCandidate,
+    FactMergeLog,
+    FactPack,
+    FactItem,
+    FactSourceType,
+)
+from backend.common.workflow.issues import (
+    IssueCategory,
+    IssueCertainty,
+    IssueItem,
+    IssueSeverity,
+)
+from backend.common.workflow.pipeline import WorkflowPipeline
+from backend.common.workflow.trace import (
+    TraceEvent,
+    TraceManifest,
+    TraceStep,
+)
+
+__all__ = [
+    # facts
+    "EvidenceStatus",
+    "FactItem",
+    "FactMergeCandidate",
+    "FactMergeLog",
+    "FactPack",
+    "FactSourceType",
+    # issues
+    "IssueCategory",
+    "IssueCertainty",
+    "IssueItem",
+    "IssueSeverity",
+    # evidence
+    "CitationBinding",
+    "DocumentRef",
+    "EvidenceItem",
+    "EvidencePack",
+    # action
+    "ActionPlan",
+    "MaterialItem",
+    "RemediationAction",
+    "StagePlan",
+    # expression
+    "ExpressionStrategy",
+    "ForbiddenExpressionRule",
+    "cn_forbidden_expressions",
+    # trace
+    "TraceEvent",
+    "TraceManifest",
+    "TraceStep",
+    # context
+    "GenerationContextPack",
+    # pipeline
+    "WorkflowPipeline",
+]
