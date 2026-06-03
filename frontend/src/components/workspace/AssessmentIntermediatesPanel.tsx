@@ -6,7 +6,10 @@ type IntermediatesSubTab =
   | "facts"
   | "path_judgment"
   | "issues"
+  | "gaps"
   | "evidence"
+  | "spi"
+  | "vendor"
   | "materials"
   | "report";
 
@@ -21,7 +24,10 @@ const SUB_TABS: SubTabDef[] = [
   { id: "facts", labelZh: "事实识别", labelEn: "Facts", fileKey: "facts_json" },
   { id: "path_judgment", labelZh: "路径判断", labelEn: "Path Judgment", fileKey: "path_judgment_json" },
   { id: "issues", labelZh: "问题清单", labelEn: "Issue List", fileKey: "issue_list_json" },
+  { id: "gaps", labelZh: "差距项", labelEn: "Gap Items", fileKey: "gap_items_json" },
   { id: "evidence", labelZh: "证据链", labelEn: "Evidence Chain", fileKey: "evidence_chain_json" },
+  { id: "spi", labelZh: "敏感信息风险", labelEn: "SPI Risks", fileKey: "spi_risks_json" },
+  { id: "vendor", labelZh: "供应商问题", labelEn: "Vendor Issues", fileKey: "vendor_issues_json" },
   { id: "materials", labelZh: "材料清单", labelEn: "Material Checklist", fileKey: "material_checklist_json" },
   { id: "report", labelZh: "报告输出", labelEn: "Report Output", fileKey: "markdown" },
 ];
@@ -235,6 +241,25 @@ const COLUMNS: Record<string, ColumnDef[]> = {
     { key: "fact_refs", labelZh: "关联事实", labelEn: "Related Facts", render: joinIfArray },
     { key: "rule_refs", labelZh: "关联规则", labelEn: "Related Rules", render: joinIfArray },
     { key: "used_by", labelZh: "被使用于", labelEn: "Used By", render: joinIfArray },
+  ],
+  gaps: [
+    { key: "domain", labelZh: "领域", labelEn: "Domain" },
+    { key: "risk_level", labelZh: "风险等级", labelEn: "Risk", render: (v) => severityBadge(String(v)) },
+    { key: "gap", labelZh: "差距描述", labelEn: "Gap" },
+    { key: "legal_basis", labelZh: "法律依据", labelEn: "Legal Basis" },
+    { key: "recommendation", labelZh: "建议", labelEn: "Recommendation" },
+    { key: "phase", labelZh: "阶段", labelEn: "Phase" },
+  ],
+  spi: [
+    { key: "category", labelZh: "类别", labelEn: "Category" },
+    { key: "is_sensitive", labelZh: "是否敏感", labelEn: "Sensitive" },
+    { key: "risk_level", labelZh: "风险等级", labelEn: "Risk" },
+  ],
+  vendor: [
+    { key: "name", labelZh: "供应商名", labelEn: "Vendor" },
+    { key: "vendor_type", labelZh: "类型", labelEn: "Type" },
+    { key: "receives_spi", labelZh: "接收SPI", labelEn: "Receives SPI" },
+    { key: "risk_level", labelZh: "风险等级", labelEn: "Risk" },
   ],
   materials: [
     { key: "source_ref", labelZh: "材料编号", labelEn: "Source Ref" },
