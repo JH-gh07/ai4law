@@ -27,6 +27,7 @@ from backend.modules.us_14117.evidence_builder import build_us_14117_evidence
 from backend.modules.us_14117.fact_builder import build_us_14117_facts
 from backend.modules.us_14117.issue_builder import US_14117_CHAPTER_KEYS, build_us_14117_issues
 from backend.modules.us_14117.rule_engine import run_rule_engine
+from backend.modules.us_14117.agents import create_us14117_agents
 from backend.modules.us_14117.schema import (
     US14117AsyncAccepted,
     US14117AsyncStatus,
@@ -57,6 +58,7 @@ class US14117Service:
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="us_14117")
+        self.agents = create_us14117_agents(llm_client)
 
     def generate_report(self, payload: US14117Request) -> US14117Result:
         task_id = str(uuid.uuid4())
@@ -67,6 +69,29 @@ class US14117Service:
         # Run rule engine BEFORE pipeline
         rule_result = run_rule_engine(payload)
         trace.record("rule_engine_result", rule_result.model_dump())
+
+        # ── Agent 1: Rule Boundary — review uncertain classifications ──
+        uncertain_entities = [
+            ea for ea in rule_result.entity_assessments
+            if ea.get("confidence", 1.0) < 0.85 and ea.get("is_covered_person")
+        ]
+        boundary_items = [
+            dc for dc in rule_result.data_classifications
+            if dc.get("threshold_hit") and 0.9 <= dc.get("us_person_count", 0) / max(dc.get("bulk_threshold", 1), 1) <= 1.1
+        ]
+        if uncertain_entities or boundary_items:
+            agent_rb = self.agents["rule_boundary"].run(
+                uncertain_entities=uncertain_entities,
+                boundary_items=boundary_items,
+                ambiguous_tx=rule_result.transaction_classification.get("transaction_type") == "other",
+                tx_description=payload.transaction_description,
+            )
+            for override in agent_rb.get("overrides", []):
+                for ea in rule_result.entity_assessments:
+                    if ea.get("entity_name") == override.get("entity_name"):
+                        if override.get("recommended_status") == "needs_review":
+                            ea["flag_for_dpo"] = True
+            trace.record("agent_rule_boundary", agent_rb)
 
         try:
             run_result = self._build_pipeline(rule_result).run(
@@ -115,14 +140,15 @@ class US14117Service:
             return build_us_14117_facts(payload, rule_result)
         return _inner
 
-    @staticmethod
-    def _retrieve_regulations(_: US14117Request) -> list[dict]:
-        docs = retrieve_regulations(
-            "EO 14117 US data flow restricted transaction prohibited data brokerage covered person security measures",
-            top_k=6,
-            jurisdiction="us",
-            path="eo14117",
+    def _retrieve_regulations(self, _: US14117Request) -> list[dict]:
+        # ── Agent 3: RAG Reformulation — generate targeted query ──
+        query = "EO 14117 restricted transaction covered person security measures"
+        agent_rag = self.agents["rag_reformulation"].run(
+            rule_hit_summary=[], data_categories=[], transaction_type="vendor_agreement", covered_person_count=0,
         )
+        if agent_rag.get("primary_query"):
+            query = agent_rag["primary_query"]
+        docs = retrieve_regulations(query, top_k=6, jurisdiction="us", path="eo14117")
         return [
             {
                 "source_id": item.id,
@@ -156,7 +182,8 @@ class US14117Service:
 
     @staticmethod
     def _build_evidence(facts, issues, regulations, diagnosis: US14117RuleEngineResult):
-        return build_us_14117_evidence(facts, issues, regulations)
+        updated_issues, evidence_chain = build_us_14117_evidence(facts, issues, regulations)
+        return updated_issues, evidence_chain
 
     def _build_context_pack(self, rule_result: US14117RuleEngineResult):
         def _inner(
@@ -184,6 +211,24 @@ class US14117Service:
                     "traffic_light": rule_result.traffic_light.overall_light,
                     "is_prohibited": rule_result.traffic_light.is_prohibited,
                     "is_restricted": rule_result.traffic_light.is_restricted,
+                    # ── Agent 2: Evidence Priority ──
+                    "agent_evidence_priority": self.agents["evidence_priority"].run(
+                        risk_matrix_rows=[r.model_dump() for r in rule_result.risk_matrix],
+                        traffic_light=rule_result.traffic_light.overall_light,
+                        prohibition_reasons=rule_result.traffic_light.prohibition_reasons,
+                        restriction_reasons=rule_result.traffic_light.restriction_reasons,
+                    ),
+                    # ── Agent 5: Repair Check ──
+                    "agent_repair_check": self.agents["repair_check"].run(
+                        issue_summaries=[{
+                            "issue_id": i.issue_id, "severity": i.severity,
+                            "title": i.title, "fact_refs": i.fact_refs, "rule_refs": i.rule_refs,
+                        } for i in issues],
+                        evidence_count=len(evidence_chain),
+                        has_attachments=bool(attachment_notes),
+                        traffic_light=rule_result.traffic_light.overall_light,
+                        missing_measures=rule_result.traffic_light.missing_security_measures,
+                    ),
                 },
                 attachment_notes=attachment_notes,
                 output_requirements={"chapter_keys": list(US_14117_CHAPTER_KEYS.values())},
@@ -219,6 +264,18 @@ class US14117Service:
                         risk_level=rule_result.traffic_light.overall_light,
                     )
                 )
+            # ── Agent 4: Chapter Consistency — verify generated chapters ──
+            agent_chk = self.agents["chapter_consistency"].run(
+                chapter_summaries=[{
+                    "no": ch.chapter_no, "title": ch.title, "content": ch.content[:400],
+                } for ch in chapters],
+                traffic_light=rule_result.traffic_light.overall_light,
+                issue_count=len(context_pack.issues),
+                missing_measures=rule_result.traffic_light.missing_security_measures,
+            )
+            if not agent_chk.get("consistent", True):
+                for fix in agent_chk.get("recommended_fixes", []):
+                    chapters[-1].content += f"\n\n[一致性检查建议] {fix}"
             return chapters
         return _inner
 
