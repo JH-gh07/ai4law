@@ -173,6 +173,48 @@ class BCRService:
                     recommendation=agent_ot.get("recommendation", ""),
                 ))
 
+        # Agent 6: Evidence coverage — check main text vs annex coverage for key requirements
+        for req in requirements:
+            req_id = req.get("requirement_id", "")
+            if req_id in ("BCR-C-1.1", "BCR-C-1.2", "BCR-C-1.3", "BCR-C-1.4", "BCR-P-1.1"):
+                agent_ev = self.agents["evidence_coverage"].run(
+                    requirement_id=req_id,
+                    main_body_text=combined_text[:5000],
+                    annex_texts={},
+                    coverage_status=req.get("_coverage_status", "FULLY_COVERED"),
+                )
+                if agent_ev.get("risk_level") in ("MEDIUM", "HIGH"):
+                    findings.append(BCRFinding(
+                        finding_id=f"BCR-AGENT-EV-{req_id}",
+                        requirement_id=req_id,
+                        title=f"Coverage source: {req.get('title', req_id)}",
+                        risk_level=agent_ev.get("risk_level", "MEDIUM"),
+                        finding=agent_ev.get("assessment", ""),
+                        recommendation=("Move key obligation to main BCR body text" if agent_ev.get("is_key_requirement") else "Consider inline coverage"),
+                    ))
+
+        # Agent 7: Incorrect status — detect BCR-C documents with processor clauses
+        for req in requirements:
+            req_id = req.get("requirement_id", "")
+            status = req.get("_coverage_status", "")
+            if status in ("PARTIALLY_COVERED", "VAGUE", "FULLY_COVERED"):
+                matched = [ch.content for ch in main_doc.chapters
+                          if any(kw.lower() in ch.content.lower() for kw in req.get("check_keywords", [])[:2])]
+                clause_text = "\n".join(matched[:3]) if matched else combined_text[:3000]
+                agent_inc = self.agents["incorrect_status"].run(
+                    clause_text=clause_text, requirement_id=req_id,
+                    bcr_type=bcr_type, coverage_status=status,
+                )
+                if agent_inc.get("has_incorrect"):
+                    findings.append(BCRFinding(
+                        finding_id=f"BCR-AGENT-INC-{req_id}",
+                        requirement_id=req_id,
+                        title=f"Incorrect clause: {req.get('title', req_id)}",
+                        risk_level=agent_inc.get("risk_level", "HIGH"),
+                        finding=agent_inc.get("finding_summary", ""),
+                        recommendation="Realign clause to correct BCR type (C vs P) responsibility assignment.",
+                    ))
+
         # Agent 5: TIA completeness
         tia_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["third country", "tia", "local law"]))
         gov_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["government", "access"]))
@@ -200,6 +242,24 @@ class BCRService:
                     findings.extend(self.clause_reviewer.review_clause(
                         ch.content, req, bcr_type, refs,
                     ))
+                    # Agent 8: Legal grounding — validate that RAG citations support findings
+                    if refs:
+                        agent_lg = self.agents["legal_grounding"].run(
+                            finding_id=f"BCR-CLAUSE-{req['requirement_id']}",
+                            requirement_id=req["requirement_id"],
+                            rag_citations=refs, clause_text=ch.content, bcr_type=bcr_type,
+                        )
+                        if not agent_lg.get("grounding_adequate"):
+                            findings.append(BCRFinding(
+                                finding_id=f"BCR-AGENT-LG-{req['requirement_id']}",
+                                requirement_id=req["requirement_id"],
+                                title=f"Weak legal grounding: {req['title']}",
+                                risk_level="MEDIUM",
+                                finding=f"Legal citations for this requirement may not be adequate "
+                                        f"(discarded {agent_lg.get('discarded_count', 0)} of "
+                                        f"{agent_lg.get('total_citations', 0)} citations).",
+                                recommendation="Verify legal basis with primary GDPR articles.",
+                            ))
                     break
 
         # Deduplicate findings
@@ -225,6 +285,24 @@ class BCRService:
         )
         if agent_risk.get("rating_adjustment") == "HIGH" and rating != "高风险":
             rating = "高风险"
+
+        # Agent 10: Remediation — generate actionable fix suggestions for HIGH findings
+        remediation_suggestions: list[dict] = []
+        for f in deduped:
+            if getattr(f, "risk_level", "LOW") in ("HIGH",):
+                req_text = next((ch.content for ch in main_doc.chapters
+                               if any(kw.lower() in ch.content.lower()
+                                      for kw in ["liable", "binding", "liability", "rights",
+                                                 "third party", "transfer", "government"])), "")
+                agent_rem = self.agents["remediation"].run(
+                    requirement_id=getattr(f, "requirement_id", ""),
+                    clause_text=req_text[:2000] if req_text else "",
+                    bcr_type=bcr_type,
+                    finding_text=getattr(f, "finding", ""),
+                    legal_basis=getattr(f, "legal_basis", ""),
+                )
+                if agent_rem.get("suggested_text"):
+                    remediation_suggestions.append(agent_rem)
 
         metadata = {
             "completed_at": datetime.datetime.now().isoformat(),

@@ -39,7 +39,7 @@ class ContractReviewAgent(SCCAgentBase):
         - 隐私政策 (Privacy Policy)
         """
         if not contract_text or len(contract_text.strip()) < 50:
-            return [_missing_text_finding(contract_type)]
+            return _missing_text_finding(contract_type)
 
         if not self.enabled:
             return _rule_based_contract_review(contract_text, contract_type, receiver_country)

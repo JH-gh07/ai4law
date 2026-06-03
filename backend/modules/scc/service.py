@@ -82,10 +82,17 @@ SCC_CHAPTERS = [
 ]
 
 
+# Sentinel to distinguish "no argument passed" from "explicit None"
+_NO_LLM = object()
+
+
 class SCCService:
     """CN SCC compliance review service with full agent pipeline."""
 
-    def __init__(self, llm_client: LLMClient | None = None) -> None:
+    def __init__(self, llm_client: LLMClient | None = _NO_LLM) -> None:
+        if llm_client is _NO_LLM:
+            from backend.core.settings import get_settings
+            llm_client = LLMClient(get_settings())
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="scc")
