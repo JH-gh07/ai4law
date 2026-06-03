@@ -11,6 +11,50 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ── name → event_type 映射 ──────────────────────────────────────────────
+_NAME_TO_EVENT_TYPE: dict[str, str] = {
+    # 新事件类型（直接映射）
+    "status": "status",
+    "thought": "thought",
+    "tool_start": "tool_start",
+    "tool_result": "tool_result",
+    "intermediate": "intermediate",
+    "warning": "warning",
+    "final": "final",
+    "final_brief": "final_brief",
+    # 向后兼容 — 现有 trace.record() 调用点
+    "assessment_request": "status",
+    "profile_extracted": "intermediate",
+    "diagnosis": "thought",
+    "path_validation": "warning",
+    "fact_extraction": "tool_start",
+    "fact_built": "intermediate",
+    "regulation_retrieval": "tool_start",
+    "rag_hit": "tool_result",
+    "issue_built": "intermediate",
+    "evidence_built": "intermediate",
+    "writing_plan": "thought",
+    "report_generation": "tool_result",
+    "qa_check": "tool_result",
+    "consistency_check": "tool_result",
+    "repair": "warning",
+    "render": "tool_result",
+    # CPRA 特有
+    "attachment_extraction_and_fact_agents": "tool_result",
+    "fact_merge": "tool_result",
+    "rule_engine": "tool_result",
+    "legacy_fallback": "warning",
+    "spi_review": "tool_result",
+    "vendor_review": "tool_result",
+    "attach_gap_citations": "tool_result",
+    "resolve_rating": "tool_result",
+    "attachment_notes": "tool_result",
+    "build_context": "tool_result",
+    "generate_chapters": "tool_result",
+    "consistency_review": "tool_result",
+}
+
+
 @dataclass
 class TraceEvent:
     seq: int
