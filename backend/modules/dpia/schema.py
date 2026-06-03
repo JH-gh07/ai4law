@@ -188,6 +188,146 @@ class DPIAResult(BaseModel):
     risk_matrix: list[DPIARiskMatrixItem] = Field(default_factory=list)
     mitigation_plan: list[DPIAMitigationItem] = Field(default_factory=list)
 
+    # ── Agent enrichment fields ──
+    processing_activity_pack: dict | None = None
+    necessity_findings: dict | None = None
+    dpo_decision_pack: dict | None = None
+    internal_ai_review: dict | None = None
+    consistency_report: dict | None = None
+    generation_basis_snapshot: dict | None = None
+    trace_manifest_path: str = ""
+
+
+# ── Agent-specific I/O models (per doc/tmp/dpia) ──
+
+
+class DPIANeedAgentInput(BaseModel):
+    """Input for DPIA Need Agent (Section 2)."""
+    project_profile: dict = Field(default_factory=dict)
+    rule_signals: dict = Field(default_factory=dict)
+    legal_candidates: list[str] = Field(default_factory=list)
+
+
+class DPIANeedAgentOutput(BaseModel):
+    """Output from DPIA Need Agent."""
+    agent_name: str = "DPIANeedAgent"
+    dpia_required: bool = False
+    trigger_reasons: list[dict] = Field(default_factory=list)
+    draft_text: str = ""
+    legal_basis_refs: list[str] = Field(default_factory=list)
+    confidence: str = "MEDIUM"
+
+
+class ProcessingActivityPack(BaseModel):
+    """Processing activity description pack (Section 3)."""
+    processing_steps: list[dict] = Field(default_factory=list)
+    data_sources: list[str] = Field(default_factory=list)
+    data_categories: list[str] = Field(default_factory=list)
+    data_subjects: list[str] = Field(default_factory=list)
+    recipients: list[str] = Field(default_factory=list)
+    retention_periods: list[str] = Field(default_factory=list)
+    cross_border_transfer: dict = Field(default_factory=dict)
+    ambiguities: list[str] = Field(default_factory=list)
+    draft_text: str = ""
+
+
+class NecessityFinding(BaseModel):
+    """Necessity & Proportionality finding (Section 4)."""
+    processing: str = ""
+    reason: str = ""
+
+
+class NecessityFindings(BaseModel):
+    """Necessity & Proportionality analysis output."""
+    agent_name: str = "NecessityProportionalityAgent"
+    necessary_processing: list[NecessityFinding] = Field(default_factory=list)
+    questionable_processing: list[NecessityFinding] = Field(default_factory=list)
+    excessive_data_items: list[str] = Field(default_factory=list)
+    less_intrusive_alternatives: list[str] = Field(default_factory=list)
+    data_minimisation_recommendations: list[str] = Field(default_factory=list)
+    draft_text: str = ""
+
+
+class RiskMatrixEntry(BaseModel):
+    """Single risk in risk matrix (Section 5)."""
+    risk_id: str = ""
+    risk_name: str = ""
+    description: str = ""
+    affected_rights: list[str] = Field(default_factory=list)
+    likelihood: str = "MEDIUM"
+    impact: str = "MEDIUM"
+    overall_level: str = "MEDIUM"
+    related_processing_steps: list[str] = Field(default_factory=list)
+    related_facts: list[str] = Field(default_factory=list)
+    related_legal_basis: list[str] = Field(default_factory=list)
+    reasoning: str = ""
+
+
+class RiskMatrix(BaseModel):
+    """Full risk assessment output."""
+    agent_name: str = "RiskAssessmentAgent"
+    risk_matrix: list[RiskMatrixEntry] = Field(default_factory=list)
+    draft_text: str = ""
+
+
+class MitigationMeasure(BaseModel):
+    """Single mitigation measure (Section 6)."""
+    measure: str = ""
+    status: Literal["planned", "implemented", "missing"] = "planned"
+    effect: str = ""
+    verification: str = ""
+
+
+class MitigationPlanEntry(BaseModel):
+    """Risk → measures mapping."""
+    risk_id: str = ""
+    measures: list[MitigationMeasure] = Field(default_factory=list)
+    residual_risk: str = "MEDIUM"
+    additional_actions_required: list[str] = Field(default_factory=list)
+
+
+class MitigationPlan(BaseModel):
+    """Full mitigation plan output."""
+    agent_name: str = "MitigationMappingAgent"
+    mitigation_plan: list[MitigationPlanEntry] = Field(default_factory=list)
+    draft_text: str = ""
+
+
+class DPODecisionPack(BaseModel):
+    """DPO / Prior Consultation decision (Section 7)."""
+    agent_name: str = "DPOPriorConsultationAgent"
+    dpo_position: Literal["approval", "conditional_approval", "objection"] = "conditional_approval"
+    conditions: list[str] = Field(default_factory=list)
+    prior_consultation_recommended: bool = False
+    reason: str = ""
+    draft_text: str = ""
+
+
+class InternalReviewOutput(BaseModel):
+    """Internal AI review output (Section 9)."""
+    agent_name: str = "InternalReviewAgent"
+    overall_risk_judgment: str = ""
+    high_risk_issues: list[str] = Field(default_factory=list)
+    insufficient_evidence_items: list[str] = Field(default_factory=list)
+    planned_vs_implemented_gaps: list[str] = Field(default_factory=list)
+    dpo_preconditions: list[str] = Field(default_factory=list)
+    recommend_delay_launch: bool = False
+    material_supplement_priority: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
+    draft_text: str = ""
+
+
+class ConsistencyReport(BaseModel):
+    """Consistency / Repair check output (Section 10)."""
+    agent_name: str = "ConsistencyRepairAgent"
+    checks_passed: int = 0
+    checks_total: int = 10
+    blocking_issues: list[dict] = Field(default_factory=list)
+    repairs_applied: list[dict] = Field(default_factory=list)
+    needs_manual_review: bool = False
+    final_status: Literal["ready", "needs_repair", "blocked"] = "needs_repair"
+    draft_text: str = ""
+
 
 class DPIAAsyncAccepted(BaseModel):
     task_id: str

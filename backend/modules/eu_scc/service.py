@@ -21,7 +21,8 @@ from backend.modules.eu_scc.evidence_builder import build_eu_scc_evidence
 from backend.modules.eu_scc.fact_builder import build_eu_scc_facts
 from backend.modules.eu_scc.issue_builder import EU_SCC_CHAPTER_KEYS, build_eu_scc_issues
 from backend.modules.eu_scc.scc_parser import parse_scc_document
-from backend.modules.eu_scc.scc_rule_engine import run_eu_scc_rule_engine
+from backend.modules.eu_scc.scc_rule_engine import run_eu_scc_rule_engine, score_scc_risk
+from backend.modules.eu_scc.agents import create_eu_scc_agents
 from backend.modules.eu_scc.schema import (
     SCCAsyncAccepted, SCCAsyncStatus, SCCChapter, SCCReviewRequest, SCCReviewResult, SCCRuleEngineResult,
 )
@@ -44,6 +45,7 @@ class EU_SCCService:
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="eu_scc")
+        self.agents = create_eu_scc_agents(llm_client)
 
     def generate_report(self, payload: SCCReviewRequest) -> SCCReviewResult:
         task_id = str(uuid.uuid4())
@@ -58,12 +60,37 @@ class EU_SCCService:
             exporter_role=payload.exporter_role,
             importer_role=payload.importer_role,
         )
+        trace.record("parsed_document_raw", doc.model_dump())
+
+        # ── Agent 1: Document Structure Completion ──
+        doc_patch = self.agents["document_structure"].run(
+            raw_text=payload.scc_text, parsed_document=doc.model_dump(),
+            declared_module=payload.declared_module_type,
+        )
+        trace.record("agent_document_structure", doc_patch)
+        # Apply patches to doc (field-level corrections) — only fill missing fields
+        for patch in doc_patch.get("patches", []):
+            field_path = patch.get("field_path", "")
+            if "exporter_role" in field_path and patch.get("new_value") and not payload.exporter_role:
+                payload.exporter_role = patch["new_value"]
+            if "importer_role" in field_path and patch.get("new_value") and not payload.importer_role:
+                payload.importer_role = patch["new_value"]
 
         # Build transfer chain
         from backend.modules.eu_scc.scc_parser import _build_transfer_chain
         chain = _build_transfer_chain(
             payload.exporter_role, payload.importer_role, doc, ""
         )
+        trace.record("transfer_chain_raw", chain.model_dump())
+
+        # ── Agent 2: Transfer Chain Reasoning ──
+        chain_patch = self.agents["transfer_chain"].run(
+            document=doc.model_dump(), initial_chain=chain.model_dump(),
+            uploaded_attachment_notes=payload.uploaded_files,
+        )
+        trace.record("agent_transfer_chain", chain_patch)
+        # Merge risk hints into rule engine input
+        risk_hints = chain_patch.get("risk_hints", [])
 
         # Run rule engine
         rule_result = run_eu_scc_rule_engine(
@@ -71,7 +98,44 @@ class EU_SCCService:
             has_tia=payload.has_tia,
             has_supplementary_measures=payload.has_supplementary_measures,
         )
-        trace.record("rule_engine_result", rule_result.model_dump())
+        trace.record("rule_engine_result_raw", rule_result.model_dump())
+
+        # ── Agent 3: Clause Semantic Comparison ──
+        clause_agent_out = self.agents["clause_semantic"].run(
+            document=doc.model_dump(),
+            rule_clause_comparison=rule_result.clause_comparison.model_dump(),
+        )
+        for f in clause_agent_out.get("additional_findings", []):
+            rule_result.clause_comparison.findings.append(
+                type(rule_result.clause_comparison.findings[0])(**f) if rule_result.clause_comparison.findings else f)
+            from backend.modules.eu_scc.schema import SCCFinding
+            rule_result.all_findings.append(SCCFinding(
+                finding_id=f.get("finding_id", "EU-SCC-AGENT-CLAUSE"), location=f.get("location", ""),
+                clause_ref=f.get("clause_ref", ""), issue_type=f.get("issue_type", "clause_weakened"),
+                severity=f.get("severity", "MEDIUM"), risk_analysis=f.get("risk_analysis", ""),
+                legal_basis=f.get("legal_basis", ""), recommendation=f.get("recommendation", ""),
+            ))
+        trace.record("agent_clause_semantic", {k: v for k, v in clause_agent_out.items() if k != "additional_findings"})
+
+        # ── Agent 4: TIA / Supplementary Measures Effectiveness ──
+        tia_agent_out = self.agents["tia_effectiveness"].run(
+            document=doc.model_dump(), transfer_chain=chain.model_dump(),
+            tia_review=rule_result.tia_review.model_dump(),
+            has_tia=payload.has_tia,
+            has_supplementary_measures=payload.has_supplementary_measures,
+        )
+        for f in tia_agent_out.get("additional_findings", []):
+            from backend.modules.eu_scc.schema import SCCFinding
+            rule_result.all_findings.append(SCCFinding(
+                finding_id=f.get("finding_id", "EU-SCC-AGENT-TIA"), location=f.get("location", ""),
+                issue_type=f.get("issue_type", "supplementary_measures_insufficient"),
+                severity=f.get("severity", "MEDIUM"), risk_analysis=f.get("risk_analysis", ""),
+                legal_basis=f.get("legal_basis", ""), recommendation=f.get("recommendation", ""),
+            ))
+        trace.record("agent_tia_effectiveness", {k: v for k, v in tia_agent_out.items() if k != "additional_findings"})
+
+        # ── Re-score after agent findings ──
+        rule_result.overall_rating = score_scc_risk(rule_result.all_findings)
 
         try:
             run_result = self._build_pipeline(rule_result).run(
@@ -79,6 +143,32 @@ class EU_SCCService:
             )
         finally:
             current_trace.reset(token)
+
+        # ── Agent 5: Evidence Review (post-pipeline) ──
+        try:
+            evidence_agent_out = self.agents["evidence_review"].run(
+                facts=[f.model_dump() if hasattr(f, "model_dump") else f for f in run_result.context_pack.facts],
+                issues=[i.model_dump() if hasattr(i, "model_dump") else i for i in run_result.context_pack.issues],
+                evidence_chain=[e.model_dump() if hasattr(e, "model_dump") else e for e in run_result.context_pack.evidence_chain],
+                regulations=[], findings=[f.model_dump() if hasattr(f, "model_dump") else f for f in rule_result.all_findings],
+            )
+            trace.record("agent_evidence_review", evidence_agent_out)
+        except Exception:
+            pass  # Agent 5 is advisory — never block the pipeline
+
+        # ── Agent 6: Remediation Generation ──
+        remediation_out = self.agents["remediation"].run(
+            findings=[f.model_dump() for f in rule_result.all_findings],
+            document=doc.model_dump(), transfer_chain=chain.model_dump(),
+            module_validation=rule_result.module_validation.model_dump(),
+        )
+        trace.record("agent_remediation", remediation_out)
+        # Apply remediation suggestions to findings
+        for pf in remediation_out.get("patched_findings", []):
+            for orig in rule_result.all_findings:
+                if orig.finding_id == pf.get("finding_id"):
+                    orig.recommendation = pf.get("recommendation", orig.recommendation)
+                    orig.suggested_text = pf.get("suggested_text", orig.suggested_text)
 
         return SCCReviewResult(
             report_path=run_result.outputs.get("markdown", ""),

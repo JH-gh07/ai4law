@@ -13,6 +13,8 @@ from backend.common.render.report import (
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.modules.cpra.attachment_extractor import CPRAAttachmentExtractor
+from backend.modules.cpra.agents import create_cpra_agents
+from backend.modules.cpra.fact_merger import CPRAFactMerger
 from backend.modules.cpra.gap_rules import run_all_rules
 from backend.modules.cpra.legal_retriever import CPRALegalRetriever
 from backend.modules.cpra.schema import (
@@ -47,29 +49,42 @@ class CPRAService:
         self.tasks = InMemoryTaskManager(module="cpra")
         self.extractor = CPRAAttachmentExtractor(parser=self.parser)
         self.legal_retriever = CPRALegalRetriever()
+        self.fact_merger = CPRAFactMerger()
+        self.agents = create_cpra_agents(llm_client)
 
     def generate_report(self, payload: CPRARequest) -> CPRAResult:
         # ── Attachment extraction ──
         attachment_facts: list[dict] = []
+        fact_packs = []
         for att in payload.attachments:
-            attachment_facts.append(self.extractor.extract(att))
+            raw_facts = self.extractor.extract(att)
+            attachment_facts.append(raw_facts)
+            fact_packs.append(
+                self.agents["fact_extraction"].run(
+                    attachment=att,
+                    raw_facts=raw_facts,
+                    business_model=payload.business_model,
+                    data_lifecycle=payload.data_lifecycle,
+                )
+            )
+        enhanced_payload = self.fact_merger.merge(payload, fact_packs)
 
         # ── Rule engine ──
         gap_items = run_all_rules(
-            applicability=payload.applicability,
-            business_text=payload.business_model,
-            notice_text=payload.notice_and_consent,
-            dsr=payload.dsr_mechanism,
-            dsr_text=payload.consumer_rights_process,
-            opt_out_text=payload.opt_out_and_sale_sharing,
-            data_items=payload.data_items,
-            vendors=payload.vendors,
-            consent_ui=payload.consent_ui,
+            applicability=enhanced_payload.applicability,
+            business_text=enhanced_payload.business_model,
+            notice_text=enhanced_payload.notice_and_consent,
+            dsr=enhanced_payload.dsr_mechanism,
+            dsr_text=enhanced_payload.consumer_rights_process,
+            opt_out_text=enhanced_payload.opt_out_and_sale_sharing,
+            data_items=enhanced_payload.data_items,
+            vendors=enhanced_payload.vendors,
+            consent_ui=enhanced_payload.consent_ui,
         )
 
         # ── Fallback: old rules if no structured input ──
-        if not gap_items and payload.applicability is None and not payload.data_items:
-            gap_items = self._build_legacy_gap_items(payload)
+        if not gap_items and enhanced_payload.applicability is None and not enhanced_payload.data_items:
+            gap_items = self._build_legacy_gap_items(enhanced_payload)
 
         # ── Dynamic RAG per domain ──
         domains = list(set(g.domain for g in gap_items if g.risk_level in ("HIGH", "MEDIUM")))
@@ -81,10 +96,10 @@ class CPRAService:
         risk_level = self._resolve_overall_level(gap_items)
 
         # ── Attachment notes ──
-        attachment_notes = self._extract_attachment_notes(payload)
+        attachment_notes = self._extract_attachment_notes(enhanced_payload)
 
         # ── Build context block with facts ──
-        context_block = self._build_enhanced_context(payload, gap_items, risk_level)
+        context_block = self._build_enhanced_context(enhanced_payload, gap_items, risk_level)
 
         # ── Chapters ──
         all_citations = [c for g in gap_items for c in g.citations[:1]]
@@ -93,10 +108,10 @@ class CPRAService:
         )
 
         # ── Consistency ──
-        issues = self._check_consistency(payload, gap_items, attachment_facts)
+        issues = self._check_consistency(enhanced_payload, gap_items, attachment_facts)
 
         # ── Render ──
-        outputs = self._render(payload, chapters, gap_items, attachment_notes)
+        outputs = self._render(enhanced_payload, chapters, gap_items, attachment_notes)
 
         return CPRAResult(
             report_path=outputs["docx"],

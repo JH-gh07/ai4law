@@ -76,6 +76,53 @@ class CPRAConsentUI(BaseModel):
     confusing_language: bool = False
 
 
+class CPRAEvidenceSpan(BaseModel):
+    fact_id: str
+    source_file: str
+    quote: str = ""
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+
+class CPRAAgentWarning(BaseModel):
+    message: str
+    severity: Literal["info", "warning", "error"] = "warning"
+
+
+class CPRAFactPack(BaseModel):
+    source_file: CPRAAttachment
+    extracted_applicability: CPRAApplicabilityInfo | None = None
+    extracted_data_items: list[CPRADataItem] = Field(default_factory=list)
+    extracted_dsr_mechanism: CPRADSRMechanism | None = None
+    extracted_vendors: list[CPRAVendorInfo] = Field(default_factory=list)
+    extracted_consent_ui: CPRAConsentUI | None = None
+    evidence_spans: list[CPRAEvidenceSpan] = Field(default_factory=list)
+    extraction_warnings: list[str] = Field(default_factory=list)
+
+
+class CPRARiskChain(BaseModel):
+    chain_id: str
+    facts: list[str] = Field(default_factory=list)
+    risk_level: Literal["HIGH", "MEDIUM", "LOW"]
+    gap: str
+    recommendation: str
+
+
+class CPRAVendorPatch(BaseModel):
+    vendor: CPRAVendorInfo
+    evidence_source: str = "attachment_extracted"
+
+
+class CPRADataItemPatch(BaseModel):
+    data_item: CPRADataItem
+    evidence_source: str = "attachment_extracted"
+
+
+class CPRAConsistencyIssue(BaseModel):
+    issue: str
+    severity: Literal["HIGH", "MEDIUM", "LOW"] = "MEDIUM"
+    suggested_fix: str = ""
+
+
 # ── Request ─────────────────────────────────────────────────────────────
 
 class CPRARequest(BaseModel):
