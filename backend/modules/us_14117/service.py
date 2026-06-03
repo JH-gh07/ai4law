@@ -509,23 +509,49 @@ def _render_placeholder_chapter(
 
     if chapter_id == "overall_conclusion":
         light_label = {"RED": "红灯（禁止传输）", "YELLOW": "黄灯（限制性交易）", "GREEN": "绿灯（低风险放行）"}
+        yellow_note = ""
+        if tl.yellow_status == "blocked":
+            yellow_note = "\n> **⚠️ 整改前不得推进数据传输。** 存在安全措施缺口，在全部整改完成并经法务审批前，不得继续推进。\n"
+        elif tl.yellow_status == "controlled":
+            yellow_note = "\n> **✅ 安全措施已基本落实，可在持续监控和季度审计下推进。**\n"
+
         return (
             f"## 总体结论\n\n"
             f"**红黄绿判定: {light_label.get(tl.overall_light, tl.overall_light)}**\n\n"
-            f"{tl.summary}\n\n"
+            f"{tl.summary}\n"
+            f"{yellow_note}\n"
             f"### 传输可行性\n\n"
             f"{'禁止传输' if tl.is_prohibited else '限制性交易，需采取措施' if tl.is_restricted else '当前可传输，建议持续监控'}\n\n"
+            f"{'可条件性推进: 是' if tl.can_proceed_conditionally else '可条件性推进: 否'}\n\n"
             f"### 触发规则\n\n"
             + ("".join(f"- {r}\n" for r in tl.prohibition_reasons))
             + ("".join(f"- {r}\n" for r in tl.restriction_reasons))
+            + ("\n### 需补充材料\n\n" + "".join(f"- {q}\n" for q in tl.clarification_questions) if tl.clarification_questions else "")
         )
 
     elif chapter_id == "risk_details":
         lines = ["## 风险详情与分析\n"]
+        # Group entities by status
+        confirmed = [ea for ea in rule_result.entity_assessments if ea.get("covered_person_status") == "confirmed"]
+        inferred = [ea for ea in rule_result.entity_assessments if ea.get("covered_person_status") == "inferred"]
+        needs_review = [ea for ea in rule_result.entity_assessments if ea.get("covered_person_status") == "needs_review"]
+
         lines.append("### 涵盖人员/实体清单\n")
-        for ea in rule_result.entity_assessments:
-            if ea.get("is_covered_person"):
-                lines.append(f"- **{ea['entity_name']}**: {'; '.join(ea.get('covered_person_reasons', []))}")
+        if confirmed:
+            lines.append("**已确认涵盖人员:**")
+            for ea in confirmed:
+                lines.append(f"- **{ea['entity_name']}** (置信度: {ea.get('confidence', 0):.0%}): {'; '.join(ea.get('covered_person_reasons', []))}")
+        if inferred:
+            lines.append("\n**推断为涵盖人员 (需法务确认):**")
+            for ea in inferred:
+                lines.append(f"- **{ea['entity_name']}** (置信度: {ea.get('confidence', 0):.0%}): {'; '.join(ea.get('covered_person_reasons', []))}")
+        if needs_review:
+            lines.append("\n**需进一步尽调:**")
+            for ea in needs_review:
+                lines.append(f"- **{ea['entity_name']}**: {'; '.join(ea.get('covered_person_reasons', ['信息不足']))}")
+                for info in ea.get("missing_information", [])[:2]:
+                    lines.append(f"  - 缺失信息: {info}")
+
         lines.append("\n### 敏感数据分布\n")
         for dc in rule_result.data_classifications:
             lines.append(
@@ -533,11 +559,12 @@ def _render_placeholder_chapter(
                 f"US persons: {dc['us_person_count']}, "
                 f"阈值: {dc['bulk_threshold']}, "
                 f"命中: {'是' if dc['threshold_hit'] else '否'}"
+                f"{' (低置信度⚠️)' if dc.get('confidence', 1.0) < 0.75 else ''}"
             )
         lines.append("\n### 风险匹配矩阵\n")
         for row in rule_result.risk_matrix:
             lines.append(
-                f"- {row.entity_name} × {row.data_item_name} → **{row.traffic_light}** "
+                f"- {row.entity_name} [{row.covered_person_status}] × {row.data_item_name} → **{row.traffic_light}** "
                 f"({row.reason})"
             )
         return "\n".join(lines)
@@ -545,30 +572,47 @@ def _render_placeholder_chapter(
     elif chapter_id == "compliance_actions":
         lines = ["## 合规措施建议与行动清单\n"]
         if tl.overall_light == "RED":
-            lines.append("### 红灯措施\n- 立即停止数据传输\n- 咨询法务团队\n- 评估替代方案（如本地化处理、非涵盖人员传输等）")
+            lines.append("### 红灯措施\n- 立即停止数据传输\n- 咨询法务团队\n- 评估替代方案（如本地化处理、非涵盖人员传输等）\n- 如需继续，评估是否可能通过调整交易结构改变法律定性")
         elif tl.overall_light == "YELLOW":
-            lines.append("### 黄灯措施 — 必要安全措施\n")
+            if tl.yellow_status == "blocked":
+                lines.append("### ⚠️ 黄灯（整改前禁止推进）\n")
+                lines.append("**在以下安全措施全部整改完成前，不得继续推进数据传输。**\n")
+            else:
+                lines.append("### ✅ 黄灯（条件满足可推进）\n")
+                lines.append("**安全措施已基本落实，可在持续监控下推进。**\n")
+            lines.append("\n### 必要安全措施状态\n")
             for measure in tl.required_security_measures:
-                status = "❌ 缺失" if measure in tl.missing_security_measures else "✅ 已具备"
-                lines.append(f"- {status} {measure}")
+                if measure in tl.missing_security_measures:
+                    lines.append(f"- ❌ **缺失**: {measure}")
+                else:
+                    lines.append(f"- ✅ 已具备: {measure}")
             if tl.missing_security_measures:
                 lines.append(f"\n**缺失措施 ({len(tl.missing_security_measures)}项)**: {', '.join(tl.missing_security_measures)}")
-                lines.append("\n建议90天内完成整改。")
+                lines.append("\n建议90天内完成整改，整改完成后重新提交评估。")
+            if tl.can_proceed_conditionally:
+                lines.append("\n### 持续合规要求\n- 保持季度独立审计\n- 维持访问日志至少1年\n- 供应商合同包含再传输限制和审计权\n- 接收方变更时重新评估\n- 法规更新时及时调整措施")
         else:
-            lines.append("### 绿灯措施\n- 保持当前合规状态\n- 建立季度复审机制\n- 监控法规更新和接收方变化\n- 禁止未经审批的再转让")
+            lines.append("### 绿灯措施\n- 保持当前合规状态\n- 建立季度复审机制\n- 监控法规更新和接收方变化\n- 禁止未经审批的再转让\n- 更新数据清单和人数统计")
         return "\n".join(lines)
 
     elif chapter_id == "attachments_monitoring":
-        return (
+        lines = [
             "## 附件与持续监控\n\n"
             "### 附件清单\n"
-            "（详见输出包中的 rule_engine_result.json）\n\n"
-            "### 持续监控建议\n"
+            "（详见输出包中的 rule_engine_result.json、facts.json、evidence_chain.json）\n"
+        ]
+        if tl.clarification_questions:
+            lines.append("\n### ⚠️ 需补充材料\n")
+            for q in tl.clarification_questions:
+                lines.append(f"- {q}")
+        lines.append("\n### 持续监控建议\n"
             "- 季度复审接收方实体状态\n"
             "- 监控 EO 14117 法规更新\n"
             "- 定期审计安全措施有效性\n"
             "- 更新数据清单和人数统计\n"
+            "- 接收方变更、数据类别新增、交易结构调整时触发重新评估"
         )
+        return "\n".join(lines)
 
     return f"（{title}：占位内容）"
 
@@ -587,6 +631,7 @@ def _build_template_mapping(
 
     tl = rule_result.traffic_light
     light_label = {"RED": "红灯（禁止传输）", "YELLOW": "黄灯（限制性交易）", "GREEN": "绿灯（低风险放行）"}
+    yellow_label = {"blocked": "整改前禁止推进", "controlled": "条件满足可推进", "": ""}
 
     citations: list[str] = []
     for chapter in chapters:
@@ -594,13 +639,29 @@ def _build_template_mapping(
             citations = chapter.citations
             break
 
-    # Build covered entity list
-    covered_entities = [
-        ea["entity_name"]
-        for ea in rule_result.entity_assessments
-        if ea.get("is_covered_person")
+    # Build covered entity list with tri-state
+    confirmed_entities = [
+        ea["entity_name"] for ea in rule_result.entity_assessments
+        if ea.get("covered_person_status") == "confirmed"
     ]
-    entity_block = "\n".join(f"- {e}" for e in covered_entities) if covered_entities else "- 未发现涵盖人员/实体"
+    inferred_entities = [
+        ea["entity_name"] for ea in rule_result.entity_assessments
+        if ea.get("covered_person_status") == "inferred"
+    ]
+    needs_review_entities = [
+        ea["entity_name"] for ea in rule_result.entity_assessments
+        if ea.get("covered_person_status") == "needs_review"
+    ]
+    entity_parts = []
+    if confirmed_entities:
+        entity_parts.append("**已确认涵盖人员:**\n" + "\n".join(f"- {e}" for e in confirmed_entities))
+    if inferred_entities:
+        entity_parts.append("**推断为涵盖人员:**\n" + "\n".join(f"- {e}" for e in inferred_entities))
+    if needs_review_entities:
+        entity_parts.append("**需进一步尽调:**\n" + "\n".join(f"- {e}" for e in needs_review_entities))
+    if not entity_parts:
+        entity_parts.append("- 未发现涵盖人员/实体")
+    entity_block = "\n\n".join(entity_parts)
 
     # Build data classification summary
     data_lines = []
@@ -645,6 +706,10 @@ def _build_template_mapping(
         "risk_matrix_table": matrix_block,
         "security_gaps": missing_block,
         "required_measures": "\n".join(f"- {m}" for m in tl.required_security_measures) or "无",
+        "yellow_status": yellow_label.get(tl.yellow_status, tl.yellow_status),
+        "can_proceed": "是（条件满足，可在持续监控下推进）" if tl.can_proceed_conditionally else "否（存在安全措施缺口）",
+        "clarification_questions": "\n".join(f"- {q}" for q in tl.clarification_questions) if tl.clarification_questions else "无",
+        "covered_entity_detail": entity_block,
         "risk_details": attach_citations(
             summarize_for_slot(pick(2), max_sentences=4, max_chars=500),
             citations,

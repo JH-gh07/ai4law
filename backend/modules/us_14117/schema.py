@@ -116,6 +116,7 @@ class US14117Request(BaseModel):
     onward_transfer_description: str = ""
     attachments: list[str] = Field(default_factory=list)  # uploaded file paths
     company_name: str = "示例企业"
+    override_thresholds: dict[str, int] | None = None  # optional rule threshold overrides
 
 
 # ---------------------------------------------------------------------------
@@ -153,7 +154,14 @@ class US14117RiskMatrixRow(BaseModel):
 
 
 class US14117TrafficLightResult(BaseModel):
-    """EO 14117 traffic light assessment."""
+    """EO 14117 traffic light assessment.
+
+    RED    = Prohibited transaction under §100.2
+    YELLOW = Restricted transaction under §100.3 — requires security measures
+             - yellow_status "blocked": measures missing, must not proceed
+             - yellow_status "controlled": measures implemented, may proceed under monitoring
+    GREEN  = No EO 14117 trigger detected
+    """
 
     overall_light: TrafficLight | str = "GREEN"
     per_entity_lights: dict[str, str] = Field(default_factory=dict)
@@ -164,6 +172,11 @@ class US14117TrafficLightResult(BaseModel):
     restriction_reasons: list[str] = Field(default_factory=list)
     required_security_measures: list[str] = Field(default_factory=list)
     missing_security_measures: list[str] = Field(default_factory=list)
+    # ── Yellow sub-states ──
+    yellow_status: str = ""  # "blocked" | "controlled" | "" (empty for RED/GREEN)
+    can_proceed_conditionally: bool = False  # True only for YELLOW-controlled
+    # ── Due diligence gaps ──
+    clarification_questions: list[str] = Field(default_factory=list)
 
 
 class US14117RuleEngineResult(BaseModel):

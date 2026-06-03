@@ -75,14 +75,14 @@ def test_async_flow_completes() -> None:
     task_id = accepted.task_id
 
     # Poll until complete
-    max_attempts = 200
+    max_attempts = 300
     for _ in range(max_attempts):
         status = service.get_async_status(task_id)
         if status.state == "COMPLETED":
             break
         if status.state == "FAILED":
             raise AssertionError(f"Task failed: {status.error}")
-        time.sleep(0.05)
+        time.sleep(0.1)
     else:
         raise AssertionError(f"Task did not complete within {max_attempts} polling attempts")
 

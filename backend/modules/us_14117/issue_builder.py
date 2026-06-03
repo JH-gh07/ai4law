@@ -150,7 +150,54 @@ def build_us_14117_issues(
             ["risk_details", "compliance_actions"],
         ))
 
-    # ── 7. Data classification uncertain ──
+    # ── 7a. Covered person needs review ──
+    for ea in rule_engine_result.entity_assessments:
+        if ea.get("covered_person_status") == "needs_review":
+            issues.append(_issue(
+                f"US14117-ISSUE-COVERED-NEEDS-REVIEW-{ea['entity_name'].upper().replace(' ', '-')[:25]}",
+                f"涵盖人员状态待确认: {ea['entity_name']}",
+                f"实体 '{ea['entity_name']}' 的涵盖人员状态为 'needs_review'，存在受关注国家关联但信息不足以确认。"
+                f"缺失信息: {'; '.join(ea.get('missing_information', [])[:3])}",
+                "recipient",
+                "MEDIUM",
+                [f.fact_id for f in facts if f.field_path and ea['entity_name'] in f.field_path][:2],
+                rule_refs + ["EO 14117 §100.1"],
+                f"补充 {ea['entity_name']} 的尽调材料后重新评估。参见追问清单。",
+                ["risk_details", "overall_conclusion"],
+            ))
+
+    # ── 7b. Yellow-blocked ──
+    if tl.yellow_status == "blocked":
+        issues.append(_issue(
+            "US14117-ISSUE-YELLOW-BLOCKED",
+            "黄灯-整改前禁止推进",
+            f"限制性交易存在 {len(tl.missing_security_measures)} 项安全措施缺口，在整改完成前不得继续推进数据传输。",
+            "security_measure",
+            "HIGH",
+            [f.fact_id for f in facts if f.field_path and "security_measure" in f.field_path][:2],
+            rule_refs + ["EO 14117 §100.3"],
+            f"在90天内完成以下措施整改: {', '.join(tl.missing_security_measures[:6])}。完成后重新提交评估。",
+            ["compliance_actions", "overall_conclusion"],
+        ))
+
+    # ── 7c. Clarification needed ──
+    all_missing_info: list[str] = []
+    for ea in rule_engine_result.entity_assessments:
+        all_missing_info.extend(ea.get("missing_information", []))
+    if all_missing_info or tl.clarification_questions:
+        issues.append(_issue(
+            "US14117-ISSUE-CLARIFICATION-NEEDED",
+            "需补充尽调材料",
+            f"评估过程中发现 {len(all_missing_info) + len(tl.clarification_questions)} 项信息缺口，需补充材料后方可作出最终判断。",
+            "documentation",
+            "MEDIUM",
+            [f.fact_id for f in facts[:1]],
+            rule_refs,
+            "参见报告中的追问清单，补充相关材料后重新提交评估。",
+            ["overall_conclusion", "attachments_monitoring"],
+        ))
+
+    # ── 8. Data classification uncertain ──
     uncertain = [
         dc for dc in rule_engine_result.data_classifications
         if dc.get("confidence", 1.0) < 0.75
