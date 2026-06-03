@@ -433,4 +433,42 @@ def build_assessment_issues(
         )
     )
 
+    # ── Tri-state classification ──
+    # Mark each issue as confirmed_issue, suspected_issue, or default_review_item
+    # This controls how the issue is expressed in external reports
+    _CERTAINTY_MAP: dict[str, str] = {
+        "ISSUE-ciio-security-assessment": "confirmed_issue",
+        "ISSUE-important-data-security-assessment": "confirmed_issue",
+        "ISSUE-pii-threshold": "confirmed_issue",
+        "ISSUE-spi-threshold": "confirmed_issue",
+        "ISSUE-recommended-path-mismatch": "confirmed_issue",
+        "ISSUE-missing-transfer-purpose": "confirmed_issue",
+        "ISSUE-missing-receiver-country": "confirmed_issue",
+        #
+        "ISSUE-recipient-security-evidence-missing": "suspected_issue",
+        "ISSUE-legal-document-gaps": "suspected_issue",
+        "ISSUE-onward-transfer-unclear": "suspected_issue",
+        "ISSUE-consent-evidence-missing": "suspected_issue",
+        "ISSUE-anonymization-uncertain": "suspected_issue",
+        "ISSUE-spi-classification-uncertain": "suspected_issue",
+        "ISSUE-necessity-argument-generic": "suspected_issue",
+        #
+        "ISSUE-missing-attachments": "default_review_item",
+        "ISSUE-attachments-not-parsed": "default_review_item",
+        "ISSUE-material-checklist-incomplete": "default_review_item",
+        "ISSUE-internal-approval-missing": "default_review_item",
+    }
+
+    for issue in issues:
+        certainty = _CERTAINTY_MAP.get(issue.issue_id, "default_review_item")
+        if certainty == "confirmed_issue":
+            prefix = "[confirmed_issue]"
+        elif certainty == "suspected_issue":
+            prefix = "[suspected_issue]"
+        else:
+            prefix = "[default_review_item]"
+        # Embed certainty in the recommended_action for downstream consumption
+        if prefix not in issue.recommended_action:
+            issue.recommended_action = f"{prefix} {issue.recommended_action}"
+
     return issues

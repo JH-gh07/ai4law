@@ -25,6 +25,7 @@ from backend.modules.assessment.repair_generator import run_repair_pass
 from backend.modules.assessment.report_renderer import AssessmentReportRenderer
 from backend.modules.assessment.retriever import AssessmentRetriever
 from backend.modules.assessment.writing_strategy_builder import build_writing_strategy
+from backend.modules.assessment.compliance_reasoning import build_compliance_reasoning
 from backend.modules.assessment.schema import (
     AssessmentAsyncAccepted,
     AssessmentAsyncStatus,
@@ -32,12 +33,27 @@ from backend.modules.assessment.schema import (
     AssessmentResult,
 )
 from backend.modules.assessment.task_state import AssessmentTaskState
-from backend.modules.diagnosis.schema import DiagnosisAnswers, ReceiverType, TransferScenario, YesNoUnknown
-from backend.modules.diagnosis.service import DiagnosisService
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
     from backend.services.legal_api_service import DeliLegalService
+
+
+class _DiagnosisStub:
+    """Stub replacing DiagnosisService — upstream diagnosis already done."""
+    def __init__(self, recommended_path: str = "security_assessment"):
+        self.recommended_path = recommended_path
+        self.rationale = "上游路径诊断模块已判定进入安全评估路径，本模块仅负责文书生成。"
+        self.risk_level = "HIGH"
+        self.matched_rule_id = None
+
+    def model_dump(self) -> dict:
+        return {
+            "recommended_path": self.recommended_path,
+            "rationale": self.rationale,
+            "risk_level": self.risk_level,
+            "matched_rule_id": self.matched_rule_id,
+        }
 
 
 class AssessmentService:
@@ -100,17 +116,9 @@ class AssessmentService:
 
     @staticmethod
     def _evaluate_diagnosis(payload: AssessmentRequest):
-        return DiagnosisService().evaluate(
-            DiagnosisAnswers(
-                q1_is_ciio=YesNoUnknown.YES if payload.is_ciio else YesNoUnknown.NO,
-                q2_has_important_data=YesNoUnknown.YES if payload.contains_important_data else YesNoUnknown.NO,
-                q3_pii_count=payload.pii_count,
-                q4_spi_count=payload.spi_count,
-                q6_scenario=TransferScenario.OTHER,
-                q7_receiver_type=ReceiverType.THIRD_PARTY,
-                q8_purpose=payload.transfer_purpose,
-            )
-        )
+        """Upstream diagnosis already determined security_assessment path.
+        This module only generates the report — no re-diagnosis."""
+        return _DiagnosisStub(recommended_path="security_assessment")
 
     def _retrieve_per_issue(self, *, issues, profile, regulations) -> dict[str, dict]:
         """为每个 HIGH/BLOCKER issue 调用 DeliLegal search_laws + search_cases。"""

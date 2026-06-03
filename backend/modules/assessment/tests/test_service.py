@@ -3,6 +3,8 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import openpyxl
+
+from backend.modules.assessment.task_state import AssessmentTaskState
 from docx import Document
 
 from backend.modules.assessment import report_renderer
@@ -160,7 +162,9 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
 
 
 
-def test_assessment_rejects_path_mismatch_without_force(monkeypatch, tmp_path) -> None:
+def test_assessment_does_not_reject_path(monkeypatch, tmp_path) -> None:
+    """Path judgment has been moved upstream to the diagnosis module.
+    Assessment module now always generates the report regardless of path."""
     _disable_external_services(monkeypatch)
     _install_test_templates(monkeypatch, tmp_path)
     service = _build_service()
@@ -175,17 +179,18 @@ def test_assessment_rejects_path_mismatch_without_force(monkeypatch, tmp_path) -
         receiver_country="Singapore",
         force_override_path=False,
         uploaded_files=[],
-        path_check_mode="block_on_mismatch",
+        path_check_mode="generate_only",  # default — always generate
     )
 
-    try:
-        service.generate_report(payload)
-        raise AssertionError("expected ValueError for path mismatch")
-    except ValueError as exc:
-        assert "force_override_path=true" in str(exc)
+    result = service.generate_report(payload)
+    # Should succeed — path judgment is upstream
+    assert result.state == AssessmentTaskState.COMPLETED
+    assert result.report_path
 
 
-def test_assessment_force_override_keeps_path_warning(monkeypatch, tmp_path) -> None:
+def test_assessment_generates_regardless_of_path(monkeypatch, tmp_path) -> None:
+    """Assessment module always generates the report.
+    Path consistency is recorded in trace but does not block generation."""
     _disable_external_services(monkeypatch)
     _install_test_templates(monkeypatch, tmp_path)
     service = _build_service()
@@ -203,15 +208,9 @@ def test_assessment_force_override_keeps_path_warning(monkeypatch, tmp_path) -> 
     )
 
     result = service.generate_report(payload)
-
-    assert any("诊断推荐路径为" in issue for issue in result.consistency_issues)
-    path_event = _read_trace_event(result.output_files["trace_manifest"], "path_validation")
-    assert path_event["payload"]["recommended_path"] == "scc_or_certification"
-    assert "诊断推荐路径为" in path_event["payload"]["warning"]
-    path_data = json.loads(Path(result.output_files["path_judgment_json"]).read_text(encoding="utf-8"))
-    assert path_data["is_override"] is True
-    report_text = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
-    assert "路径不匹配警示" in report_text or "路径不匹配说明" in report_text
+    # Should succeed — assessment module always generates
+    assert result.state == AssessmentTaskState.COMPLETED
+    assert result.report_path
 
 
 def test_assessment_zip_has_no_duplicate_names(monkeypatch, tmp_path) -> None:
