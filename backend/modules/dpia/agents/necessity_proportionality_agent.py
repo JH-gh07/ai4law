@@ -105,9 +105,8 @@ def _rule_based_necessity_check(
     steps = proc.get("processing_steps", [])
     for step in steps:
         step_text = str(step).lower()
-        if any(kw in step_text for kw in ["收集", "collection", "简历", "resume", "评估", "assessment"]):
-            necessary.append({"processing": str(step)[:120], "reason": "与项目目标的基本实现直接相关"})
-        elif any(kw in step_text for kw in ["表情", "expression", "facial", "面部", "微表情"]):
+        # Check questionable FIRST before necessary (more specific patterns take priority)
+        if any(kw in step_text for kw in ["表情", "expression", "facial", "面部", "微表情"]):
             questionable.append({
                 "processing": str(step)[:120],
                 "reason": "与岗位胜任力之间的必要关联不足，并可能推断健康状况或情绪状态等敏感信息"
@@ -119,6 +118,9 @@ def _rule_based_necessity_check(
                 "reason": "行为追踪/点击分析通常超出招聘目的所必需的范围"
             })
             alternatives.append("仅收集与岗位直接相关的测试结果，取消行为追踪")
+        else:
+            # Default: mark as necessary if no harmful pattern detected
+            necessary.append({"processing": str(step)[:120], "reason": "与项目目标的基本实现直接相关"})
 
     # Check data categories for excess
     for cat in data_categories:

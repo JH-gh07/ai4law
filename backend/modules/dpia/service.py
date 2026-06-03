@@ -177,21 +177,23 @@ class DPIAService:
 
             # ── Agent 5: Mitigation Mapping Agent ──
             user_measures = [m.description for m in (payload.mitigation_measures or [])]
+            risk_dicts = [r.model_dump() for r in risk_matrix.risk_matrix]
             mit_result = self.agents["mitigation_mapping"].run(
-                risk_matrix=risk_matrix.risk_matrix,
+                risk_matrix=risk_dicts,
                 user_measures=user_measures,
             )
             mit_plan = MitigationPlan(**mit_result)
             trace.record("agent_mitigation_mapping", mit_plan.model_dump())
 
             # ── Agent 6: DPO / Prior Consultation Agent ──
+            mit_dicts = [m.model_dump() for m in mit_plan.mitigation_plan]
             remaining_high = [
                 entry.risk_id for entry in mit_plan.mitigation_plan
                 if entry.residual_risk == "HIGH"
             ]
             dpo_result = self.agents["dpo_consultation"].run(
-                risk_matrix=risk_matrix.risk_matrix,
-                mitigation_plan=mit_plan.mitigation_plan,
+                risk_matrix=risk_dicts,
+                mitigation_plan=mit_dicts,
                 dpo_opinion=payload.dpo_opinion,
                 remaining_high_risks=remaining_high,
             )
@@ -282,8 +284,8 @@ class DPIAService:
                 if hasattr(f, "evidence_status") and f.evidence_status == "user_claim_only"
             ]
             int_review_result = self.agents["internal_review"].run(
-                risk_matrix=risk_matrix.risk_matrix,
-                mitigation_plan=mit_plan.mitigation_plan,
+                risk_matrix=risk_dicts,
+                mitigation_plan=mit_dicts,
                 dpo_decision_pack=dpo_pack.model_dump(),
                 user_claim_only_facts=user_claim_facts,
                 issues=[i.model_dump() for i in issues],
@@ -298,8 +300,8 @@ class DPIAService:
             cons_result = self.agents["consistency_repair"].run(
                 draft_chapters=[ch.model_dump() for ch in dpia_chapters],
                 generation_basis_pack=gen_basis,
-                risk_matrix=risk_matrix.risk_matrix,
-                mitigation_plan=mit_plan.mitigation_plan,
+                risk_matrix=risk_dicts,
+                mitigation_plan=mit_dicts,
                 dpo_decision_pack=dpo_pack.model_dump(),
                 facts=[f.model_dump() for f in facts],
                 known_citations=list(set(known_citations)),
@@ -330,7 +332,7 @@ class DPIAService:
             # ── Output rendering ──
             manifest = trace.write_manifest()
 
-            # Build risk matrix for result
+            # Build risk matrix for result (use dict versions from risk_dicts)
             risk_items = [
                 {
                     "risk_id": r.get("risk_id", ""),
@@ -341,20 +343,22 @@ class DPIAService:
                     "affected_data_subjects": ", ".join(r.get("affected_rights", [])),
                     "risk_source": "processing_activity",
                 }
-                for r in risk_matrix.risk_matrix
+                for r in risk_dicts
             ]
 
             mit_items = []
-            for entry in mit_plan.mitigation_plan:
-                for m in entry.get("measures", []) if isinstance(entry, dict) else entry.measures:
-                    mit_items.append({
-                        "mitigation_id": f"MIT-{len(mit_items)+1:03d}",
-                        "description": m.get("measure", str(m)) if isinstance(m, dict) else str(m),
-                        "target_risk_ids": [entry.get("risk_id", "")] if isinstance(entry, dict) else [entry.risk_id],
-                        "status": m.get("status", "planned") if isinstance(m, dict) else "planned",
-                        "responsible_party": "",
-                        "residual_risk_level": (entry.get("residual_risk", "MEDIUM") if isinstance(entry, dict) else entry.residual_risk),
-                    })
+            for entry in mit_dicts:
+                measures = entry.get("measures", [])
+                if isinstance(measures, list):
+                    for m in measures:
+                        mit_items.append({
+                            "mitigation_id": f"MIT-{len(mit_items) + 1:03d}",
+                            "description": m.get("measure", str(m)) if isinstance(m, dict) else str(m),
+                            "target_risk_ids": [entry.get("risk_id", "")],
+                            "status": m.get("status", "planned") if isinstance(m, dict) else "planned",
+                            "responsible_party": "",
+                            "residual_risk_level": entry.get("residual_risk", "MEDIUM"),
+                        })
 
             outputs = self.renderer.render(
                 task_id=task_id,
