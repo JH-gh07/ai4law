@@ -57,6 +57,8 @@ class TIAService:
         route = None
         country_risk_result = None
         measure_assessments = []
+        measure_overall = "unknown"
+        effective_risk = "MEDIUM"
         data_sens = {}
 
         if payload.structured_input:
