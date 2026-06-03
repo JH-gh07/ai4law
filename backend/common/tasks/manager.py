@@ -68,6 +68,58 @@ class InMemoryTaskManager:
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
+    def submit_with_trace(
+        self,
+        runner: Callable[[], Any],
+        trace_recorder: Any,  # TraceRecorder
+        max_attempts: int = 2,
+    ) -> TaskSnapshot:
+        """提交任务并绑定 TraceRecorder 用于事件推送。"""
+        now = _utc_now_iso()
+        task_id = str(uuid.uuid4())
+
+        # 将 SSEManager 注册为 TraceRecorder 订阅者
+        from backend.common.events.manager import get_ssemanager
+        sm = get_ssemanager()
+        trace_recorder.subscribe(sm.on_event)
+
+        # 包裹 runner：注入 TraceRecorder 到 contextvar
+        def wrapped_runner():
+            from backend.common.trace.context import current_trace
+            token = current_trace.set(trace_recorder)
+            try:
+                return runner()
+            finally:
+                current_trace.reset(token)
+
+        record = _TaskRecord(
+            task_id=task_id,
+            module=self.module,
+            state="CREATED",
+            attempts=0,
+            max_attempts=max(1, max_attempts),
+            created_at=now,
+            updated_at=now,
+            error=None,
+            result=None,
+            runner=wrapped_runner,
+        )
+        with self._lock:
+            self._tasks[task_id] = record
+        self._executor.submit(self._execute, task_id)
+
+        # 发布 status 事件
+        from backend.common.trace.events import RunEvent
+        sm.publish(task_id, RunEvent(
+            task_id=task_id,
+            seq=0,
+            event_type="status",
+            summary=f"任务已创建 ({self.module})",
+            detail={"module": self.module, "state": "CREATED"},
+        ))
+
+        return self.get_or_raise(task_id)
+
     def get(self, task_id: str) -> TaskSnapshot | None:
         with self._lock:
             record = self._tasks.get(task_id)
@@ -121,6 +173,18 @@ class InMemoryTaskManager:
             record.attempts += 1
             record.updated_at = _utc_now_iso()
 
+            # 新增：发布 RUNNING 状态事件
+            from backend.common.events.manager import get_ssemanager
+            from backend.common.trace.events import RunEvent
+            sm = get_ssemanager()
+            sm.publish(task_id, RunEvent(
+                task_id=task_id,
+                seq=-1,
+                event_type="status",
+                summary=f"任务开始执行 ({self.module})",
+                detail={"module": self.module, "state": "RUNNING"},
+            ))
+
         try:
             result = record.runner()
             if hasattr(result, "model_dump"):
@@ -140,6 +204,15 @@ class InMemoryTaskManager:
                 current.updated_at = _utc_now_iso()
                 current.error = None
                 current.result = payload
+
+                # 新增：发布 COMPLETED 状态
+                sm.publish(task_id, RunEvent(
+                    task_id=task_id,
+                    seq=-1,
+                    event_type="status",
+                    summary=f"任务执行完成 ({self.module})",
+                    detail={"module": self.module, "state": "COMPLETED"},
+                ))
         except Exception as exc:
             with self._lock:
                 current = self._tasks.get(task_id)
@@ -151,6 +224,15 @@ class InMemoryTaskManager:
                 current.updated_at = _utc_now_iso()
                 current.error = f"{exc.__class__.__name__}: {exc}"
                 current.result = None
+
+                # 新增：发布 FAILED 状态
+                sm.publish(task_id, RunEvent(
+                    task_id=task_id,
+                    seq=-1,
+                    event_type="status",
+                    summary=f"任务执行失败: {exc}",
+                    detail={"module": self.module, "state": "FAILED", "error": str(exc)},
+                ))
 
     @staticmethod
     def _snapshot(record: _TaskRecord) -> TaskSnapshot:
