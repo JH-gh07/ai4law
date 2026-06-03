@@ -331,7 +331,16 @@ class CPRAService:
     # ── Async ───────────────────────────────────────────────────────────
 
     def submit_async(self, payload: CPRARequest) -> CPRAAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        from pathlib import Path
+        from backend.common.trace.recorder import TraceRecorder
+
+        trace_dir = Path(f"storage/traces/cpra_{format_date_stamp()}")
+        trace_recorder = TraceRecorder(trace_dir=trace_dir)
+
+        snapshot = self.tasks.submit_with_trace(
+            runner=lambda: self.generate_report(payload),
+            trace_recorder=trace_recorder,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> CPRAAsyncStatus:
