@@ -1,0 +1,1987 @@
+你当前实际落实版本已经不是“早期粗糙版”了。它已经有比较完整的工程骨架：`WorkflowPipeline`、`Fact / Issue / Evidence / ContextPack`、`writing_strategy`、`generation_basis_pack`、`CitationRegistry`、内部审查、外部报告、修复机制、trace 留痕都已经有了。
+
+但和预期功能相比，主要差距不是“有没有模块”，而是：**模块有了，但输入事实还不够细；生成依据逻辑还不够贴近真实文书；官方模板映射还不够严格；风险判断仍偏规则化和兜底化；对外报告还没有完全达到“可申报草案”的质量。**
+
+---
+
+# 1. 最大差距：当前仍把“路径判断”放在安全评估文书生成里
+
+你前面已经明确说过：**这一步不需要路径触发判断**。
+
+但当前实际代码里，`WorkflowPipeline` 仍然有：
+
+```text
+evaluate_diagnosis
+validate_path
+path_check_mode
+force_override_path
+path_warning
+```
+
+也就是说，当前安全评估模块仍然会复用 `DiagnosisService` 判断是否推荐 `security_assessment`，并根据 `generate_only / warn_only / block_on_mismatch` 控制是否继续生成。
+
+这和预期有偏差。
+
+预期应该是：
+
+```text
+前置路径诊断模块已经判断进入安全评估路径
+        ↓
+安全评估文书生成模块只做文书生成
+        ↓
+不再判断“是否应该走安全评估”
+```
+
+当前实际是：
+
+```text
+安全评估文书生成模块内部仍重新做一次路径判断
+```
+
+这个设计有两个问题：
+
+第一，职责混杂。安全评估文书生成模块应该回答：
+
+```text
+这份安全评估报告怎么写？
+哪些事实可写？
+哪些材料不足？
+哪些风险需要提示？
+```
+
+而不是回答：
+
+```text
+是否应该走安全评估？
+```
+
+第二，容易造成用户体验冲突。用户已经从“安全评估路径”入口进来了，结果后端又提示路径不匹配，甚至阻断生成，这会让用户觉得系统前后矛盾。
+
+建议改成：
+
+```text
+路径诊断结果作为上游输入，可记录在 trace 中；
+安全评估生成模块默认 current_path = security_assessment；
+不再主动调用 DiagnosisService；
+如确实需要校验，只作为“上游路径一致性提示”，不能作为核心门禁。
+```
+
+---
+
+# 2. 输入模型仍然过窄，无法支撑高质量文书
+
+当前 `AssessmentRequest` 仍然只有：
+
+```text
+company_name
+industry
+is_ciio
+contains_important_data
+pii_count
+spi_count
+transfer_purpose
+receiver_country
+force_override_path
+uploaded_files
+path_check_mode
+```
+
+这比早期版本增强不多。虽然后面有 `CompanyProfile.attachment_metadata`，但核心表单事实仍然非常少。
+
+而预期安全评估报告需要的是完整的 A-J 类事实，包括基础信息、自评估工作、数据出境场景、出境数据清单、系统链路、安全保障能力、境外接收方、法律文件、历史合规、个人信息保护等。功能说明里也明确要求报告严格遵循官方模板，AI 自动填充输入信息并生成分析性文字。
+
+当前模型缺少很多关键字段：
+
+| 预期需要                  | 当前是否结构化支持 | 问题             |
+| --------------------- | --------: | -------------- |
+| 股权结构、实际控制人            |       不充分 | 只能靠文本或附件       |
+| 数据安全组织架构              |       不充分 | 难以写“数据处理者基本情况” |
+| 自评估起止时间、参与部门          |       不充分 | 报告第一章容易空泛      |
+| 数据项清单：名称、内容、必要性、示例、备注 |       不充分 | 无法生成高质量数据清单表   |
+| 境内存储系统、链路、中转地、境外存储    |       不充分 | 链路风险只能概括写      |
+| 接收方名称、身份、能力证明、实际处理者   |       不充分 | 接收方风险判断不精准     |
+| 合同六项核心条款覆盖情况          |    依赖附件解析 | 没有结构化人工输入兜底    |
+| 单独同意、告知内容、归档证据        |       不充分 | 个人信息保护章节容易泛化   |
+| 历史处罚与整改               |       不充分 | 模板要求内容无法稳定生成   |
+
+所以当前生成质量的上限会被输入模型限制。即使后面有 RAG、LLM、repair，也只能围绕少量字段做扩写，容易出现“结构很完整，但内容像通用报告”的问题。
+
+建议把 `AssessmentRequest` 拆成更完整的结构：
+
+```text
+basic_info
+self_assessment_info
+transfer_scenario
+data_inventory
+system_link
+security_capability
+recipient_info
+legal_documents
+compliance_history
+personal_info_protection
+attachments
+```
+
+而不是继续把大量信息塞进 `transfer_purpose` 或附件摘要。
+
+---
+
+# 3. 当前 8 章生成结构和官方模板仍不完全一致
+
+当前 `chapter_generator.py` 定义的是 8 个章节：
+
+```text
+出境活动概述
+数据类型与规模
+出境必要性与合法性基础
+境外接收方保障能力
+个人信息权益影响分析
+安全措施与传输机制
+剩余风险与整改建议
+综合评估结论
+```
+
+这个结构更像“合规分析报告”，不是官方《数据出境风险自评估报告》模板的原始结构。
+
+官方模板要求的核心结构是：
+
+```text
+一、自评估工作情况
+
+二、出境活动整体情况
+  （一）数据处理者基本情况
+  （二）拟出境数据情况
+  （三）数据处理者数据安全保障能力情况
+  （四）境外接收方情况
+  （五）法律文件约定数据安全保护责任义务的情况
+  （六）数据处理者认为需要说明的其他情况
+
+三、出境活动的风险自评估情况及结论
+```
+
+当前 8 章并不是不能用，但它更适合内部分析，不适合作为正式草案主结构。
+
+你预期的文书生成应该是：
+
+```text
+官方模板结构 = 外部报告主骨架
+8章分析结构 = 内部生成依据 / 中间分析层
+```
+
+当前代码的问题是：**把中间分析结构当成了外部报告章节结构。**
+
+建议改成双层结构：
+
+```text
+内部分析层：
+  overview
+  data_scope
+  necessity_legal_basis
+  recipient_capability
+  rights_impact
+  security_measures
+  risk_remediation
+  conclusion
+
+对外报告层：
+  一、自评估工作情况
+  二、出境活动整体情况
+  三、风险自评估情况及结论
+```
+
+也就是说，8 章可以继续存在，但它应该服务于 `generation_basis_pack`，而不是直接等同于最终 docx 报告结构。
+
+---
+
+# 4. “AI 生成依据逻辑”有雏形，但还不够贴合你想要的判断层
+
+你真正想要的不是“模板 + 用户输入 = 草案”，而是：
+
+```text
+模板
++ 用户事实
++ AI生成依据逻辑
++ 合规表达策略
++ 风险识别
++ 模糊性判断
++ 可能不合法判断
+= 文书草案
+```
+
+当前代码已经有：
+
+```text
+writing_strategy_builder.py
+generation_basis.py
+legal_grounding.py
+citation_builder.py
+internal_review_generator.py
+external_report_generator.py
+```
+
+这说明工程上已经开始落实这层逻辑。
+
+但目前还缺少一个更明确的“合规判断矩阵”。现在的 issue 主要还是：
+
+```text
+触发条件 → issue → severity → recommended_action
+```
+
+它还没有充分表达你说的几类判断：
+
+```text
+哪里合理？
+哪里模糊？
+哪里合法？
+哪里可能不合法？
+实际应该怎样表述才对？
+```
+
+建议在 `generation_basis_pack` 或单独模块里增加 `compliance_reasoning_items`：
+
+```json
+{
+  "target": "境外接收方安全能力",
+  "user_claim": "接收方符合国际标准",
+  "fact_status": "user_claim_only",
+  "reasonableness": "表述方向合理，但过于概括",
+  "ambiguity": "未说明具体标准、认证名称、有效期、审计范围",
+  "legal_risk": "接收方安全保障能力证明不足",
+  "possible_non_compliance": "可能难以支撑安全评估报告中关于接收方保障能力的正面结论",
+  "correct_expression": "应表述为：用户已说明接收方遵循相关标准，但尚需补充认证、审计或制度文件予以佐证。",
+  "external_claim_allowed": false
+}
+```
+
+这样 LLM 不是只拿 issue 写报告，而是拿到更清晰的“怎么判断、怎么表达”。
+
+---
+
+# 5. Issue 设计偏保守，但有“始终触发过多”的副作用
+
+当前有 9 个始终触发的问题，例如：
+
+```text
+ISSUE-recipient-security-evidence-missing
+ISSUE-legal-document-gaps
+ISSUE-onward-transfer-unclear
+ISSUE-necessity-argument-generic
+ISSUE-consent-evidence-missing
+ISSUE-anonymization-uncertain
+ISSUE-material-checklist-incomplete
+ISSUE-internal-approval-missing
+```
+
+这个设计的出发点是对的：**材料缺失时不假设合规。**
+
+但问题是，如果始终触发过多，会导致两个后果。
+
+第一，报告容易“永远高风险”。即使用户提供了充分材料，如果 parser 没有识别出来，issue 仍然触发，报告会显得不智能。
+
+第二，用户很难区分：
+
+```text
+真实存在的风险
+系统因为没看到材料而保守提示的风险
+系统默认提醒项
+```
+
+建议把 issue 分成三类：
+
+```text
+confirmed_issue       已确认问题
+suspected_issue       疑似问题
+default_review_item   默认审查项 / 待核验项
+```
+
+例如：
+
+```text
+合同明确缺少再转移条款 → confirmed_issue
+没有上传合同 → suspected_issue / missing_material
+默认需要核查再转移安排 → default_review_item
+```
+
+对外报告中三者表达不能一样：
+
+| 类型                  | 对外表达                |
+| ------------------- | ------------------- |
+| confirmed_issue     | “当前法律文件未覆盖……”       |
+| suspected_issue     | “由于未提供相关材料，尚无法确认……” |
+| default_review_item | “建议在正式申报前核验……”      |
+
+当前 `IssueItem` 有 severity，但缺少这种“确定性类型”。
+
+---
+
+# 6. 附件解析能力方向正确，但容易被文件质量限制
+
+当前 `attachment_parser.py` 已经能识别：
+
+```text
+contract
+privacy_policy
+checklist
+certification
+consent_record
+audit_report
+data_inventory
+policy_doc
+dpa
+scc
+```
+
+这是一个明显进步。
+
+但这里有几个容易忽略的问题：
+
+## 6.1 附件解析不应只做摘要
+
+如果只取前 160 字 preview，很多关键条款根本读不到。合同、隐私政策、审计报告的关键内容通常在中后部。
+
+建议附件解析输出：
+
+```text
+document_type
+extracted_sections
+key_clauses
+missing_clauses
+confidence
+page_or_paragraph_ref
+raw_excerpt
+```
+
+尤其是合同六项核心条款，不能只判断“有没有”，还要保留原文依据。
+
+## 6.2 附件解析结果需要可复核
+
+例如系统判断：
+
+```text
+合同缺少再转移约束
+```
+
+应该能点击看到：
+
+```text
+系统检索了哪些合同段落？
+为什么认为没有覆盖？
+有没有低置信度？
+```
+
+否则用户无法判断是合同真的缺，还是系统没解析出来。
+
+## 6.3 附件角色需要用户确认
+
+自动识别文件类型容易错。比如一个 `数据共享协议.docx` 可能既是 DPA，又包含 SCC 附录，也可能只是业务协议。
+
+建议前端上传附件时允许用户标注：
+
+```text
+这是合同
+这是隐私政策
+这是同意记录
+这是认证报告
+这是数据清单
+```
+
+系统自动识别作为辅助，不要完全替代用户标注。
+
+---
+
+# 7. 法律依据检索有了，但“引用相关性”仍是关键短板
+
+当前有：
+
+```text
+AssessmentRetriever
+retrieve_per_issue
+legal_grounding
+CitationRegistry
+每段末尾引用法规
+```
+
+这说明已经开始解决“可追溯引用”。
+
+但一个容易被忽略的问题是：**有引用不等于引用正确。**
+
+当前一致性检查主要确认：
+
+```text
+是否有 citation
+issue 引用的 rule_ref 是否存在
+evidence 引用是否存在
+```
+
+但还不够确认：
+
+```text
+这条法规是否真的支撑这个判断？
+引用的条款是否和该 issue 语义相关？
+是否出现“拿相近法规硬支撑结论”的问题？
+```
+
+例如：
+
+```text
+单独同意问题 → 应该引用个保法第三十九条
+合同六项条款问题 → 应该引用安全评估办法第九条
+风险自评估维度 → 应该引用安全评估办法第五条
+申报材料 → 应该引用安全评估办法第六条
+```
+
+如果系统只是拿 top_k 检索结果兜底，就可能出现引用不精确。
+
+建议增加 `citation_relevance_checker`：
+
+```text
+issue.category = consent
+  → required_articles must include PIPL Art.39 or equivalent
+
+issue.category = legal_document / onward_transfer
+  → required_articles must include Assessment Measures Art.9
+
+issue.category = data_scope / important_data
+  → required_articles must include relevant data export / important data basis
+
+issue.category = documentation
+  → can cite guide/template, not强行引用实体义务条款
+```
+
+引用质量应该有分数：
+
+```text
+exact_support
+partial_support
+background_only
+irrelevant
+```
+
+外部报告只能使用 `exact_support / partial_support`。
+
+---
+
+# 8. 对外报告和内部审查已经分离，但还需要更严格的“申报草案边界”
+
+当前有：
+
+```text
+internal_ai_review.md
+external_report_generator.py
+writing_strategy
+forbidden_expressions
+internal_expression_leakage check
+```
+
+这是对的。
+
+但安全评估报告作为“申报前草案”，对外版本必须非常谨慎。当前还需要注意两类边界。
+
+## 8.1 不能把“系统判断”写成“企业已证明”
+
+例如当前如果用户只提供：
+
+```text
+采用加密传输
+```
+
+报告不能写：
+
+```text
+企业已充分建立完善的数据安全保障体系。
+```
+
+只能写：
+
+```text
+用户说明已采取加密传输措施，但仍需结合制度文件、访问控制、审计记录和应急预案等材料进一步佐证。
+```
+
+你的 `user_claim_only` 机制已经考虑了这个，但需要确保模板映射、外部报告生成、repair 重写都不会破坏这个约束。
+
+## 8.2 不能把“合规风险提示”写成“违法定性”
+
+例如：
+
+```text
+未提供单独同意记录
+```
+
+不能直接写：
+
+```text
+企业违反个人信息保护法。
+```
+
+更稳妥的是：
+
+```text
+在现有材料条件下，尚无法充分证明已履行个人信息出境告知和单独同意义务，存在合法性基础不足风险。
+```
+
+这类表达应该固化到 `writing_strategy` 的模板库中，而不是每次交给 LLM 自由发挥。
+
+---
+
+# 9. 一致性检查很强，但还缺几类关键检查
+
+当前一致性检查已有 6 类，尤其是：
+
+```text
+禁止表述检测
+内部表述泄露检测
+用户声称事实滥用检测
+```
+
+这很有价值。
+
+但还建议补充下面几类。
+
+## 9.1 数字一致性检查
+
+例如：
+
+```text
+pii_count = 1200000
+```
+
+报告中不能出现：
+
+```text
+12万人
+100万人以下
+数量较小
+```
+
+需要检查所有数字、单位、阈值表达是否一致。
+
+## 9.2 主体一致性检查
+
+报告中不能把：
+
+```text
+香港母公司
+德国合作伙伴
+美国第三方处理者
+```
+
+混写。
+
+尤其是多接收方、多跳链路时，LLM 很容易把名义接收方和实际处理者混淆。
+
+## 9.3 风险等级一致性检查
+
+如果存在 BLOCKER 级 issue，对外报告结论不能是：
+
+```text
+总体风险可控，建议直接申报。
+```
+
+应该是：
+
+```text
+需补充或整改后再形成正式申报材料。
+```
+
+## 9.4 模板完整性检查
+
+不仅要检查章节存在，还要检查官方模板要求的每个小节是否覆盖。
+
+例如：
+
+```text
+法律文件约定情况必须覆盖六项核心条款
+拟出境数据情况必须有数据项清单
+数据处理者保障能力必须包含管理、技术、证明材料、守法情况
+```
+
+## 9.5 引用-句子级对齐检查
+
+不能只检查“段落有引用”，要检查引用是否支撑该段核心判断。
+
+---
+
+# 10. 输出产物很多，但用户侧主线可能不够清晰
+
+当前输出 14 种：
+
+```text
+docx
+md
+zip
+issue_list
+evidence_chain
+facts
+path_judgment
+material_checklist
+internal_ai_review
+legal_grounding
+writing_strategy
+generation_basis_pack
+trace_manifest
+...
+```
+
+工程上很完整，但用户可能不知道重点看什么。
+
+建议输出分层：
+
+```text
+一级交付：给用户直接看的
+- 数据出境风险自评估报告草案.docx
+- 材料补充清单.xlsx
+- 风险问题清单.xlsx
+
+二级交付：给项目/法务/审查人员看的
+- 内部AI审查.md
+- 生成逻辑与合规性说明.docx/md
+- 引用来源清单.json/xlsx
+
+三级交付：给开发和审计看的
+- facts.json
+- issues.json
+- evidence_chain.json
+- generation_basis_pack.json
+- trace_manifest.json
+```
+
+现在缺一个非常重要的用户向文件：
+
+```text
+《草案生成逻辑与合规性说明》
+```
+
+虽然你已经有 `generation_basis_pack.json`、`writing_strategy.json`、`trace_manifest.json`，但这些是开发/审计中间产物，不是用户能直接理解的说明文件。
+
+预期文档里明确提到需要解释生成过程、关键判断、合规化处理、已知差距和待定项。
+
+所以建议增加一个正式输出：
+
+```text
+[企业简称]_安全评估报告草案生成逻辑与合规性说明.docx
+```
+
+结构可以是：
+
+```text
+一、本次输入信息摘要
+二、本次采用的模板与法规依据
+三、各章节生成依据说明
+四、关键风险与表达策略说明
+五、当前材料缺失与待确认项
+六、人工复核建议
+七、免责声明
+```
+
+---
+
+# 11. 当前缺少“字段级数据清单”的强约束
+
+安全评估报告里，数据清单非常关键。预期测试案例也反复要求系统自动生成数据清单表，并指出数据性质风险，例如客户资产信息、日终交易流水、匿名设备 ID、GPS 坐标、车辆轨迹等。
+
+当前 `AssessmentRequest` 只有：
+
+```text
+pii_count
+spi_count
+contains_important_data
+transfer_purpose
+```
+
+这不足以生成真正的数据清单。
+
+建议新增 `data_inventory_items[]`：
+
+```json
+[
+  {
+    "name": "客户资产汇总信息",
+    "description": "客户编号、资产总额、投资产品类型代码",
+    "data_subject": "高净值客户",
+    "personal_info_type": "sensitive_personal_information",
+    "is_important_data_candidate": true,
+    "necessity": "用于集团合并报表与风险监控",
+    "example": "客户A，总资产500万，类型代码EQ",
+    "volume": "80000",
+    "retention_period": "未提供",
+    "remarks": "已取得客户授权"
+  }
+]
+```
+
+然后风险识别才可以做到字段级：
+
+```text
+该字段是否必要？
+是否敏感？
+是否可能重要数据？
+是否可重识别？
+是否超范围？
+是否缺少示例？
+```
+
+---
+
+# 12. 当前对“接收方”和“实际处理者”的建模不够
+
+预期案例二里有一个关键点：名义接收方是母公司，但实际处理者是美国 DataMind LLC。预期要求系统揭示“数据最终由未在合同中的美国第三方处理”，这是严重风险。
+
+当前只有：
+
+```text
+receiver_country
+```
+
+这远远不够。
+
+建议新增：
+
+```text
+recipient:
+  name
+  country_or_region
+  role
+  relationship_to_processor
+  security_certifications
+  audit_reports
+  legal_environment_summary
+  processing_purpose
+  processing_method
+  storage_location
+
+downstream_processors[]:
+  name
+  country_or_region
+  role
+  processing_activity
+  contract_covered
+  onward_transfer_constraint
+```
+
+否则系统很难判断：
+
+```text
+谁是境外接收方？
+谁是实际处理者？
+是否存在再转移？
+合同是否覆盖下游？
+数据最终落在哪里？
+```
+
+---
+
+# 13. 当前对“合同六项核心条款”的处理还应更结构化
+
+预期里法律文件是重点，尤其是《数据出境安全评估办法》第九条要求的六项核心条款。功能说明也明确列出了法律文件约定应包含出境目的、境外保存地点和期限、再转移约束、法律环境变化应对、违约责任、应急处置和个人权益保障等内容。
+
+当前 attachment_parser 会检查合同条款覆盖情况，但建议把它显式变成 `legal_document_review`：
+
+```json
+{
+  "document_name": "集团数据共享与处理协议",
+  "clause_coverage": {
+    "purpose_method_scope": "covered",
+    "overseas_retention_location_period": "missing",
+    "onward_transfer_constraint": "unclear",
+    "legal_environment_change_response": "missing",
+    "breach_liability_dispute_resolution": "covered",
+    "incident_response_and_individual_rights": "partial"
+  },
+  "raw_clause_refs": [...],
+  "missing_items": [...],
+  "risk_level": "HIGH"
+}
+```
+
+这样外部报告可以准确写：
+
+```text
+法律文件已覆盖哪些条款，未覆盖哪些条款，哪些条款需要补充。
+```
+
+而不是泛泛写“法律文件存在缺口”。
+
+---
+
+# 14. 当前“修复机制”要防止越修越偏
+
+`repair_generator.py` 的方向是对的：一致性检查发现可修复问题后，调用 LLM 重写章节。
+
+但修复机制有一个风险：LLM 修复时可能绕开原始 constraints，生成新的事实、新的判断、新的引用。
+
+建议修复机制只能使用：
+
+```text
+原章节
+具体错误
+相关 context_pack 片段
+允许使用的 facts
+允许使用的 citations
+允许使用的 writing_strategy
+```
+
+并禁止：
+
+```text
+新增事实
+新增法规
+改变风险等级
+删除原本必须披露的问题
+把缺失材料改成已具备
+```
+
+修复后除了重新跑 consistency，还要跑：
+
+```text
+diff check
+new fact injection check
+citation drift check
+risk downgrade check
+```
+
+特别要防止：
+
+```text
+原来：接收方安全能力材料缺失
+修复后：接收方已具备完善安全能力
+```
+
+---
+
+# 15. 重要但容易忽略的点
+
+下面这些不一定在当前文件里明显体现，但对后续落地很关键。
+
+## 15.1 版本管理
+
+必须记录：
+
+```text
+模板版本
+法规库版本
+RAG索引版本
+prompt版本
+workflow版本
+生成时间
+LLM模型版本
+```
+
+否则同一输入不同时间生成不同结论时，无法解释原因。
+
+## 15.2 原始输入快照
+
+trace 里应保存用户原始输入快照，而不是只保存结构化后的 payload。
+
+因为后续争议通常会问：
+
+```text
+用户当时到底填了什么？
+系统有没有误读？
+哪些字段是用户原话？
+哪些字段是系统推断？
+```
+
+## 15.3 “用户事实”和“系统推断”必须分开
+
+例如：
+
+```text
+用户事实：采用 K-匿名和差分隐私
+系统推断：仍可能存在重识别风险
+```
+
+不能混成一种 fact。否则对外报告会把系统推断写成用户已承认的事实。
+
+## 15.4 缺失材料不能只进 issue，也要反向影响章节生成
+
+如果缺少同意记录，个人信息保护章节不能只是写一条 issue，还要改变正文策略：
+
+```text
+不得写“已取得充分同意”
+必须写“尚需补充同意记录佐证”
+```
+
+这个你现在通过 writing_strategy 部分实现了，但需要确保每个章节都强制读取。
+
+## 15.5 不同用户对象需要不同输出
+
+至少要区分：
+
+```text
+企业业务人员：看材料清单和简单整改建议
+企业法务：看风险清单、法规依据、合同缺口
+开发/审计人员：看 facts、evidence、trace、generation_basis
+监管申报材料：看正式草案
+```
+
+当前输出很多，但还没有明确按用户角色组织。
+
+## 15.6 测试集要覆盖“模糊场景”
+
+不要只测强规则场景，比如 CIIO、100 万人阈值。
+
+更应该测试：
+
+```text
+用户声称匿名化但字段可重识别
+接收方是母公司但实际第三方处理
+合同存在但六项条款不完整
+隐私政策泛化告知但未单独同意
+重要数据不确定
+车辆轨迹 / 金融流水 / 设备ID 等边界数据
+```
+
+这些才是文书生成质量的关键。
+
+---
+
+# 16. 结论：当前版本的真实水平
+
+当前版本已经完成了：
+
+```text
+工程管线搭建
+中间产物建模
+问题识别
+证据链
+写作策略
+引用注册
+内部/外部报告分离
+一致性检查
+修复机制
+多文件输出
+```
+
+这说明它已经不是简单 demo，而是一个比较完整的安全评估文书生成流水线。
+
+但距离预期还有几个核心差距：
+
+```text
+1. 安全评估文书生成模块仍混入路径判断，应弱化或移除。
+2. 输入模型过窄，无法支撑真实官方报告的细粒度内容。
+3. 当前 8 章结构更像内部分析报告，不完全等于官方申报模板。
+4. AI 生成依据逻辑已有雏形，但还需要显式表达“合理/模糊/合法/可能不合法/正确表述”。
+5. Issue 规则偏粗，始终触发项过多，需要区分 confirmed / suspected / review_item。
+6. 引用系统有了，但还要检查引用是否真正支撑判断。
+7. 输出中缺少面向用户的《草案生成逻辑与合规性说明》。
+8. 数据清单、接收方、实际处理者、合同六项条款、同意记录等关键对象需要结构化。
+```
+
+一句话概括：
+
+```text
+当前实现已经搭起“可追溯生成流水线”，但还没有完全变成“严格按官方模板、基于细粒度事实和合规判断逻辑生成高质量安全评估草案”的系统。
+```
+
+下一轮最优先迭代不是继续加模块，而是做三件事：
+
+```text
+第一，扩展 AssessmentRequest，让输入事实真正覆盖官方模板。
+第二，把 8 章分析结构和官方报告模板结构分离。
+第三，把 AI 生成依据逻辑显式化为“事实状态 + 合理性 + 模糊性 + 合法性 + 风险 + 对外表达策略”。
+```
+
+
+# 一、最值得加的 Agent 总览
+
+| 位置                   | 是否值得加 | 解决什么问题                  | 预期收益          |
+| -------------------- | ----: | ----------------------- | ------------- |
+| 1. 输入补全与字段归一 Agent   |     高 | 用户输入散、字段少、事实不完整         | 提升事实结构化质量     |
+| 2. 附件深度解析 Agent      |    极高 | 合同、隐私政策、同意记录、认证报告无法只靠摘要 | 显著提升证据链质量     |
+| 3. 数据定性与重识别风险 Agent  |    极高 | 重要数据、敏感个人信息、匿名化有效性判断模糊  | 提升风险识别准确性     |
+| 4. 法律依据匹配与引用校验 Agent |     高 | 有引用但引用不一定支撑判断           | 降低“假引用/弱引用”风险 |
+| 5. 文书生成规划 Agent      |     高 | 直接生成章节容易泛化、不贴官方模板       | 提升草案质量和结构稳定性  |
+| 6. 内外报告表达校准 Agent    |     高 | 内部审查和对外草案语气边界不同         | 避免过度承诺或违法定性   |
+| 7. 审查-修复 Agent       |     高 | 当前 repair pass 可能越修越偏   | 提升最终文书一致性     |
+
+不建议把 agent 加在：
+
+```text
+路径阈值判断
+task 状态管理
+artifact 注册
+docx / xlsx 渲染
+基础 schema 校验
+固定模板字段映射
+```
+
+这些地方确定性强，规则更稳。
+
+---
+
+# 二、Agent 1：输入补全与字段归一 Agent
+
+## 1. 为什么需要
+
+当前 `AssessmentRequest` 字段仍然偏窄：
+
+```text
+company_name
+industry
+is_ciio
+contains_important_data
+pii_count
+spi_count
+transfer_purpose
+receiver_country
+uploaded_files
+```
+
+但安全评估报告真正需要的是：
+
+```text
+主体信息
+自评估工作信息
+出境数据清单
+系统链路
+境外接收方
+实际处理者
+安全保障能力
+法律文件
+历史合规
+个人信息告知同意
+```
+
+如果继续只靠前端字段和附件摘要，后面的 facts、issues、evidence、generation_basis 都会“先天营养不足”。
+
+## 2. Agent 负责什么
+
+这个 Agent 不负责判断合规路径，只负责把用户输入整理成报告需要的结构化事实。
+
+它应该回答：
+
+```text
+用户到底提供了哪些事实？
+这些事实应该归入哪个报告字段？
+哪些字段缺失？
+哪些字段表达模糊？
+哪些字段互相冲突？
+哪些字段需要追问？
+```
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  AssessmentRequest
+  前端原始表单快照
+  用户自由文本
+  附件 metadata
+  官方模板 schema
+
+处理：
+  1. 读取用户输入和附件摘要
+  2. 按官方模板 schema 做字段映射
+  3. 将散落文本拆成结构化字段
+  4. 标记字段状态：
+     - provided
+     - missing
+     - ambiguous
+     - inferred
+     - conflicting
+  5. 生成字段补全建议
+  6. 输出 normalized_assessment_input
+
+输出：
+  normalized_assessment_input.json
+  missing_fields.json
+  clarification_questions.json
+```
+
+## 4. 输出示例
+
+```json
+{
+  "recipient_info": {
+    "recipient_name": "东方金融控股集团",
+    "country_or_region": "香港",
+    "role": "境外接收方",
+    "security_evidence": {
+      "status": "missing",
+      "reason": "用户仅描述符合香港本地法律和国际标准，未提供认证或审计报告"
+    }
+  },
+  "legal_documents": {
+    "document_name": "集团数据共享与处理协议",
+    "status": "provided",
+    "missing_clauses": [
+      "法律环境变化应对措施",
+      "再转移约束"
+    ]
+  }
+}
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+ProfileExtractor.extract()
+        ↓
+InputNormalizationAgent
+        ↓
+FactBuilder
+```
+
+也就是在 facts 构建之前先把输入事实补齐和归一。
+
+---
+
+# 三、Agent 2：附件深度解析 Agent
+
+## 1. 为什么最值得加
+
+当前有 `attachment_parser.py`，但附件解析如果只靠规则和摘要，很容易漏掉真正关键的内容。
+
+安全评估里最重要的证据往往在附件里：
+
+```text
+合同条款
+隐私政策
+单独同意记录
+认证报告
+审计报告
+数据清单
+内部审批制度
+应急预案
+数据分类分级制度
+```
+
+这些文件不能只看前 160 字，也不能只判断“上传了没有”。
+
+真正要判断的是：
+
+```text
+这个文件能不能支撑报告里的正面表述？
+合同六项核心条款是否真的覆盖？
+隐私政策是否告知了境外接收方和具体目的？
+同意记录是否能证明已取得单独同意？
+认证报告是否覆盖本次数据出境系统和接收方？
+```
+
+这非常适合 agent。
+
+## 2. Agent 负责什么
+
+附件深度解析 Agent 负责从文件中抽取“可引用证据”。
+
+它不是简单摘要工具，而是证据抽取工具。
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  uploaded_files[]
+  official_template_schema
+  clause_checklist
+  issue_builder 需要的证据类型
+
+处理：
+  1. 判断附件类型：
+     - contract
+     - privacy_policy
+     - consent_record
+     - certification
+     - audit_report
+     - data_inventory
+     - internal_policy
+     - approval_record
+  2. 针对不同文件类型启动不同检查清单
+  3. 抽取关键原文片段
+  4. 判断覆盖状态：
+     - covered
+     - partial
+     - missing
+     - unclear
+  5. 生成证据项和缺口项
+  6. 标注页码、段落、原文引用、置信度
+
+输出：
+  attachment_evidence.json
+  clause_coverage_matrix.json
+  extracted_quotes.json
+  material_gap_items.json
+```
+
+## 4. 合同解析逻辑示例
+
+针对法律文件，Agent 应该按六项核心条款检查：
+
+```text
+1. 数据出境目的、方式、范围
+2. 境外保存地点、期限、到期处理措施
+3. 再转移约束
+4. 接收方控制权、经营范围、法律环境变化应对
+5. 违约责任、补救措施、争议解决
+6. 数据泄露、篡改、丢失时的应急处置和个人权益保障
+```
+
+输出：
+
+```json
+{
+  "document_type": "contract",
+  "document_name": "集团数据共享与处理协议",
+  "clause_coverage": {
+    "purpose_method_scope": {
+      "status": "covered",
+      "evidence_quote": "协议第2.1条约定……",
+      "confidence": 0.88
+    },
+    "onward_transfer_constraint": {
+      "status": "unclear",
+      "reason": "仅约定接收方不得擅自披露，但未明确再转移审批、接收方范围和责任承担",
+      "confidence": 0.72
+    },
+    "legal_environment_change_response": {
+      "status": "missing",
+      "reason": "未检索到法律环境变化或不可抗力导致无法保障数据安全时的处理措施"
+    }
+  }
+}
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+ProfileExtractor
+        ↓
+AttachmentParsingAgent
+        ↓
+FactBuilder / IssueBuilder / EvidenceBuilder
+```
+
+也就是不要只把附件作为 `extracted_notes`，而是变成真正的 `EvidenceItem` 来源。
+
+---
+
+# 四、Agent 3：数据定性与重识别风险 Agent
+
+## 1. 为什么需要
+
+安全评估最容易出问题的地方，不是“100 万人阈值”这种硬规则，而是数据定性：
+
+```text
+匿名设备 ID 是否仍是个人信息？
+去标识化数据是否仍可重识别？
+GPS 坐标是否构成敏感个人信息？
+交易结算流水是否可能涉及重要数据？
+车辆 VIN + 轨迹是否可能关联个人？
+客户资产汇总信息是否属于敏感个人信息？
+```
+
+这些判断不是简单布尔值，规则很难覆盖。
+
+当前代码里 `contains_important_data`、`pii_count`、`spi_count` 太粗。实际报告需要字段级判断。
+
+## 2. Agent 负责什么
+
+数据定性 Agent 负责对 `data_inventory_items` 做逐项分析。
+
+它要输出：
+
+```text
+数据项是什么？
+是否可能是个人信息？
+是否可能是敏感个人信息？
+是否可能是重要数据？
+是否声称匿名化？
+匿名化是否可信？
+是否存在重识别风险？
+是否需要保守表述？
+```
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  data_inventory_items[]
+  industry
+  transfer_purpose
+  receiver_info
+  legal_grounding_context
+  data_classification_rules
+
+处理：
+  for each data item:
+    1. 分析字段内容
+    2. 判断是否可识别自然人
+    3. 判断是否涉及敏感属性：
+       - 金融账户
+       - 行踪轨迹
+       - 精确定位
+       - 交易流水
+       - 资产信息
+    4. 判断是否为重要数据候选
+    5. 判断匿名化/去标识化有效性
+    6. 给出风险等级、置信度和写作建议
+
+输出：
+  data_classification_report.json
+  reidentification_risk_items.json
+  data_inventory_enriched.json
+```
+
+## 4. 输出示例
+
+```json
+{
+  "data_item": "匿名设备ID + 浏览点击购买日志",
+  "user_claim": "去标识化后用于训练推荐模型",
+  "classification": {
+    "personal_information_candidate": true,
+    "sensitive_personal_information_candidate": false,
+    "important_data_candidate": "uncertain"
+  },
+  "risk_reasoning": [
+    "匿名设备ID若可与行为日志、时间戳、购买记录结合，仍可能识别特定用户",
+    "当前未提供去标识化有效性评估或第三方审计"
+  ],
+  "writing_strategy": {
+    "external_expression": "该类数据虽被描述为去标识化数据，但仍需结合字段组合、可链接性和技术验证结果进一步确认其匿名化有效性。",
+    "forbidden_expression": [
+      "该数据已经完全匿名化",
+      "该数据不涉及个人信息"
+    ]
+  }
+}
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+FactBuilder
+        ↓
+DataClassificationAgent
+        ↓
+IssueBuilder
+        ↓
+EvidenceBuilder
+```
+
+也就是说，先做字段级数据定性，再触发 issue，而不是只靠 `contains_important_data`。
+
+---
+
+# 五、Agent 4：法律依据匹配与引用校验 Agent
+
+## 1. 为什么需要
+
+当前系统已经有：
+
+```text
+retriever.py
+legal_grounding.py
+citation_builder.py
+CitationRegistry
+```
+
+但核心问题是：**有引用不等于引用正确。**
+
+比如：
+
+```text
+合同六项条款缺失 → 应该引用安全评估办法第九条
+风险自评估维度 → 应该引用安全评估办法第五条
+个人信息出境告知同意 → 应该引用个保法第三十九条
+个人信息影响评估 → 应该引用个保法第五十五条
+```
+
+如果只是 RAG top_k 命中，可能出现“引用存在，但支撑力弱”。
+
+## 2. Agent 负责什么
+
+法律依据 Agent 不负责创造法规，而是负责校验：
+
+```text
+当前 issue 应该引用哪些法规？
+当前引用是否真正支撑这个判断？
+是否只是背景性引用？
+有没有更精确条款？
+引用和结论是否错配？
+```
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  issues[]
+  legal_grounding
+  regulations[]
+  per_issue_rag
+  citation_registry
+
+处理：
+  for each issue:
+    1. 根据 issue.category 推断所需法规类型
+    2. 检查已有 citations 是否匹配
+    3. 判断引用支撑等级：
+       - exact_support
+       - partial_support
+       - background_only
+       - irrelevant
+    4. 如果支撑不足，重新检索或要求降级表达
+    5. 输出引用校验结果
+
+输出：
+  citation_validation_report.json
+  improved_citation_registry.json
+  weak_citation_warnings.json
+```
+
+## 4. 示例
+
+```json
+{
+  "issue_id": "ISSUE-legal-document-gaps",
+  "expected_legal_basis": [
+    "数据出境安全评估办法 第九条"
+  ],
+  "current_citations": [
+    {
+      "citation_id": "CIT-003",
+      "title": "个人信息保护法",
+      "article": "第三十九条",
+      "support_level": "background_only",
+      "problem": "该条支持告知同意问题，但不能直接支撑法律文件六项条款缺失"
+    }
+  ],
+  "recommended_citation": {
+    "title": "数据出境安全评估办法",
+    "article": "第九条",
+    "support_level": "exact_support"
+  }
+}
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+legal_grounding.py
+        ↓
+LegalCitationAgent
+        ↓
+citation_builder.py
+        ↓
+chapter_generator / external_report_generator
+```
+
+并且一致性检查中加入：
+
+```text
+citation_support_level < partial_support
+→ 外部报告不得使用该引用支撑结论
+```
+
+---
+
+# 六、Agent 5：文书生成规划 Agent
+
+## 1. 为什么需要
+
+当前有 `generation_basis_pack`，但还可以更进一步。
+
+真正高质量的文书不是直接让 LLM 写 8 章，而是先规划：
+
+```text
+每个章节写什么？
+哪些事实能写？
+哪些事实不能写成正面结论？
+哪些风险必须披露？
+哪些内容只能写“待补充”？
+哪些表达要保守？
+哪些引用必须出现？
+```
+
+这就是文书生成规划 Agent 的价值。
+
+它相当于“写作前的合规大纲审查员”。
+
+## 2. Agent 负责什么
+
+它不直接写最终报告，而是生成每个章节的 `section_plan`。
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  official_template_schema
+  generation_basis_pack
+  writing_strategy
+  facts
+  issues
+  evidence_chain
+  citation_registry
+
+处理：
+  for each official template section:
+    1. 识别本节必须覆盖的模板要求
+    2. 选择可以进入本节的 confirmed facts
+    3. 选择必须披露的 issues
+    4. 选择可使用 citations
+    5. 生成写作策略：
+       - 正面表述
+       - 保守表述
+       - 待补充表述
+       - 禁止表述
+    6. 输出章节生成计划
+
+输出：
+  section_generation_plan.json
+```
+
+## 4. 输出示例
+
+```json
+{
+  "section_id": "二（五）法律文件约定数据安全保护责任义务的情况",
+  "must_cover": [
+    "目的、方式、范围",
+    "境外保存地点和期限",
+    "再转移约束",
+    "法律环境变化应对",
+    "违约责任",
+    "应急处置和个人权益保障"
+  ],
+  "confirmed_facts": [
+    "已上传《集团数据共享与处理协议》"
+  ],
+  "issues_to_disclose": [
+    "ISSUE-legal-document-gaps",
+    "ISSUE-onward-transfer-unclear"
+  ],
+  "allowed_positive_claims": [
+    "已提供相关协议作为初步材料"
+  ],
+  "forbidden_claims": [
+    "法律文件已经完整覆盖全部要求",
+    "再转移风险已经充分控制"
+  ],
+  "required_citations": [
+    "数据出境安全评估办法 第九条"
+  ],
+  "writing_instruction": "采用审慎表述，明确已提供协议但条款覆盖不完整，提出补充修订建议。"
+}
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+generation_basis_pack
+        ↓
+DocumentPlanningAgent
+        ↓
+external_report_generator
+```
+
+最终报告生成时，LLM 不直接面对全部上下文，而是按 `section_plan` 写。
+
+---
+
+# 七、Agent 6：内外表达校准 Agent
+
+## 1. 为什么需要
+
+你现在已经有 `writing_strategy_builder.py`，这是正确方向。但对于安全评估文书，表达边界非常重要。
+
+内部可以写：
+
+```text
+存在较大违规风险
+合同严重缺失
+无法证明已履行告知同意义务
+```
+
+对外报告不能太像“定罪书”，应该写：
+
+```text
+在现有材料条件下，尚需进一步补充……
+存在合规风险，建议在正式申报前完善……
+```
+
+这里需要一个专门的表达校准 Agent。
+
+## 2. Agent 负责什么
+
+它负责把内部风险语言转换成对外文书语言。
+
+主要处理：
+
+```text
+过度承诺
+违法定性
+事实外推
+语气过重
+语气过轻
+内部审查语泄露
+正面结论证据不足
+```
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  internal_review
+  draft_external_report
+  writing_strategy
+  facts.evidence_status
+  forbidden_expressions
+
+处理：
+  1. 逐段扫描外部报告
+  2. 标记高风险表达：
+     - 完全合规
+     - 已充分证明
+     - 不涉及重要数据
+     - 已完成全部义务
+     - 违法违规
+  3. 判断该表达是否有 verified/documented evidence 支撑
+  4. 如果没有，改写为审慎表达
+  5. 检查内部表达是否泄露
+  6. 输出校准后的外部报告
+
+输出：
+  calibrated_external_report.md
+  expression_change_log.json
+```
+
+## 4. 示例
+
+原文：
+
+```text
+境外接收方已具备完善的数据安全保障能力。
+```
+
+校准后：
+
+```text
+用户已说明境外接收方具备一定数据安全保障能力，但当前材料尚未提供认证报告、审计结论或安全制度文件，建议在正式申报前补充相关证明材料。
+```
+
+## 5. 接入位置
+
+建议放在：
+
+```text
+external_report_generator
+        ↓
+ExpressionCalibrationAgent
+        ↓
+consistency_checker
+```
+
+---
+
+# 八、Agent 7：审查-修复 Agent
+
+## 1. 为什么需要
+
+当前 `repair_generator.py` 已经有修复机制，但修复如果只是把 consistency issue 喂给 LLM，可能出现：
+
+```text
+新增事实
+删除风险
+降低风险等级
+替用户补齐不存在的材料
+引用漂移
+把“未提供”改成“已提供”
+```
+
+所以 repair 需要变成受控 agent，而不是普通 LLM 重写。
+
+## 2. Agent 负责什么
+
+它只修复可修复问题，不处理缺材料问题。
+
+可以修复：
+
+```text
+缺引用
+章节漏提 issue
+表达不够保守
+引用格式不规范
+内部表达泄露
+正面表述证据不足
+```
+
+不能修复：
+
+```text
+没有合同
+没有同意记录
+没有接收方认证
+没有数据清单
+事实冲突
+法规依据缺失
+```
+
+## 3. 预期实现逻辑
+
+```text
+输入：
+  chapters
+  consistency_issues
+  context_pack
+  section_generation_plan
+  allowed_facts
+  allowed_citations
+
+处理：
+  1. 将 consistency issues 分类：
+     - repairable
+     - unfixable
+  2. 对 repairable issue 定位到具体章节和句子
+  3. 调用 LLM 只改局部文本
+  4. 禁止新增事实、删除风险、改变证据状态
+  5. 修复后运行：
+     - consistency check
+     - new fact injection check
+     - risk downgrade check
+     - citation drift check
+  6. 如果仍不通过，标记 blocked 或转人工复核
+
+输出：
+  repaired_chapters
+  repair_log.json
+  unresolved_issues.json
+```
+
+## 4. 接入位置
+
+当前已经有：
+
+```text
+repair_chapters
+```
+
+建议升级为：
+
+```text
+ControlledRepairAgent
+```
+
+并加入四个后检查：
+
+```text
+new_fact_injection_check
+risk_downgrade_check
+citation_drift_check
+material_claim_check
+```
+
+---
+
+# 九、可以考虑但优先级较低的 Agent
+
+## 1. 材料清单 Agent
+
+当前有 `material_checklist`，但可以增强成材料补全 Agent。
+
+它根据 issues 自动生成：
+
+```text
+缺什么材料
+为什么需要
+对应报告章节
+对应法规依据
+优先级
+建议上传什么文件
+文件命名建议
+```
+
+适合用户侧交互。
+
+## 2. 用户追问 Agent
+
+当输入缺失时，不要一次性抛 30 个问题，而是智能追问最关键的 5 个。
+
+逻辑：
+
+```text
+先问影响文书生成和风险判断的关键字段
+后问格式性字段
+能从附件中推断的不问
+低优先级问题放到材料清单
+```
+
+## 3. 质量评分 Agent
+
+给最终报告打分：
+
+```text
+事实完整度
+证据充分度
+引用准确度
+模板覆盖度
+表达稳健性
+可申报程度
+```
+
+这个适合作为内部评分，不一定直接给用户看。
+
+---
+
+# 十、推荐的多 Agent 架构
+
+不要做成所有 agent 自由协作。建议仍然保留现有 pipeline，由 pipeline 调度 agent。
+
+也就是：
+
+```text
+WorkflowPipeline 是主控
+Agent 是某些复杂步骤里的专家工具
+```
+
+推荐结构：
+
+```text
+AssessmentRequest
+        ↓
+InputNormalizationAgent
+        ↓
+AttachmentParsingAgent
+        ↓
+FactBuilder
+        ↓
+DataClassificationAgent
+        ↓
+IssueBuilder
+        ↓
+EvidenceBuilder
+        ↓
+LegalCitationAgent
+        ↓
+DocumentPlanningAgent
+        ↓
+ExternalReportGenerator
+        ↓
+ExpressionCalibrationAgent
+        ↓
+ConsistencyChecker
+        ↓
+ControlledRepairAgent
+        ↓
+ReportRenderer
+```
+
+注意：**不要让 agent 决定主流程走向**。主流程仍然由 pipeline 控制。
+
+---
+
+# 十一、最优先落地顺序
+
+## 第一优先级：附件深度解析 Agent
+
+原因：当前文书质量最依赖附件证据。合同、隐私政策、同意记录、认证报告如果解析不好，后面 issue、evidence、report 都会空泛。
+
+预期效果：
+
+```text
+合同缺口更准
+同意记录判断更准
+接收方能力证明更准
+证据链更可追溯
+```
+
+## 第二优先级：数据定性与重识别风险 Agent
+
+原因：这是安全评估最核心的法律风险之一，也是规则最难写全的地方。
+
+预期效果：
+
+```text
+重要数据判断更稳
+敏感个人信息提示更准确
+匿名化风险不再泛泛而谈
+字段级风险清单更有价值
+```
+
+## 第三优先级：文书生成规划 Agent
+
+原因：当前生成容易“按 8 章写分析报告”，而不是严格按官方模板生成申报草案。
+
+预期效果：
+
+```text
+官方模板覆盖更完整
+章节内容更贴合
+风险和材料缺口进入正确位置
+AI 不再自由发挥
+```
+
+## 第四优先级：法律引用校验 Agent
+
+原因：引用已经有了，下一步要解决引用质量。
+
+预期效果：
+
+```text
+减少弱引用
+减少错引法规
+每个判断有更精准依据
+提升报告可信度
+```
+
+## 第五优先级：表达校准 + 受控修复 Agent
+
+原因：这是最终质量兜底，防止报告过度承诺、错误定性、修复漂移。
+
+预期效果：
+
+```text
+外部报告更稳妥
+内部风险不泄露
+正面结论更有证据边界
+repair 不会越修越错
+```
+
+---
+
+# 十二、最终建议：加 Agent 的核心不是“更智能”，而是“更可控”
+
+这里最合理的设计不是：
+
+```text
+让一个大 Agent 统管安全评估报告生成
+```
+
+而是：
+
+```text
+在现有 pipeline 中加入多个受控 specialist agent：
+  输入归一 agent
+  附件解析 agent
+  数据定性 agent
+  引用校验 agent
+  文书规划 agent
+  表达校准 agent
+  受控修复 agent
+```
+
+每个 agent 都必须有：
+
+```text
+明确输入
+明确输出
+明确边界
+明确禁止行为
+可追溯 trace
+可复核 JSON
+失败降级策略
+```
+
+一句话总结：
+
+```text
+当前系统的规则管线已经足够成型，最需要 agent 的地方不是路径判断，而是“模糊事实解析、附件证据抽取、数据定性、引用校验、文书规划、表达校准和受控修复”。这些地方加 agent 后，能把系统从“可生成报告”提升到“能生成有证据、有边界、可复核、接近正式草案的安全评估文书”。
+```

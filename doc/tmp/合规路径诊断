@@ -1,0 +1,837 @@
+这里需要先把边界说清楚：**合规路径诊断模块的主判断不能交给 agent。**
+
+预期文档已经明确：用户通过封闭式问题输入关键事实，系统严格按照决策树顺序执行，每一步判断都基于特定法律条款；当用户回答“不知道”时，才启动次级信息收集与判断流程。
+所以这个模块的核心原则应该是：
+
+```text id="oay35j"
+规则引擎负责最终路径判断
+Agent 负责“不确定事实的澄清、辅助判断、解释生成、证据追溯、报告表达”
+```
+
+换句话说，不应该做成：
+
+```text id="37sq59"
+用户输入 → 大 Agent 直接判断路径
+```
+
+而应该做成：
+
+```text id="5l6xxc"
+用户输入 → Agent 辅助补事实 / 判模糊项 → 规则引擎判路径 → Agent 解释和校验
+```
+
+---
+
+# 一、最值得加 Agent 的位置总览
+
+| 位置                       | 是否值得加 | 当前问题                                        | 加 Agent 后的收益                  |
+| ------------------------ | ----: | ------------------------------------------- | ----------------------------- |
+| 1. “不知道”辅助判断 Agent       |    极高 | 当前 `_normalize_answers()` 是静态补全，不是真正交互式辅助判断 | 解决用户不知道重要数据、个人信息、CIIO、豁免情形的问题 |
+| 2. 重要数据识别 Agent          |    极高 | 重要数据判断依赖用户自报，行业目录和数据特征理解不足                  | 能处理医疗、金融、汽车、地图、工业等模糊数据定性      |
+| 3. 个人信息 / 敏感个人信息识别 Agent |     高 | 当前主要靠枚举字段和数量，无法分析“匿名化/去标识化/可重识别”            | 降低匿名数据误判、敏感信息漏判               |
+| 4. 豁免情形判断 Agent          |     高 | 当前场景字段较粗，容易把可豁免场景默认推到 SCC/认证                | 更准确识别合同履约、人力资源、紧急情况、自贸区等豁免    |
+| 5. 多规则冲突复核 Agent         |    中高 | 当前第一条规则命中即返回，不能解释潜在冲突                       | 输出“命中规则 / 未命中规则 / 潜在风险”       |
+| 6. 法规依据解释 Agent          |    中高 | 当前法律依据多为规则内置静态列表                            | 让报告中的法条解释更贴合用户事实              |
+| 7. 诊断报告生成 Agent          |     高 | 当前报告模板化较强，不能完整呈现辅助判断过程                      | 生成更像预期的结构化诊断报告、逻辑树和后续行动       |
+| 8. 用户追问 Agent            |     高 | 一次性问卷可能让用户填不准                               | 用最少问题补齐关键事实，提升前端体验            |
+
+不建议加 Agent 的位置：
+
+```text id="0lwx7m"
+规则阈值判断
+路径最终决策
+API 路由
+PDF / HTML 渲染
+基础字段校验
+任务状态管理
+```
+
+这些位置确定性强，规则更可靠。
+
+---
+
+# 二、Agent 1：“不知道”辅助判断 Agent
+
+## 1. 为什么这里最需要 Agent
+
+预期流程反复强调：用户可能回答“不知道”，此时系统要启动次级信息收集与判断流程。比如：
+
+```text id="xyq2jj"
+重要数据不知道 → 询问行业领域 + 数据性质
+个人信息不知道 → 展示个人信息清单并引导核对
+CIIO 不确定 → 询问行业属性 + 是否收到主管部门认定通知
+豁免情形不确定 → 按各项豁免逐条细化询问
+```
+
+这些在预期文档里是明确要求。
+
+但当前代码主要是 `_normalize_answers()` 做静态推断：
+
+```text id="ncobg6"
+m3_processes_important_data == yes → q2_has_important_data = yes
+m3_processes_personal_info == no → q5_no_personal_info = yes
+m3_data_volume_range → 估算 q3_pii_count
+```
+
+这不是预期中的“辅助判断子流程”，而是后台字段补全。它无法和用户交互，也无法解释为什么建议用户把“不知道”改成“是/否”。
+
+## 2. Agent 负责什么
+
+这个 Agent 不直接输出最终路径，而是输出：
+
+```text id="hipx0v"
+原始不确定字段
+需要追问的问题
+用户补充回答
+辅助判断结果
+建议回填的核心字段
+判断理由
+不确定性提示
+```
+
+## 3. 预期实现逻辑
+
+```text id="2gbkj3"
+触发条件：
+  q1_is_ciio == unknown
+  q2_has_important_data == unknown
+  q5_no_personal_info == unknown
+  q6_scenario == unknown / other 且用户选择不确定
+  个人信息类型 == 不确定
+
+输入：
+  DiagnosisAnswers
+  当前问卷上下文
+  行业、数据类型、用途、接收方、数量
+  法规规则库 / 辅助判断知识库
+
+处理：
+  1. 找出 unknown 字段
+  2. 判断哪个 unknown 对路径影响最大
+  3. 生成 1-3 个最关键追问
+  4. 根据用户补充回答形成辅助判断
+  5. 生成建议回填字段：
+     - suggested_q1_is_ciio
+     - suggested_q2_has_important_data
+     - suggested_q5_no_personal_info
+     - suggested_sensitive_info_type
+     - suggested_exemption
+  6. 标注置信度和仍需人工确认的点
+
+输出：
+  assisted_answers_patch.json
+  auxiliary_judgment_trace.json
+  user_visible_guidance
+```
+
+## 4. 示例
+
+用户回答：
+
+```text id="1q6fr9"
+是否涉及重要数据：不知道
+行业：卫生健康
+数据：1.5 万名罕见病患者脱敏医疗记录 + 基因测序数据摘要
+用途：欧盟大学联合研究
+```
+
+Agent 输出：
+
+```json id="6r5f0p"
+{
+  "target_field": "q2_has_important_data",
+  "suggested_value": "yes",
+  "confidence": "MEDIUM",
+  "reasoning": [
+    "数据属于卫生健康领域",
+    "涉及1.5万名患者",
+    "包含罕见病医疗记录和基因测序数据摘要",
+    "可能符合族群生物特征数据或重要医疗健康数据特征"
+  ],
+  "user_guidance": "基于审慎原则，建议按可能涉及重要数据处理。最终仍应结合主管部门目录确认。",
+  "next_action": "引导用户回到主问题选择“是”或保留为“待确认但按重要数据从严处理”"
+}
+```
+
+这正好对应测试案例二：用户一开始回答“不知道”，系统通过辅助判断发现可能涉及重要数据，并建议按重要数据处理，随后主流程立即导向安全评估。【43†source】
+
+---
+
+# 三、Agent 2：重要数据识别 Agent
+
+## 1. 为什么非常值得加
+
+重要数据是合规路径诊断里最关键的短路条件之一。预期流程明确：如果用户选择“是”，主流程立即终止，输出“必须申报安全评估”；如果“不知道”，要询问行业和数据性质，结合行业重要数据特征库进行匹配分析。
+
+当前代码的判断比较粗：
+
+```text id="54bgj0"
+q2_has_important_data == yes
+m3_processes_important_data == yes
+m3_important_data_types 非空
+```
+
+但真实问题是：很多企业不知道自己的数据是不是重要数据。
+
+典型模糊场景：
+
+```text id="g302l6"
+医疗基因数据
+金融交易流水
+自动驾驶车辆轨迹
+高精度地图数据
+工业运行数据
+能源调度数据
+大规模用户行为数据
+科研数据
+```
+
+这些不能简单靠用户自报。
+
+## 2. Agent 负责什么
+
+它负责把“数据描述 + 行业 + 用途 + 数量 + 地域特征”映射到重要数据风险。
+
+## 3. 预期实现逻辑
+
+```text id="gcnqy9"
+输入：
+  industry
+  data_description
+  data_types
+  data_volume
+  transfer_purpose
+  m3_important_data_types
+  行业重要数据特征库
+  法规依据库
+
+处理：
+  1. 提取数据特征：
+     - 行业
+     - 数据对象
+     - 数据规模
+     - 是否群体性 / 区域性 / 系统性
+     - 是否涉及国家安全、公共利益、经济运行、公共安全
+     - 是否涉及基因、地图、金融、工业、能源等高敏领域
+  2. 与重要数据特征库匹配
+  3. 给出匹配等级：
+     - likely_important_data
+     - possible_important_data
+     - unlikely_important_data
+     - insufficient_information
+  4. 输出建议回填：
+     - yes
+     - no
+     - remain_unknown_but_conservative
+  5. 生成用户可理解解释
+
+输出：
+  important_data_assessment.json
+```
+
+## 4. 输出格式
+
+```json id="87lwca"
+{
+  "assessment_type": "important_data",
+  "result": "possible_important_data",
+  "suggested_answer": "yes",
+  "confidence": 0.72,
+  "matched_features": [
+    "卫生健康行业",
+    "涉及超过1万人的患者数据",
+    "包含基因测序数据摘要",
+    "用于国际联合医学研究"
+  ],
+  "legal_basis": [
+    "《促进和规范数据跨境流动规定》第七条",
+    "《数据安全法》第二十一条"
+  ],
+  "recommended_user_message": "根据您提供的信息，该数据可能涉及重要数据。基于审慎原则，建议按涉及重要数据处理，并在正式申报前结合主管部门目录进一步确认。"
+}
+```
+
+## 5. 接入位置
+
+```text id="n3q3ff"
+DiagnosisService._normalize_answers()
+        ↓
+ImportantDataAgent
+        ↓
+assisted_answers_patch
+        ↓
+_rule_match()
+```
+
+注意：Agent 只给建议值和理由，最终仍由规则引擎根据回填后的字段判定路径。
+
+---
+
+# 四、Agent 3：个人信息 / 敏感个人信息识别 Agent
+
+## 1. 为什么需要
+
+预期流程中，用户回答“不知道”时，系统需要展示个人信息清单，帮助用户判断是否包含姓名、电话、地址、账号、财产信息、行踪轨迹、健康信息、交易信息等；敏感个人信息还要核对生物识别、宗教信仰、医疗健康、金融账户、行踪轨迹、不满十四周岁未成年人信息等。
+
+当前实现的不足是：
+
+```text id="8k20wb"
+1. 主要靠用户选择 m3_personal_info_types / m3_sensitive_info_types
+2. 对匿名化、去标识化、可重识别的判断较弱
+3. 对“交易信息、车辆数据、设备ID、轨迹数据”等边界数据不够敏感
+```
+
+测试案例三中，用户一开始对是否包含个人信息回答“不知道”，系统应启动辅助判断，核对 VIN、车牌、驾驶员信息等是否去除且无法复原，最终导向不包含个人信息的豁免路径。【43†source】
+
+## 2. Agent 负责什么
+
+这个 Agent 处理两类问题：
+
+```text id="g8ps89"
+是否包含个人信息？
+是否包含敏感个人信息？
+匿名化是否足以让数据不再属于个人信息？
+```
+
+## 3. 预期实现逻辑
+
+```text id="c4nu5r"
+输入：
+  data_description
+  personal_info_types
+  sensitive_info_types
+  anonymization_description
+  industry
+  use_case
+
+处理：
+  1. 抽取可能识别自然人的字段
+  2. 判断是否存在直接标识符：
+     - 姓名、手机号、身份证、邮箱、账号、车牌、VIN等
+  3. 判断是否存在间接标识符：
+     - 设备ID、订单号、精确位置、时间戳、交易轨迹等
+  4. 判断是否涉及敏感个人信息：
+     - 医疗健康、金融账户、行踪轨迹、儿童信息、生物识别等
+  5. 判断匿名化是否达到“无法识别且不能复原”
+  6. 输出建议答案和风险提示
+
+输出：
+  personal_info_assessment.json
+  sensitive_info_assessment.json
+  anonymization_risk_note.json
+```
+
+## 4. 示例
+
+```json id="9dazk1"
+{
+  "data_description": "车辆传感器数据包，已去除 VIN、车牌、驾驶员信息，无法关联特定车辆或个人",
+  "personal_information_result": "unlikely",
+  "suggested_q5_no_personal_info": "yes",
+  "risk_note": "仍建议留存匿名化处理技术文档，证明无法识别特定个人或车辆。",
+  "legal_basis": [
+    "《个人信息保护法》第四条",
+    "《促进和规范数据跨境流动规定》第三条"
+  ]
+}
+```
+
+---
+
+# 五、Agent 4：豁免情形辅助判断 Agent
+
+## 1. 为什么需要
+
+预期流程要求：如果用户对豁免情形“不清楚/不确定”，系统要针对《规定》第五条、第六条列举的豁免逐条细化询问，包括合同履行、紧急情况、跨境人力资源管理、自贸区负面清单等。
+
+当前规则有豁免项：
+
+```text id="yp21j9"
+exemption_contract
+exemption_hr
+exemption_emergency
+exemption_legal_duty
+```
+
+但当前更多是基于 `q6_scenario` 直接判断。如果用户填 `other` 或不确定，系统容易默认走 `scc_or_certification`。
+
+这会造成过度保守：本来可能豁免的业务，被错误推到标准合同或认证。
+
+## 2. Agent 负责什么
+
+它负责判断用户场景是否可能落入豁免，并生成细化问题。
+
+## 3. 预期实现逻辑
+
+```text id="ttj8tz"
+输入：
+  transfer_purpose
+  q6_scenario
+  receiver_type
+  business_description
+  service_targets
+  data_types
+  region / free_trade_zone info
+
+处理：
+  1. 判断是否可能是合同履约：
+     - 跨境购物、支付、寄递、开户、预订、签证、考试等
+     - 是否“不出境则合同无法履行”
+  2. 判断是否可能是 HR 管理：
+     - 员工数据
+     - 集团内部
+     - 劳动规章制度 / 集体合同基础
+  3. 判断是否紧急情况：
+     - 生命健康、财产安全
+  4. 判断是否法定义务
+  5. 判断是否自贸区负面清单场景
+  6. 生成豁免候选和追问问题
+
+输出：
+  exemption_candidate_assessment.json
+```
+
+## 4. 输出示例
+
+```json id="ick04l"
+{
+  "candidate_exemptions": [
+    {
+      "type": "contract_performance",
+      "confidence": 0.64,
+      "missing_questions": [
+        "本次出境是否为履行用户主动发起的跨境购物合同所必需？",
+        "如果不向境外提供该数据，是否无法完成支付、寄递或售后服务？"
+      ]
+    }
+  ],
+  "recommended_next_question": "请确认本次出境是否为履行个人用户合同所必需，而不是用于合同履行后的营销或算法优化。"
+}
+```
+
+这对于测试案例一尤其重要。案例一中数据用于区域物流算法和精准营销，合同已经履行完毕，因此不属于合同履约豁免，最终应走标准合同/认证路径。【43†source】
+Agent 可以帮助区分：
+
+```text id="lyykl5"
+跨境购物合同履行必需
+≠
+合同履行完毕后的算法优化和营销
+```
+
+---
+
+# 六、Agent 5：多规则冲突与路径复核 Agent
+
+## 1. 为什么需要
+
+当前 `decision_tree.json` 是第一条命中即返回。这个适合确定性路径，但不利于解释复杂场景。
+
+例如同一场景可能同时出现：
+
+```text id="f54c7r"
+存在豁免表象
+但数量超过安全评估阈值
+用户说不涉及重要数据
+但数据描述高度疑似重要数据
+用户说匿名化
+但字段可能重识别
+非 CIIO
+但行业属于高敏领域
+```
+
+预期报告不仅要输出核心路径，还要展示判定逻辑树、逐条法规依据、核心风险提示和后续行动建议。【43†source】
+
+所以除了最终路径，还要说明：
+
+```text id="f464lf"
+命中了哪些规则？
+哪些规则未命中？
+哪些规则因信息不足无法判断？
+是否存在路径冲突？
+为什么最终选择这个路径？
+```
+
+## 2. Agent 负责什么
+
+这个 Agent 不改规则结果，而是复核和解释规则结果。
+
+## 3. 预期实现逻辑
+
+```text id="8kdapy"
+输入：
+  normalized_answers
+  all_rules
+  matched_rule
+  unmatched_rules
+  assisted_judgments
+  uncertainty_notes
+
+处理：
+  1. 对所有规则进行全量扫描，不仅第一条命中
+  2. 分类：
+     - matched
+     - not_matched
+     - uncertain
+     - conflicting
+  3. 检查最终路径是否和关键事实冲突
+  4. 生成路径复核说明
+  5. 输出逻辑树节点
+
+输出：
+  rule_audit_report.json
+  decision_logic_tree.json
+  path_review_notes.json
+```
+
+## 4. 示例逻辑树
+
+```json id="or9vfa"
+{
+  "logic_tree": [
+    {
+      "step": "重要数据",
+      "answer": "否",
+      "result": "继续下一步"
+    },
+    {
+      "step": "个人信息",
+      "answer": "是",
+      "result": "进入豁免判断"
+    },
+    {
+      "step": "豁免情形",
+      "answer": "均不属于",
+      "result": "进入CIIO判断"
+    },
+    {
+      "step": "CIIO",
+      "answer": "否",
+      "result": "进入数量判断"
+    },
+    {
+      "step": "一般个人信息数量",
+      "answer": "45万人",
+      "result": "触发标准合同或认证路径"
+    }
+  ],
+  "final_path": "scc_or_certification"
+}
+```
+
+这正对应预期案例一的逻辑链条：不涉及重要数据 → 涉及个人信息 → 不适用豁免 → 非 CIIO → 一般个人信息 45 万人 → 触发标准合同/认证路径。【43†source】
+
+---
+
+# 七、Agent 6：法规依据解释与引用校验 Agent
+
+## 1. 为什么需要
+
+当前规则会返回法律依据列表，但预期报告要求“逐条法规依据”，而且要解释为什么该条法规支撑当前路径。例如案例一重点引用并解释《促进和规范数据跨境流动规定》第八条；案例二重点引用第七条，并结合数据安全法和行业指南说明重要数据理由；案例三重点引用第三条和个保法第四条的匿名化定义。【43†source】
+
+当前如果只是：
+
+```text id="oi5gtz"
+legal_basis = ["《促进和规范数据跨境流动规定》第八条"]
+```
+
+不够。报告需要把：
+
+```text id="6m2gbd"
+用户事实
+规则条件
+法条要求
+路径结论
+```
+
+串起来。
+
+## 2. Agent 负责什么
+
+它负责把法条和用户事实做解释性绑定。
+
+## 3. 预期实现逻辑
+
+```text id="lkt3uc"
+输入：
+  DiagnosisResult
+  normalized_answers
+  matched_rule_id
+  legal_basis[]
+  decision_logic_tree
+
+处理：
+  1. 解析 matched_rule 对应法律依据
+  2. 判断该法律依据支撑哪一步：
+     - 重要数据安全评估
+     - 非个人信息豁免
+     - 合同履约豁免
+     - 10万-100万一般个人信息标准合同/认证
+     - 100万以上安全评估
+  3. 将用户事实代入解释
+  4. 生成面向用户的法规解释
+  5. 标记引用置信度
+
+输出：
+  legal_explanation_items.json
+```
+
+## 4. 示例
+
+```json id="72kc4l"
+{
+  "legal_basis": "《促进和规范数据跨境流动规定》第八条",
+  "applies_to": "一般个人信息10万人以上、不满100万人",
+  "user_facts": [
+    "非CIIO",
+    "不涉及重要数据",
+    "不适用豁免",
+    "一般个人信息约45万人"
+  ],
+  "explanation": "由于本次出境涉及一般个人信息，且自当年1月1日起累计人数约45万人，达到10万人以上但未达到100万人，在未适用豁免的情况下，应通过订立个人信息出境标准合同或个人信息保护认证路径。"
+}
+```
+
+---
+
+# 八、Agent 7：诊断报告生成 Agent
+
+## 1. 为什么需要
+
+当前 `DiagnosisReportRenderer` 已经能生成 8 节报告，但预期报告更强调：
+
+```text id="cvqd12"
+用户答案摘要
+辅助判断子流程记录
+判定逻辑树
+逐条法规依据
+核心风险提示
+后续行动建议
+```
+
+尤其是“不知道”场景，必须记录辅助判断的详细问答过程。测试案例二和三都要求报告包含辅助判断子流程中的详细问答记录。【43†source】
+
+当前报告如果只展示最终 q 字段，会丢失：
+
+```text id="sdyrll"
+用户最初回答不知道
+系统问了什么
+用户补充了什么
+系统为什么建议改为是/否
+```
+
+这会削弱可追溯性。
+
+## 2. Agent 负责什么
+
+报告生成 Agent 负责把诊断过程写成可读、可审计的报告。
+
+## 3. 预期实现逻辑
+
+```text id="w1a2c2"
+输入：
+  original_answers
+  normalized_answers
+  auxiliary_judgment_trace
+  rule_audit_report
+  decision_logic_tree
+  legal_explanation_items
+  DiagnosisResult
+
+处理：
+  1. 生成用户答案摘要表
+  2. 生成辅助判断记录
+  3. 生成判定逻辑树
+  4. 生成法规依据解释
+  5. 生成核心风险提示
+  6. 生成后续行动建议
+  7. 生成免责声明和复核提示
+
+输出：
+  diagnosis_report_sections.json
+  diagnosis_report.md/html/pdf
+```
+
+## 4. 预期报告结构
+
+```text id="i93u6x"
+一、诊断结论摘要
+二、用户答案摘要
+三、辅助判断过程记录
+四、判定逻辑树
+五、逐条法规依据说明
+六、核心风险提示
+七、后续行动建议
+八、系统生成说明与免责声明
+```
+
+---
+
+# 九、Agent 8：用户追问 Agent
+
+## 1. 为什么需要
+
+如果所有问题都一次性列出来，用户会觉得问卷很重；如果问题太少，又容易误判。
+
+追问 Agent 的目标是：
+
+```text id="wktp6f"
+用最少的问题补齐影响路径判断的关键事实
+```
+
+## 2. 预期实现逻辑
+
+```text id="zaj99y"
+输入：
+  current_answers
+  unknown_fields
+  rule_sensitivity_analysis
+
+处理：
+  1. 计算每个缺失字段对最终路径的影响
+  2. 优先追问影响最大的字段
+  3. 每轮最多问 1-3 个问题
+  4. 如果某个问题答案足以短路路径，立即停止追问
+  5. 把低优先级问题放进报告“待补充信息”
+
+输出：
+  next_best_questions.json
+```
+
+## 3. 示例
+
+如果用户：
+
+```text id="kbwqq9"
+重要数据 = 不知道
+个人信息 = 是
+PII 数量 = 45 万
+CIIO = 否
+```
+
+系统不应该先问合同、接收方、材料，而应该先问：
+
+```text id="j4w60x"
+请描述本次出境数据是否属于金融、医疗、汽车、地图、工业、能源等行业敏感数据？
+是否涉及群体性、区域性、系统性数据？
+是否已有行业主管部门认定为重要数据？
+```
+
+因为“是否重要数据”一旦是“是”，会直接短路到安全评估路径。
+
+---
+
+# 十、推荐落地架构
+
+不要让 Agent 接管整个诊断模块。正确架构是：
+
+```text id="ro2v4g"
+DiagnosisService 仍是主控
+decision_tree.json 仍是最终判断依据
+Agent 只作为辅助判断、复核、解释、报告生成工具
+```
+
+推荐流程：
+
+```text id="qoik01"
+用户填写问卷
+        ↓
+基础字段校验
+        ↓
+UnknownDetection
+        ↓
+如果存在 unknown：
+    UserQuestionAgent 生成追问
+    ImportantDataAgent / PIClassifyAgent / ExemptionAgent 辅助判断
+        ↓
+形成 assisted_answers_patch
+        ↓
+_normalize_answers 合并字段
+        ↓
+_rule_match 全量扫描规则
+        ↓
+MultiRuleReviewAgent 生成逻辑树和冲突说明
+        ↓
+LegalExplanationAgent 绑定法条和事实
+        ↓
+DiagnosisReportAgent 生成结构化报告
+```
+
+最终输出：
+
+```text id="qv4h8s"
+DiagnosisResult
+decision_logic_tree.json
+auxiliary_judgment_trace.json
+rule_audit_report.json
+legal_explanation_items.json
+diagnosis_report.html/pdf
+```
+
+---
+
+# 十一、最优先加的 Agent 顺序
+
+## 第一优先级：重要数据识别 Agent
+
+原因：重要数据是最高优先级短路条件。判断错了，整个路径都会错。
+
+能解决：
+
+```text id="dl7bm4"
+医疗基因数据
+金融流水
+汽车轨迹
+高精度地图
+工业运行数据
+用户不知道是否重要数据
+```
+
+## 第二优先级：“不知道”辅助判断 Agent
+
+原因：这是预期文档明确要求，但当前实现主要靠静态 `_normalize_answers()` 补全，不是真正的子流程。
+
+能解决：
+
+```text id="x1e403"
+不知道是否个人信息
+不知道是否重要数据
+不知道是否 CIIO
+不知道是否豁免
+```
+
+## 第三优先级：个人信息 / 匿名化识别 Agent
+
+原因：豁免路径很依赖“不包含个人信息或重要数据”的判断。匿名化如果误判，会直接影响合规结论。
+
+能解决：
+
+```text id="se3q4a"
+匿名化地图数据
+车辆传感器数据
+设备ID
+订单号
+去标识化日志
+```
+
+## 第四优先级：豁免情形判断 Agent
+
+原因：避免把本来可以豁免的场景默认推到 SCC/认证。
+
+能解决：
+
+```text id="e995ml"
+合同履约是否必需
+HR 管理是否符合条件
+紧急情况是否成立
+自贸区负面清单是否相关
+```
+
+## 第五优先级：报告生成和法规解释 Agent
+
+原因：这提升用户理解和系统展示质量，但它不直接决定路径，因此优先级略低于事实判断类 Agent。
+
+---
+
+# 十二、一句话总结
+
+当前合规路径诊断模块最需要加 Agent 的地方，不是规则判断本身，而是**用户回答“不知道”时的辅助判断、重要数据识别、个人信息/匿名化识别、豁免情形细化、多规则复核、法规解释和诊断报告生成**。加 Agent 后，系统能从“静态问卷 + 规则匹配”升级为“交互式事实澄清 + 规则化路径判定 + 可追溯解释报告”，既保持规则判断的确定性，又解决模糊场景下用户填不准、系统解释不充分、报告证据链不足的问题。
