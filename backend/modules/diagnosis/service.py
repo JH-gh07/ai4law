@@ -6,6 +6,7 @@ from backend.common.llm.client import LLMClient
 from backend.common.risk.scoring import risk_level
 from backend.core.settings import get_settings
 from backend.modules.diagnosis.schema import DiagnosisAnswers, DiagnosisResult
+from backend.modules.diagnosis.agents import create_diag_agents
 
 
 _RATIONALE_I18N = {
@@ -22,6 +23,7 @@ class DiagnosisService:
         self.tree_path = tree_path or str(Path(__file__).with_name("decision_tree.json"))
         self._tree = self._load_tree(self.tree_path)
         self._llm_client = LLMClient(get_settings())
+        self.agents = create_diag_agents(self._llm_client)
 
     @staticmethod
     def _load_tree(tree_path: str) -> dict:
@@ -30,6 +32,63 @@ class DiagnosisService:
 
     def evaluate(self, answers: DiagnosisAnswers) -> DiagnosisResult:
         answers = self._normalize_answers(answers)
+
+        # ── Agent-assisted fact clarification for unknown fields ──
+        agent_trace: dict = {}
+        payload = answers.model_dump()
+
+        # Agent 2 (P0): ImportantDataAgent — when q2 is still unknown
+        if answers.q2_has_important_data.value == "unknown":
+            imp_result = self.agents["important_data"].run(
+                industry=answers.m1_industry,
+                data_desc=f"{answers.q8_purpose} {str(answers.m3_personal_info_types)}",
+                data_types=list(answers.m3_personal_info_types or []),
+                important_data_types=list(answers.m3_important_data_types or []),
+                purpose=answers.q8_purpose,
+                volume_range=str(answers.m3_data_volume_range or ""),
+                processes_important_data=str(answers.m3_processes_important_data or ""),
+            )
+            if imp_result:
+                agent_trace["important_data"] = imp_result
+                suggested = imp_result.get("suggested_answer", "unknown")
+                if suggested in ("yes", "no"):
+                    payload["q2_has_important_data"] = suggested
+                    answers = DiagnosisAnswers(**payload)
+
+        # Agent 3 (P2): PIClassifyAgent — when q5 is still unknown
+        if answers.q5_no_personal_info.value == "unknown":
+            pi_result = self.agents["pi_classify"].run(
+                data_desc=f"{answers.q8_purpose} {str(answers.m3_personal_info_types)}",
+                personal_info_types=list(answers.m3_personal_info_types or []),
+                sensitive_info_types=list(answers.m3_sensitive_info_types or []),
+                anonymization_desc=str(answers.m3_retention_desc or ""),
+                processes_personal_info=str(answers.m3_processes_personal_info or ""),
+                industry=answers.m1_industry,
+                use_case=str(answers.q6_scenario.value),
+            )
+            if pi_result:
+                agent_trace["pi_classify"] = pi_result
+                suggested = pi_result.get("suggested_q5_no_personal_info", "unknown")
+                if suggested in ("yes", "no"):
+                    payload["q5_no_personal_info"] = suggested
+                    answers = DiagnosisAnswers(**payload)
+
+        # Agent 4 (P3): ExemptionAgent — when scenario is "other" (may miss exemption)
+        if answers.q6_scenario.value == "other":
+            ex_result = self.agents["exemption"].run(
+                scenario="other",
+                purpose=answers.q8_purpose,
+                data_desc=str(answers.m3_personal_info_types),
+                receiver_type=answers.q7_receiver_type.value,
+                receiver_name=str(answers.m4_cross_border_regions or ""),
+                is_intra_group=answers.q7_receiver_type.value == "intra_group",
+                pii_count=answers.q3_pii_count,
+                spi_count=answers.q4_spi_count,
+            )
+            if ex_result:
+                agent_trace["exemption"] = ex_result
+
+        # ── Decision tree ──
         for rule in self._tree["rules"]:
             when = rule["when"]
             if self._rule_match(when, answers):
@@ -41,6 +100,31 @@ class DiagnosisService:
             if inferred is not None:
                 return inferred
 
+        # ── Attach agent findings to uncertainty notes ──
+        agent_notes: list[str] = []
+        if agent_trace.get("important_data"):
+            ad = agent_trace["important_data"]
+            agent_notes.append(
+                f"[Agent] 重要数据辅助判断: {ad.get('result','?')} "
+                f"(置信度 {ad.get('confidence',0):.0%}), "
+                f"建议值: q2={ad.get('suggested_answer','?')}"
+            )
+        if agent_trace.get("pi_classify"):
+            pd = agent_trace["pi_classify"]
+            agent_notes.append(
+                f"[Agent] 个人信息辅助判断: {pd.get('personal_information_result','?')}, "
+                f"重识别风险: {pd.get('re_identification_risk','?')}"
+            )
+        if agent_trace.get("exemption"):
+            ed = agent_trace["exemption"]
+            cands = ed.get("candidate_exemptions", [])
+            if cands:
+                top = cands[0]
+                agent_notes.append(
+                    f"[Agent] 豁免情形辅助判断: {top.get('type','?')} "
+                    f"(置信度 {top.get('confidence',0):.0%})"
+                )
+
         default = self._tree["default"]
         return self._build_result(
             answers,
@@ -50,6 +134,7 @@ class DiagnosisService:
             conclusion_source="rule",
             confidence="MEDIUM",
             matched_rule_id="default",
+            uncertainty_notes=agent_notes if agent_notes else None,
         )
 
     @staticmethod
