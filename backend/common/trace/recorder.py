@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 def _utc_now_iso() -> str:
@@ -66,11 +66,13 @@ class TraceEvent:
 class TraceRecorder:
     """Write step-by-step trace payloads as JSON files under a run directory."""
 
-    def __init__(self, trace_dir: Path) -> None:
+    def __init__(self, trace_dir: Path, task_id: str = "") -> None:
         self.trace_dir = trace_dir
         self.trace_dir.mkdir(parents=True, exist_ok=True)
         self._seq = 0
         self._events: list[TraceEvent] = []
+        self._subscribers: list[Callable] = []  # Callable[[RunEvent], None]
+        self._task_id = task_id
 
     def record(self, name: str, payload: dict[str, Any]) -> Path:
         self._seq += 1
@@ -80,7 +82,30 @@ class TraceRecorder:
         to_write = {"name": name, "seq": self._seq, "created_at": _utc_now_iso(), "payload": payload}
         path.write_text(json.dumps(to_write, ensure_ascii=False, indent=2), encoding="utf-8")
         self._events.append(TraceEvent(seq=self._seq, name=name, path=str(path), created_at=to_write["created_at"]))
+        # ── 新增：发布 RunEvent 给订阅者 ──
+        if self._subscribers:
+            from backend.common.trace.events import RunEvent
+            event_type = _NAME_TO_EVENT_TYPE.get(name, "status")
+            run_event = RunEvent(
+                task_id=self._task_id,
+                seq=self._seq,
+                event_type=event_type,
+                timestamp=to_write["created_at"],
+                summary=payload.get("summary", name),
+                detail=payload.get("detail"),
+                level=payload.get("level", "audit"),
+            )
+            for sub in self._subscribers:
+                try:
+                    sub(run_event)
+                except Exception:
+                    pass  # 订阅者异常不影响主流程
+
         return path
+
+    def subscribe(self, callback: Callable) -> None:
+        """注册事件订阅者。callback 接收 RunEvent 实例。"""
+        self._subscribers.append(callback)
 
     def write_manifest(self) -> Path:
         path = self.trace_dir / "manifest.json"
