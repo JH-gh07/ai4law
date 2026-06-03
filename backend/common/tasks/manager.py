@@ -78,6 +78,9 @@ class InMemoryTaskManager:
         now = _utc_now_iso()
         task_id = str(uuid.uuid4())
 
+        # 将 task_id 注入 TraceRecorder，使 record() 发布的 RunEvent 带正确的 task_id
+        trace_recorder._task_id = task_id
+
         # 将 SSEManager 注册为 TraceRecorder 订阅者
         from backend.common.events.manager import get_ssemanager
         sm = get_ssemanager()
