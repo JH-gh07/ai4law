@@ -47,7 +47,7 @@ DEFAULT_MODULE_CATALOG = {
             "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
             "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
             "jurisdiction": "eu",
-            "production_enabled": False,
+            "production_enabled": True,
             "requires_standard_clause_index": True,
             "template_policy": "official_only",
         },

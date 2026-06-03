@@ -72,7 +72,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
   {
     id: "eu_scc",
     jurisdiction: "EU",
-    module: "scc",
+    module: "eu_scc",
     workspaceStyle: "eu_scc",
     title: { zh: "SCC 审查", en: "SCC Review" },
     subtitle: { zh: "按 GDPR SCC 模块进行条款审查", en: "Clause review aligned with GDPR SCC modules" },

@@ -122,6 +122,15 @@ const MODULES: ModuleDefinition[] = [
     asyncRetryEndpoint: (taskId) => `/api/v1/us_14117/tasks/${taskId}/retry`
   },
   {
+    key: "eu_scc",
+    label: "EU_SCC",
+    jurisdiction: "EU",
+    syncEndpoint: "/api/v1/eu_scc/generate",
+    asyncSubmitEndpoint: "/api/v1/eu_scc/generate_async",
+    asyncStatusEndpoint: (taskId) => `/api/v1/eu_scc/tasks/${taskId}`,
+    asyncRetryEndpoint: (taskId) => `/api/v1/eu_scc/tasks/${taskId}/retry`
+  },
+  {
     key: "cpra",
     label: "CPRA",
     jurisdiction: "US",

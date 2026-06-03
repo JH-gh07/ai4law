@@ -5,6 +5,7 @@ from backend.modules.cn_flow.router import router as cn_flow_router
 from backend.modules.cpra.router import router as cpra_router
 from backend.modules.dpia.router import router as dpia_router
 from backend.modules.diagnosis.router import router as diagnosis_router
+from backend.modules.eu_scc.router import router as eu_scc_router
 from backend.modules.pipia.router import router as pipia_router
 from backend.modules.scc.router import router as scc_router
 from backend.modules.tia.router import router as tia_router
@@ -19,6 +20,7 @@ app.include_router(scc_router, prefix="/api/v1")
 app.include_router(pipia_router, prefix="/api/v1")
 app.include_router(bcr_router, prefix="/api/v1")
 app.include_router(dpia_router, prefix="/api/v1")
+app.include_router(eu_scc_router, prefix="/api/v1")
 app.include_router(tia_router, prefix="/api/v1")
 app.include_router(cn_flow_router, prefix="/api/v1")
 app.include_router(cpra_router, prefix="/api/v1")

@@ -13,7 +13,7 @@ const ENDPOINTS: Record<ModuleKey, string> = {
   cn_flow: "/api/v1/cn-flow/generate",
   cpra: "/api/v1/cpra/generate",
   us_14117: "/api/v1/us_14117/generate"
-};
+  eu_scc: "/api/v1/eu_scc/generate",
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

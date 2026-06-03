@@ -96,6 +96,7 @@ const MODULE_TEMPLATE_ID_MAP: Record<string, string> = {
   cn_flow: "us_14117",
   cpra: "us_cpra",
   us_14117: "us_14117",
+  eu_scc: "eu_scc",
 };
 
 const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
@@ -110,6 +111,7 @@ const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
   cn_flow: "US",
   cpra: "US",
   us_14117: "US",
+  eu_scc: "EU",
 };
 
 function normalizePanelState(raw: unknown): PanelState {

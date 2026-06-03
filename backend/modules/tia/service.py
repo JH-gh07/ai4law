@@ -18,6 +18,7 @@ from backend.modules.tia.country_risk import TIACountryRiskAssessor
 from backend.modules.tia.data_sensitivity import TIADataSensitivity
 from backend.modules.tia.measure_sufficiency import TIAMeasureSufficiency
 from backend.modules.tia.route_decider import TIARouteDecider
+from backend.modules.tia.agents import create_tia_agents
 from backend.modules.tia.schema import (
     TIAAsyncAccepted, TIAAsyncStatus, TIAChapter, TIARequest, TIAResult,
 )
@@ -49,6 +50,7 @@ class TIAService:
         self.data_sensitivity = TIADataSensitivity()
         self.measure_sufficiency = TIAMeasureSufficiency()
         self.attachment_evidence = TIAAttachmentEvidence(parser=self.parser)
+        self.agents = create_tia_agents(llm_client)
 
     def generate_report(self, payload: TIARequest) -> TIAResult:
         # ── Structured assessment (NEW) ──
@@ -87,14 +89,43 @@ class TIAService:
             # Fallback: original keyword-based assessment
             level = self._resolve_risk_level(payload.third_country_assessment, payload.final_conclusion)
 
-        # ── Regulation retrieval (enhanced) ──
+        # ── Agent 1: RAG Planning — multi-query targeted retrieval ──
         dest = ""
         if payload.structured_input:
             dest = payload.structured_input.destination_country or payload.structured_input.importer_country
-        regs = retrieve_regulations(
-            f"TIA EDPB transfer tool {payload.transfer_tool} {dest} third country law assessment",
-            top_k=5, jurisdiction="eu", path="all",
+        agent_rag = self.agents["rag_planning"].run(
+            transfer_tool=payload.transfer_tool, dest_country=dest,
+            data_categories=list(payload.structured_input.data_categories) if payload.structured_input else [],
+            sensitivity=data_sens.get("sensitivity", "unknown"),
+            country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
+            has_spi=payload.structured_input.has_special_category_data if payload.structured_input else False,
+            gov_access_risk=country_risk_result.gov_access_risk if country_risk_result else False,
+            route=route.route if route else "unknown",
         )
+        # Collect results from all planned queries
+        all_regs: list = []
+        reg_queries = agent_rag.get("queries", [])
+        for q in reg_queries[:4]:
+            try:
+                hits = retrieve_regulations(q["query"], top_k=3, jurisdiction="eu", path="all")
+                all_regs.extend(hits)
+            except Exception:
+                pass
+        # Fallback: single query if agent produced no queries
+        if not all_regs:
+            all_regs = retrieve_regulations(
+                f"TIA EDPB transfer tool {payload.transfer_tool} {dest} third country law assessment",
+                top_k=5, jurisdiction="eu", path="all",
+            )
+        # Deduplicate by source_id
+        seen_ids = set()
+        regs = []
+        for r in all_regs:
+            rid = getattr(r, "id", str(r))
+            if rid not in seen_ids:
+                seen_ids.add(rid)
+                regs.append(r)
+        regs = regs[:8]
         citations = [f"{item.title}{item.article}" for item in regs]
         reg_snippet = "\n".join(
             f"- {item.title}{item.article}：{(item.content or '')[:120]}"
@@ -111,6 +142,31 @@ class TIAService:
                 attachment_evidences.append(self.attachment_evidence.extract(att))
             except (FileNotFoundError, ValueError) as exc:
                 attachment_notes.append(f"{att.file_name}: [parse skipped] {exc}")
+                attachment_evidences.append({"parse_error": True})
+
+        # ── Agent 2: Attachment Review — deep evidence quality assessment ──
+        ta_ev = next((e for e in attachment_evidences if e.get("role") == "transfer_agreement"), None)
+        cl_ev = next((e for e in attachment_evidences if e.get("role") == "country_law_analysis"), None)
+        tc_ev = next((e for e in attachment_evidences if e.get("role") == "technical_control_doc"), None)
+        si_summary = {}
+        if payload.structured_input:
+            si_summary = {
+                "encryption_before_transfer": payload.structured_input.encryption_before_transfer,
+                "key_managed_in_eu": payload.structured_input.key_managed_in_eu,
+                "has_secure_enclave": payload.structured_input.has_secure_enclave,
+                "has_key_separation": payload.structured_input.has_key_separation,
+            }
+        agent_att = self.agents["attachment_review"].run(
+            transfer_agreement_evidence=ta_ev,
+            country_law_evidence=cl_ev,
+            technical_control_evidence=tc_ev,
+            structured_input_summary=si_summary,
+        )
+        # Inject evidence review findings into attachment_notes for report display
+        for conflict in agent_att.get("conflicts", []):
+            attachment_notes.append(f"[证据冲突] {conflict}")
+        for missing in agent_att.get("missing_evidence", []):
+            attachment_notes.append(f"[缺失证据] {missing}")
 
         # ── Context block ──
         context_block = self._build_context(payload, level, route, country_risk_result,
@@ -124,6 +180,32 @@ class TIAService:
             else:
                 content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(TIAChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=level))
+
+        # ── Agent 3: DPO Review — second opinion quality gate ──
+        dpo_review = self.agents["dpo_review"].run(
+            route=route.route if route else "unknown",
+            country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
+            sensitivity=data_sens.get("sensitivity", "unknown"),
+            measure_overall=measure_overall if (payload.structured_input and measure_overall) else "unknown",
+            effective_risk=effective_risk if payload.structured_input else level,
+            issues=[],
+            chapter_summaries=[{
+                "no": ch.chapter_no, "title": ch.title, "content": ch.content[:300],
+            } for ch in chapters],
+        )
+        # Inject DPO review findings
+        if dpo_review.get("non_reliance_warning_needed"):
+            chapters[0].content = (
+                "⚠️ 重要警告：不应仅依赖本TIA草案启动传输。"
+                "建议在实施前寻求主管监管机构指导或批准。\n\n" + chapters[0].content
+            )
+        if dpo_review.get("dpo_position"):
+            chapters[0].content += f"\n\n**DPO意见**: {dpo_review['dpo_position']}"
+        if dpo_review.get("mandatory_conditions"):
+            chapters[5].content += (
+                "\n\n**强制前置条件**:\n" +
+                "\n".join(f"- {c}" for c in dpo_review["mandatory_conditions"])
+            )
 
         # ── Consistency ──
         issues = self._check_consistency(payload, level, route, country_risk_result,

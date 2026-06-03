@@ -1,0 +1,383 @@
+"""EU SCC document parser — extracts structured SCC from raw text.
+
+Uses regex + heuristics to identify:
+- Module Type (One/Two/Three/Four)
+- Clauses 1-18
+- Annex I.A, I.B, II, III
+- Parties, transfer descriptions, TOMs, sub-processors
+"""
+
+from __future__ import annotations
+
+import re
+
+from backend.modules.eu_scc.schema import (
+    SCCAnnexIA,
+    SCCAnnexIB,
+    SCCAnnexII,
+    SCCAnnexIII,
+    SCCClause,
+    SCCDocument,
+    SCCParty,
+    SCCTransferChain,
+)
+
+# ═══════════════════════════════════════════════════════════════════════
+# Clause titles from EU 2021/914 — used for section splitting
+# ═══════════════════════════════════════════════════════════════════════
+
+_SCC_CLAUSE_TITLES: dict[int, list[str]] = {
+    1: ["purpose and scope", "purpose", "Purpose and scope", "Clause 1"],
+    2: ["effect and invariability", "effect", "Effect and invariability", "Clause 2"],
+    3: ["third-party beneficiaries", "third party", "Third-party beneficiaries", "Clause 3"],
+    4: ["interpretation", "Interpretation", "Clause 4"],
+    5: ["hierarchy", "Hierarchy", "Clause 5"],
+    6: ["description of the transfer", "description of transfer", "Description of the transfer(s)", "Clause 6"],
+    7: ["docking clause", "Docking Clause", "docking", "Clause 7"],
+    8: ["data protection safeguards", "data protection", "safeguards", "Clause 8"],
+    9: ["use of sub-processors", "sub-processors", "sub processors", "use of subprocessors", "Clause 9"],
+    10: ["data subject rights", "data subject", "Clause 10"],
+    11: ["redress", "Redress", "Clause 11"],
+    12: ["liability", "Liability", "Clause 12"],
+    13: ["supervision", "Supervision", "Clause 13"],
+    14: ["local laws and practices", "local laws", "Clause 14"],
+    15: ["access by public authorities", "public authorities", "government access", "Clause 15"],
+    16: ["non-compliance", "non compliance", "Clause 16"],
+    17: ["governing law", "governing", "Governing law", "Clause 17"],
+    18: ["choice of forum and jurisdiction", "choice of forum", "jurisdiction", "Clause 18"],
+}
+
+_ANNEX_PATTERNS: dict[str, list[str]] = {
+    "annex_ia": [
+        "ANNEX I", "Annex I", "annex i", "Annex IA", "ANNEX IA",
+        "Annex I\\.A", "Annex I-A", "List of Parties",
+        "A\\.\\s*LIST OF PARTIES", "ANNEX I\\s*[–\\-]\\s*LIST OF PARTIES",
+    ],
+    "annex_ib": [
+        "Annex I\\.B", "ANNEX I\\.B", "Annex I-B", "ANNEX I-B",
+        "Annex IB", "DESCRIPTION OF TRANSFER",
+        "B\\.\\s*DESCRIPTION OF", "DESCRIPTION OF THE TRANSFER",
+    ],
+    "annex_ii": [
+        "ANNEX II", "Annex II", "annex ii",
+        "TECHNICAL AND ORGANISATIONAL MEASURES",
+        "Technical and Organisational Measures",
+    ],
+    "annex_iii": [
+        "ANNEX III", "Annex III", "annex iii",
+        "LIST OF SUB[-\\s]?PROCESSORS",
+        "List of sub-processors", "List of Sub[Pp]rocessors",
+    ],
+}
+
+_MODULE_PATTERNS = [
+    (r"MODULE\s*(ONE|1)", "Module One"),
+    (r"MODULE\s*(TWO|2)", "Module Two"),
+    (r"MODULE\s*(THREE|3)", "Module Three"),
+    (r"MODULE\s*(FOUR|4)", "Module Four"),
+    (r"Module\s*(One|1)", "Module One"),
+    (r"Module\s*(Two|2)", "Module Two"),
+    (r"Module\s*(Three|3)", "Module Three"),
+    (r"Module\s*(Four|4)", "Module Four"),
+]
+
+_PARTY_ROLE_PATTERNS = [
+    r"(?:data\s*)?(exporter|data\s*exporter).*?(?:controller|processor)",
+    r"(?:data\s*)?(importer|data\s*importer).*?(?:controller|processor)",
+    r"(controller|processor).*?(?:exporter|data exporter)",
+    r"(controller|processor).*?(?:importer|data importer)",
+]
+
+
+def _normalize(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip().lower()
+
+
+def _find_module_type(text: str) -> str:
+    """Extract SCC module type from document text."""
+    for pattern, module_name in _MODULE_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return module_name
+    return ""
+
+
+def _split_sections(text: str) -> dict[str, str]:
+    """Split SCC document into clause and annex sections."""
+    sections: dict[str, str] = {"preamble": "", "clauses": "", "annexes": ""}
+
+    # Find annex boundaries
+    annex_starts: list[tuple[int, str]] = []
+    for annex_key, patterns in _ANNEX_PATTERNS.items():
+        for pat in patterns:
+            m = re.search(pat, text, re.IGNORECASE)
+            if m:
+                annex_starts.append((m.start(), annex_key))
+                break
+
+    annex_starts.sort()
+    if annex_starts:
+        first_annex = annex_starts[0][0]
+        sections["clauses"] = text[:first_annex].strip()
+        remaining = text[first_annex:]
+        for i, (pos, key) in enumerate(annex_starts):
+            start = pos - first_annex
+            end = annex_starts[i + 1][0] - first_annex if i + 1 < len(annex_starts) else len(remaining)
+            sections[key] = remaining[start:end].strip()
+    else:
+        sections["clauses"] = text
+
+    return sections
+
+
+def _extract_clauses(clause_text: str) -> list[SCCClause]:
+    """Extract individual clauses from the clauses section."""
+    clauses: list[SCCClause] = []
+
+    # Try to split by numbered clauses
+    clause_splits: list[tuple[int, str, str]] = []
+    for clause_no in range(1, 19):
+        patterns = _SCC_CLAUSE_TITLES.get(clause_no, [f"Clause {clause_no}", f"clause {clause_no}"])
+        for pat in patterns:
+            m = re.search(rf"({re.escape(pat)})\b", clause_text, re.IGNORECASE)
+            if m:
+                start = max(0, m.start() - 20)
+                clause_splits.append((start, f"Clause {clause_no}", f"Clause {clause_no}"))
+                break
+
+    clause_splits.sort()
+
+    if not clause_splits:
+        # Fallback: look for "Clause N" or "clause n" patterns
+        for m in re.finditer(r"[Cc]lause\s+(\d+)", clause_text):
+            clause_no = int(m.group(1))
+            if 1 <= clause_no <= 18:
+                clause_splits.append((m.start(), f"Clause {clause_no}", f"Clause {clause_no}"))
+
+        clause_splits.sort()
+
+    if clause_splits:
+        for i, (pos, title, _) in enumerate(clause_splits):
+            end_pos = clause_splits[i + 1][0] if i + 1 < len(clause_splits) else len(clause_text)
+            content = clause_text[pos:end_pos].strip()
+            clause_no_match = re.search(r"[Cc]lause\s+(\d+)", title)
+            clause_no = int(clause_no_match.group(1)) if clause_no_match else 0
+            clauses.append(SCCClause(clause_no=clause_no, title=title, content=content))
+    else:
+        # No clause structure found — treat entire text as single block
+        pass
+
+    return clauses
+
+
+def _extract_annex_ia(text: str) -> SCCAnnexIA:
+    """Extract Annex I.A — List of Parties."""
+    parties: list[SCCParty] = []
+
+    # Look for party blocks
+    party_blocks = re.split(r"(?i)(?:data\s*)?exporter\s*[:\-]", text)
+    if len(party_blocks) < 2:
+        party_blocks = re.split(r"(?i)(?:data\s*)?importer\s*[:\-]", text)
+
+    for block in party_blocks[1:]:
+        block = block.strip()[:500]
+        party = SCCParty()
+
+        # Extract name
+        name_match = re.search(r"(?:name|名称)[:\s]*(.+)", block, re.IGNORECASE)
+        if name_match:
+            party.name = name_match.group(1).strip()[:200]
+
+        # Extract address
+        addr_match = re.search(r"(?:address|地址)[:\s]*(.+)", block, re.IGNORECASE)
+        if addr_match:
+            party.address = addr_match.group(1).strip()[:300]
+
+        # Check for incomplete info
+        if re.search(r"see\s+(?:master\s+service\s+agreement|MSA)", block, re.IGNORECASE):
+            party.is_incomplete = True
+
+        parties.append(party)
+
+    return SCCAnnexIA(parties=parties)
+
+
+def _extract_annex_ib(text: str) -> SCCAnnexIB:
+    """Extract Annex I.B — Description of Transfer."""
+    ib = SCCAnnexIB()
+
+    patterns = {
+        "data_subjects": [(r"(?:data\s*)?(?:subjects|categories\s*of\s*data\s*subjects)\s*[:\-]\s*(.+)", re.IGNORECASE)],
+        "data_categories": [(r"(?:personal\s*)?data\s*(?:categories\s*)?(?:transferred\s*)?\s*[:\-]\s*(.+)", re.IGNORECASE), (r"data\s*categories\s*[:\-]\s*(.+)", re.IGNORECASE), (r"categories\s*of\s*(?:personal\s*)?data\b[:\-]?\s*(.+)", re.IGNORECASE)],
+        "processing_purpose": [(r"(?:purpose|purposes?)\s*(?:of\s*(?:the\s*)?transfer|data\s*processing)?\s*[:\-]\s*(.+)", re.IGNORECASE)],
+        "retention_period": [(r"(?:retention|period|duration)\s*[:\-]\s*(.+)", re.IGNORECASE)],
+        "transfer_frequency": [(r"(?:frequency|transfer\s*frequency)\s*[:\-]\s*(.+)", re.IGNORECASE)],
+    }
+
+    for field, pattern_list in patterns.items():
+        for pat_tuple in pattern_list:
+            if isinstance(pat_tuple, tuple):
+                pattern, flags = pat_tuple[0], pat_tuple[1] if len(pat_tuple) > 1 else 0
+            else:
+                pattern, flags = pat_tuple, 0
+            m = re.search(pattern, text, flags)
+            if m:
+                setattr(ib, field, m.group(1).strip()[:500])
+                break
+
+    # Check for special category data
+    for m in re.finditer(
+        r"(?:special\s*categor(?:y|ies)\s*(?:of\s*)?(?:personal\s*)?data|sensitive\s*data|health\s*data|genetic|biometric|religious|political|ethnic|trade\s*union)",
+        text, re.IGNORECASE
+    ):
+        ib.special_category_data.append(m.group(0))
+
+    # Check for vague descriptions
+    if re.search(r"order\s*history\s*data", text, re.IGNORECASE):
+        if not any("order" in cat.lower() for cat in ib.special_category_data):
+            pass  # Flagged in rule engine
+
+    return ib
+
+
+def _extract_annex_ii(text: str) -> SCCAnnexII:
+    """Extract Annex II — Technical and Organisational Measures."""
+    tom_items: list[str] = []
+    supp_items: list[str] = []
+
+    # List items
+    for m in re.finditer(r"(?:^|\n)\s*[-•*]\s*(.+)", text):
+        item = m.group(1).strip()[:300]
+        if any(kw in item.lower() for kw in ("encryption", "tls", "aes", "access control", "pseudonymi", "audit", "log", "firewall")):
+            tom_items.append(item)
+        else:
+            tom_items.append(item)
+
+    # Supplementary measures (Schrems II)
+    for kw in ("supplement", "additional", "further measure", "schrems", "onward transfer restriction"):
+        if kw in text.lower():
+            for m in re.finditer(rf"{kw}[^.]*\.", text, re.IGNORECASE):
+                supp_items.append(m.group(0).strip())
+
+    return SCCAnnexII(tom_items=tom_items, supplementary_measures=supp_items)
+
+
+def _extract_annex_iii(text: str) -> SCCAnnexIII:
+    """Extract Annex III — List of Sub-Processors."""
+    sub_processors: list[dict] = []
+
+    for m in re.finditer(r"(?:^|\n)\s*[-•*]\s*(.+)", text):
+        entry = m.group(1).strip()
+        sub_proc = {"name": entry[:200]}
+
+        # Try to extract additional info
+        loc_match = re.search(r"(?:located|location|country|地址)\s*(?:in|:)?\s*(.+)", entry, re.IGNORECASE)
+        if loc_match:
+            sub_proc["location"] = loc_match.group(1).strip()[:100]
+
+        sub_processors.append(sub_proc)
+
+    return SCCAnnexIII(sub_processors=sub_processors)
+
+
+def _check_incomplete_info(text: str) -> list[str]:
+    """Check for common incomplete-info patterns."""
+    patterns = [
+        (r"see\s+(?:master\s+service\s+agreement|MSA)", "主体信息引用外部MSA，未直接填入"),
+        (r"as\s+set\s+(?:out|forth)\s+in\s+the\s+(?:agreement|contract|MSA)", "关键信息指向外部协议"),
+        (r"\[to\s*be\s*(?:completed|filled)", "存在占位符"),
+        (r"as\s+agreed\s+(?:between|by)\s+the\s+parties", "关键条款留白，未具体约定"),
+    ]
+    hits: list[str] = []
+    for pat, desc in patterns:
+        if re.search(pat, text, re.IGNORECASE):
+            hits.append(desc)
+    return hits
+
+
+def _build_transfer_chain(
+    exporter_role: str, importer_role: str, doc: SCCDocument, request_chain: str = ""
+) -> SCCTransferChain:
+    """Build transfer chain model from parsed document and request data."""
+    exporter_name = ""
+    importer_name = ""
+
+    # Extract from Annex I.A parties
+    for party in doc.annex_i_a.parties:
+        if not party.name:
+            continue
+        if not exporter_name and any(r in party.role.lower() for r in ("exporter", "data exporter", "controller")) if party.role else False:
+            exporter_name = party.name
+        elif not importer_name and any(r in party.role.lower() for r in ("importer", "data importer", "processor")) if party.role else False:
+            importer_name = party.name
+
+    if not exporter_name and doc.annex_i_a.parties:
+        exporter_name = doc.annex_i_a.parties[0].name
+    if not importer_name and len(doc.annex_i_a.parties) > 1:
+        importer_name = doc.annex_i_a.parties[1].name
+
+    # Sub-processors from Annex III
+    sub_processors = [sp.get("name", "") for sp in doc.annex_iii.sub_processors if sp.get("name")]
+
+    # Storage/access locations from Annex III location fields + text scanning
+    locations: list[str] = []
+    for sp in doc.annex_iii.sub_processors:
+        if sp.get("location"):
+            locations.append(sp["location"])
+
+    # Scan doc for country mentions
+    country_pattern = re.findall(
+        r"\b(United\s*States|USA?|India|Serbia|China|UK|United\s*Kingdom|Japan|South\s*Korea|Singapore|Brazil|Australia)\b",
+        doc.raw_text, re.IGNORECASE
+    )
+    locations.extend([c.strip() for c in country_pattern])
+
+    return SCCTransferChain(
+        exporter_name=exporter_name,
+        exporter_role=exporter_role,
+        importer_name=importer_name,
+        importer_role=importer_role,
+        sub_processors=sub_processors,
+        onward_transfer_locations=locations[:5],
+        storage_locations=locations[:3],
+        access_locations=locations[:3],
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Main parser entry point
+# ═══════════════════════════════════════════════════════════════════════
+
+def parse_scc_document(
+    text: str,
+    declared_module: str = "",
+    exporter_role: str = "",
+    importer_role: str = "",
+) -> SCCDocument:
+    """Parse raw SCC document text into structured SCCDocument.
+
+    Uses regex + heuristics. Falls back gracefully when sections are not found.
+    """
+    # Module type
+    module_type = _find_module_type(text) or declared_module
+
+    # Section splitting
+    sections = _split_sections(text)
+
+    # Clause extraction
+    clauses = _extract_clauses(sections.get("clauses", text))
+
+    # Annex extraction
+    annex_ia = _extract_annex_ia(sections.get("annex_ia", ""))
+    annex_ib = _extract_annex_ib(sections.get("annex_ib", ""))
+    annex_ii = _extract_annex_ii(sections.get("annex_ii", ""))
+    annex_iii = _extract_annex_iii(sections.get("annex_iii", ""))
+
+    return SCCDocument(
+        module_type=module_type,
+        clauses=clauses,
+        annex_i_a=annex_ia,
+        annex_i_b=annex_ib,
+        annex_ii=annex_ii,
+        annex_iii=annex_iii,
+        raw_text=text,
+    )
