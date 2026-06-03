@@ -28,6 +28,8 @@ import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
 import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/AppIcons";
+import { ExecutionTimeline } from "./ExecutionTimeline";
+import { RunBrief } from "./RunBrief";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -41,10 +43,10 @@ const CENTER_PANEL_MIN = 360;
 const RESIZER_WIDTH = 10;
 const PREFERRED_ARTIFACT_ORDER = ["html", "report", "markdown", "md", "docx", "annotated_docx", "pdf"];
 
-type WorkspaceTopTabId = "details" | "canvas" | "docs" | "terminal" | "report";
+type WorkspaceTopTabId = "details" | "canvas" | "docs" | "terminal" | "report" | "timeline" | "brief";
 type WorkspaceTopTab = {
   id: WorkspaceTopTabId;
-  key: "workspaceTabDetails" | "workspaceTabCanvas" | "workspaceTabDocs" | "workspaceTabTerminal" | "workspaceTabReport";
+  key: "workspaceTabDetails" | "workspaceTabCanvas" | "workspaceTabDocs" | "workspaceTabTerminal" | "workspaceTabReport" | "workspaceTabTimeline" | "workspaceTabBrief";
   closable: boolean;
 };
 type ResponseChapter = {
@@ -73,7 +75,9 @@ const WORKSPACE_TABS: WorkspaceTopTab[] = [
   { id: "canvas", key: "workspaceTabCanvas", closable: true },
   { id: "docs", key: "workspaceTabDocs", closable: true },
   { id: "terminal", key: "workspaceTabTerminal", closable: true },
-  { id: "report", key: "workspaceTabReport", closable: true }
+  { id: "report", key: "workspaceTabReport", closable: true },
+  { id: "timeline", key: "workspaceTabTimeline", closable: true },
+  { id: "brief", key: "workspaceTabBrief", closable: true },
 ];
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -768,8 +772,13 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       dispatch({ type: "append_artifacts", payload: extractArtifacts(taskSpace.id, output.module, output.response) });
       dispatch({ type: "append_evidence", payload: extractEvidenceHits(taskSpace.id, output.module, output.response) });
       dispatch({ type: "append_issues", payload: extractConsistencyIssues(taskSpace.id, output.module, output.response) });
-      setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
-      setActiveTab("report");
+      if (output.asyncTaskId) {
+        setOpenTabs((prev) => (prev.includes("timeline") ? prev : [...prev, "timeline"]));
+        setActiveTab("timeline");
+      } else {
+        setOpenTabs((prev) => (prev.includes("report") ? prev : [...prev, "report"]));
+        setActiveTab("report");
+      }
     }
   };
 
@@ -1003,6 +1012,14 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           </section>
         </section>
       );
+    }
+
+    if (activeTab === "timeline") {
+      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} />;
+    }
+
+    if (activeTab === "brief") {
+      return <RunBrief taskId={latestRun?.asyncTaskId ?? null} />;
     }
 
     const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);
