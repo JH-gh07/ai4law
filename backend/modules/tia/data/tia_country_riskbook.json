@@ -1,0 +1,89 @@
+{
+  "meta": {"version": "1.0", "jurisdiction": "eu", "last_updated": "2025-06-03"},
+
+  "adequacy_countries": {
+    "United Kingdom": {"source": "EU-UK adequacy decision 2021", "notes": "Monitor adequacy decision renewal"},
+    "Switzerland": {"source": "EU adequacy decision", "notes": "Monitor changes"},
+    "Japan": {"source": "EU adequacy decision 2019", "notes": ""},
+    "South Korea": {"source": "EU adequacy decision 2021", "notes": ""},
+    "New Zealand": {"source": "EU adequacy decision", "notes": ""},
+    "Argentina": {"source": "EU adequacy decision", "notes": ""},
+    "Uruguay": {"source": "EU adequacy decision", "notes": ""},
+    "Israel": {"source": "EU adequacy decision", "notes": ""},
+    "Canada": {"source": "Partial — commercial organizations only (PIPEDA)", "notes": "Limited scope"}
+  },
+
+  "country_risks": {
+    "United States": {
+      "adequacy": false,
+      "risk_level": "HIGH",
+      "risk_sources": ["FISA Section 702", "CLOUD Act", "EO 12333"],
+      "gov_access_risk": true,
+      "effective_remedy": false,
+      "independent_oversight": false,
+      "default_tool_effect": "SCC potentially ineffective without strong supplementary measures",
+      "required_measures": ["encryption_before_transfer", "key_managed_in_eu"],
+      "notes": "US bulk surveillance laws may undermine SCC effectiveness. Supplementary measures are essential."
+    },
+    "United Kingdom": {
+      "adequacy": true,
+      "risk_level": "LOW",
+      "risk_sources": [],
+      "gov_access_risk": false,
+      "effective_remedy": true,
+      "independent_oversight": true,
+      "default_tool_effect": "No tool needed — adequacy decision applies",
+      "required_measures": [],
+      "notes": "EU adequacy decision in force. No full TIA needed. Monitor for changes. Ensure UK GDPR compliance for employee data."
+    },
+    "India": {
+      "adequacy": false,
+      "risk_level": "VERY_HIGH",
+      "risk_sources": ["Information Technology Act Section 69", "Government access powers", "Weak data protection framework"],
+      "gov_access_risk": true,
+      "effective_remedy": false,
+      "independent_oversight": false,
+      "default_tool_effect": "SCC potentially ineffective; extreme technical measures required",
+      "required_measures": ["encryption_before_transfer", "key_managed_in_eu", "has_secure_enclave", "has_key_separation"],
+      "notes": "India's IT Act Section 69 provides broad government access powers. SCCs alone are likely insufficient. Strong technical measures (secure enclave, key separation) are necessary. For clinical/genetic data, regulatory consultation is strongly advised."
+    },
+    "China": {
+      "adequacy": false,
+      "risk_level": "VERY_HIGH",
+      "risk_sources": ["Cybersecurity Law", "Data Security Law", "PIPL cross-border restrictions", "Government access powers"],
+      "gov_access_risk": true,
+      "effective_remedy": false,
+      "independent_oversight": false,
+      "default_tool_effect": "SCC potentially ineffective; extreme measures needed",
+      "required_measures": ["encryption_before_transfer", "key_managed_in_eu", "has_secure_enclave", "has_key_separation"],
+      "notes": "China's comprehensive state access to data makes SCC effectiveness very uncertain."
+    }
+  },
+
+  "data_sensitivity_weights": {
+    "contact_information": 1,
+    "transaction_records": 1,
+    "crm_data": 2,
+    "employee_data": 3,
+    "hr_records": 3,
+    "financial_data": 4,
+    "behavioral_data": 3,
+    "location_data": 3,
+    "communication_content": 4,
+    "health_data": 5,
+    "genetic_data": 5,
+    "biometric_data": 5,
+    "clinical_trial_data": 5,
+    "political_opinion": 5,
+    "religious_belief": 5,
+    "children_data": 5,
+    "other": 2
+  },
+
+  "measure_sufficiency_thresholds": {
+    "VERY_HIGH": {"minimum_level": "technical_extreme", "contractual_alone_sufficient": false},
+    "HIGH": {"minimum_level": "technical_strong", "contractual_alone_sufficient": false},
+    "MEDIUM": {"minimum_level": "technical_weak", "contractual_alone_sufficient": false},
+    "LOW": {"minimum_level": "contractual", "contractual_alone_sufficient": true}
+  }
+}
