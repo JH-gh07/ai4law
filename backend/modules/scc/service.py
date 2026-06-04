@@ -34,9 +34,11 @@ from backend.common.render.report import (
 from backend.common.render.docx_comments import DocxComment, render_commented_docx
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.risk.scoring import risk_level
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.workflow import (
     EvidenceItem,
     FactItem,
@@ -407,7 +409,13 @@ class SCCService:
 
     # ── Main pipeline ──
 
-    def generate_report(self, payload: SCCRequest) -> SCCResult:
+    def generate_report(
+        self,
+        payload: SCCRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> SCCResult:
         """Execute the full CN SCC compliance review pipeline.
 
         Pipeline order (per documented architecture):
@@ -425,54 +433,72 @@ class SCCService:
         12. Explanation Agent (P2)
         13. Output rendering
         """
-        task_id = safe_filename(payload.company_name)
-        trace_dir = Path("outputs/scc") / f"{task_id}_{format_date_stamp()}" / "trace"
-        trace = TraceRecorder(trace_dir)
+        run_task_id = task_id or uuid.uuid4().hex
+        trace, token = prepare_run(module="scc", task_id=run_task_id, trace=trace)
+        try:
 
-        trace.record("scc_request", payload.model_dump())
+            if trace:
+                trace.record("thought", {"summary": "路径判断：基于出口方/进口方信息和传输角色确定 SCC 审查框架"})
+
+            trace.record("scc_request", payload.model_dump())
 
         # ── Phase 1: Profile extraction ──
-        profile = self._build_profile(payload)
-        trace.record("profile_extracted", profile.model_dump())
+            profile = self._build_profile(payload)
+            trace.record("profile_extracted", profile.model_dump())
 
         # ── Phase 2: Path Diagnosis Agent (P0) ──
-        path_diagnosis = self._run_path_diagnosis(payload)
-        trace.record("path_diagnosis", path_diagnosis.model_dump())
+            path_diagnosis = self._run_path_diagnosis(payload)
+            trace.record("path_diagnosis", path_diagnosis.model_dump())
+            if trace:
+                thought = summarize_agent_output("SCC 路径诊断", path_diagnosis)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 3: Data Classification Agent (P0) ──
-        field_classifications = self._run_data_classification(payload)
-        trace.record("field_classifications", {
+            field_classifications = self._run_data_classification(payload)
+            trace.record("field_classifications", {
             "count": len(field_classifications),
             "mislabeled": sum(1 for fc in field_classifications if fc.risk in ("HIGH", "BLOCKER")),
         })
+            if trace:
+                thought = summarize_agent_output("SCC 数据分级分类", field_classifications)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 4: Contract Review Agent (P0) ──
-        contract_findings = self._run_contract_review(payload, profile)
-        trace.record("contract_findings", {
+            contract_findings = self._run_contract_review(payload, profile)
+            trace.record("contract_findings", {
             "count": len(contract_findings),
             "high_severity": sum(1 for cf in contract_findings if cf.severity in ("HIGH", "BLOCKER")),
         })
+            if trace:
+                thought = summarize_agent_output("SCC 合同条款审查", contract_findings)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 5: Legal Basis Review Agent (P1) ──
-        legal_basis_reviews = self._run_legal_basis_review(payload)
-        trace.record("legal_basis_reviews", {
+            legal_basis_reviews = self._run_legal_basis_review(payload)
+            trace.record("legal_basis_reviews", {
             "count": len(legal_basis_reviews),
             "weak_or_worse": sum(1 for lbr in legal_basis_reviews if lbr.status in ("weak", "insufficient_evidence", "not_recommended")),
         })
+            if trace:
+                thought = summarize_agent_output("SCC 合法性审查", legal_basis_reviews)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 6: Evidence Verification Agent (P1) ──
-        evidence_verifications = self._run_evidence_verification(payload, path_diagnosis)
-        trace.record("evidence_verifications", {
+            evidence_verifications = self._run_evidence_verification(payload, path_diagnosis)
+            trace.record("evidence_verifications", {
             "count": len(evidence_verifications),
             "user_claim_only": sum(1 for ev in evidence_verifications if ev.evidence_status == "user_claim_only"),
         })
+            if trace:
+                thought = summarize_agent_output("SCC 证据验证", evidence_verifications)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 7: Facts / Issues / Evidence building ──
-        facts = build_scc_facts(payload, profile)
-        trace.record("facts_built", {"count": len(facts)})
+            facts = build_scc_facts(payload, profile)
+            trace.record("facts_built", {"count": len(facts)})
 
         # Build issues from agent results
-        issues = build_scc_issues(
+            issues = build_scc_issues(
             facts=facts,
             path_diagnosis=path_diagnosis,
             field_classifications=field_classifications,
@@ -481,25 +507,28 @@ class SCCService:
             evidence_verifications=[ev.model_dump() for ev in evidence_verifications],
             regulations=[],
         )
-        trace.record("issues_built", {"count": len(issues)})
+            trace.record("issues_built", {"count": len(issues)})
 
         # RAG retrieval for each issue
-        rag_plans = self._run_rag_planning(path_diagnosis.recommended_path, issues, payload)
-        trace.record("rag_plans", {"count": len(rag_plans)})
+            rag_plans = self._run_rag_planning(path_diagnosis.recommended_path, issues, payload)
+            trace.record("rag_plans", {"count": len(rag_plans)})
+            if trace:
+                thought = summarize_agent_output("SCC 检索规划", rag_plans)
+                trace.record("thought", {"summary": thought})
 
-        all_regs = []
-        all_citations: list[str] = []
-        for plan in rag_plans:
-            for query in plan.queries[:2]:
-                regs = retrieve_regulations(query, top_k=3, jurisdiction="cn", path="scc")
-                all_regs.extend(regs)
-                all_citations.extend(f"{r.title}{r.article}" for r in regs)
+            all_regs = []
+            all_citations: list[str] = []
+            for plan in rag_plans:
+                for query in plan.queries[:2]:
+                    regs = retrieve_regulations(query, top_k=3, jurisdiction="cn", path="scc")
+                    all_regs.extend(regs)
+                    all_citations.extend(f"{r.title}{r.article}" for r in regs)
         # Deduplicate citations
-        all_citations = list(dict.fromkeys(all_citations))
-        trace.record("retrieval_hits", {"count": len(all_regs), "citations": all_citations})
+            all_citations = list(dict.fromkeys(all_citations))
+            trace.record("retrieval_hits", {"count": len(all_regs), "citations": all_citations})
 
         # Rebuild issues with regulations
-        issues = build_scc_issues(
+            issues = build_scc_issues(
             facts=facts,
             path_diagnosis=path_diagnosis,
             field_classifications=field_classifications,
@@ -510,51 +539,57 @@ class SCCService:
         )
 
         # Build evidence
-        issues, evidence_chain = build_scc_evidence(facts, issues, all_regs, path_diagnosis)
-        trace.record("evidence_built", {"count": len(evidence_chain)})
+            issues, evidence_chain = build_scc_evidence(facts, issues, all_regs, path_diagnosis)
+            trace.record("evidence_built", {"count": len(evidence_chain)})
 
         # ── Phase 8: RAG context for chapter generation ──
-        reg_snippet = "\n".join(
+            reg_snippet = "\n".join(
             f"- {r.title}{r.article}：{(r.content or '')[:120]}"
             for r in all_regs[:8]
         ) or "（暂无检索到相关法条）"
 
-        severity_levels = {issue.severity for issue in issues}
-        if "BLOCKER" in severity_levels:
-            level = "高风险"
-        elif "HIGH" in severity_levels:
-            level = "高风险"
-        elif "MEDIUM" in severity_levels:
-            level = "部分合规"
-        else:
-            level = "基本合规"
+            severity_levels = {issue.severity for issue in issues}
+            if "BLOCKER" in severity_levels:
+                level = "高风险"
+            elif "HIGH" in severity_levels:
+                level = "高风险"
+            elif "MEDIUM" in severity_levels:
+                level = "部分合规"
+            else:
+                level = "基本合规"
 
-        context_block = self._build_context_block(profile, path_diagnosis, issues, evidence_chain, reg_snippet, level)
-        trace.record("context_block_built", {"length": len(context_block)})
+            context_block = self._build_context_block(profile, path_diagnosis, issues, evidence_chain, reg_snippet, level)
+            trace.record("context_block_built", {"length": len(context_block)})
 
         # ── Phase 9: Chapter generation ──
-        chapters, gen_issues = self._generate_chapters(profile, context_block, all_citations, level)
-        trace.record("chapters_generated", {"count": len(chapters)})
+            chapters, gen_issues = self._generate_chapters(profile, context_block, all_citations, level)
+            trace.record("chapters_generated", {"count": len(chapters)})
 
-        report_text = "\n".join(ch.content for ch in chapters)
+            report_text = "\n".join(ch.content for ch in chapters)
 
         # Alignment check
-        alignment_issues = check_cn_alignment(report_text, receiver_country=profile.receiver_country)
-        if alignment_issues:
-            gen_issues.extend(alignment_issues)
-        trace.record("alignment_check", {"issues": alignment_issues})
+            alignment_issues = check_cn_alignment(report_text, receiver_country=profile.receiver_country)
+            if alignment_issues:
+                gen_issues.extend(alignment_issues)
+            trace.record("alignment_check", {"issues": alignment_issues})
 
         # ── Phase 10: Report Review Agent (P1) ──
-        report_review = self._run_report_review(report_text, facts, issues, evidence_chain, all_regs, path_diagnosis)
-        trace.record("report_review", report_review.model_dump())
+            report_review = self._run_report_review(report_text, facts, issues, evidence_chain, all_regs, path_diagnosis)
+            trace.record("report_review", report_review.model_dump())
+            if trace:
+                thought = summarize_agent_output("SCC 报告审查", report_review)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 11: Clarification Agent (P2) ──
-        clarification = self._run_clarification(facts, issues, path_diagnosis, payload)
-        trace.record("clarification", clarification.model_dump())
+            clarification = self._run_clarification(facts, issues, path_diagnosis, payload)
+            trace.record("clarification", clarification.model_dump())
+            if trace:
+                thought = summarize_agent_output("SCC 澄清补全", clarification)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 12: Explanation Agent (P2) ──
         # Collect trace events
-        trace_events = [
+            trace_events = [
             {"event": name, "payload": {}}
             for name in ["scc_request", "profile_extracted", "path_diagnosis",
                          "field_classifications", "contract_findings", "legal_basis_reviews",
@@ -562,57 +597,64 @@ class SCCService:
                          "rag_plans", "retrieval_hits", "context_block_built",
                          "chapters_generated", "report_review"]
         ]
-        explanation = self._run_explanation(
+            explanation = self._run_explanation(
             trace_events, facts, issues, evidence_chain, all_regs, path_diagnosis,
             final_conclusion=chapters[1].content[:500] if len(chapters) > 1 else "",
         )
-        trace.record("explanation", explanation.model_dump())
+            trace.record("explanation", explanation.model_dump())
+            if trace:
+                thought = summarize_agent_output("SCC 说明生成", explanation)
+                trace.record("thought", {"summary": thought})
 
         # ── Phase 13: Output rendering ──
-        manifest = trace.write_manifest()
-        date_stamp = format_date_stamp()
-        safe_company = safe_filename(payload.company_name)
-        md_output = Path("outputs/scc") / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.md"
-        docx_output = Path("outputs/scc") / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.docx"
+            manifest = trace.write_manifest()
+            date_stamp = format_date_stamp()
+            safe_company = safe_filename(payload.company_name)
+            output_dir = Path("outputs/scc") / run_task_id / "outputs"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            md_output = output_dir / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.md"
+            docx_output = output_dir / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.docx"
 
-        mapping = _build_scc_template_mapping(
+            mapping = _build_scc_template_mapping(
             profile, chapters, issues, evidence_chain, date_stamp,
             alignment_warning="；".join(alignment_issues) if alignment_issues else None,
         )
-        render_markdown_template(md_output, TEMPLATE_MD, mapping)
-        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+            render_markdown_template(md_output, TEMPLATE_MD, mapping)
+            render_docx_template(docx_output, TEMPLATE_PATH, mapping)
 
-        annotated_docx_output = self._render_annotated_docx(payload, issues, evidence_chain, date_stamp)
-        output_files = {"markdown": str(md_output), "docx": str(docx_output)}
-        if annotated_docx_output is not None:
-            output_files["annotated_docx"] = str(annotated_docx_output)
+            annotated_docx_output = self._render_annotated_docx(payload, issues, evidence_chain, date_stamp, output_dir=output_dir)
+            output_files = {"markdown": str(md_output), "docx": str(docx_output)}
+            if annotated_docx_output is not None:
+                output_files["annotated_docx"] = str(annotated_docx_output)
 
         # Collect all consistency issues
-        all_consistency_issues = gen_issues + alignment_issues
-        if report_review.review_status != "pass":
-            for problem in report_review.problems:
-                all_consistency_issues.append(f"[{problem.type}] {problem.text}")
+            all_consistency_issues = gen_issues + alignment_issues
+            if report_review.review_status != "pass":
+                for problem in report_review.problems:
+                    all_consistency_issues.append(f"[{problem.type}] {problem.text}")
 
-        return SCCResult(
-            report_path=str(docx_output),
-            output_files=output_files,
-            profile=profile,
-            chapters=chapters,
-            consistency_issues=all_consistency_issues,
-            path_diagnosis=path_diagnosis,
-            field_classifications=field_classifications,
-            legal_basis_reviews=legal_basis_reviews,
-            contract_findings=contract_findings,
-            evidence_verifications=evidence_verifications,
-            report_review=report_review,
-            clarification=clarification,
-            explanation=explanation,
-            facts=[f.model_dump() for f in facts],
-            issues=[i.model_dump() for i in issues],
-            evidence_chain=[e.model_dump() for e in evidence_chain],
-            rag_query_plans=rag_plans,
-            trace_manifest_path=str(manifest),
-        )
+            return SCCResult(
+                report_path=str(docx_output),
+                output_files=output_files,
+                profile=profile,
+                chapters=chapters,
+                consistency_issues=all_consistency_issues,
+                path_diagnosis=path_diagnosis,
+                field_classifications=field_classifications,
+                legal_basis_reviews=legal_basis_reviews,
+                contract_findings=contract_findings,
+                evidence_verifications=evidence_verifications,
+                report_review=report_review,
+                clarification=clarification,
+                explanation=explanation,
+                facts=[f.model_dump() for f in facts],
+                issues=[i.model_dump() for i in issues],
+                evidence_chain=[e.model_dump() for e in evidence_chain],
+                rag_query_plans=rag_plans,
+                trace_manifest_path=str(manifest),
+            )
+        finally:
+            finalize_run(token)
 
     def _build_context_block(
         self,
@@ -662,6 +704,8 @@ class SCCService:
         issues: list[IssueItem],
         evidence_chain: list[EvidenceItem],
         date_stamp: str,
+        *,
+        output_dir: Path,
     ) -> Path | None:
         """Render annotated DOCX with review comments."""
         source_docx = self._pick_source_docx(payload.uploaded_files)
@@ -669,7 +713,7 @@ class SCCService:
             return None
 
         safe_company = safe_filename(payload.company_name)
-        output_path = Path("outputs/scc") / f"{safe_company}_SCC_批注修订版_{date_stamp}.docx"
+        output_path = output_dir / f"{safe_company}_SCC_批注修订版_{date_stamp}.docx"
 
         comments: list[DocxComment] = []
         for issue in issues:
@@ -696,7 +740,12 @@ class SCCService:
     # ── Async API ──
 
     def submit_async(self, payload: SCCRequest) -> SCCAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = uuid.uuid4().hex
+        trace = TraceRecorder(Path("outputs/scc") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> SCCAsyncStatus:
