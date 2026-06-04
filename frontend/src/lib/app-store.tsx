@@ -456,6 +456,26 @@ function reducer(state: AppState, action: Action): AppState {
         )
       };
     case "append_run":
+      if (action.payload.asyncTaskId) {
+        const existingIndex = state.moduleRuns.findIndex(
+          (run) => run.taskSpaceId === action.payload.taskSpaceId && run.asyncTaskId === action.payload.asyncTaskId
+        );
+        if (existingIndex >= 0) {
+          const existing = state.moduleRuns[existingIndex];
+          const merged: ModuleRun = {
+            ...existing,
+            ...action.payload,
+            startedAt: existing.startedAt || action.payload.startedAt,
+            finishedAt: action.payload.finishedAt ?? existing.finishedAt,
+            request: action.payload.request ?? existing.request,
+            response: action.payload.response ?? existing.response,
+            error: action.payload.error ?? existing.error,
+            asyncState: action.payload.asyncState ?? existing.asyncState,
+          };
+          const remaining = state.moduleRuns.filter((_, index) => index !== existingIndex);
+          return { ...state, moduleRuns: [merged, ...remaining] };
+        }
+      }
       return { ...state, moduleRuns: [action.payload, ...state.moduleRuns] };
     case "append_artifacts":
       return { ...state, artifacts: dedupeArtifacts([...action.payload, ...state.artifacts]) };

@@ -5,6 +5,7 @@ import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
 import { useLang } from "../lib/language";
 import { fetchMyTasks, type MyTaskItem } from "../lib/me-api";
+import { getRunLifecycleState } from "../lib/run-state";
 import {
   buildSuggestedTaskName,
   findTaskTemplate,
@@ -56,12 +57,12 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   ];
 
   const latestRunByTask = useMemo(() => {
-    const map = new Map<string, { success: boolean; module: string; at: string }>();
+    const map = new Map<string, { state: "idle" | "running" | "success" | "failed"; module: string; at: string }>();
     for (const run of state.moduleRuns) {
       const prev = map.get(run.taskSpaceId);
       const at = run.finishedAt ?? run.startedAt;
       if (!prev || at > prev.at) {
-        map.set(run.taskSpaceId, { success: run.success, module: run.module, at });
+        map.set(run.taskSpaceId, { state: getRunLifecycleState(run), module: run.module, at });
       }
     }
     return map;
@@ -334,9 +335,9 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
                 >
                   <div className="tasks-card-head">
                     <h3>{task.name}</h3>
-                    <span className={`tasks-status-pill ${latestRun ? (latestRun.success ? "ok" : "fail") : "idle"}`}>
+                    <span className={`tasks-status-pill ${latestRun ? (latestRun.state === "running" ? "running" : latestRun.state === "success" ? "ok" : "fail") : "idle"}`}>
                       {latestRun
-                        ? `${latestRun.success ? "OK" : "FAIL"} · ${latestRun.module.toUpperCase()}`
+                        ? `${latestRun.state === "running" ? "RUNNING" : latestRun.state === "success" ? "OK" : "FAIL"} · ${latestRun.module.toUpperCase()}`
                         : t("tasksCardNoRuns")}
                     </span>
                   </div>

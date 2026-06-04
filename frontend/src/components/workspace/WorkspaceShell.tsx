@@ -13,6 +13,7 @@ import type { ModuleRun, OutputArtifact, TaskSpace, WorkflowStepKey } from "../.
 import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
 import { getAuthHeaders } from "../../lib/auth/auth-service";
 import { useLang } from "../../lib/language";
+import { findModule, fetchModuleTaskStatus } from "../../lib/module-adapter";
 import {
   findTaskTemplate,
   getTaskTemplateInputHint,
@@ -28,10 +29,11 @@ import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
 import type { RunOutput } from "./ModuleRunPanel";
 import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/AppIcons";
-import { ExecutionTimeline } from "./ExecutionTimeline";
-import { RunBrief } from "./RunBrief";
+import { RunTranscript } from "./RunTranscript";
+import { TaskEventBridge } from "./TaskEventBridge";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 import { normalizeLegalMarkdown } from "../../lib/legal-markdown";
+import { getRunLifecycleState, isRunInProgress } from "../../lib/run-state";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -45,10 +47,10 @@ const CENTER_PANEL_MIN = 360;
 const RESIZER_WIDTH = 10;
 const PREFERRED_ARTIFACT_ORDER = ["html", "report", "markdown", "md", "docx", "annotated_docx", "pdf"];
 
-type WorkspaceTopTabId = "details" | "canvas" | "docs" | "terminal" | "report" | "timeline" | "brief";
+type WorkspaceTopTabId = "details" | "canvas" | "docs" | "terminal" | "report" | "timeline";
 type WorkspaceTopTab = {
   id: WorkspaceTopTabId;
-  key: "workspaceTabDetails" | "workspaceTabCanvas" | "workspaceTabDocs" | "workspaceTabTerminal" | "workspaceTabReport" | "workspaceTabTimeline" | "workspaceTabBrief";
+  key: "workspaceTabDetails" | "workspaceTabCanvas" | "workspaceTabDocs" | "workspaceTabTerminal" | "workspaceTabReport" | "workspaceTabTimeline";
   closable: boolean;
 };
 type ResponseChapter = {
@@ -59,11 +61,6 @@ type ResponseChapter = {
 type ReportPreviewSection = {
   title: string;
   content: string;
-};
-
-type ReportQuickFact = {
-  label: string;
-  value: string;
 };
 
 type OpenedResource =
@@ -84,7 +81,6 @@ const WORKSPACE_TABS: WorkspaceTopTab[] = [
   { id: "terminal", key: "workspaceTabTerminal", closable: true },
   { id: "report", key: "workspaceTabReport", closable: true },
   { id: "timeline", key: "workspaceTabTimeline", closable: true },
-  { id: "brief", key: "workspaceTabBrief", closable: true },
 ];
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -270,40 +266,6 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   return sections;
 };
 
-const buildReportQuickFacts = (
-  lang: "zh" | "en",
-  riskLevel: string | undefined,
-  issueCount: number,
-  evidenceCount: number,
-  artifactCount: number,
-): ReportQuickFact[] => [
-  {
-    label: lang === "zh" ? "风险等级" : "Risk Level",
-    value: riskLevel || (lang === "zh" ? "待生成" : "Pending"),
-  },
-  {
-    label: lang === "zh" ? "问题数量" : "Issues",
-    value: String(issueCount),
-  },
-  {
-    label: lang === "zh" ? "证据命中" : "Evidence",
-    value: String(evidenceCount),
-  },
-  {
-    label: lang === "zh" ? "输出文件" : "Artifacts",
-    value: String(artifactCount),
-  },
-];
-
-function slugifySectionTitle(value: string, index: number): string {
-  const base = value
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w\u4e00-\u9fff-]/g, "")
-    .slice(0, 32);
-  return `report-section-${index}-${base || "section"}`;
-}
-
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
@@ -378,18 +340,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
     return buildFallbackPreviewSections(latestRun?.response, lang);
   }, [lang, latestRun?.response, responseChapters]);
-  const reportQuickFacts = useMemo(
-    () => buildReportQuickFacts(lang, responseInsight.riskLevel, taskIssues.length, taskEvidence.length, displayReportArtifacts.length),
-    [displayReportArtifacts.length, lang, responseInsight.riskLevel, taskEvidence.length, taskIssues.length],
-  );
-  const reportSectionAnchors = useMemo(
-    () =>
-      reportPreviewSections.map((section, index) => ({
-        id: slugifySectionTitle(section.title, index),
-        title: section.title,
-      })),
-    [reportPreviewSections],
-  );
   const terminalLines = useMemo(() => {
     const lines: string[] = [];
     lines.push(`[workspace] ${taskSpace.name} (${taskSpace.id})`);
@@ -402,8 +352,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     } else {
       taskRuns.slice(0, 10).forEach((run) => {
         const at = run.finishedAt ?? run.startedAt;
+        const runState = getRunLifecycleState(run);
         lines.push(
-          `[run] ${new Date(at).toLocaleString()} ${run.module.toUpperCase()} ${run.success ? "SUCCESS" : "FAILED"}`
+          `[run] ${new Date(at).toLocaleString()} ${run.module.toUpperCase()} ${runState.toUpperCase()}`
         );
         if (run.error) lines.push(`       error: ${run.error}`);
       });
@@ -841,6 +792,65 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
   };
 
+  const handleTaskCreated = (taskId: string, module: ModuleRun["module"], request: unknown) => {
+    const now = new Date().toISOString();
+    setActiveTaskId(taskId);
+    dispatch({
+      type: "append_run",
+      payload: {
+        id: `${module}-${taskId}`,
+        taskSpaceId: taskSpace.id,
+        module,
+        runMode: "async",
+        startedAt: now,
+        success: false,
+        request,
+        asyncTaskId: taskId,
+        asyncState: "running",
+      },
+    });
+    dispatch({ type: "touch_task_space", payload: { id: taskSpace.id, updatedAt: now } });
+    setOpenTabs((prev) => (prev.includes("timeline") ? prev : [...prev, "timeline"]));
+    setActiveTab("timeline");
+  };
+
+  useEffect(() => {
+    if (!activeTaskId && latestRun?.asyncTaskId && isRunInProgress(latestRun)) {
+      setActiveTaskId(latestRun.asyncTaskId);
+    }
+  }, [activeTaskId, latestRun]);
+
+  useEffect(() => {
+    if (!latestRun?.asyncTaskId || !isRunInProgress(latestRun)) return;
+
+    let cancelled = false;
+    const moduleDefinition = findModule(latestRun.module);
+
+    const syncStatus = async () => {
+      try {
+        const status = await fetchModuleTaskStatus(moduleDefinition, latestRun.asyncTaskId!);
+        if (cancelled) return;
+        if (status.state === "completed" || status.state === "succeeded" || status.state === "failed" || status.state === "cancelled" || status.state === "canceled") {
+          dispatch({
+            type: "append_run",
+            payload: {
+              ...latestRun,
+              finishedAt: new Date().toISOString(),
+              success: status.state === "completed" || status.state === "succeeded",
+              response: status.result ?? latestRun.response,
+              error: status.error ?? latestRun.error,
+              asyncState: status.state,
+            },
+          });
+        }
+      } catch {
+        // Best-effort sync only
+      }
+    };
+
+    void syncStatus();
+  }, [dispatch, latestRun]);
+
   const handleOpenResource = (target: ResourceOpenTarget) => {
     let resource: OpenedResource;
     if (target.kind === "output") {
@@ -998,7 +1008,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   const renderTabSurface = () => {
     if (activeTab === "details") {
-      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={(taskId) => setActiveTaskId(taskId)} />;
+      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={handleTaskCreated} />;
     }
 
     if (activeTab === "canvas") {
@@ -1083,11 +1093,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab === "timeline") {
-      return <ExecutionTimeline taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} moduleLabel={latestRun?.module ?? taskSpace.module} />;
-    }
-
-    if (activeTab === "brief") {
-      return <RunBrief taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} />;
+      return <RunTranscript taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} moduleLabel={latestRun?.module ?? taskSpace.module} />;
     }
 
     const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);
@@ -1176,7 +1182,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab !== "report") {
-      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={(taskId) => setActiveTaskId(taskId)} />;
+      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={handleTaskCreated} />;
     }
 
     return (
@@ -1185,38 +1191,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <h3>{t("workspaceTabReportTitle")}</h3>
           <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
         </header>
-        <section className="workspace-report-quickbar">
-          <article className="workspace-report-summary-card">
-            <div className="workspace-report-summary-head">
-              <span>{lang === "zh" ? "快速摘要" : "Quick Summary"}</span>
-              <strong>{artifactPreview?.file_name || (lang === "zh" ? "当前报告" : "Current Report")}</strong>
-            </div>
-            <div className="workspace-report-summary-grid">
-              {reportQuickFacts.map((fact) => (
-                <div key={fact.label} className="workspace-report-summary-chip">
-                  <span>{fact.label}</span>
-                  <strong>{fact.value}</strong>
-                </div>
-              ))}
-            </div>
-          </article>
-          {reportSectionAnchors.length > 0 ? (
-            <article className="workspace-report-outline-card">
-              <div className="workspace-report-outline-head">
-                <span>{lang === "zh" ? "章节导航" : "Section Outline"}</span>
-                <strong>{lang === "zh" ? `${reportSectionAnchors.length} 个章节` : `${reportSectionAnchors.length} sections`}</strong>
-              </div>
-              <nav className="workspace-report-outline-nav" aria-label={lang === "zh" ? "报告章节导航" : "Report section navigation"}>
-                {reportSectionAnchors.map((section, index) => (
-                  <a key={section.id} href={`#${section.id}`} className="workspace-report-outline-link">
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{section.title}</strong>
-                  </a>
-                ))}
-              </nav>
-            </article>
-          ) : null}
-        </section>
         <section className="workspace-report-kpi-row">
           <article>
             <span>{t("reportIssueCount")}</span>
@@ -1242,11 +1216,35 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         {artifactPreviewError ? (
           <div className="workspace-report-preview-state workspace-report-preview-error">{artifactPreviewError}</div>
         ) : null}
+        {reportPreviewSections.length > 0 ? (
+          <section className="workspace-report-chapters">
+            {reportPreviewSections.map((section, index) => (
+              <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
+                <strong>{section.title}</strong>
+                <div className="workspace-report-richtext">
+                  {latestRun?.asyncTaskId ? (
+                    <CitationMarkdownRenderer
+                      markdown={normalizeMarkdownForRender(section.content)}
+                      taskId={latestRun.asyncTaskId}
+                      moduleKey={taskSpace.module}
+                    />
+                  ) : (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {normalizeMarkdownForRender(section.content)}
+                    </ReactMarkdown>
+                  )}
+                </div>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <p className="resource-empty">{t("reportNoData")}</p>
+        )}
         {artifactPreview ? (
           <section className="workspace-report-selected">
             <div className="workspace-report-selected-head">
               <div>
-                <span>{lang === "zh" ? "当前预览" : "Now Previewing"}</span>
+                <span>{lang === "zh" ? "导出文件预览" : "Export Preview"}</span>
                 <strong>{artifactPreview.file_name}</strong>
               </div>
               <div className="workspace-report-selected-actions">
@@ -1303,40 +1301,13 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
             ) : null}
           </section>
         ) : null}
-        {reportPreviewSections.length > 0 ? (
-          <section className="workspace-report-chapters">
-            {reportPreviewSections.map((section, index) => (
-              <article
-                key={`${section.title}-${index}`}
-                id={reportSectionAnchors[index]?.id}
-                className="workspace-report-chapter workspace-report-preview-block"
-              >
-                <strong>{section.title}</strong>
-                <div className="workspace-report-richtext">
-                  {latestRun?.asyncTaskId ? (
-                    <CitationMarkdownRenderer
-                      markdown={normalizeMarkdownForRender(section.content)}
-                      taskId={latestRun.asyncTaskId}
-                      moduleKey={taskSpace.module}
-                    />
-                  ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {normalizeMarkdownForRender(section.content)}
-                    </ReactMarkdown>
-                  )}
-                </div>
-              </article>
-            ))}
-          </section>
-        ) : (
-          <p className="resource-empty">{t("reportNoData")}</p>
-        )}
       </section>
     );
   };
 
   return (
     <section className={`workspace-shell workspace-style-${taskSpace.workspaceStyle}`}>
+      <TaskEventBridge taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} moduleLabel={latestRun?.module ?? taskSpace.module} />
       <header className="workspace-header workspace-header-compact">
         <div className="workspace-browser-left">
           <button

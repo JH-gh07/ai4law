@@ -387,7 +387,10 @@ export async function runModule(
         const err = isRecord(statusResponse) && typeof statusResponse.error === "string"
           ? statusResponse.error
           : "Async task failed";
-        throw new Error(err);
+        const failure = new Error(err) as Error & { asyncTaskId?: string; asyncState?: string };
+        failure.asyncTaskId = taskId;
+        failure.asyncState = state;
+        throw failure;
       }
       if (result === undefined || result === null) {
         throw new Error("Async task finished without result payload");
@@ -419,4 +422,25 @@ export async function cancelModuleTask(module: ModuleDefinition, taskId: string)
     throw new Error("Cancel is not supported by this module");
   }
   return requestJson(module.asyncCancelEndpoint(taskId), "POST");
+}
+
+export async function fetchModuleTaskStatus(module: ModuleDefinition, taskId: string): Promise<{
+  state: string;
+  progress?: number;
+  result?: unknown;
+  error?: string;
+}> {
+  if (!module.asyncStatusEndpoint) {
+    throw new Error("Async status is not supported by this module");
+  }
+
+  const statusResponse = await requestJson(module.asyncStatusEndpoint(taskId), "GET");
+  const state = parseTaskState(statusResponse);
+  const progress = parseTaskProgress(statusResponse);
+  const result = parseTaskResult(statusResponse);
+  const error = isRecord(statusResponse) && typeof statusResponse.error === "string"
+    ? statusResponse.error
+    : undefined;
+
+  return { state, progress, result, error };
 }

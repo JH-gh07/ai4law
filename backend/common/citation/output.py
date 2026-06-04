@@ -63,6 +63,116 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     return normalized
 
 
+def _citation_title_from_source(source: str) -> str:
+    value = (source or "").strip()
+    if not value:
+        return "引用依据"
+    return value.split("第")[0].strip("：《》[]【】()（） ") or value
+
+
+def _citation_article_from_source(source: str) -> str:
+    value = (source or "").strip()
+    if "第" in value and "条" in value:
+        after = value.split("第", 1)[1]
+        return after.split("条", 1)[0].strip()
+    return ""
+
+
+def synthesize_citation_map(
+    *,
+    module: str,
+    task_id: str,
+    payload: dict[str, Any] | None,
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    if not isinstance(payload, dict):
+        return {}, []
+
+    items: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+
+    def add_item(item: dict[str, Any]) -> None:
+        normalized = normalize_citation_item(item, module=module)
+        key = (
+            normalized.get("title", ""),
+            normalized.get("article_no", ""),
+            normalized.get("quote_text", ""),
+            normalized.get("source_id", ""),
+        )
+        if key in seen:
+            return
+        seen.add(key)
+        items.append(normalized)
+
+    for reg in payload.get("regulations", []) or []:
+        if not isinstance(reg, dict):
+            continue
+        title = str(reg.get("title", "") or "").strip()
+        article_no = str(reg.get("article", "") or "").strip()
+        snippet = str(reg.get("snippet", "") or "").strip()
+        source_id = str(reg.get("source_id", "") or "").strip()
+        add_item(
+            {
+                "citation_id": f"{module}-{task_id}-reg-{len(items) + 1}",
+                "source_id": source_id or title,
+                "citation_type": "law_article",
+                "title": title or "引用法规",
+                "article_no": article_no,
+                "quote_text": snippet,
+                "authority_level": "high",
+                "binding_force": "mandatory",
+            }
+        )
+
+    for chapter in payload.get("chapters", []) or []:
+        if not isinstance(chapter, dict):
+            continue
+        chapter_title = str(chapter.get("title", "") or "").strip()
+        citations = chapter.get("citations", []) or []
+        if not isinstance(citations, list):
+            citations = []
+        for raw_citation in citations:
+            citation_text = str(raw_citation or "").strip()
+            if not citation_text:
+                continue
+            add_item(
+                {
+                    "citation_id": f"{module}-{task_id}-chapter-{len(items) + 1}",
+                    "source_id": _citation_title_from_source(citation_text),
+                    "citation_type": "law_article",
+                    "title": _citation_title_from_source(citation_text),
+                    "article_no": _citation_article_from_source(citation_text),
+                    "quote_text": chapter_title,
+                    "authority_level": "medium",
+                    "binding_force": "recommended",
+                }
+            )
+
+    result = payload.get("result")
+    if isinstance(result, dict):
+        for citation in result.get("citations", []) or []:
+            if not isinstance(citation, dict):
+                continue
+            source = str(citation.get("source") or citation.get("source_title") or "").strip()
+            article = str(citation.get("article") or "").strip()
+            note = str(citation.get("note") or citation.get("snippet") or "").strip()
+            add_item(
+                {
+                    "citation_id": f"{module}-{task_id}-result-{len(items) + 1}",
+                    "source_id": source or _citation_title_from_source(source),
+                    "citation_type": "law_article",
+                    "title": source or "引用依据",
+                    "article_no": article or _citation_article_from_source(source),
+                    "quote_text": note,
+                }
+            )
+
+    footnote_map = {
+        str(index): item
+        for index, item in enumerate(items, start=1)
+    }
+    return footnote_map, items
+
+
 def write_citation_map_json(
     *,
     output_dir: Path,

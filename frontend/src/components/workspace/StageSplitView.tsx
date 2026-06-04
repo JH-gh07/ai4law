@@ -1,16 +1,18 @@
 import type { ModuleKey, ModuleRun, TaskSpace } from "../../lib/domain";
 import { ModuleRunPanel, type RunOutput } from "./ModuleRunPanel";
 import { useLang } from "../../lib/language";
+import { getRunLifecycleState } from "../../lib/run-state";
 
 type StageSplitViewProps = {
   taskSpace: TaskSpace;
   onRunDone: (output: RunOutput) => void;
   latestRun: ModuleRun | null;
-  onTaskCreated?: (taskId: string, module: ModuleKey) => void;
+  onTaskCreated?: (taskId: string, module: ModuleKey, request: unknown) => void;
 };
 
 export function StageSplitView({ taskSpace, onRunDone, latestRun, onTaskCreated }: StageSplitViewProps) {
   const { lang } = useLang();
+  const latestRunState = getRunLifecycleState(latestRun);
 
   return (
     <section className="stage-split stage-split-single" data-guide="workspace-center">
@@ -22,8 +24,20 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun, onTaskCreated 
               <strong>{lang === "zh" ? "执行当前模块并生成可预览结果" : "Run the active module and generate previewable results"}</strong>
             </div>
             {latestRun ? (
-              <small className={`stage-run-status ${latestRun.success ? "is-success" : "is-fail"}`}>
-                {latestRun.success ? (lang === "zh" ? "最近一次运行成功" : "Latest run succeeded") : (lang === "zh" ? "最近一次运行失败" : "Latest run failed")}
+              <small
+                className={`stage-run-status ${
+                  latestRunState === "running"
+                    ? "is-running"
+                    : latestRunState === "success"
+                      ? "is-success"
+                      : "is-fail"
+                }`}
+              >
+                {latestRunState === "running"
+                  ? (lang === "zh" ? "当前运行中" : "Currently running")
+                  : latestRunState === "success"
+                    ? (lang === "zh" ? "最近一次运行成功" : "Latest run succeeded")
+                    : (lang === "zh" ? "最近一次运行失败" : "Latest run failed")}
               </small>
             ) : null}
           </div>

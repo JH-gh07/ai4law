@@ -29,7 +29,7 @@ export type RunOutput = {
 type ModuleRunPanelProps = {
   onRunDone: (output: RunOutput) => void;
   taskSpace: TaskSpace;
-  onTaskCreated?: (taskId: string, module: ModuleKey) => void;
+  onTaskCreated?: (taskId: string, module: ModuleKey, request: unknown) => void;
 };
 
 type UserFacingResult = {
@@ -2647,7 +2647,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const isCpraModule = moduleKey === "cpra";
 
   // ── 开发者测试案例 ──
-  const [devTestCaseIndex, setDevTestCaseIndex] = useState(0);
   const devTestCases = DEV_ACCEL_ENABLED ? getTestCases(moduleKey) : [];
   const [showCasePicker, setShowCasePicker] = useState(false);
   const selectDevCase = (index: number) => {
@@ -3641,7 +3640,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         timeoutMs,
         (progress) => setAsyncRunProgress(progress),
         (event) => setRecentEvents((prev) => [...prev.slice(-19), event]),
-        (taskId) => onTaskCreated?.(taskId, moduleKey),
+        (taskId) => onTaskCreated?.(taskId, moduleKey, requestPayload),
       );
       setResponseData(result.response);
       onRunDone({
@@ -3655,9 +3654,25 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       });
     } catch (runErr) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
+      const asyncTaskId =
+        runErr instanceof Error && "asyncTaskId" in runErr && typeof runErr.asyncTaskId === "string"
+          ? runErr.asyncTaskId
+          : undefined;
+      const asyncState =
+        runErr instanceof Error && "asyncState" in runErr && typeof runErr.asyncState === "string"
+          ? runErr.asyncState
+          : undefined;
       setResponseData(undefined);
       setError(message);
-      onRunDone({ module: moduleKey, runMode: hasAsync(definition) ? "async" : "sync", request: requestPayload, success: false, error: message });
+      onRunDone({
+        module: moduleKey,
+        runMode: hasAsync(definition) ? "async" : "sync",
+        request: requestPayload,
+        success: false,
+        error: message,
+        asyncTaskId,
+        asyncState,
+      });
     } finally {
       setLoading(false);
     }

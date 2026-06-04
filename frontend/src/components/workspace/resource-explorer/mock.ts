@@ -1,4 +1,5 @@
 import type { ModuleRun, TaskSpace, WorkflowStepState } from "../../../lib/domain";
+import { isRunFailed, isRunInProgress } from "../../../lib/run-state";
 import type { ResourceExplorerData, ResourceItemData } from "./types";
 
 type BuildResourceExplorerDataInput = {
@@ -46,8 +47,8 @@ const toRunBatch = (latestRun: ModuleRun | null, fallbackModule: string): string
 const deriveSummaryStatus = (inputMaterials: ResourceItemData[], latestRun: ModuleRun | null): "blocked" | "in_progress" | "completed" => {
   const hasMissingCritical = inputMaterials.some((item) => item.kind === "input" && item.status === "missing" && item.id === "data_inventory");
   if (hasMissingCritical) return "blocked";
-  if (latestRun && !latestRun.success) return "blocked";
-  if (latestRun) return "in_progress";
+  if (isRunFailed(latestRun)) return "blocked";
+  if (isRunInProgress(latestRun) || latestRun) return "in_progress";
   return "in_progress";
 };
 

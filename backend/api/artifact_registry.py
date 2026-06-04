@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -31,7 +30,31 @@ def register_module_result_artifacts(
     if not paths:
         return
 
-    owner_id = str(uuid4())
+    owner_id = str(
+        getattr(result, "task_id", None)
+        or getattr(result, "id", None)
+        or ""
+    ).strip()
+    if not owner_id:
+        for raw_path in paths.values():
+            resolved = Path(raw_path).resolve() if raw_path else None
+            if not resolved:
+                continue
+            parts = list(resolved.parts)
+            if "outputs" not in parts:
+                continue
+            outputs_index = parts.index("outputs")
+            if len(parts) > outputs_index + 2:
+                owner_id = parts[outputs_index + 2]
+                break
+    if not owner_id:
+        return
+
+    preview_base = {
+        "module": module_key,
+        "owner_id": owner_id,
+        "task_id": owner_id,
+    }
     for kind, raw_path in paths.items():
         normalized = str(Path(raw_path).resolve()) if raw_path else raw_path
         artifact_type = (kind or "file").lower()
@@ -42,5 +65,5 @@ def register_module_result_artifacts(
             owner_id=owner_id,
             artifact_type=artifact_type,
             file_path=normalized,
-            preview={"module": module_key, "kind": artifact_type},
+            preview={**preview_base, "kind": artifact_type, "path": normalized},
         )

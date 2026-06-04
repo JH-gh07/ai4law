@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.common.citation.output import normalize_citation_item
+from backend.common.citation.output import synthesize_citation_map, write_citation_map_json
 from backend.schemas.citation import CitationDetailResponse, CitationMapResponse
 
 router = APIRouter()
@@ -61,6 +62,25 @@ def _find_citation_map(task_id: str, module: str | None = None) -> tuple[str, di
     return None, None
 
 
+def _read_recovery_payload(module: str, task_id: str) -> dict | None:
+    output_dir = Path("outputs") / module / task_id / "outputs"
+    payload: dict[str, object] = {"task_id": task_id}
+    for candidate in sorted(output_dir.glob("*.json")):
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        if isinstance(data.get("chapters"), list):
+            payload["chapters"] = data["chapters"]
+        if isinstance(data.get("regulations"), list):
+            payload["regulations"] = data["regulations"]
+        if isinstance(data.get("result"), dict):
+            payload["result"] = data["result"]
+    return payload if len(payload) > 1 else None
+
+
 def _build_detail(item: dict, *, module: str, footnote_number: int | None = None) -> CitationDetailResponse:
     normalized = normalize_citation_item(item, module=module)
     return CitationDetailResponse(
@@ -96,10 +116,60 @@ def _build_detail(item: dict, *, module: str, footnote_number: int | None = None
 @router.get("/reports/{task_id}", response_model=CitationMapResponse)
 def get_report_citations(task_id: str, module: str | None = Query(None)) -> CitationMapResponse:
     resolved_module, data = _find_citation_map(task_id, module)
+    target_module = resolved_module or module or ""
+    if data is None and target_module:
+        recovery_payload = _read_recovery_payload(target_module, task_id)
+        if recovery_payload is not None:
+            footnote_map, all_items = synthesize_citation_map(
+                module=target_module,
+                task_id=task_id,
+                payload=recovery_payload,
+            )
+            output_dir = Path("outputs") / target_module / task_id / "outputs"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            write_citation_map_json(
+                output_dir=output_dir,
+                module=target_module,
+                task_id=task_id,
+                footnote_map=footnote_map,
+                all_items=all_items,
+            )
+            data = {
+                "task_id": task_id,
+                "module": target_module,
+                "footnote_map": footnote_map,
+                "all_items": all_items,
+            }
+            resolved_module = target_module
+
     if data is None:
-        return CitationMapResponse(task_id=task_id, module=module or "", footnote_map={}, citation_count=0)
+        return CitationMapResponse(task_id=task_id, module=target_module, footnote_map={}, citation_count=0)
 
     footnote_map_raw: dict = data.get("footnote_map", {})
+    all_items_raw: list[dict] = data.get("all_items", [])
+    if not footnote_map_raw and target_module:
+        recovery_payload = _read_recovery_payload(target_module, task_id)
+        merged_payload = recovery_payload or {}
+        if not merged_payload and all_items_raw:
+            merged_payload = {"result": {"citations": all_items_raw}}
+        synthesized_footnote_map, synthesized_all_items = synthesize_citation_map(
+            module=target_module,
+            task_id=task_id,
+            payload=merged_payload,
+        )
+        if synthesized_footnote_map:
+            footnote_map_raw = synthesized_footnote_map
+            all_items_raw = synthesized_all_items
+            output_dir = Path("outputs") / target_module / task_id / "outputs"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            write_citation_map_json(
+                output_dir=output_dir,
+                module=target_module,
+                task_id=task_id,
+                footnote_map=synthesized_footnote_map,
+                all_items=synthesized_all_items,
+            )
+
     result: dict[str, CitationDetailResponse] = {}
     for num_str, item in footnote_map_raw.items():
         result[num_str] = _build_detail(

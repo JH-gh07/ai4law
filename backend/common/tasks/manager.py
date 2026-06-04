@@ -195,6 +195,12 @@ class InMemoryTaskManager:
 
         try:
             result = record.runner()
+            trace_recorder = None
+            try:
+                from backend.common.trace.context import current_trace
+                trace_recorder = current_trace.get()
+            except Exception:
+                trace_recorder = None
             if hasattr(result, "model_dump"):
                 payload = result.model_dump()  # pydantic model
             elif isinstance(result, dict):
@@ -228,17 +234,22 @@ class InMemoryTaskManager:
                             break
                 if sample_path:
                     from pathlib import Path
-                    from backend.common.citation.output import write_citation_map_json
+                    from backend.common.citation.output import synthesize_citation_map, write_citation_map_json
 
                     output_dir = Path(sample_path).parent
                     citation_map_path = output_dir / "citation_map.json"
                     if not citation_map_path.exists():
+                        footnote_map, all_items = synthesize_citation_map(
+                            module=self.module,
+                            task_id=task_id,
+                            payload=payload,
+                        )
                         write_citation_map_json(
                             output_dir=output_dir,
                             module=self.module,
                             task_id=task_id,
-                            footnote_map={},
-                            all_items=[],
+                            footnote_map=footnote_map,
+                            all_items=all_items,
                         )
             except Exception:
                 pass

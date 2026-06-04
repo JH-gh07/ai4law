@@ -51,23 +51,33 @@ export function normalizeLegalMarkdown(value: string): string {
   );
   const lines = normalized
     .split("\n")
-    .flatMap((line) => explodePackedLine(line.trim()))
-    .map(classifyLine)
-    .filter(Boolean);
+    .flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return [""];
+      return explodePackedLine(trimmed).map(classifyLine);
+    });
 
   const parts: string[] = [];
   let prevKind: ReturnType<typeof lineKind> | null = null;
+  let sawBlankLine = false;
 
   for (const line of lines) {
+    if (!line) {
+      sawBlankLine = true;
+      continue;
+    }
+
     const kind = lineKind(line);
     if (parts.length > 0) {
       let separator = "\n\n";
-      if (kind === "list" && prevKind === "list") separator = "\n";
-      if (kind === "table" && prevKind === "table") separator = "\n";
+      if (!sawBlankLine && kind === "paragraph" && prevKind === "paragraph") separator = "\n";
+      if (!sawBlankLine && kind === "list" && prevKind === "list") separator = "\n";
+      if (!sawBlankLine && kind === "table" && prevKind === "table") separator = "\n";
       parts.push(separator);
     }
     parts.push(line);
     prevKind = kind;
+    sawBlankLine = false;
   }
 
   return parts.join("").replace(/\n{3,}/g, "\n\n").trim();

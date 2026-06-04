@@ -19,6 +19,31 @@ export type MyReportItem = {
   preview?: Record<string, unknown>;
 };
 
+export type RecoveredModuleRunItem = {
+  id: string;
+  task_space_id: string;
+  module: string;
+  run_mode: "sync" | "async";
+  started_at: string;
+  finished_at?: string | null;
+  success: boolean;
+  request?: Record<string, unknown>;
+  response?: Record<string, unknown> | null;
+  error?: string | null;
+  async_task_id?: string | null;
+  async_state?: string | null;
+};
+
+export type RecoveredWorkspaceItem = {
+  task_id: string;
+  module: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  run?: RecoveredModuleRunItem | null;
+  artifacts: MyReportItem[];
+};
+
 export type WorkspaceStatePayload = {
   task_spaces: Record<string, unknown>[];
   module_runs: Record<string, unknown>[];
@@ -38,6 +63,13 @@ export async function fetchMyReports(): Promise<MyReportItem[]> {
   const response = await fetch("/api/v1/me/reports", { headers: { ...getAuthHeaders() } });
   if (!response.ok) return [];
   const data = (await response.json()) as { items?: MyReportItem[] };
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+export async function fetchWorkspaceRecovery(): Promise<RecoveredWorkspaceItem[]> {
+  const response = await fetch("/api/v1/me/workspace-recovery", { headers: { ...getAuthHeaders() } });
+  if (!response.ok) return [];
+  const data = (await response.json()) as { items?: RecoveredWorkspaceItem[] };
   return Array.isArray(data.items) ? data.items : [];
 }
 
