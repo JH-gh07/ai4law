@@ -7,11 +7,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from backend.common.rag.ingest import build_regulation_index
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
 
 
 def main() -> None:
     settings = SimpleNamespace(
-        rag_source_jsonl=ROOT / "doc/knowledge/normalized/regulation_articles.jsonl",
+        rag_source_jsonl=regulation_articles_jsonl_path(),
         rag_index_path=ROOT / "storage/rag/regulation_index_v2.json",
         rag_embedding_dimension=384,
     )

@@ -1,11 +1,18 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic import AliasChoices, Field
+from pydantic import PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
 
 
 class Settings(BaseSettings):
+    _runtime_llm_providers: list[dict[str, Any]] | None = PrivateAttr(default=None)
+    _runtime_llm_active_provider_id: str = PrivateAttr(default="")
+
     app_env: str = "development"
     database_url: str = "sqlite:///./storage/ai4law.db"
     storage_dir: Path = Path("storage")
@@ -15,7 +22,7 @@ class Settings(BaseSettings):
     delilegal_base_url: str = "https://openapi.delilegal.com"
     delilegal_app_id: str | None = None
     delilegal_secret: str | None = None
-    rag_source_jsonl: Path = Path("doc/knowledge/normalized/regulation_articles.jsonl")
+    rag_source_jsonl: Path = Field(default_factory=regulation_articles_jsonl_path)
     rag_index_path: Path = Path("storage/rag/regulation_index_v2.json")
     rag_user_materials_index_path: Path = Path("storage/rag/user_materials_index_v2.json")
     rag_v3_dir: Path = Path("storage/rag/v3")

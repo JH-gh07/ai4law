@@ -14,7 +14,12 @@ import pypdf
 from docx import Document
 
 ROOT = Path(__file__).resolve().parents[1]
-JSONL_PATH = ROOT / "doc/knowledge/normalized/regulation_articles.jsonl"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
+
+JSONL_PATH = regulation_articles_jsonl_path()
 SRC_DIR = ROOT / "doc/v3/数据跨境中美欧法律文本"
 
 # ──────────────────────────────────────────────────────────────────────────────

@@ -15,9 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from backend.common.knowledge.paths import practice_cases_csv_path
 from backend.common.rag.retriever import RegulationDoc, retrieve_regulations
 
-PRACTICE_CASES_CSV = ROOT / "doc/knowledge/index/practice_cases.csv"
+PRACTICE_CASES_CSV = practice_cases_csv_path()
 OUTPUT_MD = ROOT / "doc/v2/qa-rag-v1.md"
 OUTPUT_JSON = ROOT / "qa/rag_baseline_v1.json"
 EVAL_MODES: tuple[str, ...] = ("vector", "hybrid")

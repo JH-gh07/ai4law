@@ -7,12 +7,13 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
+from backend.common.knowledge.paths import module_catalog_path, practice_cases_csv_path, sources_csv_path
+
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
-CASES_CSV = ROOT / "doc/knowledge/index/practice_cases.csv"
-REGISTRY_DIR = ROOT / "doc/knowledge/registry"
-MODULE_CATALOG = REGISTRY_DIR / "module_catalog.v1.json"
+SOURCES_CSV = sources_csv_path()
+CASES_CSV = practice_cases_csv_path()
+MODULE_CATALOG = module_catalog_path()
 
 
 def _now_iso() -> str:

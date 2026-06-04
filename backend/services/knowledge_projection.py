@@ -150,14 +150,18 @@ def _summarize_source(
     first_chunk = chunks[0] if chunks else None
     metadata = dict(entry.metadata or {})
     category = _category_for_chunk(first_chunk) if first_chunk else "知识条目"
+    category = str(metadata.get("category") or category)
     scenario_text = "、".join(sorted({_scenario_label(chunk) for chunk in chunks if _scenario_label(chunk)}))
+    scenario_text = str(metadata.get("suitable_for") or scenario_text)
     usage_text = "、".join(_usage_labels([str(item) for item in entry.allowed_usage]))
+    usage_text = str(metadata.get("usage") or usage_text)
     article_count = sum(1 for chunk in chunks if chunk.article_no)
     template_hint = ""
     if first_chunk and first_chunk.layer == "L4_template":
         template_hint = "用于正式文档结构组织。" if first_chunk.template_type == "official_template" else "用于内部起草参考。"
     description = (
-        metadata.get("description")
+        metadata.get("summary")
+        or metadata.get("description")
         or metadata.get("notes")
         or first_chunk.content[:120] if first_chunk and first_chunk.content else ""
     )
@@ -173,16 +177,18 @@ def _summarize_source(
         "binding_force_code": entry.binding_force,
         "status": _status_label(entry.status, entry.is_current_version),
         "status_code": entry.status,
-        "publisher": str(metadata.get("source_org") or ""),
+        "publisher": str(metadata.get("publisher") or metadata.get("source_org") or ""),
         "source_org": str(metadata.get("source_org") or ""),
         "publish_date": str(metadata.get("publish_date") or ""),
         "effective_date": str(metadata.get("effective_date") or ""),
         "source_url": str(metadata.get("source_url") or ""),
         "url": str(metadata.get("source_url") or ""),
         "snapshot_path": str(metadata.get("snapshot_path") or ""),
+        "module": str(metadata.get("module") or ""),
+        "knowledge_url": str(metadata.get("knowledge_url") or ""),
         "suitable_for": scenario_text or "通用参考",
         "usage": usage_text or ("可作为正式依据" if entry.can_be_cited else "仅供内部参考"),
-        "report_usage": "可直接用于正式报告" if entry.can_enter_external_report else "不直接写入正式报告",
+        "report_usage": str(metadata.get("report_usage") or ("可直接用于正式报告" if entry.can_enter_external_report else "不直接写入正式报告")),
         "summary": (description or template_hint or entry.title)[:180],
         "highlights": f"{article_count} 个重点条文" if article_count else template_hint or "查看详情了解适用方式",
         "doc_type": str(metadata.get("doc_type") or ""),
@@ -235,20 +241,21 @@ def build_user_case_catalog() -> list[dict[str, str]]:
                 "case_id": raw.get("case_id", ""),
                 "title": raw.get("case_title", ""),
                 "case_title": raw.get("case_title", ""),
-                "category": "典型案例",
+                "category": raw.get("category", "") or "典型案例",
                 "jurisdiction": _jurisdiction_label(raw.get("jurisdiction", "").split("-")[0]),
                 "jurisdiction_code": raw.get("jurisdiction", "").split("-")[0],
-                "publisher": raw.get("source_org", ""),
+                "publisher": raw.get("publisher", "") or raw.get("source_org", ""),
                 "source_org": raw.get("source_org", ""),
                 "publish_date": raw.get("publish_date", ""),
-                "suitable_for": "、".join(dict.fromkeys(scenario_labels)) or "业务参考",
-                "usage": "仅供案例参考",
-                "report_usage": "不直接写入正式报告",
-                "summary": raw.get("available_artifacts", "") or raw.get("limitations", "") or raw.get("case_title", ""),
+                "suitable_for": raw.get("suitable_for", "") or "、".join(dict.fromkeys(scenario_labels)) or "业务参考",
+                "usage": raw.get("usage", "") or "仅供案例参考",
+                "report_usage": raw.get("report_usage", "") or "不直接写入正式报告",
+                "summary": raw.get("summary", "") or raw.get("available_artifacts", "") or raw.get("limitations", "") or raw.get("case_title", ""),
                 "limitations": raw.get("limitations", ""),
                 "source_url": raw.get("url", ""),
                 "url": raw.get("url", ""),
                 "snapshot_path": raw.get("snapshot_path", ""),
+                "knowledge_url": raw.get("knowledge_url", ""),
                 "scenario": "、".join(expected_modules),
                 "expected_module": "、".join(expected_modules),
                 "case_type": raw.get("case_type", ""),

@@ -5,12 +5,17 @@ import json
 from pathlib import Path
 
 from backend.common.knowledge.v2 import SourceRegistryEntry
+from backend.common.knowledge.paths import (
+    module_catalog_path,
+    source_registry_path,
+    sources_csv_path,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
-REGISTRY_DIR = ROOT / "doc" / "knowledge" / "registry"
-REGISTRY_PATH = REGISTRY_DIR / "source_registry.v1.json"
-MODULE_CATALOG_PATH = REGISTRY_DIR / "module_catalog.v1.json"
-SOURCES_CSV = ROOT / "doc" / "knowledge" / "index" / "sources.csv"
+REGISTRY_DIR = source_registry_path().parent
+REGISTRY_PATH = source_registry_path()
+MODULE_CATALOG_PATH = module_catalog_path()
+SOURCES_CSV = sources_csv_path()
 
 DEFAULT_MODULE_CATALOG = {
     "version": "v1",
@@ -112,8 +117,11 @@ DEFAULT_MODULE_CATALOG = {
 def _source_kind_from_row(row: dict[str, str]) -> str:
     title = (row.get("title") or "").replace("《", "").replace("》", "")
     doc_type = (row.get("doc_type") or "").lower()
+    category = (row.get("category") or "").lower()
     if "指南" in title or "指引" in title or doc_type == "guide":
         return "official_guide"
+    if "模板" in title or "模板" in category:
+        return "standard_clause"
     if "标准合同" in title or "标准" in title or "规范" in title:
         return "standard_clause"
     return "law_article"
@@ -131,6 +139,9 @@ def _binding_force_from_title(title: str) -> str:
 
 
 def _authority_level_from_row(row: dict[str, str]) -> str:
+    normalized = (row.get("authority") or "").lower()
+    if normalized in {"high", "medium", "low"}:
+        return normalized
     level = (row.get("authority_level") or "").lower()
     if level in {"official", "high"}:
         return "high"
@@ -187,6 +198,8 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                 continue
             path = (row.get("path") or "all").strip()
             modules = _modules_for_row(jurisdiction, path)
+            if row.get("module"):
+                modules = [item.strip().replace("-", "_") for item in row["module"].split("|") if item.strip()]
             entries.append(
                 SourceRegistryEntry(
                     source_id=source_id,
@@ -205,12 +218,20 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                     can_enter_external_report=True,
                     metadata={
                         "path": path,
+                        "module": (row.get("module") or "").strip(),
+                        "category": (row.get("category") or "").strip(),
                         "doc_type": (row.get("doc_type") or "").strip(),
+                        "publisher": (row.get("publisher") or "").strip(),
                         "source_org": (row.get("source_org") or "").strip(),
                         "publish_date": (row.get("publish_date") or "").strip(),
                         "effective_date": (row.get("effective_date") or "").strip(),
                         "snapshot_path": (row.get("snapshot_path") or "").strip(),
                         "source_url": (row.get("url") or "").strip(),
+                        "usage": (row.get("usage") or "").strip(),
+                        "suitable_for": (row.get("suitable_for") or "").strip(),
+                        "report_usage": (row.get("report_usage") or "").strip(),
+                        "summary": (row.get("summary") or "").strip(),
+                        "knowledge_url": (row.get("knowledge_url") or "").strip(),
                     },
                 )
             )

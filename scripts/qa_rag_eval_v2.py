@@ -17,11 +17,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from backend.common.knowledge.paths import (
+    NEW_EVALUATION_DIR,
+    sources_csv_path,
+)
 from backend.common.rag.retriever import DEFAULT_SCORE_FLOOR_BY_MODE, RegulationDoc, retrieve_regulations
 
-DATASET_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_queries.csv"
-EXTRA_NEGATIVE_CSV = ROOT / "doc/knowledge/evaluation/rag_eval_v2_hard_negatives.csv"
-SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
+DATASET_CSV = NEW_EVALUATION_DIR / "rag_eval_v2_queries.csv"
+EXTRA_NEGATIVE_CSV = NEW_EVALUATION_DIR / "rag_eval_v2_hard_negatives.csv"
+SOURCES_CSV = sources_csv_path()
 OUT_JSON = ROOT / "qa/rag_eval_v2.json"
 OUT_MD = ROOT / "doc/v2/qa-rag-v2.md"
 

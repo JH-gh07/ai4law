@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import type { RuntimeProvider, RuntimeSettingsPayload } from "../lib/system-settings-api";
-import { fetchRuntimeSettings, saveRuntimeSettings } from "../lib/system-settings-api";
+import { useEffect, useState } from "react";
+import type { RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../lib/system-settings-api";
+import { fetchRuntimeSettings, saveRuntimeSettings, testRuntimeProvider } from "../lib/system-settings-api";
 
 const FALLBACK_MODELS = ["hunyuan-lite", "hunyuan-turbos-latest", "hunyuan-standard"];
 
@@ -12,14 +12,22 @@ const emptyPayload: RuntimeSettingsPayload = {
     enabled: false,
   },
   llm: {
-    provider: "tencent_hunyuan",
-    api_key: "",
-    api_url: "https://api.hunyuan.cloud.tencent.com/v1",
-    model: "hunyuan-lite",
+    active_provider_id: "default",
+    providers: [
+      {
+        id: "default",
+        name: "Default Provider",
+        provider_type: "openai_compatible",
+        api_key: "",
+        api_url: "https://api.hunyuan.cloud.tencent.com/v1",
+        model: "hunyuan-lite",
+        enabled: false,
+        timeout: 60,
+      },
+    ],
     model_options: FALLBACK_MODELS,
     enabled: false,
   },
-  custom_providers: [],
 };
 
 export function SettingsPage() {
@@ -27,12 +35,8 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>("");
-  const llmModels = useMemo(() => {
-    const opts = form.llm.model_options.length ? form.llm.model_options : FALLBACK_MODELS;
-    if (!opts.includes(form.llm.model)) return [...opts, form.llm.model];
-    return opts;
-  }, [form.llm.model, form.llm.model_options]);
-
+  const [testingProviderId, setTestingProviderId] = useState<string>("");
+  const [providerTestState, setProviderTestState] = useState<Record<string, RuntimeProviderTestResult | { ok: false; error: string }>>({});
   useEffect(() => {
     let alive = true;
     fetchRuntimeSettings()
@@ -56,7 +60,10 @@ export function SettingsPage() {
   const updateProvider = (id: string, patch: Partial<RuntimeProvider>) => {
     setForm((prev) => ({
       ...prev,
-      custom_providers: prev.custom_providers.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      llm: {
+        ...prev.llm,
+        providers: prev.llm.providers.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      },
     }));
   };
 
@@ -64,18 +71,69 @@ export function SettingsPage() {
     const id = `provider-${Date.now()}`;
     setForm((prev) => ({
       ...prev,
-      custom_providers: [
-        ...prev.custom_providers,
-        { id, name: "New Provider", api_key: "", api_url: "", model: "", enabled: false },
-      ],
+      llm: {
+        ...prev.llm,
+        providers: [
+          ...prev.llm.providers,
+          {
+            id,
+            name: "New Provider",
+            provider_type: "openai_compatible",
+            api_key: "",
+            api_url: "",
+            model: "",
+            enabled: true,
+            timeout: 60,
+          },
+        ],
+      },
     }));
   };
 
   const removeProvider = (id: string) => {
     setForm((prev) => ({
       ...prev,
-      custom_providers: prev.custom_providers.filter((item) => item.id !== id),
+      llm: {
+        ...prev.llm,
+        active_provider_id:
+          prev.llm.active_provider_id === id
+            ? prev.llm.providers.find((item) => item.id !== id)?.id || ""
+            : prev.llm.active_provider_id,
+        providers: prev.llm.providers.filter((item) => item.id !== id),
+      },
     }));
+  };
+
+  const setActiveProvider = (id: string) => {
+    setForm((prev) => ({
+      ...prev,
+      llm: {
+        ...prev.llm,
+        active_provider_id: id,
+      },
+    }));
+  };
+
+  const onTestProvider = async (provider: RuntimeProvider) => {
+    setTestingProviderId(provider.id);
+    try {
+      const result = await testRuntimeProvider(provider);
+      setProviderTestState((prev) => ({ ...prev, [provider.id]: result }));
+    } catch (err) {
+      setProviderTestState((prev) => ({
+        ...prev,
+        [provider.id]: { ok: false, error: err instanceof Error ? err.message : String(err) },
+      }));
+    } finally {
+      setTestingProviderId("");
+    }
+  };
+
+  const getProviderTestLabel = (providerId: string) => {
+    const state = providerTestState[providerId];
+    if (!state) return "";
+    if (!state.ok) return state.error || "测试失败";
+    return `连接成功 · ${state.latency_ms ?? "-"}ms`;
   };
 
   const onSave = async () => {
@@ -96,7 +154,7 @@ export function SettingsPage() {
     <section className="page-shell settings-page">
       <header className="page-header">
         <h2>设置</h2>
-        <p className="tasks-hero-subtitle">配置得理法搜、腾讯混元和其他 API Provider。</p>
+        <p className="tasks-hero-subtitle">配置得理法搜与全局 LLM Provider。当前仅支持 OpenAI-compatible API。</p>
       </header>
 
       {loading ? <p className="resource-empty">加载中...</p> : null}
@@ -145,75 +203,49 @@ export function SettingsPage() {
           </section>
 
           <section className="settings-card">
-            <h3>腾讯混元（LLM）</h3>
-            <label>
-              <span>Provider</span>
-              <input
-                value={form.llm.provider}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, llm: { ...prev.llm, provider: event.target.value } }))
-                }
-              />
-            </label>
-            <label>
-              <span>API Key</span>
-              <input
-                type="password"
-                value={form.llm.api_key}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, llm: { ...prev.llm, api_key: event.target.value } }))
-                }
-              />
-            </label>
-            <label>
-              <span>API URL</span>
-              <input
-                value={form.llm.api_url}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, llm: { ...prev.llm, api_url: event.target.value } }))
-                }
-              />
-            </label>
-            <label>
-              <span>模型选择</span>
-              <select
-                value={form.llm.model}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, llm: { ...prev.llm, model: event.target.value } }))
-                }
-              >
-                {llmModels.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>自定义模型</span>
-              <input
-                value={form.llm.model}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, llm: { ...prev.llm, model: event.target.value } }))
-                }
-              />
-            </label>
-            <p className="settings-hint">{form.llm.enabled ? "当前已启用" : "当前未启用（缺少 API Key）"}</p>
+            <h3>当前生效 Provider</h3>
+            {form.llm.providers.length > 0 ? (
+              <>
+                <p className="settings-provider-active-line">
+                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.name || "未选择"} ·{" "}
+                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.model || "-"} ·{" "}
+                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.api_url || "-"}
+                </p>
+                <p className="settings-hint">
+                  {form.llm.enabled ? "当前存在可用 Provider。" : "当前没有已启用且配置了 API Key 的 Provider。"}
+                </p>
+              </>
+            ) : (
+              <p className="resource-empty">暂无 Provider。</p>
+            )}
           </section>
 
           <section className="settings-card settings-card-full">
             <div className="settings-card-head">
-              <h3>其他 API Provider</h3>
+              <h3>LLM Provider 管理</h3>
               <button className="pill-btn" onClick={addProvider}>
                 新增 Provider
               </button>
             </div>
             <div className="settings-provider-list">
-              {form.custom_providers.map((provider) => (
+              {form.llm.providers.map((provider) => (
                 <article key={provider.id} className="settings-provider-item">
+                  <label>
+                    <span>ID</span>
+                    <input value={provider.id} onChange={(event) => updateProvider(provider.id, { id: event.target.value })} />
+                  </label>
                   <label>
                     <span>名称</span>
                     <input value={provider.name} onChange={(event) => updateProvider(provider.id, { name: event.target.value })} />
+                  </label>
+                  <label>
+                    <span>Provider 类型</span>
+                    <select
+                      value={provider.provider_type}
+                      onChange={(event) => updateProvider(provider.id, { provider_type: event.target.value })}
+                    >
+                      <option value="openai_compatible">OpenAI Compatible</option>
+                    </select>
                   </label>
                   <label>
                     <span>API URL</span>
@@ -227,6 +259,14 @@ export function SettingsPage() {
                     <span>Model</span>
                     <input value={provider.model} onChange={(event) => updateProvider(provider.id, { model: event.target.value })} />
                   </label>
+                  <label>
+                    <span>Timeout</span>
+                    <input
+                      type="number"
+                      value={provider.timeout}
+                      onChange={(event) => updateProvider(provider.id, { timeout: Number(event.target.value) || 60 })}
+                    />
+                  </label>
                   <label className="settings-provider-toggle">
                     <input
                       type="checkbox"
@@ -235,12 +275,31 @@ export function SettingsPage() {
                     />
                     <span>启用</span>
                   </label>
+                  <div className="settings-provider-actions">
+                    <button
+                      className={form.llm.active_provider_id === provider.id ? "pill-btn-primary" : "pill-btn"}
+                      onClick={() => setActiveProvider(provider.id)}
+                    >
+                      {form.llm.active_provider_id === provider.id ? "当前使用" : "设为当前"}
+                    </button>
+                    <button className="pill-btn" onClick={() => onTestProvider(provider)} disabled={testingProviderId === provider.id}>
+                      {testingProviderId === provider.id ? "测试中..." : "测试连接"}
+                    </button>
+                  </div>
+                  <p className="settings-hint">
+                    {provider.api_key_configured || provider.api_key ? "API Key 已配置" : "API Key 未配置"}
+                  </p>
+                  {provider.id in providerTestState ? (
+                    <p className={`settings-provider-test ${providerTestState[provider.id]?.ok ? "is-success" : "is-error"}`}>
+                      {getProviderTestLabel(provider.id)}
+                    </p>
+                  ) : null}
                   <button className="tasks-save-btn is-danger" onClick={() => removeProvider(provider.id)}>
                     删除
                   </button>
                 </article>
               ))}
-              {form.custom_providers.length === 0 ? <p className="resource-empty">暂无自定义 Provider。</p> : null}
+              {form.llm.providers.length === 0 ? <p className="resource-empty">暂无 Provider。</p> : null}
             </div>
           </section>
         </div>

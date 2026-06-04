@@ -48,7 +48,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
       code: "EU" as const,
       tone: "eu" as const,
       title: lang === "zh" ? "欧盟任务包" : "EU Task Pack",
-      description: lang === "zh" ? "围绕 SCC / BCR / DPIA / TIA 的合规模块" : "Compliance modules for SCC / BCR / DPIA / TIA"
+      description: lang === "zh" ? "围绕 SCC、BCR、DPIA、TIA 的合规模块" : "Compliance modules for SCC, BCR, DPIA, TIA"
     },
     {
       code: "US" as const,

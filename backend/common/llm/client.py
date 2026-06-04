@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from backend.common.llm.provider_registry import LLMProviderRegistry
 from backend.common.trace.context import current_trace
 
 try:
@@ -53,19 +54,33 @@ class LLMClient:
     """
 
     def __init__(self, settings: Settings) -> None:
-        self._provider = settings.resolved_llm_provider
-        self._model = settings.resolved_llm_model
-        self._api_key = settings.resolved_llm_api_key
-        self._api_url = settings.resolved_llm_api_url
+        provider = LLMProviderRegistry(settings).get_active_provider()
+        self._provider_id = provider.id
+        self._provider_name = provider.name
+        self._provider_type = provider.provider_type
+        self._provider = provider.id
+        self._model = provider.model
+        self._api_key = provider.api_key
+        self._api_url = provider.api_url
+        self._timeout = provider.timeout
         self._enabled = bool(self._api_key) and OpenAI is not None
         if self._enabled:
             self._client = OpenAI(
                 api_key=self._api_key,
                 base_url=self._api_url,
-                timeout=60,
+                timeout=self._timeout,
             )
         elif OpenAI is None:
             logger.warning("LLMClient: openai package not installed, falling back to placeholder outputs.")
+        logger.info(
+            "LLMClient initialized: provider_id=%s provider_name=%s provider_type=%s model=%s base_url=%s api_key_configured=%s",
+            self._provider_id,
+            self._provider_name,
+            self._provider_type,
+            self._model,
+            self._api_url,
+            bool(self._api_key),
+        )
 
     @property
     def enabled(self) -> bool:
@@ -109,6 +124,10 @@ class LLMClient:
                         "tool": "llm_chat",
                         "channel": channel,
                         "provider": self._provider,
+                        "provider_id": self._provider_id,
+                        "provider_name": self._provider_name,
+                        "provider_type": self._provider_type,
+                        "base_url": self._api_url,
                         "model": self._model,
                         "temperature": temperature,
                         "max_tokens": max_tokens,
@@ -147,6 +166,11 @@ class LLMClient:
                         "detail": {
                             "tool": "llm_chat",
                             "channel": channel,
+                            "provider": self._provider,
+                            "provider_id": self._provider_id,
+                            "provider_name": self._provider_name,
+                            "provider_type": self._provider_type,
+                            "base_url": self._api_url,
                             "model": self._model,
                             "usage": usage.as_dict(),
                             "content": content[:1200],

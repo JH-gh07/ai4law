@@ -7,12 +7,18 @@ import csv
 import html
 import json
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES_CSV = ROOT / "doc/knowledge/index/sources.csv"
-OUTPUT_JSONL = ROOT / "doc/knowledge/normalized/regulation_articles.jsonl"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path
+
+SOURCES_CSV = sources_csv_path()
+OUTPUT_JSONL = regulation_articles_jsonl_path()
 
 ARTICLE_PATTERN = re.compile(r"(第[一二三四五六七八九十百千万零〇0-9]{1,10}条)")
 WHITESPACE_PATTERN = re.compile(r"[ \t\x0b\x0c\r]+")

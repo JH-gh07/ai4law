@@ -1,0 +1,20 @@
+{
+  "spec_modules": [
+    "cn-diagnosis",
+    "cn-assessment",
+    "cn-review",
+    "cn-pipia",
+    "eu-scc",
+    "eu-bcr",
+    "eu-dpia",
+    "eu-tia",
+    "us-14117",
+    "us-cpra"
+  ],
+  "copied_specs": 11,
+  "copied_tests": 10,
+  "copied_references": 204,
+  "copied_snapshots": 83,
+  "generated_index_rows": 19,
+  "generated_case_rows": 12
+}

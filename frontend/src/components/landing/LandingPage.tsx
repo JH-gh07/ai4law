@@ -29,73 +29,14 @@ type CopyBlock = {
 };
 
 function JurisdictionFlag({ code }: { code: Jurisdiction }) {
-  if (code === "CN") {
-    return (
-      <svg viewBox="0 0 36 24" aria-hidden="true">
-        <rect width="36" height="24" rx="3" fill="#de2910" />
-        <path d="M7.2 3.1l0.79 2.41h2.53l-2.05 1.49 0.78 2.41-2.05-1.49-2.05 1.49 0.78-2.41-2.05-1.49h2.53z" fill="#ffde00" />
-        <path d="M12.7 2.84l0.31 0.96h1.01l-0.82 0.59 0.32 0.96-0.82-0.6-0.82 0.6 0.31-0.96-0.82-0.59h1.01z" fill="#ffde00" transform="rotate(22 12.7 4.2)" />
-        <path d="M15.14 5.26l0.31 0.96h1.01l-0.82 0.59 0.31 0.96-0.81-0.6-0.82 0.6 0.31-0.96-0.82-0.59h1.01z" fill="#ffde00" transform="rotate(45 15.14 6.62)" />
-        <path d="M15.05 9.22l0.31 0.96h1.01l-0.82 0.59 0.31 0.96-0.81-0.6-0.82 0.6 0.31-0.96-0.82-0.59h1.01z" fill="#ffde00" transform="rotate(8 15.05 10.58)" />
-        <path d="M12.43 11.86l0.31 0.96h1.01l-0.82 0.6 0.31 0.95-0.81-0.59-0.82 0.59 0.31-0.95-0.82-0.6h1.01z" fill="#ffde00" transform="rotate(28 12.43 13.22)" />
-      </svg>
-    );
-  }
-
-  if (code === "EU") {
-    return (
-      <svg viewBox="0 0 36 24" aria-hidden="true">
-        <rect width="36" height="24" rx="3" fill="#003399" />
-        <g fill="#ffcc00">
-          <circle cx="18" cy="5" r="1.1" />
-          <circle cx="21.8" cy="6" r="1.1" />
-          <circle cx="24.5" cy="9" r="1.1" />
-          <circle cx="25" cy="12" r="1.1" />
-          <circle cx="24.5" cy="15" r="1.1" />
-          <circle cx="21.8" cy="18" r="1.1" />
-          <circle cx="18" cy="19" r="1.1" />
-          <circle cx="14.2" cy="18" r="1.1" />
-          <circle cx="11.5" cy="15" r="1.1" />
-          <circle cx="11" cy="12" r="1.1" />
-          <circle cx="11.5" cy="9" r="1.1" />
-          <circle cx="14.2" cy="6" r="1.1" />
-        </g>
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 36 24" aria-hidden="true">
-      <rect width="36" height="24" rx="3" fill="#b22234" />
-      <rect y="2" width="36" height="2" fill="#ffffff" />
-      <rect y="6" width="36" height="2" fill="#ffffff" />
-      <rect y="10" width="36" height="2" fill="#ffffff" />
-      <rect y="14" width="36" height="2" fill="#ffffff" />
-      <rect y="18" width="36" height="2" fill="#ffffff" />
-      <rect y="22" width="36" height="2" fill="#ffffff" />
-      <rect width="15.2" height="12.5" rx="2" fill="#3c3b6e" />
-      <g fill="#ffffff">
-        <circle cx="3" cy="2.5" r="0.55" />
-        <circle cx="6" cy="2.5" r="0.55" />
-        <circle cx="9" cy="2.5" r="0.55" />
-        <circle cx="12" cy="2.5" r="0.55" />
-        <circle cx="4.5" cy="4.5" r="0.55" />
-        <circle cx="7.5" cy="4.5" r="0.55" />
-        <circle cx="10.5" cy="4.5" r="0.55" />
-        <circle cx="3" cy="6.5" r="0.55" />
-        <circle cx="6" cy="6.5" r="0.55" />
-        <circle cx="9" cy="6.5" r="0.55" />
-        <circle cx="12" cy="6.5" r="0.55" />
-        <circle cx="4.5" cy="8.5" r="0.55" />
-        <circle cx="7.5" cy="8.5" r="0.55" />
-        <circle cx="10.5" cy="8.5" r="0.55" />
-        <circle cx="3" cy="10.5" r="0.55" />
-        <circle cx="6" cy="10.5" r="0.55" />
-        <circle cx="9" cy="10.5" r="0.55" />
-        <circle cx="12" cy="10.5" r="0.55" />
-      </g>
-    </svg>
-  );
+  const src =
+    code === "CN"
+      ? "/flags/cn-jurisdiction.svg"
+      : code === "EU"
+        ? "/flags/eu-jurisdiction.svg"
+        : "/flags/us-jurisdiction.svg";
+  const alt = code === "CN" ? "China flag" : code === "EU" ? "European Union flag" : "United States flag";
+  return <img className="landing-blue-jd-flag" src={src} alt={alt} />;
 }
 
 export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }: LandingPageProps) {
@@ -123,12 +64,12 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           },
           {
             title: "材料繁杂，文书准备链条长",
-            desc: "从数据清单到 PIPIA、DPIA、TIA 与 SCC 审查，准备和复核往往最耗时间",
+            desc: "PIPIA、DPIA、TIA 与 SCC等文件的准备和复核往往最耗时间",
             badge: "文书"
           },
           {
-            title: "审查依据不稳，整改难推进",
-            desc: "很多问题不是没发现，而是依据不清、定位不准，难以形成可执行结论",
+            title: "审查依据不清，整改难推进",
+            desc: "很多问题不是没发现，而是依据不稳、定位不准，难以形成可执行结论",
             badge: "审查"
           }
         ],
@@ -145,7 +86,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           },
           {
             title: "合同与文书审查",
-            desc: "围绕隐私政策、DPA、标准合同、SCC/BCR 等文本输出条款级审查意见与修改依据",
+            desc: "围绕隐私政策、DPIA、标准合同、SCC、BCR 等文本输出条款级审查意见与修改依据",
             tag: "Review"
           },
           {
@@ -163,7 +104,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           {
             code: "EU",
             name: "欧盟",
-            points: ["SCC / BCR 审查", "DPIA 草案生成", "TIA 草案生成", "跨境传输义务分析"]
+            points: ["SCC、BCR 审查", "DPIA 草案生成", "TIA 草案生成", "跨境传输义务分析"]
           },
           {
             code: "US",
@@ -203,7 +144,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           },
           {
             title: "Contract and Document Review",
-            desc: "Deliver clause-level review findings for privacy policies, DPAs, standard contracts, and SCC/BCR documentation",
+            desc: "Deliver clause-level review findings for privacy policies, DPIAs, standard contracts, and SCC, BCR documentation",
             tag: "Review"
           },
           {
@@ -221,7 +162,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
           {
             code: "EU",
             name: "European Union",
-            points: ["SCC / BCR Review", "DPIA Drafting", "TIA Drafting", "Transfer Obligation Analysis"]
+            points: ["SCC, BCR Review", "DPIA Drafting", "TIA Drafting", "Transfer Obligation Analysis"]
           },
           {
             code: "US",

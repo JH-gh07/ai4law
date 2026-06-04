@@ -3219,11 +3219,15 @@
   justify-self: center;
 }
 
-.landing-blue-jd-icon svg {
-  width: 36px;
-  height: 24px;
+.landing-blue-jd-flag {
+  display: block;
+  width: 44px;
+  height: 29.333px;
+  object-fit: contain;
+  object-position: center;
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(194, 221, 247, 0.24);
+  background: rgba(12, 28, 48, 0.35);
 }
 
 .landing-blue-jd-card h3 {
@@ -5068,6 +5072,34 @@
 
 .settings-provider-toggle input {
   width: auto;
+}
+
+.settings-provider-active-line {
+  margin: 0;
+  color: #1f4872;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.settings-provider-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  flex-wrap: wrap;
+}
+
+.settings-provider-test {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.settings-provider-test.is-success {
+  color: #1f7a4e;
+}
+
+.settings-provider-test.is-error {
+  color: #b54848;
 }
 
 .settings-foot {
