@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.api.artifact_registry import register_module_result_artifacts
+from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.modules.scc.schema import SCCAsyncAccepted, SCCAsyncStatus, SCCRequest, SCCResult
@@ -25,7 +26,7 @@ def generate_scc(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ) -> SCCResult:
-    result = service.generate_report(payload)
+    result = trace_sync("scc", lambda: service.generate_report(payload))
     register_module_result_artifacts(
         db=db,
         container=container,

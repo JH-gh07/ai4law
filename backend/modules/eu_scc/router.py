@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.api.artifact_registry import register_module_result_artifacts
+from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.modules.eu_scc.schema import SCCAsyncAccepted, SCCAsyncStatus, SCCReviewRequest, SCCReviewResult
@@ -21,7 +22,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
 
 @router.post("/eu_scc/generate", response_model=SCCReviewResult)
 def generate_eu_scc(payload: SCCReviewRequest, db: Session = Depends(get_db), current_user: AuthUser = Depends(get_current_user), container=Depends(get_container)) -> SCCReviewResult:
-    result = service.generate_report(payload)
+    result = trace_sync("eu_scc", lambda: service.generate_report(payload))
     register_module_result_artifacts(db=db, container=container, user=current_user, module_key="eu_scc", result=result)
     return result
 

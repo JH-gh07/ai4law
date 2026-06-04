@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
+from backend.common.trace.tracer import trace_sync
 from backend.modules.v0_task_gateway.schema import APIEnvelope, V0TaskCreateRequest
 from backend.modules.v0_task_gateway.service import V0TaskGatewayService
 
@@ -19,7 +20,7 @@ def upload_file(file: UploadFile = File(...)) -> APIEnvelope:
 @router.post("/tasks", response_model=APIEnvelope)
 def create_task(payload: V0TaskCreateRequest) -> APIEnvelope:
     try:
-        created = service.create_task(payload)
+        created = trace_sync("v0_task_gateway", lambda: service.create_task(payload))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001

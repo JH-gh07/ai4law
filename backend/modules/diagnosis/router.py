@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.api.artifact_registry import register_module_result_artifacts
+from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.modules.diagnosis.report_renderer import DiagnosisReportRenderer
 from backend.modules.diagnosis.schema import (
@@ -35,7 +36,7 @@ def generate_report(
     container=Depends(get_container),
 ) -> DiagnosisReportResponse:
     try:
-        result = service.evaluate(payload.answers)
+        result = trace_sync("diagnosis", lambda: service.evaluate(payload.answers))
         outputs = renderer.render(payload.company_name, payload.answers, result)
         register_module_result_artifacts(
             db=db,
