@@ -76,17 +76,6 @@ function AppShell() {
         updatedAt: now
       }
     });
-
-    dispatch({
-      type: "set_onboarding",
-      payload: {
-        active: true,
-        completed: false,
-        stepIndex: 1,
-        source: "task_create",
-        targetTaskId: id
-      }
-    });
     setSelectedMode(null);
     setModeModalOpen(false);
     navigate(`/workspace/${id}`);
@@ -94,9 +83,6 @@ function AppShell() {
 
   const onboardingActive = state.onboarding.active;
   const closeOnboarding = () => {
-    const source = state.onboarding.source;
-    const targetTaskId = state.onboarding.targetTaskId;
-
     dispatch({
       type: "set_onboarding",
       payload: {
@@ -107,10 +93,6 @@ function AppShell() {
         targetTaskId: undefined
       }
     });
-
-    if (source === "task_create" && targetTaskId) {
-      navigate(`/workspace/${targetTaskId}`, { replace: true });
-    }
   };
 
   return (
