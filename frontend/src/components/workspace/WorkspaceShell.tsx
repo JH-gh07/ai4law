@@ -30,6 +30,7 @@ import type { RunOutput } from "./ModuleRunPanel";
 import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/AppIcons";
 import { ExecutionTimeline } from "./ExecutionTimeline";
 import { RunBrief } from "./RunBrief";
+import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -125,6 +126,12 @@ const isPdfArtifact = (artifact: OutputArtifact): boolean =>
 const getArtifactPriority = (artifact: OutputArtifact): number => {
   const index = PREFERRED_ARTIFACT_ORDER.indexOf(artifact.kind.toLowerCase());
   return index === -1 ? PREFERRED_ARTIFACT_ORDER.length + 1 : index;
+};
+
+const isTextPreferredArtifact = (artifact: OutputArtifact): boolean => {
+  const ext = getArtifactExtension(artifact.path);
+  const kind = artifact.kind.toLowerCase();
+  return ["md", "markdown", "txt", "json", "csv"].includes(ext) || ["markdown", "md", "report", "txt", "json", "csv"].includes(kind);
 };
 
 const readResponseChapters = (response: unknown): ResponseChapter[] => {
@@ -308,10 +315,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     () => [...reportArtifacts].sort((a, b) => getArtifactPriority(a) - getArtifactPriority(b)),
     [reportArtifacts]
   );
-  const displayReportArtifacts = useMemo(() => {
-    const htmlArtifacts = sortedReportArtifacts.filter(isHtmlArtifact);
-    return htmlArtifacts.length > 0 ? htmlArtifacts : sortedReportArtifacts;
-  }, [sortedReportArtifacts]);
+  const displayReportArtifacts = useMemo(() => sortedReportArtifacts, [sortedReportArtifacts]);
   const selectedArtifact = useMemo(
     () => sortedReportArtifacts.find((artifact) => artifact.path === selectedArtifactPath) ?? null,
     [selectedArtifactPath, sortedReportArtifacts]
@@ -435,7 +439,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       if (current && displayReportArtifacts.some((artifact) => artifact.path === current)) {
         return current;
       }
-      return displayReportArtifacts[0]?.path ?? null;
+      return displayReportArtifacts.find(isTextPreferredArtifact)?.path ?? displayReportArtifacts[0]?.path ?? null;
     });
   }, [displayReportArtifacts]);
 
@@ -846,6 +850,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const renderTextArtifactPreview = (preview: ArtifactPreview) => {
     const ext = readPreviewExt(preview);
     const content = preview.content ?? "";
+    const previewTaskId = latestRun?.asyncTaskId ?? null;
 
     if (ext === "csv") {
       const rows = parseCsvRows(content);
@@ -920,9 +925,17 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       <article className="workspace-report-chapter workspace-report-preview-block">
         <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
         <div className="workspace-report-richtext">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {normalizeMarkdownForRender(content)}
-          </ReactMarkdown>
+          {previewTaskId ? (
+            <CitationMarkdownRenderer
+              markdown={normalizeMarkdownForRender(content)}
+              taskId={previewTaskId}
+              moduleKey={taskSpace.module}
+            />
+          ) : (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {normalizeMarkdownForRender(content)}
+            </ReactMarkdown>
+          )}
         </div>
       </article>
     );
@@ -1015,7 +1028,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab === "timeline") {
-      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} />;
+      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} />;
     }
 
     if (activeTab === "brief") {
@@ -1209,9 +1222,17 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
                 <strong>{section.title}</strong>
                 <div className="workspace-report-richtext">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {normalizeMarkdownForRender(section.content)}
-                  </ReactMarkdown>
+                  {latestRun?.asyncTaskId ? (
+                    <CitationMarkdownRenderer
+                      markdown={normalizeMarkdownForRender(section.content)}
+                      taskId={latestRun.asyncTaskId}
+                      moduleKey={taskSpace.module}
+                    />
+                  ) : (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {normalizeMarkdownForRender(section.content)}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </article>
             ))}
@@ -1366,6 +1387,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <AssistantPanel
             taskSpace={taskSpace}
             onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { rightOpen: false } })}
+            onSwitchTab={(tab) => {
+              setOpenTabs((prev) => (prev.includes(tab as WorkspaceTopTabId) ? prev : [...prev, tab as WorkspaceTopTabId]));
+              setActiveTab(tab);
+            }}
           />
         ) : null}
       </div>

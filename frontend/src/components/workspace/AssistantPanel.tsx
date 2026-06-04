@@ -11,13 +11,16 @@ import { ChevronToggleIcon } from "../common/AppIcons";
 type AssistantPanelProps = {
   taskSpace: TaskSpace;
   onToggleCollapse: () => void;
+  onSwitchTab?: (tab: string) => void;
 };
 
 type ChatMessage = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system_run";
   createdAt: string;
   text: string;
+  eventType?: string;
+  eventSeq?: number;
 };
 
 const toFileName = (value: string): string => {
@@ -26,7 +29,7 @@ const toFileName = (value: string): string => {
   return chunks[chunks.length - 1] || value;
 };
 
-export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelProps) {
+export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: AssistantPanelProps) {
   const { t, lang } = useLang();
   const { state } = useAppStore();
   const [input, setInput] = useState("");
@@ -40,6 +43,38 @@ export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelPr
       text: t("copilotWelcome")
     }
   ]);
+
+  // 从 store 获取当前 workspace 的系统消息，过滤后注入聊天流
+  const systemMessages = useMemo(
+    () => state.systemMessages.filter((m) => m.taskSpaceId === taskSpace.id),
+    [state.systemMessages, taskSpace.id]
+  );
+
+  const lastSystemMsgId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const newOnes = systemMessages.filter(
+      (m) => lastSystemMsgId.current === null || m.id > (lastSystemMsgId.current ?? "")
+    );
+    if (newOnes.length === 0) return;
+    lastSystemMsgId.current = newOnes[newOnes.length - 1].id;
+
+    // 去重：跳过已经存在于 messages 中的
+    setMessages((prev) => {
+      const existingIds = new Set(prev.map((m) => m.id));
+      const toAdd = newOnes
+        .filter((m) => !existingIds.has(m.id))
+        .map((m) => ({
+          id: m.id,
+          role: "system_run" as const,
+          createdAt: m.createdAt,
+          text: m.text,
+          eventType: m.eventType,
+          eventSeq: m.eventSeq,
+        }));
+      return [...prev, ...toAdd];
+    });
+  }, [systemMessages]);
 
   const issues = useMemo(
     () => state.issues.filter((item) => item.taskSpaceId === taskSpace.id),
@@ -129,10 +164,12 @@ export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelPr
           top_issues: issues.slice(0, 5).map((item) => `[${item.severity}] ${item.message}`),
           latest_artifacts: artifacts.slice(0, 5).map((item) => toFileName(item.path))
         },
-        messages: historyForModel.map((item) => ({
-          role: item.role,
-          content: item.text
-        }))
+        messages: historyForModel
+          .filter((item): item is ChatMessage & { role: "user" | "assistant" } => item.role === "user" || item.role === "assistant")
+          .map((item) => ({
+            role: item.role,
+            content: item.text
+          }))
       });
 
       setMessages((prev) => [
@@ -176,11 +213,23 @@ export function AssistantPanel({ taskSpace, onToggleCollapse }: AssistantPanelPr
 
         <section ref={streamRef} className="assistant-stream assistant-copilot-stream assistant-copilot-stream-redesign assistant-chat-stream" aria-live="polite">
           {messages.map((item) => (
-            <article key={item.id} className={`assistant-msg assistant-copilot-msg assistant-copilot-msg-redesign assistant-chat-bubble ${item.role}`}>
+            <article
+              key={item.id}
+              className={`assistant-msg assistant-copilot-msg assistant-copilot-msg-redesign assistant-chat-bubble ${item.role}`}
+              {...(item.eventType === "thought" || item.eventType === "tool_start"
+                ? { style: { cursor: "pointer" }, onClick: () => onSwitchTab?.("timeline") }
+                : {})}
+            >
               <div className="assistant-msg-content markdown-content">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {item.text}
-                </ReactMarkdown>
+                {item.role === "system_run" ? (
+                  <span style={{ fontSize: "0.85em", opacity: 0.85, borderLeft: "3px solid #7c3aed", paddingLeft: "8px", display: "block" }}>
+                    {item.text}
+                  </span>
+                ) : (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {item.text}
+                  </ReactMarkdown>
+                )}
               </div>
             </article>
           ))}

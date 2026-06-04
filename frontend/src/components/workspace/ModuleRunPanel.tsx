@@ -3606,14 +3606,14 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
     setError(null);
     setAsyncRunProgress(null);
     try {
-      const preferredRunMode: RunMode = moduleKey === "review" && hasAsync(definition) ? "async" : "sync";
+      const preferredRunMode: RunMode = hasAsync(definition) ? "async" : "sync";
       const timeoutMs = moduleKey === "review" ? 900000 : 180000;
       const result = await runModule(
         definition,
         requestPayload,
         preferredRunMode,
         timeoutMs,
-        (progress) => setAsyncRunProgress(progress)
+        (progress) => setAsyncRunProgress(progress),
       );
       setResponseData(result.response);
       onRunDone({
@@ -3629,7 +3629,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
       setResponseData(undefined);
       setError(message);
-      onRunDone({ module: moduleKey, runMode: moduleKey === "review" && hasAsync(definition) ? "async" : "sync", request: requestPayload, success: false, error: message });
+      onRunDone({ module: moduleKey, runMode: hasAsync(definition) ? "async" : "sync", request: requestPayload, success: false, error: message });
     } finally {
       setLoading(false);
     }

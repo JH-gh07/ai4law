@@ -149,3 +149,12 @@ export type TraceLink = {
   title: string;
   excerpt?: string;
 };
+
+export type SystemMessage = {
+  id: string;
+  taskSpaceId: string;
+  text: string;
+  createdAt: string;
+  eventType?: string;
+  eventSeq?: number;
+};

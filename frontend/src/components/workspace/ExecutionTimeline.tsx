@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { useLang } from "../../lib/language";
 import type { RunEvent } from "../../lib/useTaskEvents";
 import { useTaskEvents } from "../../lib/useTaskEvents";
+import { useAppStore } from "../../lib/app-store";
 
 type Props = {
   taskId: string | null;
+  taskSpaceId: string;
 };
 
 const ICON_MAP: Record<RunEvent["event_type"], string> = {
@@ -57,9 +59,32 @@ function TimelineRow({ event }: { event: RunEvent }) {
   );
 }
 
-export function ExecutionTimeline({ taskId }: Props) {
+export function ExecutionTimeline({ taskId, taskSpaceId }: Props) {
   const { lang } = useLang();
   const events = useTaskEvents(taskId);
+  const { dispatch } = useAppStore();
+  const lastDispatchTime = useRef(0);
+
+  // 将 thought/tool_start/warning/final 事件桥接为 Copilot 系统消息（有频率控制）
+  useEffect(() => {
+    if (events.length === 0) return;
+    const latest = events[events.length - 1];
+    if (latest.event_type === "tool_result" || latest.event_type === "intermediate") return; // skip noisy types
+
+    const now = Date.now();
+    if (now - lastDispatchTime.current < 1000) return; // max 1 per second
+    lastDispatchTime.current = now;
+
+    const msg = {
+      id: `sys-${taskId}-${latest.seq}`,
+      taskSpaceId,
+      text: latest.summary,
+      createdAt: new Date().toISOString(),
+      eventType: latest.event_type,
+      eventSeq: latest.seq,
+    };
+    dispatch({ type: "append_system_message", payload: msg });
+  }, [events, taskId, taskSpaceId, dispatch]);
 
   const isConnected = events.length > 0;
 

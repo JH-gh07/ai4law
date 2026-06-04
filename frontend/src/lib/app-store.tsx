@@ -7,6 +7,7 @@ import type {
   OnboardingState,
   OutputArtifact,
   PanelState,
+  SystemMessage,
   TaskSpace
 } from "./domain";
 import { useAuth } from "./auth/AuthContext";
@@ -21,6 +22,7 @@ type AppState = {
   artifacts: OutputArtifact[];
   evidenceHits: EvidenceHit[];
   issues: ConsistencyIssue[];
+  systemMessages: SystemMessage[];
   panelState: PanelState;
   onboarding: OnboardingState;
 };
@@ -44,6 +46,8 @@ type Action =
         issues: ConsistencyIssue[];
       };
     }
+  | { type: "append_system_message"; payload: SystemMessage }
+  | { type: "clear_system_messages"; payload: { taskSpaceId: string } }
   | { type: "set_panel_state"; payload: Partial<PanelState> }
   | { type: "set_onboarding"; payload: Partial<OnboardingState> }
   | { type: "reset_all" };
@@ -54,6 +58,7 @@ const initialState: AppState = {
   artifacts: [],
   evidenceHits: [],
   issues: [],
+  systemMessages: [],
   panelState: {
     leftOpen: true,
     rightOpen: true,
@@ -431,7 +436,8 @@ function reducer(state: AppState, action: Action): AppState {
         moduleRuns: state.moduleRuns.filter((run) => run.taskSpaceId !== action.payload.id),
         artifacts: state.artifacts.filter((artifact) => artifact.taskSpaceId !== action.payload.id),
         evidenceHits: state.evidenceHits.filter((hit) => hit.taskSpaceId !== action.payload.id),
-        issues: state.issues.filter((issue) => issue.taskSpaceId !== action.payload.id)
+        issues: state.issues.filter((issue) => issue.taskSpaceId !== action.payload.id),
+        systemMessages: state.systemMessages.filter((m) => m.taskSpaceId !== action.payload.id)
       };
     case "touch_task_space":
       return {
@@ -448,6 +454,16 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, evidenceHits: [...action.payload, ...state.evidenceHits] };
     case "append_issues":
       return { ...state, issues: [...action.payload, ...state.issues] };
+    case "append_system_message":
+      return {
+        ...state,
+        systemMessages: [...state.systemMessages, action.payload].slice(-200),
+      };
+    case "clear_system_messages":
+      return {
+        ...state,
+        systemMessages: state.systemMessages.filter((m) => m.taskSpaceId !== action.payload.taskSpaceId),
+      };
     case "hydrate_remote_state":
       return {
         ...state,

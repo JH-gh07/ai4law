@@ -321,12 +321,24 @@ export function getDefaultPayload(module: ModuleKey): unknown {
   return buildDemoPayload(module);
 }
 
+export type RunEvent = {
+  event_id: string;
+  task_id: string;
+  seq: number;
+  event_type: "status" | "thought" | "tool_start" | "tool_result" | "intermediate" | "warning" | "final" | "final_brief";
+  timestamp: string;
+  summary: string;
+  detail?: Record<string, unknown> | null;
+  level: "audit" | "debug";
+};
+
 export async function runModule(
   module: ModuleDefinition,
   payload: unknown,
   runMode: RunMode,
   timeoutMs = 180000,
-  onProgress?: (update: ModuleRunProgress) => void
+  onProgress?: (update: ModuleRunProgress) => void,
+  onEvent?: (event: RunEvent) => void,
 ): Promise<ModuleRunResponse> {
   if (runMode === "sync" || !hasAsync(module)) {
     const response = await requestJson(module.syncEndpoint, "POST", payload);
@@ -336,6 +348,23 @@ export async function runModule(
   const submitResponse = await requestJson(module.asyncSubmitEndpoint!, "POST", payload);
   const taskId = parseAsyncTaskId(submitResponse);
   onProgress?.({ state: parseTaskState(submitResponse), progress: parseTaskProgress(submitResponse) });
+
+  // ── SSE 实时事件流 ──
+  let es: EventSource | null = null;
+  let sseActive = false;
+  if (onEvent) {
+    es = new EventSource(`/api/v1/events/task/${taskId}/stream`);
+    es.onmessage = (e) => {
+      if (!e.data || e.data.startsWith(":")) return;
+      try {
+        const event = JSON.parse(e.data) as RunEvent;
+        sseActive = true;
+        onEvent(event);
+      } catch { /* ignore parse errors */ }
+    };
+    es.onerror = () => { es?.close(); };
+  }
+
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
@@ -343,7 +372,14 @@ export async function runModule(
     const state = parseTaskState(statusResponse);
     onProgress?.({ state, progress: parseTaskProgress(statusResponse) });
 
+    // 如果 3 秒内 SSE 没收到事件，回退到仅轮询
+    if (!sseActive && Date.now() - startedAt > 3000 && es) {
+      es.close();
+      es = null;
+    }
+
     if (FINAL_STATES.has(state)) {
+      es?.close();
       const result = parseTaskResult(statusResponse);
       if (state === "failed") {
         const err = isRecord(statusResponse) && typeof statusResponse.error === "string"
@@ -365,6 +401,7 @@ export async function runModule(
     await sleep(1500);
   }
 
+  es?.close();
   throw new Error("Async task timeout");
 }
 
