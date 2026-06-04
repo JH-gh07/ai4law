@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from backend.common.llm.provider_registry import LLMProviderRegistry
 from backend.common.trace.context import current_trace
@@ -63,14 +63,10 @@ class LLMClient:
         self._api_key = provider.api_key
         self._api_url = provider.api_url
         self._timeout = provider.timeout
+        self._client: Any | None = None
+        self._client_init_error: str | None = None
         self._enabled = bool(self._api_key) and OpenAI is not None
-        if self._enabled:
-            self._client = OpenAI(
-                api_key=self._api_key,
-                base_url=self._api_url,
-                timeout=self._timeout,
-            )
-        elif OpenAI is None:
+        if OpenAI is None:
             logger.warning("LLMClient: openai package not installed, falling back to placeholder outputs.")
         logger.info(
             "LLMClient initialized: provider_id=%s provider_name=%s provider_type=%s model=%s base_url=%s api_key_configured=%s",
@@ -146,8 +142,21 @@ class LLMClient:
                 "fallback": True,
             }
 
+        client = self._ensure_client()
+        if client is None:
+            logger.warning(
+                "LLMClient: provider %s client unavailable (%s), returning fallback text.",
+                self._provider_id,
+                self._client_init_error or "unknown_error",
+            )
+            return {
+                "content": _FALLBACK_MESSAGE,
+                "usage": LLMUsage(usage_source="unavailable").as_dict(),
+                "fallback": True,
+            }
+
         try:
-            response = self._client.chat.completions.create(
+            response = client.chat.completions.create(
                 model=self._model,
                 messages=[
                     {"role": "system", "content": system},
@@ -217,3 +226,27 @@ class LLMClient:
             total_tokens=int(total_tokens) if total_tokens is not None else None,
             usage_source="provider",
         )
+
+    def _ensure_client(self):
+        if not self._enabled:
+            return None
+        if self._client is not None:
+            return self._client
+        if self._client_init_error is not None:
+            return None
+        try:
+            self._client = OpenAI(
+                api_key=self._api_key,
+                base_url=self._api_url,
+                timeout=self._timeout,
+            )
+            return self._client
+        except Exception as exc:
+            self._client_init_error = str(exc)
+            logger.error(
+                "LLMClient initialization error for provider_id=%s base_url=%s: %s",
+                self._provider_id,
+                self._api_url,
+                exc,
+            )
+            return None

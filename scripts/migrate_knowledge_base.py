@@ -375,6 +375,23 @@ PUBLISHER_MAP = {
     "TJCAC(转载中国网信网)": "天津网信办（转载中国网信网）",
 }
 
+VISIBLE_SOURCE_FILENAME_MAP = {
+    "网络安全法.pdf": ["CN-LAW-001"],
+    "中华人民共和国数据安全法.pdf": ["CN-LAW-002"],
+    "中华人民共和国个人信息保护法.pdf": ["CN-LAW-003"],
+    "数据出境安全评估办法.pdf": ["CN-REG-004"],
+    "个人信息出境标准合同办法_中央网络安全和信息化委员会办公室.pdf": ["CN-REG-005"],
+    "促进和规范数据跨境流动规定_中央网络安全和信息化委员会办公室.pdf": ["CN-REG-006", "CN-REG-007"],
+    "网络数据安全管理条例.pdf": ["CN-REG-008"],
+    "数据出境安全评估申报指南（第三版） (1).docx": ["CN-GUIDE-009"],
+    "数据出境安全评估申报指南（第三版） (2).docx": ["CN-GUIDE-009"],
+    "个人信息出境标准合同备案指南（第二版） (1).docx": ["CN-GUIDE-010"],
+    "CELEX_32016R0679_EN_TXT.pdf": ["EU-LAW-001"],
+    "edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf": ["EU-GUIDE-002"],
+    "2024-04573.pdf": ["US-FED-001"],
+    "The California Privacy Rights Act of 2020 (1).pdf": ["US-CA-001"],
+}
+
 
 @dataclass
 class MigrationSummary:
@@ -1061,6 +1078,139 @@ def write_summary(summary: MigrationSummary) -> None:
     )
 
 
+def _rel(path: Path) -> str:
+    return str(path.relative_to(ROOT))
+
+
+def _jurisdiction_of_path(path: Path) -> str:
+    raw = str(path)
+    if "中国数据出境路径" in raw:
+        return "cn"
+    if "欧盟数据出境路径" in raw:
+        return "eu"
+    return "us"
+
+
+def _find_module_for_asset(path: Path) -> str:
+    for module_name, config in MODULES.items():
+        if path in config["specs"] or path in config["tests"]:
+            return module_name
+        try:
+            path.relative_to(Path(config["references_dir"]))
+            return module_name
+        except ValueError:
+            continue
+
+    raw = str(path)
+    if "中国数据出境路径" in raw:
+        if "任务1" in raw:
+            return "cn-diagnosis"
+        if "任务2" in raw:
+            return "cn-assessment"
+        if "任务3" in raw:
+            return "cn-pipia"
+        if "任务4" in raw:
+            return "cn-review"
+    if "欧盟数据出境路径" in raw:
+        if "任务1" in raw:
+            return "eu-scc"
+        if "任务2" in raw:
+            return "eu-bcr"
+        if "任务3" in raw:
+            return "eu-dpia"
+        if "任务4" in raw:
+            return "eu-tia"
+    if "美国（加州）数据出境路径" in raw:
+        if "任务1" in raw:
+            return "us-14117"
+        if "任务2" in raw:
+            return "us-cpra"
+    return ""
+
+
+def _asset_type_for_manifest(path: Path, module_name: str) -> str:
+    if path in MODULES.get(module_name, {}).get("specs", []):
+        return "flow_spec" if "流程描述" in path.name else "spec"
+    if path in MODULES.get(module_name, {}).get("tests", []):
+        return "test_case"
+    if "Reference库清单" in path.name:
+        return "reference_catalog"
+    lowered = path.name.lower()
+    if "样例" in path.name or "模板" in path.name:
+        if lowered.endswith((".png", ".jpg", ".jpeg", ".webp")):
+            return "sample_image"
+        return "template_sample"
+    return "reference_source"
+
+
+def _target_for_manifest(path: Path, module_name: str) -> tuple[str, str]:
+    module_root = KNOWLEDGE_ROOT / module_name if module_name else KNOWLEDGE_ROOT
+    if path in MODULES.get(module_name, {}).get("specs", []):
+        return "spec", _rel(module_root / "spec.md")
+    if path in MODULES.get(module_name, {}).get("tests", []):
+        return "test-cases", _rel(module_root / "test-cases.md")
+    if "Reference库清单" in path.name:
+        return "_index", _rel(NEW_INDEX_DIR / "spec_asset_manifest.csv")
+    return "references", _rel(module_root / "references" / path.name)
+
+
+def _notes_for_manifest(asset_type: str) -> str:
+    if asset_type in {"spec", "flow_spec", "test_case"}:
+        return "已纳入模块正文资产"
+    if asset_type in {"template_sample", "sample_image"}:
+        return "已作为文审/模板样例迁入 references"
+    if asset_type == "reference_catalog":
+        return "资产清单依据文件，仅用于追踪与核对"
+    return "已纳入模块 references；是否前端可见取决于是否进入索引与知识展示层"
+
+
+def build_spec_asset_manifest_rows() -> list[dict[str, str]]:
+    visible_source_ids = {
+        row.get("source_id", "").strip()
+        for row in load_sources_index_rows()
+        if row.get("source_id", "").strip()
+    }
+    rows: list[dict[str, str]] = []
+    for path in sorted(p for p in SPEC_ROOT.rglob("*") if p.is_file()):
+        module_name = _find_module_for_asset(path)
+        asset_type = _asset_type_for_manifest(path, module_name)
+        target_layer, target_path = _target_for_manifest(path, module_name)
+        notes = _notes_for_manifest(asset_type)
+
+        if asset_type == "reference_catalog":
+            sync_status = "tracked_only"
+        else:
+            target_exists = (ROOT / target_path).exists()
+            sync_status = "synced" if target_exists else "pending"
+
+        mapped_source_ids = VISIBLE_SOURCE_FILENAME_MAP.get(path.name, [])
+        if any(source_id in visible_source_ids for source_id in mapped_source_ids):
+            sync_status = "frontend_visible"
+            notes = "该资产对应的知识条目已进入前端知识库中心可见层"
+
+        rows.append(
+            {
+                "source_path": _rel(path),
+                "asset_type": asset_type,
+                "jurisdiction_family": _jurisdiction_of_path(path),
+                "target_module": module_name or "unmapped",
+                "target_layer": target_layer,
+                "target_path": target_path,
+                "sync_status": sync_status,
+                "notes": notes,
+            }
+        )
+    return rows
+
+
+def load_sources_index_rows() -> list[dict[str, str]]:
+    path = NEW_INDEX_DIR / "sources.csv"
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
 def write_spec_asset_manifest() -> None:
     output = NEW_INDEX_DIR / "spec_asset_manifest.csv"
     fieldnames = [
@@ -1076,7 +1226,7 @@ def write_spec_asset_manifest() -> None:
     with output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(SPEC_MANIFEST_ROWS)
+        writer.writerows(build_spec_asset_manifest_rows())
 
 
 def main() -> None:

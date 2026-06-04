@@ -24,6 +24,9 @@ def test_knowledge_index_returns_user_facing_filters() -> None:
     assert "category" in first_source
     assert "usage" in first_source
     assert "report_usage" in first_source
+    assert payload["sync_meta"]["manifest_total_files"] >= 88
+    assert payload["sync_meta"]["manifest_migrated_files"] >= 88
+    assert payload["sync_meta"]["manifest_frontend_visible_files"] >= 1
 
 
 def test_knowledge_search_uses_unified_article_index() -> None:
