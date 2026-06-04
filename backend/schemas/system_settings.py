@@ -25,6 +25,10 @@ class DeliLegalConfig(BaseModel):
 class LLMConfig(BaseModel):
     active_provider_id: str = ""
     providers: list[RuntimeProviderConfig] = Field(default_factory=list)
+    provider: str = ""
+    api_key: str = ""
+    api_url: str = ""
+    model: str = ""
     model_options: list[str] = Field(default_factory=list)
     enabled: bool = False
 

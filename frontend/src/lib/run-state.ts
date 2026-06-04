@@ -1,10 +1,18 @@
 import type { ModuleRun } from "./domain";
 
+// ---------------------------------------------------------------------------
+// Async state constants
+// ---------------------------------------------------------------------------
+
 const TERMINAL_ASYNC_STATES = new Set(["succeeded", "completed", "failed", "cancelled", "canceled"]);
 const SUCCESS_ASYNC_STATES = new Set(["succeeded", "completed"]);
 const FAILED_ASYNC_STATES = new Set(["failed", "cancelled", "canceled"]);
 
 export type RunLifecycleState = "idle" | "running" | "success" | "failed";
+
+// ---------------------------------------------------------------------------
+// Normalization helpers
+// ---------------------------------------------------------------------------
 
 export function normalizeAsyncState(value: string | undefined): string | null {
   if (!value) return null;
@@ -12,12 +20,36 @@ export function normalizeAsyncState(value: string | undefined): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
+/**
+ * Check if an async state string (from backend) means the task has finished.
+ * Used by GlobalTaskWatcher to decide whether to stop polling.
+ */
+export function isFinalAsyncState(state: string | undefined): boolean {
+  const norm = normalizeAsyncState(state);
+  if (!norm) return false;
+  return TERMINAL_ASYNC_STATES.has(norm);
+}
+
+/**
+ * Check if an async state string means the task completed successfully.
+ */
+export function isSuccessAsyncState(state: string | undefined): boolean {
+  const norm = normalizeAsyncState(state);
+  if (!norm) return false;
+  return SUCCESS_ASYNC_STATES.has(norm);
+}
+
+// ---------------------------------------------------------------------------
+// ModuleRun lifecycle helpers
+// ---------------------------------------------------------------------------
+
 export function isRunInProgress(run: ModuleRun | null | undefined): boolean {
   if (!run) return false;
   if (run.runMode !== "async" || !run.asyncTaskId) return false;
 
   const asyncState = normalizeAsyncState(run.asyncState);
   if (!asyncState) {
+    // No asyncState set yet → still running if no finishedAt
     return !run.finishedAt;
   }
 
@@ -52,4 +84,58 @@ export function getRunLifecycleState(run: ModuleRun | null | undefined): RunLife
   if (isRunFailed(run)) return "failed";
   if (isRunSuccessful(run)) return "success";
   return "idle";
+}
+
+// ---------------------------------------------------------------------------
+// Global polling selectors
+// ---------------------------------------------------------------------------
+
+/**
+ * Select all ModuleRuns that the GlobalTaskWatcher should actively poll.
+ *
+ * Criteria:
+ * - asyncTaskId exists
+ * - asyncState is not terminal
+ * - finishedAt is not set (hasn't already been finalized)
+ */
+export function selectRunningModuleRuns(runs: ModuleRun[]): ModuleRun[] {
+  return runs.filter((run) => {
+    if (!run.asyncTaskId) return false;
+    const asyncState = normalizeAsyncState(run.asyncState);
+    if (asyncState && TERMINAL_ASYNC_STATES.has(asyncState)) return false;
+    // If finishedAt is already set, we've already finalized it
+    if (run.finishedAt) return false;
+    return true;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// ModuleRun merge helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a stable identity key for a ModuleRun.
+ * Prefers asyncTaskId > id > module + taskSpaceId + startedAt.
+ */
+export function getRunIdentityKey(run: ModuleRun): string {
+  if (run.asyncTaskId) return `task:${run.asyncTaskId}`;
+  return `run:${run.id}`;
+}
+
+/**
+ * Merge two ModuleRun objects. The "server" (newer) record wins for
+ * state fields (success, asyncState, response, error, finishedAt).
+ * The "local" (older) record keeps its startedAt and request.
+ */
+export function mergeRunResults(local: ModuleRun, server: ModuleRun): ModuleRun {
+  return {
+    ...local,
+    success: server.success,
+    asyncState: server.asyncState ?? local.asyncState,
+    response: server.response ?? local.response,
+    error: server.error ?? local.error,
+    finishedAt: server.finishedAt ?? local.finishedAt,
+    asyncTaskId: server.asyncTaskId ?? local.asyncTaskId,
+    runMode: server.runMode ?? local.runMode,
+  };
 }

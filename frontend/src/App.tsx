@@ -24,6 +24,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { SuperDesign002Page } from "./pages/SuperDesign002Page";
 import { TaskSpacesPage } from "./pages/TaskSpacesPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+import { GlobalTaskWatcher } from "./components/workspace/GlobalTaskWatcher";
 
 function AppShell() {
   const QUICK_START_DISMISSED_KEY = "ai4law_quick_start_dismissed_v1";
@@ -270,6 +271,8 @@ function AppShell() {
         targetTaskId={state.onboarding.targetTaskId}
         onClose={closeOnboarding}
       />
+
+      <GlobalTaskWatcher />
     </div>
   );
 }

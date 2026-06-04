@@ -532,13 +532,20 @@ function reducer(state: AppState, action: Action): AppState {
           task.id === action.payload.id ? { ...task, updatedAt: action.payload.updatedAt } : task
         )
       };
-    case "append_run":
+    case "append_run": {
+      // ── 按 asyncTaskId 合并（全局级别，不限于同一 taskSpaceId）──
       if (action.payload.asyncTaskId) {
-        const existingIndex = state.moduleRuns.findIndex(
-          (run) => run.taskSpaceId === action.payload.taskSpaceId && run.asyncTaskId === action.payload.asyncTaskId
+        const taskId = action.payload.asyncTaskId;
+        // 优先匹配同 taskSpace+asyncTaskId，其次匹配同 asyncTaskId
+        let existingIndex = state.moduleRuns.findIndex(
+          (run) => run.taskSpaceId === action.payload.taskSpaceId && run.asyncTaskId === taskId
         );
+        if (existingIndex < 0) {
+          existingIndex = state.moduleRuns.findIndex((run) => run.asyncTaskId === taskId);
+        }
         if (existingIndex >= 0) {
           const existing = state.moduleRuns[existingIndex];
+          // 终态覆盖原则：服务端终态 > 本地 running
           const merged: ModuleRun = {
             ...existing,
             ...action.payload,
@@ -548,12 +555,15 @@ function reducer(state: AppState, action: Action): AppState {
             response: action.payload.response ?? existing.response,
             error: action.payload.error ?? existing.error,
             asyncState: action.payload.asyncState ?? existing.asyncState,
+            // success 仅当服务端返回明确终态时才覆盖
+            success: action.payload.finishedAt ? action.payload.success : existing.success,
           };
           const remaining = state.moduleRuns.filter((_, index) => index !== existingIndex);
           return { ...state, moduleRuns: [merged, ...remaining] };
         }
       }
       return { ...state, moduleRuns: [action.payload, ...state.moduleRuns] };
+    }
     case "append_artifacts":
       return { ...state, artifacts: dedupeArtifacts([...action.payload, ...state.artifacts]) };
     case "append_evidence":
