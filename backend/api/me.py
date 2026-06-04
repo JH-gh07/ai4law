@@ -71,6 +71,13 @@ def _extract_output_files(artifacts: list[MyReportItem]) -> dict[str, str]:
 
 def _reconstruct_response(module: str, task_id: str, artifacts: list[MyReportItem]) -> dict[str, Any] | None:
     output_dir = Path("outputs") / module / task_id / "outputs"
+    if not output_dir.exists():
+        for artifact in artifacts:
+            artifact_path = _resolve_path(artifact.file_path)
+            parent = artifact_path.parent
+            if parent.exists():
+                output_dir = parent
+                break
     response: dict[str, Any] = {
         "task_id": task_id,
         "output_files": _extract_output_files(artifacts),
