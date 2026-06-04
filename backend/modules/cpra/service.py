@@ -13,8 +13,11 @@ from backend.common.render.artifacts import bundle_files, render_pdf_report, ren
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
 )
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.common.trace.thoughts import summarize_agent_output
+from backend.common.trace.recorder import TraceRecorder
 from backend.modules.cpra.attachment_extractor import CPRAAttachmentExtractor
 from backend.modules.cpra.agents import create_cpra_agents
 from backend.modules.cpra.fact_merger import CPRAFactMerger
@@ -59,9 +62,16 @@ class CPRAService:
         self.gap_merger = CPRAGapMerger()
         self.agents = create_cpra_agents(llm_client)
 
-    def generate_report(self, payload: CPRARequest) -> CPRAResult:
+    def generate_report(
+        self,
+        payload: CPRARequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> CPRAResult:
         timings: list[tuple[str, float]] = []
         t0 = time.perf_counter()
+        run_task_id = task_id or safe_filename(payload.company_name) or "cpra"
 
         def mark(stage: str) -> None:
             nonlocal t0
@@ -69,239 +79,252 @@ class CPRAService:
             timings.append((stage, now - t0))
             t0 = now
 
-        # ── 从 contextvar 获取 trace ──
-        from backend.common.trace.context import current_trace
-        trace = current_trace.get()
+        trace, token = prepare_run(module="cpra", task_id=run_task_id, trace=trace)
+        try:
 
-        # ── 开始事件 ──
-        if trace:
-            trace.record("status", {"summary": "开始 CPRA 合规诊断", "detail": {"module": "cpra", "company": payload.company_name}})
-            trace.record("thought", {"summary": "路径判断：基于企业规模和数据处理范围确定 CPRA 适用条款范围"})
+            # ── 开始事件 ──
+            if trace:
+                trace.record("status", {"summary": "开始 CPRA 合规诊断", "detail": {"module": "cpra", "company": payload.company_name}})
+                trace.record("thought", {"summary": "路径判断：基于企业规模和数据处理范围确定 CPRA 适用条款范围"})
 
-        # ── Attachment extraction ──
-        if trace:
-            trace.record("tool_start", {"summary": "附件事实提取器", "detail": {"tool": "CPRAAttachmentExtractor"}})
-        attachment_facts: list[dict] = []
-        fact_packs = []
-        for att in payload.attachments:
-            raw_facts = self.extractor.extract(att)
-            attachment_facts.append(raw_facts)
-            fact_packs.append(
-                self.agents["fact_extraction"].run(
-                    attachment=att,
-                    raw_facts=raw_facts,
-                    business_model=payload.business_model,
-                    data_lifecycle=payload.data_lifecycle,
+            # ── Attachment extraction ──
+            if trace:
+                trace.record("tool_start", {"summary": "附件事实提取器", "detail": {"tool": "CPRAAttachmentExtractor"}})
+            attachment_facts: list[dict] = []
+            fact_packs = []
+            for att in payload.attachments:
+                raw_facts = self.extractor.extract(att)
+                attachment_facts.append(raw_facts)
+                fact_packs.append(
+                    self.agents["fact_extraction"].run(
+                        attachment=att,
+                        raw_facts=raw_facts,
+                        business_model=payload.business_model,
+                        data_lifecycle=payload.data_lifecycle,
+                    )
                 )
-            )
-        mark("attachment_extraction_and_fact_agents")
-        if trace:
-            trace.record("tool_result", {
-                "summary": f"附件提取完成：{len(attachment_facts)} 个附件，{len(fact_packs)} 个事实包",
-                "detail": {"attachment_count": len(attachment_facts), "fact_pack_count": len(fact_packs)},
-            })
+            mark("attachment_extraction_and_fact_agents")
+            if trace:
+                trace.record("tool_result", {
+                    "summary": f"附件提取完成：{len(attachment_facts)} 个附件，{len(fact_packs)} 个事实包",
+                    "detail": {"attachment_count": len(attachment_facts), "fact_pack_count": len(fact_packs)},
+                })
+                for fp in fact_packs:
+                    thought = summarize_agent_output("CPRA 事实提取", fp, input_hint="附件事实抽取")
+                    trace.record("thought", {"summary": thought})
 
-        # ── 事实合并前 ──
-        if trace:
-            trace.record("tool_start", {"summary": "事实合并器", "detail": {"tool": "CPRAFactMerger"}})
-        enhanced_payload = self.fact_merger.merge(payload, fact_packs)
-        mark("fact_merge")
-        if trace:
-            trace.record("intermediate", {
-                "summary": "事实合并完成",
-                "detail": {
-                    "category": "facts",
-                    "data_item_count": len(enhanced_payload.data_items),
+            # ── 事实合并前 ──
+            if trace:
+                trace.record("tool_start", {"summary": "事实合并器", "detail": {"tool": "CPRAFactMerger"}})
+            enhanced_payload = self.fact_merger.merge(payload, fact_packs)
+            mark("fact_merge")
+            if trace:
+                trace.record("intermediate", {
+                    "summary": "事实合并完成",
+                    "detail": {
+                        "category": "facts",
+                        "data_item_count": len(enhanced_payload.data_items),
+                        "vendor_count": len(enhanced_payload.vendors),
+                    },
+                })
+
+            # ── Rule engine ──
+            if trace:
+                trace.record("tool_start", {"summary": "差距分析规则引擎", "detail": {"tool": "CPRA Gap Rules"}})
+            gap_items = run_all_rules(
+                applicability=enhanced_payload.applicability,
+                business_text=enhanced_payload.business_model,
+                notice_text=enhanced_payload.notice_and_consent,
+                dsr=enhanced_payload.dsr_mechanism,
+                dsr_text=enhanced_payload.consumer_rights_process,
+                opt_out_text=enhanced_payload.opt_out_and_sale_sharing,
+                data_items=enhanced_payload.data_items,
+                vendors=enhanced_payload.vendors,
+                consent_ui=enhanced_payload.consent_ui,
+            )
+            mark("rule_engine")
+            if trace:
+                trace.record("intermediate", {
+                    "summary": f"差距分析完成：{len(gap_items)} 项差距",
+                    "detail": {
+                        "category": "gap_items",
+                        "data": [{"domain": g.domain, "risk_level": g.risk_level, "gap": g.gap} for g in gap_items],
+                    },
+                })
+
+            # ── Fallback: old rules if no structured input ──
+            if not gap_items and enhanced_payload.applicability is None and not enhanced_payload.data_items:
+                if trace:
+                    trace.record("warning", {"summary": "结构化输入缺失，启用回退规则"})
+                gap_items = self._build_legacy_gap_items(enhanced_payload)
+            mark("legacy_fallback")
+
+            # ── SPI review ──
+            if trace:
+                trace.record("tool_start", {"summary": "敏感信息共享风险评估", "detail": {"agent": "spi_sharing_risk"}})
+            spi_review = self.agents["spi_sharing_risk"].run(
+                data_items=enhanced_payload.data_items,
+                vendors=enhanced_payload.vendors,
+                dsr_mechanism=enhanced_payload.dsr_mechanism,
+                consent_ui=enhanced_payload.consent_ui,
+                notice_facts=next((fact for fact in attachment_facts if fact.get("role") == "privacy_policy"), {}),
+                data_map_facts=next((fact for fact in attachment_facts if fact.get("role") == "data_map"), {}),
+                vendor_facts=next((fact for fact in attachment_facts if fact.get("role") == "vendor_list"), {}),
+            )
+            gap_items = self.gap_merger.merge(gap_items, spi_review.gap_candidates)
+            mark("spi_review")
+            if trace:
+                thought = summarize_agent_output("敏感信息共享风险评估", spi_review)
+                trace.record("thought", {"summary": thought})
+                trace.record("tool_result", {
+                    "summary": f"SPI 风险评估完成：{len(spi_review.gap_candidates)} 个候选差距",
+                    "detail": {"spi_gap_count": len(spi_review.gap_candidates)},
+                })
+
+            # ── Vendor review ──
+            if trace:
+                trace.record("tool_start", {"summary": "供应商合同合规审查", "detail": {"agent": "vendor_contract"}})
+            vendor_review = self.agents["vendor_contract"].run(
+                vendor_list_facts=next((fact for fact in attachment_facts if fact.get("role") == "vendor_list"), {}),
+                contract_texts=[payload.vendor_management] if payload.vendor_management else [],
+                vendors=enhanced_payload.vendors,
+                data_items=enhanced_payload.data_items,
+                opt_out_context=enhanced_payload.opt_out_and_sale_sharing,
+            )
+            gap_items = self.gap_merger.merge(gap_items, vendor_review.contract_gaps)
+            mark("vendor_review")
+            if trace:
+                thought = summarize_agent_output("供应商合同合规审查", vendor_review)
+                trace.record("thought", {"summary": thought})
+                trace.record("tool_result", {
+                    "summary": f"供应商审查完成：{len(vendor_review.contract_gaps)} 个合同差距",
+                    "detail": {"vendor_gap_count": len(vendor_review.contract_gaps)},
+                })
+
+            # ── Dynamic RAG per gap/domain ──
+            if trace:
+                trace.record("tool_start", {"summary": "法规检索与引用匹配", "detail": {"tool": "CPRALegalRetriever"}})
+            self._attach_gap_citations(gap_items)
+            mark("attach_gap_citations")
+            if trace:
+                cited = sum(1 for g in gap_items if g.citations)
+                trace.record("tool_result", {"summary": f"法规引用匹配完成：{cited} 项差距有法规引用"})
+
+            # ── Rating ──
+            risk_level = self._resolve_overall_level(gap_items)
+            mark("resolve_rating")
+            if trace:
+                trace.record("intermediate", {
+                    "summary": f"综合风险评级：{risk_level}",
+                    "detail": {"category": "risk_level", "value": risk_level},
+                })
+
+            # ── Attachment notes ──
+            attachment_notes = self._extract_attachment_notes(enhanced_payload)
+            mark("attachment_notes")
+
+            # ── Build context block with facts ──
+            context_block = self._build_enhanced_context(enhanced_payload, gap_items, risk_level)
+            mark("build_context")
+
+            # ── Chapters ──
+            if trace:
+                trace.record("tool_start", {"summary": "报告章节生成", "detail": {"agent": "chapter_generation"}})
+            all_citations = [c for g in gap_items for c in g.citations[:1]]
+            chapters = self._generate_chapters_from_context(
+                context_block, risk_level, all_citations[:6],
+            )
+            mark("generate_chapters")
+            if trace:
+                thought = summarize_agent_output("CPRA 章节生成", chapters)
+                trace.record("thought", {"summary": thought})
+
+            # ── Consistency ──
+            if trace:
+                trace.record("tool_start", {"summary": "一致性审查", "detail": {"agent": "consistency_review"}})
+            issues = self._check_consistency(enhanced_payload, gap_items, attachment_facts)
+            consistency_review = self.agents["consistency_review"].run(
+                payload_summary={
+                    "company_name": enhanced_payload.company_name,
+                    "has_spi": any(item.is_sensitive for item in enhanced_payload.data_items),
                     "vendor_count": len(enhanced_payload.vendors),
                 },
-            })
-
-        # ── Rule engine ──
-        if trace:
-            trace.record("tool_start", {"summary": "差距分析规则引擎", "detail": {"tool": "CPRA Gap Rules"}})
-        gap_items = run_all_rules(
-            applicability=enhanced_payload.applicability,
-            business_text=enhanced_payload.business_model,
-            notice_text=enhanced_payload.notice_and_consent,
-            dsr=enhanced_payload.dsr_mechanism,
-            dsr_text=enhanced_payload.consumer_rights_process,
-            opt_out_text=enhanced_payload.opt_out_and_sale_sharing,
-            data_items=enhanced_payload.data_items,
-            vendors=enhanced_payload.vendors,
-            consent_ui=enhanced_payload.consent_ui,
-        )
-        mark("rule_engine")
-        if trace:
-            trace.record("intermediate", {
-                "summary": f"差距分析完成：{len(gap_items)} 项差距",
-                "detail": {
-                    "category": "gap_items",
-                    "data": [{"domain": g.domain, "risk_level": g.risk_level, "gap": g.gap} for g in gap_items],
-                },
-            })
-
-        # ── Fallback: old rules if no structured input ──
-        if not gap_items and enhanced_payload.applicability is None and not enhanced_payload.data_items:
-            if trace:
-                trace.record("warning", {"summary": "结构化输入缺失，启用回退规则"})
-            gap_items = self._build_legacy_gap_items(enhanced_payload)
-        mark("legacy_fallback")
-
-        # ── SPI review ──
-        if trace:
-            trace.record("tool_start", {"summary": "敏感信息共享风险评估", "detail": {"agent": "spi_sharing_risk"}})
-        spi_review = self.agents["spi_sharing_risk"].run(
-            data_items=enhanced_payload.data_items,
-            vendors=enhanced_payload.vendors,
-            dsr_mechanism=enhanced_payload.dsr_mechanism,
-            consent_ui=enhanced_payload.consent_ui,
-            notice_facts=next((fact for fact in attachment_facts if fact.get("role") == "privacy_policy"), {}),
-            data_map_facts=next((fact for fact in attachment_facts if fact.get("role") == "data_map"), {}),
-            vendor_facts=next((fact for fact in attachment_facts if fact.get("role") == "vendor_list"), {}),
-        )
-        gap_items = self.gap_merger.merge(gap_items, spi_review.gap_candidates)
-        mark("spi_review")
-        if trace:
-            trace.record("tool_result", {
-                "summary": f"SPI 风险评估完成：{len(spi_review.gap_candidates)} 个候选差距",
-                "detail": {"spi_gap_count": len(spi_review.gap_candidates)},
-            })
-
-        # ── Vendor review ──
-        if trace:
-            trace.record("tool_start", {"summary": "供应商合同合规审查", "detail": {"agent": "vendor_contract"}})
-        vendor_review = self.agents["vendor_contract"].run(
-            vendor_list_facts=next((fact for fact in attachment_facts if fact.get("role") == "vendor_list"), {}),
-            contract_texts=[payload.vendor_management] if payload.vendor_management else [],
-            vendors=enhanced_payload.vendors,
-            data_items=enhanced_payload.data_items,
-            opt_out_context=enhanced_payload.opt_out_and_sale_sharing,
-        )
-        gap_items = self.gap_merger.merge(gap_items, vendor_review.contract_gaps)
-        mark("vendor_review")
-        if trace:
-            trace.record("tool_result", {
-                "summary": f"供应商审查完成：{len(vendor_review.contract_gaps)} 个合同差距",
-                "detail": {"vendor_gap_count": len(vendor_review.contract_gaps)},
-            })
-
-        # ── Dynamic RAG per gap/domain ──
-        if trace:
-            trace.record("tool_start", {"summary": "法规检索与引用匹配", "detail": {"tool": "CPRALegalRetriever"}})
-        self._attach_gap_citations(gap_items)
-        mark("attach_gap_citations")
-        if trace:
-            cited = sum(1 for g in gap_items if g.citations)
-            trace.record("tool_result", {"summary": f"法规引用匹配完成：{cited} 项差距有法规引用"})
-
-        # ── Rating ──
-        risk_level = self._resolve_overall_level(gap_items)
-        mark("resolve_rating")
-        if trace:
-            trace.record("intermediate", {
-                "summary": f"综合风险评级：{risk_level}",
-                "detail": {"category": "risk_level", "value": risk_level},
-            })
-
-        # ── Attachment notes ──
-        attachment_notes = self._extract_attachment_notes(enhanced_payload)
-        mark("attachment_notes")
-
-        # ── Build context block with facts ──
-        context_block = self._build_enhanced_context(enhanced_payload, gap_items, risk_level)
-        mark("build_context")
-
-        # ── Chapters ──
-        if trace:
-            trace.record("tool_start", {"summary": "报告章节生成", "detail": {"agent": "chapter_generation"}})
-        all_citations = [c for g in gap_items for c in g.citations[:1]]
-        chapters = self._generate_chapters_from_context(
-            context_block, risk_level, all_citations[:6],
-        )
-        mark("generate_chapters")
-
-        # ── Consistency ──
-        if trace:
-            trace.record("tool_start", {"summary": "一致性审查", "detail": {"agent": "consistency_review"}})
-        issues = self._check_consistency(enhanced_payload, gap_items, attachment_facts)
-        consistency_review = self.agents["consistency_review"].run(
-            payload_summary={
-                "company_name": enhanced_payload.company_name,
-                "has_spi": any(item.is_sensitive for item in enhanced_payload.data_items),
-                "vendor_count": len(enhanced_payload.vendors),
-            },
-            gap_items=gap_items,
-            chapters=chapters,
-        )
-        issues.extend(issue.issue for issue in consistency_review.issues)
-        mark("consistency_review")
-        if trace:
-            trace.record("tool_result", {
-                "summary": f"一致性审查完成：{len(consistency_review.issues)} 个问题",
-                "detail": {"issues": [i.issue for i in consistency_review.issues]} if consistency_review.issues else {},
-            })
-
-        # ── Render ──
-        if trace:
-            trace.record("tool_start", {"summary": "报告渲染输出"})
-        outputs = self._render(enhanced_payload, chapters, gap_items, attachment_notes)
-        mark("render")
-
-        # ── Final events ──
-        if trace:
-            high_count = sum(1 for g in gap_items if g.risk_level == "HIGH")
-            medium_count = sum(1 for g in gap_items if g.risk_level == "MEDIUM")
-            low_count = sum(1 for g in gap_items if g.risk_level == "LOW")
-
-            trace.record("final", {
-                "summary": f"CPRA 合规诊断完成：{high_count} 项高风险，{medium_count} 项中风险，{low_count} 项低风险",
-                "detail": {
-                    "output_files": outputs,
-                    "risk_distribution": {"HIGH": high_count, "MEDIUM": medium_count, "LOW": low_count},
-                    "total_duration_ms": int(sum(d for _, d in timings) * 1000),
-                },
-            })
-
-            trace.record("final_brief", {
-                "summary": "CPRA 合规诊断完成",
-                "detail": {
-                    "conclusion": f"完成 CPRA 合规全景诊断，识别 {high_count} 项高风险、{medium_count} 项中风险差距",
-                    "files": list(outputs.values()),
-                    "risks": [
-                        {"severity": "HIGH", "count": high_count},
-                        {"severity": "MEDIUM", "count": medium_count},
-                        {"severity": "LOW", "count": low_count},
-                    ],
-                    "next_steps": [
-                        "优先处理所有 HIGH 风险差距项，制定短期整改计划",
-                        "核查一致性审查中发现的问题",
-                        "补充缺失的隐私政策附件和数据处理协议",
-                        "建议每半年复审一次 CPRA 合规状态",
-                    ],
-                    "stats": {
-                        "total_duration_seconds": round(sum(d for _, d in timings), 1),
-                        "gap_count": len(gap_items),
-                        "output_files_count": len(outputs),
-                    },
-                },
-            })
-
-        if os.getenv("AI4LAW_CPRA_PROFILE") == "1":
-            logger.warning(
-                "CPRA generate_report timings: %s",
-                ", ".join(f"{name}={duration:.3f}s" for name, duration in timings),
+                gap_items=gap_items,
+                chapters=chapters,
             )
+            issues.extend(issue.issue for issue in consistency_review.issues)
+            mark("consistency_review")
+            if trace:
+                thought = summarize_agent_output("CPRA 一致性审查", consistency_review)
+                trace.record("thought", {"summary": thought})
+                trace.record("tool_result", {
+                    "summary": f"一致性审查完成：{len(consistency_review.issues)} 个问题",
+                    "detail": {"issues": [i.issue for i in consistency_review.issues]} if consistency_review.issues else {},
+                })
 
-        return CPRAResult(
-            report_path=outputs["docx"],
-            output_files=outputs,
-            company_name=payload.company_name,
-            risk_level=risk_level,
-            gap_items=gap_items,
-            chapters=chapters,
-            consistency_issues=issues,
-            attachment_notes=attachment_notes,
-        )
+            # ── Render ──
+            if trace:
+                trace.record("tool_start", {"summary": "报告渲染输出"})
+            outputs = self._render(run_task_id, enhanced_payload, chapters, gap_items, attachment_notes)
+            mark("render")
+
+            # ── Final events ──
+            if trace:
+                high_count = sum(1 for g in gap_items if g.risk_level == "HIGH")
+                medium_count = sum(1 for g in gap_items if g.risk_level == "MEDIUM")
+                low_count = sum(1 for g in gap_items if g.risk_level == "LOW")
+
+                trace.record("final", {
+                    "summary": f"CPRA 合规诊断完成：{high_count} 项高风险，{medium_count} 项中风险，{low_count} 项低风险",
+                    "detail": {
+                        "output_files": outputs,
+                        "risk_distribution": {"HIGH": high_count, "MEDIUM": medium_count, "LOW": low_count},
+                        "total_duration_ms": int(sum(d for _, d in timings) * 1000),
+                    },
+                })
+
+                trace.record("final_brief", {
+                    "summary": "CPRA 合规诊断完成",
+                    "detail": {
+                        "conclusion": f"完成 CPRA 合规全景诊断，识别 {high_count} 项高风险、{medium_count} 项中风险差距",
+                        "files": list(outputs.values()),
+                        "risks": [
+                            {"severity": "HIGH", "count": high_count},
+                            {"severity": "MEDIUM", "count": medium_count},
+                            {"severity": "LOW", "count": low_count},
+                        ],
+                        "next_steps": [
+                            "优先处理所有 HIGH 风险差距项，制定短期整改计划",
+                            "核查一致性审查中发现的问题",
+                            "补充缺失的隐私政策附件和数据处理协议",
+                            "建议每半年复审一次 CPRA 合规状态",
+                        ],
+                        "stats": {
+                            "total_duration_seconds": round(sum(d for _, d in timings), 1),
+                            "gap_count": len(gap_items),
+                            "output_files_count": len(outputs),
+                        },
+                    },
+                })
+
+                if os.getenv("AI4LAW_CPRA_PROFILE") == "1":
+                    logger.warning(
+                        "CPRA generate_report timings: %s",
+                        ", ".join(f"{name}={duration:.3f}s" for name, duration in timings),
+                    )
+
+                return CPRAResult(
+                    report_path=outputs["docx"],
+                    output_files=outputs,
+                    company_name=payload.company_name,
+                    risk_level=risk_level,
+                    gap_items=gap_items,
+                    chapters=chapters,
+                    consistency_issues=issues,
+                    attachment_notes=attachment_notes,
+                )
+        finally:
+            finalize_run(token)
 
     def _attach_gap_citations(self, gap_items: list[CPRAGapItem]) -> None:
         high_medium_gaps = [
@@ -331,16 +354,10 @@ class CPRAService:
     # ── Async ───────────────────────────────────────────────────────────
 
     def submit_async(self, payload: CPRARequest) -> CPRAAsyncAccepted:
-        from pathlib import Path
-        from uuid import uuid4
-        from backend.common.trace.recorder import TraceRecorder
-
-        # 用短 UUID 后缀避免并发提交 trace_dir 冲突
-        trace_dir = Path(f"storage/traces/cpra_{format_date_stamp()}_{str(uuid4())[:8]}")
-        trace_recorder = TraceRecorder(trace_dir=trace_dir)
-
+        task_id = safe_filename(payload.company_name) or "cpra"
+        trace_recorder = TraceRecorder(trace_dir=Path("outputs/cpra") / task_id / "trace", task_id=task_id)
         snapshot = self.tasks.submit_with_trace(
-            runner=lambda: self.generate_report(payload),
+            runner=lambda: self.generate_report(payload, task_id=task_id, trace=trace_recorder),
             trace_recorder=trace_recorder,
         )
         return self._snapshot_to_accepted(snapshot)
@@ -459,7 +476,7 @@ class CPRAService:
             issues.append("Contains HIGH risk gaps; remediation should be scheduled in short_term phase.")
         return issues
 
-    def _render(self, payload, chapters, gaps, attachment_notes) -> dict[str, str]:
+    def _render(self, task_id: str, payload, chapters, gaps, attachment_notes) -> dict[str, str]:
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
             ("差距清单摘要", "\n".join(f"- [{g.risk_level}] {g.domain}: {g.gap}" for g in gaps)),
@@ -468,7 +485,7 @@ class CPRAService:
         for ch in chapters:
             sections.append((f"第{ch.chapter_no}章 {ch.title}", ch.content))
 
-        output_dir = Path("outputs/cpra")
+        output_dir = Path("outputs/cpra") / task_id / "outputs"
         date_stamp = format_date_stamp()
         base = safe_filename(payload.company_name)
         md_out = output_dir / f"{base}_CPRA_合规全景报告_草案_{date_stamp}.md"
