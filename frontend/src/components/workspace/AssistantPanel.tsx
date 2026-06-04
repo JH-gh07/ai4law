@@ -241,23 +241,38 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
             </article>
           ))}
           {isSending ? <p className="assistant-thinking-note">{t("copilotThinking")}</p> : null}
+          <section className="assistant-copilot-composer assistant-chat-composer assistant-chat-composer-inline">
+            <div className="assistant-command assistant-copilot-command assistant-copilot-command-redesign">
+              <input
+                className="resource-search"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder={lang === "zh" ? "输入消息..." : "Type a message..."}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !isSending) {
+                    event.preventDefault();
+                    submitPrompt();
+                  }
+                }}
+              />
+              <button className="pill-btn-primary" onClick={() => submitPrompt()} disabled={isSending}>
+                {isSending ? t("copilotSending") : t("copilotSend")}
+              </button>
+            </div>
+          </section>
         </section>
 
-        <section className="assistant-copilot-composer assistant-chat-composer">
+        <section className="assistant-copilot-composer assistant-chat-composer assistant-chat-composer-detached" aria-hidden="true">
           <div className="assistant-command assistant-copilot-command assistant-copilot-command-redesign">
             <input
               className="resource-search"
+              tabIndex={-1}
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={lang === "zh" ? "输入消息..." : "Type a message..."}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !isSending) {
-                  event.preventDefault();
-                  submitPrompt();
-                }
-              }}
+              readOnly
             />
-            <button className="pill-btn-primary" onClick={() => submitPrompt()} disabled={isSending}>
+            <button className="pill-btn-primary" disabled>
               {isSending ? t("copilotSending") : t("copilotSend")}
             </button>
           </div>

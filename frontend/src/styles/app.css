@@ -9701,7 +9701,7 @@
 }
 
 .assistant-mode-shell-copilot {
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .assistant-mode-shell .assistant-section {
@@ -10638,7 +10638,7 @@
 .assistant-mode-shell-chat {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.44rem;
 }
 
@@ -10668,14 +10668,17 @@
 }
 
 .assistant-copilot-stream-redesign {
-  padding: 0.1rem 0.12rem 0.1rem 0;
+  padding: 0.1rem 0.12rem 0 0;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
 }
 
 .assistant-chat-stream {
   display: flex;
   flex-direction: column;
   gap: 0.42rem;
+  align-items: stretch;
 }
 
 .copilot-trace-history-link {
@@ -10783,10 +10786,17 @@
 }
 
 .assistant-chat-composer {
-  position: sticky;
-  bottom: 0;
   background: #ffffff;
   padding-top: 0.18rem;
+}
+
+.assistant-chat-composer-inline {
+  margin-top: auto;
+  padding-bottom: 0.08rem;
+}
+
+.assistant-chat-composer-detached {
+  display: none;
 }
 
 .assistant-copilot-command-redesign {
