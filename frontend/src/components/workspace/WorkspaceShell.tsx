@@ -272,6 +272,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("details");
   const [openTabs, setOpenTabs] = useState<WorkspaceTopTabId[]>(["details", "report"]);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [resourceTabs, setResourceTabs] = useState<ResourcePreviewTab[]>([]);
   const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null);
   const [artifactPreview, setArtifactPreview] = useState<ArtifactPreview | null>(null);
@@ -943,7 +944,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   const renderTabSurface = () => {
     if (activeTab === "details") {
-      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} />;
+      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={(taskId) => setActiveTaskId(taskId)} />;
     }
 
     if (activeTab === "canvas") {
@@ -1028,11 +1029,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab === "timeline") {
-      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} moduleLabel={latestRun?.module ?? taskSpace.module} />;
+      return <ExecutionTimeline taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} moduleLabel={latestRun?.module ?? taskSpace.module} />;
     }
 
     if (activeTab === "brief") {
-      return <RunBrief taskId={latestRun?.asyncTaskId ?? null} />;
+      return <RunBrief taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} />;
     }
 
     const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);
@@ -1121,7 +1122,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab !== "report") {
-      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} />;
+      return <StageSplitView taskSpace={taskSpace} onRunDone={onRunDone} latestRun={latestRun} onTaskCreated={(taskId) => setActiveTaskId(taskId)} />;
     }
 
     return (

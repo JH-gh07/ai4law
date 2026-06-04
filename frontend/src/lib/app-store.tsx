@@ -8,7 +8,6 @@ import type {
   OutputArtifact,
   PanelState,
   RunSession,
-  StageNode,
   SystemMessage,
   TaskSpace
 } from "./domain";

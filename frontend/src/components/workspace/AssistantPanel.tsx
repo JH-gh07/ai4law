@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAppStore } from "../../lib/app-store";
 import { requestCopilotChat } from "../../lib/copilot-api";
-import type { RunSession, StageNode, TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
+import type { RunSession, TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { ChevronToggleIcon } from "../common/AppIcons";
@@ -30,12 +30,6 @@ const toFileName = (value: string): string => {
 };
 
 /** ── ThinkingBlock: Claude-style expandable thinking process ── */
-const THINKING_ICONS: Record<string, string> = {
-  pending: "○",
-  running: "⊙",
-  done: "✓",
-};
-
 function ThinkingBlock({ session, onToggle, lang }: { session: RunSession; onToggle: () => void; lang: "zh" | "en" }) {
   const [collapsed, setCollapsed] = useState(session.isComplete);
   const runningCount = session.stages.filter((s) => s.status === "running").length;
