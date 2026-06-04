@@ -2667,6 +2667,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     setShowCasePicker(false);
   };
 
+
   useEffect(() => {
     if (!isDiagnosisModule) return;
     const anchor = diagnosisStepTopRef.current;
@@ -3996,6 +3997,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   }, [selectedDocumentReviewFile]);
 
   return (
+    <>
     <section className="run-panel" data-guide="stage-run">
       {!lockedModule ? (
         <div className="jurisdiction-tabs">
@@ -4033,6 +4035,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
       {isDocumentReviewTask ? (
         <section className="doc-review-workbench">
+          {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
           <aside className="doc-review-input-pane">
             <header className="doc-review-panel-head">
               <div className="doc-review-panel-copy">
@@ -4329,7 +4332,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                     disabled={loading}
                     title="开发期一键注入文档审查预设并运行真实后端流程"
                   >
-                      <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                     一键体验文档审查
                   </button>
                 ) : null}
@@ -4348,7 +4350,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isEuSccTask ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">SCC Review Wizard</div>
             <span>{euSccProgress}%</span>
           </div>
@@ -4473,7 +4476,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入SCC预设并运行真实后端流程"
               >
-                  <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验SCC
               </button>
             ) : null}
@@ -4500,6 +4502,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDiagnosisModule ? (
         <section className="schema-wizard schema-wizard--diagnosis">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
 <div ref={diagnosisStepTopRef} />
           <div className="schema-wizard-head">
             <div className="runner-title">业务数据合规需求诊断</div>
@@ -4658,7 +4661,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入诊断问卷预设并运行真实后端流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验诊断
               </button>
             ) : null}
@@ -4685,6 +4687,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isAssessmentModule ? (
         <section className="schema-wizard">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
 {DEV_ACCEL_ENABLED ? (
             <div className="schema-dev-banner">
               <strong>开发测试模式</strong>
@@ -4826,7 +4829,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入预设数据并运行真实Assessment流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验主流程
               </button>
             ) : null}
@@ -4853,7 +4855,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isPipiaModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">PIPIA Wizard</div>
             <span>{pipiaProgress}%</span>
           </div>
@@ -4986,7 +4989,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入PIPIA预设并运行真实后端流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验PIPIA
               </button>
             ) : null}
@@ -5013,7 +5015,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isBcrModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">BCR Review Wizard</div>
             <span>{bcrProgress}%</span>
           </div>
@@ -5109,7 +5112,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入BCR预设并运行真实后端流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验BCR
               </button>
             ) : null}
@@ -5136,7 +5138,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDpiaModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">DPIA Wizard</div>
             <span>{dpiaProgress}%</span>
           </div>
@@ -5244,7 +5247,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入DPIA预设并运行真实后端流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验DPIA
               </button>
             ) : null}
@@ -5271,7 +5273,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isTiaModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">TIA Wizard</div>
             <span>{tiaProgress}%</span>
           </div>
@@ -5379,7 +5382,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                 disabled={loading}
                 title="开发期一键注入TIA预设并运行真实后端流程"
               >
-                <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} disabled={loading} style={{ marginRight: 4 }}>🧪 测试案例</button>
                 一键体验TIA
               </button>
             ) : null}
@@ -5406,7 +5408,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isCnFlowModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">EO 14117 Wizard</div>
             <span>{cnFlowProgress}%</span>
           </div>
@@ -5563,14 +5566,12 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成14117风险评估结论报告"}
             </button>
-            {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (
-              <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>
-            ) : null}
           </div>
         </section>
       ) : isCpraModule ? (
         <section className="schema-wizard">
-          <div className="schema-wizard-head">
+                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
+<div className="schema-wizard-head">
             <div className="runner-title">CPRA Wizard</div>
             <span>{cpraProgress}%</span>
           </div>
@@ -5745,9 +5746,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成CPRA合规全景报告"}
             </button>
-            {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (
-              <button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>
-            ) : null}
           </div>
         </section>
       ) : (
@@ -5815,7 +5813,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         {responseData
           ? (lang === "zh" ? "结果已生成，系统会自动切换到“报告”页签进行前端预览。" : "Result generated. The workspace switches to the report tab for preview.")
           : (lang === "zh" ? "运行完成后，报告内容将在“报告”页签中预览。" : "Generated reports will be previewed in the report tab.")}
-      </div>flex", alignItems: "center", justifyContent: "center" }}>
+      </div>
+      {error ? <div className="runner-error">{error}</div> : null}
+    </section>
+    {showCasePicker && devTestCases.length > 0 ? (
+      <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowCasePicker(false)} />
         <div style={{ position: "relative", background: "white", borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: 520, maxHeight: "70vh", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -5824,9 +5826,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           </div>
           <div style={{ overflow: "auto", flex: 1, padding: "4px 0" }}>
             {devTestCases.map((tc, i) => (
-              <div key={i} onClick={() => selectDevCase(i)}
-                style={{ padding: "12px 20px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
-              >
+              <div key={i} onClick={() => selectDevCase(i)} style={{ padding: "12px 20px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
                 <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{tc.name}</div>
                 <div style={{ fontSize: 11, color: "#6b7280" }}>{tc.description}</div>
               </div>
