@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import uuid
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -12,8 +13,11 @@ from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
 )
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.modules.bcr.bcr_checklist_checker import BCRChecklistChecker
 from backend.modules.bcr.bcr_clause_reviewer import BCRClauseReviewer
 from backend.modules.bcr.bcr_document_parser import BCRDocumentParser
@@ -63,13 +67,29 @@ class BCRService:
     # Public API
     # ------------------------------------------------------------------
 
-    def generate_report(self, payload: BCRRequest) -> BCRResult:
-        if payload.uploaded_documents:
-            return self._run_document_driven_review(payload)
-        return self._run_form_driven_review(payload)
+    def generate_report(
+        self,
+        payload: BCRRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> BCRResult:
+        run_task_id = task_id or uuid.uuid4().hex
+        _, token = prepare_run(module="bcr", task_id=run_task_id, trace=trace)
+        try:
+            if payload.uploaded_documents:
+                return self._run_document_driven_review(payload, task_id=run_task_id, trace=trace)
+            return self._run_form_driven_review(payload, task_id=run_task_id)
+        finally:
+            finalize_run(token)
 
     def submit_async(self, payload: BCRRequest) -> BCRAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = uuid.uuid4().hex
+        trace = TraceRecorder(Path("outputs/bcr") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> BCRAsyncStatus:
@@ -85,7 +105,11 @@ class BCRService:
     # Document-driven review (NEW — 6-stage pipeline)
     # ------------------------------------------------------------------
 
-    def _run_document_driven_review(self, payload: BCRRequest) -> BCRResult:
+    def _run_document_driven_review(self, payload: BCRRequest, *, task_id: str, trace: TraceRecorder | None = None) -> BCRResult:
+        if trace:
+            trace.record("status", {"summary": "开始 BCR 合规审查", "detail": {"module": "bcr", "company": getattr(payload, 'company_name', '')}})
+            trace.record("thought", {"summary": "路径判断：基于集团结构和数据流范围确定 BCR 适用条款"})
+
         # Stage 1: PARSING
         sdocs = []
         for ud in payload.uploaded_documents:
@@ -113,6 +137,9 @@ class BCRService:
             if agent_type.get("type_judgment") in ("BCR-C", "BCR-P"):
                 bcr_type = agent_type["type_judgment"]
             type_class.risk_level = agent_type.get("risk_level", "MEDIUM")
+            if trace:
+                thought = summarize_agent_output("BCR 类型推理", agent_type)
+                trace.record("thought", {"summary": thought})
 
         # Stage 3: SCENARIO_EXTRACTION
         scenario = self.scenario_extractor.extract(
@@ -123,6 +150,9 @@ class BCRService:
         if main_doc:
             entities = [{"name": scenario.company_name or "unknown", "context": combined_text[:200]}]
             agent_roles = self.agents["actor_role"].run(text=combined_text, entities=entities)
+            if trace:
+                thought = summarize_agent_output("BCR 角色识别", agent_roles)
+                trace.record("thought", {"summary": thought})
             if agent_roles.get("eu_liable_entity") and not scenario.eu_liable_entity:
                 scenario.eu_liable_entity = agent_roles["eu_liable_entity"]
 
@@ -146,6 +176,9 @@ class BCRService:
                     matched_clauses=matched[:3], coverage_status=status,
                     legal_basis=[req.get("gdpr_basis", ""), req.get("source", "")], bcr_type=bcr_type,
                 )
+                if trace:
+                    thought = summarize_agent_output("BCR 覆盖率评估", agent_cov)
+                    trace.record("thought", {"summary": thought})
                 if agent_cov.get("should_generate_finding"):
                     findings.append(BCRFinding(
                         finding_id=f"BCR-AGENT-COV-{req['requirement_id']}",
@@ -163,6 +196,9 @@ class BCRService:
                 clause_text=onward_text, has_scc=False, has_adequacy=False,
                 has_derogation=False, bcr_type=bcr_type,
             )
+            if trace:
+                thought = summarize_agent_output("BCR 后续传输风险", agent_ot)
+                trace.record("thought", {"summary": thought})
             if agent_ot.get("finding_type") == "ONWARD_TRANSFER_WEAK_STANDARD":
                 findings.append(BCRFinding(
                     finding_id="BCR-AGENT-OT-01",
@@ -183,6 +219,9 @@ class BCRService:
                     annex_texts={},
                     coverage_status=req.get("_coverage_status", "FULLY_COVERED"),
                 )
+                if trace:
+                    thought = summarize_agent_output("BCR 证据覆盖", agent_ev)
+                    trace.record("thought", {"summary": thought})
                 if agent_ev.get("risk_level") in ("MEDIUM", "HIGH"):
                     findings.append(BCRFinding(
                         finding_id=f"BCR-AGENT-EV-{req_id}",
@@ -205,6 +244,9 @@ class BCRService:
                     clause_text=clause_text, requirement_id=req_id,
                     bcr_type=bcr_type, coverage_status=status,
                 )
+                if trace:
+                    thought = summarize_agent_output("BCR 状态纠正", agent_inc)
+                    trace.record("thought", {"summary": thought})
                 if agent_inc.get("has_incorrect"):
                     findings.append(BCRFinding(
                         finding_id=f"BCR-AGENT-INC-{req_id}",
@@ -223,6 +265,9 @@ class BCRService:
                 tia_section=tia_text, gov_access_section=gov_text,
                 legal_refs=["Schrems II", "EDPB 01/2020"],
             )
+            if trace:
+                thought = summarize_agent_output("BCR TIA 评估", agent_tia)
+                trace.record("thought", {"summary": thought})
             if agent_tia.get("tia_completeness") != "complete":
                 findings.append(BCRFinding(
                     finding_id="BCR-AGENT-TIA-01",
@@ -249,6 +294,9 @@ class BCRService:
                             requirement_id=req["requirement_id"],
                             rag_citations=refs, clause_text=ch.content, bcr_type=bcr_type,
                         )
+                        if trace:
+                            thought = summarize_agent_output("BCR 法律依据", agent_lg)
+                            trace.record("thought", {"summary": thought})
                         if not agent_lg.get("grounding_adequate"):
                             findings.append(BCRFinding(
                                 finding_id=f"BCR-AGENT-LG-{req['requirement_id']}",
@@ -283,6 +331,9 @@ class BCRService:
             findings=finding_dicts, rating=rating, score=score,
             type_consistency=type_class.type_consistency, bcr_type=bcr_type,
         )
+        if trace:
+            thought = summarize_agent_output("BCR 审批风险", agent_risk)
+            trace.record("thought", {"summary": thought})
         if agent_risk.get("rating_adjustment") == "HIGH" and rating != "高风险":
             rating = "高风险"
 
@@ -301,6 +352,9 @@ class BCRService:
                     finding_text=getattr(f, "finding", ""),
                     legal_basis=getattr(f, "legal_basis", ""),
                 )
+                if trace:
+                    thought = summarize_agent_output("BCR 整改建议", agent_rem)
+                    trace.record("thought", {"summary": thought})
                 if agent_rem.get("suggested_text"):
                     remediation_suggestions.append(agent_rem)
 
@@ -321,7 +375,25 @@ class BCRService:
             for i, (title, lines) in enumerate(sections[:4])
         ]
 
-        outputs = self._render_document_driven(payload, rating, deduped, chapters, sections, metadata)
+        if trace:
+            trace.record("tool_start", {"summary": "报告章节生成", "detail": {"agent": "chapter_generation"}})
+
+        outputs = self._render_document_driven(task_id, payload, rating, deduped, chapters, sections, metadata)
+
+        if trace:
+            trace.record("final", {
+                "summary": "BCR 合规审查完成",
+                "detail": {"output_files": outputs, "module": "bcr"},
+            })
+            trace.record("final_brief", {
+                "summary": "BCR 合规审查完成",
+                "detail": {
+                    "conclusion": f"BCR 合规审查完成，已生成 {len(outputs)} 个输出文件",
+                    "files": list(outputs.values()) if isinstance(outputs, dict) else [],
+                    "risks": [],
+                    "next_steps": ["复核生成的合规审查报告", "根据审查发现制定整改计划"],
+                },
+            })
 
         return BCRResult(
             report_path=outputs["docx"],
@@ -339,7 +411,7 @@ class BCRService:
     # Form-driven review (original path — backward compat)
     # ------------------------------------------------------------------
 
-    def _run_form_driven_review(self, payload: BCRRequest) -> BCRResult:
+    def _run_form_driven_review(self, payload: BCRRequest, *, task_id: str) -> BCRResult:
         problems = self._extract_problems(payload)
         rating = self._resolve_rating(payload.review_items)
         issues = self._check_consistency(payload)
@@ -349,7 +421,7 @@ class BCRService:
         citations = [f"{item.title}{item.article}" for item in regs]
         reg_snippet = "\n".join(f"- {item.title}{item.article}：{(item.content or '')[:120]}" for item in regs) or "（暂无检索到相关法条）"
         chapters = self._generate_chapters(payload, rating, problems, citations, reg_snippet)
-        outputs = self._render(payload, rating, problems, chapters, attachment_notes)
+        outputs = self._render(task_id, payload, rating, problems, chapters, attachment_notes)
         return BCRResult(
             report_path=outputs["docx"], output_files=outputs,
             company_name=payload.company_name, rating=rating,
@@ -432,8 +504,8 @@ class BCRService:
             chapters.append(BCRChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=rating))
         return chapters
 
-    def _render(self, payload, rating, problems, chapters, attachment_notes) -> dict[str, str]:
-        output_dir = Path("outputs/bcr")
+    def _render(self, task_id: str, payload, rating, problems, chapters, attachment_notes) -> dict[str, str]:
+        output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
         md_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.md"
@@ -452,8 +524,8 @@ class BCRService:
     # Document-driven rendering
     # ------------------------------------------------------------------
 
-    def _render_document_driven(self, payload, rating, findings, chapters, sections, metadata) -> dict[str, str]:
-        output_dir = Path("outputs/bcr")
+    def _render_document_driven(self, task_id: str, payload, rating, findings, chapters, sections, metadata) -> dict[str, str]:
+        output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
         md_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.md"
