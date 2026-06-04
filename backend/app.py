@@ -17,7 +17,28 @@ from backend.core.settings import Settings, get_settings
 async def lifespan(app: FastAPI):
     container: AppContainer = app.state.container
     init_db(container.engine)
+
+    # 后台周期性清理 SSEManager 中已过期 task 的事件数据
+    import asyncio as _asyncio
+    from backend.common.events.manager import get_ssemanager
+
+    async def _cleanup_loop():
+        while True:
+            await _asyncio.sleep(600)  # 每 10 分钟执行一次
+            try:
+                get_ssemanager().cleanup_expired()
+            except Exception:
+                pass
+
+    cleanup_task = _asyncio.create_task(_cleanup_loop())
+
     yield
+
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except _asyncio.CancelledError:
+        pass
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

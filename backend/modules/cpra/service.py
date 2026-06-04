@@ -332,9 +332,11 @@ class CPRAService:
 
     def submit_async(self, payload: CPRARequest) -> CPRAAsyncAccepted:
         from pathlib import Path
+        from uuid import uuid4
         from backend.common.trace.recorder import TraceRecorder
 
-        trace_dir = Path(f"storage/traces/cpra_{format_date_stamp()}")
+        # 用短 UUID 后缀避免并发提交 trace_dir 冲突
+        trace_dir = Path(f"storage/traces/cpra_{format_date_stamp()}_{str(uuid4())[:8]}")
         trace_recorder = TraceRecorder(trace_dir=trace_dir)
 
         snapshot = self.tasks.submit_with_trace(

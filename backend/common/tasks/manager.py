@@ -176,13 +176,13 @@ class InMemoryTaskManager:
             record.attempts += 1
             record.updated_at = _utc_now_iso()
 
-            # 新增：发布 RUNNING 状态事件
+            # 新增：发布 RUNNING 状态事件（用大数值 seq 避免与 trace 事件冲突，同时对轮询可见）
             from backend.common.events.manager import get_ssemanager
             from backend.common.trace.events import RunEvent
             sm = get_ssemanager()
             sm.publish(task_id, RunEvent(
                 task_id=task_id,
-                seq=-1,
+                seq=9001,
                 event_type="status",
                 summary=f"任务开始执行 ({self.module})",
                 detail={"module": self.module, "state": "RUNNING"},
@@ -211,7 +211,7 @@ class InMemoryTaskManager:
                 # 新增：发布 COMPLETED 状态
                 sm.publish(task_id, RunEvent(
                     task_id=task_id,
-                    seq=-1,
+                    seq=9002,
                     event_type="status",
                     summary=f"任务执行完成 ({self.module})",
                     detail={"module": self.module, "state": "COMPLETED"},
@@ -231,7 +231,7 @@ class InMemoryTaskManager:
                 # 新增：发布 FAILED 状态
                 sm.publish(task_id, RunEvent(
                     task_id=task_id,
-                    seq=-1,
+                    seq=9999,
                     event_type="status",
                     summary=f"任务执行失败: {exc}",
                     detail={"module": self.module, "state": "FAILED", "error": str(exc)},
