@@ -95,6 +95,9 @@ export function EvidenceCenterPage() {
       syncStatus: "内容状态",
       syncReady: "内容可用",
       syncMissing: "部分内容缺失",
+      manifestTotal: "纳入同步范围",
+      manifestMigrated: "已迁移落盘",
+      manifestVisible: "前端可见",
       articlesTab: "条文检索",
       articlesPlaceholder: "输入关键词检索法规条文，如：标准合同备案",
       articlesFilterJurisdiction: "法域",
@@ -157,6 +160,9 @@ export function EvidenceCenterPage() {
       syncStatus: "Content Status",
       syncReady: "Ready",
       syncMissing: "Partially Missing",
+      manifestTotal: "Tracked Assets",
+      manifestMigrated: "Migrated Assets",
+      manifestVisible: "Frontend Visible",
       articlesTab: "Article Search",
       articlesPlaceholder: "Search regulation articles, e.g. standard contract filing",
       articlesFilterJurisdiction: "Jurisdiction",
@@ -191,10 +197,16 @@ export function EvidenceCenterPage() {
     cache_refreshed: false,
     sources_csv_path: "",
     cases_csv_path: "",
+    spec_asset_manifest_path: "",
     sources_csv_exists: false,
     cases_csv_exists: false,
+    spec_asset_manifest_exists: false,
     sources_csv_mtime: "",
-    cases_csv_mtime: ""
+    cases_csv_mtime: "",
+    spec_asset_manifest_mtime: "",
+    manifest_total_files: 0,
+    manifest_frontend_visible_files: 0,
+    manifest_migrated_files: 0,
   });
   const [syncing, setSyncing] = useState(false);
 
@@ -423,7 +435,9 @@ export function EvidenceCenterPage() {
   const syncTimeLabel = syncMeta.synced_at
     ? new Date(syncMeta.synced_at).toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { hour12: false })
     : "-";
-  const syncFileStatusLabel = syncMeta.sources_csv_exists && syncMeta.cases_csv_exists ? copy.syncReady : copy.syncMissing;
+  const syncFileStatusLabel = syncMeta.sources_csv_exists && syncMeta.cases_csv_exists && syncMeta.spec_asset_manifest_exists
+    ? copy.syncReady
+    : copy.syncMissing;
 
   const handleSyncNow = async () => {
     setSyncing(true);
@@ -480,6 +494,18 @@ export function EvidenceCenterPage() {
           <article className="kc-status-item">
             <div className="k">{copy.syncAt}</div>
             <div className="v">{syncTimeLabel}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.manifestTotal}</div>
+            <div className="v">{syncMeta.manifest_total_files}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.manifestMigrated}</div>
+            <div className="v">{syncMeta.manifest_migrated_files}</div>
+          </article>
+          <article className="kc-status-item">
+            <div className="k">{copy.manifestVisible}</div>
+            <div className="v">{syncMeta.manifest_frontend_visible_files}</div>
           </article>
         </div>
       </section>

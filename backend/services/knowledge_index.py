@@ -7,13 +7,19 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
-from backend.common.knowledge.paths import module_catalog_path, practice_cases_csv_path, sources_csv_path
+from backend.common.knowledge.paths import (
+    module_catalog_path,
+    practice_cases_csv_path,
+    sources_csv_path,
+    spec_asset_manifest_path,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES_CSV = sources_csv_path()
 CASES_CSV = practice_cases_csv_path()
 MODULE_CATALOG = module_catalog_path()
+SPEC_ASSET_MANIFEST = spec_asset_manifest_path()
 
 
 def _now_iso() -> str:
@@ -28,24 +34,36 @@ def _mtime_iso(path: Path) -> str:
 
 
 def get_knowledge_sync_meta(*, cache_refreshed: bool) -> dict[str, object]:
+    manifest_rows = load_spec_asset_manifest()
+    frontend_visible_count = sum(1 for row in manifest_rows if (row.get("sync_status") or "").strip() == "frontend_visible")
+    migrated_count = sum(
+        1 for row in manifest_rows if (row.get("sync_status") or "").strip() in {"synced", "frontend_visible", "indexed_only", "tracked_only"}
+    )
     return {
         "synced_at": _now_iso(),
         "cache_refreshed": cache_refreshed,
         "sources_csv_path": str(SOURCES_CSV),
         "cases_csv_path": str(CASES_CSV),
         "module_catalog_path": str(MODULE_CATALOG),
+        "spec_asset_manifest_path": str(SPEC_ASSET_MANIFEST),
         "sources_csv_exists": SOURCES_CSV.exists(),
         "cases_csv_exists": CASES_CSV.exists(),
         "module_catalog_exists": MODULE_CATALOG.exists(),
+        "spec_asset_manifest_exists": SPEC_ASSET_MANIFEST.exists(),
         "sources_csv_mtime": _mtime_iso(SOURCES_CSV),
         "cases_csv_mtime": _mtime_iso(CASES_CSV),
         "module_catalog_mtime": _mtime_iso(MODULE_CATALOG),
+        "spec_asset_manifest_mtime": _mtime_iso(SPEC_ASSET_MANIFEST),
+        "manifest_total_files": len(manifest_rows),
+        "manifest_frontend_visible_files": frontend_visible_count,
+        "manifest_migrated_files": migrated_count,
     }
 
 
 def refresh_knowledge_cache() -> None:
     _load_sources_index.cache_clear()
     _load_practice_cases.cache_clear()
+    _load_spec_asset_manifest.cache_clear()
 
 
 def load_sources_index() -> list[dict[str, str]]:
@@ -54,6 +72,10 @@ def load_sources_index() -> list[dict[str, str]]:
 
 def load_practice_cases() -> list[dict[str, str]]:
     return list(_load_practice_cases())
+
+
+def load_spec_asset_manifest() -> list[dict[str, str]]:
+    return list(_load_spec_asset_manifest())
 
 
 @lru_cache(maxsize=1)
@@ -69,6 +91,14 @@ def _load_practice_cases() -> tuple[dict[str, str], ...]:
     if not CASES_CSV.exists():
         return ()
     with CASES_CSV.open("r", encoding="utf-8", newline="") as fp:
+        return tuple({k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fp))
+
+
+@lru_cache(maxsize=1)
+def _load_spec_asset_manifest() -> tuple[dict[str, str], ...]:
+    if not SPEC_ASSET_MANIFEST.exists():
+        return ()
+    with SPEC_ASSET_MANIFEST.open("r", encoding="utf-8", newline="") as fp:
         return tuple({k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fp))
 
 

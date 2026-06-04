@@ -208,17 +208,24 @@ def _normalize_runtime_providers(settings, llm_payload: dict[str, Any], legacy_c
     legacy = []
     if isinstance(legacy_custom_providers, list):
         legacy.extend(item for item in legacy_custom_providers if isinstance(item, dict))
+    legacy_provider_id = str(llm_payload.get("provider") or settings.resolved_llm_provider or "default").strip() or "default"
     legacy_default = {
-        "id": str(settings.resolved_llm_provider or "default").strip() or "default",
-        "name": str(settings.resolved_llm_provider or "default").strip() or "default",
+        "id": legacy_provider_id,
+        "name": legacy_provider_id,
         "provider_type": "openai_compatible",
-        "api_key": settings.resolved_llm_api_key or "",
-        "api_url": settings.resolved_llm_api_url,
-        "model": settings.resolved_llm_model,
-        "enabled": bool(settings.resolved_llm_api_key),
+        "api_key": str(llm_payload.get("api_key") or settings.resolved_llm_api_key or "").strip(),
+        "api_url": str(llm_payload.get("api_url") or settings.resolved_llm_api_url or "").strip(),
+        "model": str(llm_payload.get("model") or settings.resolved_llm_model or "").strip(),
+        "enabled": bool(str(llm_payload.get("api_key") or settings.resolved_llm_api_key or "").strip()),
         "timeout": 60,
     }
-    return [_normalize_single_provider(legacy_default), *[_normalize_single_provider(item) for item in legacy]]
+    normalized = [_normalize_single_provider(legacy_default)]
+    for item in legacy:
+        try:
+            normalized.append(_normalize_single_provider(item))
+        except ValueError:
+            continue
+    return normalized
 
 
 def _resolve_active_provider_id(llm_payload: dict[str, Any], providers: list[dict[str, Any]]) -> str:

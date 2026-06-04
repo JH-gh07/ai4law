@@ -23,12 +23,18 @@ class KnowledgeSyncMeta(BaseModel):
     sources_csv_path: str
     cases_csv_path: str
     module_catalog_path: str = ""
+    spec_asset_manifest_path: str = ""
     sources_csv_exists: bool
     cases_csv_exists: bool
     module_catalog_exists: bool = False
+    spec_asset_manifest_exists: bool = False
     sources_csv_mtime: str = ""
     cases_csv_mtime: str = ""
     module_catalog_mtime: str = ""
+    spec_asset_manifest_mtime: str = ""
+    manifest_total_files: int = 0
+    manifest_frontend_visible_files: int = 0
+    manifest_migrated_files: int = 0
 
 
 class KnowledgeIndexResponse(BaseModel):

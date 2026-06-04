@@ -44,6 +44,13 @@ def module_catalog_path() -> Path:
     )
 
 
+def spec_asset_manifest_path() -> Path:
+    return prefer_existing(
+        NEW_INDEX_DIR / "spec_asset_manifest.csv",
+        LEGACY_INDEX_DIR / "spec_asset_manifest.csv",
+    )
+
+
 def source_registry_path() -> Path:
     return prefer_existing(
         NEW_REGISTRY_DIR / "source_registry.v1.json",
@@ -63,4 +70,3 @@ def regulation_article_schema_path() -> Path:
         NEW_REGISTRY_DIR / "regulation_article.schema.json",
         LEGACY_NORMALIZED_DIR / "regulation_article.schema.json",
     )
-

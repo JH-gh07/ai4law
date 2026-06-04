@@ -44,10 +44,16 @@ export type KnowledgeSyncMeta = {
   cache_refreshed: boolean;
   sources_csv_path: string;
   cases_csv_path: string;
+  spec_asset_manifest_path: string;
   sources_csv_exists: boolean;
   cases_csv_exists: boolean;
+  spec_asset_manifest_exists: boolean;
   sources_csv_mtime: string;
   cases_csv_mtime: string;
+  spec_asset_manifest_mtime: string;
+  manifest_total_files: number;
+  manifest_frontend_visible_files: number;
+  manifest_migrated_files: number;
 };
 
 export type KnowledgeSourceOptions = {
@@ -101,10 +107,16 @@ const parseKnowledgeIndexData = (data: unknown): KnowledgeIndexData => {
       cache_refreshed: syncMetaRaw.cache_refreshed === true,
       sources_csv_path: typeof syncMetaRaw.sources_csv_path === "string" ? syncMetaRaw.sources_csv_path : "",
       cases_csv_path: typeof syncMetaRaw.cases_csv_path === "string" ? syncMetaRaw.cases_csv_path : "",
+      spec_asset_manifest_path: typeof syncMetaRaw.spec_asset_manifest_path === "string" ? syncMetaRaw.spec_asset_manifest_path : "",
       sources_csv_exists: syncMetaRaw.sources_csv_exists === true,
       cases_csv_exists: syncMetaRaw.cases_csv_exists === true,
+      spec_asset_manifest_exists: syncMetaRaw.spec_asset_manifest_exists === true,
       sources_csv_mtime: typeof syncMetaRaw.sources_csv_mtime === "string" ? syncMetaRaw.sources_csv_mtime : "",
-      cases_csv_mtime: typeof syncMetaRaw.cases_csv_mtime === "string" ? syncMetaRaw.cases_csv_mtime : ""
+      cases_csv_mtime: typeof syncMetaRaw.cases_csv_mtime === "string" ? syncMetaRaw.cases_csv_mtime : "",
+      spec_asset_manifest_mtime: typeof syncMetaRaw.spec_asset_manifest_mtime === "string" ? syncMetaRaw.spec_asset_manifest_mtime : "",
+      manifest_total_files: typeof syncMetaRaw.manifest_total_files === "number" ? syncMetaRaw.manifest_total_files : 0,
+      manifest_frontend_visible_files: typeof syncMetaRaw.manifest_frontend_visible_files === "number" ? syncMetaRaw.manifest_frontend_visible_files : 0,
+      manifest_migrated_files: typeof syncMetaRaw.manifest_migrated_files === "number" ? syncMetaRaw.manifest_migrated_files : 0,
     },
     source_options: {
       categories: toStringList(sourceOptionsRaw.categories),
