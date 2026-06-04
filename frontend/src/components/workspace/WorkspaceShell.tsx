@@ -155,6 +155,59 @@ const readResponseChapters = (response: unknown): ResponseChapter[] => {
 const readStringList = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
 
+const escapeMarkdownCell = (value: string): string =>
+  value.replace(/\|/g, "\\|").replace(/\r\n?/g, " ").replace(/\n/g, " ").trim();
+
+const buildMarkdownTable = (headers: string[], rows: string[][]): string => {
+  if (headers.length === 0 || rows.length === 0) return "";
+  const normalizedRows = rows.filter((row) => row.length === headers.length);
+  if (normalizedRows.length === 0) return "";
+  return [
+    `| ${headers.map(escapeMarkdownCell).join(" | ")} |`,
+    `| ${headers.map(() => "---").join(" | ")} |`,
+    ...normalizedRows.map((row) => `| ${row.map((cell) => escapeMarkdownCell(cell || "-")).join(" | ")} |`),
+  ].join("\n");
+};
+
+const readDetailedFindingRows = (response: unknown): string[][] => {
+  if (!isRecord(response)) return [];
+
+  if (Array.isArray(response.findings)) {
+    const rows = response.findings
+      .filter(isRecord)
+      .map((item) => {
+        const requirementId = readString(item.requirement_id) ?? "";
+        const title = readString(item.title) ?? "";
+        const riskLevel = readString(item.risk_level) ?? "";
+        const finding = readString(item.finding) ?? "";
+        const recommendation = readString(item.recommendation) ?? "";
+        const legalBasis = Array.isArray(item.legal_basis)
+          ? item.legal_basis.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0).join("；")
+          : "";
+        return [requirementId, title, riskLevel, finding, recommendation, legalBasis];
+      })
+      .filter((row) => row.some((cell) => cell.trim().length > 0));
+    if (rows.length > 0) return rows;
+  }
+
+  if (Array.isArray(response.problems)) {
+    const rows = response.problems
+      .filter(isRecord)
+      .map((item) => [
+        readString(item.code) ?? "",
+        readString(item.title) ?? "",
+        readString(item.risk_level) ?? "",
+        readString(item.finding) ?? "",
+        readString(item.recommendation) ?? "",
+        readString(item.legal_basis) ?? "",
+      ])
+      .filter((row) => row.some((cell) => cell.trim().length > 0));
+    if (rows.length > 0) return rows;
+  }
+
+  return [];
+};
+
 const normalizeMarkdownForRender = (value: string): string => {
   const normalized = value.replace(/\r\n?/g, "\n");
   return normalizeLegalMarkdown(
@@ -244,6 +297,20 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
     lang === "zh" ? "命中规则与判断依据" : "Applied Rules and Basis",
     hitRules
   );
+
+  const detailedFindingRows = readDetailedFindingRows(response);
+  const detailedFindingsTable = buildMarkdownTable(
+    lang === "zh"
+      ? ["检查项", "主题", "风险", "现状", "整改建议", "法律依据"]
+      : ["Item", "Topic", "Risk", "Current Status", "Recommendation", "Legal Basis"],
+    detailedFindingRows,
+  );
+  if (detailedFindingsTable) {
+    sections.push({
+      title: lang === "zh" ? "详细审查结果" : "Detailed Review Findings",
+      content: detailedFindingsTable,
+    });
+  }
 
   const citations = Array.isArray(result.citations)
     ? result.citations
@@ -1488,6 +1555,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         {state.panelState.rightOpen ? (
           <AssistantPanel
             taskSpace={taskSpace}
+            taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null}
             onToggleCollapse={() => dispatch({ type: "set_panel_state", payload: { rightOpen: false } })}
             onSwitchTab={(tab) => {
               setOpenTabs((prev) => (prev.includes(tab as WorkspaceTopTabId) ? prev : [...prev, tab as WorkspaceTopTabId]));

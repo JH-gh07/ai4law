@@ -14,6 +14,10 @@ export type CopilotContextPayload = {
   artifact_count: number;
   top_issues: string[];
   latest_artifacts: string[];
+  trace_summary?: string;
+  trace_stage?: string;
+  trace_status?: "idle" | "running" | "completed" | "failed";
+  trace_highlights?: string[];
 };
 
 export type CopilotChatRequestPayload = {

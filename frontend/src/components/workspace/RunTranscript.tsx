@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { useLang } from "../../lib/language";
 import { useTaskEvents } from "../../lib/useTaskEvents";
 import { adaptEvents } from "../../lib/trace-adapter";
+import { TraceRunHeader } from "./TraceRunHeader";
 import { TraceNodeView } from "./TraceNodeView";
 import type { TraceNode } from "../../lib/domain";
 
@@ -23,8 +24,32 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
 
   // 自动滚动到最新（仅在运行中且用户在底部附近）
   const prevNodeCount = useRef(0);
-  const hasFinal = events.some((e) => e.event_type === "final");
-  const isRunning = events.length > 0 && !hasFinal;
+  const terminalEvent = [...events]
+    .reverse()
+    .find((event) => event.event_type === "final" || event.event_type === "final_brief");
+  const latestState = [...events]
+    .reverse()
+    .find((event) => event.event_type === "status" && typeof event.detail?.state === "string");
+  const latestStateValue =
+    typeof latestState?.detail?.state === "string" ? latestState.detail.state.toLowerCase() : null;
+  const hasFailureState = latestStateValue != null && /(fail|error|cancel|timeout|aborted)/i.test(latestStateValue);
+  const hasFailureSummary = [...events]
+    .reverse()
+    .some((event) => /失败|异常|报错|中止|超时|failed|error/i.test(event.summary));
+  const hasFinal = events.some((event) => event.event_type === "final");
+  const isRunning = events.length > 0 && !hasFinal && !hasFailureState;
+
+  const runStatus = !taskId || events.length === 0
+    ? "empty" as const
+    : hasFailureState || hasFailureSummary
+      ? "failed" as const
+      : hasFinal
+        ? "completed" as const
+        : "running" as const;
+
+  const firstTs = events[0]?.timestamp ?? nodes[0]?.timestamp;
+  const lastTs = terminalEvent?.timestamp ?? nodes[nodes.length - 1]?.timestamp;
+
   useEffect(() => {
     if (!bodyRef.current) return;
     const el = bodyRef.current;
@@ -37,6 +62,16 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
 
   return (
     <section className="execution-timeline">
+      <TraceRunHeader
+        moduleLabel={moduleLabel}
+        status={runStatus}
+        taskId={taskId}
+        startedAt={firstTs}
+        completedAt={runStatus === "completed" || runStatus === "failed" ? lastTs : undefined}
+        nodeCount={nodes.length}
+        eventCount={events.length}
+      />
+
       <div className="trace-timeline-body" ref={bodyRef}>
         {!taskId ? (
           <p className="trace-empty">

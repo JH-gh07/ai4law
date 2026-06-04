@@ -27,9 +27,9 @@ export function TraceNodeView({ node }: { node: TraceNode }) {
         <span className="trace-node-stage-wrap">
           {node.badge ? <span className="trace-node-badge">{node.badge}</span> : null}
           <span className="trace-node-stage" style={{ color }}>
-            {node.icon} {node.stage}
+            {node.stage}
           </span>
-          <span className="trace-node-action">| {node.action}</span>
+          <span className="trace-node-action">｜{node.action}</span>
         </span>
         <span className="trace-node-time">{fmtTime(node.timestamp)}</span>
       </div>

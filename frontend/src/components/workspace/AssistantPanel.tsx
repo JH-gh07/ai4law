@@ -3,13 +3,16 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAppStore } from "../../lib/app-store";
 import { requestCopilotChat } from "../../lib/copilot-api";
-import type { RunSession, TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
+import type { TaskSpace, TraceNode, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { ChevronToggleIcon } from "../common/AppIcons";
+import { useTaskEvents } from "../../lib/useTaskEvents";
+import { adaptEvents } from "../../lib/trace-adapter";
 
 type AssistantPanelProps = {
   taskSpace: TaskSpace;
+  taskId: string | null;
   onToggleCollapse: () => void;
   onSwitchTab?: (tab: string) => void;
 };
@@ -29,149 +32,94 @@ const toFileName = (value: string): string => {
   return chunks[chunks.length - 1] || value;
 };
 
-/** ── ThinkingBlock: Claude-style expandable thinking process ── */
-function ThinkingBlock({ session, onToggle, lang }: { session: RunSession; onToggle: () => void; lang: "zh" | "en" }) {
-  const [collapsed, setCollapsed] = useState(session.isComplete);
-  const runningCount = session.stages.filter((s) => s.status === "running").length;
-  const doneCount = session.stages.filter((s) => s.status === "done").length;
-  const totalCount = session.stages.length;
+function summarizeTraceNodes(nodes: TraceNode[]): {
+  summary: string;
+  stage: string | undefined;
+  status: "idle" | "running" | "completed" | "failed";
+  highlights: string[];
+} {
+  if (nodes.length === 0) {
+    return {
+      summary: "暂无执行轨迹",
+      stage: undefined,
+      status: "idle",
+      highlights: [],
+    };
+  }
 
-  useEffect(() => {
-    if (session.isComplete) {
-      // Auto-collapse after 2s when complete
-      const t = setTimeout(() => setCollapsed(true), 2000);
-      return () => clearTimeout(t);
-    }
-    setCollapsed(false);
-  }, [session.isComplete]);
+  const latest = nodes[nodes.length - 1];
+  const stage = `${latest.stage}｜${latest.action}`;
+  const failed = nodes.some((node) => node.status === "error");
+  const running = nodes.some((node) => node.status === "running");
+  const status = failed ? "failed" : running ? "running" : "completed";
+  const highlights = nodes
+    .slice(-5)
+    .map((node) => `${node.stage}｜${node.action}：${node.description}`)
+    .filter((line) => line.trim().length > 0);
 
-  const headerText = session.isComplete
-    ? lang === "zh"
-      ? `思考过程已完成（${doneCount} 个阶段${session.totalDurationMs ? `，${(session.totalDurationMs / 1000).toFixed(1)}s` : ""}）`
-      : `Thinking complete (${doneCount} stages${session.totalDurationMs ? `, ${(session.totalDurationMs / 1000).toFixed(1)}s` : ""})`
-    : lang === "zh"
-      ? `思考中...（${runningCount} 运行，${doneCount}/${totalCount} 完成）`
-      : `Thinking... (${runningCount} running, ${doneCount}/${totalCount} done)`;
+  const summary = highlights[highlights.length - 1] ?? `${latest.stage}｜${latest.action}`;
+  return { summary, stage, status, highlights };
+}
+
+function CopilotTraceStrip({
+  summary,
+  stage,
+  status,
+  highlights,
+  onOpenHistory,
+  lang,
+}: {
+  summary: string;
+  stage?: string;
+  status: "idle" | "running" | "completed" | "failed";
+  highlights: string[];
+  onOpenHistory: () => void;
+  lang: "zh" | "en";
+}) {
+  const statusLabel = status === "running"
+    ? (lang === "zh" ? "执行中" : "Running")
+    : status === "completed"
+      ? (lang === "zh" ? "已完成" : "Completed")
+      : status === "failed"
+        ? (lang === "zh" ? "失败" : "Failed")
+        : (lang === "zh" ? "待执行" : "Idle");
 
   return (
-    <article
-      className="assistant-msg assistant-copilot-msg assistant-chat-bubble system_run thinking-block"
-      style={{ borderLeft: "3px solid #7c3aed", background: "rgba(124, 58, 237, 0.04)", cursor: "default" }}
-    >
-      <div
-        className="thinking-header"
-        onClick={() => setCollapsed((c) => !c)}
-        style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: "4px 0", fontSize: "0.85em", userSelect: "none" }}
-      >
-        <span style={{ fontSize: "0.7em", transition: "transform 0.2s", transform: collapsed ? "rotate(-90deg)" : "none" }}>▼</span>
-        <span style={{ fontWeight: 600, color: "#7c3aed" }}>
-          {session.isComplete ? "🧠" : runningCount > 0 ? "🧠" : "🧠"}
-        </span>
-        <span style={{ color: "#6b7280" }}>{headerText}</span>
-        <span
-          style={{ fontSize: "0.75em", color: "#3b82f6", marginLeft: "auto", cursor: "pointer", textDecoration: "underline" }}
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        >
-          {lang === "zh" ? "查看详情" : "View details"}
-        </span>
-      </div>
-      {!collapsed && (
-        <div className="thinking-stages" style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "2px" }}>
-          {session.stages.map((stage) => {
-            const [detailOpen, setDetailOpen] = useState(false);
-            const hasDetail = stage.status === "done" && stage.detail && Object.keys(stage.detail).length > 0;
-            return (
-              <div key={stage.id} style={{ marginBottom: "2px" }}>
-                <div
-                  className={`thinking-stage thinking-stage-${stage.status}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "0.82em",
-                    padding: "3px 0",
-                    color: stage.status === "done" ? "#374151" : stage.status === "running" ? "#1e40af" : "#9ca3af",
-                    animation: stage.status === "running" ? "pulse 1.5s infinite" : "none",
-                    cursor: hasDetail ? "pointer" : "default",
-                  }}
-                  onClick={() => hasDetail && setDetailOpen((o) => !o)}
-                >
-                  <span style={{
-                    width: "18px",
-                    textAlign: "center",
-                    fontWeight: 700,
-                    color: stage.status === "done" ? "#059669" : stage.status === "running" ? "#2563eb" : "#9ca3af",
-                  }}>
-                    {stage.status === "running" ? "⊙" : stage.status === "done" ? "✓" : "○"}
-                  </span>
-                  <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1px" }}>
-                    <span>{stage.name}</span>
-                    {stage.command && (
-                      <span style={{ fontSize: "0.75em", color: "#9ca3af" }}>
-                        {stage.command}
-                      </span>
-                    )}
-                  </span>
-                  {stage.summary && (
-                    <span style={{ color: "#6b7280", fontSize: "0.85em", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {stage.summary}
-                    </span>
-                  )}
-                  {stage.status === "running" && (
-                    <span style={{ fontSize: "0.7em", color: "#2563eb", animation: "spin 1s linear infinite" }}>⟳</span>
-                  )}
-                  {hasDetail && (
-                    <span style={{ fontSize: "0.65em", color: "#9ca3af" }}>{detailOpen ? "▲" : "▼"}</span>
-                  )}
-                </div>
-                {hasDetail && detailOpen && (
-                  <pre style={{
-                    margin: "4px 0 4px 34px",
-                    padding: "6px 10px",
-                    fontSize: "0.72em",
-                    background: "rgba(0,0,0,0.03)",
-                    borderRadius: "4px",
-                    maxHeight: "200px",
-                    overflow: "auto",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-all",
-                    color: "#4b5563",
-                    border: "1px solid rgba(0,0,0,0.06)",
-                  }}>
-                    {JSON.stringify(stage.detail, null, 2)}
-                  </pre>
-                )}
-              </div>
-            );
-          })}
+    <section className="copilot-trace-strip">
+      <div className="copilot-trace-strip-head">
+        <div>
+          <strong>{lang === "zh" ? "当前执行" : "Current Trace"}</strong>
+          <p>{summary}</p>
         </div>
-      )}
-    </article>
+        <button type="button" className="copilot-trace-history-link" onClick={onOpenHistory}>
+          {lang === "zh" ? "查看历史" : "Open History"}
+        </button>
+      </div>
+      <div className="copilot-trace-strip-meta">
+        <span>{statusLabel}</span>
+        <span>{stage ?? (lang === "zh" ? "暂无阶段" : "No stage")}</span>
+      </div>
+      {highlights.length > 0 ? (
+        <div className="copilot-trace-strip-list">
+          {highlights.map((item) => (
+            <div key={item} className="copilot-trace-strip-item">
+              {item}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: AssistantPanelProps) {
+export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTab }: AssistantPanelProps) {
   const { t, lang } = useLang();
   const { state } = useAppStore();
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const streamRef = useRef<HTMLElement | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      createdAt: new Date().toISOString(),
-      text: t("copilotWelcome")
-    }
-  ]);
-
-  // 从 store 获取当前 workspace 的活跃 RunSession（实时思考过程）
-  const activeSession = useMemo<RunSession | null>(() => {
-    const sessions = state.runSessions.filter((s) => s.taskSpaceId === taskSpace.id);
-    if (sessions.length === 0) return null;
-    // 返回最近的 session（可能有多个历史 session，取最新）
-    return sessions[0] ?? null;
-  }, [state.runSessions, taskSpace.id]);
+  const traceEvents = useTaskEvents(taskId);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const issues = useMemo(
     () => state.issues.filter((item) => item.taskSpaceId === taskSpace.id),
@@ -194,6 +142,13 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
     () => state.moduleRuns.find((item) => item.taskSpaceId === taskSpace.id) ?? null,
     [state.moduleRuns, taskSpace.id]
   );
+
+  const traceNodes = useMemo(() => {
+    if (!taskId || traceEvents.length === 0) return [];
+    return adaptEvents(traceEvents);
+  }, [taskId, traceEvents]);
+
+  const traceContext = useMemo(() => summarizeTraceNodes(traceNodes), [traceNodes]);
 
   const workflowSteps = useMemo(
     () => deriveWorkflowSteps(taskSpace, latestRun, state.artifacts, state.evidenceHits, state.issues),
@@ -259,7 +214,11 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
           evidence_count: evidenceCount,
           artifact_count: artifacts.length,
           top_issues: issues.slice(0, 5).map((item) => `[${item.severity}] ${item.message}`),
-          latest_artifacts: artifacts.slice(0, 5).map((item) => toFileName(item.path))
+          latest_artifacts: artifacts.slice(0, 5).map((item) => toFileName(item.path)),
+          trace_summary: traceContext.summary,
+          trace_stage: traceContext.stage,
+          trace_status: traceContext.status,
+          trace_highlights: traceContext.highlights,
         },
         messages: historyForModel
           .filter((item): item is ChatMessage & { role: "user" | "assistant" } => item.role === "user" || item.role === "assistant")
@@ -309,6 +268,14 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
         </section>
 
         <section ref={streamRef} className="assistant-stream assistant-copilot-stream assistant-copilot-stream-redesign assistant-chat-stream" aria-live="polite">
+          <CopilotTraceStrip
+            summary={traceContext.summary}
+            stage={traceContext.stage}
+            status={traceContext.status}
+            highlights={traceContext.highlights}
+            onOpenHistory={() => onSwitchTab?.("timeline")}
+            lang={lang}
+          />
           {messages.map((item) => (
             <article
               key={item.id}
@@ -321,13 +288,6 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
               </div>
             </article>
           ))}
-          {activeSession ? (
-            <ThinkingBlock
-              session={activeSession}
-              onToggle={() => onSwitchTab?.("timeline")}
-              lang={lang}
-            />
-          ) : null}
           {isSending ? <p className="assistant-thinking-note">{t("copilotThinking")}</p> : null}
         </section>
 

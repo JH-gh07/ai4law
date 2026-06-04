@@ -40,6 +40,54 @@ TEMPLATE_MD = Path("doc/v2/assets/templates/3.2_bcr_review_template_v0.md")
 BCR_REQUIRED_CODES = {f"3.2-C{i}" for i in range(1, 11)}
 
 
+def _escape_md_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\r", " ").replace("\n", " ").strip()
+
+
+def _build_markdown_table(headers: list[str], rows: list[list[str]]) -> str:
+    if not headers or not rows:
+        return "无"
+    normalized_rows = [row for row in rows if len(row) == len(headers)]
+    if not normalized_rows:
+        return "无"
+    lines = [
+        f"| {' | '.join(_escape_md_cell(header) for header in headers)} |",
+        f"| {' | '.join('---' for _ in headers)} |",
+    ]
+    lines.extend(
+        f"| {' | '.join(_escape_md_cell(cell or '-') for cell in row)} |"
+        for row in normalized_rows
+    )
+    return "\n".join(lines)
+
+
+def _build_problem_detail_table(problems: list[BCRProblem]) -> str:
+    return _build_markdown_table(
+        ["检查项", "主题", "风险", "现状", "整改建议", "法律依据"],
+        [
+            [p.code, p.title, p.risk_level, p.finding, p.recommendation, p.legal_basis]
+            for p in problems
+        ],
+    )
+
+
+def _build_finding_detail_table(findings: list[BCRFinding]) -> str:
+    return _build_markdown_table(
+        ["检查项", "主题", "风险", "现状", "整改建议", "法律依据"],
+        [
+            [
+                f.requirement_id,
+                f.title,
+                f.risk_level,
+                f.finding,
+                f.recommendation,
+                "；".join(f.legal_basis) if f.legal_basis else "-",
+            ]
+            for f in findings
+        ],
+    )
+
+
 class BCRService:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         if llm_client is None:
@@ -365,14 +413,29 @@ class BCRService:
         }
 
         sections = self.report_renderer.build_sections(type_class, deduped, missing, rating, score, metadata)
+        detailed_findings_table = _build_finding_detail_table(deduped[:10])
 
-        # Generate chapters for backward compat
+        # Generate chapters for backward compat, but keep the detailed findings
+        # chapter aligned with the same markdown table exported into the template.
+        chapter_pairs: list[tuple[str, str]] = []
+        for title, lines in sections[:2]:
+            chapter_pairs.append((title, "\n".join(lines[:20])))
+        chapter_pairs.append(("详细审查结果", detailed_findings_table))
+        if len(sections) > 7:
+            chapter_pairs.append(("风险优先级与整改建议", "\n".join(sections[7][1][:20])))
+        elif len(sections) > 2:
+            title, lines = sections[2]
+            chapter_pairs.append((title, "\n".join(lines[:20])))
+
         chapters = [
             BCRChapter(
-                chapter_no=i + 1, title=title, content="\n".join(lines[:20]),
-                citations=[], risk_level=rating,
+                chapter_no=i + 1,
+                title=title,
+                content=content,
+                citations=[],
+                risk_level=rating,
             )
-            for i, (title, lines) in enumerate(sections[:4])
+            for i, (title, content) in enumerate(chapter_pairs)
         ]
 
         if trace:
@@ -481,10 +544,7 @@ class BCRService:
         return notes
 
     def _generate_chapters(self, payload, rating, problems, citations, reg_snippet) -> list[BCRChapter]:
-        detail = "\n".join(
-            f"{p.code} | {p.title} | 风险={p.risk_level} | {p.finding} | {p.recommendation}"
-            for p in problems
-        ) or "未发现高/中风险问题。"
+        detail = _build_problem_detail_table(problems)
         ctx = (
             f"【审查信息】\n- 公司名称：{payload.company_name}\n"
             f"- 审查项总数：{len(payload.review_items)}\n- 问题数：{len(problems)}\n"
@@ -539,7 +599,7 @@ class BCRService:
             "review_date": date_stamp,
             "overall_rating": rating,
             "key_findings": "；".join(f.title for f in findings[:5]) or "未发现高风险问题",
-            "detailed_findings": "\n".join(f"{f.title} [{f.risk_level}] {f.finding}" for f in findings[:10]) or "无",
+            "detailed_findings": _build_finding_detail_table(findings[:10]),
             "high_risk_items": "；".join(f.title for f in findings if f.risk_level == "HIGH") or "无",
             "medium_risk_items": "；".join(f.title for f in findings if f.risk_level == "MEDIUM") or "无",
             "low_risk_items": "；".join(f.title for f in findings if f.risk_level == "LOW") or "无",
@@ -578,7 +638,7 @@ def _build_template_mapping(payload, rating, problems, chapters, date_stamp):
     high = [p for p in problems if p.risk_level == "HIGH"]
     med = [p for p in problems if p.risk_level == "MEDIUM"]
     low = [p for p in problems if p.risk_level == "LOW"]
-    detailed = "\n".join(f"{p.code} | {p.title} | 风险={p.risk_level} | {p.finding} | {p.recommendation}" for p in problems) or "无"
+    detailed = _build_problem_detail_table(problems)
     return {
         "bcr_subject": payload.company_name, "review_scope": "EDPB BCR-C 核心要素",
         "review_date": date_stamp, "overall_rating": rating,

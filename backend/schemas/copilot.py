@@ -28,6 +28,10 @@ class CopilotContext(BaseModel):
     artifact_count: int = 0
     top_issues: list[str] = Field(default_factory=list)
     latest_artifacts: list[str] = Field(default_factory=list)
+    trace_summary: str | None = None
+    trace_stage: str | None = None
+    trace_status: Literal["idle", "running", "completed", "failed"] | None = None
+    trace_highlights: list[str] = Field(default_factory=list)
 
 
 class CopilotChatRequest(BaseModel):

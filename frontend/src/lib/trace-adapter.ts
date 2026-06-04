@@ -40,6 +40,15 @@ function stringify(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
+function isScalar(value: unknown): value is string | number | boolean {
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+}
+
+function normalizeWhitespace(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.replace(/\s+/g, " ").trim();
+}
+
 function summarizeArray(value: unknown): string | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
   const preview = value
@@ -57,6 +66,94 @@ function summarizeArray(value: unknown): string | undefined {
     })
     .join("；");
   return value.length > 3 ? `${preview} 等 ${value.length} 项` : preview;
+}
+
+function formatDetailValue(value: unknown, indent = "  "): string[] {
+  if (value == null) return ["null"];
+  if (typeof value === "string") {
+    const lines = value.split("\n").map((line) => line.trimEnd()).filter((line) => line.length > 0);
+    return lines.length > 0 ? lines : [value];
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return [String(value)];
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return ["[]"];
+    if (value.every((item) => isScalar(item))) {
+      return [value.map((item) => String(item)).join(" | ")];
+    }
+    return value.slice(0, 6).map((item) => {
+      if (typeof item === "string") return `- ${item}`;
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const summary = readString(record.title)
+          ?? readString(record.name)
+          ?? readString(record.id)
+          ?? normalizeWhitespace(JSON.stringify(item));
+        return `- ${summary ?? stringify(item)}`;
+      }
+      return `- ${String(item)}`;
+    });
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const entries = Object.entries(record);
+    if (entries.length === 0) return ["{}"];
+    return entries.slice(0, 8).flatMap(([key, nested]) => {
+      const nestedLines = formatDetailValue(nested, `${indent}  `);
+      if (nestedLines.length === 1) return [`${key}: ${nestedLines[0]}`];
+      return [`${key}:`, ...nestedLines.map((line) => `${indent}${line}`)];
+    });
+  }
+  return [String(value)];
+}
+
+function formatDetailContent(detail: Record<string, unknown>): string {
+  const priority = [
+    "tool",
+    "agent",
+    "provider",
+    "model",
+    "task",
+    "query",
+    "context",
+    "category",
+    "state",
+    "error",
+    "count",
+    "hit_count",
+    "issues_count",
+    "chapter_count",
+    "artifact_path",
+    "preview",
+    "files",
+    "risks",
+    "notices",
+    "next_steps",
+    "stats",
+    "system",
+    "user",
+    "content",
+  ];
+
+  const orderedEntries = Object.entries(detail)
+    .filter(([key, value]) => key !== "raw_name" && value !== undefined && value !== null && value !== "")
+    .sort(([left], [right]) => {
+      const leftIndex = priority.indexOf(left);
+      const rightIndex = priority.indexOf(right);
+      if (leftIndex === -1 && rightIndex === -1) return left.localeCompare(right);
+      if (leftIndex === -1) return 1;
+      if (rightIndex === -1) return -1;
+      return leftIndex - rightIndex;
+    });
+
+  return orderedEntries
+    .flatMap(([key, value]) => {
+      const lines = formatDetailValue(value);
+      if (lines.length === 1) return `${key}: ${lines[0]}`;
+      return [`${key}:`, ...lines.map((line) => `  ${line}`)];
+    })
+    .join("\n");
 }
 
 function computeDuration(startIso: string, endIso: string): number | undefined {
@@ -105,22 +202,37 @@ function semanticFromDetail(event: RunEvent): SemanticMapping {
   }
 
   if (rawName) {
+    if (/per_issue_rag|agent_rag_reformulation/i.test(rawName)) {
+      return { stage: "RAG", action: /reformulation/i.test(rawName) ? "重构检索查询" : "按问题补充检索", icon: "●", badge: "RAG" };
+    }
     if (/retrieval_hits|rag_plans|rag_hit/i.test(rawName)) {
       return { stage: "RAG", action: /plans/i.test(rawName) ? "规划检索策略" : "检索法规与依据", icon: "●", badge: "RAG" };
     }
     if (/parsed_document_raw|profile_extracted|facts_built|transfer_chain_raw/i.test(rawName)) {
       return { stage: "Parser", action: "提取结构化事实", icon: "●", badge: "PARSER" };
     }
+    if (/issues_built/i.test(rawName)) {
+      return { stage: "Review", action: "生成问题清单", icon: "●", badge: "REVIEW" };
+    }
+    if (/evidence_built/i.test(rawName)) {
+      return { stage: "Review", action: "构建证据链", icon: "●", badge: "REVIEW" };
+    }
+    if (/context_pack_built/i.test(rawName)) {
+      return { stage: "Generator", action: "构建生成上下文", icon: "●", badge: "GEN" };
+    }
     if (/agent_external_draft|chapters_generated|generate_chapters|render/i.test(rawName)) {
       return { stage: "Generator", action: "生成报告章节", icon: "●", badge: "GEN" };
     }
-    if (/agent_internal_review|agent_consistency_repair|report_review|alignment/i.test(rawName)) {
+    if (/agent_internal_review|agent_consistency_repair|report_review|alignment|repair_pass|agent_repair_check|agent_chapter_consistency/i.test(rawName)) {
       return { stage: "Review", action: "执行一致性审查", icon: "●", badge: "REVIEW" };
+    }
+    if (/agent_rule_boundary|rule_engine_result/i.test(rawName)) {
+      return { stage: "Review", action: "执行规则边界分析", icon: "●", badge: "REVIEW" };
     }
     if (/agent_dpia_need|path_diagnosis|need_detection_rule|need_diagnosis_enriched/i.test(rawName)) {
       return { stage: "LLM", action: "生成判断与路径分析", icon: "●", badge: "LLM" };
     }
-    if (/agent_processing_activity|agent_risk_assessment|agent_mitigation_mapping|agent_dpo_consultation|agent_clause_semantic|agent_tia_effectiveness|agent_remediation/i.test(rawName)) {
+    if (/agent_processing_activity|agent_risk_assessment|agent_mitigation_mapping|agent_dpo_consultation|agent_clause_semantic|agent_tia_effectiveness|agent_remediation|agent_evidence_priority/i.test(rawName)) {
       return { stage: "Generator", action: "生成专项分析结果", icon: "●", badge: "GEN" };
     }
   }
@@ -145,7 +257,7 @@ function detailToBlock(
   maxPreviewLines = 8,
 ): TraceBlock | undefined {
   if (!detail || Object.keys(detail).length === 0) return undefined;
-  const content = JSON.stringify(detail, null, 2);
+  const content = formatDetailContent(detail);
   const lines = content.split("\n");
   const preview = lines.length > maxPreviewLines
     ? lines.slice(0, maxPreviewLines).join("\n") + "\n..."
@@ -153,7 +265,7 @@ function detailToBlock(
   return {
     label,
     content,
-    language: "json",
+    language: "text",
     preview,
     isTruncated: lines.length > maxPreviewLines,
     summary: summarizeDetail(detail),
@@ -215,7 +327,6 @@ function summarizeDetail(detail: Record<string, unknown> | null | undefined): st
 
   const parts = [
     tool || agent,
-    rawName,
     category,
     state,
     module,
@@ -234,7 +345,45 @@ function summarizeDetail(detail: Record<string, unknown> | null | undefined): st
   if (error) {
     parts.unshift(`错误：${error}`);
   }
-  return parts.length > 0 ? parts.join(" · ") : undefined;
+  if (parts.length > 0) return parts.join(" · ");
+  return rawName;
+}
+
+function chooseInputLabel(sem: SemanticMapping): TraceBlock["label"] {
+  if (sem.stage === "RAG") return "QUERY";
+  if (sem.stage === "Parser") return "INPUT";
+  return "CALL";
+}
+
+function chooseOutputLabel(
+  sem: SemanticMapping,
+  detail: Record<string, unknown> | null | undefined,
+  status: TraceNode["status"],
+  eventType: RunEvent["event_type"],
+): TraceBlock["label"] {
+  if (status === "error" || readString(detail?.error)) return "ERROR";
+  if (eventType === "warning") return "ERROR";
+  if (sem.stage === "Parser" || eventType === "intermediate" || eventType === "final_brief") return "OUTPUT";
+  return "RESULT";
+}
+
+function buildHumanDetail(
+  lines: Array<string | undefined>,
+): string | undefined {
+  const normalized = lines
+    .map((line) => normalizeWhitespace(line))
+    .filter((line, index, arr): line is string => !!line && arr.indexOf(line) === index);
+  return normalized.length > 0 ? normalized.join("\n") : undefined;
+}
+
+function summaryLine(event: RunEvent, fallback: string): string {
+  return shorten(normalizeWhitespace(event.summary), 120) ?? fallback;
+}
+
+function rawEventIds(...events: Array<RunEvent | null | undefined>): string[] {
+  return events
+    .map((event) => event?.event_id)
+    .filter((eventId): eventId is string => typeof eventId === "string" && eventId.length > 0);
 }
 
 function makeNode(event: RunEvent, sem: SemanticMapping, overrides: Partial<TraceNode> = {}): TraceNode {
@@ -248,6 +397,7 @@ function makeNode(event: RunEvent, sem: SemanticMapping, overrides: Partial<Trac
     timestamp: event.timestamp,
     icon: sem.icon,
     badge: overrides.badge ?? sem.badge,
+    rawEventIds: overrides.rawEventIds ?? rawEventIds(event),
     ...overrides,
   };
 }
@@ -257,19 +407,25 @@ function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent 
   const toolName = readString(toolStart.detail?.tool) ?? readString(toolStart.detail?.agent);
   const callSummary = summarizeDetail(toolStart.detail);
   const resultSummary = summarizeDetail(toolResult.detail);
+  const status = readString(toolResult.detail?.error) ? "error" : "success";
 
   return makeNode(toolStart, sem, {
     action: sem.action,
-    description: toolName
-      ? `${toolName}${callSummary ? ` · ${callSummary}` : ""}`
-      : (callSummary ?? shorten(toolStart.summary, 96) ?? sem.action),
-    detail: thought?.summary
-      ? `判断依据：${thought.summary}${resultSummary ? `\n结果摘要：${resultSummary}` : ""}`
-      : resultSummary,
-    status: readString(toolResult.detail?.error) ? "error" : "success",
+    description: thought?.summary
+      ? summaryLine(thought, sem.action)
+      : summaryLine(toolStart, sem.action),
+    detail: buildHumanDetail([
+      toolName ? `调用对象：${toolName}` : undefined,
+      callSummary ? `调用摘要：${callSummary}` : undefined,
+      resultSummary ? `结果摘要：${resultSummary}` : undefined,
+    ]),
+    status,
     durationMs: computeDuration(toolStart.timestamp, toolResult.timestamp),
-    input: toolStart.detail ? detailToBlock("CALL", toolStart.detail) : undefined,
-    output: toolResult.detail ? detailToBlock("RESULT", toolResult.detail) : textToBlock("RESULT", toolResult.summary),
+    input: toolStart.detail ? detailToBlock(chooseInputLabel(sem), toolStart.detail) : undefined,
+    output: toolResult.detail
+      ? detailToBlock(chooseOutputLabel(sem, toolResult.detail, status, toolResult.event_type), toolResult.detail)
+      : textToBlock(chooseOutputLabel(sem, null, status, toolResult.event_type), toolResult.summary),
+    rawEventIds: rawEventIds(toolStart, thought, toolResult),
   });
 }
 
@@ -277,36 +433,46 @@ function flushToolStart(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
   const toolName = readString(event.detail?.tool) ?? readString(event.detail?.agent);
   return makeNode(event, sem, {
-    description: toolName
-      ? `${toolName}${summarizeDetail(event.detail) ? ` · ${summarizeDetail(event.detail)}` : ""}`
-      : (summarizeDetail(event.detail) ?? shorten(event.summary, 96) ?? sem.action),
+    description: summaryLine(event, sem.action),
+    detail: buildHumanDetail([
+      toolName ? `调用对象：${toolName}` : undefined,
+      summarizeDetail(event.detail) ? `调用摘要：${summarizeDetail(event.detail)}` : undefined,
+    ]),
     status: "running",
-    input: event.detail ? detailToBlock("CALL", event.detail) : undefined,
+    input: event.detail ? detailToBlock(chooseInputLabel(sem), event.detail) : undefined,
   });
 }
 
 function standaloneNode(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
+  const status = readString(event.detail?.error) ? "error" : "success";
   return makeNode(event, sem, {
-    description: summarizeDetail(event.detail) ?? shorten(event.summary, 96) ?? sem.action,
-    detail: !event.detail ? undefined : shorten(event.summary, 120),
-    output: event.detail ? detailToBlock(event.event_type === "thought" ? "OUTPUT" : "RESULT", event.detail) : undefined,
+    description: summaryLine(event, sem.action),
+    detail: summarizeDetail(event.detail),
+    status,
+    output: event.detail
+      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail)
+      : undefined,
   });
 }
 
 function intermediateNode(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
+  const status = event.event_type === "warning" ? "error" : "success";
   return makeNode(event, sem, {
-    description: summarizeDetail(event.detail) ?? shorten(event.summary, 96) ?? sem.action,
-    detail: shorten(event.summary, 120),
-    output: event.detail ? detailToBlock("OUTPUT", event.detail) : undefined,
+    description: summaryLine(event, sem.action),
+    detail: summarizeDetail(event.detail),
+    status,
+    output: event.detail
+      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail)
+      : undefined,
   });
 }
 
 function finalNode(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
   return makeNode(event, sem, {
-    description: shorten(event.summary, 96) ?? sem.action,
+    description: summaryLine(event, sem.action),
     detail: summarizeDetail(event.detail),
     output: event.detail ? detailToBlock("RESULT", event.detail) : undefined,
   });
@@ -316,7 +482,7 @@ function briefNode(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
   const conclusion = readString(event.detail?.conclusion);
   return makeNode(event, sem, {
-    description: conclusion ?? shorten(event.summary, 96) ?? sem.action,
+    description: conclusion ?? summaryLine(event, sem.action),
     detail: summarizeDetail(event.detail),
     output: event.detail ? detailToBlock("OUTPUT", event.detail) : undefined,
   });
@@ -326,7 +492,7 @@ function bareNode(event: RunEvent): TraceNode {
   const sem = semanticFromDetail(event);
   const status = readString(event.detail?.state);
   return makeNode(event, sem, {
-    description: status ? `${event.summary} · ${status}` : (shorten(event.summary, 96) ?? sem.action),
+    description: status ? `${summaryLine(event, sem.action)} · ${status}` : summaryLine(event, sem.action),
     detail: summarizeDetail(event.detail),
     status: /failed|error|cancel/i.test(status ?? "") ? "error" : "success",
   });

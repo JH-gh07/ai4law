@@ -1,10 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
-import { useLang } from "../../lib/language";
-import { useTaskEvents } from "../../lib/useTaskEvents";
-import { adaptEvents } from "../../lib/trace-adapter";
-import { TraceRunHeader } from "./TraceRunHeader";
-import { TraceNodeView } from "./TraceNodeView";
-import type { TraceNode } from "../../lib/domain";
+import { RunTranscript } from "./RunTranscript";
 
 type Props = {
   taskId: string | null;
@@ -12,65 +6,5 @@ type Props = {
 };
 
 export function ExecutionTimeline({ taskId, moduleLabel = "" }: Props) {
-  const { lang } = useLang();
-  const events = useTaskEvents(taskId);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
-  // 语义聚合: 原始事件 -> 语义节点
-  const nodes: TraceNode[] = useMemo(() => {
-    if (events.length === 0) return [];
-    return adaptEvents(events);
-  }, [events]);
-
-  // 自动滚动到最新（仅在运行中且用户在底部附近）
-  const prevNodeCount = useRef(0);
-  const isRunning = nodes.length > 0 && events.some((e) => e.event_type !== "final" && e.event_type !== "final_brief");
-  useEffect(() => {
-    if (!bodyRef.current) return;
-    const el = bodyRef.current;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    if (isRunning && nodes.length > prevNodeCount.current && atBottom) {
-      el.scrollTop = el.scrollHeight;
-    }
-    prevNodeCount.current = nodes.length;
-  }, [nodes.length, isRunning]);
-
-  // 推导运行状态
-  const runStatus = events.length === 0
-    ? "empty" as const
-    : events.some((e) => e.event_type === "final")
-      ? "completed" as const
-      : "running" as const;
-
-  const firstTs = nodes[0]?.timestamp;
-  const lastTs = nodes[nodes.length - 1]?.timestamp;
-
-  return (
-    <section className="execution-timeline">
-      <TraceRunHeader
-        moduleLabel={moduleLabel}
-        status={runStatus}
-        taskId={taskId}
-        startedAt={firstTs}
-        completedAt={runStatus === "completed" ? lastTs : undefined}
-        nodeCount={nodes.length}
-      />
-
-      <div className="trace-timeline-body" ref={bodyRef}>
-        {nodes.length === 0 ? (
-          <p className="trace-empty">
-            {lang === "zh"
-              ? "暂无执行记录，任务开始后这里会显示 Agent 的执行轨迹。"
-              : "No execution records yet. Agent trace will appear here once the task starts."}
-          </p>
-        ) : (
-          <div className="trace-timeline-line">
-            {nodes.map((node) => (
-              <TraceNodeView key={node.id} node={node} />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
+  return <RunTranscript taskId={taskId} moduleLabel={moduleLabel} />;
 }

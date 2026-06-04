@@ -9,6 +9,100 @@ function normalizeHeadingSpacing(value: string): string {
     .replace(/^\s*•\s+/gm, "- ");
 }
 
+function splitPipeRow(line: string): string[] {
+  const normalized = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return normalized.split("|").map((cell) => cell.trim());
+}
+
+function isMarkdownDelimiterLine(line: string): boolean {
+  const cells = splitPipeRow(line);
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
+function looksLikePipeTableLine(line: string): boolean {
+  if (!line.includes("|")) return false;
+  if (isMarkdownDelimiterLine(line)) return true;
+  const cells = splitPipeRow(line);
+  return cells.length >= 3 && cells.every((cell) => cell.length > 0);
+}
+
+function looksLikeReviewMatrix(rows: string[][]): boolean {
+  return rows.every((cells) => {
+    if (cells.length < 5) return false;
+    const item = cells[0] ?? "";
+    const risk = cells[2] ?? "";
+    return /^\d+-[A-Z]\d+$/i.test(item) && /风险\s*=/.test(risk);
+  });
+}
+
+function inferPipeTableHeaders(rows: string[][]): string[] | null {
+  const width = rows[0]?.length ?? 0;
+  if (width < 3) return null;
+  if (looksLikeReviewMatrix(rows)) {
+    if (width === 6) return ["检查项", "主题", "风险", "现状", "整改建议", "本轮重点"];
+    if (width === 5) return ["检查项", "主题", "风险", "现状", "整改建议"];
+  }
+  if (width === 3) {
+    return ["来源", "定位", "备注"];
+  }
+  return Array.from({ length: width }, (_, index) => `列${index + 1}`);
+}
+
+function convertPipeTableBlock(lines: string[]): string[] {
+  if (lines.length < 2) return lines;
+  if (!lines.every(looksLikePipeTableLine)) return lines;
+
+  const rows = lines.map(splitPipeRow);
+  const width = rows[0]?.length ?? 0;
+  if (width < 3 || rows.some((cells) => cells.length !== width)) return lines;
+
+  if (isMarkdownDelimiterLine(lines[1] ?? "")) {
+    return lines.map((line) => {
+      const cells = splitPipeRow(line);
+      return `| ${cells.join(" | ")} |`;
+    });
+  }
+
+  const headers = inferPipeTableHeaders(rows);
+  if (!headers || headers.length !== width) return lines;
+
+  const delimiter = headers.map(() => "---");
+  return [
+    `| ${headers.join(" | ")} |`,
+    `| ${delimiter.join(" | ")} |`,
+    ...rows.map((cells) => `| ${cells.join(" | ")} |`),
+  ];
+}
+
+function normalizePipeTables(value: string): string {
+  const lines = value.split("\n");
+  const output: string[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    if (!looksLikePipeTableLine(line.trim())) {
+      output.push(line);
+      index += 1;
+      continue;
+    }
+
+    const block: string[] = [];
+    let nextIndex = index;
+    while (nextIndex < lines.length) {
+      const current = lines[nextIndex] ?? "";
+      if (!looksLikePipeTableLine(current.trim())) break;
+      block.push(current.trim());
+      nextIndex += 1;
+    }
+
+    output.push(...convertPipeTableBlock(block));
+    index = nextIndex;
+  }
+
+  return output.join("\n");
+}
+
 // ---------------------------------------------------------------------------
 // 法条引用上下文检测
 //
@@ -179,9 +273,9 @@ function lineKind(line: string): "heading" | "list" | "basis" | "table" | "parag
 // ---------------------------------------------------------------------------
 
 export function normalizeLegalMarkdown(value: string): string {
-  const normalized = normalizeHeadingSpacing(
+  const normalized = normalizePipeTables(normalizeHeadingSpacing(
     value.replace(/\r\n?/g, "\n").replace(/ /g, " ").replace(/　/g, " "),
-  );
+  ));
   const lines = normalized
     .split("\n")
     .flatMap((line) => {
