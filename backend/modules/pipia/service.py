@@ -1,25 +1,32 @@
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.llm.client import LLMClient
-from backend.common.quality.alignment import check_cn_alignment
 from backend.common.llm.module_generator import generate_chapter
+from backend.common.quality.alignment import check_cn_alignment
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.report import (
     format_date_stamp,
+    render_docx_report,
     render_docx_template,
+    render_markdown_report,
     render_markdown_template,
     safe_filename,
 )
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.risk.scoring import risk_level
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.common.trace.recorder import TraceRecorder
+from backend.common.workflow import EvidenceItem, FactItem, IssueItem
 from backend.modules.pipia.schema import (
     PIPIAAsyncAccepted,
     PIPIAAsyncStatus,
+    PIPIAFilingReadiness,
     PIPIAChapter,
     PIPIARequest,
     PIPIAResult,
@@ -40,95 +47,148 @@ PIPIA_CHAPTERS = [
 ]
 
 
+_NO_LLM = object()
+
+
 class PIPIAService:
-    def __init__(self, llm_client: LLMClient | None = None) -> None:
-        if llm_client is None:
+    def __init__(self, llm_client: LLMClient | None = _NO_LLM) -> None:
+        if llm_client is _NO_LLM:
             from backend.core.settings import get_settings
             llm_client = LLMClient(get_settings())
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="pipia")
 
-    def generate_report(self, payload: PIPIARequest) -> PIPIAResult:
+    def generate_report(
+        self,
+        payload: PIPIARequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> PIPIAResult:
+        run_task_id = task_id or uuid.uuid4().hex
+        trace, token = prepare_run(module="pipia", task_id=run_task_id, trace=trace)
         profile = payload.company_profile
-        level = risk_level(
-            is_ciio=profile.is_ciio,
-            contains_important_data=False,
-            pii_count=profile.outbound_pi_count,
-            spi_count=profile.outbound_spi_count,
-        )
-        regs = retrieve_regulations(
-            f"PIPIA standard contract certification {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
-            top_k=4,
-            jurisdiction="cn",
-            path="scc" if payload.route_type == "scc_filing" else "all",
-        )
-        citations = [f"{item.title}{item.article}" for item in regs]
-        reg_snippet = "\n".join(
-            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
-            for item in regs
-        ) or "（暂无检索到相关法条）"
-        attachment_notes = self._extract_attachment_notes(payload)
+        try:
+            if trace:
+                trace.record("status", {"summary": "开始 PIPIA 个人信息保护影响评估", "detail": {"module": "pipia"}})
+                trace.record("thought", {"summary": "路径判断：基于出境场景和路径类型确定 PIPIA 评估框架"})
+            level = risk_level(
+                is_ciio=profile.is_ciio,
+                contains_important_data=False,
+                pii_count=profile.outbound_pi_count,
+                spi_count=profile.outbound_spi_count,
+            )
+            regs = retrieve_regulations(
+                f"PIPIA standard contract certification {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
+                top_k=4,
+                jurisdiction="cn",
+                path="scc" if payload.route_type == "scc_filing" else "all",
+            )
+            citations = [f"{item.title}{item.article}" for item in regs]
+            reg_snippet = "\n".join(
+                f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+                for item in regs
+            ) or "（暂无检索到相关法条）"
+            attachment_notes = self._extract_attachment_notes(payload)
 
-        context_block = (
-            f"【企业信息】\n"
-            f"- 企业名称：{profile.company_name}\n"
-            f"- 合规路径：{payload.route_type}\n"
-            f"- 境外接收方：{payload.transfer_context.recipient_name}（{payload.transfer_context.recipient_country_region}）\n"
-            f"- 出境目的：{payload.transfer_context.purpose}\n"
-            f"- 法定基础：{payload.transfer_context.legal_basis}\n"
-            f"- 个人信息规模：{profile.outbound_pi_count:,}人\n"
-            f"- 敏感个人信息规模：{profile.outbound_spi_count:,}人\n"
-            f"- 风险等级：{level}\n"
-            f"\n【法规参考】\n{reg_snippet}\n"
-        )
-
-        chapters: list[PIPIAChapter] = []
-        for idx, title in enumerate(PIPIA_CHAPTERS, start=1):
-            if self.llm_client and self.llm_client.enabled:
-                content = generate_chapter(self.llm_client, "pipia", title, context_block, citations=citations)
-            else:
-                content = f"（{title}：LLM未配置，此处为占位内容）"
-            chapters.append(
-                PIPIAChapter(
-                    chapter_no=idx,
-                    title=title,
-                    content=content,
-                    citations=citations,
-                    risk_level=level,
-                )
+            context_block = (
+                f"【企业信息】\n"
+                f"- 企业名称：{profile.company_name}\n"
+                f"- 合规路径：{payload.route_type}\n"
+                f"- 境外接收方：{payload.transfer_context.recipient_name}（{payload.transfer_context.recipient_country_region}）\n"
+                f"- 出境目的：{payload.transfer_context.purpose}\n"
+                f"- 法定基础：{payload.transfer_context.legal_basis}\n"
+                f"- 个人信息规模：{profile.outbound_pi_count:,}人\n"
+                f"- 敏感个人信息规模：{profile.outbound_spi_count:,}人\n"
+                f"- 风险等级：{level}\n"
+                f"\n【法规参考】\n{reg_snippet}\n"
             )
 
-        issues = self._check_consistency(payload, level)
-        alignment_issues = check_cn_alignment(
-            "\n".join(chapter.content for chapter in chapters),
-            industry=payload.company_profile.industry,
-            receiver_country=payload.transfer_context.recipient_country_region,
-        )
-        if alignment_issues:
-            issues.extend(alignment_issues)
-        risk_conflicts = _find_risk_conflicts(chapters, level)
-        if risk_conflicts:
-            issues.extend(risk_conflicts)
-        outputs = self._render(
-            payload,
-            chapters,
-            attachment_notes,
-            overall_risk_level=level,
-            alignment_warning="；".join(alignment_issues) if alignment_issues else None,
-        )
-        return PIPIAResult(
-            report_path=outputs["docx"],
-            output_files=outputs,
-            route_type=payload.route_type,
-            risk_level=level,
-            chapters=chapters,
-            consistency_issues=issues,
-            attachment_notes=attachment_notes,
-        )
+            facts = self._build_facts(payload, attachment_notes, level)
+            structured_issues, material_gaps = self._build_structured_issues(payload, level)
+            evidence_chain = self._build_evidence_chain(facts, structured_issues, regs, payload)
+            structured_issues = self._attach_issue_evidence_refs(structured_issues, evidence_chain)
+
+            if trace:
+                trace.record("tool_start", {"summary": "PIPIA 报告章节生成", "detail": {"chapters": len(PIPIA_CHAPTERS)}})
+            chapters: list[PIPIAChapter] = []
+            for idx, title in enumerate(PIPIA_CHAPTERS, start=1):
+                if self.llm_client and self.llm_client.enabled:
+                    content = generate_chapter(self.llm_client, "pipia", title, context_block, citations=citations)
+                else:
+                    content = f"（{title}：LLM未配置，此处为占位内容）"
+                chapters.append(
+                    PIPIAChapter(
+                        chapter_no=idx,
+                        title=title,
+                        content=content,
+                        citations=citations,
+                        risk_level=level,
+                    )
+                )
+
+            if trace:
+                trace.record("thought", {"summary": f"PIPIA 章节生成完成：{len(chapters)} 个章节"})
+            issues = self._check_consistency(payload, level)
+            alignment_issues = check_cn_alignment(
+                "\n".join(chapter.content for chapter in chapters),
+                industry=payload.company_profile.industry,
+                receiver_country=payload.transfer_context.recipient_country_region,
+            )
+            if alignment_issues:
+                issues.extend(alignment_issues)
+            risk_conflicts = _find_risk_conflicts(chapters, level)
+            if risk_conflicts:
+                issues.extend(risk_conflicts)
+            if trace:
+                trace.record("tool_result", {"summary": f"一致性检查完成：{len(issues)} 个问题"})
+            filing_readiness = self._assess_filing_readiness(level, structured_issues, material_gaps)
+            if trace:
+                trace.record("intermediate", {"summary": f"备案准备度评估：{filing_readiness}"})
+            outputs = self._render(
+                run_task_id,
+                payload,
+                chapters,
+                attachment_notes,
+                overall_risk_level=level,
+                alignment_warning="；".join(alignment_issues) if alignment_issues else None,
+            )
+            if trace:
+                trace.record("final", {"summary": "PIPIA 评估完成", "detail": {"output_files": outputs}})
+                trace.record("final_brief", {
+                    "summary": "PIPIA 评估完成",
+                    "detail": {
+                        "conclusion": "PIPIA 个人信息保护影响评估已完成",
+                        "files": list(outputs.values()) if isinstance(outputs, dict) else [],
+                        "risks": [],
+                        "next_steps": ["复核评估报告", "准备备案材料"],
+                    },
+                })
+            return PIPIAResult(
+                report_path=outputs["docx"],
+                output_files=outputs,
+                route_type=payload.route_type,
+                risk_level=level,
+                chapters=chapters,
+                consistency_issues=issues,
+                attachment_notes=attachment_notes,
+                facts=[fact.model_dump() for fact in facts],
+                issues=[issue.model_dump() for issue in structured_issues],
+                evidence_chain=[evidence.model_dump() for evidence in evidence_chain],
+                material_gaps=material_gaps,
+                filing_readiness=filing_readiness,
+            )
+        finally:
+            finalize_run(token)
 
     def submit_async(self, payload: PIPIARequest) -> PIPIAAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = uuid.uuid4().hex
+        trace = TraceRecorder(Path("outputs/pipia") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> PIPIAAsyncStatus:
@@ -182,6 +242,320 @@ class PIPIAService:
         return notes
 
     @staticmethod
+    def _fact_id(field_path: str) -> str:
+        safe = "".join(ch if ch.isalnum() else "-" for ch in field_path).strip("-")
+        return f"PIPIA-FACT-{safe}"
+
+    @classmethod
+    def _schema_fact(
+        cls,
+        field_path: str,
+        value,
+        *,
+        source_ref: str = "PIPIARequest",
+        notes: str | None = None,
+        evidence_status: str = "user_claim_only",
+        confidence: float = 0.7,
+    ) -> FactItem:
+        return FactItem(
+            fact_id=cls._fact_id(field_path),
+            source_type="schema",
+            source_ref=source_ref,
+            field_path=field_path,
+            value=value,
+            normalized_value=value,
+            confidence=confidence,
+            notes=notes,
+            evidence_status=evidence_status,
+            can_support_external_positive_claim=evidence_status in ("documented_evidence", "verified_evidence"),
+        )
+
+    def _build_facts(
+        self,
+        payload: PIPIARequest,
+        attachment_notes: list[str],
+        level: str,
+    ) -> list[FactItem]:
+        profile = payload.company_profile
+        transfer = payload.transfer_context
+        scope = payload.personal_info_scope
+        rights = payload.rights_protection
+        emergency = payload.emergency_plan
+
+        facts: list[FactItem] = [
+            self._schema_fact("request.route_type", payload.route_type, evidence_status="documented_evidence"),
+            self._schema_fact("request.company_name", profile.company_name),
+            self._schema_fact("request.company_uscc", profile.company_uscc, evidence_status="documented_evidence"),
+            self._schema_fact("request.is_ciio", profile.is_ciio),
+            self._schema_fact("request.outbound_pi_count", profile.outbound_pi_count, notes=f"{profile.outbound_pi_count:,}人"),
+            self._schema_fact("request.outbound_spi_count", profile.outbound_spi_count, notes=f"{profile.outbound_spi_count:,}人"),
+            self._schema_fact("request.transfer_purpose", transfer.purpose),
+            self._schema_fact("request.recipient_name", transfer.recipient_name),
+            self._schema_fact("request.recipient_country_region", transfer.recipient_country_region),
+            self._schema_fact("request.legal_basis", transfer.legal_basis),
+            self._schema_fact("request.pi_categories", scope.pi_categories, evidence_status="documented_evidence"),
+            self._schema_fact("request.spi_categories", scope.spi_categories, evidence_status="documented_evidence"),
+            self._schema_fact("request.subject_volume", scope.subject_volume, notes=f"{scope.subject_volume:,}人"),
+            self._schema_fact("request.notice_mechanism", rights.notice_mechanism),
+            self._schema_fact("request.consent_mechanism", rights.consent_mechanism),
+            self._schema_fact("request.dsar_channel", rights.dsar_channel),
+            self._schema_fact("request.retention_policy", rights.retention_policy),
+            self._schema_fact(
+                "request.incident_response_sla_hours",
+                emergency.incident_response_sla_hours,
+                evidence_status="documented_evidence",
+            ),
+            self._schema_fact("derived.risk_level", level, source_ref="risk_scoring", evidence_status="verified_evidence", confidence=0.95),
+            self._schema_fact(
+                "derived.attachment_roles",
+                [item.file_role for item in payload.attachments],
+                evidence_status="documented_evidence",
+                confidence=0.95,
+            ),
+        ]
+
+        for note in attachment_notes:
+            facts.append(
+                FactItem(
+                    fact_id=self._fact_id(f"attachment.{note[:32]}"),
+                    source_type="attachment",
+                    source_ref=note.split(":", 1)[0] if ":" in note else "attachment",
+                    field_path="attachment.note",
+                    value=note,
+                    normalized_value=note,
+                    confidence=0.7,
+                    evidence_status="documented_evidence",
+                    can_support_external_positive_claim=True,
+                )
+            )
+        return facts
+
+    @staticmethod
+    def _issue(
+        issue_id: str,
+        title: str,
+        description: str,
+        category: str,
+        severity: str,
+        recommended_action: str,
+        *,
+        fact_refs: list[str] | None = None,
+        rule_refs: list[str] | None = None,
+        missing_materials: list[str] | None = None,
+    ) -> IssueItem:
+        return IssueItem(
+            issue_id=issue_id,
+            title=title,
+            description=description,
+            category=category,
+            severity=severity,
+            fact_refs=fact_refs or [],
+            rule_refs=rule_refs or [],
+            recommended_action=recommended_action,
+            affects_outputs=["PIPIA报告", "备案准备清单"],
+            missing_materials=missing_materials or [],
+        )
+
+    def _build_structured_issues(
+        self,
+        payload: PIPIARequest,
+        level: str,
+    ) -> tuple[list[IssueItem], list[str]]:
+        issues: list[IssueItem] = []
+        material_gaps: list[str] = []
+        counter = 0
+
+        def next_id() -> str:
+            nonlocal counter
+            counter += 1
+            return f"PIPIA-ISSUE-{counter:03d}"
+
+        attachment_roles = {item.file_role for item in payload.attachments}
+
+        if payload.route_type == "scc_filing" and "scc_contract" not in attachment_roles:
+            material_gaps.append("scc_contract: 缺少标准合同文本或附件")
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "缺少标准合同备案核心材料",
+                    "当前路径为标准合同备案，但未提供标准合同文本，无法完成条款核对和备案准备。",
+                    "legal_document",
+                    "BLOCKER",
+                    "补充标准合同完整文本及附件后，再执行备案版 PIPIA 审查。",
+                    missing_materials=["scc_contract"],
+                )
+            )
+
+        if payload.route_type == "certification" and "certification_material" not in attachment_roles:
+            material_gaps.append("certification_material: 缺少认证路径所需的认证材料")
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "缺少认证路径核心材料",
+                    "当前路径为认证，但未提供认证规则、申请材料或机构要求文件，无法证明认证路径具备落地条件。",
+                    "legal_document",
+                    "BLOCKER",
+                    "补充 certification_material 后，再评估认证路径下的 PIPIA 与材料完整性。",
+                    missing_materials=["certification_material"],
+                )
+            )
+
+        if payload.emergency_plan.incident_response_sla_hours > 72:
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "事件响应时限偏长",
+                    f"事件响应 SLA 为 {payload.emergency_plan.incident_response_sla_hours} 小时，超过常用的 72 小时控制基线。",
+                    "security_measure",
+                    "MEDIUM",
+                    "将事件响应时限压缩至 72 小时以内，并补充升级与通知流程。",
+                )
+            )
+
+        if level == "HIGH":
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "风险等级较高",
+                    "当前出境规模、敏感信息规模或主体属性触发高风险画像，备案前需要更强的人工复核与整改。",
+                    "path",
+                    "HIGH",
+                    "先完成高风险项整改和法务复核，再决定是否推进备案或调整路径。",
+                )
+            )
+
+        if payload.personal_info_scope.spi_categories and "单独同意" not in payload.rights_protection.consent_mechanism:
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "敏感个人信息同意机制偏弱",
+                    "涉及敏感个人信息，但当前同意机制描述中未明确体现单独同意安排。",
+                    "consent",
+                    "HIGH",
+                    "补充单独同意的获取、留痕和撤回机制说明，并在 PIPIA 中体现。",
+                )
+            )
+
+        return issues, material_gaps
+
+    @staticmethod
+    def _build_evidence_chain(
+        facts: list[FactItem],
+        issues: list[IssueItem],
+        regulations: list,
+        payload: PIPIARequest,
+    ) -> list[EvidenceItem]:
+        regulation_refs = [getattr(item, "source_id", f"{item.title}{item.article}") for item in regulations]
+        fact_by_field = {fact.field_path: fact for fact in facts if fact.field_path}
+        evidence_chain: list[EvidenceItem] = []
+        counter = 0
+
+        def next_id() -> str:
+            nonlocal counter
+            counter += 1
+            return f"PIPIA-EVD-{counter:03d}"
+
+        for field_path, claim, conclusion in (
+            (
+                "request.route_type",
+                f"当前选择路径为 {payload.route_type}",
+                f"系统将按 {'标准合同备案' if payload.route_type == 'scc_filing' else '认证路径'} 组织 PIPIA 输出。",
+            ),
+            (
+                "request.legal_basis",
+                f"当前声明的合法性基础为 {payload.transfer_context.legal_basis}",
+                "该合法性基础已进入评估上下文，但仍需结合附件和内部制度继续核验。",
+            ),
+            (
+                "request.incident_response_sla_hours",
+                f"事件响应 SLA 为 {payload.emergency_plan.incident_response_sla_hours} 小时",
+                "事件响应能力将直接影响技术与组织措施有效性评估。",
+            ),
+            (
+                "derived.risk_level",
+                f"总体风险等级为 {fact_by_field['derived.risk_level'].value}",
+                f"当前档案被评定为 {fact_by_field['derived.risk_level'].value} 风险等级。",
+            ),
+        ):
+            fact = fact_by_field.get(field_path)
+            if not fact:
+                continue
+            evidence_chain.append(
+                EvidenceItem(
+                    evidence_id=next_id(),
+                    claim=claim,
+                    fact_refs=[fact.fact_id],
+                    rule_refs=regulation_refs[:2],
+                    conclusion=conclusion,
+                    confidence=max(fact.confidence, 0.75),
+                    used_by=["PIPIA报告", "备案准备评估"],
+                )
+            )
+
+        if issues:
+            for issue in issues[:4]:
+                linked_fact_refs = issue.fact_refs or [fact_by_field["request.route_type"].fact_id]
+                evidence_chain.append(
+                    EvidenceItem(
+                        evidence_id=next_id(),
+                        claim=issue.title,
+                        fact_refs=linked_fact_refs,
+                        rule_refs=regulation_refs[:2],
+                        conclusion=issue.description,
+                        confidence=0.8 if issue.severity in ("HIGH", "BLOCKER") else 0.7,
+                        used_by=["PIPIA报告", "整改清单"],
+                    )
+                )
+
+        return evidence_chain
+
+    @staticmethod
+    def _attach_issue_evidence_refs(
+        issues: list[IssueItem],
+        evidence_chain: list[EvidenceItem],
+    ) -> list[IssueItem]:
+        for issue in issues:
+            related = [
+                evidence.evidence_id
+                for evidence in evidence_chain
+                if evidence.claim == issue.title or set(evidence.fact_refs) & set(issue.fact_refs)
+            ]
+            if related:
+                issue.evidence_refs = related
+        return issues
+
+    @staticmethod
+    def _assess_filing_readiness(
+        level: str,
+        issues: list[IssueItem],
+        material_gaps: list[str],
+    ) -> PIPIAFilingReadiness:
+        blocker_issues = [issue for issue in issues if issue.severity == "BLOCKER"]
+        if blocker_issues:
+            return PIPIAFilingReadiness(
+                status="blocked",
+                reason="存在阻断性材料缺口或路径前置条件不足，当前不宜直接进入备案。",
+                blocking_items=[issue.title for issue in blocker_issues] + material_gaps,
+                next_steps=[issue.recommended_action for issue in blocker_issues[:3]],
+            )
+
+        remedial_issues = [issue for issue in issues if issue.severity in ("HIGH", "MEDIUM")]
+        if remedial_issues or material_gaps or level == "HIGH":
+            return PIPIAFilingReadiness(
+                status="supplement_required",
+                reason="当前可以继续形成 PIPIA 草案，但在备案前仍需补强材料或整改控制措施。",
+                blocking_items=material_gaps,
+                next_steps=[issue.recommended_action for issue in remedial_issues[:3]],
+            )
+
+        return PIPIAFilingReadiness(
+            status="ready",
+            reason="当前输入下未识别出阻断性缺口，适合继续作为备案草案输出。",
+            blocking_items=[],
+            next_steps=["保持附件、制度和版本记录同步更新。"],
+        )
+
+    @staticmethod
     def _check_consistency(payload: PIPIARequest, level: str) -> list[str]:
         issues: list[str] = []
         if payload.route_type == "scc_filing":
@@ -200,6 +574,7 @@ class PIPIAService:
 
     def _render(
         self,
+        task_id: str,
         payload: PIPIARequest,
         chapters: list[PIPIAChapter],
         attachment_notes: list[str],
@@ -207,7 +582,7 @@ class PIPIAService:
         alignment_warning: str | None = None,
     ) -> dict[str, str]:
         company_name = payload.company_profile.company_name
-        output_dir = Path("outputs/pipia")
+        output_dir = Path("outputs/pipia") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_company = safe_filename(company_name)
         md_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.md"
@@ -220,12 +595,53 @@ class PIPIAService:
             overall_risk_level=overall_risk_level,
             alignment_warning=alignment_warning,
         )
-        render_markdown_template(md_output, TEMPLATE_MD, mapping)
-        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        if TEMPLATE_MD.exists():
+            render_markdown_template(md_output, TEMPLATE_MD, mapping)
+        else:
+            render_markdown_report(
+                md_output,
+                f"{company_name} PIPIA 报告草案",
+                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
+            )
+        if TEMPLATE_PATH.exists():
+            render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        else:
+            render_docx_report(
+                docx_output,
+                f"{company_name} PIPIA 报告草案",
+                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
+            )
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
         return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+
+    @staticmethod
+    def _fallback_sections(
+        payload: PIPIARequest,
+        chapters: list[PIPIAChapter],
+        overall_risk_level: str,
+        attachment_notes: list[str],
+    ) -> list[tuple[str, str]]:
+        sections: list[tuple[str, str]] = [
+            (
+                "基础信息",
+                "\n".join(
+                    [
+                        f"- 企业名称：{payload.company_profile.company_name}",
+                        f"- 合规路径：{payload.route_type}",
+                        f"- 境外接收方：{payload.transfer_context.recipient_name}（{payload.transfer_context.recipient_country_region}）",
+                        f"- 出境目的：{payload.transfer_context.purpose}",
+                        f"- 风险等级：{overall_risk_level}",
+                    ]
+                ),
+            )
+        ]
+        for chapter in chapters:
+            sections.append((chapter.title, chapter.content))
+        if attachment_notes:
+            sections.append(("附件摘要", "\n".join(f"- {note}" for note in attachment_notes)))
+        return sections
 
 
 def _build_template_mapping(
