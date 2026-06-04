@@ -10162,244 +10162,195 @@
   border: 1px solid rgba(212, 170, 74, 0.32);
 }
 
-.run-transcript {
-  gap: 0.88rem;
+/* ── Agent Trace History — compact timeline ─────────────────────────── */
+
+.execution-timeline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0;
 }
 
-.run-transcript-header {
+/* Header bar */
+.trace-run-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.1rem 0.1rem 0;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #6b7280;
+  flex-shrink: 0;
 }
-
-.run-transcript-header span {
-  display: block;
-  color: #58779a;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.run-transcript-header h3 {
-  margin: 0.16rem 0 0;
-  color: #163958;
-  font-size: 1.08rem;
-}
-
-.run-transcript-status {
-  min-width: 170px;
-  padding: 0.5rem 0.72rem;
-  border-radius: 16px;
-  border: 1px solid rgba(106, 141, 191, 0.22);
-  background: rgba(248, 252, 255, 0.92);
-  text-align: right;
-}
-
-.run-transcript-status strong {
-  display: block;
-  color: #214a71;
-  font-size: 0.9rem;
-}
-
-.run-transcript-status small {
-  display: block;
-  margin-top: 0.16rem;
-  color: #6985a1;
-  font-size: 0.72rem;
-  word-break: break-all;
-}
-
-.run-transcript-status.status-running {
-  border-color: rgba(212, 170, 74, 0.26);
-  background: rgba(255, 248, 231, 0.96);
-}
-
-.run-transcript-status.status-completed {
-  border-color: rgba(88, 175, 120, 0.24);
-  background: rgba(242, 251, 245, 0.96);
-}
-
-.run-transcript-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.56rem;
-}
-
-.run-transcript-strip article {
-  border: 1px solid rgba(106, 141, 191, 0.2);
-  border-radius: 14px;
-  background: rgba(249, 252, 255, 0.94);
-  padding: 0.6rem 0.7rem;
-}
-
-.run-transcript-strip span {
-  display: block;
-  color: #6584a6;
-  font-size: 0.74rem;
-}
-
-.run-transcript-strip strong {
-  display: block;
-  margin-top: 0.2rem;
-  color: #1f476e;
-  font-size: 0.95rem;
-}
-
-.run-transcript-body {
-  position: relative;
-  display: grid;
-  gap: 0.24rem;
-  padding-left: 1.1rem;
-}
-
-.run-transcript-body::before {
-  content: "";
-  position: absolute;
-  left: 0.28rem;
-  top: 0.15rem;
-  bottom: 0.15rem;
-  width: 1px;
-  background: linear-gradient(180deg, rgba(113, 143, 179, 0.35), rgba(113, 143, 179, 0.08));
-}
-
-.run-transcript-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr);
-  gap: 0.72rem;
-  align-items: start;
-}
-
-.run-transcript-dot {
-  width: 0.72rem;
-  height: 0.72rem;
-  margin-top: 0.38rem;
-  border-radius: 999px;
-  background: #7e97b5;
-  box-shadow: 0 0 0 4px rgba(250, 253, 255, 0.96);
-}
-
-.run-transcript-dot.is-running {
-  background: #ca9230;
-}
-
-.run-transcript-cardless {
-  padding: 0.1rem 0 0.84rem;
-}
-
-.run-transcript-row-head {
+.trace-run-header-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
+  gap: 6px;
+}
+.trace-run-module {
+  font-weight: 600;
+  color: #1f2937;
+}
+.trace-run-badge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.badge-running  { background: #dbeafe; color: #1d4ed8; }
+.badge-completed { background: #d1fae5; color: #065f46; }
+.badge-failed    { background: #fee2e2; color: #991b1b; }
+.badge-empty     { background: #f3f4f6; color: #6b7280; }
+.trace-run-id {
+  font-size: 10px;
+  color: #9ca3af;
+  font-family: "SF Mono", monospace;
+}
+.trace-run-sep {
+  margin: 0 3px;
+  color: #d1d5db;
+}
+.trace-run-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
-.run-transcript-row-head strong {
-  color: #173d60;
-  font-size: 1rem;
+/* Timeline body */
+.trace-timeline-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+}
+.trace-timeline-line {
+  position: relative;
+  padding-left: 14px;
+}
+.trace-timeline-line::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: #d1d5db;
 }
 
-.run-transcript-row-head span {
-  color: #6f89a7;
-  font-size: 0.74rem;
+/* Node */
+.trace-node {
+  position: relative;
+  padding: 4px 0 10px 14px;
+  font-size: 13px;
+}
+.trace-node-dot {
+  position: absolute;
+  left: -5px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid white;
+  z-index: 1;
+}
+.trace-node-running .trace-node-dot {
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.trace-node-header {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.trace-node-stage {
+  font-weight: 600;
+}
+.trace-node-action {
+  color: #374151;
+}
+.trace-node-time {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9ca3af;
   white-space: nowrap;
 }
-
-.run-transcript-row-summary {
-  margin: 0.26rem 0 0;
-  color: #31577e;
-  line-height: 1.62;
+.trace-node-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+.trace-node-duration {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
-.run-transcript-result-block,
-.run-transcript-brief-body,
-.run-transcript-detail {
-  margin-top: 0.48rem;
+/* Trace block (CALL / RESULT / etc) */
+.trace-block {
+  margin-top: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 12px;
 }
-
-.run-transcript-result-block {
-  padding-left: 0.76rem;
-  border-left: 2px solid rgba(74, 143, 102, 0.22);
-}
-
-.run-transcript-result-block span,
-.run-transcript-brief-section > span {
-  display: block;
-  color: #5e7c9f;
-  font-size: 0.74rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.run-transcript-result-block p,
-.run-transcript-brief-section p {
-  margin: 0.22rem 0 0;
-  color: #21496f;
-  line-height: 1.58;
-}
-
-.run-transcript-detail summary {
-  cursor: pointer;
-  color: #335b83;
-  font-size: 0.84rem;
-}
-
-.run-transcript-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.46rem;
-  margin-top: 0.4rem;
-}
-
-.run-transcript-meta-item {
-  padding: 0.48rem 0.56rem;
-  border-radius: 12px;
-  border: 1px solid rgba(106, 141, 191, 0.16);
-  background: rgba(248, 252, 255, 0.92);
-}
-
-.run-transcript-meta-item span {
-  display: block;
-  color: #6a86a3;
-  font-size: 0.72rem;
-}
-
-.run-transcript-meta-item strong {
-  display: block;
-  margin-top: 0.18rem;
-  color: #20456a;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  word-break: break-word;
-}
-
-.run-transcript-brief-body {
-  display: grid;
-  gap: 0.52rem;
-}
-
-.run-transcript-brief-section ul,
-.run-transcript-brief-section ol {
-  margin: 0.24rem 0 0;
-  padding-left: 1.1rem;
-  color: #21496f;
-}
-
-.run-transcript-brief-badges {
+.trace-block-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.42rem;
-  margin-top: 0.28rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 8px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.trace-block-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+}
+.trace-block-actions {
+  display: flex;
+  gap: 2px;
+}
+.trace-block-copy,
+.trace-block-expand {
+  border: none;
+  background: none;
+  font-size: 10px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 1px 4px;
+}
+.trace-block-copy:hover,
+.trace-block-expand:hover {
+  color: #374151;
+}
+.trace-block-content {
+  padding: 5px 8px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  font-family: "SF Mono", "Menlo", "Monaco", monospace;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 140px;
+  background: #fafafa;
+  color: #374151;
 }
 
-.run-transcript-brief-badges strong {
-  padding: 0.26rem 0.58rem;
-  border-radius: 999px;
-  background: rgba(234, 244, 255, 0.92);
-  color: #28517a;
-  font-size: 0.78rem;
+/* Empty state */
+.trace-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 13px;
 }
 
 .assistant-pane-redesign {

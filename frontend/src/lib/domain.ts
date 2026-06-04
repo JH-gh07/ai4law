@@ -184,3 +184,39 @@ export type RunSession = {
   totalDurationMs?: number;
   collapsed?: boolean;
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+// Agent Trace History — 语义化执行轨迹
+// ═══════════════════════════════════════════════════════════════════════
+
+export type TraceStage =
+  | "Task"
+  | "LLM"
+  | "RAG"
+  | "Tool"
+  | "Parser"
+  | "Generator"
+  | "Review";
+
+export type TraceBlockType = "CALL" | "INPUT" | "QUERY" | "RESULT" | "OUTPUT" | "ERROR";
+
+export type TraceBlock = {
+  label: TraceBlockType;
+  content: string;
+  language?: "text" | "json" | "markdown";
+  preview?: string;
+  isTruncated?: boolean;
+};
+
+export type TraceNode = {
+  id: string;
+  stage: TraceStage;
+  action: string;
+  description: string;
+  status: "pending" | "running" | "success" | "error";
+  timestamp: string;
+  durationMs?: number;
+  input?: TraceBlock;
+  output?: TraceBlock;
+  icon?: string;
+};
