@@ -6,12 +6,14 @@ import {
   hasAsync,
   listModules,
   runModule,
+  type RunEvent,
   uploadTaskFile
 } from "../../lib/module-adapter";
 import { useLang } from "../../lib/language";
 import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates";
 import { extractInsight } from "../../lib/workspace";
 import { DEV_ACCEL_ENABLED, getAssessmentDevPreset, getModuleDevPreset } from "../../lib/dev-presets";
+import { getTestCases } from "../../lib/dev-test-cases";
 
 export type RunOutput = {
   module: ModuleKey;
@@ -2465,6 +2467,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [asyncRunProgress, setAsyncRunProgress] = useState<AsyncRunProgressState | null>(null);
+  const [_recentEvents, setRecentEvents] = useState<RunEvent[]>([]);
   const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
   const [diagnosisValues, setDiagnosisValues] = useState<DiagnosisFormValues>(createDefaultDiagnosisValues);
   const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
@@ -2642,6 +2645,35 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const isTiaModule = moduleKey === "tia";
   const isCnFlowModule = moduleKey === "cn_flow";
   const isCpraModule = moduleKey === "cpra";
+
+  // ── 开发者测试案例 ──
+  const [devTestCaseIndex, setDevTestCaseIndex] = useState(0);
+  const devTestCases = DEV_ACCEL_ENABLED ? getTestCases(moduleKey) : [];
+  const runDevTestCase = async () => {
+    if (!DEV_ACCEL_ENABLED || devTestCases.length === 0 || loading) return;
+    const tc = devTestCases[devTestCaseIndex];
+    if (!tc) return;
+    setError(null);
+    setAsyncRunProgress(null);
+    await runWithPayload(tc.payload);
+  };
+  const renderDevTestToolbar = () => {
+    if (!DEV_ACCEL_ENABLED || devTestCases.length === 0) return null;
+    return (
+      <div className="runner-dev-test-bar" style={{ background: "#fef3c7", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+        <span>🧪 测试案例</span>
+        <select value={devTestCaseIndex} onChange={(e) => setDevTestCaseIndex(Number(e.target.value))} style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid #d1d5db" }}>
+          {devTestCases.map((tc, i) => (<option key={i} value={i}>{tc.name}</option>))}
+        </select>
+        <button type="button" className="pill-btn" onClick={runDevTestCase} disabled={loading} style={{ whiteSpace: "nowrap" }}>
+          {loading ? "⏳" : "▶"} 直接运行
+        </button>
+        <span style={{ fontSize: 11, color: "#92400e", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={devTestCases[devTestCaseIndex]?.description}>
+          {devTestCases[devTestCaseIndex]?.description ?? ""}
+        </span>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (!isDiagnosisModule) return;
@@ -4323,6 +4355,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isEuSccTask ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">SCC Review Wizard</div>
             <span>{euSccProgress}%</span>
@@ -4474,6 +4507,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDiagnosisModule ? (
         <section className="schema-wizard schema-wizard--diagnosis">
+          {renderDevTestToolbar()}
           <div ref={diagnosisStepTopRef} />
           <div className="schema-wizard-head">
             <div className="runner-title">业务数据合规需求诊断</div>
@@ -4658,6 +4692,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isAssessmentModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           {DEV_ACCEL_ENABLED ? (
             <div className="schema-dev-banner">
               <strong>开发测试模式</strong>
@@ -4825,6 +4860,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isPipiaModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">PIPIA Wizard</div>
             <span>{pipiaProgress}%</span>
@@ -4984,6 +5020,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isBcrModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">BCR Review Wizard</div>
             <span>{bcrProgress}%</span>
@@ -5106,6 +5143,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDpiaModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">DPIA Wizard</div>
             <span>{dpiaProgress}%</span>
@@ -5240,6 +5278,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isTiaModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">TIA Wizard</div>
             <span>{tiaProgress}%</span>
@@ -5374,6 +5413,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isCnFlowModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">EO 14117 Wizard</div>
             <span>{cnFlowProgress}%</span>
@@ -5535,6 +5575,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isCpraModule ? (
         <section className="schema-wizard">
+          {renderDevTestToolbar()}
           <div className="schema-wizard-head">
             <div className="runner-title">CPRA Wizard</div>
             <span>{cpraProgress}%</span>
