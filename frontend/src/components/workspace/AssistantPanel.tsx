@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAppStore } from "../../lib/app-store";
 import { requestCopilotChat } from "../../lib/copilot-api";
-import type { TaskSpace, TraceNode, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
+import type { TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { ChevronToggleIcon } from "../common/AppIcons";
@@ -33,86 +33,6 @@ const toFileName = (value: string): string => {
   const chunks = normalized.split("/");
   return chunks[chunks.length - 1] || value;
 };
-
-function summarizeTraceNodes(nodes: TraceNode[]): {
-  summary: string;
-  stage: string | undefined;
-  status: "idle" | "running" | "completed" | "failed";
-  highlights: string[];
-} {
-  if (nodes.length === 0) {
-    return {
-      summary: "暂无执行轨迹",
-      stage: undefined,
-      status: "idle",
-      highlights: [],
-    };
-  }
-
-  const latest = nodes[nodes.length - 1];
-  const stage = `${latest.stage}｜${latest.action}`;
-  const failed = nodes.some((node) => node.status === "error");
-  const running = nodes.some((node) => node.status === "running");
-  const status = failed ? "failed" : running ? "running" : "completed";
-  const highlights = nodes
-    .slice(-5)
-    .map((node) => `${node.stage}｜${node.action}：${node.description}`)
-    .filter((line) => line.trim().length > 0);
-
-  const summary = highlights[highlights.length - 1] ?? `${latest.stage}｜${latest.action}`;
-  return { summary, stage, status, highlights };
-}
-
-function CopilotTraceStrip({
-  summary,
-  stage,
-  status,
-  highlights,
-  onOpenHistory,
-  lang,
-}: {
-  summary: string;
-  stage?: string;
-  status: "idle" | "running" | "completed" | "failed";
-  highlights: string[];
-  onOpenHistory: () => void;
-  lang: "zh" | "en";
-}) {
-  const statusLabel = status === "running"
-    ? (lang === "zh" ? "执行中" : "Running")
-    : status === "completed"
-      ? (lang === "zh" ? "已完成" : "Completed")
-      : status === "failed"
-        ? (lang === "zh" ? "失败" : "Failed")
-        : (lang === "zh" ? "待执行" : "Idle");
-
-  return (
-    <section className="copilot-trace-strip">
-      <div className="copilot-trace-strip-head">
-        <div>
-          <strong>{lang === "zh" ? "当前执行" : "Current Trace"}</strong>
-          <p>{summary}</p>
-        </div>
-        <button type="button" className="copilot-trace-history-link" onClick={onOpenHistory}>
-          {lang === "zh" ? "查看历史" : "Open History"}
-        </button>
-      </div>
-      <div className="copilot-trace-strip-meta">
-        <span>{statusLabel}</span>
-        <span>{stage ?? (lang === "zh" ? "暂无阶段" : "No stage")}</span>
-      </div>
-      {highlights.length > 0 ? (
-        <div className="copilot-trace-strip-list">
-          {highlights.map((item) => (
-            <div key={item} className="copilot-trace-strip-item">
-              {item}
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </section>
-  );
-}
 
 export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTab }: AssistantPanelProps) {
   const { t, lang } = useLang();
@@ -151,8 +71,6 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
   }, [taskId, traceEvents, lang]);
 
   const tokenUsage = useMemo(() => extractTokenUsage(traceEvents), [traceEvents]);
-
-  const traceContext = useMemo(() => summarizeTraceNodes(traceNodes), [traceNodes]);
 
   const workflowSteps = useMemo(
     () => deriveWorkflowSteps(taskSpace, latestRun, state.artifacts, state.evidenceHits, state.issues),
@@ -220,10 +138,22 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
           artifact_count: artifacts.length,
           top_issues: issues.slice(0, 5).map((item) => `[${item.severity}] ${item.message}`),
           latest_artifacts: artifacts.slice(0, 5).map((item) => toFileName(item.path)),
-          trace_summary: traceContext.summary,
-          trace_stage: traceContext.stage,
-          trace_status: traceContext.status,
-          trace_highlights: traceContext.highlights,
+          trace_summary:
+            traceNodes.length > 0
+              ? `${traceNodes[traceNodes.length - 1].stage}｜${traceNodes[traceNodes.length - 1].action}`
+              : undefined,
+          trace_stage: traceNodes.length > 0 ? traceNodes[traceNodes.length - 1].stage : undefined,
+          trace_status: traceNodes.some((node) => node.status === "error")
+            ? "failed"
+            : traceNodes.some((node) => node.status === "running")
+              ? "running"
+              : traceNodes.length > 0
+                ? "completed"
+                : "idle",
+          trace_highlights: traceNodes
+            .slice(-5)
+            .map((node) => `${node.stage}｜${node.action}：${node.description}`)
+            .filter((line) => line.trim().length > 0),
         },
         messages: historyForModel
           .filter((item): item is ChatMessage & { role: "user" | "assistant" } => item.role === "user" || item.role === "assistant")
@@ -273,37 +203,30 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
         </section>
 
         <section ref={streamRef} className="assistant-stream assistant-copilot-stream assistant-copilot-stream-redesign assistant-chat-stream" aria-live="polite">
-          <CopilotTraceStrip
-            summary={traceContext.summary}
-            stage={traceContext.stage}
-            status={traceContext.status}
-            highlights={traceContext.highlights}
-            onOpenHistory={() => onSwitchTab?.("timeline")}
-            lang={lang}
-          />
           {taskId && traceNodes.length > 0 ? (
-            <section className="copilot-trace-embedded">
-              <header className="copilot-trace-embedded-head">
-                <div>
-                  <strong>{lang === "zh" ? "执行流详情" : "Execution Flow"}</strong>
-                  <p>
-                    {lang === "zh"
-                      ? `展示当前任务的阶段、工具调用、结果摘要与中间产物。累计 tokens：${tokenUsage.total.total_tokens}`
-                      : `Shows stages, tool calls, outputs, and intermediate results. Total tokens: ${tokenUsage.total.total_tokens}`}
-                  </p>
-                </div>
+            <div className="copilot-trace-inline">
+              <div className="copilot-trace-token-line">
+                <span>
+                  {lang === "zh" ? "总 Token" : "Total Tokens"}: {tokenUsage.total.total_tokens}
+                </span>
+                <span>
+                  {lang === "zh" ? "输入" : "Input"}: {tokenUsage.total.prompt_tokens}
+                </span>
+                <span>
+                  {lang === "zh" ? "输出" : "Output"}: {tokenUsage.total.completion_tokens}
+                </span>
                 <button type="button" className="copilot-trace-history-link" onClick={() => onSwitchTab?.("timeline")}>
                   {lang === "zh" ? "在工作区打开" : "Open in Workspace"}
                 </button>
-              </header>
-              <div className="copilot-trace-embedded-body">
+              </div>
+              <div className="copilot-trace-inline-body">
                 <div className="trace-timeline-line trace-timeline-line-embedded">
                   {traceNodes.map((node) => (
                     <TraceNodeView key={node.id} node={node} lang={lang} />
                   ))}
                 </div>
               </div>
-            </section>
+            </div>
           ) : null}
           {messages.map((item) => (
             <article
