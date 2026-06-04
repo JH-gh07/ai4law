@@ -12,10 +12,11 @@ from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.report import format_date_stamp, render_docx_template, render_markdown_template, safe_filename
 from backend.common.render.docx_comments import DocxComment, render_commented_docx
 from backend.common.render.summary import attach_citations, summarize_for_slot
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
-from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.modules.eu_scc.evidence_builder import build_eu_scc_evidence
 from backend.modules.eu_scc.fact_builder import build_eu_scc_facts
@@ -47,11 +48,15 @@ class EU_SCCService:
         self.tasks = InMemoryTaskManager(module="eu_scc")
         self.agents = create_eu_scc_agents(llm_client)
 
-    def generate_report(self, payload: SCCReviewRequest) -> SCCReviewResult:
-        task_id = str(uuid.uuid4())
-        trace_dir = Path("outputs/eu_scc") / task_id / "trace"
-        trace = TraceRecorder(trace_dir)
-        token = current_trace.set(trace)
+    def generate_report(
+        self,
+        payload: SCCReviewRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> SCCReviewResult:
+        run_task_id = task_id or str(uuid.uuid4())
+        trace, token = prepare_run(module="eu_scc", task_id=run_task_id, trace=trace)
 
         # Parse SCC document
         doc = parse_scc_document(
@@ -68,6 +73,9 @@ class EU_SCCService:
             declared_module=payload.declared_module_type,
         )
         trace.record("agent_document_structure", doc_patch)
+        if trace:
+            thought = summarize_agent_output("EU SCC 文档结构", doc_patch)
+            trace.record("thought", {"summary": thought})
         # Apply patches to doc (field-level corrections) — only fill missing fields
         for patch in doc_patch.get("patches", []):
             field_path = patch.get("field_path", "")
@@ -89,6 +97,9 @@ class EU_SCCService:
             uploaded_attachment_notes=payload.uploaded_files,
         )
         trace.record("agent_transfer_chain", chain_patch)
+        if trace:
+            thought = summarize_agent_output("EU SCC 传输链分析", chain_patch)
+            trace.record("thought", {"summary": thought})
         # Merge risk hints into rule engine input
         risk_hints = chain_patch.get("risk_hints", [])
 
@@ -116,6 +127,9 @@ class EU_SCCService:
                 legal_basis=f.get("legal_basis", ""), recommendation=f.get("recommendation", ""),
             ))
         trace.record("agent_clause_semantic", {k: v for k, v in clause_agent_out.items() if k != "additional_findings"})
+        if trace:
+            thought = summarize_agent_output("EU SCC 条款语义", clause_agent_out)
+            trace.record("thought", {"summary": thought})
 
         # ── Agent 4: TIA / Supplementary Measures Effectiveness ──
         tia_agent_out = self.agents["tia_effectiveness"].run(
@@ -133,16 +147,19 @@ class EU_SCCService:
                 legal_basis=f.get("legal_basis", ""), recommendation=f.get("recommendation", ""),
             ))
         trace.record("agent_tia_effectiveness", {k: v for k, v in tia_agent_out.items() if k != "additional_findings"})
+        if trace:
+            thought = summarize_agent_output("EU SCC TIA有效性", tia_agent_out)
+            trace.record("thought", {"summary": thought})
 
         # ── Re-score after agent findings ──
         rule_result.overall_rating = score_scc_risk(rule_result.all_findings)
 
         try:
             run_result = self._build_pipeline(rule_result).run(
-                payload=payload, task_id=task_id, trace=trace
+                payload=payload, task_id=run_task_id, trace=trace
             )
         finally:
-            current_trace.reset(token)
+            finalize_run(token)
 
         # ── Agent 5: Evidence Review (post-pipeline) ──
         try:
@@ -153,6 +170,9 @@ class EU_SCCService:
                 regulations=[], findings=[f.model_dump() if hasattr(f, "model_dump") else f for f in rule_result.all_findings],
             )
             trace.record("agent_evidence_review", evidence_agent_out)
+            if trace:
+                thought = summarize_agent_output("EU SCC 证据审查", evidence_agent_out)
+                trace.record("thought", {"summary": thought})
         except Exception:
             pass  # Agent 5 is advisory — never block the pipeline
 
@@ -163,6 +183,9 @@ class EU_SCCService:
             module_validation=rule_result.module_validation.model_dump(),
         )
         trace.record("agent_remediation", remediation_out)
+        if trace:
+            thought = summarize_agent_output("EU SCC 整改建议", remediation_out)
+            trace.record("thought", {"summary": thought})
         # Apply remediation suggestions to findings
         for pf in remediation_out.get("patched_findings", []):
             for orig in rule_result.all_findings:
@@ -322,7 +345,14 @@ class EU_SCCService:
         return _inner
 
     # Async
-    def submit_async(self, payload): snapshot = self.tasks.submit(lambda: self.generate_report(payload)); return self._to_accepted(snapshot)
+    def submit_async(self, payload):
+        task_id = str(uuid.uuid4())
+        trace = TraceRecorder(Path("outputs/eu_scc") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
+        return self._to_accepted(snapshot)
     def get_async_status(self, tid): return self._to_status(self.tasks.get_or_raise(tid))
     def retry_async(self, tid): return self._to_status(self.tasks.retry(tid))
     def cancel_async(self, tid): return self._to_status(self.tasks.cancel(tid))
