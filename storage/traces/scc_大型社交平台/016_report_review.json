@@ -1,0 +1,16 @@
+{
+  "name": "report_review",
+  "seq": 16,
+  "created_at": "2026-06-04T05:46:30.504865+00:00",
+  "payload": {
+    "review_status": "blocked",
+    "problems": [
+      {
+        "type": "template_incomplete",
+        "text": "报告内容为空或过短",
+        "reason": "报告生成可能失败",
+        "repair": "重新运行报告生成流程"
+      }
+    ]
+  }
+}

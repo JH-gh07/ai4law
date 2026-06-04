@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -32,6 +33,8 @@ class CPRAAgentBase:
 
     @property
     def enabled(self) -> bool:
+        if os.getenv("AI4LAW_CPRA_DISABLE_AGENT_LLM") == "1":
+            return False
         return self.llm_client is not None and self.llm_client.enabled
 
     def _call_llm(self, user_prompt: str) -> dict | None:
@@ -55,9 +58,15 @@ class CPRAAgentBase:
 
 
 from backend.modules.cpra.agents.fact_extraction_agent import CPRAFactExtractionAgent
+from backend.modules.cpra.agents.spi_sharing_risk_agent import CPRASPISharingRiskAgent
+from backend.modules.cpra.agents.vendor_contract_agent import CPRAVendorContractAgent
+from backend.modules.cpra.agents.consistency_review_agent import CPRAConsistencyReviewAgent
 
 
 def create_cpra_agents(llm_client: "LLMClient | None" = None) -> dict[str, CPRAAgentBase]:
     return {
         "fact_extraction": CPRAFactExtractionAgent(llm_client),
+        "spi_sharing_risk": CPRASPISharingRiskAgent(llm_client),
+        "vendor_contract": CPRAVendorContractAgent(llm_client),
+        "consistency_review": CPRAConsistencyReviewAgent(llm_client),
     }

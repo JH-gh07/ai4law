@@ -27,6 +27,7 @@ export type RunOutput = {
 type ModuleRunPanelProps = {
   onRunDone: (output: RunOutput) => void;
   taskSpace: TaskSpace;
+  onTaskCreated?: (taskId: string, module: ModuleKey) => void;
 };
 
 type UserFacingResult = {
@@ -2454,7 +2455,7 @@ const REVIEW_ASYNC_STATE_LABEL: Record<string, string> = {
   failed: "执行失败",
 };
 
-export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
+export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRunPanelProps) {
   const { t, lang } = useLang();
   const diagnosisStepTopRef = useRef<HTMLDivElement | null>(null);
   const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>(taskSpace.jurisdiction);
@@ -3614,6 +3615,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace }: ModuleRunPanelProps) {
         preferredRunMode,
         timeoutMs,
         (progress) => setAsyncRunProgress(progress),
+        (event) => setRecentEvents((prev) => [...prev.slice(-19), event]),
+        (taskId) => onTaskCreated?.(taskId, moduleKey),
       );
       setResponseData(result.response);
       onRunDone({

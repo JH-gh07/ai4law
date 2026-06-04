@@ -2,7 +2,6 @@
 import { useMemo } from "react";
 import { useLang } from "../../lib/language";
 import { useTaskEvents } from "../../lib/useTaskEvents";
-import type { RunEvent } from "../../lib/useTaskEvents";
 
 type Props = {
   taskId: string | null;

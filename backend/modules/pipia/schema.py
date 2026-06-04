@@ -67,6 +67,13 @@ class PIPIAChapter(BaseModel):
     risk_level: str
 
 
+class PIPIAFilingReadiness(BaseModel):
+    status: Literal["ready", "supplement_required", "blocked"]
+    reason: str = ""
+    blocking_items: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
+
+
 class PIPIAResult(BaseModel):
     report_path: str
     output_files: dict[str, str] = Field(default_factory=dict)
@@ -75,6 +82,11 @@ class PIPIAResult(BaseModel):
     chapters: list[PIPIAChapter]
     consistency_issues: list[str]
     attachment_notes: list[str] = Field(default_factory=list)
+    facts: list[dict] = Field(default_factory=list)
+    issues: list[dict] = Field(default_factory=list)
+    evidence_chain: list[dict] = Field(default_factory=list)
+    material_gaps: list[str] = Field(default_factory=list)
+    filing_readiness: PIPIAFilingReadiness
 
 
 class PIPIAAsyncAccepted(BaseModel):
@@ -95,4 +107,3 @@ class PIPIAAsyncStatus(BaseModel):
     updated_at: str
     error: str | None = None
     result: PIPIAResult | None = None
-

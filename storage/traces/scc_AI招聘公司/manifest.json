@@ -1,0 +1,114 @@
+{
+  "created_at": "2026-06-04T05:46:26.839593+00:00",
+  "event_count": 18,
+  "events": [
+    {
+      "seq": 1,
+      "name": "scc_request",
+      "path": "storage/traces/scc_AI招聘公司/001_scc_request.json",
+      "created_at": "2026-06-04T05:46:23.361654+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "profile_extracted",
+      "path": "storage/traces/scc_AI招聘公司/002_profile_extracted.json",
+      "created_at": "2026-06-04T05:46:23.362031+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "path_diagnosis",
+      "path": "storage/traces/scc_AI招聘公司/003_path_diagnosis.json",
+      "created_at": "2026-06-04T05:46:23.362382+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "field_classifications",
+      "path": "storage/traces/scc_AI招聘公司/004_field_classifications.json",
+      "created_at": "2026-06-04T05:46:23.362680+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "contract_findings",
+      "path": "storage/traces/scc_AI招聘公司/005_contract_findings.json",
+      "created_at": "2026-06-04T05:46:23.362946+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "legal_basis_reviews",
+      "path": "storage/traces/scc_AI招聘公司/006_legal_basis_reviews.json",
+      "created_at": "2026-06-04T05:46:23.363270+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "evidence_verifications",
+      "path": "storage/traces/scc_AI招聘公司/007_evidence_verifications.json",
+      "created_at": "2026-06-04T05:46:23.363618+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "facts_built",
+      "path": "storage/traces/scc_AI招聘公司/008_facts_built.json",
+      "created_at": "2026-06-04T05:46:23.364023+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "issues_built",
+      "path": "storage/traces/scc_AI招聘公司/009_issues_built.json",
+      "created_at": "2026-06-04T05:46:23.364453+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "rag_plans",
+      "path": "storage/traces/scc_AI招聘公司/010_rag_plans.json",
+      "created_at": "2026-06-04T05:46:23.365485+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "retrieval_hits",
+      "path": "storage/traces/scc_AI招聘公司/011_retrieval_hits.json",
+      "created_at": "2026-06-04T05:46:26.835777+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "evidence_built",
+      "path": "storage/traces/scc_AI招聘公司/012_evidence_built.json",
+      "created_at": "2026-06-04T05:46:26.836963+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "context_block_built",
+      "path": "storage/traces/scc_AI招聘公司/013_context_block_built.json",
+      "created_at": "2026-06-04T05:46:26.837320+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "chapters_generated",
+      "path": "storage/traces/scc_AI招聘公司/014_chapters_generated.json",
+      "created_at": "2026-06-04T05:46:26.837622+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "alignment_check",
+      "path": "storage/traces/scc_AI招聘公司/015_alignment_check.json",
+      "created_at": "2026-06-04T05:46:26.837909+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "report_review",
+      "path": "storage/traces/scc_AI招聘公司/016_report_review.json",
+      "created_at": "2026-06-04T05:46:26.838380+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "clarification",
+      "path": "storage/traces/scc_AI招聘公司/017_clarification.json",
+      "created_at": "2026-06-04T05:46:26.838848+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "explanation",
+      "path": "storage/traces/scc_AI招聘公司/018_explanation.json",
+      "created_at": "2026-06-04T05:46:26.839290+00:00"
+    }
+  ]
+}

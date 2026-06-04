@@ -28,10 +28,11 @@ const SOURCE_KIND_LABELS: Record<string, string> = {
 interface Props {
   footnoteNumber: number;
   citation: CitationDetail;
-  onClickSource?: () => void;
+  onClickSource?: (citation: CitationDetail) => void;
+  label?: string;
 }
 
-export function CitationPopover({ footnoteNumber, citation, onClickSource }: Props) {
+export function CitationPopover({ footnoteNumber, citation, onClickSource, label }: Props) {
   const snippet =
     citation.quote_text.length > 120
       ? citation.quote_text.slice(0, 120) + "…"
@@ -47,10 +48,19 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource }: Pro
         className="citation-sup"
         onClick={(e) => {
           e.stopPropagation();
-          onClickSource?.();
+          onClickSource?.(citation);
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            onClickSource?.(citation);
+          }
         }}
       >
-        [{footnoteNumber}]
+        {label ?? `[${footnoteNumber}] 引用`}
       </sup>
       <span className="citation-popover">
         <span className="citation-popover-header">
@@ -71,6 +81,12 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource }: Pro
           </span>
         </span>
         <span className="citation-popover-governance">
+          {citation.can_jump && (
+            <span className="citation-governance-ok">↗ 点击跳转知识库</span>
+          )}
+          {!citation.can_jump && (
+            <span className="citation-governance-warning">无法精确跳转知识库</span>
+          )}
           {citation.source_kind && (
             <span className="citation-source-kind-label">
               {SOURCE_KIND_LABELS[citation.source_kind] ?? citation.source_kind}

@@ -1,0 +1,11 @@
+{
+  "name": "tool_start",
+  "seq": 20,
+  "created_at": "2026-06-04T05:47:50.236615+00:00",
+  "payload": {
+    "summary": "报告章节生成",
+    "detail": {
+      "agent": "chapter_generation"
+    }
+  }
+}

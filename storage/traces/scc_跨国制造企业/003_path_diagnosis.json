@@ -1,0 +1,22 @@
+{
+  "name": "path_diagnosis",
+  "seq": 3,
+  "created_at": "2026-06-04T05:46:30.537909+00:00",
+  "payload": {
+    "recommended_path": "standard_contract",
+    "alternative_path": "exemption",
+    "confidence": 0.6,
+    "rationale": "人力资源管理豁免可能适用，但证据不足；建议选择标准合同路径增强确定性",
+    "blocking_issues": [
+      "员工手册未明确数据出境条款",
+      "集体合同未专门提及数据出境",
+      "用户主张人力资源管理豁免，但未提供豁免材料（员工手册/集体合同），建议补充后再评估"
+    ],
+    "next_questions": [
+      "是否已通过民主程序制定包含数据出境条款的劳动规章制度？",
+      "是否能提供最新版集体合同？"
+    ],
+    "triggered_thresholds": [],
+    "exemption_assessment": "人力资源管理豁免可能适用；"
+  }
+}

@@ -1,4 +1,4 @@
-import type { ModuleRun, TaskSpace } from "../../lib/domain";
+import type { ModuleKey, ModuleRun, TaskSpace } from "../../lib/domain";
 import { ModuleRunPanel, type RunOutput } from "./ModuleRunPanel";
 import { useLang } from "../../lib/language";
 
@@ -6,9 +6,10 @@ type StageSplitViewProps = {
   taskSpace: TaskSpace;
   onRunDone: (output: RunOutput) => void;
   latestRun: ModuleRun | null;
+  onTaskCreated?: (taskId: string, module: ModuleKey) => void;
 };
 
-export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitViewProps) {
+export function StageSplitView({ taskSpace, onRunDone, latestRun, onTaskCreated }: StageSplitViewProps) {
   const { lang } = useLang();
 
   return (
@@ -27,7 +28,7 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun }: StageSplitVi
             ) : null}
           </div>
           <section className="plugin-view plugin-view-run plugin-view-run-full">
-            <ModuleRunPanel onRunDone={onRunDone} taskSpace={taskSpace} />
+            <ModuleRunPanel onRunDone={onRunDone} taskSpace={taskSpace} onTaskCreated={onTaskCreated} />
           </section>
         </section>
       </div>

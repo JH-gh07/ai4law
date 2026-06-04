@@ -179,7 +179,7 @@ function ReportTab({ preview, lang, filePath }: { preview: ArtifactPreview | nul
 
   return (
     <article className="assessment-intermediates-report">
-      <CitationMarkdownRenderer markdown={preview.content} taskId={taskId} />
+      <CitationMarkdownRenderer markdown={preview.content} taskId={taskId} moduleKey="assessment" />
     </article>
   );
 }

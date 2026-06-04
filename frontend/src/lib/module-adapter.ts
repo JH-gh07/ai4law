@@ -339,6 +339,7 @@ export async function runModule(
   timeoutMs = 180000,
   onProgress?: (update: ModuleRunProgress) => void,
   onEvent?: (event: RunEvent) => void,
+  onTaskDiscovered?: (taskId: string) => void,
 ): Promise<ModuleRunResponse> {
   if (runMode === "sync" || !hasAsync(module)) {
     const response = await requestJson(module.syncEndpoint, "POST", payload);
@@ -347,6 +348,7 @@ export async function runModule(
 
   const submitResponse = await requestJson(module.asyncSubmitEndpoint!, "POST", payload);
   const taskId = parseAsyncTaskId(submitResponse);
+  onTaskDiscovered?.(taskId);  // 立即通知调用方 taskId，不等任务完成
   onProgress?.({ state: parseTaskState(submitResponse), progress: parseTaskProgress(submitResponse) });
 
   // ── SSE 实时事件流 ──

@@ -76,10 +76,15 @@ class InMemoryTaskManager:
     ) -> TaskSnapshot:
         """提交任务并绑定 TraceRecorder 用于事件推送。"""
         now = _utc_now_iso()
-        task_id = str(uuid.uuid4())
+        task_id = getattr(trace_recorder, "_task_id", "") or str(uuid.uuid4())
 
         # 将 task_id 注入 TraceRecorder，使 record() 发布的 RunEvent 带正确的 task_id
         trace_recorder._task_id = task_id
+        if hasattr(trace_recorder, "trace_dir"):
+            try:
+                trace_recorder.trace_dir.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                pass
 
         # 将 SSEManager 注册为 TraceRecorder 订阅者
         from backend.common.events.manager import get_ssemanager
@@ -197,6 +202,52 @@ class InMemoryTaskManager:
             else:
                 payload = {"value": result}
 
+            try:
+                if hasattr(trace_recorder, "_events"):
+                    event_names = {getattr(item, "name", "") for item in getattr(trace_recorder, "_events", [])}
+                else:
+                    event_names = set()
+                if "final" not in event_names or "final_brief" not in event_names:
+                    from backend.common.trace.finalization import build_success_events
+
+                    final_payload, brief_payload = build_success_events(self.module, payload)
+                    if "final" not in event_names:
+                        trace_recorder.record("final", final_payload)
+                    if "final_brief" not in event_names:
+                        trace_recorder.record("final_brief", brief_payload)
+            except Exception:
+                pass
+
+            try:
+                output_files = payload.get("output_files") if isinstance(payload, dict) else None
+                sample_path = None
+                if isinstance(output_files, dict):
+                    for value in output_files.values():
+                        if isinstance(value, str) and value.strip():
+                            sample_path = value
+                            break
+                if sample_path:
+                    from pathlib import Path
+                    from backend.common.citation.output import write_citation_map_json
+
+                    output_dir = Path(sample_path).parent
+                    citation_map_path = output_dir / "citation_map.json"
+                    if not citation_map_path.exists():
+                        write_citation_map_json(
+                            output_dir=output_dir,
+                            module=self.module,
+                            task_id=task_id,
+                            footnote_map={},
+                            all_items=[],
+                        )
+            except Exception:
+                pass
+
+            try:
+                from backend.common.trace.finalization import build_success_events
+            except Exception:
+                pass
+
             with self._lock:
                 current = self._tasks.get(task_id)
                 if current is None:
@@ -217,6 +268,14 @@ class InMemoryTaskManager:
                     detail={"module": self.module, "state": "COMPLETED"},
                 ))
         except Exception as exc:
+            try:
+                from backend.common.trace.finalization import build_failure_events
+
+                final_payload, brief_payload = build_failure_events(self.module, f"{exc.__class__.__name__}: {exc}")
+                trace_recorder.record("final", final_payload)
+                trace_recorder.record("final_brief", brief_payload)
+            except Exception:
+                pass
             with self._lock:
                 current = self._tasks.get(task_id)
                 if current is None:

@@ -51,10 +51,13 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
   }, [citation.source_id, citation.article_no]);
 
   const handleViewFullLaw = () => {
-    if (citation.source_id) {
-      navigate(
-        `/knowledge/laws/${encodeURIComponent(citation.source_id)}?article=${encodeURIComponent(citation.article_no)}`,
-      );
+    const targetUrl = citation.knowledge_url || (
+      citation.source_id
+        ? `/knowledge/laws/${encodeURIComponent(citation.source_id)}?article=${encodeURIComponent(citation.article_no)}`
+        : ""
+    );
+    if (targetUrl) {
+      navigate(targetUrl);
     }
   };
 

@@ -1,0 +1,11 @@
+{
+  "name": "tool_start",
+  "seq": 3,
+  "created_at": "2026-06-04T06:32:46.880417+00:00",
+  "payload": {
+    "summary": "附件事实提取器",
+    "detail": {
+      "tool": "CPRAAttachmentExtractor"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "created_at": "2026-06-04T05:55:03.794344+00:00",
+  "event_count": 14,
+  "events": [
+    {
+      "seq": 1,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/001_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:32.608681+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/002_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:36.993361+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/003_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:36.994287+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/004_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:41.385336+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/005_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:41.385854+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/006_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:44.594461+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/007_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:44.594960+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/008_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:49.019752+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/009_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:49.020203+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/010_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:53.268630+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/011_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:53.269053+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/012_llm_chat_response.json",
+      "created_at": "2026-06-04T05:54:59.688056+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "llm_chat_request",
+      "path": "storage/traces/pipia_sync/013_llm_chat_request.json",
+      "created_at": "2026-06-04T05:54:59.688855+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "llm_chat_response",
+      "path": "storage/traces/pipia_sync/014_llm_chat_response.json",
+      "created_at": "2026-06-04T05:55:03.737735+00:00"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "profile_extracted",
+  "seq": 2,
+  "created_at": "2026-06-04T05:46:34.081531+00:00",
+  "payload": {
+    "company_name": "测试公司",
+    "receiver_name": "Example Recipient Inc.",
+    "receiver_country": "Singapore",
+    "transfer_purpose": "客户支持与系统运维",
+    "pii_count": 200,
+    "spi_count": 10,
+    "has_scc_draft": true,
+    "is_ciio": false,
+    "has_important_data": false,
+    "legal_basis": [],
+    "receiver_type": "other",
+    "industry": "",
+    "is_hr_management": false,
+    "is_certification_body": false,
+    "has_certification_material": false,
+    "has_exemption_material": false,
+    "extracted_notes": [
+      "/private/tmp/claude-501/pytest-of-oujiazhan/pytest-4/test_scc_generate_annotated_do0/sample.docx: 个人信息出境标准合同 甲方名称：测试公司 乙方名称：Example Recipient Inc. 双方应根据适用法律持续评估跨境传输风险。"
+    ],
+    "attachment_texts": {
+      "/private/tmp/claude-501/pytest-of-oujiazhan/pytest-4/test_scc_generate_annotated_do0/sample.docx": "个人信息出境标准合同\n甲方名称：测试公司\n乙方名称：Example Recipient Inc.\n双方应根据适用法律持续评估跨境传输风险。"
+    }
+  }
+}

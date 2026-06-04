@@ -8,16 +8,29 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from backend.common.citation.output import normalize_citation_item
 from backend.schemas.citation import CitationDetailResponse, CitationMapResponse
 
 router = APIRouter()
 
-_OUTPUT_BASE = Path("outputs/assessment")
+_KNOWN_MODULES = (
+    "assessment",
+    "dpia",
+    "scc",
+    "cn_flow",
+    "eu_scc",
+    "us_14117",
+    "pipia",
+    "tia",
+    "bcr",
+    "cpra",
+)
 
 
 class BatchCitationRequest(BaseModel):
     citation_ids: list[str]
     task_id: str
+    module: str | None = None
 
 
 class BatchCitationResponse(BaseModel):
@@ -25,55 +38,79 @@ class BatchCitationResponse(BaseModel):
     not_found: list[str]
 
 
-def _find_citation_map(task_id: str) -> dict | None:
-    path = _OUTPUT_BASE / task_id / "outputs" / "citation_map.json"
-    if not path.exists():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
+def _candidate_paths(task_id: str, module: str | None) -> list[tuple[str, Path]]:
+    modules = [module] if module else list(_KNOWN_MODULES)
+    candidates: list[tuple[str, Path]] = []
+    for item in modules:
+        if not item:
+            continue
+        path = Path("outputs") / item / task_id / "outputs" / "citation_map.json"
+        candidates.append((item, path))
+    return candidates
 
 
-def _build_detail(item: dict, footnote_number: int | None = None) -> CitationDetailResponse:
+def _find_citation_map(task_id: str, module: str | None = None) -> tuple[str, dict] | tuple[None, None]:
+    for resolved_module, path in _candidate_paths(task_id, module):
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        return resolved_module, data
+    return None, None
+
+
+def _build_detail(item: dict, *, module: str, footnote_number: int | None = None) -> CitationDetailResponse:
+    normalized = normalize_citation_item(item, module=module)
     return CitationDetailResponse(
-        citation_id=item.get("citation_id", ""),
-        source_id=item.get("source_id", ""),
-        citation_type=item.get("citation_type", "law_article"),
-        title=item.get("title", ""),
-        article_no=item.get("article_no", ""),
-        quote_text=item.get("quote_text", ""),
-        authority_level=item.get("authority_level", "medium"),
-        binding_force=item.get("binding_force", "recommended"),
-        related_issue_ids=item.get("related_issue_ids", []),
-        related_fact_ids=item.get("related_fact_ids", []),
-        related_evidence_ids=item.get("related_evidence_ids", []),
-        confidence_score=item.get("confidence_score", 0.0),
+        citation_id=normalized.get("citation_id", ""),
+        module=normalized.get("module", module),
+        source_id=normalized.get("source_id", ""),
+        citation_type=normalized.get("citation_type", "law_article"),
+        title=normalized.get("title", ""),
+        article_no=normalized.get("article_no", ""),
+        quote_text=normalized.get("quote_text", ""),
+        authority_level=normalized.get("authority_level", "medium"),
+        binding_force=normalized.get("binding_force", "recommended"),
+        related_issue_ids=normalized.get("related_issue_ids", []),
+        related_fact_ids=normalized.get("related_fact_ids", []),
+        related_evidence_ids=normalized.get("related_evidence_ids", []),
+        confidence_score=normalized.get("confidence_score", 0.0),
         footnote_number=footnote_number,
-        source_kind=item.get("source_kind", "law_article"),
-        allowed_usage=item.get("allowed_usage", []),
-        can_enter_external_report=item.get("can_enter_external_report", True),
-        external_report_allowed=item.get("external_report_allowed", True),
-        confidence_threshold=item.get("confidence_threshold", 0.20),
+        source_kind=normalized.get("source_kind", "law_article"),
+        allowed_usage=normalized.get("allowed_usage", []),
+        can_enter_external_report=normalized.get("can_enter_external_report", True),
+        external_report_allowed=normalized.get("external_report_allowed", True),
+        confidence_threshold=normalized.get("confidence_threshold", 0.20),
+        knowledge_url=normalized.get("knowledge_url", ""),
+        anchor=normalized.get("anchor", ""),
+        section_id=normalized.get("section_id", ""),
+        clause_id=normalized.get("clause_id", ""),
+        open_mode=normalized.get("open_mode", "new_tab"),
+        can_jump=normalized.get("can_jump", False),
+        source_url=normalized.get("source_url", ""),
     )
 
 
 @router.get("/reports/{task_id}", response_model=CitationMapResponse)
-def get_report_citations(task_id: str) -> CitationMapResponse:
-    data = _find_citation_map(task_id)
+def get_report_citations(task_id: str, module: str | None = Query(None)) -> CitationMapResponse:
+    resolved_module, data = _find_citation_map(task_id, module)
     if data is None:
-        return CitationMapResponse(task_id=task_id, footnote_map={}, citation_count=0)
+        return CitationMapResponse(task_id=task_id, module=module or "", footnote_map={}, citation_count=0)
 
     footnote_map_raw: dict = data.get("footnote_map", {})
     result: dict[str, CitationDetailResponse] = {}
     for num_str, item in footnote_map_raw.items():
         result[num_str] = _build_detail(
             item,
+            module=resolved_module or module or str(data.get("module", "")),
             footnote_number=int(num_str) if num_str.isdigit() else None,
         )
 
     return CitationMapResponse(
         task_id=task_id,
+        module=resolved_module or module or str(data.get("module", "")),
         footnote_map=result,
         citation_count=len(result),
     )
@@ -82,7 +119,7 @@ def get_report_citations(task_id: str) -> CitationMapResponse:
 @router.post("/batch", response_model=BatchCitationResponse)
 def get_citations_batch(body: BatchCitationRequest) -> BatchCitationResponse:
     """Fetch multiple citation details in a single request."""
-    data = _find_citation_map(body.task_id)
+    resolved_module, data = _find_citation_map(body.task_id, body.module)
     if data is None:
         return BatchCitationResponse(items={}, not_found=list(body.citation_ids))
 
@@ -104,17 +141,25 @@ def get_citations_batch(body: BatchCitationRequest) -> BatchCitationResponse:
         if item is None:
             not_found.append(cid)
         else:
-            result[cid] = _build_detail(item, footnote_number=id_to_footnote.get(cid))
+            result[cid] = _build_detail(
+                item,
+                module=resolved_module or body.module or str(data.get("module", "")),
+                footnote_number=id_to_footnote.get(cid),
+            )
 
     return BatchCitationResponse(items=result, not_found=not_found)
 
 
 @router.get("/{citation_id}", response_model=CitationDetailResponse)
-def get_citation_detail(citation_id: str, task_id: Optional[str] = Query(None)) -> CitationDetailResponse:
+def get_citation_detail(
+    citation_id: str,
+    task_id: Optional[str] = Query(None),
+    module: str | None = Query(None),
+) -> CitationDetailResponse:
     if not task_id:
         raise HTTPException(status_code=400, detail="task_id query parameter is required")
 
-    data = _find_citation_map(task_id)
+    resolved_module, data = _find_citation_map(task_id, module)
     if data is None:
         raise HTTPException(status_code=404, detail=f"No citation map found for task {task_id}")
 
@@ -126,6 +171,10 @@ def get_citation_detail(citation_id: str, task_id: Optional[str] = Query(None)) 
                 if fn_item.get("citation_id") == citation_id:
                     footnote_number = int(num_str) if num_str.isdigit() else None
                     break
-            return _build_detail(item, footnote_number=footnote_number)
+            return _build_detail(
+                item,
+                module=resolved_module or module or str(data.get("module", "")),
+                footnote_number=footnote_number,
+            )
 
     raise HTTPException(status_code=404, detail=f"Citation {citation_id} not found")

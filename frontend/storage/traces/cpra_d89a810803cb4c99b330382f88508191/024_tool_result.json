@@ -1,0 +1,9 @@
+{
+  "name": "tool_result",
+  "seq": 24,
+  "created_at": "2026-06-04T06:54:17.165113+00:00",
+  "payload": {
+    "summary": "一致性审查完成：0 个问题",
+    "detail": {}
+  }
+}

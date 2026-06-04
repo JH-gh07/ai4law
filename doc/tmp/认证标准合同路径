@@ -783,3 +783,82 @@ Trace / 可解释链路
 # 12. 一句话结论
 
 这个功能最需要 Agent 的地方，不是替代确定性规则，而是补齐当前 CN SCC 的“判断能力”：**路径分流、字段识别、合法性论证、合同条款审查、证据核验、报告审稿**。这些地方本质上都不是单一规则判断，而是“多材料、多法规、多事实之间的推理与解释”，加 Agent 后能明显提升系统从“表单报告生成器”到“合规审查助手”的质量。
+
+---
+
+# 13. 当前落实状态（2026-06-04）
+
+## 13.1 已经落到代码里的部分
+
+### SCC 主链路：已使用 Agent
+
+`backend/modules/scc/service.py` 已接入并编排以下 Agent：
+
+- 路径诊断 Agent
+- 数据字段识别 Agent
+- 合法性基础审查 Agent
+- 合同审查 Agent
+- 证据核验 Agent
+- RAG 检索规划 Agent
+- 报告审稿 Agent
+- 动态追问 Agent
+- 可解释链路 Agent
+
+并且已经配套落地：
+
+- `facts -> issues -> evidence` 分层构建
+- `TraceRecorder` 全链路记录
+- 报告生成后的对齐检查与一致性问题汇总
+- 批注版 DOCX 输出
+- `backend/modules/scc/tests/test_service.py` 主链路测试
+
+### PIPIA 配套链路：本轮已补强
+
+`backend/modules/pipia/service.py` 本轮已从“模板型报告生成”补到“结构化评估输出”：
+
+- 新增 `facts`
+- 新增 `issues`
+- 新增 `evidence_chain`
+- 新增 `material_gaps`
+- 新增 `filing_readiness`
+- 新增模板缺失时的 markdown/docx 降级渲染
+- 支持 `llm_client=None` 的快速测试模式
+
+目前 `PIPIA` 已能明确输出：
+
+- 当前是否具备备案准备度
+- 是 `ready / supplement_required / blocked` 中哪一种
+- 缺哪些核心材料
+- 哪些问题会阻断备案
+
+并已补充测试：
+
+- `backend/modules/pipia/tests/test_service.py`
+
+## 13.2 还没有完全用 Agent 的部分
+
+### PIPIA：仍未形成独立 Agent 编排
+
+当前 `PIPIA` 虽然已有结构化事实、问题、证据和备案准备度输出，但仍主要是服务内规则化构建，尚未像 `SCC` 一样拆成独立 Agent：
+
+- 尚无独立的 PIPIA 路径诊断 Agent
+- 尚无独立的 PIPIA 证据核验 Agent
+- 尚无独立的 PIPIA 报告审稿 Agent
+- 尚无独立的 PIPIA 可解释链路 Agent
+
+也就是说，`PIPIA` 现在已经不是纯模板生成器，但还没有进入“多 Agent 协作”的完成态。
+
+### 异步接口测试：仍有环境级阻塞
+
+`backend/modules/pipia/tests/test_async_api.py` 当前回归失败原因为接口返回 `401 Unauthorized`，属于鉴权/测试环境问题，不是本轮 `PIPIA service` 逻辑错误。后续若要继续推进，需要统一异步接口测试的鉴权豁免或测试凭证注入。
+
+## 13.3 下一步最值得继续落实的顺序
+
+1. 把 `PIPIA` 从“结构化服务”继续拆成独立 Agent 协作层，优先补：
+   - 证据核验
+   - 报告审稿
+   - 可解释链路
+2. 打通 `PIPIA` 异步接口测试的鉴权环境
+3. 视需要再把 `SCC` 与 `PIPIA` 做更强的联动输出：
+   - SCC 负责路径诊断与专项审查
+   - PIPIA 负责备案草案与备案准备度

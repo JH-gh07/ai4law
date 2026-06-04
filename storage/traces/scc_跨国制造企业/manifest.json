@@ -1,0 +1,114 @@
+{
+  "created_at": "2026-06-04T05:46:32.207207+00:00",
+  "event_count": 18,
+  "events": [
+    {
+      "seq": 1,
+      "name": "scc_request",
+      "path": "storage/traces/scc_跨国制造企业/001_scc_request.json",
+      "created_at": "2026-06-04T05:46:30.537134+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "profile_extracted",
+      "path": "storage/traces/scc_跨国制造企业/002_profile_extracted.json",
+      "created_at": "2026-06-04T05:46:30.537517+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "path_diagnosis",
+      "path": "storage/traces/scc_跨国制造企业/003_path_diagnosis.json",
+      "created_at": "2026-06-04T05:46:30.537909+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "field_classifications",
+      "path": "storage/traces/scc_跨国制造企业/004_field_classifications.json",
+      "created_at": "2026-06-04T05:46:30.538215+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "contract_findings",
+      "path": "storage/traces/scc_跨国制造企业/005_contract_findings.json",
+      "created_at": "2026-06-04T05:46:30.538493+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "legal_basis_reviews",
+      "path": "storage/traces/scc_跨国制造企业/006_legal_basis_reviews.json",
+      "created_at": "2026-06-04T05:46:30.538780+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "evidence_verifications",
+      "path": "storage/traces/scc_跨国制造企业/007_evidence_verifications.json",
+      "created_at": "2026-06-04T05:46:30.539095+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "facts_built",
+      "path": "storage/traces/scc_跨国制造企业/008_facts_built.json",
+      "created_at": "2026-06-04T05:46:30.539531+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "issues_built",
+      "path": "storage/traces/scc_跨国制造企业/009_issues_built.json",
+      "created_at": "2026-06-04T05:46:30.539934+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "rag_plans",
+      "path": "storage/traces/scc_跨国制造企业/010_rag_plans.json",
+      "created_at": "2026-06-04T05:46:30.543837+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "retrieval_hits",
+      "path": "storage/traces/scc_跨国制造企业/011_retrieval_hits.json",
+      "created_at": "2026-06-04T05:46:32.203089+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "evidence_built",
+      "path": "storage/traces/scc_跨国制造企业/012_evidence_built.json",
+      "created_at": "2026-06-04T05:46:32.204177+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "context_block_built",
+      "path": "storage/traces/scc_跨国制造企业/013_context_block_built.json",
+      "created_at": "2026-06-04T05:46:32.204653+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "chapters_generated",
+      "path": "storage/traces/scc_跨国制造企业/014_chapters_generated.json",
+      "created_at": "2026-06-04T05:46:32.204980+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "alignment_check",
+      "path": "storage/traces/scc_跨国制造企业/015_alignment_check.json",
+      "created_at": "2026-06-04T05:46:32.205306+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "report_review",
+      "path": "storage/traces/scc_跨国制造企业/016_report_review.json",
+      "created_at": "2026-06-04T05:46:32.205830+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "clarification",
+      "path": "storage/traces/scc_跨国制造企业/017_clarification.json",
+      "created_at": "2026-06-04T05:46:32.206349+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "explanation",
+      "path": "storage/traces/scc_跨国制造企业/018_explanation.json",
+      "created_at": "2026-06-04T05:46:32.206874+00:00"
+    }
+  ]
+}

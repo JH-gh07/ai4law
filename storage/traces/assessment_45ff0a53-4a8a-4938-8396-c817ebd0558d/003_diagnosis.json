@@ -1,0 +1,11 @@
+{
+  "name": "diagnosis",
+  "seq": 3,
+  "created_at": "2026-06-04T05:46:19.851415+00:00",
+  "payload": {
+    "recommended_path": "security_assessment",
+    "rationale": "上游路径诊断模块已判定进入安全评估路径，本模块仅负责文书生成。",
+    "risk_level": "HIGH",
+    "matched_rule_id": null
+  }
+}

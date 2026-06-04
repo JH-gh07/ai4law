@@ -35,18 +35,19 @@ class CPRAFactExtractionAgent(CPRAAgentBase):
         business_model: str,
         data_lifecycle: str,
     ) -> CPRAFactPack:
-        llm_result = self._call_llm(
-            self._build_prompt(
-                attachment=attachment,
-                raw_facts=raw_facts,
-                business_model=business_model,
-                data_lifecycle=data_lifecycle,
+        if self.enabled:
+            llm_result = self._call_llm(
+                self._build_prompt(
+                    attachment=attachment,
+                    raw_facts=raw_facts,
+                    business_model=business_model,
+                    data_lifecycle=data_lifecycle,
+                )
             )
-        )
-        if llm_result:
-            # First slice keeps LLM use conservative and falls back to deterministic shaping.
-            # We only rely on fallback shaping until targeted tests and contracts expand.
-            pass
+            if llm_result:
+                # First slice keeps LLM use conservative and falls back to deterministic shaping.
+                # We only rely on fallback shaping until targeted tests and contracts expand.
+                pass
         return self._fallback_fact_pack(attachment=attachment, raw_facts=raw_facts)
 
     @staticmethod

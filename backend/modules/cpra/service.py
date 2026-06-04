@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+import uuid
 from pathlib import Path
 
 from backend.common.llm.client import LLMClient
@@ -71,7 +72,7 @@ class CPRAService:
     ) -> CPRAResult:
         timings: list[tuple[str, float]] = []
         t0 = time.perf_counter()
-        run_task_id = task_id or safe_filename(payload.company_name) or "cpra"
+        run_task_id = task_id or uuid.uuid4().hex
 
         def mark(stage: str) -> None:
             nonlocal t0
@@ -354,7 +355,7 @@ class CPRAService:
     # ── Async ───────────────────────────────────────────────────────────
 
     def submit_async(self, payload: CPRARequest) -> CPRAAsyncAccepted:
-        task_id = safe_filename(payload.company_name) or "cpra"
+        task_id = uuid.uuid4().hex
         trace_recorder = TraceRecorder(trace_dir=Path("outputs/cpra") / task_id / "trace", task_id=task_id)
         snapshot = self.tasks.submit_with_trace(
             runner=lambda: self.generate_report(payload, task_id=task_id, trace=trace_recorder),

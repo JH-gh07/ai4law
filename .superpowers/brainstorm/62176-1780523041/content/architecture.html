@@ -1,0 +1,225 @@
+<div style="font-family: system-ui, -apple-system, sans-serif; max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
+
+<h2>📐 可观测执行工作台 — 整体架构 (方案一 · 轻量扩展)</h2>
+<p class="subtitle">Phase 1：CPRA 样板接入 · 内部视图 · SSE 实时推送 · 自动摘要</p>
+
+<div class="section">
+  <h3>一、后端三层</h3>
+
+  <!-- Layer 1: Event Stream -->
+  <div style="border: 2px solid #3b82f6; border-radius: 12px; margin-bottom: 16px; overflow: hidden;">
+    <div style="background: #3b82f6; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+      ① 运行时事件层 — RunEventStream（扩展现有 TraceRecorder）
+    </div>
+    <div style="padding: 16px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 12px; font-size: 13px;">
+
+      <!-- Event types -->
+      <div style="background: #f0f7ff; border-radius: 8px; padding: 12px;">
+        <div style="font-weight: 700; margin-bottom: 8px; color: #1e40af;">事件类型</div>
+        <div style="color: #374151; line-height: 2;">
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#2563eb;margin-right:4px;"></span> status</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#7c3aed;margin-right:4px;"></span> thought</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#059669;margin-right:4px;"></span> tool_start</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#0891b2;margin-right:4px;"></span> tool_result</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ea580c;margin-right:4px;"></span> intermediate</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#dc2626;margin-right:4px;"></span> warning / error</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#9333ea;margin-right:4px;"></span> final</div>
+          <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#d946ef;margin-right:4px;"></span> final_brief</div>
+        </div>
+      </div>
+
+      <!-- Flow -->
+      <div style="background: #fefce8; border-radius: 8px; padding: 12px;">
+        <div style="font-weight: 700; margin-bottom: 8px; color: #854d0e;">事件流转</div>
+        <div style="font-size: 12px; color: #374151; line-height: 1.8;">
+          CPRAService.run()<br>
+          &nbsp;&nbsp;→ <code>stream.record("thought", ...)</code><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;→ <code>TraceRecorder</code> 写 JSON 文件<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;→ <code>SSEManager</code> 推前端<br>
+          &nbsp;&nbsp;→ <code>stream.record("tool_start", ...)</code><br>
+          &nbsp;&nbsp;→ <code>stream.record("intermediate", ...)</code><br>
+          &nbsp;&nbsp;→ <code>stream.record("final", ...)</code><br>
+          &nbsp;&nbsp;→ <code>stream.record("final_brief", ...)</code>
+        </div>
+      </div>
+
+      <!-- Transport -->
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 12px;">
+        <div style="font-weight: 700; margin-bottom: 8px; color: #166534;">传输</div>
+        <div style="font-size: 12px; color: #374151; line-height: 1.8;">
+          <strong>SSE 主通道</strong><br>
+          GET /task/{id}/stream<br>
+          → FastAPI StreamingResponse<br>
+          → text/event-stream<br><br>
+          <strong>轮询兜底</strong><br>
+          GET /task/{id}/events?since={seq}<br>
+          → SSE 断连时降级<br>
+          → 1-2s interval
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 2 -->
+  <div style="border: 2px solid #f59e0b; border-radius: 12px; margin-bottom: 16px; overflow: hidden;">
+    <div style="background: #f59e0b; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+      ② 结构化中间结果层 — 扩展现有 CPRA schema
+    </div>
+    <div style="padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12px;">
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">facts</div>
+        <div style="color: #6b7280;">事实提取结果</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">issues</div>
+        <div style="color: #6b7280;">合规问题列表</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">gap_items</div>
+        <div style="color: #6b7280;">差距项 + 风险等级</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">evidence_chain</div>
+        <div style="color: #6b7280;">证据链</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">consistency_issues</div>
+        <div style="color: #6b7280;">一致性问题</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">output_files</div>
+        <div style="color: #6b7280;">生成文件清单</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">spi_risks</div>
+        <div style="color: #6b7280;">敏感信息风险</div>
+      </div>
+      <div style="background: #fffbeb; border-radius: 8px; padding: 10px; text-align: center;">
+        <div style="font-weight: 700; color: #92400e;">vendor_issues</div>
+        <div style="color: #6b7280;">供应商合规问题</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 3 -->
+  <div style="border: 2px solid #22c55e; border-radius: 12px; margin-bottom: 24px; overflow: hidden;">
+    <div style="background: #22c55e; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+      ③ 最终摘要层 — 复用 TraceManifest.audit_summary() 思路
+    </div>
+    <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; border-left: 4px solid #22c55e;">
+        <div style="font-weight: 700; color: #166534; margin-bottom: 6px;">internal_summary（内部视图）</div>
+        <div style="color: #374151; line-height: 1.6;">
+          执行结论 · 总耗时 · LLM调用次数<br>
+          各步骤耗时分解 · 降级次数 · 错误详情<br>
+          生成文件清单 · 风险分布统计
+        </div>
+      </div>
+      <div style="background: #fdf2f8; border-radius: 8px; padding: 12px; border-left: 4px solid #db2777;">
+        <div style="font-weight: 700; color: #9d174d; margin-bottom: 6px;">client_brief（客户视图 · 未来 Phase）</div>
+        <div style="color: #374151; line-height: 1.6;">
+          执行结果 · 生成文件 · 需注意的风险<br>
+          建议下一步 · 不暴露内部 trace
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>二、前端四段式工作台</h3>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+    <!-- Panel 1 -->
+    <div style="border: 2px solid #8b5cf6; border-radius: 12px; overflow: hidden;">
+      <div style="background: #8b5cf6; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+        💬 对话 (Chat)
+      </div>
+      <div style="padding: 12px; font-size: 12px; color: #374151; background: #faf5ff; min-height: 80px;">
+        保留现有 <code>AssistantPanel</code><br>
+        Copilot 聊天能力不变<br>
+        增加"查看执行详情"快捷按钮→跳转到执行流
+      </div>
+    </div>
+
+    <!-- Panel 2 -->
+    <div style="border: 2px solid #2563eb; border-radius: 12px; overflow: hidden;">
+      <div style="background: #2563eb; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+        📋 执行流 (Execution Timeline) — 新增
+      </div>
+      <div style="padding: 12px; font-size: 12px; color: #374151; background: #eff6ff; min-height: 80px; line-height: 1.8;">
+        时间线展示：<br>
+        💭 Thought → 🔧 Tool start → ✅ Tool result<br>
+        📚 Retrieval hit → 📊 Intermediate snapshot<br>
+        ⚠️ Warning → 🏁 Final result<br>
+        <span style="color: #6b7280;">SSE 实时更新 | 运行结束后可回放</span>
+      </div>
+    </div>
+
+    <!-- Panel 3 -->
+    <div style="border: 2px solid #f59e0b; border-radius: 12px; overflow: hidden;">
+      <div style="background: #f59e0b; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+        📊 中间结果 (Intermediates) — 通用化现有组件
+      </div>
+      <div style="padding: 12px; font-size: 12px; color: #374151; background: #fffbeb; min-height: 80px; line-height: 1.8;">
+        扩展现有 <code>AssessmentIntermediatesPanel</code><br>
+        → 通用 <code>IntermediatesPanel</code><br>
+        展示：facts · issues · gap items · evidence<br>
+        可折叠/展开 · JSON 预览
+      </div>
+    </div>
+
+    <!-- Panel 4 -->
+    <div style="border: 2px solid #22c55e; border-radius: 12px; overflow: hidden;">
+      <div style="background: #22c55e; color: white; padding: 8px 16px; font-weight: 700; font-size: 13px;">
+        📝 结果简报 (Run Brief) — 新增
+      </div>
+      <div style="padding: 12px; font-size: 12px; color: #374151; background: #f0fdf4; min-height: 80px; line-height: 1.8;">
+        运行结束后自动生成：<br>
+        本次结论 · 文件列表<br>
+        风险提示 · 建议下一步<br>
+        可打印/导出
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>三、数据流总览</h3>
+  <div style="background: #f9fafb; border-radius: 12px; padding: 20px; font-size: 13px; font-family: monospace; line-height: 2.2; color: #1f2937;">
+    <div style="background: #dbeafe; padding: 4px 12px; border-radius: 6px; margin-bottom: 6px; display: inline-block;">
+      CPRA Service → <code>stream.record()</code>
+    </div><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├─→ <span style="color:#2563eb">TraceRecorder</span> → <code>storage/traces/run_xxx/</code> （JSON 文件 · 审计）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;└─→ <span style="color:#059669">SSEManager</span> → <code>GET /task/{id}/stream</code> → 前端 SSE<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─→ <span style="color:#dc2626">fallback</span>: <code>GET /task/{id}/events?since={seq}</code> (轮询)<br><br>
+    <div style="background: #dbeafe; padding: 4px 12px; border-radius: 6px; margin-bottom: 6px; display: inline-block;">
+      前端消费
+    </div><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├─→ <span style="color:#8b5cf6">对话</span> 面板（现有）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├─→ <span style="color:#2563eb">执行流</span> 面板（新增 · 消费 SSE 事件）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├─→ <span style="color:#f59e0b">中间结果</span> 面板（通用化现有）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;└─→ <span style="color:#22c55e">结果简报</span> 面板（新增 · 消费 final_brief 事件）
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>四、实施顺序</h3>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px;">
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center;">
+      <div style="font-weight: 700; color: #166534;">Step 1</div>
+      <div style="color: #374151; margin-top: 4px;">后端事件基础设施<br><span style="font-size: 11px; color: #6b7280;">RunEvent 模型 · TraceRecorder 扩展 · SSE endpoint · 轮询 fallback</span></div>
+    </div>
+    <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 12px; text-align: center;">
+      <div style="font-weight: 700; color: #854d0e;">Step 2</div>
+      <div style="color: #374151; margin-top: 4px;">CPRA service 接入<br><span style="font-size: 11px; color: #6b7280;">关键节点加 stream.record() · 中间结果结构化 · final_brief 生成</span></div>
+    </div>
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; text-align: center;">
+      <div style="font-weight: 700; color: #1e40af;">Step 3</div>
+      <div style="color: #374151; margin-top: 4px;">前端四段改造<br><span style="font-size: 11px; color: #6b7280;">ExecutionTimeline · IntermediatesPanel通用化 · RunBrief · SSE 消费</span></div>
+    </div>
+  </div>
+</div>
+
+</div>
