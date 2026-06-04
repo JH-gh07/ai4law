@@ -7,6 +7,8 @@ import type {
   OnboardingState,
   OutputArtifact,
   PanelState,
+  RunSession,
+  StageNode,
   SystemMessage,
   TaskSpace
 } from "./domain";
@@ -23,6 +25,7 @@ type AppState = {
   evidenceHits: EvidenceHit[];
   issues: ConsistencyIssue[];
   systemMessages: SystemMessage[];
+  runSessions: RunSession[];
   panelState: PanelState;
   onboarding: OnboardingState;
 };
@@ -48,6 +51,11 @@ type Action =
     }
   | { type: "append_system_message"; payload: SystemMessage }
   | { type: "clear_system_messages"; payload: { taskSpaceId: string } }
+  | { type: "begin_run_session"; payload: RunSession }
+  | { type: "stage_running"; payload: { sessionId: string; stageId: string; startedAt: string } }
+  | { type: "stage_done"; payload: { sessionId: string; stageId: string; summary?: string; completedAt: string } }
+  | { type: "finish_run_session"; payload: { sessionId: string; completedAt: string; totalDurationMs?: number } }
+  | { type: "clear_run_sessions"; payload: { taskSpaceId: string } }
   | { type: "set_panel_state"; payload: Partial<PanelState> }
   | { type: "set_onboarding"; payload: Partial<OnboardingState> }
   | { type: "reset_all" };
@@ -59,6 +67,7 @@ const initialState: AppState = {
   evidenceHits: [],
   issues: [],
   systemMessages: [],
+  runSessions: [],
   panelState: {
     leftOpen: true,
     rightOpen: true,
@@ -437,7 +446,8 @@ function reducer(state: AppState, action: Action): AppState {
         artifacts: state.artifacts.filter((artifact) => artifact.taskSpaceId !== action.payload.id),
         evidenceHits: state.evidenceHits.filter((hit) => hit.taskSpaceId !== action.payload.id),
         issues: state.issues.filter((issue) => issue.taskSpaceId !== action.payload.id),
-        systemMessages: state.systemMessages.filter((m) => m.taskSpaceId !== action.payload.id)
+        systemMessages: state.systemMessages.filter((m) => m.taskSpaceId !== action.payload.id),
+        runSessions: state.runSessions.filter((s) => s.taskSpaceId !== action.payload.id)
       };
     case "touch_task_space":
       return {
@@ -463,6 +473,70 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         systemMessages: state.systemMessages.filter((m) => m.taskSpaceId !== action.payload.taskSpaceId),
+      };
+    case "begin_run_session": {
+      const existingIdx = state.runSessions.findIndex((s) => s.id === action.payload.id);
+      if (existingIdx >= 0) {
+        // Merge stages into existing session (avoid duplicates by id)
+        const existing = state.runSessions[existingIdx];
+        const existingStageIds = new Set(existing.stages.map((st) => st.id));
+        const newStages = action.payload.stages.filter((st) => !existingStageIds.has(st.id));
+        const updated = {
+          ...existing,
+          stages: [...existing.stages, ...newStages],
+          collapsed: false, // expand when new stage arrives
+        };
+        const next = [...state.runSessions];
+        next[existingIdx] = updated;
+        return { ...state, runSessions: next };
+      }
+      return { ...state, runSessions: [action.payload, ...state.runSessions] };
+    }
+    case "stage_running":
+      return {
+        ...state,
+        runSessions: state.runSessions.map((s) =>
+          s.id === action.payload.sessionId
+            ? {
+                ...s,
+                stages: s.stages.map((st) =>
+                  st.id === action.payload.stageId
+                    ? { ...st, status: "running" as const, startedAt: action.payload.startedAt }
+                    : st
+                ),
+              }
+            : s
+        ),
+      };
+    case "stage_done":
+      return {
+        ...state,
+        runSessions: state.runSessions.map((s) =>
+          s.id === action.payload.sessionId
+            ? {
+                ...s,
+                stages: s.stages.map((st) =>
+                  st.id === action.payload.stageId
+                    ? { ...st, status: "done" as const, summary: action.payload.summary ?? st.summary, completedAt: action.payload.completedAt }
+                    : st
+                ),
+              }
+            : s
+        ),
+      };
+    case "finish_run_session":
+      return {
+        ...state,
+        runSessions: state.runSessions.map((s) =>
+          s.id === action.payload.sessionId
+            ? { ...s, isComplete: true, completedAt: action.payload.completedAt, totalDurationMs: action.payload.totalDurationMs, collapsed: true }
+            : s
+        ),
+      };
+    case "clear_run_sessions":
+      return {
+        ...state,
+        runSessions: state.runSessions.filter((s) => s.taskSpaceId !== action.payload.taskSpaceId),
       };
     case "hydrate_remote_state":
       return {

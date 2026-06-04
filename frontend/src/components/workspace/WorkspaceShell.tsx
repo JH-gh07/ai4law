@@ -1028,7 +1028,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab === "timeline") {
-      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} />;
+      return <ExecutionTimeline taskId={latestRun?.asyncTaskId ?? null} taskSpaceId={taskSpace.id} moduleLabel={latestRun?.module ?? taskSpace.module} />;
     }
 
     if (activeTab === "brief") {

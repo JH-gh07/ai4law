@@ -7,6 +7,7 @@ import { useAppStore } from "../../lib/app-store";
 type Props = {
   taskId: string | null;
   taskSpaceId: string;
+  moduleLabel?: string;
 };
 
 const ICON_MAP: Record<RunEvent["event_type"], string> = {
@@ -59,32 +60,222 @@ function TimelineRow({ event }: { event: RunEvent }) {
   );
 }
 
-export function ExecutionTimeline({ taskId, taskSpaceId }: Props) {
+/** Extract a short stage name from a tool_start/tool_result summary */
+function extractStageName(summary: string): string {
+  // "附件事实提取器" → "附件事实提取"
+  // "差距分析规则引擎" → "差距分析"
+  // "事实合并器" → "事实合并"
+  // "CPRA 事实提取" → "事实提取"
+  const trimmed = summary.replace(/^(CPRA |SCC |DPIA |BCR |TIA |EU |US )/, "");
+  if (trimmed.length <= 12) return trimmed;
+  return trimmed.slice(0, 12) + "…";
+}
+
+export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
   const { lang } = useLang();
   const events = useTaskEvents(taskId);
   const { dispatch } = useAppStore();
-  const lastDispatchTime = useRef(0);
+  const sessionIdRef = useRef<string | null>(null);
+  const pendingStagesRef = useRef<string[]>([]);  // stack of running stage IDs
+  const seenSeqs = useRef(new Set<number>());
 
-  // 将 thought/tool_start/warning/final 事件桥接为 Copilot 系统消息（有频率控制）
+  // ── 将 SSE 事件流桥接为 RunSession + StageNode 生命周期 ──
   useEffect(() => {
-    if (events.length === 0) return;
-    const latest = events[events.length - 1];
-    if (latest.event_type === "tool_result" || latest.event_type === "intermediate") return; // skip noisy types
+    if (!taskId || events.length === 0) return;
 
-    const now = Date.now();
-    if (now - lastDispatchTime.current < 1000) return; // max 1 per second
-    lastDispatchTime.current = now;
+    // Find new events we haven't processed yet
+    const newEvents = events.filter((e) => !seenSeqs.current.has(e.seq));
+    if (newEvents.length === 0) return;
 
-    const msg = {
-      id: `sys-${taskId}-${latest.seq}`,
-      taskSpaceId,
-      text: latest.summary,
-      createdAt: new Date().toISOString(),
-      eventType: latest.event_type,
-      eventSeq: latest.seq,
+    for (const event of newEvents) {
+      seenSeqs.current.add(event.seq);
+
+      switch (event.event_type) {
+
+        case "status": {
+          // Begin a new run session
+          if (sessionIdRef.current) break; // only one session per timeline mount
+          const sessionId = `run-${taskId}`;
+          sessionIdRef.current = sessionId;
+          dispatch({
+            type: "begin_run_session",
+            payload: {
+              id: sessionId,
+              taskSpaceId,
+              taskId,
+              module: moduleLabel ?? "",
+              startedAt: event.timestamp,
+              stages: [],
+              isComplete: false,
+              collapsed: false,
+            },
+          });
+          break;
+        }
+
+        case "tool_start": {
+          const sessionId = sessionIdRef.current;
+          if (!sessionId) break;
+          const stageId = `stage-${taskId}-${event.seq}`;
+          pendingStagesRef.current.push(stageId);
+
+          // Extract agent name from detail if available
+          const agentName = event.detail?.agent
+            ? String(event.detail.agent)
+            : event.detail?.tool
+              ? String(event.detail.tool)
+              : extractStageName(event.summary);
+
+          dispatch({
+            type: "begin_run_session",
+            payload: {
+              id: sessionId,
+              taskSpaceId,
+              taskId,
+              module: moduleLabel ?? "",
+              startedAt: event.timestamp,
+              stages: [{
+                id: stageId,
+                name: agentName,
+                status: "running",
+                startedAt: event.timestamp,
+                icon: "🔧",
+              }],
+              isComplete: false,
+              collapsed: false,
+            },
+          });
+          break;
+        }
+
+        case "tool_result": {
+          // Complete the latest pending stage
+          const stageId = pendingStagesRef.current.pop();
+          if (!stageId) break;
+          const sessionId = sessionIdRef.current;
+          if (!sessionId) break;
+          dispatch({
+            type: "stage_done",
+            payload: {
+              sessionId,
+              stageId,
+              summary: event.summary,
+              completedAt: event.timestamp,
+            },
+          });
+          break;
+        }
+
+        case "thought": {
+          // Attach thought as summary to the latest running stage
+          const sessionId = sessionIdRef.current;
+          if (!sessionId) break;
+          const runningStageId = pendingStagesRef.current[pendingStagesRef.current.length - 1];
+          if (!runningStageId) break;
+          dispatch({
+            type: "stage_done",
+            payload: {
+              sessionId,
+              stageId: runningStageId,
+              summary: event.summary,
+              completedAt: event.timestamp,
+            },
+          });
+          break;
+        }
+
+        case "final": {
+          const sessionId = sessionIdRef.current;
+          if (!sessionId) break;
+          dispatch({
+            type: "finish_run_session",
+            payload: {
+              sessionId,
+              completedAt: event.timestamp,
+              totalDurationMs: event.detail?.total_duration_ms
+                ? Number(event.detail.total_duration_ms)
+                : undefined,
+            },
+          });
+          break;
+        }
+
+        case "warning": {
+          // Warning creates a stage that immediately completes with a warning icon
+          const sessionId = sessionIdRef.current;
+          if (!sessionId) break;
+          const stageId = `stage-${taskId}-${event.seq}`;
+          dispatch({
+            type: "begin_run_session",
+            payload: {
+              id: sessionId,
+              taskSpaceId,
+              taskId,
+              module: moduleLabel ?? "",
+              startedAt: event.timestamp,
+              stages: [{
+                id: stageId,
+                name: event.summary,
+                status: "done",
+                startedAt: event.timestamp,
+                completedAt: event.timestamp,
+                summary: event.summary,
+                icon: "⚠️",
+              }],
+              isComplete: false,
+              collapsed: false,
+            },
+          });
+          break;
+        }
+
+        case "final_brief":
+          // Already handled by `final` → `finish_run_session`
+          break;
+
+        case "intermediate":
+          // Intermediate snapshots just create a done stage
+          {
+            const sessionId = sessionIdRef.current;
+            if (!sessionId) break;
+            const stageId = `stage-${taskId}-${event.seq}`;
+            dispatch({
+              type: "begin_run_session",
+              payload: {
+                id: sessionId,
+                taskSpaceId,
+                taskId,
+                module: moduleLabel ?? "",
+                startedAt: event.timestamp,
+                stages: [{
+                  id: stageId,
+                  name: extractStageName(event.summary),
+                  status: "done",
+                  startedAt: event.timestamp,
+                  completedAt: event.timestamp,
+                  summary: event.summary,
+                  icon: "📊",
+                }],
+                isComplete: false,
+                collapsed: false,
+              },
+            });
+          }
+          break;
+      }
+    }
+  }, [events, taskId, taskSpaceId, dispatch, moduleLabel]);
+
+  // Cleanup on unmount — clear session
+  useEffect(() => {
+    return () => {
+      if (sessionIdRef.current && taskId) {
+        sessionIdRef.current = null;
+        pendingStagesRef.current = [];
+        seenSeqs.current.clear();
+      }
     };
-    dispatch({ type: "append_system_message", payload: msg });
-  }, [events, taskId, taskSpaceId, dispatch]);
+  }, [taskId]);
 
   const isConnected = events.length > 0;
 

@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAppStore } from "../../lib/app-store";
 import { requestCopilotChat } from "../../lib/copilot-api";
-import type { TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
+import type { RunSession, StageNode, TaskSpace, WorkflowStepKey, WorkflowStepStatus } from "../../lib/domain";
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { ChevronToggleIcon } from "../common/AppIcons";
@@ -29,6 +29,99 @@ const toFileName = (value: string): string => {
   return chunks[chunks.length - 1] || value;
 };
 
+/** ── ThinkingBlock: Claude-style expandable thinking process ── */
+const THINKING_ICONS: Record<string, string> = {
+  pending: "○",
+  running: "⊙",
+  done: "✓",
+};
+
+function ThinkingBlock({ session, onToggle, lang }: { session: RunSession; onToggle: () => void; lang: "zh" | "en" }) {
+  const [collapsed, setCollapsed] = useState(session.isComplete);
+  const runningCount = session.stages.filter((s) => s.status === "running").length;
+  const doneCount = session.stages.filter((s) => s.status === "done").length;
+  const totalCount = session.stages.length;
+
+  useEffect(() => {
+    if (session.isComplete) {
+      // Auto-collapse after 2s when complete
+      const t = setTimeout(() => setCollapsed(true), 2000);
+      return () => clearTimeout(t);
+    }
+    setCollapsed(false);
+  }, [session.isComplete]);
+
+  const headerText = session.isComplete
+    ? lang === "zh"
+      ? `思考过程已完成（${doneCount} 个阶段${session.totalDurationMs ? `，${(session.totalDurationMs / 1000).toFixed(1)}s` : ""}）`
+      : `Thinking complete (${doneCount} stages${session.totalDurationMs ? `, ${(session.totalDurationMs / 1000).toFixed(1)}s` : ""})`
+    : lang === "zh"
+      ? `思考中...（${runningCount} 运行，${doneCount}/${totalCount} 完成）`
+      : `Thinking... (${runningCount} running, ${doneCount}/${totalCount} done)`;
+
+  return (
+    <article
+      className="assistant-msg assistant-copilot-msg assistant-chat-bubble system_run thinking-block"
+      style={{ borderLeft: "3px solid #7c3aed", background: "rgba(124, 58, 237, 0.04)", cursor: "default" }}
+    >
+      <div
+        className="thinking-header"
+        onClick={() => setCollapsed((c) => !c)}
+        style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: "4px 0", fontSize: "0.85em", userSelect: "none" }}
+      >
+        <span style={{ fontSize: "0.7em", transition: "transform 0.2s", transform: collapsed ? "rotate(-90deg)" : "none" }}>▼</span>
+        <span style={{ fontWeight: 600, color: "#7c3aed" }}>
+          {session.isComplete ? "🧠" : runningCount > 0 ? "🧠" : "🧠"}
+        </span>
+        <span style={{ color: "#6b7280" }}>{headerText}</span>
+        <span
+          style={{ fontSize: "0.75em", color: "#3b82f6", marginLeft: "auto", cursor: "pointer", textDecoration: "underline" }}
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        >
+          {lang === "zh" ? "查看详情" : "View details"}
+        </span>
+      </div>
+      {!collapsed && (
+        <div className="thinking-stages" style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "3px" }}>
+          {session.stages.map((stage) => (
+            <div
+              key={stage.id}
+              className={`thinking-stage thinking-stage-${stage.status}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "0.82em",
+                padding: "2px 0",
+                color: stage.status === "done" ? "#374151" : stage.status === "running" ? "#1e40af" : "#9ca3af",
+                animation: stage.status === "running" ? "pulse 1.5s infinite" : "none",
+              }}
+            >
+              <span style={{
+                width: "18px",
+                textAlign: "center",
+                fontWeight: 700,
+                color: stage.status === "done" ? "#059669" : stage.status === "running" ? "#2563eb" : "#9ca3af",
+              }}>
+                {stage.status === "running" ? "⊙" : stage.status === "done" ? "✓" : "○"}
+              </span>
+              <span style={{ flex: 1 }}>{stage.name}</span>
+              {stage.summary && (
+                <span style={{ color: "#6b7280", fontSize: "0.85em", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {stage.summary}
+                </span>
+              )}
+              {stage.status === "running" && (
+                <span style={{ fontSize: "0.7em", color: "#2563eb", animation: "spin 1s linear infinite" }}>⟳</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
 export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: AssistantPanelProps) {
   const { t, lang } = useLang();
   const { state } = useAppStore();
@@ -44,37 +137,13 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
     }
   ]);
 
-  // 从 store 获取当前 workspace 的系统消息，过滤后注入聊天流
-  const systemMessages = useMemo(
-    () => state.systemMessages.filter((m) => m.taskSpaceId === taskSpace.id),
-    [state.systemMessages, taskSpace.id]
-  );
-
-  const lastSystemMsgId = useRef<string | null>(null);
-
-  useEffect(() => {
-    const newOnes = systemMessages.filter(
-      (m) => lastSystemMsgId.current === null || m.id > (lastSystemMsgId.current ?? "")
-    );
-    if (newOnes.length === 0) return;
-    lastSystemMsgId.current = newOnes[newOnes.length - 1].id;
-
-    // 去重：跳过已经存在于 messages 中的
-    setMessages((prev) => {
-      const existingIds = new Set(prev.map((m) => m.id));
-      const toAdd = newOnes
-        .filter((m) => !existingIds.has(m.id))
-        .map((m) => ({
-          id: m.id,
-          role: "system_run" as const,
-          createdAt: m.createdAt,
-          text: m.text,
-          eventType: m.eventType,
-          eventSeq: m.eventSeq,
-        }));
-      return [...prev, ...toAdd];
-    });
-  }, [systemMessages]);
+  // 从 store 获取当前 workspace 的活跃 RunSession（实时思考过程）
+  const activeSession = useMemo<RunSession | null>(() => {
+    const sessions = state.runSessions.filter((s) => s.taskSpaceId === taskSpace.id);
+    if (sessions.length === 0) return null;
+    // 返回最近的 session（可能有多个历史 session，取最新）
+    return sessions[0] ?? null;
+  }, [state.runSessions, taskSpace.id]);
 
   const issues = useMemo(
     () => state.issues.filter((item) => item.taskSpaceId === taskSpace.id),
@@ -216,23 +285,21 @@ export function AssistantPanel({ taskSpace, onToggleCollapse, onSwitchTab }: Ass
             <article
               key={item.id}
               className={`assistant-msg assistant-copilot-msg assistant-copilot-msg-redesign assistant-chat-bubble ${item.role}`}
-              {...(item.eventType === "thought" || item.eventType === "tool_start"
-                ? { style: { cursor: "pointer" }, onClick: () => onSwitchTab?.("timeline") }
-                : {})}
             >
               <div className="assistant-msg-content markdown-content">
-                {item.role === "system_run" ? (
-                  <span style={{ fontSize: "0.85em", opacity: 0.85, borderLeft: "3px solid #7c3aed", paddingLeft: "8px", display: "block" }}>
-                    {item.text}
-                  </span>
-                ) : (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {item.text}
-                  </ReactMarkdown>
-                )}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {item.text}
+                </ReactMarkdown>
               </div>
             </article>
           ))}
+          {activeSession ? (
+            <ThinkingBlock
+              session={activeSession}
+              onToggle={() => onSwitchTab?.("timeline")}
+              lang={lang}
+            />
+          ) : null}
           {isSending ? <p className="assistant-thinking-note">{t("copilotThinking")}</p> : null}
         </section>
 

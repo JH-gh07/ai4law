@@ -158,3 +158,27 @@ export type SystemMessage = {
   eventType?: string;
   eventSeq?: number;
 };
+
+export type StageNodeStatus = "pending" | "running" | "done";
+export type StageNode = {
+  id: string;
+  name: string;
+  status: StageNodeStatus;
+  startedAt?: string;
+  completedAt?: string;
+  summary?: string;
+  icon?: string;
+};
+
+export type RunSession = {
+  id: string;
+  taskSpaceId: string;
+  taskId: string;
+  module: string;
+  startedAt: string;
+  stages: StageNode[];
+  isComplete: boolean;
+  completedAt?: string;
+  totalDurationMs?: number;
+  collapsed?: boolean;
+};
