@@ -1,4 +1,5 @@
 import type { AuthUser, LoginPayload, RegisterPayload } from "./types";
+import { fetchWithTimeout, HttpTimeoutError } from "../http";
 
 type AuthResponse = {
   access_token: string;
@@ -104,13 +105,22 @@ function normalizeDetailMessage(detail: unknown): string | null {
 }
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(url, {
+      ...init,
+      timeoutMs: 12000,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+  } catch (error) {
+    if (error instanceof HttpTimeoutError) {
+      throw new Error(uiLang() === "zh" ? "请求超时，请检查前后端连接状态" : "Request timed out. Please verify frontend/backend connectivity.");
+    }
+    throw error;
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = normalizeDetailMessage(data?.detail);

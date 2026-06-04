@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import shutil
 import subprocess
@@ -392,6 +393,23 @@ VISIBLE_SOURCE_FILENAME_MAP = {
     "The California Privacy Rights Act of 2020 (1).pdf": ["US-CA-001"],
 }
 
+SOURCE_ID_ORIGIN_PATHS = {
+    "CN-LAW-001": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/网络安全法.pdf",
+    "CN-LAW-002": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/中华人民共和国数据安全法.pdf",
+    "CN-LAW-003": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/中华人民共和国个人信息保护法.pdf",
+    "CN-REG-004": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境安全评估办法.pdf",
+    "CN-REG-005": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息出境标准合同办法_中央网络安全和信息化委员会办公室.pdf",
+    "CN-REG-006": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/促进和规范数据跨境流动规定_中央网络安全和信息化委员会办公室.pdf",
+    "CN-REG-007": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/促进和规范数据跨境流动规定_中央网络安全和信息化委员会办公室.pdf",
+    "CN-REG-008": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/网络数据安全管理条例.pdf",
+    "CN-GUIDE-009": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境安全评估申报指南（第三版） (1).docx",
+    "CN-GUIDE-010": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息出境标准合同备案指南（第二版） (1).docx",
+    "EU-LAW-001": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32016R0679_EN_TXT.pdf",
+    "EU-GUIDE-002": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+    "US-FED-001": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/2024-04573.pdf",
+    "US-CA-001": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/The California Privacy Rights Act of 2020 (1).pdf",
+}
+
 
 @dataclass
 class MigrationSummary:
@@ -740,6 +758,28 @@ def extract_docx_text(path: Path) -> str:
     return f"# {title}\n\n{text}\n"
 
 
+def extract_reference_text(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in {".png", ".jpg", ".jpeg", ".webp"}:
+        return f"# {path.stem}\n\n该资产为图片样例，原始文件路径：`{path}`。\n"
+    if suffix == ".docx" or suffix == ".doc":
+        return extract_docx_text(path)
+    if suffix == ".pdf":
+        result = subprocess.run(
+            ["pdftotext", "-layout", str(path), "-"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        text = result.stdout.replace("\r\n", "\n").replace("\r", "\n").strip()
+        return f"# {path.stem}\n\n{text}\n"
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore").strip()
+    except Exception:
+        text = ""
+    return f"# {path.stem}\n\n{text}\n"
+
+
 def write_combined_markdown(sources: list[Path], output_path: Path) -> int:
     chunks = [extract_docx_text(source) for source in sources]
     output_path.write_text("\n\n---\n\n".join(chunks), encoding="utf-8")
@@ -1006,6 +1046,7 @@ def migrate_index_files(summary: MigrationSummary) -> None:
         row["report_usage"] = str(source_detail.get("report_usage") or report_usage_from_row(doc_type, title))
         row["summary"] = str(source_detail.get("summary") or summary_from_source_row(title, jurisdiction, module_name, row.get("notes", "")))
         row["knowledge_url"] = f"/knowledge/sources/{row.get('source_id', '').strip()}"
+        row["origin_path"] = SOURCE_ID_ORIGIN_PATHS.get(row.get("source_id", "").strip(), "")
     source_fields = list(source_rows[0].keys()) if source_rows else []
     with (NEW_INDEX_DIR / "sources.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=source_fields)
@@ -1047,6 +1088,423 @@ def migrate_registry_and_evaluation() -> None:
     for path in sorted(evaluation_dir.iterdir()):
         if path.is_file():
             shutil.copy2(path, NEW_EVALUATION_DIR / path.name)
+
+
+def _safe_snapshot_name(source_id: str, title: str, suffix: str = ".md") -> str:
+    digest = hashlib.md5(f"{source_id}:{title}".encode("utf-8")).hexdigest()[:8]
+    slug = "".join(ch.lower() if ch.isalnum() else "_" for ch in title).strip("_")
+    slug = "_".join(part for part in slug.split("_") if part)[:48] or source_id.lower()
+    return f"{source_id.lower()}_{slug}_{digest}{suffix}"
+
+
+def backfill_reference_snapshots() -> None:
+    path = NEW_INDEX_DIR / "sources.csv"
+    if not path.exists():
+        return
+
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    changed = False
+    for row in rows:
+        source_id = (row.get("source_id") or "").strip()
+        module_name = (row.get("module") or "").strip()
+        snapshot_path = (row.get("snapshot_path") or "").strip()
+        if not source_id or not module_name or snapshot_path:
+            continue
+
+        origin_rel = SOURCE_ID_ORIGIN_PATHS.get(source_id)
+        if not origin_rel:
+            continue
+        origin_path = ROOT / origin_rel
+        if not origin_path.exists():
+            continue
+
+        text = extract_reference_text(origin_path)
+        if not text.strip():
+            continue
+
+        snapshot_name = _safe_snapshot_name(source_id, row.get("title", ""), ".md")
+        target = KNOWLEDGE_ROOT / module_name / "snapshots" / snapshot_name
+        target.write_text(text, encoding="utf-8")
+        row["snapshot_path"] = _rel(target)
+        changed = True
+
+    if not changed:
+        return
+
+    fieldnames = list(rows[0].keys()) if rows else []
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+SUPPLEMENTAL_CN_REFERENCE_ROWS = [
+    {
+        "source_id": "CN-TPL-016",
+        "module": "cn-review",
+        "jurisdiction": "cn",
+        "path": "review",
+        "doc_type": "template",
+        "title": "个人信息出境标准合同模板",
+        "source_org": "项目资料库",
+        "authority_level": "recommended",
+        "publish_date": "",
+        "effective_date": "",
+        "status": "reference",
+        "url": "",
+        "origin_path": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/个人信息出境标准合同【模板】.docx",
+        "usage_priority": "P2",
+        "notes": "标准合同模板样例",
+        "category": "官方模板",
+        "usage": "结构参照",
+        "binding_force": "reference",
+        "authority": "medium",
+        "publisher": "项目资料库",
+        "suitable_for": "文档审查、标准合同",
+        "report_usage": "用于结构参照，不直接作为法律依据",
+        "summary": "用于标准合同结构比对和条款位置识别的模板样例。",
+    },
+    {
+        "source_id": "CN-TPL-017",
+        "module": "cn-review",
+        "jurisdiction": "cn",
+        "path": "review",
+        "doc_type": "template",
+        "title": "数据处理协议样例",
+        "source_org": "项目资料库",
+        "authority_level": "recommended",
+        "publish_date": "",
+        "effective_date": "",
+        "status": "reference",
+        "url": "",
+        "origin_path": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/数据处理协议样例.pdf",
+        "usage_priority": "P2",
+        "notes": "DPA样例",
+        "category": "官方模板",
+        "usage": "结构参照",
+        "binding_force": "reference",
+        "authority": "medium",
+        "publisher": "项目资料库",
+        "suitable_for": "文档审查、数据处理协议",
+        "report_usage": "用于结构参照，不直接作为法律依据",
+        "summary": "用于数据处理协议版式和条款结构识别的样例文书。",
+    },
+    {
+        "source_id": "CN-TPL-018",
+        "module": "cn-review",
+        "jurisdiction": "cn",
+        "path": "review",
+        "doc_type": "template",
+        "title": "数据安全及保密协议模板",
+        "source_org": "项目资料库",
+        "authority_level": "recommended",
+        "publish_date": "",
+        "effective_date": "",
+        "status": "reference",
+        "url": "",
+        "origin_path": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/数据安全及保密协议（模板） (1).docx",
+        "usage_priority": "P2",
+        "notes": "保密协议模板样例",
+        "category": "官方模板",
+        "usage": "结构参照",
+        "binding_force": "reference",
+        "authority": "medium",
+        "publisher": "项目资料库",
+        "suitable_for": "文档审查、保密协议",
+        "report_usage": "用于结构参照，不直接作为法律依据",
+        "summary": "用于保密义务和数据安全条款结构识别的样例模板。",
+    },
+    {
+        "source_id": "CN-TPL-019",
+        "module": "cn-assessment",
+        "jurisdiction": "cn",
+        "path": "assessment",
+        "doc_type": "template",
+        "title": "数据出境风险自评估报告模板",
+        "source_org": "项目资料库",
+        "authority_level": "recommended",
+        "publish_date": "",
+        "effective_date": "",
+        "status": "reference",
+        "url": "",
+        "origin_path": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境风险自评估报告（模板）.docx",
+        "usage_priority": "P2",
+        "notes": "评估报告模板",
+        "category": "官方模板",
+        "usage": "结构参照",
+        "binding_force": "reference",
+        "authority": "medium",
+        "publisher": "项目资料库",
+        "suitable_for": "评估申报",
+        "report_usage": "用于结构参照，不直接作为法律依据",
+        "summary": "用于安全评估报告结构编排和章节组织的模板。",
+    },
+    {
+        "source_id": "CN-TPL-020",
+        "module": "cn-assessment",
+        "jurisdiction": "cn",
+        "path": "assessment",
+        "doc_type": "template",
+        "title": "个人信息保护影响评估报告模板",
+        "source_org": "项目资料库",
+        "authority_level": "recommended",
+        "publish_date": "",
+        "effective_date": "",
+        "status": "reference",
+        "url": "",
+        "origin_path": "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息保护影响评估报告（模板）.docx",
+        "usage_priority": "P2",
+        "notes": "PIA模板",
+        "category": "官方模板",
+        "usage": "结构参照",
+        "binding_force": "reference",
+        "authority": "medium",
+        "publisher": "项目资料库",
+        "suitable_for": "评估申报、PIPIA",
+        "report_usage": "用于结构参照，不直接作为法律依据",
+        "summary": "用于个人信息保护影响评估报告结构生成的模板。",
+    },
+]
+
+
+def append_supplemental_reference_rows() -> None:
+    path = NEW_INDEX_DIR / "sources.csv"
+    if not path.exists():
+        return
+
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+        fieldnames = list(rows[0].keys()) if rows else []
+
+    existing_ids = {row.get("source_id", "").strip() for row in rows}
+    changed = False
+
+    for item in SUPPLEMENTAL_CN_REFERENCE_ROWS:
+        source_id = item["source_id"]
+        if source_id in existing_ids:
+            continue
+
+        origin_path = ROOT / item["origin_path"]
+        if not origin_path.exists():
+            continue
+
+        snapshot_name = _safe_snapshot_name(source_id, item["title"], ".md")
+        snapshot_target = KNOWLEDGE_ROOT / item["module"] / "snapshots" / snapshot_name
+        snapshot_target.write_text(extract_reference_text(origin_path), encoding="utf-8")
+
+        row = {field: "" for field in fieldnames}
+        row.update(item)
+        row["layer"] = "template_assets"
+        row["snapshot_path"] = _rel(snapshot_target)
+        row["knowledge_url"] = f"/knowledge/sources/{source_id}"
+        rows.append(row)
+        existing_ids.add(source_id)
+        changed = True
+
+    if not changed:
+        return
+
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _title_from_filename(name: str) -> str:
+    stem = Path(name).stem
+    stem = stem.replace("_", " ").replace("-", " ")
+    return " ".join(stem.split()).strip() or stem
+
+
+def _doc_type_from_name(name: str) -> str:
+    lowered = name.lower()
+    if "功能说明" in name or "路径描述" in name or "流程描述" in name:
+        return "workflow"
+    if "测试案例" in name:
+        return "testcase"
+    if "清单" in name:
+        return "catalog"
+    if any(token in lowered for token in ["template", "模板", "sample", "样例"]):
+        return "template"
+    if any(token in lowered for token in ["guidelines", "guide", "recommendations", "faq", "qa"]):
+        return "guide"
+    if lowered.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        return "template"
+    if lowered.endswith((".pdf", ".doc", ".docx")):
+        return "regulation"
+    return "reference"
+
+
+def _category_for_supplemental(doc_type: str, name: str) -> str:
+    lowered = name.lower()
+    if doc_type == "workflow":
+        return "模块说明"
+    if doc_type == "testcase":
+        return "测试案例"
+    if doc_type == "catalog":
+        return "资料清单"
+    if doc_type == "template":
+        return "官方模板"
+    if any(token in lowered for token in ["guidelines", "guide", "recommendations"]):
+        return "官方指南"
+    return "补充依据"
+
+
+def _usage_for_supplemental(doc_type: str) -> str:
+    if doc_type == "workflow":
+        return "业务说明"
+    if doc_type == "testcase":
+        return "案例参考"
+    if doc_type == "catalog":
+        return "索引导航"
+    if doc_type == "template":
+        return "结构参照"
+    if doc_type == "guide":
+        return "知识增强"
+    return "参考引用"
+
+
+def _binding_force_for_supplemental(doc_type: str, title: str) -> str:
+    if doc_type in {"workflow", "testcase", "catalog"}:
+        return "reference"
+    if doc_type == "template":
+        return "reference"
+    if any(token in title for token in ["法", "条例", "规定", "决定"]):
+        return "mandatory"
+    return "recommended"
+
+
+def _authority_for_supplemental(doc_type: str) -> str:
+    if doc_type in {"template", "workflow", "testcase", "catalog"}:
+        return "medium"
+    return "medium"
+
+
+def _suitable_for_for_module(module_name: str) -> str:
+    mapping = {
+        "cn-diagnosis": "路径判断",
+        "cn-assessment": "评估申报",
+        "cn-review": "文档审查",
+        "cn-pipia": "认证标准合同",
+        "eu-scc": "SCC审查",
+        "eu-bcr": "BCR审核",
+        "eu-dpia": "DPIA草案",
+        "eu-tia": "TIA草案",
+        "us-14117": "EO14117合规",
+        "us-cpra": "CPRA合规",
+    }
+    return mapping.get(module_name, "知识参考")
+
+
+def _next_source_id(existing_ids: set[str], jurisdiction: str, doc_type: str) -> str:
+    prefix_map = {
+        ("cn", "template"): "CN-TPL",
+        ("cn", "guide"): "CN-SUP",
+        ("cn", "regulation"): "CN-SUP",
+        ("eu", "template"): "EU-TPL",
+        ("eu", "guide"): "EU-SUP",
+        ("eu", "regulation"): "EU-SUP",
+        ("us", "template"): "US-TPL",
+        ("us", "guide"): "US-SUP",
+        ("us", "regulation"): "US-SUP",
+    }
+    prefix = prefix_map.get((jurisdiction, doc_type), f"{jurisdiction.upper()}-SUP")
+    max_num = 0
+    for item in existing_ids:
+        if not item.startswith(prefix + "-"):
+            continue
+        try:
+            max_num = max(max_num, int(item.split("-")[-1]))
+        except ValueError:
+            continue
+    return f"{prefix}-{max_num + 1:03d}"
+
+
+def append_all_remaining_manifest_sources() -> None:
+    sources_path = NEW_INDEX_DIR / "sources.csv"
+    manifest_path = NEW_INDEX_DIR / "spec_asset_manifest.csv"
+    if not sources_path.exists() or not manifest_path.exists():
+        return
+
+    with sources_path.open("r", encoding="utf-8", newline="") as handle:
+        source_rows = list(csv.DictReader(handle))
+        fieldnames = list(source_rows[0].keys()) if source_rows else []
+
+    existing_origin_paths = {row.get("origin_path", "").strip() for row in source_rows}
+    existing_ids = {row.get("source_id", "").strip() for row in source_rows}
+
+    with manifest_path.open("r", encoding="utf-8", newline="") as handle:
+        manifest_rows = list(csv.DictReader(handle))
+
+    changed = False
+    for asset in manifest_rows:
+        source_path = (asset.get("source_path") or "").strip()
+        if not source_path or source_path in existing_origin_paths:
+            continue
+        if asset.get("asset_type") not in {"reference_source", "template_sample", "sample_image", "spec", "flow_spec", "test_case", "reference_catalog"}:
+            continue
+        if asset.get("sync_status") == "frontend_visible":
+            continue
+
+        origin = ROOT / source_path
+        if not origin.exists():
+            continue
+
+        module_name = (asset.get("target_module") or "").strip()
+        jurisdiction = (asset.get("jurisdiction_family") or "").strip()
+        doc_type = _doc_type_from_name(origin.name)
+        source_id = _next_source_id(existing_ids, jurisdiction, doc_type)
+        existing_ids.add(source_id)
+
+        title = _title_from_filename(origin.name)
+        snapshot_name = _safe_snapshot_name(source_id, title, ".md")
+        snapshot_target = KNOWLEDGE_ROOT / module_name / "snapshots" / snapshot_name
+        snapshot_target.write_text(extract_reference_text(origin), encoding="utf-8")
+
+        row = {field: "" for field in fieldnames}
+        row.update(
+            {
+                "source_id": source_id,
+                "layer": "supplemental_assets",
+                "jurisdiction": jurisdiction,
+                "path": "all" if module_name not in {"cn-review", "cn-assessment"} else ("review" if module_name == "cn-review" else "assessment"),
+                "doc_type": doc_type,
+                "title": title,
+                "source_org": "项目资料库",
+                "authority_level": "recommended",
+                "publish_date": "",
+                "effective_date": "",
+                "status": "reference",
+                "url": "",
+                "snapshot_path": _rel(snapshot_target),
+                "usage_priority": "P3",
+                "notes": f"由原始资产自动扩展入知识库：{origin.name}",
+                "module": module_name,
+                "category": _category_for_supplemental(doc_type, origin.name),
+                "usage": _usage_for_supplemental(doc_type),
+                "binding_force": _binding_force_for_supplemental(doc_type, title),
+                "authority": _authority_for_supplemental(doc_type),
+                "publisher": "项目资料库",
+                "suitable_for": _suitable_for_for_module(module_name),
+                "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
+                "summary": f"由原始参考文件 `{origin.name}` 自动扩展生成的知识条目。",
+                "knowledge_url": f"/knowledge/sources/{source_id}",
+                "origin_path": source_path,
+            }
+        )
+        source_rows.append(row)
+        existing_origin_paths.add(source_path)
+        changed = True
+
+    if not changed:
+        return
+
+    with sources_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(source_rows)
 
 
 def regenerate_source_registry() -> None:
@@ -1125,6 +1583,13 @@ def _find_module_for_asset(path: Path) -> str:
             return "us-14117"
         if "任务2" in raw:
             return "us-cpra"
+    if "Reference库清单" in raw:
+        if "中国数据出境路径" in raw:
+            return "cn-diagnosis"
+        if "欧盟数据出境路径" in raw:
+            return "eu-scc"
+        if "美国（加州）数据出境路径" in raw:
+            return "us-14117"
     return ""
 
 
@@ -1170,8 +1635,14 @@ def build_spec_asset_manifest_rows() -> list[dict[str, str]]:
         for row in load_sources_index_rows()
         if row.get("source_id", "").strip()
     }
+    visible_origin_paths = {
+        row.get("origin_path", "").strip()
+        for row in load_sources_index_rows()
+        if row.get("origin_path", "").strip()
+    }
     rows: list[dict[str, str]] = []
     for path in sorted(p for p in SPEC_ROOT.rglob("*") if p.is_file()):
+        source_rel = _rel(path)
         module_name = _find_module_for_asset(path)
         asset_type = _asset_type_for_manifest(path, module_name)
         target_layer, target_path = _target_for_manifest(path, module_name)
@@ -1184,13 +1655,13 @@ def build_spec_asset_manifest_rows() -> list[dict[str, str]]:
             sync_status = "synced" if target_exists else "pending"
 
         mapped_source_ids = VISIBLE_SOURCE_FILENAME_MAP.get(path.name, [])
-        if any(source_id in visible_source_ids for source_id in mapped_source_ids):
+        if source_rel in visible_origin_paths or any(source_id in visible_source_ids for source_id in mapped_source_ids):
             sync_status = "frontend_visible"
             notes = "该资产对应的知识条目已进入前端知识库中心可见层"
 
         rows.append(
             {
-                "source_path": _rel(path),
+                "source_path": source_rel,
                 "asset_type": asset_type,
                 "jurisdiction_family": _jurisdiction_of_path(path),
                 "target_module": module_name or "unmapped",
@@ -1235,6 +1706,10 @@ def main() -> None:
     migrate_module_docs(summary)
     migrate_raw_assets(summary)
     migrate_index_files(summary)
+    backfill_reference_snapshots()
+    append_supplemental_reference_rows()
+    write_spec_asset_manifest()
+    append_all_remaining_manifest_sources()
     migrate_registry_and_evaluation()
     regenerate_source_registry()
     write_spec_asset_manifest()

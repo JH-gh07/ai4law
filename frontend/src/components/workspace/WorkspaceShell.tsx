@@ -1206,7 +1206,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
 
     if (activeTab === "timeline") {
-      return <RunTranscript taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} moduleLabel={latestRun?.module ?? taskSpace.module} />;
+      return (
+        <section className="workspace-tab-page workspace-tab-timeline">
+          <RunTranscript taskId={activeTaskId ?? latestRun?.asyncTaskId ?? null} moduleLabel={latestRun?.module ?? taskSpace.module} />
+        </section>
+      );
     }
 
     const activeResourceTab = resourceTabs.find((item) => item.id === activeTab);

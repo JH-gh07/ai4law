@@ -136,6 +136,8 @@ export function SettingsPage() {
     return `连接成功 · ${state.latency_ms ?? "-"}ms`;
   };
 
+  const activeProvider = form.llm.providers.find((item) => item.id === form.llm.active_provider_id) || null;
+
   const onSave = async () => {
     setSaving(true);
     setMsg("");
@@ -204,13 +206,32 @@ export function SettingsPage() {
 
           <section className="settings-card">
             <h3>当前生效 Provider</h3>
-            {form.llm.providers.length > 0 ? (
+            {activeProvider ? (
               <>
-                <p className="settings-provider-active-line">
-                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.name || "未选择"} ·{" "}
-                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.model || "-"} ·{" "}
-                  {form.llm.providers.find((item) => item.id === form.llm.active_provider_id)?.api_url || "-"}
-                </p>
+                <div className="settings-provider-summary">
+                  <div className="settings-provider-summary-title">
+                    <strong>{activeProvider.name || "未命名 Provider"}</strong>
+                    <span>{activeProvider.provider_type}</span>
+                  </div>
+                  <div className="settings-provider-summary-grid">
+                    <div>
+                      <span>ID</span>
+                      <strong>{activeProvider.id || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>模型</span>
+                      <strong>{activeProvider.model || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>API URL</span>
+                      <strong>{activeProvider.api_url || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>Timeout</span>
+                      <strong>{activeProvider.timeout || 60}s</strong>
+                    </div>
+                  </div>
+                </div>
                 <p className="settings-hint">
                   {form.llm.enabled ? "当前存在可用 Provider。" : "当前没有已启用且配置了 API Key 的 Provider。"}
                 </p>
@@ -230,51 +251,72 @@ export function SettingsPage() {
             <div className="settings-provider-list">
               {form.llm.providers.map((provider) => (
                 <article key={provider.id} className="settings-provider-item">
-                  <label>
-                    <span>ID</span>
-                    <input value={provider.id} onChange={(event) => updateProvider(provider.id, { id: event.target.value })} />
-                  </label>
-                  <label>
-                    <span>名称</span>
-                    <input value={provider.name} onChange={(event) => updateProvider(provider.id, { name: event.target.value })} />
-                  </label>
-                  <label>
-                    <span>Provider 类型</span>
-                    <select
-                      value={provider.provider_type}
-                      onChange={(event) => updateProvider(provider.id, { provider_type: event.target.value })}
-                    >
-                      <option value="openai_compatible">OpenAI Compatible</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span>API URL</span>
-                    <input value={provider.api_url} onChange={(event) => updateProvider(provider.id, { api_url: event.target.value })} />
-                  </label>
-                  <label>
-                    <span>API Key</span>
-                    <input type="password" value={provider.api_key} onChange={(event) => updateProvider(provider.id, { api_key: event.target.value })} />
-                  </label>
-                  <label>
-                    <span>Model</span>
-                    <input value={provider.model} onChange={(event) => updateProvider(provider.id, { model: event.target.value })} />
-                  </label>
-                  <label>
-                    <span>Timeout</span>
-                    <input
-                      type="number"
-                      value={provider.timeout}
-                      onChange={(event) => updateProvider(provider.id, { timeout: Number(event.target.value) || 60 })}
-                    />
-                  </label>
-                  <label className="settings-provider-toggle">
-                    <input
-                      type="checkbox"
-                      checked={provider.enabled}
-                      onChange={(event) => updateProvider(provider.id, { enabled: event.target.checked })}
-                    />
-                    <span>启用</span>
-                  </label>
+                  <div className="settings-provider-item-head">
+                    <div className="settings-provider-item-title">
+                      <strong>{provider.name || "未命名 Provider"}</strong>
+                      <span>{provider.provider_type}</span>
+                    </div>
+                    <div className="settings-provider-item-badges">
+                      <span className={`settings-provider-badge ${provider.enabled ? "is-enabled" : "is-disabled"}`}>
+                        {provider.enabled ? "已启用" : "已禁用"}
+                      </span>
+                      <span className={`settings-provider-badge ${form.llm.active_provider_id === provider.id ? "is-active" : ""}`}>
+                        {form.llm.active_provider_id === provider.id ? "当前使用" : "候选 Provider"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="settings-provider-fields">
+                    <label>
+                      <span>ID</span>
+                      <input value={provider.id} onChange={(event) => updateProvider(provider.id, { id: event.target.value })} />
+                    </label>
+                    <label>
+                      <span>名称</span>
+                      <input value={provider.name} onChange={(event) => updateProvider(provider.id, { name: event.target.value })} />
+                    </label>
+                    <label>
+                      <span>Provider 类型</span>
+                      <select
+                        value={provider.provider_type}
+                        onChange={(event) => updateProvider(provider.id, { provider_type: event.target.value })}
+                      >
+                        <option value="openai_compatible">OpenAI Compatible</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Timeout</span>
+                      <input
+                        type="number"
+                        value={provider.timeout}
+                        onChange={(event) => updateProvider(provider.id, { timeout: Number(event.target.value) || 60 })}
+                      />
+                    </label>
+                    <label className="settings-provider-field-wide">
+                      <span>API URL</span>
+                      <input value={provider.api_url} onChange={(event) => updateProvider(provider.id, { api_url: event.target.value })} />
+                    </label>
+                    <label className="settings-provider-field-wide">
+                      <span>API Key</span>
+                      <input type="password" value={provider.api_key} onChange={(event) => updateProvider(provider.id, { api_key: event.target.value })} />
+                    </label>
+                    <label className="settings-provider-field-wide">
+                      <span>Model</span>
+                      <input value={provider.model} onChange={(event) => updateProvider(provider.id, { model: event.target.value })} />
+                    </label>
+                  </div>
+                  <div className="settings-provider-meta">
+                    <label className="settings-provider-toggle">
+                      <input
+                        type="checkbox"
+                        checked={provider.enabled}
+                        onChange={(event) => updateProvider(provider.id, { enabled: event.target.checked })}
+                      />
+                      <span>启用该 Provider</span>
+                    </label>
+                    <p className="settings-hint">
+                      {provider.api_key_configured || provider.api_key ? "API Key 已配置" : "API Key 未配置"}
+                    </p>
+                  </div>
                   <div className="settings-provider-actions">
                     <button
                       className={form.llm.active_provider_id === provider.id ? "pill-btn-primary" : "pill-btn"}
@@ -285,18 +327,15 @@ export function SettingsPage() {
                     <button className="pill-btn" onClick={() => onTestProvider(provider)} disabled={testingProviderId === provider.id}>
                       {testingProviderId === provider.id ? "测试中..." : "测试连接"}
                     </button>
+                    <button className="tasks-save-btn is-danger" onClick={() => removeProvider(provider.id)}>
+                      删除
+                    </button>
                   </div>
-                  <p className="settings-hint">
-                    {provider.api_key_configured || provider.api_key ? "API Key 已配置" : "API Key 未配置"}
-                  </p>
                   {provider.id in providerTestState ? (
                     <p className={`settings-provider-test ${providerTestState[provider.id]?.ok ? "is-success" : "is-error"}`}>
                       {getProviderTestLabel(provider.id)}
                     </p>
                   ) : null}
-                  <button className="tasks-save-btn is-danger" onClick={() => removeProvider(provider.id)}>
-                    删除
-                  </button>
                 </article>
               ))}
               {form.llm.providers.length === 0 ? <p className="resource-empty">暂无 Provider。</p> : null}

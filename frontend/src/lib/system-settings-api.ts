@@ -1,3 +1,5 @@
+import { fetchWithTimeout, toReadableRequestError } from "./http";
+
 export type RuntimeProvider = {
   id: string;
   name: string;
@@ -39,7 +41,12 @@ const ENDPOINT = "/api/v1/system/settings/runtime";
 const TEST_PROVIDER_ENDPOINT = "/api/v1/system/settings/llm/test-provider";
 
 export async function fetchRuntimeSettings(): Promise<RuntimeSettingsPayload> {
-  const res = await fetch(ENDPOINT);
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(ENDPOINT, { timeoutMs: 12000 });
+  } catch (error) {
+    throw new Error(toReadableRequestError(error, "Load settings failed"));
+  }
   if (!res.ok) {
     throw new Error(`Load settings failed: ${res.status}`);
   }
@@ -47,11 +54,17 @@ export async function fetchRuntimeSettings(): Promise<RuntimeSettingsPayload> {
 }
 
 export async function saveRuntimeSettings(payload: RuntimeSettingsPayload): Promise<RuntimeSettingsPayload> {
-  const res = await fetch(ENDPOINT, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(ENDPOINT, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      timeoutMs: 15000,
+    });
+  } catch (error) {
+    throw new Error(toReadableRequestError(error, "Save settings failed"));
+  }
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Save settings failed: ${res.status} ${text}`);
@@ -60,11 +73,17 @@ export async function saveRuntimeSettings(payload: RuntimeSettingsPayload): Prom
 }
 
 export async function testRuntimeProvider(provider: RuntimeProvider): Promise<RuntimeProviderTestResult> {
-  const res = await fetch(TEST_PROVIDER_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(TEST_PROVIDER_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider }),
+      timeoutMs: 15000,
+    });
+  } catch (error) {
+    throw new Error(toReadableRequestError(error, "Test provider failed"));
+  }
   const data = (await res.json()) as RuntimeProviderTestResult;
   if (!res.ok) {
     throw new Error(data.error || `Test provider failed: ${res.status}`);
