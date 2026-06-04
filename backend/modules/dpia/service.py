@@ -20,9 +20,10 @@ import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
-from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 
 from backend.modules.dpia.agents import create_dpia_agents, DPIAAgentBase
@@ -87,11 +88,18 @@ class DPIAService:
 
     # ── Main pipeline ──
 
-    def generate_report(self, payload: DPIARequest) -> DPIAResult:
-        task_id = str(uuid.uuid4())
-        trace_dir = Path("outputs/dpia") / task_id / "trace"
-        trace = TraceRecorder(trace_dir)
-        token = current_trace.set(trace)
+    def generate_report(
+        self,
+        payload: DPIARequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> DPIAResult:
+        run_task_id = task_id or str(uuid.uuid4())
+        trace, token = prepare_run(module="dpia", task_id=run_task_id, trace=trace)
+
+        if trace:
+            trace.record("thought", {"summary": "路径判断：基于项目类型和触发理由确定 DPIA 评估框架"})
 
         try:
             # Phase 1: Profile + Facts + Need Detection (rule layer)
@@ -127,6 +135,9 @@ class DPIAService:
             )
             dpia_need_output = DPIANeedAgentOutput(**need_agent_result)
             trace.record("agent_dpia_need", dpia_need_output.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 触发判定", need_agent_result)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 2: Processing Activity Agent ──
             proc_result = self.agents["processing_activity"].run(
@@ -142,6 +153,9 @@ class DPIAService:
             )
             proc_pack = ProcessingActivityPack(**proc_result)
             trace.record("agent_processing_activity", proc_pack.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 处理活动描述", proc_result)
+                trace.record("thought", {"summary": thought})
 
             # Phase 2: RAG + Issues + Evidence (rule layer)
             regulations = self.retriever.search(profile)
@@ -163,6 +177,9 @@ class DPIAService:
             )
             nec_findings = NecessityFindings(**nec_result)
             trace.record("agent_necessity_proportionality", nec_findings.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 必要性与相称性", nec_result)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 4: Risk Assessment Agent ──
             risk_result = self.agents["risk_assessment"].run(
@@ -174,6 +191,9 @@ class DPIAService:
             )
             risk_matrix = RiskMatrix(**risk_result)
             trace.record("agent_risk_assessment", risk_matrix.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 风险评估", risk_result)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 5: Mitigation Mapping Agent ──
             user_measures = [m.description for m in (payload.mitigation_measures or [])]
@@ -184,6 +204,9 @@ class DPIAService:
             )
             mit_plan = MitigationPlan(**mit_result)
             trace.record("agent_mitigation_mapping", mit_plan.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 缓解措施映射", mit_result)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 6: DPO / Prior Consultation Agent ──
             mit_dicts = [m.model_dump() for m in mit_plan.mitigation_plan]
@@ -199,6 +222,9 @@ class DPIAService:
             )
             dpo_pack = DPODecisionPack(**dpo_result)
             trace.record("agent_dpo_consultation", dpo_pack.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA DPO咨询", dpo_result)
+                trace.record("thought", {"summary": thought})
 
             # Phase 3: Legal Grounding + Generation Basis + Context Pack
             need_diagnosis_dict = {
@@ -217,7 +243,7 @@ class DPIAService:
 
             # Enrich generation basis with all agent outputs
             gen_basis = build_generation_basis_pack(
-                task_id=task_id,
+                task_id=run_task_id,
                 facts=facts,
                 issues=issues,
                 evidence_chain=evidence_chain,
@@ -277,6 +303,9 @@ class DPIAService:
                         risk_level=ch.get("risk_level", "medium"),
                     ))
             trace.record("agent_external_draft", {"chapters": len(dpia_chapters)})
+            if trace:
+                thought = summarize_agent_output("DPIA 外部草拟", chapters)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 8: Internal Review Agent ──
             user_claim_facts = [
@@ -292,6 +321,9 @@ class DPIAService:
             )
             int_review = InternalReviewOutput(**int_review_result)
             trace.record("agent_internal_review", int_review.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 内部审查", int_review_result)
+                trace.record("thought", {"summary": thought})
 
             # ── Agent 9: Consistency / Repair Agent ──
             known_citations = []
@@ -308,6 +340,9 @@ class DPIAService:
             )
             cons_report = ConsistencyReport(**cons_result)
             trace.record("agent_consistency_repair", cons_report.model_dump())
+            if trace:
+                thought = summarize_agent_output("DPIA 一致性修复", cons_result)
+                trace.record("thought", {"summary": thought})
 
             # Repair pass if needed
             consistency_issues: list[str] = []
@@ -361,7 +396,7 @@ class DPIAService:
                         })
 
             outputs = self.renderer.render(
-                task_id=task_id,
+                task_id=run_task_id,
                 profile=profile,
                 chapters=dpia_chapters,
                 issues=issues,
@@ -376,7 +411,7 @@ class DPIAService:
             )
 
         finally:
-            current_trace.reset(token)
+            finalize_run(token)
 
         # Build DPIANeedAssessment for result
         need_assessment = DPIANeedAssessment(
@@ -391,7 +426,7 @@ class DPIAService:
         )
 
         return DPIAResult(
-            task_id=task_id,
+            task_id=run_task_id,
             state="COMPLETED",
             report_path=outputs.get("markdown", ""),
             output_files=outputs,
@@ -415,7 +450,12 @@ class DPIAService:
     # ── Async API ──
 
     def submit_async(self, payload: DPIARequest) -> DPIAAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = str(uuid.uuid4())
+        trace = TraceRecorder(Path("outputs/dpia") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> DPIAAsyncStatus:
