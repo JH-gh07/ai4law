@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { fetchCitationMap, type CitationDetail } from "../../lib/citation-api";
 import { fetchKnowledgeCitation } from "../../lib/knowledge-api";
 import type { ModuleKey } from "../../lib/domain";
@@ -11,10 +13,10 @@ interface Props {
   moduleKey?: ModuleKey;
 }
 
-type RenderToken =
-  | { type: "text"; value: string }
-  | { type: "footnote"; value: number }
-  | { type: "basis"; value: string };
+function isBasisOnlyParagraph(text: string): boolean {
+  const trimmed = text.trim();
+  return /^【依据：[^】]+】$/.test(trimmed);
+}
 
 function buildFallbackKnowledgeUrl(citation: CitationDetail): string | null {
   if (!citation.source_id) return null;
@@ -100,37 +102,12 @@ function extractBasisItems(block: string): string[] {
   return inner
     .split(/[；;]+/)
     .map((item) => item.trim())
-    .filter((item) => item.length > 0 && item !== "未检索到");
+    .filter((item) => item.length > 0 && item !== "未检索到" && item !== "未检索到相关法规");
 }
 
 function shortenCitationLabel(citation: CitationDetail): string {
   const article = citation.article_no ? `第${citation.article_no}条` : "";
   return `${citation.title}${article ? ` ${article}` : ""}`;
-}
-
-function tokenizeMarkdown(markdown: string): RenderToken[] {
-  if (!markdown) return [];
-  const regex = /(\[(\d+)\]|【依据：[^】]+】)/g;
-  const result: RenderToken[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(markdown)) !== null) {
-    if (match.index > lastIndex) {
-      result.push({ type: "text", value: markdown.slice(lastIndex, match.index) });
-    }
-    if (match[2]) {
-      result.push({ type: "footnote", value: Number(match[2]) });
-    } else {
-      result.push({ type: "basis", value: match[1] });
-    }
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < markdown.length) {
-    result.push({ type: "text", value: markdown.slice(lastIndex) });
-  }
-  return result;
 }
 
 function findCitationFromMap(rawBasis: string, citationMap: Record<string, CitationDetail>): CitationDetail | null {
@@ -193,6 +170,98 @@ function buildResolvedCitation(
   };
 }
 
+function renderInlineCitationText(
+  value: string,
+  citationMap: Record<string, CitationDetail>,
+  resolvedBasisMap: Record<string, CitationDetail | null>,
+  onOpenCitation: (citation: CitationDetail) => void,
+): Array<string | JSX.Element> {
+  const regex = /(\[(\d+)\]|【依据：[^】]+】)/g;
+  const result: Array<string | JSX.Element> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(value)) !== null) {
+    if (match.index > lastIndex) {
+      result.push(value.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      const footnoteNumber = Number(match[2]);
+      const citation = citationMap[String(footnoteNumber)];
+      if (!citation) {
+        result.push(match[0]);
+      } else {
+        result.push(
+          <span
+            key={`footnote-${match.index}-${footnoteNumber}`}
+            className="citation-marker-inline"
+            onClick={() => onOpenCitation(citation)}
+            style={{ cursor: "pointer" }}
+          >
+            <CitationPopover
+              footnoteNumber={footnoteNumber}
+              citation={citation}
+              onClickSource={onOpenCitation}
+            />
+          </span>,
+        );
+      }
+    } else {
+      const entries = extractBasisItems(match[0])
+        .map((raw) => ({ raw, citation: resolvedBasisMap[raw] }))
+        .filter((item) => item.citation);
+
+      if (entries.length === 0) {
+        result.push(match[0]);
+      } else {
+        result.push(
+          <span key={`basis-${match.index}`} className="citation-basis-inline">
+            <span className="citation-basis-prefix">依据</span>
+            {entries.map(({ raw, citation }, idx) =>
+              citation ? (
+                <span
+                  key={`${raw}-${idx}`}
+                  className="citation-marker-inline"
+                  onClick={() => onOpenCitation(citation)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <CitationPopover
+                    footnoteNumber={citation.footnote_number ?? idx + 1}
+                    citation={citation}
+                    onClickSource={onOpenCitation}
+                    label={shortenCitationLabel(citation)}
+                  />
+                </span>
+              ) : null,
+            )}
+          </span>,
+        );
+      }
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < value.length) {
+    result.push(value.slice(lastIndex));
+  }
+
+  return result;
+}
+
+function flattenTextChildren(children: unknown): string | null {
+  if (typeof children === "string") return children;
+  if (typeof children === "number") return String(children);
+  if (Array.isArray(children)) {
+    const parts = children.map(flattenTextChildren);
+    if (parts.every((item) => typeof item === "string")) {
+      return parts.join("");
+    }
+  }
+  return null;
+}
+
 export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props) {
   const [citationMap, setCitationMap] = useState<Record<string, CitationDetail>>({});
   const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
@@ -205,14 +274,10 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
       .catch(() => setCitationMap({}));
   }, [taskId, moduleKey]);
 
-  const tokens = useMemo(() => tokenizeMarkdown(markdown), [markdown]);
-
   const basisItems = useMemo(() => {
-    const items = tokens
-      .filter((token): token is Extract<RenderToken, { type: "basis" }> => token.type === "basis")
-      .flatMap((token) => extractBasisItems(token.value));
-    return Array.from(new Set(items));
-  }, [tokens]);
+    const blocks = markdown.match(/【依据：[^】]+】/g) ?? [];
+    return Array.from(new Set(blocks.flatMap(extractBasisItems)));
+  }, [markdown]);
 
   useEffect(() => {
     if (basisItems.length === 0) {
@@ -265,64 +330,56 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
 
   return (
     <>
-      <div className="citation-markdown-text">
-        {tokens.map((token, index) => {
-          if (token.type === "text") {
-            return <span key={index}>{token.value}</span>;
-          }
-
-          if (token.type === "footnote") {
-            const citation = citationMap[String(token.value)];
-            if (!citation) {
-              return <span key={index}>[{token.value}]</span>;
-            }
-            return (
-              <span
-                key={index}
-                className="citation-marker-inline"
-                onClick={() => handleOpenCitation(citation)}
-                style={{ cursor: "pointer" }}
-              >
-                <CitationPopover
-                  footnoteNumber={token.value}
-                  citation={citation}
-                  onClickSource={handleOpenCitation}
-                />
-              </span>
-            );
-          }
-
-          const basisEntries = extractBasisItems(token.value)
-            .map((raw) => ({ raw, citation: resolvedBasisMap[raw] }))
-            .filter((item) => item.citation);
-
-          if (basisEntries.length === 0) {
-            return <span key={index}>{token.value}</span>;
-          }
-
-          return (
-            <span key={index} className="citation-basis-inline">
-              <span className="citation-basis-prefix">依据</span>
-              {basisEntries.map(({ raw, citation }, itemIndex) => (
-                <span
-                  key={`${raw}-${itemIndex}`}
-                  className="citation-marker-inline"
-                  onClick={() => citation && handleOpenCitation(citation)}
-                  style={{ cursor: citation ? "pointer" : "default" }}
-                >
-                  {citation ? (
-                    <CitationPopover
-                      footnoteNumber={citation.footnote_number ?? itemIndex + 1}
-                      citation={citation}
-                      onClickSource={handleOpenCitation}
-                      label={shortenCitationLabel(citation)}
-                    />
-                  ) : null}
-                </span>
-              ))}
-            </span>
-          );
-        })}
+      <div className="citation-markdown-text workspace-report-richtext">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            p({ children }) {
+              const text = flattenTextChildren(children);
+              if (!text) {
+                return <p>{children}</p>;
+              }
+              return (
+                <p className={isBasisOnlyParagraph(text) ? "workspace-legal-basis-block" : undefined}>
+                  {renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}
+                </p>
+              );
+            },
+            li({ children }) {
+              const text = flattenTextChildren(children);
+              if (!text) {
+                return <li>{children}</li>;
+              }
+              return <li>{renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}</li>;
+            },
+            blockquote({ children }) {
+              const text = flattenTextChildren(children);
+              if (!text) {
+                return <blockquote>{children}</blockquote>;
+              }
+              return <blockquote>{renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}</blockquote>;
+            },
+            td({ children }) {
+              const text = flattenTextChildren(children);
+              if (!text) {
+                return <td>{children}</td>;
+              }
+              return <td>{renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}</td>;
+            },
+            th({ children }) {
+              return <th>{children}</th>;
+            },
+            text({ children }) {
+              const text = flattenTextChildren(children);
+              if (!text) {
+                return <Fragment>{children}</Fragment>;
+              }
+              return <>{renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}</>;
+            },
+          }}
+        >
+          {markdown}
+        </ReactMarkdown>
       </div>
       {selectedCitation ? (
         <CitationArticleDrawer citation={selectedCitation} onClose={() => setSelectedCitation(null)} />

@@ -119,12 +119,12 @@ export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
           const stageId = `stage-${taskId}-${event.seq}`;
           pendingStagesRef.current.push(stageId);
 
-          // Extract agent name from detail if available
           const agentName = event.detail?.agent
             ? String(event.detail.agent)
             : event.detail?.tool
               ? String(event.detail.tool)
               : extractStageName(event.summary);
+          const command = event.detail?.tool ? String(event.detail.tool) : event.detail?.agent ? String(event.detail.agent) : undefined;
 
           dispatch({
             type: "begin_run_session",
@@ -139,6 +139,7 @@ export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
                 name: agentName,
                 status: "running",
                 startedAt: event.timestamp,
+                command,
                 icon: "🔧",
               }],
               isComplete: false,
@@ -149,7 +150,6 @@ export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
         }
 
         case "tool_result": {
-          // Complete the latest pending stage
           const stageId = pendingStagesRef.current.pop();
           if (!stageId) break;
           const sessionId = sessionIdRef.current;
@@ -160,6 +160,7 @@ export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
               sessionId,
               stageId,
               summary: event.summary,
+              detail: event.detail ?? null,
               completedAt: event.timestamp,
             },
           });
@@ -167,7 +168,6 @@ export function ExecutionTimeline({ taskId, taskSpaceId, moduleLabel }: Props) {
         }
 
         case "thought": {
-          // Attach thought as summary to the latest running stage
           const sessionId = sessionIdRef.current;
           if (!sessionId) break;
           const runningStageId = pendingStagesRef.current[pendingStagesRef.current.length - 1];

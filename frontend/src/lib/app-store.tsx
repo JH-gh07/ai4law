@@ -51,8 +51,8 @@ type Action =
   | { type: "append_system_message"; payload: SystemMessage }
   | { type: "clear_system_messages"; payload: { taskSpaceId: string } }
   | { type: "begin_run_session"; payload: RunSession }
-  | { type: "stage_running"; payload: { sessionId: string; stageId: string; startedAt: string } }
-  | { type: "stage_done"; payload: { sessionId: string; stageId: string; summary?: string; completedAt: string } }
+  | { type: "stage_running"; payload: { sessionId: string; stageId: string; startedAt: string; command?: string } }
+  | { type: "stage_done"; payload: { sessionId: string; stageId: string; summary?: string; detail?: Record<string, unknown> | null; completedAt: string } }
   | { type: "finish_run_session"; payload: { sessionId: string; completedAt: string; totalDurationMs?: number } }
   | { type: "clear_run_sessions"; payload: { taskSpaceId: string } }
   | { type: "set_panel_state"; payload: Partial<PanelState> }
@@ -500,7 +500,7 @@ function reducer(state: AppState, action: Action): AppState {
                 ...s,
                 stages: s.stages.map((st) =>
                   st.id === action.payload.stageId
-                    ? { ...st, status: "running" as const, startedAt: action.payload.startedAt }
+                    ? { ...st, status: "running" as const, startedAt: action.payload.startedAt, command: action.payload.command ?? st.command }
                     : st
                 ),
               }
@@ -516,7 +516,7 @@ function reducer(state: AppState, action: Action): AppState {
                 ...s,
                 stages: s.stages.map((st) =>
                   st.id === action.payload.stageId
-                    ? { ...st, status: "done" as const, summary: action.payload.summary ?? st.summary, completedAt: action.payload.completedAt }
+                    ? { ...st, status: "done" as const, summary: action.payload.summary ?? st.summary, detail: action.payload.detail ?? st.detail, completedAt: action.payload.completedAt }
                     : st
                 ),
               }

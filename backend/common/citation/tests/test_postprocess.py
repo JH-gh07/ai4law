@@ -1,6 +1,10 @@
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
-from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations
+from backend.common.llm.postprocess import (
+    convert_citation_markers,
+    ensure_paragraph_citations,
+    normalize_legal_markdown_structure,
+)
 
 
 def test_ensure_paragraph_citations_still_works() -> None:
@@ -137,3 +141,30 @@ def test_convert_citation_markers_reuses_same_number_for_repeated() -> None:
     # Both should use [1]
     assert result.count("[1]") == 2
     assert "[2]" not in result
+
+
+def test_normalize_legal_markdown_structure_splits_packed_legal_outline() -> None:
+    text = "第一章 个人信息出境活动说明一、数据处理者基本情况（一）处理活动说明1. 数据类型【依据：个人信息保护法第三十九条】"
+    result = normalize_legal_markdown_structure(text)
+    assert "# 第一章 个人信息出境活动说明" in result
+    assert "## 一、数据处理者基本情况" in result
+    assert "### （一）处理活动说明" in result
+    assert "1. 数据类型" in result
+    assert "【依据：个人信息保护法第三十九条】" in result
+
+
+def test_convert_citation_markers_normalizes_heading_breaks() -> None:
+    reg = CitationRegistry()
+    reg.register(
+        CitationItem(
+            citation_id="CIT-CN-PIPL-ART39-P01",
+            source_id="CN-LAW-002-001",
+            title="个人信息保护法",
+            article_no="39",
+        )
+    )
+    text = "第一章 个人信息出境活动说明一、数据处理者基本情况企业应取得单独同意{{CIT-CN-PIPL-ART39-P01}}。"
+    result = convert_citation_markers(text, reg)
+    assert "# 第一章 个人信息出境活动说明" in result
+    assert "## 一、数据处理者基本情况" in result
+    assert "[1]" in result

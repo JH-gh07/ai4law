@@ -167,6 +167,8 @@ export type StageNode = {
   startedAt?: string;
   completedAt?: string;
   summary?: string;
+  detail?: Record<string, unknown> | null;
+  command?: string;
   icon?: string;
 };
 

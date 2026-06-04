@@ -31,6 +31,7 @@ import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/A
 import { ExecutionTimeline } from "./ExecutionTimeline";
 import { RunBrief } from "./RunBrief";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
+import { normalizeLegalMarkdown } from "../../lib/legal-markdown";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -150,11 +151,13 @@ const readStringList = (value: unknown): string[] =>
 
 const normalizeMarkdownForRender = (value: string): string => {
   const normalized = value.replace(/\r\n?/g, "\n");
-  return normalized
+  return normalizeLegalMarkdown(
+    normalized
     .replace(/^(#{1,6})([^\s#])/gm, "$1 $2")
     .replace(/^(\d+)\)\s+/gm, "$1. ")
     .replace(/^\s*•\s+/gm, "- ")
-    .trim();
+    .trim(),
+  );
 };
 
 const parseCsvRows = (source: string): string[][] => {

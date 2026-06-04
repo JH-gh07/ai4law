@@ -76,40 +76,74 @@ function ThinkingBlock({ session, onToggle, lang }: { session: RunSession; onTog
         </span>
       </div>
       {!collapsed && (
-        <div className="thinking-stages" style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "3px" }}>
-          {session.stages.map((stage) => (
-            <div
-              key={stage.id}
-              className={`thinking-stage thinking-stage-${stage.status}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.82em",
-                padding: "2px 0",
-                color: stage.status === "done" ? "#374151" : stage.status === "running" ? "#1e40af" : "#9ca3af",
-                animation: stage.status === "running" ? "pulse 1.5s infinite" : "none",
-              }}
-            >
-              <span style={{
-                width: "18px",
-                textAlign: "center",
-                fontWeight: 700,
-                color: stage.status === "done" ? "#059669" : stage.status === "running" ? "#2563eb" : "#9ca3af",
-              }}>
-                {stage.status === "running" ? "⊙" : stage.status === "done" ? "✓" : "○"}
-              </span>
-              <span style={{ flex: 1 }}>{stage.name}</span>
-              {stage.summary && (
-                <span style={{ color: "#6b7280", fontSize: "0.85em", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {stage.summary}
-                </span>
-              )}
-              {stage.status === "running" && (
-                <span style={{ fontSize: "0.7em", color: "#2563eb", animation: "spin 1s linear infinite" }}>⟳</span>
-              )}
-            </div>
-          ))}
+        <div className="thinking-stages" style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "2px" }}>
+          {session.stages.map((stage) => {
+            const [detailOpen, setDetailOpen] = useState(false);
+            const hasDetail = stage.status === "done" && stage.detail && Object.keys(stage.detail).length > 0;
+            return (
+              <div key={stage.id} style={{ marginBottom: "2px" }}>
+                <div
+                  className={`thinking-stage thinking-stage-${stage.status}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontSize: "0.82em",
+                    padding: "3px 0",
+                    color: stage.status === "done" ? "#374151" : stage.status === "running" ? "#1e40af" : "#9ca3af",
+                    animation: stage.status === "running" ? "pulse 1.5s infinite" : "none",
+                    cursor: hasDetail ? "pointer" : "default",
+                  }}
+                  onClick={() => hasDetail && setDetailOpen((o) => !o)}
+                >
+                  <span style={{
+                    width: "18px",
+                    textAlign: "center",
+                    fontWeight: 700,
+                    color: stage.status === "done" ? "#059669" : stage.status === "running" ? "#2563eb" : "#9ca3af",
+                  }}>
+                    {stage.status === "running" ? "⊙" : stage.status === "done" ? "✓" : "○"}
+                  </span>
+                  <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1px" }}>
+                    <span>{stage.name}</span>
+                    {stage.command && (
+                      <span style={{ fontSize: "0.75em", color: "#9ca3af" }}>
+                        {stage.command}
+                      </span>
+                    )}
+                  </span>
+                  {stage.summary && (
+                    <span style={{ color: "#6b7280", fontSize: "0.85em", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {stage.summary}
+                    </span>
+                  )}
+                  {stage.status === "running" && (
+                    <span style={{ fontSize: "0.7em", color: "#2563eb", animation: "spin 1s linear infinite" }}>⟳</span>
+                  )}
+                  {hasDetail && (
+                    <span style={{ fontSize: "0.65em", color: "#9ca3af" }}>{detailOpen ? "▲" : "▼"}</span>
+                  )}
+                </div>
+                {hasDetail && detailOpen && (
+                  <pre style={{
+                    margin: "4px 0 4px 34px",
+                    padding: "6px 10px",
+                    fontSize: "0.72em",
+                    background: "rgba(0,0,0,0.03)",
+                    borderRadius: "4px",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                    color: "#4b5563",
+                    border: "1px solid rgba(0,0,0,0.06)",
+                  }}>
+                    {JSON.stringify(stage.detail, null, 2)}
+                  </pre>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </article>

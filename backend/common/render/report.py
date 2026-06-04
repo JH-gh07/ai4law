@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 from docx import Document
+from backend.common.llm.postprocess import normalize_legal_markdown_structure
 
 
 def render_markdown_report(output_path: Path, title: str, sections: Iterable[tuple[str, str]]) -> Path:
@@ -13,9 +14,9 @@ def render_markdown_report(output_path: Path, title: str, sections: Iterable[tup
     lines = [f"# {title}", ""]
     for header, content in sections:
         lines.append(f"## {header}")
-        lines.append(content)
+        lines.append(normalize_legal_markdown_structure(content))
         lines.append("")
-    output_path.write_text("\n".join(lines), encoding="utf-8")
+    output_path.write_text(normalize_legal_markdown_structure("\n".join(lines)), encoding="utf-8")
     return output_path
 
 
@@ -28,7 +29,7 @@ def render_markdown_template(
     rendered = template
     for key, value in normalized.items():
         rendered = rendered.replace(f"{{{{{key}}}}}", value)
-    output_path.write_text(rendered, encoding="utf-8")
+    output_path.write_text(normalize_legal_markdown_structure(rendered), encoding="utf-8")
     return output_path
 
 

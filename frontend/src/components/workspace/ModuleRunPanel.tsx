@@ -2649,31 +2649,53 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   // ── 开发者测试案例 ──
   const [devTestCaseIndex, setDevTestCaseIndex] = useState(0);
   const devTestCases = DEV_ACCEL_ENABLED ? getTestCases(moduleKey) : [];
-  const runDevTestCase = async () => {
-    if (!DEV_ACCEL_ENABLED || devTestCases.length === 0 || loading) return;
+  // 回填测试案例到表单
+  const backfillDevCase = () => {
     const tc = devTestCases[devTestCaseIndex];
-    if (!tc) return;
-    setError(null);
-    setAsyncRunProgress(null);
-    await runWithPayload(tc.payload);
+    if (!tc?.formDefaults) return;
+    const fd = tc.formDefaults as Record<string, unknown>;
+    if (isCpraModule) setCpraValues((prev) => ({ ...prev, ...fd } as CpraFormValues));
+    else if (isDiagnosisModule) setDiagnosisValues((prev) => ({ ...prev, ...fd } as DiagnosisFormValues));
+    else if (isAssessmentModule) setAssessmentValues((prev) => ({ ...prev, ...fd } as AssessmentFormValues));
+    else if (isPipiaModule) setPipiaValues((prev) => ({ ...prev, ...fd } as PipiaFormValues));
+    else if (isBcrModule) setBcrValues((prev) => ({ ...prev, ...fd } as BcrFormValues));
+    else if (isDpiaModule) setDpiaValues((prev) => ({ ...prev, ...fd } as DpiaFormValues));
+    else if (isTiaModule) setTiaValues((prev) => ({ ...prev, ...fd } as TiaFormValues));
+    else if (isCnFlowModule) setCnFlowValues((prev) => ({ ...prev, ...fd } as CnFlowFormValues));
+    else if (isEuSccTask) setEuSccValues((prev) => ({ ...prev, ...fd } as EuSccFormValues));
   };
-  const renderDevTestToolbar = () => {
+  const renderDevCasePicker = (compact?: boolean) => {
     if (!DEV_ACCEL_ENABLED || devTestCases.length === 0) return null;
+    if (compact) {
+      return (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+          <span>🧪</span>
+          <select value={devTestCaseIndex} onChange={(e) => setDevTestCaseIndex(Number(e.target.value))}
+            style={{ padding: "2px 4px", borderRadius: 3, border: "1px solid #d1d5db", fontSize: 12, maxWidth: 180 }}>
+            {devTestCases.map((tc, i) => (<option key={i} value={i}>{tc.name}</option>))}
+          </select>
+          <button type="button" className="pill-btn" onClick={backfillDevCase} disabled={loading}
+            style={{ fontSize: 11, padding: "2px 8px" }} title={devTestCases[devTestCaseIndex]?.description}>
+            回填
+          </button>
+        </span>
+      );
+    }
     return (
-      <div className="runner-dev-test-bar" style={{ background: "#fef3c7", borderRadius: 8, padding: "8px 12px", marginBottom: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+      <div style={{ background: "#fef3c7", borderRadius: 6, padding: "6px 10px", marginBottom: 12, display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
         <span>🧪 测试案例</span>
-        <select value={devTestCaseIndex} onChange={(e) => setDevTestCaseIndex(Number(e.target.value))} style={{ flex: 1, padding: "4px 8px", borderRadius: 4, border: "1px solid #d1d5db" }}>
+        <select value={devTestCaseIndex} onChange={(e) => setDevTestCaseIndex(Number(e.target.value))}
+          style={{ flex: 1, padding: "3px 6px", borderRadius: 4, border: "1px solid #d1d5db", fontSize: 12 }}>
           {devTestCases.map((tc, i) => (<option key={i} value={i}>{tc.name}</option>))}
         </select>
-        <button type="button" className="pill-btn" onClick={runDevTestCase} disabled={loading} style={{ whiteSpace: "nowrap" }}>
-          {loading ? "⏳" : "▶"} 直接运行
+        <button type="button" className="pill-btn" onClick={backfillDevCase} disabled={loading}
+          style={{ whiteSpace: "nowrap", fontSize: 12 }} title={devTestCases[devTestCaseIndex]?.description}>
+          回填表单
         </button>
-        <span style={{ fontSize: 11, color: "#92400e", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={devTestCases[devTestCaseIndex]?.description}>
-          {devTestCases[devTestCaseIndex]?.description ?? ""}
-        </span>
       </div>
     );
   };
+
 
   useEffect(() => {
     if (!isDiagnosisModule) return;
@@ -4355,8 +4377,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isEuSccTask ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">SCC Review Wizard</div>
             <span>{euSccProgress}%</span>
           </div>
@@ -4507,8 +4529,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDiagnosisModule ? (
         <section className="schema-wizard schema-wizard--diagnosis">
-          {renderDevTestToolbar()}
-          <div ref={diagnosisStepTopRef} />
+                    {renderDevCasePicker()}
+<div ref={diagnosisStepTopRef} />
           <div className="schema-wizard-head">
             <div className="runner-title">业务数据合规需求诊断</div>
             <span>{diagnosisProgress}%</span>
@@ -4692,8 +4714,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isAssessmentModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          {DEV_ACCEL_ENABLED ? (
+                    {renderDevCasePicker()}
+{DEV_ACCEL_ENABLED ? (
             <div className="schema-dev-banner">
               <strong>开发测试模式</strong>
               <span>
@@ -4860,8 +4882,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isPipiaModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">PIPIA Wizard</div>
             <span>{pipiaProgress}%</span>
           </div>
@@ -5020,8 +5042,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isBcrModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">BCR Review Wizard</div>
             <span>{bcrProgress}%</span>
           </div>
@@ -5143,8 +5165,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isDpiaModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">DPIA Wizard</div>
             <span>{dpiaProgress}%</span>
           </div>
@@ -5278,8 +5300,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isTiaModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">TIA Wizard</div>
             <span>{tiaProgress}%</span>
           </div>
@@ -5413,8 +5435,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isCnFlowModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">EO 14117 Wizard</div>
             <span>{cnFlowProgress}%</span>
           </div>
@@ -5575,8 +5597,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         </section>
       ) : isCpraModule ? (
         <section className="schema-wizard">
-          {renderDevTestToolbar()}
-          <div className="schema-wizard-head">
+                    {renderDevCasePicker()}
+<div className="schema-wizard-head">
             <div className="runner-title">CPRA Wizard</div>
             <span>{cpraProgress}%</span>
           </div>
