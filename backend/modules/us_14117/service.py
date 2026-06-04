@@ -19,9 +19,10 @@ from backend.common.render.report import (
 )
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.storage.file_parser import FileParser
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
-from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.modules.us_14117.evidence_builder import build_us_14117_evidence
 from backend.modules.us_14117.fact_builder import build_us_14117_facts
@@ -60,11 +61,19 @@ class US14117Service:
         self.tasks = InMemoryTaskManager(module="us_14117")
         self.agents = create_us14117_agents(llm_client)
 
-    def generate_report(self, payload: US14117Request) -> US14117Result:
-        task_id = str(uuid.uuid4())
-        trace_dir = Path("outputs/us_14117") / task_id / "trace"
-        trace = TraceRecorder(trace_dir)
-        token = current_trace.set(trace)
+    def generate_report(
+        self,
+        payload: US14117Request,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> US14117Result:
+        run_task_id = task_id or str(uuid.uuid4())
+        trace, token = prepare_run(module="us_14117", task_id=run_task_id, trace=trace)
+
+        if trace:
+            trace.record("status", {"state": "started"})
+            trace.record("thought", {"summary": "路径判断：输入解析与规则引擎触发，评估是否有必要启动 US 14117 流程"})
 
         # Run rule engine BEFORE pipeline
         rule_result = run_rule_engine(payload)
@@ -92,13 +101,22 @@ class US14117Service:
                         if override.get("recommended_status") == "needs_review":
                             ea["flag_for_dpo"] = True
             trace.record("agent_rule_boundary", agent_rb)
+            if trace:
+                thought = summarize_agent_output("US 14117 规则边界", agent_rb)
+                trace.record("thought", {"summary": thought})
 
+        self._trace = trace
         try:
             run_result = self._build_pipeline(rule_result).run(
-                payload=payload, task_id=task_id, trace=trace
+                payload=payload, task_id=run_task_id, trace=trace
             )
         finally:
-            current_trace.reset(token)
+            self._trace = None
+            finalize_run(token)
+
+        if trace:
+            trace.record("status", {"state": "completed"})
+            trace.record("thought", {"summary": "最终输出：组装 US 14117 评估报告并返回结果"})
 
         return US14117Result(
             report_path=run_result.outputs.get("markdown", ""),
@@ -146,6 +164,11 @@ class US14117Service:
         agent_rag = self.agents["rag_reformulation"].run(
             rule_hit_summary=[], data_categories=[], transaction_type="vendor_agreement", covered_person_count=0,
         )
+        _t = getattr(self, "_trace", None)
+        if _t:
+            _t.record("agent_rag_reformulation", agent_rag)
+            thought = summarize_agent_output("US 14117 RAG检索重构", agent_rag)
+            _t.record("thought", {"summary": thought})
         if agent_rag.get("primary_query"):
             query = agent_rag["primary_query"]
         docs = retrieve_regulations(query, top_k=6, jurisdiction="us", path="eo14117")
@@ -198,6 +221,35 @@ class US14117Service:
             attachment_notes: list[dict[str, str]],
             **kwargs,
         ) -> GenerationContextPack:
+            # ── Agent 2: Evidence Priority ──
+            ev_priority_result = self.agents["evidence_priority"].run(
+                risk_matrix_rows=[r.model_dump() for r in rule_result.risk_matrix],
+                traffic_light=rule_result.traffic_light.overall_light,
+                prohibition_reasons=rule_result.traffic_light.prohibition_reasons,
+                restriction_reasons=rule_result.traffic_light.restriction_reasons,
+            )
+            _t = getattr(self, "_trace", None)
+            if _t:
+                _t.record("agent_evidence_priority", ev_priority_result)
+                thought = summarize_agent_output("US 14117 证据优先级", ev_priority_result)
+                _t.record("thought", {"summary": thought})
+
+            # ── Agent 5: Repair Check ──
+            repair_result = self.agents["repair_check"].run(
+                issue_summaries=[{
+                    "issue_id": i.issue_id, "severity": i.severity,
+                    "title": i.title, "fact_refs": i.fact_refs, "rule_refs": i.rule_refs,
+                } for i in issues],
+                evidence_count=len(evidence_chain),
+                has_attachments=bool(attachment_notes),
+                traffic_light=rule_result.traffic_light.overall_light,
+                missing_measures=rule_result.traffic_light.missing_security_measures,
+            )
+            if _t:
+                _t.record("agent_repair_check", repair_result)
+                thought = summarize_agent_output("US 14117 修复检查", repair_result)
+                _t.record("thought", {"summary": thought})
+
             return GenerationContextPack(
                 module_key="us_14117",
                 request_id=task_id,
@@ -211,24 +263,8 @@ class US14117Service:
                     "traffic_light": rule_result.traffic_light.overall_light,
                     "is_prohibited": rule_result.traffic_light.is_prohibited,
                     "is_restricted": rule_result.traffic_light.is_restricted,
-                    # ── Agent 2: Evidence Priority ──
-                    "agent_evidence_priority": self.agents["evidence_priority"].run(
-                        risk_matrix_rows=[r.model_dump() for r in rule_result.risk_matrix],
-                        traffic_light=rule_result.traffic_light.overall_light,
-                        prohibition_reasons=rule_result.traffic_light.prohibition_reasons,
-                        restriction_reasons=rule_result.traffic_light.restriction_reasons,
-                    ),
-                    # ── Agent 5: Repair Check ──
-                    "agent_repair_check": self.agents["repair_check"].run(
-                        issue_summaries=[{
-                            "issue_id": i.issue_id, "severity": i.severity,
-                            "title": i.title, "fact_refs": i.fact_refs, "rule_refs": i.rule_refs,
-                        } for i in issues],
-                        evidence_count=len(evidence_chain),
-                        has_attachments=bool(attachment_notes),
-                        traffic_light=rule_result.traffic_light.overall_light,
-                        missing_measures=rule_result.traffic_light.missing_security_measures,
-                    ),
+                    "agent_evidence_priority": ev_priority_result,
+                    "agent_repair_check": repair_result,
                 },
                 attachment_notes=attachment_notes,
                 output_requirements={"chapter_keys": list(US_14117_CHAPTER_KEYS.values())},
@@ -273,6 +309,11 @@ class US14117Service:
                 issue_count=len(context_pack.issues),
                 missing_measures=rule_result.traffic_light.missing_security_measures,
             )
+            _t = getattr(self, "_trace", None)
+            if _t:
+                _t.record("agent_chapter_consistency", agent_chk)
+                thought = summarize_agent_output("US 14117 章节一致性", agent_chk)
+                _t.record("thought", {"summary": thought})
             if not agent_chk.get("consistent", True):
                 for fix in agent_chk.get("recommended_fixes", []):
                     chapters[-1].content += f"\n\n[一致性检查建议] {fix}"
@@ -431,7 +472,12 @@ class US14117Service:
     # ── Async API ──
 
     def submit_async(self, payload: US14117Request) -> US14117AsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = str(uuid.uuid4())
+        trace = TraceRecorder(Path("outputs/us_14117") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> US14117AsyncStatus:
