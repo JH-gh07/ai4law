@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -11,8 +12,11 @@ from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
 )
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
+from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.modules.tia.attachment_evidence import TIAAttachmentEvidence
 from backend.modules.tia.country_risk import TIACountryRiskAssessor
 from backend.modules.tia.data_sensitivity import TIADataSensitivity
@@ -52,182 +56,206 @@ class TIAService:
         self.attachment_evidence = TIAAttachmentEvidence(parser=self.parser)
         self.agents = create_tia_agents(llm_client)
 
-    def generate_report(self, payload: TIARequest) -> TIAResult:
+    def generate_report(
+        self,
+        payload: TIARequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> TIAResult:
+        run_task_id = task_id or uuid.uuid4().hex
+        _, token = prepare_run(module="tia", task_id=run_task_id, trace=trace)
         # ── Structured assessment (NEW) ──
-        route = None
-        country_risk_result = None
-        measure_assessments = []
-        measure_overall = "unknown"
-        effective_risk = "MEDIUM"
-        data_sens = {}
+        try:
+            if trace:
+                trace.record("status", {"summary": "开始 TIA 传输影响评估", "detail": {"module": "tia"}})
+                trace.record("thought", {"summary": "路径判断：基于传输工具类型和目的地法律环境确定 TIA 评估范围"})
 
-        if payload.structured_input:
-            # Route decision
-            route = self.route_decider.decide(payload.transfer_tool, payload.structured_input)
-            # Country risk
-            country_risk_result = self.country_risk.assess(payload.structured_input)
-            # Data sensitivity
-            data_sens = self.data_sensitivity.assess(payload.structured_input)
-            # Measure sufficiency
-            risk_level_str = country_risk_result.risk_level
-            # Compose: country risk + data sensitivity
-            if risk_level_str == "VERY_HIGH" or data_sens.get("sensitivity") == "very_high":
-                effective_risk = "VERY_HIGH"
-            elif risk_level_str == "HIGH" or data_sens.get("risk_factor", 1.0) >= 1.5:
-                effective_risk = "HIGH"
+            route = None
+            country_risk_result = None
+            measure_assessments = []
+            measure_overall = "unknown"
+            effective_risk = "MEDIUM"
+            data_sens = {}
+
+            if payload.structured_input:
+                route = self.route_decider.decide(payload.transfer_tool, payload.structured_input)
+                country_risk_result = self.country_risk.assess(payload.structured_input)
+                data_sens = self.data_sensitivity.assess(payload.structured_input)
+                risk_level_str = country_risk_result.risk_level
+                if risk_level_str == "VERY_HIGH" or data_sens.get("sensitivity") == "very_high":
+                    effective_risk = "VERY_HIGH"
+                elif risk_level_str == "HIGH" or data_sens.get("risk_factor", 1.0) >= 1.5:
+                    effective_risk = "HIGH"
+                else:
+                    effective_risk = risk_level_str
+                measure_assessments, measure_overall = self.measure_sufficiency.assess(
+                    payload.structured_input, effective_risk,
+                )
+                if effective_risk == "VERY_HIGH" or measure_overall == "insufficient":
+                    level = "HIGH"
+                elif effective_risk == "HIGH" or measure_overall == "conditional":
+                    level = "MEDIUM"
+                else:
+                    level = "LOW"
             else:
-                effective_risk = risk_level_str
-            measure_assessments, measure_overall = self.measure_sufficiency.assess(
-                payload.structured_input, effective_risk,
+                level = self._resolve_risk_level(payload.third_country_assessment, payload.final_conclusion)
+
+            # ── Agent 1: RAG Planning — multi-query targeted retrieval ──
+            dest = ""
+            if payload.structured_input:
+                dest = payload.structured_input.destination_country or payload.structured_input.importer_country
+            agent_rag = self.agents["rag_planning"].run(
+                transfer_tool=payload.transfer_tool, dest_country=dest,
+                data_categories=list(payload.structured_input.data_categories) if payload.structured_input else [],
+                sensitivity=data_sens.get("sensitivity", "unknown"),
+                country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
+                has_spi=payload.structured_input.has_special_category_data if payload.structured_input else False,
+                gov_access_risk=country_risk_result.gov_access_risk if country_risk_result else False,
+                route=route.route if route else "unknown",
             )
-            # System risk level
-            if effective_risk == "VERY_HIGH" or measure_overall == "insufficient":
-                level = "HIGH"
-            elif effective_risk == "HIGH" or measure_overall == "conditional":
-                level = "MEDIUM"
-            else:
-                level = "LOW"
-        else:
-            # Fallback: original keyword-based assessment
-            level = self._resolve_risk_level(payload.third_country_assessment, payload.final_conclusion)
+            if trace:
+                thought = summarize_agent_output("TIA RAG检索规划", agent_rag)
+                trace.record("thought", {"summary": thought})
 
-        # ── Agent 1: RAG Planning — multi-query targeted retrieval ──
-        dest = ""
-        if payload.structured_input:
-            dest = payload.structured_input.destination_country or payload.structured_input.importer_country
-        agent_rag = self.agents["rag_planning"].run(
-            transfer_tool=payload.transfer_tool, dest_country=dest,
-            data_categories=list(payload.structured_input.data_categories) if payload.structured_input else [],
-            sensitivity=data_sens.get("sensitivity", "unknown"),
-            country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
-            has_spi=payload.structured_input.has_special_category_data if payload.structured_input else False,
-            gov_access_risk=country_risk_result.gov_access_risk if country_risk_result else False,
-            route=route.route if route else "unknown",
-        )
-        # Collect results from all planned queries
-        all_regs: list = []
-        reg_queries = agent_rag.get("queries", [])
-        for q in reg_queries[:4]:
-            try:
-                hits = retrieve_regulations(q["query"], top_k=3, jurisdiction="eu", path="all")
-                all_regs.extend(hits)
-            except Exception:
-                pass
-        # Fallback: single query if agent produced no queries
-        if not all_regs:
-            all_regs = retrieve_regulations(
-                f"TIA EDPB transfer tool {payload.transfer_tool} {dest} third country law assessment",
-                top_k=5, jurisdiction="eu", path="all",
+            all_regs: list = []
+            reg_queries = agent_rag.get("queries", [])
+            for q in reg_queries[:4]:
+                try:
+                    hits = retrieve_regulations(q["query"], top_k=3, jurisdiction="eu", path="all")
+                    all_regs.extend(hits)
+                except Exception:
+                    pass
+            if not all_regs:
+                all_regs = retrieve_regulations(
+                    f"TIA EDPB transfer tool {payload.transfer_tool} {dest} third country law assessment",
+                    top_k=5, jurisdiction="eu", path="all",
+                )
+            seen_ids = set()
+            regs = []
+            for r in all_regs:
+                rid = getattr(r, "id", str(r))
+                if rid not in seen_ids:
+                    seen_ids.add(rid)
+                    regs.append(r)
+            regs = regs[:8]
+            citations = [f"{item.title}{item.article}" for item in regs]
+            reg_snippet = "\n".join(
+                f"- {item.title}{item.article}：{(item.content or '')[:120]}"
+                for item in regs
+            ) or "（暂无检索到相关法条）"
+
+            attachment_notes: list[str] = []
+            attachment_evidences: list[dict] = []
+            for att in payload.attachments:
+                try:
+                    text = self.parser.parse_text(att.storage_uri)
+                    attachment_notes.append(f"{att.file_name}: {text[:160].replace(chr(10), ' ')}")
+                    attachment_evidences.append(self.attachment_evidence.extract(att))
+                except (FileNotFoundError, ValueError) as exc:
+                    attachment_notes.append(f"{att.file_name}: [parse skipped] {exc}")
+                    attachment_evidences.append({"parse_error": True})
+
+            ta_ev = next((e for e in attachment_evidences if e.get("role") == "transfer_agreement"), None)
+            cl_ev = next((e for e in attachment_evidences if e.get("role") == "country_law_analysis"), None)
+            tc_ev = next((e for e in attachment_evidences if e.get("role") == "technical_control_doc"), None)
+            si_summary = {}
+            if payload.structured_input:
+                si_summary = {
+                    "encryption_before_transfer": payload.structured_input.encryption_before_transfer,
+                    "key_managed_in_eu": payload.structured_input.key_managed_in_eu,
+                    "has_secure_enclave": payload.structured_input.has_secure_enclave,
+                    "has_key_separation": payload.structured_input.has_key_separation,
+                }
+            agent_att = self.agents["attachment_review"].run(
+                transfer_agreement_evidence=ta_ev,
+                country_law_evidence=cl_ev,
+                technical_control_evidence=tc_ev,
+                structured_input_summary=si_summary,
             )
-        # Deduplicate by source_id
-        seen_ids = set()
-        regs = []
-        for r in all_regs:
-            rid = getattr(r, "id", str(r))
-            if rid not in seen_ids:
-                seen_ids.add(rid)
-                regs.append(r)
-        regs = regs[:8]
-        citations = [f"{item.title}{item.article}" for item in regs]
-        reg_snippet = "\n".join(
-            f"- {item.title}{item.article}：{(item.content or '')[:120]}"
-            for item in regs
-        ) or "（暂无检索到相关法条）"
+            if trace:
+                thought = summarize_agent_output("TIA 附件审查", agent_att)
+                trace.record("thought", {"summary": thought})
 
-        # ── Attachment evidence (NEW) ──
-        attachment_notes: list[str] = []
-        attachment_evidences: list[dict] = []
-        for att in payload.attachments:
-            try:
-                text = self.parser.parse_text(att.storage_uri)
-                attachment_notes.append(f"{att.file_name}: {text[:160].replace(chr(10), ' ')}")
-                attachment_evidences.append(self.attachment_evidence.extract(att))
-            except (FileNotFoundError, ValueError) as exc:
-                attachment_notes.append(f"{att.file_name}: [parse skipped] {exc}")
-                attachment_evidences.append({"parse_error": True})
+            # Inject evidence review findings into attachment_notes for report display
+            for conflict in agent_att.get("conflicts", []):
+                attachment_notes.append(f"[证据冲突] {conflict}")
+            for missing in agent_att.get("missing_evidence", []):
+                attachment_notes.append(f"[缺失证据] {missing}")
 
-        # ── Agent 2: Attachment Review — deep evidence quality assessment ──
-        ta_ev = next((e for e in attachment_evidences if e.get("role") == "transfer_agreement"), None)
-        cl_ev = next((e for e in attachment_evidences if e.get("role") == "country_law_analysis"), None)
-        tc_ev = next((e for e in attachment_evidences if e.get("role") == "technical_control_doc"), None)
-        si_summary = {}
-        if payload.structured_input:
-            si_summary = {
-                "encryption_before_transfer": payload.structured_input.encryption_before_transfer,
-                "key_managed_in_eu": payload.structured_input.key_managed_in_eu,
-                "has_secure_enclave": payload.structured_input.has_secure_enclave,
-                "has_key_separation": payload.structured_input.has_key_separation,
-            }
-        agent_att = self.agents["attachment_review"].run(
-            transfer_agreement_evidence=ta_ev,
-            country_law_evidence=cl_ev,
-            technical_control_evidence=tc_ev,
-            structured_input_summary=si_summary,
-        )
-        # Inject evidence review findings into attachment_notes for report display
-        for conflict in agent_att.get("conflicts", []):
-            attachment_notes.append(f"[证据冲突] {conflict}")
-        for missing in agent_att.get("missing_evidence", []):
-            attachment_notes.append(f"[缺失证据] {missing}")
+            context_block = self._build_context(payload, level, route, country_risk_result,
+                                                 data_sens, measure_assessments, reg_snippet)
 
-        # ── Context block ──
-        context_block = self._build_context(payload, level, route, country_risk_result,
-                                             data_sens, measure_assessments, reg_snippet)
+            chapters: list[TIAChapter] = []
+            for idx, title in enumerate(TIA_CHAPTERS, start=1):
+                if self.llm_client and self.llm_client.enabled:
+                    content = generate_chapter(self.llm_client, "tia", title, context_block, citations=citations)
+                else:
+                    content = f"（{title}：LLM未配置，此处为占位内容）"
+                chapters.append(TIAChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=level))
 
-        # ── Chapters ──
-        chapters: list[TIAChapter] = []
-        for idx, title in enumerate(TIA_CHAPTERS, start=1):
-            if self.llm_client and self.llm_client.enabled:
-                content = generate_chapter(self.llm_client, "tia", title, context_block, citations=citations)
-            else:
-                content = f"（{title}：LLM未配置，此处为占位内容）"
-            chapters.append(TIAChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=level))
-
-        # ── Agent 3: DPO Review — second opinion quality gate ──
-        dpo_review = self.agents["dpo_review"].run(
-            route=route.route if route else "unknown",
-            country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
-            sensitivity=data_sens.get("sensitivity", "unknown"),
-            measure_overall=measure_overall if (payload.structured_input and measure_overall) else "unknown",
-            effective_risk=effective_risk if payload.structured_input else level,
-            issues=[],
-            chapter_summaries=[{
-                "no": ch.chapter_no, "title": ch.title, "content": ch.content[:300],
-            } for ch in chapters],
-        )
-        # Inject DPO review findings
-        if dpo_review.get("non_reliance_warning_needed"):
-            chapters[0].content = (
-                "⚠️ 重要警告：不应仅依赖本TIA草案启动传输。"
-                "建议在实施前寻求主管监管机构指导或批准。\n\n" + chapters[0].content
+            dpo_review = self.agents["dpo_review"].run(
+                route=route.route if route else "unknown",
+                country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
+                sensitivity=data_sens.get("sensitivity", "unknown"),
+                measure_overall=measure_overall if (payload.structured_input and measure_overall) else "unknown",
+                effective_risk=effective_risk if payload.structured_input else level,
+                issues=[],
+                chapter_summaries=[{
+                    "no": ch.chapter_no, "title": ch.title, "content": ch.content[:300],
+                } for ch in chapters],
             )
-        if dpo_review.get("dpo_position"):
-            chapters[0].content += f"\n\n**DPO意见**: {dpo_review['dpo_position']}"
-        if dpo_review.get("mandatory_conditions"):
-            chapters[5].content += (
-                "\n\n**强制前置条件**:\n" +
-                "\n".join(f"- {c}" for c in dpo_review["mandatory_conditions"])
+            if trace:
+                thought = summarize_agent_output("TIA DPO审查", dpo_review)
+                trace.record("thought", {"summary": thought})
+
+            if dpo_review.get("non_reliance_warning_needed"):
+                chapters[0].content = (
+                    "⚠️ 重要警告：不应仅依赖本TIA草案启动传输。"
+                    "建议在实施前寻求主管监管机构指导或批准。\n\n" + chapters[0].content
+                )
+            if dpo_review.get("dpo_position"):
+                chapters[0].content += f"\n\n**DPO意见**: {dpo_review['dpo_position']}"
+            if dpo_review.get("mandatory_conditions"):
+                chapters[5].content += (
+                    "\n\n**强制前置条件**:\n" +
+                    "\n".join(f"- {c}" for c in dpo_review["mandatory_conditions"])
+                )
+
+            issues = self._check_consistency(payload, level, route, country_risk_result,
+                                              data_sens, measure_assessments, attachment_evidences)
+
+            outputs = self._render(run_task_id, payload, chapters, attachment_notes)
+
+            if trace:
+                trace.record("final", {
+                    "summary": "TIA 传输影响评估完成",
+                    "detail": {"output_files": outputs if isinstance(outputs, dict) else {}},
+                })
+                trace.record("final_brief", {
+                    "summary": "TIA 传输影响评估完成",
+                    "detail": {
+                        "conclusion": "TIA 传输影响评估已完成",
+                        "files": list(outputs.values()) if isinstance(outputs, dict) else [],
+                        "risks": [],
+                        "next_steps": ["复核 TIA 评估结论", "确认补充措施的充分性"],
+                    },
+                })
+
+            return TIAResult(
+                report_path=outputs["docx"],
+                output_files=outputs,
+                transfer_tool=payload.transfer_tool,
+                risk_level=level,
+                chapters=chapters,
+                consistency_issues=issues,
+                attachment_notes=attachment_notes,
+                route_decision=route,
+                country_risk=country_risk_result,
+                measure_assessments=measure_assessments,
             )
-
-        # ── Consistency ──
-        issues = self._check_consistency(payload, level, route, country_risk_result,
-                                          data_sens, measure_assessments, attachment_evidences)
-
-        # ── Render ──
-        outputs = self._render(payload, chapters, attachment_notes)
-
-        return TIAResult(
-            report_path=outputs["docx"],
-            output_files=outputs,
-            transfer_tool=payload.transfer_tool,
-            risk_level=level,
-            chapters=chapters,
-            consistency_issues=issues,
-            attachment_notes=attachment_notes,
-            route_decision=route,
-            country_risk=country_risk_result,
-            measure_assessments=measure_assessments,
-        )
+        finally:
+            finalize_run(token)
 
     # ── Context builder ──
 
@@ -342,7 +370,12 @@ class TIAService:
     # ── Async ──
 
     def submit_async(self, payload: TIARequest) -> TIAAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = uuid.uuid4().hex
+        trace = TraceRecorder(Path("outputs/tia") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> TIAAsyncStatus:
@@ -356,8 +389,8 @@ class TIAService:
 
     # ── Render ──
 
-    def _render(self, payload: TIARequest, chapters: list[TIAChapter], attachment_notes: list[str]) -> dict[str, str]:
-        output_dir = Path("outputs/tia")
+    def _render(self, task_id: str, payload: TIARequest, chapters: list[TIAChapter], attachment_notes: list[str]) -> dict[str, str]:
+        output_dir = Path("outputs/tia") / task_id / "outputs"
         date_stamp = format_date_stamp()
         base_name = safe_filename(f"{payload.data_exporter_profile}_{payload.transfer_tool}_TIA")
         md_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.md"
