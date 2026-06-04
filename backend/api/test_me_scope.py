@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from pathlib import Path
+import json
 
 from fastapi.testclient import TestClient
 
@@ -118,3 +119,42 @@ def test_my_data_endpoints_are_user_scoped(tmp_path: Path) -> None:
         meta_b = client.get("/api/v1/reports/diag-a-1/metadata", headers={"Authorization": f"Bearer {token_b}"})
         assert meta_b.status_code == 200
         assert meta_b.json()["summary"] is None
+
+
+def test_workspace_recovery_reconstructs_run_and_response(tmp_path: Path) -> None:
+    with _make_client(tmp_path) as (client, app):
+        token = _register(client, "carol", "carol@scope.test")
+        me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}).json()["user"]
+
+        output_dir = tmp_path / "outputs" / "assessment" / "task-123" / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "report.md").write_text("# 报告标题\n\n正文内容。", encoding="utf-8")
+        (output_dir / "facts.json").write_text(
+            json.dumps({"chapters": [{"title": "第一章", "content": "这里是正文"}]}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        session = app.state.container.session_factory()
+        try:
+            session.add(
+                ReportArtifactModel(
+                    id="report-r-1",
+                    user_id=me["id"],
+                    owner_type="assessment",
+                    owner_id="task-123",
+                    artifact_type="markdown",
+                    file_path=str(output_dir / "report.md"),
+                    preview_json='{"summary":"Recovered summary"}',
+                )
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        response = client.get("/api/v1/me/workspace-recovery", headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["task_id"] == "task-123"
+        assert items[0]["run"]["async_task_id"] == "task-123"
+        assert items[0]["run"]["response"]["chapters"][0]["title"] == "第一章"

@@ -63,6 +63,11 @@ type ReportPreviewSection = {
   content: string;
 };
 
+type ReconstructedReportPayload = {
+  sections: ReportPreviewSection[];
+  citationTaskId: string | null;
+};
+
 type OpenedResource =
   | { kind: "output"; name: string; path: string; fileType: string }
   | { kind: "input-file"; name: string; path: string; fileType: string }
@@ -266,6 +271,18 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   return sections;
 };
 
+const buildSectionsFromArtifactPreview = (preview: ArtifactPreview | null): ReportPreviewSection[] => {
+  if (!preview || preview.render_mode !== "text" || !preview.content.trim()) {
+    return [];
+  }
+  return [
+    {
+      title: preview.file_name || "Report",
+      content: preview.content,
+    },
+  ];
+};
+
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
@@ -334,12 +351,33 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [selectedArtifact, sortedReportArtifacts]);
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
-  const reportPreviewSections = useMemo<ReportPreviewSection[]>(() => {
+  const reconstructedReport = useMemo<ReconstructedReportPayload>(() => {
     if (responseChapters.length > 0) {
-      return responseChapters.map((chapter) => ({ title: chapter.title, content: chapter.content }));
+      return {
+        sections: responseChapters.map((chapter) => ({ title: chapter.title, content: chapter.content })),
+        citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
+      };
     }
-    return buildFallbackPreviewSections(latestRun?.response, lang);
-  }, [lang, latestRun?.response, responseChapters]);
+    const fallbackSections = buildFallbackPreviewSections(latestRun?.response, lang);
+    if (fallbackSections.length > 0) {
+      return {
+        sections: fallbackSections,
+        citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
+      };
+    }
+    const artifactSections = buildSectionsFromArtifactPreview(artifactPreview);
+    if (artifactSections.length > 0) {
+      return {
+        sections: artifactSections,
+        citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
+      };
+    }
+    return {
+      sections: [],
+      citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
+    };
+  }, [artifactPreview, lang, latestRun?.asyncTaskId, latestRun?.response, responseChapters, taskSpace.id]);
+  const reportPreviewSections = reconstructedReport.sections;
   const terminalLines = useMemo(() => {
     const lines: string[] = [];
     lines.push(`[workspace] ${taskSpace.name} (${taskSpace.id})`);
@@ -821,7 +859,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [activeTaskId, latestRun]);
 
   useEffect(() => {
-    if (!latestRun?.asyncTaskId || !isRunInProgress(latestRun)) return;
+    if (!latestRun?.asyncTaskId) return;
+    const shouldSync = isRunInProgress(latestRun) || !latestRun.response;
+    if (!shouldSync) return;
 
     let cancelled = false;
     const moduleDefinition = findModule(latestRun.module);
@@ -1222,10 +1262,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
                 <strong>{section.title}</strong>
                 <div className="workspace-report-richtext">
-                  {latestRun?.asyncTaskId ? (
+                  {reconstructedReport.citationTaskId ? (
                     <CitationMarkdownRenderer
                       markdown={normalizeMarkdownForRender(section.content)}
-                      taskId={latestRun.asyncTaskId}
+                      taskId={reconstructedReport.citationTaskId}
                       moduleKey={taskSpace.module}
                     />
                   ) : (

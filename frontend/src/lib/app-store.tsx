@@ -12,7 +12,16 @@ import type {
   TaskSpace
 } from "./domain";
 import { useAuth } from "./auth/AuthContext";
-import { fetchMyReports, fetchMyTasks, fetchWorkspaceState, saveWorkspaceState, type MyReportItem, type MyTaskItem } from "./me-api";
+import {
+  fetchMyReports,
+  fetchMyTasks,
+  fetchWorkspaceRecovery,
+  fetchWorkspaceState,
+  saveWorkspaceState,
+  type MyReportItem,
+  type MyTaskItem,
+  type RecoveredWorkspaceItem
+} from "./me-api";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
 
 const STORAGE_KEY = "ai4law_app_state_v1";
@@ -398,6 +407,74 @@ function buildRecoveredWorkspaceState(tasks: MyTaskItem[], reports: MyReportItem
   };
 }
 
+function buildRecoveryStateFromRuns(items: RecoveredWorkspaceItem[]) {
+  const taskSpaces = items.map((item) => {
+    const module = item.module;
+    const jurisdiction = inferJurisdiction(module);
+    const template = resolveTaskTemplate(module, jurisdiction);
+    return {
+      id: item.task_id,
+      name: buildRecoveredTaskName(
+        {
+          id: item.task_id,
+          source: module,
+          status: item.status,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          module,
+        },
+        module,
+        jurisdiction
+      ),
+      mode: "rapid" as const,
+      jurisdiction,
+      taskTemplateId: template.id,
+      module: template.module,
+      workspaceStyle: template.workspaceStyle,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at
+    };
+  });
+
+  const moduleRuns: ModuleRun[] = items
+    .filter((item) => !!item.run)
+    .map((item) => ({
+      id: item.run!.id,
+      taskSpaceId: item.run!.task_space_id,
+      module: item.run!.module as ModuleRun["module"],
+      runMode: item.run!.run_mode,
+      startedAt: item.run!.started_at,
+      finishedAt: item.run!.finished_at ?? undefined,
+      success: !!item.run!.success,
+      request: item.run!.request ?? {},
+      response: item.run!.response ?? undefined,
+      error: item.run!.error ?? undefined,
+      asyncTaskId: item.run!.async_task_id ?? undefined,
+      asyncState: item.run!.async_state ?? undefined,
+    }));
+
+  const artifacts = dedupeArtifacts(
+    items.flatMap((item) =>
+      item.artifacts.map((artifact) => ({
+        id: artifact.id,
+        taskSpaceId: item.task_id,
+        module: item.module as OutputArtifact["module"],
+        kind: artifact.artifact_type,
+        path: artifact.file_path,
+        createdAt: artifact.created_at
+      }))
+    )
+  );
+
+  return {
+    taskSpaces,
+    moduleRuns,
+    artifacts,
+    evidenceHits: [] as EvidenceHit[],
+    issues: [] as ConsistencyIssue[]
+  };
+}
+
 function loadState(): AppState {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return initialState;
@@ -600,7 +677,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false;
-    Promise.all([fetchWorkspaceState(), fetchMyTasks(), fetchMyReports()]).then(([remote, myTasks, myReports]) => {
+    Promise.all([fetchWorkspaceState(), fetchMyTasks(), fetchMyReports(), fetchWorkspaceRecovery()]).then(([remote, myTasks, myReports, recoveredRuns]) => {
       if (cancelled) return;
 
       const localSnapshot = localSnapshotRef.current;
@@ -620,21 +697,25 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             issues: []
           };
       const recovered = buildRecoveredWorkspaceState(myTasks, myReports);
+      const recoveredFromRuns = buildRecoveryStateFromRuns(recoveredRuns);
 
       const mergedTaskSpaces = mergeTaskSpaces(
         normalizedRemote.taskSpaces,
         localSnapshot.taskSpaces,
-        recovered.taskSpaces
+        recovered.taskSpaces,
+        recoveredFromRuns.taskSpaces
       );
       const mergedModuleRuns = dedupeById([
         ...normalizedRemote.moduleRuns,
         ...localSnapshot.moduleRuns,
-        ...recovered.moduleRuns
+        ...recovered.moduleRuns,
+        ...recoveredFromRuns.moduleRuns
       ]);
       const mergedArtifacts = dedupeArtifacts([
         ...normalizedRemote.artifacts,
         ...localSnapshot.artifacts,
-        ...recovered.artifacts
+        ...recovered.artifacts,
+        ...recoveredFromRuns.artifacts
       ]);
       const mergedEvidenceHits = dedupeById([
         ...normalizedRemote.evidenceHits,
