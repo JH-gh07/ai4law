@@ -11,45 +11,64 @@ function normalizeHeadingSpacing(value: string): string {
 
 // ---------------------------------------------------------------------------
 // 法条引用上下文检测
-// 目的：避免把 Article 28、Art.28、GDPR Art.28、第28条 等法条名称
-// 错误拆成 "Article 2" 和 "8、..."。
+//
+// 目的：避免把 Article 28、Art.28、Sec. 3.2.1、第28条 等法条名称
+// 错误拆成 "Article 2" + "8、..."。
+//
+// 覆盖的典型模式：
+//   Article 28、         → 关键词紧邻数字
+//   Sec. 3.2.1、         → 关键词 + 条款号链
+//   Directive 95/46/EC Art.29、 → 多层引用
+//   第28条、             → 中文法条
+//   第 28 条、           → 中文法条（带空格）
 // ---------------------------------------------------------------------------
 
-const LEGAL_REF_PATTERN =
-  /(?:Article|Art\.?|Art|Section|Sec\.?|Sec|§|Regulation|Directive|GDPR|CPRA|SCC|BCR|DPIA|TIA)\s*$/i;
 
-/** 数字前是否紧邻法条引用关键词 */
-function isLegalArticlePrefix(textBefore: string): boolean {
-  return LEGAL_REF_PATTERN.test(textBefore);
+/**
+ * 检查匹配位置之前的文本是否属于法条引用上下文。
+ * 匹配 "法条关键词 + 可选的条款号链条（如 3.2.1）"。
+ * 例如 "Sec. 3.2." 中 3.2.1 的 1 被匹配时，before = "Sec. 3.2." 应通过检查。
+ */
+function isLegalNumberContext(before: string): boolean {
+  return (
+    // 英文法条引用：关键词 + 可选数字链 + 可选尾部 dot（如 "Sec. 3.2."）
+    /(?:Article|Art\.?|Art|Section|Sec\.?|Sec|§|Regulation|Directive|GDPR|CPRA|SCC|BCR|DPIA|TIA)(?:\s*\d+(?:[.]\d+)*)*[.]?\s*$/i.test(before) ||
+    // 中文法条引用："第X条"、"第 X 条"
+    /第\s*\d*\s*条?\s*$/.test(before)
+  );
 }
 
-/** 数字后是否跟着版本号/小数模式（如 28.5、2.1.0）—— 拒绝拆分 */
-function isDecimalOrVersion(digit: string, textAfter: string): boolean {
-  // digit 后紧跟 .\d → 小数或版本号的一部分，不拆
-  return /^\.[\d]/.test(textAfter);
+/**
+ * 版本号前缀检测。数字前如果是 v/V → 版本号，不拆。
+ * 例如 v2.1.0 中的 2. 不拆。
+ */
+function isVersionPrefix(before: string): boolean {
+  return /[vV]$/.test(before);
 }
 
-/** 数字是否属于 "第X条"、"第 X 条" 等中文法条前缀 —— 拒绝拆分 */
-function isChineseArticleNumber(line: string, matchIndex: number): boolean {
-  const before = line.slice(0, matchIndex);
-  return /第\s*$/.test(before);
+/**
+ * 数字后是否紧跟 digit → 说明是小数或版本号的一部分，不拆。
+ * 例如 28.5%、3.2.1 中的 3. 和 2.。
+ */
+function followedByDigit(after: string): boolean {
+  return /^\d/.test(after);
 }
 
 // ---------------------------------------------------------------------------
 // explodePackedLine — 将紧密排列的文本拆成独立行
 //
-// 安全规则（无条件拆分，因为这些模式在中文法律文本中几乎永远是编号）：
+// 安全规则（无条件拆分）：
 //   1. 【依据：...】
 //   2. 第X章
-//   3. 纯中文数字 + 、（一、二、三...）
-//   4. 全角括号中文数字 （一）（二）...
+//   3. 纯中文数字 + 、（一、二、三...）—— 纯中文数字不会出现在法条号里
+//   4. 全角括号数字 （一）（二）...
 //
-// 条件规则（需要法条上下文检查，宁愿漏拆也不能错拆法条号）：
-//   5. 阿拉伯数字 + 、（如 1、 28、）—— 需检查前面不是法条引用
-//   6. (数字) / 数字.  —— 需检查前面不是法条引用 + 排除小数
+// 条件规则（需法条上下文检查）：
+//   5. 阿拉伯数字 + 、（如 1、 28、）
+//   6. (数字) / 数字.（如 (1) 或 1.）
+//
+// 原则：宁愿漏拆一个真标题，也不能错拆一个法条号。
 // ---------------------------------------------------------------------------
-
-const PURE_CHINESE_NUM = /[一二三四五六七八九十百千万零〇两]+/;
 
 function explodePackedLine(line: string): string[] {
   // 1. 先拆【依据：...】
@@ -66,43 +85,38 @@ function explodePackedLine(line: string): string[] {
     /(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)/g,
     "\n$1",
   );
-  // 纯中文数字 + 、（不包含阿拉伯数字，避免与法条号冲突）
+  // 纯中文数字 + 、（不包含阿拉伯数字）
   next = next.replace(
     /(?<!\n)([一二三四五六七八九十百千万零〇两]+、)/g,
     "\n$1",
   );
-  // 全角括号中文数字
+  // 全角括号数字
   next = next.replace(
     /(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)/g,
     "\n$1",
   );
 
-  // --- 条件拆分（需上下文检查）---
-  // 阿拉伯数字 + 、（如 1、 28、）
-  next = next.replace(
-    /(?<!\n)(\d+、)(?=\S)/g,
-    (match, _m, offset) => {
-      const before = next.slice(0, offset);
-      // 法条上下文 → 不拆（如 Article 28、）
-      if (isLegalArticlePrefix(before)) return match;
-      // "第 X 条" 模式 → 不拆
-      if (isChineseArticleNumber(next, offset)) return match;
-      return `\n${match}`;
-    },
-  );
+  // --- 条件拆分：阿拉伯数字 + 、（如 1、 28、）---
+  next = next.replace(/(?<!\n)(\d+、)(?=\S)/g, (match, _m, offset) => {
+    const before = next.slice(0, offset);
+    if (isLegalNumberContext(before)) return match;
+    return `\n${match}`;
+  });
 
-  // (数字) 或 数字.  —— 需排除小数和法条上下文
+  // --- 条件拆分：(数字) 或 数字. ---
   next = next.replace(
     /(?<!\n)(\(?\d+\)|\d+\.)\s*(?=\S)/g,
     (match, marker, offset) => {
       const before = next.slice(0, offset);
       const after = next.slice(offset + match.length);
-      // 法条上下文 → 不拆
-      if (isLegalArticlePrefix(before)) return match;
-      // "第 X 条" 模式 → 不拆
-      if (isChineseArticleNumber(next, offset)) return match;
-      // 小数/版本号 → 不拆
-      if (isDecimalOrVersion(match.replace(/[().]/g, ""), after)) return match;
+
+      // 版本号前缀（v2.1.0）→ 不拆
+      if (isVersionPrefix(before)) return match;
+      // 法条引用上下文 → 不拆
+      if (isLegalNumberContext(before)) return match;
+      // 后跟数字 → 小数/条款号链/版本号的一部分 → 不拆
+      if (followedByDigit(after)) return match;
+
       return `\n${marker} `;
     },
   );
@@ -111,7 +125,10 @@ function explodePackedLine(line: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// classifyLine
+// classifyLine — 将拆好的行映射为 markdown 结构
+//
+// 关键：阿拉伯数字 + 、只做有序列表，绝不升级为标题。
+// 因为 LLM 可能在行首直接输出 "28、..." 这种法条号片段。
 // ---------------------------------------------------------------------------
 
 function classifyLine(line: string): string {
@@ -122,14 +139,13 @@ function classifyLine(line: string): string {
   // 中文章节
   if (/^第[一二三四五六七八九十百千万零〇两0-9]+章\b/.test(line)) return `# ${line}`;
 
-  // 纯中文数字 + 、→ 二级标题（安全，因为中文数字不会出现在法条号里）
+  // 纯中文数字 + 、→ h2（安全，中文数字不会是法条号的一部分）
   if (/^[一二三四五六七八九十百千万零〇两]+、/.test(line)) return `## ${line}`;
 
-  // 全角括号中文数字 → 三级标题
+  // 全角括号数字 → h3
   if (/^（[一二三四五六七八九十百千万零〇两0-9]+）/.test(line)) return `### ${line}`;
 
-  // 阿拉伯数字 + 、→ 只做有序列表，不升级为标题
-  // （因为可能是法条号 "28、" 被 LLM 原生放在行首的情况）
+  // 阿拉伯数字 + 、→ 只做有序列表，绝不升级为标题
   const chineseDotOrder = line.match(/^(\d+)、\s*(.*)$/);
   if (chineseDotOrder) {
     return `${chineseDotOrder[1]}. ${chineseDotOrder[2] || ""}`.trim();
@@ -159,7 +175,7 @@ function lineKind(line: string): "heading" | "list" | "basis" | "table" | "parag
 }
 
 // ---------------------------------------------------------------------------
-// normalizeLegalMarkdown
+// normalizeLegalMarkdown — 对外入口
 // ---------------------------------------------------------------------------
 
 export function normalizeLegalMarkdown(value: string): string {
