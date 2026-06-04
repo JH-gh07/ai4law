@@ -5,6 +5,7 @@ from pathlib import Path
 from backend.common.llm.client import LLMClient
 from backend.common.risk.scoring import risk_level
 from backend.core.settings import get_settings
+from backend.common.trace.recorder import TraceRecorder
 from backend.modules.diagnosis.schema import DiagnosisAnswers, DiagnosisResult
 from backend.modules.diagnosis.agents import create_diag_agents
 
@@ -30,8 +31,11 @@ class DiagnosisService:
         with open(tree_path, "r", encoding="utf-8") as fp:
             return json.load(fp)
 
-    def evaluate(self, answers: DiagnosisAnswers) -> DiagnosisResult:
+    def evaluate(self, answers: DiagnosisAnswers, *, trace: TraceRecorder | None = None) -> DiagnosisResult:
         answers = self._normalize_answers(answers)
+
+        if trace:
+            trace.record("status", {"summary": "开始路径诊断", "detail": {"module": "diagnosis"}})
 
         # ── Agent-assisted fact clarification for unknown fields ──
         agent_trace: dict = {}
@@ -49,6 +53,8 @@ class DiagnosisService:
                 processes_important_data=str(answers.m3_processes_important_data or ""),
             )
             if imp_result:
+                if trace:
+                    trace.record("thought", {"summary": "重要数据分析 Agent 完成"})
                 agent_trace["important_data"] = imp_result
                 suggested = imp_result.get("suggested_answer", "unknown")
                 if suggested in ("yes", "no"):
@@ -67,6 +73,8 @@ class DiagnosisService:
                 use_case=str(answers.q6_scenario.value),
             )
             if pi_result:
+                if trace:
+                    trace.record("thought", {"summary": "个人信息分类 Agent 完成"})
                 agent_trace["pi_classify"] = pi_result
                 suggested = pi_result.get("suggested_q5_no_personal_info", "unknown")
                 if suggested in ("yes", "no"):
@@ -86,18 +94,24 @@ class DiagnosisService:
                 spi_count=answers.q4_spi_count,
             )
             if ex_result:
+                if trace:
+                    trace.record("thought", {"summary": "豁免情形分析 Agent 完成"})
                 agent_trace["exemption"] = ex_result
 
         # ── Decision tree ──
         for rule in self._tree["rules"]:
             when = rule["when"]
             if self._rule_match(when, answers):
+                if trace:
+                    trace.record("final", {"summary": "路径诊断完成", "detail": {"matched_rule": rule.get("id", ""), "recommended_path": rule.get("path", "")}})
                 return self._build_rule_result(answers, rule)
 
         # 明显信息不足时，走 AI 推测路径（并显式标注为推测结论）。
         if self._needs_ai_inference(answers):
             inferred = self._build_ai_inference_result(answers)
             if inferred is not None:
+                if trace:
+                    trace.record("final", {"summary": "路径诊断完成", "detail": {"mode": "ai_inference", "recommended_path": inferred.recommended_path}})
                 return inferred
 
         # ── Attach agent findings to uncertainty notes ──
@@ -126,6 +140,8 @@ class DiagnosisService:
                 )
 
         default = self._tree["default"]
+        if trace:
+            trace.record("final", {"summary": "路径诊断完成", "detail": {"mode": "default", "recommended_path": default.get("path", "")}})
         return self._build_result(
             answers,
             default["path"],
