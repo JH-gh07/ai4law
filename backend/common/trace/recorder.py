@@ -129,13 +129,22 @@ class TraceRecorder:
         if self._subscribers:
             from backend.common.trace.events import RunEvent
             event_type = _NAME_TO_EVENT_TYPE.get(name, "status")
+            if isinstance(payload.get("detail"), dict):
+                detail = dict(payload.get("detail") or {})
+            else:
+                detail = {
+                    key: value
+                    for key, value in payload.items()
+                    if key not in {"summary", "detail", "level"}
+                }
+            detail.setdefault("raw_name", name)
             run_event = RunEvent(
                 task_id=self._task_id,
                 seq=self._seq,
                 event_type=event_type,
                 timestamp=to_write["created_at"],
                 summary=payload.get("summary", name),
-                detail=payload.get("detail"),
+                detail=detail or None,
                 level=payload.get("level", "audit"),
             )
             for sub in self._subscribers:

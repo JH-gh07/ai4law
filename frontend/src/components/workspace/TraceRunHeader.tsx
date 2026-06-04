@@ -13,10 +13,19 @@ function fmtTime(iso?: string): string {
 }
 
 export function TraceRunHeader({ moduleLabel, status, taskId, startedAt, completedAt, nodeCount }: Props) {
+  const durationMs =
+    startedAt && completedAt
+      ? Math.max(0, new Date(completedAt).getTime() - new Date(startedAt).getTime())
+      : null;
+  const durationLabel = durationMs != null ? `${Math.round(durationMs / 1000)}s` : "--";
+
   return (
     <div className="trace-run-header">
       <div className="trace-run-header-left">
-        <span className="trace-run-module">{moduleLabel}</span>
+        <div className="trace-run-title-group">
+          <span className="trace-run-module">{moduleLabel}</span>
+          <span className="trace-run-title">执行历史记录</span>
+        </div>
         <span className={`trace-run-badge badge-${status}`}>
           {status === "running"
             ? "RUNNING"
@@ -33,7 +42,9 @@ export function TraceRunHeader({ moduleLabel, status, taskId, startedAt, complet
         <span className="trace-run-sep">·</span>
         <span>完成 {fmtTime(completedAt)}</span>
         <span className="trace-run-sep">·</span>
-        <span>事件 {nodeCount}</span>
+        <span>用时 {durationLabel}</span>
+        <span className="trace-run-sep">·</span>
+        <span>节点 {nodeCount}</span>
       </div>
     </div>
   );

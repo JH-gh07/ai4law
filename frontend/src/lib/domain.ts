@@ -206,6 +206,7 @@ export type TraceBlock = {
   language?: "text" | "json" | "markdown";
   preview?: string;
   isTruncated?: boolean;
+  summary?: string;
 };
 
 export type TraceNode = {
@@ -213,10 +214,12 @@ export type TraceNode = {
   stage: TraceStage;
   action: string;
   description: string;
+  detail?: string;
   status: "pending" | "running" | "success" | "error";
   timestamp: string;
   durationMs?: number;
   input?: TraceBlock;
   output?: TraceBlock;
   icon?: string;
+  badge?: string;
 };

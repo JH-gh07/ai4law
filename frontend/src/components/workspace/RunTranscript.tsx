@@ -2,7 +2,6 @@ import { useMemo, useEffect, useRef } from "react";
 import { useLang } from "../../lib/language";
 import { useTaskEvents } from "../../lib/useTaskEvents";
 import { adaptEvents } from "../../lib/trace-adapter";
-import { TraceRunHeader } from "./TraceRunHeader";
 import { TraceNodeView } from "./TraceNodeView";
 import type { TraceNode } from "../../lib/domain";
 
@@ -36,29 +35,8 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
     prevNodeCount.current = nodes.length;
   }, [nodes.length, isRunning]);
 
-  // 推导运行状态
-  const runStatus = events.length === 0
-    ? "empty" as const
-    : hasFinal
-      ? "completed" as const
-      : "running" as const;
-
-  const firstTs = nodes[0]?.timestamp;
-  const lastTs = nodes[nodes.length - 1]?.timestamp;
-
   return (
     <section className="execution-timeline">
-      {taskId ? (
-        <TraceRunHeader
-          moduleLabel={moduleLabel}
-          status={runStatus}
-          taskId={taskId}
-          startedAt={firstTs}
-          completedAt={runStatus === "completed" ? lastTs : undefined}
-          nodeCount={nodes.length}
-        />
-      ) : null}
-
       <div className="trace-timeline-body" ref={bodyRef}>
         {!taskId ? (
           <p className="trace-empty">

@@ -10175,8 +10175,8 @@
 .trace-run-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
+  align-items: flex-start;
+  padding: 7px 10px 6px;
   border-bottom: 1px solid #e5e7eb;
   font-size: 12px;
   color: #6b7280;
@@ -10190,6 +10190,17 @@
 .trace-run-module {
   font-weight: 600;
   color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.trace-run-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.trace-run-title {
+  font-size: 11px;
+  color: #9ca3af;
 }
 .trace-run-badge {
   padding: 1px 6px;
@@ -10221,17 +10232,17 @@
 .trace-timeline-body {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 14px;
+  padding: 8px 14px 12px;
 }
 .trace-timeline-line {
   position: relative;
-  padding-left: 14px;
+  padding-left: 12px;
 }
 .trace-timeline-line::before {
   content: "";
   position: absolute;
   left: 4px;
-  top: 6px;
+  top: 4px;
   bottom: 6px;
   width: 1px;
   background: #d1d5db;
@@ -10240,13 +10251,13 @@
 /* Node */
 .trace-node {
   position: relative;
-  padding: 4px 0 10px 14px;
-  font-size: 13px;
+  padding: 2px 0 8px 12px;
+  font-size: 12px;
 }
 .trace-node-dot {
   position: absolute;
   left: -5px;
-  top: 10px;
+  top: 8px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -10264,15 +10275,34 @@
 .trace-node-header {
   display: flex;
   align-items: baseline;
-  gap: 2px;
-  font-size: 13px;
-  line-height: 1.4;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.trace-node-stage-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+}
+.trace-node-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 .trace-node-stage {
   font-weight: 600;
 }
 .trace-node-action {
-  color: #374151;
+  color: #1f2937;
+  font-weight: 600;
 }
 .trace-node-time {
   margin-left: auto;
@@ -10281,31 +10311,37 @@
   white-space: nowrap;
 }
 .trace-node-desc {
-  margin-top: 2px;
+  margin-top: 1px;
   font-size: 12px;
+  color: #374151;
+  line-height: 1.45;
+}
+.trace-node-detail {
+  margin-top: 1px;
+  font-size: 11px;
   color: #6b7280;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .trace-node-duration {
-  margin-top: 2px;
+  margin-top: 1px;
   font-size: 11px;
   color: #9ca3af;
 }
 
 /* Trace block (CALL / RESULT / etc) */
 .trace-block {
-  margin-top: 5px;
+  margin-top: 4px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   overflow: hidden;
-  font-size: 12px;
+  font-size: 11px;
 }
 .trace-block-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2px 8px;
-  background: #f9fafb;
+  padding: 2px 7px;
+  background: #fafafa;
   border-bottom: 1px solid #e5e7eb;
 }
 .trace-block-label {
@@ -10331,16 +10367,22 @@
 .trace-block-expand:hover {
   color: #374151;
 }
-.trace-block-content {
-  padding: 5px 8px;
-  margin: 0;
+.trace-block-summary {
+  padding: 4px 7px 0;
   font-size: 11px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+.trace-block-content {
+  padding: 4px 7px 6px;
+  margin: 0;
+  font-size: 10.5px;
   line-height: 1.45;
   font-family: "SF Mono", "Menlo", "Monaco", monospace;
   white-space: pre;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 140px;
+  max-height: 128px;
   background: #fafafa;
   color: #374151;
 }

@@ -29,6 +29,7 @@ export function TraceExpandableBlock({ block }: Props) {
           ) : null}
         </span>
       </div>
+      {block.summary ? <div className="trace-block-summary">{block.summary}</div> : null}
       <pre className={`trace-block-content ${block.language === "json" ? "lang-json" : ""}`}>
         {displayContent}
       </pre>

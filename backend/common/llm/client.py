@@ -66,14 +66,19 @@ class LLMClient:
         trace = current_trace.get()
         if trace is not None:
             trace.record(
-                "llm_chat_request",
+                "tool_start",
                 {
-                    "provider": self._provider,
-                    "model": self._model,
-                    "temperature": temperature,
-                    "max_tokens": max_tokens,
-                    "system": system,
-                    "user": user,
+                    "summary": "请求模型生成",
+                    "detail": {
+                        "tool": "llm_chat",
+                        "provider": self._provider,
+                        "model": self._model,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
+                        "system": system[:400],
+                        "user": user[:800],
+                        "raw_name": "llm_chat_request",
+                    },
                 },
             )
 
@@ -93,7 +98,18 @@ class LLMClient:
             )
             content = response.choices[0].message.content or ""
             if trace is not None:
-                trace.record("llm_chat_response", {"content": content})
+                trace.record(
+                    "tool_result",
+                    {
+                        "summary": "模型响应返回",
+                        "detail": {
+                            "tool": "llm_chat",
+                            "model": self._model,
+                            "content": content[:1200],
+                            "raw_name": "llm_chat_response",
+                        },
+                    },
+                )
             return content
         except APIError as exc:
             logger.error("LLMClient API error: %s", exc)

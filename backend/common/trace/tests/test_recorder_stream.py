@@ -19,7 +19,7 @@ def test_recorder_writes_file_and_pushes_event():
     assert received[0].event_type == "tool_start"
     assert received[0].task_id == "test-task"
     assert received[0].summary == "测试工具"
-    assert received[0].detail == {"key": "val"}
+    assert received[0].detail == {"key": "val", "raw_name": "tool_start"}
     assert received[1].event_type == "tool_result"
     assert received[1].seq == 2
 
@@ -56,3 +56,5 @@ def test_legacy_name_mapping():
     assert received[0].event_type == "thought"
     assert received[1].event_type == "intermediate"
     assert received[2].event_type == "warning"
+    assert received[0].detail == {"raw_name": "diagnosis"}
+    assert received[1].detail == {"raw_name": "profile_extracted"}

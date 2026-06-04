@@ -24,14 +24,18 @@ export function TraceNodeView({ node }: { node: TraceNode }) {
       <div className="trace-node-dot" style={{ background: dotColor }} />
 
       <div className="trace-node-header">
-        <span className="trace-node-stage" style={{ color }}>
-          {node.icon} {node.stage}
+        <span className="trace-node-stage-wrap">
+          {node.badge ? <span className="trace-node-badge">{node.badge}</span> : null}
+          <span className="trace-node-stage" style={{ color }}>
+            {node.icon} {node.stage}
+          </span>
+          <span className="trace-node-action">| {node.action}</span>
         </span>
-        <span className="trace-node-action">｜{node.action}</span>
         <span className="trace-node-time">{fmtTime(node.timestamp)}</span>
       </div>
 
       {node.description ? <div className="trace-node-desc">{node.description}</div> : null}
+      {node.detail ? <div className="trace-node-detail">{node.detail}</div> : null}
 
       {node.durationMs != null && node.durationMs > 0 ? (
         <div className="trace-node-duration">⏱ {(node.durationMs / 1000).toFixed(1)}s</div>
