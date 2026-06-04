@@ -8,6 +8,7 @@ from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
@@ -53,15 +54,23 @@ class CNFlowService:
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="cn_flow")
 
-    def generate_report(self, payload: CNFlowRequest) -> CNFlowResult:
-        task_id = str(uuid.uuid4())
-        trace_dir = Path("outputs/cn_flow") / task_id / "trace"
-        trace = TraceRecorder(trace_dir)
-        token = current_trace.set(trace)
+    def generate_report(
+        self,
+        payload: CNFlowRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> CNFlowResult:
+        run_task_id = task_id or str(uuid.uuid4())
+        trace, token = prepare_run(module="cn_flow", task_id=run_task_id, trace=trace)
         try:
-            run_result = self._build_pipeline().run(payload=payload, task_id=task_id, trace=trace)
+            if trace:
+                trace.record("status", {"summary": "开始 CN 流动合规评估", "detail": {"module": "cn_flow", "company": payload.company_name}})
+            run_result = self._build_pipeline().run(payload=payload, task_id=run_task_id, trace=trace)
         finally:
-            current_trace.reset(token)
+            finalize_run(token)
+        if trace:
+            trace.record("final", {"summary": "CN 流动合规评估完成", "detail": {"report_path": run_result.outputs.get("docx", "")}})
         return CNFlowResult(
             report_path=run_result.outputs["docx"],
             output_files=run_result.outputs,
@@ -194,7 +203,12 @@ class CNFlowService:
         return chapters
 
     def submit_async(self, payload: CNFlowRequest) -> CNFlowAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = str(uuid.uuid4())
+        trace = TraceRecorder(Path("outputs/cn_flow") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> CNFlowAsyncStatus:
