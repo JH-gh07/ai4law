@@ -6,6 +6,15 @@ type Props = {
   completedAt?: string;
   nodeCount: number;
   eventCount: number;
+  workflowPromptTokens?: number;
+  workflowCompletionTokens?: number;
+  workflowTotalTokens?: number;
+  copilotPromptTokens?: number;
+  copilotCompletionTokens?: number;
+  copilotTotalTokens?: number;
+  totalPromptTokens?: number;
+  totalCompletionTokens?: number;
+  totalTokens?: number;
 };
 
 function fmtTime(iso?: string): string {
@@ -13,7 +22,29 @@ function fmtTime(iso?: string): string {
   return new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-export function TraceRunHeader({ moduleLabel, status, taskId, startedAt, completedAt, nodeCount, eventCount }: Props) {
+function fmtCount(value?: number): string {
+  if (!value || value <= 0) return "--";
+  return value.toLocaleString("zh-CN");
+}
+
+export function TraceRunHeader({
+  moduleLabel,
+  status,
+  taskId,
+  startedAt,
+  completedAt,
+  nodeCount,
+  eventCount,
+  workflowPromptTokens,
+  workflowCompletionTokens,
+  workflowTotalTokens,
+  copilotPromptTokens,
+  copilotCompletionTokens,
+  copilotTotalTokens,
+  totalPromptTokens,
+  totalCompletionTokens,
+  totalTokens,
+}: Props) {
   const liveCompletedAt = completedAt ?? (status === "running" ? new Date().toISOString() : undefined);
   const durationMs =
     startedAt && liveCompletedAt
@@ -50,6 +81,24 @@ export function TraceRunHeader({ moduleLabel, status, taskId, startedAt, complet
         <span>事件 {eventCount}</span>
         <span className="trace-run-sep">·</span>
         <span>节点 {nodeCount}</span>
+        <span className="trace-run-sep">·</span>
+        <span>模块 Token {fmtCount(workflowTotalTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>模块输入 {fmtCount(workflowPromptTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>模块输出 {fmtCount(workflowCompletionTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>Copilot Token {fmtCount(copilotTotalTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>Copilot 输入 {fmtCount(copilotPromptTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>Copilot 输出 {fmtCount(copilotCompletionTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>总 Token {fmtCount(totalTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>总输入 {fmtCount(totalPromptTokens)}</span>
+        <span className="trace-run-sep">·</span>
+        <span>总输出 {fmtCount(totalCompletionTokens)}</span>
       </div>
     </div>
   );

@@ -20,9 +20,17 @@ export type CopilotContextPayload = {
   trace_highlights?: string[];
 };
 
+export type TokenUsagePayload = {
+  prompt_tokens?: number | null;
+  completion_tokens?: number | null;
+  total_tokens?: number | null;
+  usage_source?: string;
+};
+
 export type CopilotChatRequestPayload = {
   prompt: string;
   action?: string;
+  task_id?: string | null;
   task_space: {
     id: string;
     name: string;
@@ -40,6 +48,7 @@ export type CopilotChatResponsePayload = {
   model: string;
   enabled: boolean;
   fallback: boolean;
+  usage: TokenUsagePayload;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

@@ -34,9 +34,17 @@ class CopilotContext(BaseModel):
     trace_highlights: list[str] = Field(default_factory=list)
 
 
+class TokenUsage(BaseModel):
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    usage_source: str = "unavailable"
+
+
 class CopilotChatRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=8000)
     action: str | None = None
+    task_id: str | None = None
     task_space: CopilotTaskSpace
     context: CopilotContext = Field(default_factory=CopilotContext)
     messages: list[CopilotMessage] = Field(default_factory=list)
@@ -47,3 +55,4 @@ class CopilotChatResponse(BaseModel):
     model: str
     enabled: bool
     fallback: bool = False
+    usage: TokenUsage = Field(default_factory=TokenUsage)

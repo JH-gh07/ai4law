@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from "react";
 import { useLang } from "../../lib/language";
-import { useTaskEvents } from "../../lib/useTaskEvents";
+import { extractTokenUsage, useTaskEvents } from "../../lib/useTaskEvents";
 import { adaptEvents } from "../../lib/trace-adapter";
 import { TraceRunHeader } from "./TraceRunHeader";
 import { TraceNodeView } from "./TraceNodeView";
@@ -21,6 +21,8 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
     if (events.length === 0) return [];
     return adaptEvents(events);
   }, [events]);
+
+  const tokenUsage = useMemo(() => extractTokenUsage(events), [events]);
 
   // 自动滚动到最新（仅在运行中且用户在底部附近）
   const prevNodeCount = useRef(0);
@@ -70,6 +72,15 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
         completedAt={runStatus === "completed" || runStatus === "failed" ? lastTs : undefined}
         nodeCount={nodes.length}
         eventCount={events.length}
+        workflowPromptTokens={tokenUsage.workflow.prompt_tokens}
+        workflowCompletionTokens={tokenUsage.workflow.completion_tokens}
+        workflowTotalTokens={tokenUsage.workflow.total_tokens}
+        copilotPromptTokens={tokenUsage.copilot.prompt_tokens}
+        copilotCompletionTokens={tokenUsage.copilot.completion_tokens}
+        copilotTotalTokens={tokenUsage.copilot.total_tokens}
+        totalPromptTokens={tokenUsage.total.prompt_tokens}
+        totalCompletionTokens={tokenUsage.total.completion_tokens}
+        totalTokens={tokenUsage.total.total_tokens}
       />
 
       <div className="trace-timeline-body" ref={bodyRef}>

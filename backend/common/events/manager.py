@@ -59,6 +59,12 @@ class SSEManager:
             self._completed_at.pop(tid, None)
         return len(expired)
 
+    def clear_task(self, task_id: str) -> None:
+        """显式删除某个 task 的内存事件与订阅痕迹。"""
+        self._task_events.pop(task_id, None)
+        self._task_queues.pop(task_id, None)
+        self._completed_at.pop(task_id, None)
+
     def on_event(self, event: RunEvent) -> None:
         """作为 TraceRecorder 订阅者的回调入口。"""
         if event.task_id:

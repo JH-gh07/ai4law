@@ -19,6 +19,51 @@ export type RunEvent = {
   level: "audit" | "debug";
 };
 
+export type TokenUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+};
+
+export type TokenUsageBreakdown = {
+  total: TokenUsage;
+  copilot: TokenUsage;
+  workflow: TokenUsage;
+};
+
+function addUsage(target: TokenUsage, prompt: number, completion: number, total: number): TokenUsage {
+  return {
+    prompt_tokens: target.prompt_tokens + prompt,
+    completion_tokens: target.completion_tokens + completion,
+    total_tokens: target.total_tokens + total,
+  };
+}
+
+export function extractTokenUsage(events: RunEvent[]): TokenUsageBreakdown {
+  return events.reduce<TokenUsageBreakdown>(
+    (acc, event) => {
+      if (event.detail?.tool !== "llm_chat") return acc;
+      const usage = event.detail?.usage;
+      if (!usage || typeof usage !== "object") return acc;
+      const record = usage as Record<string, unknown>;
+      const prompt = typeof record.prompt_tokens === "number" ? record.prompt_tokens : 0;
+      const completion = typeof record.completion_tokens === "number" ? record.completion_tokens : 0;
+      const total = typeof record.total_tokens === "number" ? record.total_tokens : prompt + completion;
+      const channel = event.detail?.channel === "copilot" ? "copilot" : "workflow";
+      return {
+        total: addUsage(acc.total, prompt, completion, total),
+        copilot: channel === "copilot" ? addUsage(acc.copilot, prompt, completion, total) : acc.copilot,
+        workflow: channel === "workflow" ? addUsage(acc.workflow, prompt, completion, total) : acc.workflow,
+      };
+    },
+    {
+      total: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      copilot: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      workflow: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    }
+  );
+}
+
 const eventSources = new Map<string, EventSource>();
 const listeners = new Map<string, Set<(events: RunEvent[]) => void>>();
 const eventBuffers = new Map<string, RunEvent[]>();

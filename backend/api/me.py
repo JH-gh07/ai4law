@@ -1,24 +1,33 @@
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from backend.common.events.manager import get_ssemanager
 from backend.core.dependencies import get_current_user, get_db
+from backend.core.json_utils import dumps, loads
+from backend.models.diagnosis import DiagnosisSessionModel
+from backend.models.report import ReportArtifactModel
+from backend.models.review import ReviewTaskModel, UploadedFileModel
+from backend.models.workspace import WorkspaceStateModel
 from backend.repositories.diagnosis_repository import DiagnosisRepository
 from backend.repositories.report_repository import ReportRepository
 from backend.repositories.review_repository import ReviewRepository
 from backend.schemas.auth import AuthUser
 from backend.schemas.me import (
+    DeleteProjectHistoryResponse,
     MyReportItem,
     MyReportsResponse,
-    RecoveredModuleRun,
-    RecoveredWorkspaceItem,
-    RecoveredWorkspaceResponse,
     MyTaskItem,
     MyTasksResponse,
     ReportMetadataResponse,
+    RecoveredModuleRun,
+    RecoveredWorkspaceItem,
+    RecoveredWorkspaceResponse,
 )
 
 router = APIRouter()
@@ -59,6 +68,61 @@ def _read_text(path: Path) -> str | None:
 def _resolve_path(raw_path: str) -> Path:
     path = Path(raw_path)
     return path.resolve() if path.is_absolute() else (Path.cwd() / path).resolve()
+
+
+def _safe_remove_path(path: Path) -> bool:
+    try:
+        if not path.exists() and not path.is_symlink():
+            return False
+        if path.is_dir() and not path.is_symlink():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _find_task_root_from_path(path: Path, task_id: str) -> Path | None:
+    resolved = path.resolve()
+    for parent in resolved.parents:
+        if parent.name == task_id:
+            return parent
+    return None
+
+
+def _prune_workspace_state(raw_state: dict[str, Any], task_id: str) -> tuple[dict[str, Any], dict[str, int]]:
+    counts = {
+        "deleted_task_spaces": 0,
+        "deleted_module_runs": 0,
+        "deleted_artifacts": 0,
+        "deleted_evidence_hits": 0,
+        "deleted_issues": 0,
+    }
+    key_map = {
+        "task_spaces": ("id", "deleted_task_spaces"),
+        "module_runs": ("taskSpaceId", "deleted_module_runs"),
+        "artifacts": ("taskSpaceId", "deleted_artifacts"),
+        "evidence_hits": ("taskSpaceId", "deleted_evidence_hits"),
+        "issues": ("taskSpaceId", "deleted_issues"),
+    }
+
+    next_state = dict(raw_state)
+    for field, (id_key, count_key) in key_map.items():
+        raw_items = raw_state.get(field)
+        if not isinstance(raw_items, list):
+            next_state[field] = []
+            continue
+        kept_items = []
+        removed = 0
+        for item in raw_items:
+            if isinstance(item, dict) and item.get(id_key) == task_id:
+                removed += 1
+                continue
+            kept_items.append(item)
+        next_state[field] = kept_items
+        counts[count_key] = removed
+    return next_state, counts
 
 
 def _extract_output_files(artifacts: list[MyReportItem]) -> dict[str, str]:
@@ -256,6 +320,145 @@ def get_workspace_recovery(
 
     recovered_items.sort(key=lambda item: item.updated_at, reverse=True)
     return RecoveredWorkspaceResponse(items=recovered_items)
+
+
+@router.delete("/projects/{task_id}", response_model=DeleteProjectHistoryResponse)
+def delete_project_history(
+    task_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
+    if not task_id.strip():
+        raise HTTPException(status_code=400, detail="task_id is required")
+
+    deleted_paths: list[str] = []
+    seen_paths: set[str] = set()
+
+    diagnosis_rows = list(
+        db.scalars(
+            select(DiagnosisSessionModel).where(
+                DiagnosisSessionModel.id == task_id,
+                DiagnosisSessionModel.user_id == current_user.id,
+            )
+        )
+    )
+    review_rows = list(
+        db.scalars(
+            select(ReviewTaskModel).where(
+                ReviewTaskModel.id == task_id,
+                ReviewTaskModel.user_id == current_user.id,
+            )
+        )
+    )
+    uploaded_rows = list(
+        db.scalars(
+            select(UploadedFileModel).where(
+                UploadedFileModel.task_id == task_id,
+                UploadedFileModel.user_id == current_user.id,
+            )
+        )
+    )
+    report_rows = list(
+        db.scalars(
+            select(ReportArtifactModel).where(
+                ReportArtifactModel.owner_id == task_id,
+                ReportArtifactModel.user_id == current_user.id,
+            )
+        )
+    )
+
+    workspace_row = db.scalars(
+        select(WorkspaceStateModel).where(WorkspaceStateModel.user_id == current_user.id)
+    ).first()
+    workspace_counts = {
+        "deleted_task_spaces": 0,
+        "deleted_module_runs": 0,
+        "deleted_artifacts": 0,
+        "deleted_evidence_hits": 0,
+        "deleted_issues": 0,
+    }
+    if workspace_row:
+        raw_state = loads(workspace_row.state_json, {})
+        if not isinstance(raw_state, dict):
+            raw_state = {}
+        next_state, workspace_counts = _prune_workspace_state(raw_state, task_id)
+        workspace_row.state_json = dumps(next_state)
+
+    owned_modules = {
+        row.owner_type
+        for row in report_rows
+        if isinstance(row.owner_type, str) and row.owner_type
+    }
+    if diagnosis_rows:
+        owned_modules.add("diagnosis")
+    if review_rows:
+        owned_modules.add("review")
+
+    for row in uploaded_rows:
+        resolved = _resolve_path(row.storage_path)
+        if str(resolved) not in seen_paths and _safe_remove_path(resolved):
+            seen_paths.add(str(resolved))
+            deleted_paths.append(str(resolved))
+        db.delete(row)
+
+    report_parent_dirs: set[Path] = set()
+    task_root_dirs: set[Path] = set()
+    for row in report_rows:
+        resolved = _resolve_path(row.file_path)
+        report_parent_dirs.add(resolved.parent)
+        task_root = _find_task_root_from_path(resolved, task_id)
+        if task_root:
+            task_root_dirs.add(task_root)
+        if str(resolved) not in seen_paths and _safe_remove_path(resolved):
+            seen_paths.add(str(resolved))
+            deleted_paths.append(str(resolved))
+        db.delete(row)
+
+    for row in diagnosis_rows:
+        db.delete(row)
+    for row in review_rows:
+        db.delete(row)
+
+    settings = request.app.state.container.settings
+    for module in sorted(owned_modules):
+        output_dir = (Path.cwd() / "outputs" / module / task_id).resolve()
+        if str(output_dir) not in seen_paths and _safe_remove_path(output_dir):
+            seen_paths.add(str(output_dir))
+            deleted_paths.append(str(output_dir))
+
+        report_dir = (settings.report_dir / module / task_id).resolve()
+        if str(report_dir) not in seen_paths and _safe_remove_path(report_dir):
+            seen_paths.add(str(report_dir))
+            deleted_paths.append(str(report_dir))
+
+    for task_root in task_root_dirs:
+        resolved_root = task_root.resolve()
+        if str(resolved_root) not in seen_paths and _safe_remove_path(resolved_root):
+            seen_paths.add(str(resolved_root))
+            deleted_paths.append(str(resolved_root))
+
+    for parent in report_parent_dirs:
+        if parent.name == task_id and str(parent.resolve()) not in seen_paths and _safe_remove_path(parent.resolve()):
+            seen_paths.add(str(parent.resolve()))
+            deleted_paths.append(str(parent.resolve()))
+
+    db.commit()
+    get_ssemanager().clear_task(task_id)
+
+    return DeleteProjectHistoryResponse(
+        task_id=task_id,
+        deleted_task_spaces=workspace_counts["deleted_task_spaces"],
+        deleted_module_runs=workspace_counts["deleted_module_runs"],
+        deleted_artifacts=workspace_counts["deleted_artifacts"],
+        deleted_evidence_hits=workspace_counts["deleted_evidence_hits"],
+        deleted_issues=workspace_counts["deleted_issues"],
+        deleted_diagnosis_sessions=len(diagnosis_rows),
+        deleted_review_tasks=len(review_rows),
+        deleted_uploaded_files=len(uploaded_rows),
+        deleted_report_records=len(report_rows),
+        deleted_paths=deleted_paths,
+    )
 
 
 @router.get("/reports/{owner_id}/metadata", response_model=ReportMetadataResponse)

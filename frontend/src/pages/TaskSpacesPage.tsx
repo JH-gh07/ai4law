@@ -4,6 +4,7 @@ import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal"
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
 import { useLang } from "../lib/language";
+import { deleteProjectHistory } from "../lib/me-api";
 
 import { getRunLifecycleState } from "../lib/run-state";
 import {
@@ -34,6 +35,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const [quickCreateDraft, setQuickCreateDraft] = useState<{ taskTemplateId: string; value: string; error: string } | null>(null);
   const [renameDraft, setRenameDraft] = useState<{ taskId: string; value: string } | null>(null);
   const [pendingDeleteTask, setPendingDeleteTask] = useState<{ taskId: string; name: string } | null>(null);
+  const [deleteState, setDeleteState] = useState<{ loading: boolean; error: string }>({ loading: false, error: "" });
 
   const jurisdictionShowcase = [
     {
@@ -116,13 +118,25 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   const deleteTask = (taskId: string) => {
     const task = state.taskSpaces.find((item) => item.id === taskId);
     if (!task) return;
+    setDeleteState({ loading: false, error: "" });
     setPendingDeleteTask({ taskId, name: task.name });
   };
 
-  const submitDeleteTask = () => {
+  const submitDeleteTask = async () => {
     if (!pendingDeleteTask) return;
-    dispatch({ type: "delete_task_space", payload: { id: pendingDeleteTask.taskId } });
-    setPendingDeleteTask(null);
+    setDeleteState({ loading: true, error: "" });
+    try {
+      await deleteProjectHistory(pendingDeleteTask.taskId);
+      dispatch({ type: "delete_task_space", payload: { id: pendingDeleteTask.taskId } });
+      setPendingDeleteTask(null);
+      setDeleteState({ loading: false, error: "" });
+    } catch (error) {
+      const fallback = lang === "zh" ? "删除失败，请稍后重试。" : "Delete failed. Please try again.";
+      setDeleteState({
+        loading: false,
+        error: error instanceof Error && error.message.trim() ? error.message : fallback
+      });
+    }
   };
 
   const onTaskCardKeyDown = (event: KeyboardEvent<HTMLElement>, taskId: string) => {
@@ -365,9 +379,15 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
         open={!!pendingDeleteTask}
         title={t("tasksDeleteTitle")}
         description={`${t("tasksDeleteConfirm")}${pendingDeleteTask ? `\n${pendingDeleteTask.name}` : ""}`}
-        confirmText={t("tasksDeleteConfirmAction")}
+        confirmText={deleteState.loading ? (lang === "zh" ? "删除中..." : "Deleting...") : t("tasksDeleteConfirmAction")}
         cancelText={t("cancelBtn")}
-        onCancel={() => setPendingDeleteTask(null)}
+        confirmDisabled={deleteState.loading}
+        errorText={deleteState.error}
+        onCancel={() => {
+          if (deleteState.loading) return;
+          setDeleteState({ loading: false, error: "" });
+          setPendingDeleteTask(null);
+        }}
         onConfirm={submitDeleteTask}
       />
     </section>

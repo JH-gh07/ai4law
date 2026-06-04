@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 
+from backend.common.events.manager import get_ssemanager
+from backend.common.trace.context import current_trace
+from backend.common.trace.recorder import TraceRecorder
 from backend.core.dependencies import get_container
 from backend.schemas.copilot import CopilotChatRequest, CopilotChatResponse
 
@@ -135,22 +140,74 @@ def chat_with_copilot(
 
     fallback = not container.llm_client.enabled
     reply = ""
+    usage_payload = {"usage_source": "unavailable"}
 
-    if not fallback:
-        reply = container.llm_client.chat(
-            system=system,
-            user=user_prompt,
-            temperature=0.6,
-            max_tokens=800,
-        ).strip()
-        fallback = not bool(reply)
+    trace = None
+    trace_token = None
+    if body.task_id:
+        trace = TraceRecorder(Path("storage/traces") / f"copilot_{body.task_id}", task_id=body.task_id)
+        trace.subscribe(get_ssemanager().on_event)
+        trace_token = current_trace.set(trace)
+        trace.record(
+            "tool_start",
+            {
+                "summary": "Copilot 对话请求",
+                "detail": {
+                    "tool": "copilot_chat",
+                    "task": body.task_space.name,
+                    "module": body.task_space.module,
+                    "prompt": prompt[:800],
+                    "history_count": len(body.messages),
+                    "raw_name": "copilot_chat_request",
+                },
+            },
+        )
 
-    if fallback:
-        reply = _build_local_reply(body)
+    try:
+        if not fallback:
+            llm_result = container.llm_client.chat_with_metadata(
+                system=system,
+                user=user_prompt,
+                temperature=0.6,
+                max_tokens=800,
+                channel="copilot",
+            )
+            reply = str(llm_result.get("content") or "").strip()
+            usage_raw = llm_result.get("usage")
+            if isinstance(usage_raw, dict):
+                usage_payload = usage_raw
+            fallback = not bool(reply)
 
-    return CopilotChatResponse(
-        reply=reply,
-        model=container.settings.llm_model if container.llm_client.enabled else "local-copilot-fallback",
-        enabled=container.llm_client.enabled,
-        fallback=fallback,
-    )
+        if fallback:
+            reply = _build_local_reply(body)
+
+        if trace is not None:
+            trace.record(
+                "tool_result",
+                {
+                    "summary": "Copilot 对话返回",
+                    "detail": {
+                        "tool": "copilot_chat",
+                        "model": container.settings.llm_model if container.llm_client.enabled else "local-copilot-fallback",
+                        "fallback": fallback,
+                        "content": reply[:1200],
+                        "raw_name": "copilot_chat_response",
+                    },
+                },
+            )
+
+        return CopilotChatResponse(
+            reply=reply,
+            model=container.settings.llm_model if container.llm_client.enabled else "local-copilot-fallback",
+            enabled=container.llm_client.enabled,
+            fallback=fallback,
+            usage=usage_payload,
+        )
+    finally:
+        if trace is not None:
+            try:
+                trace.write_manifest()
+            except Exception:
+                pass
+        if trace_token is not None:
+            current_trace.reset(trace_token)

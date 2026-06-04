@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
-import { normalizeLegalMarkdown } from "../../lib/legal-markdown";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 
 type IntermediatesSubTab =
@@ -180,7 +179,7 @@ function ReportTab({ preview, lang, filePath }: { preview: ArtifactPreview | nul
 
   return (
     <article className="assessment-intermediates-report">
-      <CitationMarkdownRenderer markdown={normalizeLegalMarkdown(preview.content)} taskId={taskId} moduleKey="assessment" />
+      <CitationMarkdownRenderer markdown={preview.content} taskId={taskId} moduleKey="assessment" />
     </article>
   );
 }

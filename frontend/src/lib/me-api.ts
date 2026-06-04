@@ -52,6 +52,20 @@ export type WorkspaceStatePayload = {
   issues: Record<string, unknown>[];
 };
 
+export type DeleteProjectHistoryResult = {
+  task_id: string;
+  deleted_task_spaces: number;
+  deleted_module_runs: number;
+  deleted_artifacts: number;
+  deleted_evidence_hits: number;
+  deleted_issues: number;
+  deleted_diagnosis_sessions: number;
+  deleted_review_tasks: number;
+  deleted_uploaded_files: number;
+  deleted_report_records: number;
+  deleted_paths: string[];
+};
+
 export async function fetchMyTasks(): Promise<MyTaskItem[]> {
   const response = await fetch("/api/v1/me/tasks", { headers: { ...getAuthHeaders() } });
   if (!response.ok) return [];
@@ -89,4 +103,24 @@ export async function saveWorkspaceState(payload: WorkspaceStatePayload): Promis
     },
     body: JSON.stringify(payload),
   });
+}
+
+export async function deleteProjectHistory(taskId: string): Promise<DeleteProjectHistoryResult> {
+  const response = await fetch(`/api/v1/me/projects/${encodeURIComponent(taskId)}`, {
+    method: "DELETE",
+    headers: { ...getAuthHeaders() },
+  });
+  if (!response.ok) {
+    let detail = "Delete project failed";
+    try {
+      const data = (await response.json()) as { detail?: string };
+      if (typeof data.detail === "string" && data.detail.trim()) {
+        detail = data.detail;
+      }
+    } catch {
+      // keep fallback detail
+    }
+    throw new Error(detail);
+  }
+  return (await response.json()) as DeleteProjectHistoryResult;
 }

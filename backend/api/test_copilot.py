@@ -53,6 +53,8 @@ def test_copilot_chat_returns_local_reply_when_llm_is_disabled() -> None:
     assert payload["model"] == "local-copilot-fallback"
     assert "先处理当前阻塞项" in payload["reply"]
     assert "请上传数据清单附件" in payload["reply"]
+    assert payload["usage"]["usage_source"] == "unavailable"
+    assert payload["usage"].get("total_tokens") is None
 
 
 def test_copilot_chat_small_talk_stays_conversational_when_llm_is_disabled() -> None:
@@ -96,3 +98,4 @@ def test_copilot_chat_small_talk_stays_conversational_when_llm_is_disabled() -> 
     assert payload["fallback"] is True
     assert "我在" in payload["reply"]
     assert "现状说明" not in payload["reply"]
+    assert payload["usage"]["usage_source"] == "unavailable"

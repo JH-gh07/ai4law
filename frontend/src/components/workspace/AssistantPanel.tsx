@@ -198,6 +198,7 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
       const response = await requestCopilotChat({
         prompt: text,
         action,
+        task_id: taskId,
         task_space: {
           id: taskSpace.id,
           name: taskSpace.name,

@@ -64,3 +64,17 @@ class ReportMetadataResponse(BaseModel):
     version: str
     risk_level: str | None = None
     summary: str | None = None
+
+
+class DeleteProjectHistoryResponse(BaseModel):
+    task_id: str
+    deleted_task_spaces: int = 0
+    deleted_module_runs: int = 0
+    deleted_artifacts: int = 0
+    deleted_evidence_hits: int = 0
+    deleted_issues: int = 0
+    deleted_diagnosis_sessions: int = 0
+    deleted_review_tasks: int = 0
+    deleted_uploaded_files: int = 0
+    deleted_report_records: int = 0
+    deleted_paths: list[str] = Field(default_factory=list)

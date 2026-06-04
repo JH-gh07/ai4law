@@ -1,7 +1,7 @@
 // frontend/src/components/workspace/RunBrief.tsx
 import { useMemo } from "react";
 import { useLang } from "../../lib/language";
-import { useTaskEvents } from "../../lib/useTaskEvents";
+import { extractTokenUsage, useTaskEvents } from "../../lib/useTaskEvents";
 
 type Props = {
   taskId: string | null;
@@ -18,6 +18,7 @@ type BriefDetail = {
 export function RunBrief({ taskId }: Props) {
   const { lang } = useLang();
   const events = useTaskEvents(taskId);
+  const tokenUsage = useMemo(() => extractTokenUsage(events), [events]);
 
   const briefEvent = useMemo(() => {
     return events.find((e) => e.event_type === "final_brief") ?? null;
@@ -29,6 +30,25 @@ export function RunBrief({ taskId }: Props) {
 
   const brief: BriefDetail | null = (briefEvent?.detail as BriefDetail) ?? null;
   const isComplete = finalEvent !== null;
+  const mergedStats = useMemo(() => {
+    const base = { ...(brief?.stats ?? {}) } as Record<string, unknown>;
+    if (tokenUsage.workflow.total_tokens > 0) {
+      base["workflow_prompt_tokens"] = tokenUsage.workflow.prompt_tokens;
+      base["workflow_completion_tokens"] = tokenUsage.workflow.completion_tokens;
+      base["workflow_total_tokens"] = tokenUsage.workflow.total_tokens;
+    }
+    if (tokenUsage.copilot.total_tokens > 0) {
+      base["copilot_prompt_tokens"] = tokenUsage.copilot.prompt_tokens;
+      base["copilot_completion_tokens"] = tokenUsage.copilot.completion_tokens;
+      base["copilot_total_tokens"] = tokenUsage.copilot.total_tokens;
+    }
+    if (tokenUsage.total.total_tokens > 0) {
+      base["total_prompt_tokens"] = tokenUsage.total.prompt_tokens;
+      base["total_completion_tokens"] = tokenUsage.total.completion_tokens;
+      base["total_tokens"] = tokenUsage.total.total_tokens;
+    }
+    return Object.keys(base).length > 0 ? base : null;
+  }, [brief?.stats, tokenUsage]);
 
   if (!isComplete) {
     return (
@@ -91,11 +111,11 @@ export function RunBrief({ taskId }: Props) {
           </article>
         )}
 
-        {brief?.stats && (
+        {mergedStats && (
           <article className="brief-section brief-stats">
             <h4>{lang === "zh" ? "📊 执行统计" : "📊 Execution Stats"}</h4>
             <div className="brief-stats-grid">
-              {Object.entries(brief.stats).map(([key, value]) => (
+              {Object.entries(mergedStats).map(([key, value]) => (
                 <div key={key} className="brief-stat-item">
                   <span className="brief-stat-label">{key}</span>
                   <strong>{String(value)}</strong>

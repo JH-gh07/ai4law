@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from backend.common.trace.context import current_trace
@@ -19,6 +20,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _FALLBACK_MESSAGE = "（LLM服务暂时不可用，请稍后重试）"
+
+
+@dataclass
+class LLMUsage:
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    usage_source: str = "unavailable"
+
+    def as_dict(self) -> dict[str, int | str]:
+        payload: dict[str, int | str] = {"usage_source": self.usage_source}
+        if self.prompt_tokens is not None:
+            payload["prompt_tokens"] = self.prompt_tokens
+        if self.completion_tokens is not None:
+            payload["completion_tokens"] = self.completion_tokens
+        if self.total_tokens is not None:
+            payload["total_tokens"] = self.total_tokens
+        return payload
 
 
 class LLMClient:
@@ -58,7 +77,24 @@ class LLMClient:
         user: str,
         temperature: float = 0.3,
         max_tokens: int = 4096,
+        channel: str = "workflow",
     ) -> str:
+        return self.chat_with_metadata(
+            system=system,
+            user=user,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            channel=channel,
+        )["content"]
+
+    def chat_with_metadata(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.3,
+        max_tokens: int = 4096,
+        channel: str = "workflow",
+    ) -> dict[str, object]:
         """发送一轮对话，返回模型回复文本。
 
         如果 API 未配置或调用失败，返回降级占位文本（不抛异常）。
@@ -71,6 +107,7 @@ class LLMClient:
                     "summary": "请求模型生成",
                     "detail": {
                         "tool": "llm_chat",
+                        "channel": channel,
                         "provider": self._provider,
                         "model": self._model,
                         "temperature": temperature,
@@ -84,7 +121,11 @@ class LLMClient:
 
         if not self._enabled:
             logger.warning("LLMClient: API key not configured for provider %s, returning fallback text.", self._provider)
-            return _FALLBACK_MESSAGE
+            return {
+                "content": _FALLBACK_MESSAGE,
+                "usage": LLMUsage(usage_source="unavailable").as_dict(),
+                "fallback": True,
+            }
 
         try:
             response = self._client.chat.completions.create(
@@ -97,6 +138,7 @@ class LLMClient:
                 max_tokens=max_tokens,
             )
             content = response.choices[0].message.content or ""
+            usage = self._extract_usage(response)
             if trace is not None:
                 trace.record(
                     "tool_result",
@@ -104,16 +146,50 @@ class LLMClient:
                         "summary": "模型响应返回",
                         "detail": {
                             "tool": "llm_chat",
+                            "channel": channel,
                             "model": self._model,
+                            "usage": usage.as_dict(),
                             "content": content[:1200],
                             "raw_name": "llm_chat_response",
                         },
                     },
                 )
-            return content
+            return {
+                "content": content,
+                "usage": usage.as_dict(),
+                "fallback": False,
+            }
         except APIError as exc:
             logger.error("LLMClient API error: %s", exc)
-            return _FALLBACK_MESSAGE
+            return {
+                "content": _FALLBACK_MESSAGE,
+                "usage": LLMUsage(usage_source="unavailable").as_dict(),
+                "fallback": True,
+            }
         except Exception as exc:
             logger.error("LLMClient unexpected error: %s", exc)
-            return _FALLBACK_MESSAGE
+            return {
+                "content": _FALLBACK_MESSAGE,
+                "usage": LLMUsage(usage_source="unavailable").as_dict(),
+                "fallback": True,
+            }
+
+    @staticmethod
+    def _extract_usage(response: object) -> LLMUsage:
+        usage_obj = getattr(response, "usage", None)
+        if usage_obj is None:
+            return LLMUsage(usage_source="unavailable")
+
+        prompt_tokens = getattr(usage_obj, "prompt_tokens", None)
+        completion_tokens = getattr(usage_obj, "completion_tokens", None)
+        total_tokens = getattr(usage_obj, "total_tokens", None)
+
+        if prompt_tokens is None and completion_tokens is None and total_tokens is None:
+            return LLMUsage(usage_source="unavailable")
+
+        return LLMUsage(
+            prompt_tokens=int(prompt_tokens) if prompt_tokens is not None else None,
+            completion_tokens=int(completion_tokens) if completion_tokens is not None else None,
+            total_tokens=int(total_tokens) if total_tokens is not None else None,
+            usage_source="provider",
+        )

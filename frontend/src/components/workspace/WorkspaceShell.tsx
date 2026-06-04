@@ -32,7 +32,7 @@ import { ChevronToggleIcon, DownloadIcon, EditIcon, HomeIcon } from "../common/A
 import { RunTranscript } from "./RunTranscript";
 import { TaskEventBridge } from "./TaskEventBridge";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
-import { normalizeLegalMarkdown } from "../../lib/legal-markdown";
+import { normalizeFallbackMarkdown } from "../../lib/fallback-markdown";
 import { getRunLifecycleState, isRunInProgress } from "../../lib/run-state";
 
 type WorkspaceShellProps = {
@@ -208,16 +208,19 @@ const readDetailedFindingRows = (response: unknown): string[][] => {
   return [];
 };
 
-const normalizeMarkdownForRender = (value: string): string => {
-  const normalized = value.replace(/\r\n?/g, "\n");
-  return normalizeLegalMarkdown(
-    normalized
+const normalizeMarkdownBasics = (value: string): string =>
+  value
+    .replace(/\r\n?/g, "\n")
     .replace(/^(#{1,6})([^\s#])/gm, "$1 $2")
     .replace(/^(\d+)\)\s+/gm, "$1. ")
     .replace(/^\s*•\s+/gm, "- ")
-    .trim(),
-  );
-};
+    .trim();
+
+const normalizeFallbackMarkdownForRender = (value: string): string =>
+  normalizeFallbackMarkdown(normalizeMarkdownBasics(value));
+
+const normalizeMarkdownForRender = (value: string): string =>
+  normalizeMarkdownBasics(value);
 
 const parseCsvRows = (source: string): string[][] => {
   const rows: string[][] = [];
@@ -281,14 +284,14 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   const pushSection = (title: string, lines: string[]) => {
     const cleaned = lines.map((item) => item.trim()).filter((item) => item.length > 0);
     if (cleaned.length === 0) return;
-    sections.push({ title, content: cleaned.join("\n") });
+    sections.push({ title, content: normalizeFallbackMarkdownForRender(cleaned.join("\n")) });
   };
 
   const summary = readString(result.summary);
   if (summary) {
     sections.push({
       title: lang === "zh" ? "执行摘要" : "Executive Summary",
-      content: summary
+      content: normalizeFallbackMarkdownForRender(summary),
     });
   }
 
@@ -308,7 +311,7 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   if (detailedFindingsTable) {
     sections.push({
       title: lang === "zh" ? "详细审查结果" : "Detailed Review Findings",
-      content: detailedFindingsTable,
+      content: normalizeFallbackMarkdownForRender(detailedFindingsTable),
     });
   }
 
@@ -421,7 +424,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const reconstructedReport = useMemo<ReconstructedReportPayload>(() => {
     if (responseChapters.length > 0) {
       return {
-        sections: responseChapters.map((chapter) => ({ title: chapter.title, content: chapter.content })),
+        sections: responseChapters.map((chapter) => ({
+          title: chapter.title,
+          content: chapter.content,
+        })),
         citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
       };
     }
