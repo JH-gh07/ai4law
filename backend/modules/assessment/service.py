@@ -5,9 +5,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from backend.common.quality.alignment import check_cn_alignment
+from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
-from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.citation.audit import log_citations_created
 from backend.common.citation.registry import CitationRegistry
 from backend.common.knowledge.v2 import RetrievalRequest
@@ -73,19 +74,27 @@ class AssessmentService:
         self.renderer = AssessmentReportRenderer(llm_client=llm_client)
         self.tasks = InMemoryTaskManager(module="assessment")
 
-    def generate_report(self, payload: AssessmentRequest) -> AssessmentResult:
-        task_id = str(uuid.uuid4())
-        trace_dir = Path("outputs/assessment") / task_id / "trace"
-        trace = TraceRecorder(trace_dir)
-        token = current_trace.set(trace)
+    def generate_report(
+        self,
+        payload: AssessmentRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> AssessmentResult:
+        run_task_id = task_id or str(uuid.uuid4())
+        active_trace, token = prepare_run(module="assessment", task_id=run_task_id, trace=trace)
 
         try:
-            run_result = self._build_pipeline().run(payload=payload, task_id=task_id, trace=trace)
+            if trace:
+                trace.record("status", {"summary": "开始安全自评估", "detail": {"module": "assessment", "company": getattr(payload, 'company_name', '')}})
+            run_result = self._build_pipeline().run(payload=payload, task_id=run_task_id, trace=active_trace)
         finally:
-            current_trace.reset(token)
+            finalize_run(token)
 
+        if trace:
+            trace.record("final", {"summary": "安全自评估完成", "detail": {"report_path": run_result.outputs.get("docx", "")}})
         return AssessmentResult(
-            task_id=task_id,
+            task_id=run_task_id,
             state=AssessmentTaskState.COMPLETED,
             report_path=run_result.outputs["docx"],
             output_files=run_result.outputs,
@@ -308,7 +317,12 @@ class AssessmentService:
         )
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:
-        snapshot = self.tasks.submit(lambda: self.generate_report(payload))
+        task_id = str(uuid.uuid4())
+        trace = TraceRecorder(Path("outputs/assessment") / task_id / "trace", task_id=task_id)
+        snapshot = self.tasks.submit_with_trace(
+            lambda: self.generate_report(payload, task_id=task_id, trace=trace),
+            trace_recorder=trace,
+        )
         return self._snapshot_to_accepted(snapshot)
 
     def get_async_status(self, task_id: str) -> AssessmentAsyncStatus:
