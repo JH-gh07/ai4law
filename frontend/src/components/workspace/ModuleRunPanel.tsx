@@ -6,7 +6,6 @@ import {
   hasAsync,
   listModules,
   runModule,
-  type RunEvent,
   uploadTaskFile
 } from "../../lib/module-adapter";
 import { useLang } from "../../lib/language";
@@ -2467,7 +2466,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [asyncRunProgress, setAsyncRunProgress] = useState<AsyncRunProgressState | null>(null);
-  const [_recentEvents, setRecentEvents] = useState<RunEvent[]>([]);
   const [diagnosisStepIndex, setDiagnosisStepIndex] = useState(0);
   const [diagnosisValues, setDiagnosisValues] = useState<DiagnosisFormValues>(createDefaultDiagnosisValues);
   const [assessmentStepIndex, setAssessmentStepIndex] = useState(0);
@@ -3639,7 +3637,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         preferredRunMode,
         timeoutMs,
         (progress) => setAsyncRunProgress(progress),
-        (event) => setRecentEvents((prev) => [...prev.slice(-19), event]),
         (taskId) => onTaskCreated?.(taskId, moduleKey, requestPayload),
       );
       setResponseData(result.response);

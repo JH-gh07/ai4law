@@ -33,7 +33,7 @@ import { RunTranscript } from "./RunTranscript";
 import { TaskEventBridge } from "./TaskEventBridge";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 import { normalizeFallbackMarkdown } from "../../lib/fallback-markdown";
-import { getRunLifecycleState, isRunInProgress } from "../../lib/run-state";
+import { getRunLifecycleState, isRunInProgress, selectPreferredRun } from "../../lib/run-state";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -394,9 +394,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     [state.artifacts, taskSpace.id]
   );
 
-  const latestRun = useMemo<ModuleRun | null>(() => {
-    return taskRuns[0] ?? null;
-  }, [taskRuns]);
+  const latestRun = useMemo<ModuleRun | null>(() => selectPreferredRun(taskRuns), [taskRuns]);
   const taskTemplate = useMemo(() => findTaskTemplate(taskSpace.taskTemplateId), [taskSpace.taskTemplateId]);
   const workflowSteps = useMemo(
     () => deriveWorkflowSteps(taskSpace, latestRun, state.artifacts, state.evidenceHits, state.issues),
@@ -926,7 +924,9 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   };
 
   useEffect(() => {
-    if (!activeTaskId && latestRun?.asyncTaskId && isRunInProgress(latestRun)) {
+    if (!latestRun?.asyncTaskId) return;
+    if (activeTaskId === latestRun.asyncTaskId) return;
+    if (isRunInProgress(latestRun) || !activeTaskId) {
       setActiveTaskId(latestRun.asyncTaskId);
     }
   }, [activeTaskId, latestRun]);

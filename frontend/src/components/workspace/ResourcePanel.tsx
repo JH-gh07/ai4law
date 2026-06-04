@@ -32,28 +32,16 @@ export type ResourceOpenTarget =
       };
     };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const toFileName = (value: string): string => {
-  const normalized = value.replace(/\\/g, "/");
-  const chunks = normalized.split("/");
-  return chunks[chunks.length - 1] || value;
-};
-
-const toFolderPath = (value: string): string => {
-  const normalized = value.replace(/\\/g, "/");
-  const chunks = normalized.split("/");
-  chunks.pop();
-  return chunks.join("/");
-};
-
 type TreeNode = {
   id: string;
   type: "folder" | "file";
   name: string;
   path?: string;
   children: TreeNode[];
+};
+
+type MutableTreeNode = TreeNode & {
+  childrenMap: Map<string, MutableTreeNode>;
 };
 
 type OutputTreeEntry = {
@@ -70,8 +58,24 @@ type InputEntry = {
   createdAt: string;
 };
 
-type MutableTreeNode = TreeNode & {
-  childrenMap: Map<string, MutableTreeNode>;
+type InputResourceCandidate = {
+  path: string;
+  labelHint?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const toFileName = (value: string): string => {
+  const normalized = value.replace(/\\/g, "/");
+  const chunks = normalized.split("/");
+  return chunks[chunks.length - 1] || value;
+};
+
+const getFileExtension = (value: string): string => {
+  const fileName = toFileName(value).toLowerCase();
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex === -1 ? "" : fileName.slice(dotIndex + 1);
 };
 
 const createFolderNode = (id: string, name: string): MutableTreeNode => ({
@@ -141,21 +145,72 @@ const looksLikeFilePath = (value: string): boolean => {
   return false;
 };
 
-function collectPaths(value: unknown, bag: Set<string>) {
-  if (typeof value === "string") {
-    if (looksLikeFilePath(value)) {
-      bag.add(value);
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectPaths(item, bag));
-    return;
-  }
-  if (isRecord(value)) {
-    Object.values(value).forEach((item) => collectPaths(item, bag));
-  }
-}
+const prettifyStem = (value: string): string =>
+  value
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const inferLabelHint = (path: string, hint: string | undefined, lang: "zh" | "en"): string | undefined => {
+  const source = `${path} ${hint ?? ""}`.toLowerCase();
+  const mappings: Array<[string, string]> = lang === "zh"
+    ? [
+        ["data_inventory", "数据清单"],
+        ["entity_inventory", "实体清单"],
+        ["supporting_material", "补充证明材料"],
+        ["privacy_policy", "隐私政策"],
+        ["rights_sop", "消费者权利SOP"],
+        ["data_map", "数据映射材料"],
+        ["vendor_list", "供应商清单"],
+        ["scc_contract", "标准合同文本"],
+        ["certification_material", "认证申请材料"],
+        ["internal_policy", "内部制度文件"],
+        ["supporting_evidence", "支撑证据材料"],
+        ["data_flow_diagram", "数据流转图"],
+        ["security_policy", "安全制度文件"],
+        ["transfer_agreement", "传输协议文本"],
+        ["country_law_analysis", "目的国法律分析"],
+        ["technical_control_doc", "技术控制说明"],
+        ["bcr", "BCR材料"],
+        ["dpia", "DPIA材料"],
+        ["tia", "TIA材料"],
+        ["uploaded_files", "上传附件"],
+      ]
+    : [
+        ["data_inventory", "Data Inventory"],
+        ["entity_inventory", "Entity Inventory"],
+        ["supporting_material", "Supporting Material"],
+        ["privacy_policy", "Privacy Policy"],
+        ["rights_sop", "Consumer Rights SOP"],
+        ["data_map", "Data Mapping Material"],
+        ["vendor_list", "Vendor List"],
+        ["scc_contract", "SCC Contract"],
+        ["certification_material", "Certification Material"],
+        ["internal_policy", "Internal Policy"],
+        ["supporting_evidence", "Supporting Evidence"],
+        ["data_flow_diagram", "Data Flow Diagram"],
+        ["security_policy", "Security Policy"],
+        ["transfer_agreement", "Transfer Agreement"],
+        ["country_law_analysis", "Country Law Analysis"],
+        ["technical_control_doc", "Technical Control Note"],
+        ["bcr", "BCR Material"],
+        ["dpia", "DPIA Material"],
+        ["tia", "TIA Material"],
+        ["uploaded_files", "Uploaded Attachment"],
+      ];
+
+  const matched = mappings.find(([keyword]) => source.includes(keyword));
+  return matched?.[1];
+};
+
+const buildDisplayNameFromPath = (path: string, labelHint: string | undefined, lang: "zh" | "en"): string => {
+  const extension = getFileExtension(path);
+  const fileName = toFileName(path);
+  const fallback = prettifyStem(fileName) || fileName;
+  const semantic = labelHint ?? inferLabelHint(path, undefined, lang) ?? fallback;
+  return extension ? `${semantic}.${extension}` : semantic;
+};
 
 const parseTime = (value: string | undefined): number | null => {
   if (!value) return null;
@@ -163,23 +218,101 @@ const parseTime = (value: string | undefined): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const buildFormEntryName = (index: number, lang: "zh" | "en"): string =>
+  lang === "zh" ? `基础信息表单（第${index + 1}次）` : `Intake Form (${index + 1})`;
+
+const buildOutputDisplayName = (artifact: OutputArtifact, lang: "zh" | "en"): string => {
+  const lower = toFileName(artifact.path).toLowerCase();
+  const ext = getFileExtension(artifact.path).toUpperCase();
+  const suffix = ext ? (lang === "zh" ? `（${ext}）` : ` (${ext})`) : "";
+
+  if (lower.includes("citation_map")) return lang === "zh" ? "引用映射" : "Citation Map";
+  if (lower.includes("final_brief")) return lang === "zh" ? "执行简报" : "Execution Brief";
+  if (artifact.kind.toLowerCase() === "html") return lang === "zh" ? "报告预览页" : "Report Preview";
+  if (artifact.kind.toLowerCase() === "pdf") return lang === "zh" ? "报告 PDF 版" : "Report PDF";
+  if (artifact.kind.toLowerCase() === "docx" || artifact.kind.toLowerCase() === "annotated_docx") {
+    return lang === "zh" ? "报告 Word 版" : "Report Word";
+  }
+  if (artifact.kind.toLowerCase() === "markdown" || artifact.kind.toLowerCase() === "md") {
+    return lang === "zh" ? "报告 Markdown 版" : "Report Markdown";
+  }
+  if (artifact.kind.toLowerCase() === "report") {
+    return lang === "zh" ? `审查报告${suffix}` : `Review Report${suffix}`;
+  }
+  return buildDisplayNameFromPath(artifact.path, undefined, lang);
+};
+
+function collectInputResources(
+  value: unknown,
+  bag: Map<string, InputResourceCandidate>,
+  lang: "zh" | "en",
+  keyHint?: string,
+) {
+  if (typeof value === "string") {
+    if (looksLikeFilePath(value)) {
+      const existing = bag.get(value);
+      bag.set(value, {
+        path: value,
+        labelHint: existing?.labelHint ?? inferLabelHint(value, keyHint, lang),
+      });
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectInputResources(item, bag, lang, keyHint));
+    return;
+  }
+
+  if (!isRecord(value)) return;
+
+  const maybePath =
+    typeof value.storage_uri === "string"
+      ? value.storage_uri
+      : typeof value.path === "string"
+        ? value.path
+        : typeof value.file_path === "string"
+          ? value.file_path
+          : null;
+
+  if (maybePath && looksLikeFilePath(maybePath)) {
+    const roleHint =
+      typeof value.file_role === "string"
+        ? value.file_role
+        : typeof value.file_name === "string"
+          ? value.file_name
+          : keyHint;
+    const existing = bag.get(maybePath);
+    bag.set(maybePath, {
+      path: maybePath,
+      labelHint: existing?.labelHint ?? inferLabelHint(maybePath, roleHint, lang),
+    });
+  }
+
+  Object.entries(value).forEach(([key, nested]) => {
+    collectInputResources(nested, bag, lang, key);
+  });
+}
+
 export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, selectedOutputPath }: ResourcePanelProps) {
   const { state } = useAppStore();
-  const { lang, t } = useLang();
-  const copy =
-    lang === "zh"
-      ? {
-          inputLabel: "输入",
-          outputLabel: "产物",
-          inputEmpty: "暂无输入记录",
-          outputEmpty: "暂无已生成输出文件"
-        }
-      : {
-          inputLabel: "INPUT",
-          outputLabel: "OUTPUT",
-          inputEmpty: "No input records yet",
-          outputEmpty: "No generated output files yet"
-        };
+  const { lang } = useLang();
+  const copy = lang === "zh"
+    ? {
+        panelTitle: "任务材料",
+        inputLabel: "已提交材料",
+        outputLabel: "生成结果",
+        inputEmpty: "暂无已提交材料",
+        outputEmpty: "暂无生成结果"
+      }
+    : {
+        panelTitle: "Task Materials",
+        inputLabel: "Submitted Materials",
+        outputLabel: "Generated Results",
+        inputEmpty: "No submitted materials yet",
+        outputEmpty: "No generated results yet"
+      };
+
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(
     () => new Set(["tree-root-input", "tree-root-output"])
   );
@@ -194,29 +327,6 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
     () => state.artifacts.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.artifacts, taskSpace.id]
   );
-
-  /**
-   * Strip absolute path prefix and redundant "outputs/" layers from
-   * artifact paths so the tree stays shallow (module → Run N → file).
-   *
-   * Raw paths from the backend look like:
-   *   /abs/path/outputs/bcr/<UUID>/outputs/report.docx
-   *   /abs/path/outputs/review/<UUID>/outputs/doc.docx
-   *
-   * After cleaning:
-   *   outputs/bcr/<UUID>/report.docx
-   */
-  const cleanArtifactPath = (rawPath: string): string => {
-    let cleaned = rawPath;
-    // drop absolute prefix — everything before the first "outputs/"
-    const outputsIdx = cleaned.indexOf("outputs/");
-    if (outputsIdx >= 0) {
-      cleaned = cleaned.slice(outputsIdx);
-    }
-    // collapse redundant inner "outputs/" — "outputs/bcr/UUID/outputs/file" → "outputs/bcr/UUID/file"
-    cleaned = cleaned.replace(/^(outputs\/[^/]+\/[^/]+)\/outputs\//, "$1/");
-    return cleaned;
-  };
 
   const outputEntries = useMemo<OutputTreeEntry[]>(() => {
     if (outputFiles.length === 0) return [];
@@ -259,24 +369,20 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
       return lang === "zh" ? "未知" : "Unknown";
     };
 
+    const usedNames = new Map<string, number>();
     return uniqueOutputFiles.map((artifact) => {
-      const cleaned = cleanArtifactPath(artifact.path);
-      const folderPath = toFolderPath(cleaned);
-      const fileName = toFileName(cleaned);
-      const runLabel = assignRunLabel(artifact);
-
-      // Replace the deepest folder segment (UUID) with the human-readable run label
-      const parts = folderPath ? folderPath.split("/") : [];
-      if (parts.length > 0) {
-        parts[parts.length - 1] = runLabel;
-      }
-      const virtualPath = parts.length > 0
-        ? `${parts.join("/")}/${fileName}`
-        : `${runLabel}/${fileName}`;
-
-      return { virtualPath, artifact };
+      const runLabel = lang === "zh" ? `${assignRunLabel(artifact)}生成结果` : `${assignRunLabel(artifact)} Results`;
+      const baseName = buildOutputDisplayName(artifact, lang);
+      const key = `${runLabel}/${baseName}`;
+      const count = (usedNames.get(key) ?? 0) + 1;
+      usedNames.set(key, count);
+      const fileName = count === 1 ? baseName : `${baseName} (${count})`;
+      return {
+        virtualPath: `${runLabel}/${fileName}`,
+        artifact,
+      };
     });
-  }, [outputFiles, relatedRuns, lang]);
+  }, [lang, outputFiles, relatedRuns]);
 
   const inputEntries = useMemo<InputEntry[]>(() => {
     const sortedRuns = [...relatedRuns].sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
@@ -293,31 +399,31 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
     sortedRuns.forEach((run, index) => {
       entries.push({
         id: `input-form-${run.id}`,
-        name: pickUniqueName(`form_submission_${String(index + 1).padStart(3, "0")}.json`),
+        name: pickUniqueName(buildFormEntryName(index, lang)),
         kind: "form",
         payload: run.request,
         createdAt: run.startedAt
       });
 
-      const bag = new Set<string>();
-      collectPaths(run.request, bag);
-      Array.from(bag)
-        .filter((path) => !outputFiles.some((file) => file.path === path))
-        .forEach((path) => {
-          if (seenPaths.has(path)) return;
-          seenPaths.add(path);
+      const bag = new Map<string, InputResourceCandidate>();
+      collectInputResources(run.request, bag, lang);
+      Array.from(bag.values())
+        .filter((item) => !outputFiles.some((file) => file.path === item.path))
+        .forEach((item) => {
+          if (seenPaths.has(item.path)) return;
+          seenPaths.add(item.path);
           entries.push({
-            id: `input-file-${path}`,
-            name: pickUniqueName(toFileName(path)),
+            id: `input-file-${item.path}`,
+            name: pickUniqueName(buildDisplayNameFromPath(item.path, item.labelHint, lang)),
             kind: "file",
-            sourcePath: path,
+            sourcePath: item.path,
             createdAt: run.startedAt
           });
         });
     });
 
     return entries;
-  }, [outputFiles, relatedRuns]);
+  }, [lang, outputFiles, relatedRuns]);
 
   const outputFileMap = useMemo(
     () => new Map(outputEntries.map((entry) => [entry.virtualPath, entry.artifact])),
@@ -341,7 +447,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
     nodes.flatMap((node) => {
       if (node.type === "folder") {
         const expanded = expandedFolderIds.has(node.id);
-        const row = (
+        return [
           <li key={node.id}>
             <button
               type="button"
@@ -361,8 +467,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
               <ul className="ide-tree-list ide-tree-children">{renderTreeNodes(node.children, depth + 1, allowFileSelect)}</ul>
             ) : null}
           </li>
-        );
-        return [row];
+        ];
       }
 
       const artifact = node.path ? outputFileMap.get(node.path) : undefined;
@@ -400,7 +505,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
 
   return (
     <aside className="pane resource-pane resource-pane-ide" data-guide="workspace-left">
-      <div className="pane-title resource-pane-headline">{t("leftTitle")}</div>
+      <div className="pane-title resource-pane-headline">{copy.panelTitle}</div>
       <button
         className="workspace-side-toggle workspace-side-toggle-left"
         onClick={onToggleCollapse}
@@ -409,7 +514,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
         <ChevronToggleIcon direction="left" width="16" height="16" />
       </button>
       <div className="resource-pane-body resource-pane-body-ide">
-        <section className="ide-tree-shell" aria-label={t("leftTitle")}>
+        <section className="ide-tree-shell" aria-label={copy.panelTitle}>
           <ul className="ide-tree-list">
             <li>
               <button

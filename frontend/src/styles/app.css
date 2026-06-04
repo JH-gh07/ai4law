@@ -10335,11 +10335,22 @@
 
 /* ── Agent Trace History — compact timeline ─────────────────────────── */
 
+.workspace-tab-timeline {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .execution-timeline {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  min-width: 0;
   gap: 0;
+  overflow: hidden;
 }
 
 /* Header bar */
@@ -10402,12 +10413,16 @@
 /* Timeline body */
 .trace-timeline-body {
   flex: 1;
+  min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px 14px 12px;
 }
 .trace-timeline-line {
   position: relative;
   padding-left: 12px;
+  min-width: 0;
 }
 .trace-timeline-line::before {
   content: "";
@@ -10424,6 +10439,7 @@
   position: relative;
   padding: 2px 0 8px 12px;
   font-size: 12px;
+  min-width: 0;
 }
 .trace-node-dot {
   position: absolute;
@@ -10449,6 +10465,7 @@
   gap: 4px;
   font-size: 12px;
   line-height: 1.35;
+  min-width: 0;
 }
 .trace-node-stage-wrap {
   display: inline-flex;
@@ -10506,6 +10523,8 @@
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   font-size: 11px;
+  min-width: 0;
+  overflow: hidden;
 }
 .trace-block-head {
   display: flex;
@@ -10551,6 +10570,7 @@
   line-height: 1.45;
   font-family: "SF Mono", "Menlo", "Monaco", monospace;
   white-space: pre;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: auto;
   max-height: 128px;
@@ -10649,6 +10669,7 @@
 
 .assistant-copilot-stream-redesign {
   padding: 0.1rem 0.12rem 0.1rem 0;
+  min-width: 0;
 }
 
 .assistant-chat-stream {
@@ -10739,6 +10760,54 @@
   height: 4px;
   border-radius: 50%;
   background: #4f97ec;
+}
+
+.copilot-trace-embedded {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid rgba(109, 146, 199, 0.18);
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.copilot-trace-embedded-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.68rem 0.76rem 0.58rem;
+  border-bottom: 1px solid rgba(210, 223, 240, 0.8);
+}
+
+.copilot-trace-embedded-head strong {
+  display: block;
+  color: #1f456a;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.copilot-trace-embedded-head p {
+  margin: 0.18rem 0 0;
+  color: #587794;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.copilot-trace-embedded-body {
+  max-height: 18rem;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.35rem 0.75rem 0.6rem;
+}
+
+.trace-timeline-line-embedded::before {
+  left: 4px;
 }
 
 .assistant-copilot-msg-redesign {

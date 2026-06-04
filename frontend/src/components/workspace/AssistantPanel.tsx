@@ -7,8 +7,10 @@ import type { TaskSpace, TraceNode, WorkflowStepKey, WorkflowStepStatus } from "
 import { useLang } from "../../lib/language";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import { ChevronToggleIcon } from "../common/AppIcons";
-import { useTaskEvents } from "../../lib/useTaskEvents";
+import { extractTokenUsage, useTaskEvents } from "../../lib/useTaskEvents";
 import { adaptEvents } from "../../lib/trace-adapter";
+import { TraceNodeView } from "./TraceNodeView";
+import { selectPreferredRun } from "../../lib/run-state";
 
 type AssistantPanelProps = {
   taskSpace: TaskSpace;
@@ -139,14 +141,16 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
   );
 
   const latestRun = useMemo(
-    () => state.moduleRuns.find((item) => item.taskSpaceId === taskSpace.id) ?? null,
+    () => selectPreferredRun(state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id)),
     [state.moduleRuns, taskSpace.id]
   );
 
   const traceNodes = useMemo(() => {
     if (!taskId || traceEvents.length === 0) return [];
-    return adaptEvents(traceEvents);
-  }, [taskId, traceEvents]);
+    return adaptEvents(traceEvents, lang);
+  }, [taskId, traceEvents, lang]);
+
+  const tokenUsage = useMemo(() => extractTokenUsage(traceEvents), [traceEvents]);
 
   const traceContext = useMemo(() => summarizeTraceNodes(traceNodes), [traceNodes]);
 
@@ -277,6 +281,30 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
             onOpenHistory={() => onSwitchTab?.("timeline")}
             lang={lang}
           />
+          {taskId && traceNodes.length > 0 ? (
+            <section className="copilot-trace-embedded">
+              <header className="copilot-trace-embedded-head">
+                <div>
+                  <strong>{lang === "zh" ? "执行流详情" : "Execution Flow"}</strong>
+                  <p>
+                    {lang === "zh"
+                      ? `展示当前任务的阶段、工具调用、结果摘要与中间产物。累计 tokens：${tokenUsage.total.total_tokens}`
+                      : `Shows stages, tool calls, outputs, and intermediate results. Total tokens: ${tokenUsage.total.total_tokens}`}
+                  </p>
+                </div>
+                <button type="button" className="copilot-trace-history-link" onClick={() => onSwitchTab?.("timeline")}>
+                  {lang === "zh" ? "在工作区打开" : "Open in Workspace"}
+                </button>
+              </header>
+              <div className="copilot-trace-embedded-body">
+                <div className="trace-timeline-line trace-timeline-line-embedded">
+                  {traceNodes.map((node) => (
+                    <TraceNodeView key={node.id} node={node} lang={lang} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
           {messages.map((item) => (
             <article
               key={item.id}

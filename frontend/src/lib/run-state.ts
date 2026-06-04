@@ -139,3 +139,24 @@ export function mergeRunResults(local: ModuleRun, server: ModuleRun): ModuleRun 
     runMode: server.runMode ?? local.runMode,
   };
 }
+
+function readRunTimestamp(run: ModuleRun): number {
+  const candidate = run.finishedAt ?? run.startedAt;
+  const value = new Date(candidate).getTime();
+  return Number.isFinite(value) ? value : 0;
+}
+
+export function compareRunsByRecency(left: ModuleRun, right: ModuleRun): number {
+  return readRunTimestamp(right) - readRunTimestamp(left);
+}
+
+export function selectPreferredRun(runs: ModuleRun[]): ModuleRun | null {
+  if (runs.length === 0) return null;
+
+  const runningRuns = runs.filter((run) => isRunInProgress(run)).sort(compareRunsByRecency);
+  if (runningRuns.length > 0) {
+    return runningRuns[0];
+  }
+
+  return [...runs].sort(compareRunsByRecency)[0] ?? null;
+}
