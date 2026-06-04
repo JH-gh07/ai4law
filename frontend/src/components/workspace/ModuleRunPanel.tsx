@@ -2663,6 +2663,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     else if (isTiaModule) setTiaValues((prev) => ({ ...prev, ...fd } as TiaFormValues));
     else if (isCnFlowModule) setCnFlowValues((prev) => ({ ...prev, ...fd } as CnFlowFormValues));
     else if (isEuSccTask) setEuSccValues((prev) => ({ ...prev, ...fd } as EuSccFormValues));
+    else if (isDocumentReviewTask) setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
   };
   const renderDevCasePicker = (compact?: boolean) => {
     if (!DEV_ACCEL_ENABLED || devTestCases.length === 0) return null;
@@ -4063,6 +4064,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
       {isDocumentReviewTask ? (
         <section className="doc-review-workbench">
+          {renderDevCasePicker()}
           <aside className="doc-review-input-pane">
             <header className="doc-review-panel-head">
               <div className="doc-review-panel-copy">

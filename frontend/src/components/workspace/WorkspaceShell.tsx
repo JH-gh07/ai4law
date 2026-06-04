@@ -61,6 +61,11 @@ type ReportPreviewSection = {
   content: string;
 };
 
+type ReportQuickFact = {
+  label: string;
+  value: string;
+};
+
 type OpenedResource =
   | { kind: "output"; name: string; path: string; fileType: string }
   | { kind: "input-file"; name: string; path: string; fileType: string }
@@ -265,6 +270,40 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   return sections;
 };
 
+const buildReportQuickFacts = (
+  lang: "zh" | "en",
+  riskLevel: string | undefined,
+  issueCount: number,
+  evidenceCount: number,
+  artifactCount: number,
+): ReportQuickFact[] => [
+  {
+    label: lang === "zh" ? "风险等级" : "Risk Level",
+    value: riskLevel || (lang === "zh" ? "待生成" : "Pending"),
+  },
+  {
+    label: lang === "zh" ? "问题数量" : "Issues",
+    value: String(issueCount),
+  },
+  {
+    label: lang === "zh" ? "证据命中" : "Evidence",
+    value: String(evidenceCount),
+  },
+  {
+    label: lang === "zh" ? "输出文件" : "Artifacts",
+    value: String(artifactCount),
+  },
+];
+
+function slugifySectionTitle(value: string, index: number): string {
+  const base = value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\u4e00-\u9fff-]/g, "")
+    .slice(0, 32);
+  return `report-section-${index}-${base || "section"}`;
+}
+
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
@@ -339,6 +378,18 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     }
     return buildFallbackPreviewSections(latestRun?.response, lang);
   }, [lang, latestRun?.response, responseChapters]);
+  const reportQuickFacts = useMemo(
+    () => buildReportQuickFacts(lang, responseInsight.riskLevel, taskIssues.length, taskEvidence.length, displayReportArtifacts.length),
+    [displayReportArtifacts.length, lang, responseInsight.riskLevel, taskEvidence.length, taskIssues.length],
+  );
+  const reportSectionAnchors = useMemo(
+    () =>
+      reportPreviewSections.map((section, index) => ({
+        id: slugifySectionTitle(section.title, index),
+        title: section.title,
+      })),
+    [reportPreviewSections],
+  );
   const terminalLines = useMemo(() => {
     const lines: string[] = [];
     lines.push(`[workspace] ${taskSpace.name} (${taskSpace.id})`);
@@ -1134,6 +1185,38 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           <h3>{t("workspaceTabReportTitle")}</h3>
           <p>{reportPreviewSections.length > 0 ? (lang === "zh" ? "报告生成完成后会自动进入这里，优先展示可直接阅读的正文内容，再附带导出文件。" : "Generated reports land here automatically with readable in-page content before exported files.") : t("workspaceTabReportDesc")}</p>
         </header>
+        <section className="workspace-report-quickbar">
+          <article className="workspace-report-summary-card">
+            <div className="workspace-report-summary-head">
+              <span>{lang === "zh" ? "快速摘要" : "Quick Summary"}</span>
+              <strong>{artifactPreview?.file_name || (lang === "zh" ? "当前报告" : "Current Report")}</strong>
+            </div>
+            <div className="workspace-report-summary-grid">
+              {reportQuickFacts.map((fact) => (
+                <div key={fact.label} className="workspace-report-summary-chip">
+                  <span>{fact.label}</span>
+                  <strong>{fact.value}</strong>
+                </div>
+              ))}
+            </div>
+          </article>
+          {reportSectionAnchors.length > 0 ? (
+            <article className="workspace-report-outline-card">
+              <div className="workspace-report-outline-head">
+                <span>{lang === "zh" ? "章节导航" : "Section Outline"}</span>
+                <strong>{lang === "zh" ? `${reportSectionAnchors.length} 个章节` : `${reportSectionAnchors.length} sections`}</strong>
+              </div>
+              <nav className="workspace-report-outline-nav" aria-label={lang === "zh" ? "报告章节导航" : "Report section navigation"}>
+                {reportSectionAnchors.map((section, index) => (
+                  <a key={section.id} href={`#${section.id}`} className="workspace-report-outline-link">
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <strong>{section.title}</strong>
+                  </a>
+                ))}
+              </nav>
+            </article>
+          ) : null}
+        </section>
         <section className="workspace-report-kpi-row">
           <article>
             <span>{t("reportIssueCount")}</span>
@@ -1223,7 +1306,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         {reportPreviewSections.length > 0 ? (
           <section className="workspace-report-chapters">
             {reportPreviewSections.map((section, index) => (
-              <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
+              <article
+                key={`${section.title}-${index}`}
+                id={reportSectionAnchors[index]?.id}
+                className="workspace-report-chapter workspace-report-preview-block"
+              >
                 <strong>{section.title}</strong>
                 <div className="workspace-report-richtext">
                   {latestRun?.asyncTaskId ? (

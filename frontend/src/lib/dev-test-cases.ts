@@ -1346,6 +1346,98 @@ const cnFlowRestricted: DevTestCase = {
   }
 };
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Document Review — 2 cases
+// ═══════════════════════════════════════════════════════════════════════════
+
+const reviewPrivacyPolicy: DevTestCase = {
+  name: "审查-1: 隐私政策合规审查",
+  description: "审查跨境电商平台隐私政策，检查跨境传输告知、敏感信息处理、用户权利行使路径与联系方式披露的完整性",
+  jurisdiction: "CN",
+  formDefaults: {
+    company_name: "华东云链科技（测试）",
+    publisher_entity: "华东云链科技（测试）",
+    document_title: "跨境业务隐私政策（测试版）",
+    document_version: "v2.3",
+    effective_date: "2025-06-01",
+    applicable_products: "华东云链SaaS平台、华东云链APP",
+    applicable_scope: "面向全球用户的云服务平台的个人信息处理活动",
+    is_live_version: true,
+    document_type: "privacy_policy",
+    receiver_name: "OceanStar Technology Pte. Ltd.",
+    receiver_country: "新加坡",
+    transfer_purpose: "跨境客服工单处理和统一运维支持",
+    processor_identity_disclosed: true,
+    scope_disclosed: true,
+    collection_purpose_disclosed: true,
+    processing_method_disclosed: true,
+    category_disclosed: true,
+    sensitive_pi_disclosed: false,
+    crossborder_rule_disclosed: false,
+    rights_channel_disclosed: true,
+    contact_channel: "privacy@huadongcloud.com",
+    pii_count: 280000,
+    spi_count: 5000,
+    has_scc_draft: false,
+    review_focus: "重点核查跨境传输告知的完整性、敏感信息处理的合法性基础、用户权利行使路径与联系方式的披露"
+  },
+  payload: {
+    company_name: "华东云链科技（测试）",
+    document_type: "privacy_policy",
+    receiver_name: "OceanStar Technology Pte. Ltd.",
+    receiver_country: "新加坡",
+    transfer_purpose: "跨境客服工单处理和统一运维支持",
+    review_focus: "重点核查跨境传输告知、敏感信息处理、用户权利行使路径与联系方式披露",
+    pii_count: 280000,
+    spi_count: 5000
+  }
+};
+
+const reviewSccContract: DevTestCase = {
+  name: "审查-2: 标准合同条款审查",
+  description: "审查个人信息出境标准合同，检查条款完整性、责任分配、数据主体权利保障和补充措施",
+  jurisdiction: "CN",
+  formDefaults: {
+    company_name: "数字支付科技（深圳）有限公司",
+    publisher_entity: "数字支付科技（深圳）有限公司",
+    document_title: "个人信息出境标准合同（与新加坡支付处理商）",
+    document_version: "v1.0（草案）",
+    effective_date: "",
+    applicable_products: "跨境支付清结算服务",
+    applicable_scope: "向新加坡支付处理商传输支付交易数据用于清结算",
+    is_live_version: false,
+    document_type: "scc_contract",
+    receiver_name: "PayTech Singapore Pte Ltd",
+    receiver_country: "新加坡",
+    transfer_purpose: "跨境支付清结算数据处理",
+    processor_identity_disclosed: true,
+    scope_disclosed: true,
+    collection_purpose_disclosed: true,
+    processing_method_disclosed: true,
+    category_disclosed: true,
+    sensitive_pi_disclosed: true,
+    crossborder_rule_disclosed: true,
+    rights_channel_disclosed: true,
+    contact_channel: "dpo@digitalpay.cn",
+    pii_count: 500000,
+    spi_count: 120000,
+    has_scc_draft: true,
+    review_focus: "重点审查标准合同条款完整性、数据接收方义务、再转移限制、安全事件通知时限、和个人信息主体权利保障机制"
+  },
+  payload: {
+    company_name: "数字支付科技（深圳）有限公司",
+    document_type: "scc_contract",
+    receiver_name: "PayTech Singapore Pte Ltd",
+    receiver_country: "新加坡",
+    transfer_purpose: "跨境支付清结算数据处理",
+    review_focus: "审查标准合同条款完整性、数据接收方义务、再转移限制",
+    pii_count: 500000,
+    spi_count: 120000,
+    has_scc_draft: true
+  }
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Exported registry
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1360,6 +1452,7 @@ export const DEV_TEST_CASES: Record<string, DevTestCase[]> = {
   dpia: [dpiaAIRecruitment, dpiaSmartCity],
   tia: [tiaBasicSCC, tiaChinaBCR],
   pipia: [pipiaSCCFiling, pipiaCertification],
+  review: [reviewPrivacyPolicy, reviewSccContract],
   cn_flow: [cnFlowBasic, cnFlowRestricted],
   us_14117: [us14117Basic, us14117RestrictedParty],
 };
