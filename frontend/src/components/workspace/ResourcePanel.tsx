@@ -195,6 +195,29 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
     [state.artifacts, taskSpace.id]
   );
 
+  /**
+   * Strip absolute path prefix and redundant "outputs/" layers from
+   * artifact paths so the tree stays shallow (module → Run N → file).
+   *
+   * Raw paths from the backend look like:
+   *   /abs/path/outputs/bcr/<UUID>/outputs/report.docx
+   *   /abs/path/outputs/review/<UUID>/outputs/doc.docx
+   *
+   * After cleaning:
+   *   outputs/bcr/<UUID>/report.docx
+   */
+  const cleanArtifactPath = (rawPath: string): string => {
+    let cleaned = rawPath;
+    // drop absolute prefix — everything before the first "outputs/"
+    const outputsIdx = cleaned.indexOf("outputs/");
+    if (outputsIdx >= 0) {
+      cleaned = cleaned.slice(outputsIdx);
+    }
+    // collapse redundant inner "outputs/" — "outputs/bcr/UUID/outputs/file" → "outputs/bcr/UUID/file"
+    cleaned = cleaned.replace(/^(outputs\/[^/]+\/[^/]+)\/outputs\//, "$1/");
+    return cleaned;
+  };
+
   const outputEntries = useMemo<OutputTreeEntry[]>(() => {
     if (outputFiles.length === 0) return [];
 
@@ -216,32 +239,44 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
       .filter((item): item is { runId: string; time: number } => !!item)
       .sort((a, b) => b.time - a.time);
 
-    const runFolderById = new Map<string, string>();
+    const runLabelById = new Map<string, string>();
     runsWithTime.forEach((item, index) => {
-      runFolderById.set(item.runId, `run-${String(index + 1).padStart(3, "0")}`);
+      runLabelById.set(item.runId, `${lang === "zh" ? "第" : "Run "}${index + 1}${lang === "zh" ? "次" : ""}`);
     });
 
-    const assignRunFolder = (artifact: OutputArtifact): string => {
+    const assignRunLabel = (artifact: OutputArtifact): string => {
       const artifactTime = parseTime(artifact.createdAt);
-      if (artifactTime === null || runsWithTime.length === 0) return "run-unknown";
+      if (artifactTime === null || runsWithTime.length === 0) {
+        return lang === "zh" ? "未知" : "Unknown";
+      }
       for (let index = 0; index < runsWithTime.length; index += 1) {
         const lowerBound = runsWithTime[index].time;
         const upperBound = index === 0 ? Number.POSITIVE_INFINITY : runsWithTime[index - 1].time;
         if (artifactTime >= lowerBound && artifactTime < upperBound) {
-          return runFolderById.get(runsWithTime[index].runId) ?? "run-unknown";
+          return runLabelById.get(runsWithTime[index].runId) ?? (lang === "zh" ? "未知" : "Unknown");
         }
       }
-      return "run-unknown";
+      return lang === "zh" ? "未知" : "Unknown";
     };
 
     return uniqueOutputFiles.map((artifact) => {
-      const folder = toFolderPath(artifact.path);
-      const fileName = toFileName(artifact.path);
-      const runFolder = assignRunFolder(artifact);
-      const virtualPath = folder ? `${folder}/${runFolder}/${fileName}` : `${runFolder}/${fileName}`;
+      const cleaned = cleanArtifactPath(artifact.path);
+      const folderPath = toFolderPath(cleaned);
+      const fileName = toFileName(cleaned);
+      const runLabel = assignRunLabel(artifact);
+
+      // Replace the deepest folder segment (UUID) with the human-readable run label
+      const parts = folderPath ? folderPath.split("/") : [];
+      if (parts.length > 0) {
+        parts[parts.length - 1] = runLabel;
+      }
+      const virtualPath = parts.length > 0
+        ? `${parts.join("/")}/${fileName}`
+        : `${runLabel}/${fileName}`;
+
       return { virtualPath, artifact };
     });
-  }, [outputFiles, relatedRuns]);
+  }, [outputFiles, relatedRuns, lang]);
 
   const inputEntries = useMemo<InputEntry[]>(() => {
     const sortedRuns = [...relatedRuns].sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
