@@ -436,7 +436,13 @@ export async function runModule(
     await sleep(1500);
   }
 
-  throw new Error("Async task timeout");
+  const timeoutError = new Error("Async task timeout") as Error & {
+    asyncTaskId?: string;
+    asyncState?: string;
+  };
+  timeoutError.asyncTaskId = taskId;
+  timeoutError.asyncState = "running";
+  throw timeoutError;
 }
 
 export async function retryModuleTask(module: ModuleDefinition, taskId: string): Promise<unknown> {

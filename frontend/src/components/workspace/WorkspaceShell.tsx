@@ -869,13 +869,19 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   const onRunDone = (output: RunOutput) => {
     const now = new Date().toISOString();
+    const preserveAsyncRunning =
+      output.runMode === "async" &&
+      output.asyncTaskId &&
+      output.asyncState &&
+      output.asyncState.toLowerCase() === "running" &&
+      !output.response;
     const run: ModuleRun = {
       id: `${output.module}-${now}`,
       taskSpaceId: taskSpace.id,
       module: output.module,
       runMode: output.runMode,
       startedAt: now,
-      finishedAt: now,
+      finishedAt: preserveAsyncRunning ? undefined : now,
       success: output.success,
       request: output.request,
       response: output.response,
@@ -934,7 +940,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   useEffect(() => {
     if (!latestRun?.asyncTaskId) return;
-    const shouldSync = isRunInProgress(latestRun) || !latestRun.response;
+    const shouldSync =
+      isRunInProgress(latestRun) ||
+      !latestRun.response ||
+      (latestRun.error === "Async task timeout" && latestRun.asyncState === "running");
     if (!shouldSync) return;
 
     let cancelled = false;
