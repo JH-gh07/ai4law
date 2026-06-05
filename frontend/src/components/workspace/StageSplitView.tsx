@@ -35,6 +35,8 @@ export function StageSplitView({ taskSpace, onRunDone, latestRun, onTaskCreated 
               >
                 {latestRunState === "running"
                   ? (lang === "zh" ? "当前运行中" : "Currently running")
+                  : latestRunState === "unreachable"
+                    ? (lang === "zh" ? "最近一次运行后端不可达" : "Latest run backend unreachable")
                   : latestRunState === "success"
                     ? (lang === "zh" ? "最近一次运行成功" : "Latest run succeeded")
                     : (lang === "zh" ? "最近一次运行失败" : "Latest run failed")}

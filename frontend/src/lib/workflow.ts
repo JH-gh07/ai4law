@@ -6,7 +6,7 @@ import type {
   TaskSpace,
   WorkflowStepState
 } from "./domain";
-import { isRunFailed, isRunInProgress, isRunSuccessful } from "./run-state";
+import { isRunFailed, isRunInProgress, isRunSuccessful, isRunUnreachable } from "./run-state";
 
 const nowIso = () => new Date().toISOString();
 
@@ -23,8 +23,13 @@ export function deriveWorkflowSteps(
   const baseTime = latestRun?.finishedAt ?? latestRun?.startedAt ?? nowIso();
   const runInProgress = isRunInProgress(latestRun);
   const runFailed = isRunFailed(latestRun);
+  const runUnreachable = isRunUnreachable(latestRun);
   const runSuccessful = isRunSuccessful(latestRun);
-  const blockedReason = runFailed ? latestRun?.error ?? "Module run failed." : undefined;
+  const blockedReason = runUnreachable
+    ? latestRun?.error ?? "Backend service is unreachable."
+    : runFailed
+      ? latestRun?.error ?? "Module run failed."
+      : undefined;
 
   return [
     {

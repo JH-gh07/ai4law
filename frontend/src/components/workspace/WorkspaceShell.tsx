@@ -880,6 +880,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       request: output.request,
       response: output.response,
       error: output.error,
+      errorCode: output.errorCode,
       asyncTaskId: output.asyncTaskId,
       asyncState: output.asyncState
     };

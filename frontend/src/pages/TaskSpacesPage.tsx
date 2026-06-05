@@ -59,7 +59,7 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   ];
 
   const latestRunByTask = useMemo(() => {
-    const map = new Map<string, { state: "idle" | "running" | "success" | "failed"; module: string; at: string }>();
+    const map = new Map<string, { state: "idle" | "running" | "success" | "failed" | "unreachable"; module: string; at: string }>();
     for (const run of state.moduleRuns) {
       const prev = map.get(run.taskSpaceId);
       const at = run.finishedAt ?? run.startedAt;
@@ -306,9 +306,23 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
                 >
                   <div className="tasks-card-head">
                     <h3>{task.name}</h3>
-                    <span className={`tasks-status-pill ${latestRun ? (latestRun.state === "running" ? "running" : latestRun.state === "success" ? "ok" : "fail") : "idle"}`}>
+                    <span className={`tasks-status-pill ${
+                      latestRun
+                        ? latestRun.state === "running"
+                          ? "running"
+                          : latestRun.state === "success"
+                            ? "ok"
+                            : "fail"
+                        : "idle"
+                    }`}>
                       {latestRun
-                        ? `${latestRun.state === "running" ? "RUNNING" : latestRun.state === "success" ? "OK" : "FAIL"} · ${latestRun.module.toUpperCase()}`
+                        ? `${latestRun.state === "running"
+                          ? "RUNNING"
+                          : latestRun.state === "success"
+                            ? "OK"
+                            : latestRun.state === "unreachable"
+                              ? "UNREACHABLE"
+                              : "FAIL"} · ${latestRun.module.toUpperCase()}`
                         : t("tasksCardNoRuns")}
                     </span>
                   </div>

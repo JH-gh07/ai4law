@@ -53,6 +53,7 @@ export type ModuleRun = {
   request: unknown;
   response?: unknown;
   error?: string;
+  errorCode?: string;
   asyncTaskId?: string;
   asyncState?: string;
 };

@@ -9,6 +9,7 @@ const SUCCESS_ASYNC_STATES = new Set(["succeeded", "completed"]);
 const FAILED_ASYNC_STATES = new Set(["failed", "cancelled", "canceled"]);
 
 export type RunLifecycleState = "idle" | "running" | "success" | "failed";
+export type ExtendedRunLifecycleState = "idle" | "running" | "success" | "failed" | "unreachable";
 
 // ---------------------------------------------------------------------------
 // Normalization helpers
@@ -67,8 +68,14 @@ export function isRunSuccessful(run: ModuleRun | null | undefined): boolean {
   return !isRunInProgress(run) && !!run.finishedAt && run.success;
 }
 
+export function isRunUnreachable(run: ModuleRun | null | undefined): boolean {
+  if (!run) return false;
+  return !isRunInProgress(run) && !!run.finishedAt && run.errorCode === "backend_unreachable";
+}
+
 export function isRunFailed(run: ModuleRun | null | undefined): boolean {
   if (!run) return false;
+  if (isRunUnreachable(run)) return false;
 
   const asyncState = normalizeAsyncState(run.asyncState);
   if (asyncState && FAILED_ASYNC_STATES.has(asyncState)) {
@@ -78,9 +85,10 @@ export function isRunFailed(run: ModuleRun | null | undefined): boolean {
   return !isRunInProgress(run) && !!run.finishedAt && !run.success;
 }
 
-export function getRunLifecycleState(run: ModuleRun | null | undefined): RunLifecycleState {
+export function getRunLifecycleState(run: ModuleRun | null | undefined): ExtendedRunLifecycleState {
   if (!run) return "idle";
   if (isRunInProgress(run)) return "running";
+  if (isRunUnreachable(run)) return "unreachable";
   if (isRunFailed(run)) return "failed";
   if (isRunSuccessful(run)) return "success";
   return "idle";
@@ -134,6 +142,7 @@ export function mergeRunResults(local: ModuleRun, server: ModuleRun): ModuleRun 
     asyncState: server.asyncState ?? local.asyncState,
     response: server.response ?? local.response,
     error: server.error ?? local.error,
+    errorCode: server.errorCode ?? local.errorCode,
     finishedAt: server.finishedAt ?? local.finishedAt,
     asyncTaskId: server.asyncTaskId ?? local.asyncTaskId,
     runMode: server.runMode ?? local.runMode,
