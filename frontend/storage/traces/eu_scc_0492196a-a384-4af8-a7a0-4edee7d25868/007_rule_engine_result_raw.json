@@ -1,0 +1,207 @@
+{
+  "name": "rule_engine_result_raw",
+  "seq": 7,
+  "created_at": "2026-06-05T02:35:47.966890+00:00",
+  "payload": {
+    "recommended_path": "eu_scc",
+    "rationale": "EU SCC deterministic rule engine review",
+    "document": {
+      "module_type": "Module Two",
+      "clauses": [
+        {
+          "clause_no": 7,
+          "title": "Clause 7",
+          "content": "CTION I\n\nClause 7 — Docking clause\nAdditional parties may accede. Current list of additional parties:\n- Nordic Retail Group (See MSA for d",
+          "has_deviation": false,
+          "deviation_type": "",
+          "deviation_description": ""
+        },
+        {
+          "clause_no": 9,
+          "title": "Clause 9",
+          "content": "etails)\n\nClause 9 — Use of sub-processors\nApproved sub-processors listed in",
+          "has_deviation": false,
+          "deviation_type": "",
+          "deviation_description": ""
+        }
+      ],
+      "annex_i_a": {
+        "parties": [],
+        "signing_info": ""
+      },
+      "annex_i_b": {
+        "data_subjects": "",
+        "data_categories": "logistics tracking data, warehouse inventory",
+        "special_category_data": [],
+        "processing_purpose": "supply chain optimization",
+        "processing_nature": "",
+        "transfer_frequency": "",
+        "retention_period": ""
+      },
+      "annex_ii": {
+        "tom_items": [],
+        "supplementary_measures": []
+      },
+      "annex_iii": {
+        "sub_processors": []
+      },
+      "raw_text": "\nMODULE TWO\n\nTransfer from controller to processor\n\nSECTION I\n\nClause 7 — Docking clause\nAdditional parties may accede. Current list of additional parties:\n- Nordic Retail Group (See MSA for details)\n\nClause 9 — Use of sub-processors\nApproved sub-processors listed in Annex III.\n\nANNEX I\n\nA. LIST OF PARTIES\nData exporter: Dutch Logistics BV (Processor)\nData importer: Orange Cloud Services SARL (Processor)\n  Note: Orange Cloud provides cloud infrastructure to Nordic Retail Group's supply chain\n\nB. DESCRIPTION OF TRANSFER\nData categories: logistics tracking data, warehouse inventory\nPurpose: supply chain optimization\n\nANNEX II\nTECHNICAL AND ORGANISATIONAL MEASURES\n- TLS encryption\n- Access controls\n\nANNEX III\nLIST OF SUB-PROCESSORS\n- Serbia Data Center doo — data hosting — Serbia\n"
+    },
+    "transfer_chain": {
+      "exporter_name": "",
+      "exporter_role": "processor",
+      "importer_name": "",
+      "importer_role": "processor",
+      "sub_processors": [],
+      "onward_transfer_locations": [
+        "Serbia",
+        "Serbia"
+      ],
+      "storage_locations": [
+        "Serbia",
+        "Serbia"
+      ],
+      "access_locations": [
+        "Serbia",
+        "Serbia"
+      ]
+    },
+    "module_validation": {
+      "expected_module": "Module Three",
+      "actual_module": "Module Two",
+      "is_correct": false,
+      "mismatch_reason": "Exporter role 'processor' + Importer role 'processor' → expected Module Three, but document declares Module Two."
+    },
+    "clause_comparison": {
+      "clauses_checked": 2,
+      "deviations_found": 0,
+      "findings": []
+    },
+    "annex_review": {
+      "findings": [
+        {
+          "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "location": "Annex I.A",
+          "clause_ref": "Annex I.A",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "MEDIUM",
+          "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+          "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+          "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+          "location": "Annex II",
+          "clause_ref": "Annex II",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "HIGH",
+          "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+          "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+          "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "suggested_text": ""
+        }
+      ]
+    },
+    "tia_review": {
+      "has_third_country_transfer": true,
+      "third_country_transfers": [
+        "Serbia"
+      ],
+      "tia_present": false,
+      "has_supplementary_measures": false,
+      "schrems_ii_measures_present": false,
+      "findings": [
+        {
+          "finding_id": "EU-SCC-TIA-MISSING",
+          "location": "Clause 14",
+          "clause_ref": "14",
+          "original_text": "",
+          "issue_type": "tia_missing",
+          "severity": "HIGH",
+          "risk_analysis": "Third country transfer identified to: Serbia. No Transfer Impact Assessment (TIA) has been provided. Under GDPR and Schrems II (C-311/18), a documented TIA is required before transferring personal data to a third country without an adequacy decision.",
+          "legal_basis": "GDPR Article 46; Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Clause 14",
+          "recommendation": "Complete a TIA for transfers to Serbia. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+          "location": "Annex II",
+          "clause_ref": "Annex II & Clause 14",
+          "original_text": "",
+          "issue_type": "supplementary_measures_insufficient",
+          "severity": "HIGH",
+          "risk_analysis": "Third country transfer to non-adequate jurisdiction 'Serbia' requires Schrems II supplementary measures. Technical: NOT FOUND. Contractual: NOT FOUND. Organizational: NOT FOUND.",
+          "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Annex II",
+          "recommendation": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+          "suggested_text": ""
+        }
+      ]
+    },
+    "all_findings": [
+      {
+        "finding_id": "EU-SCC-MODULE-MISMATCH",
+        "location": "Document Header",
+        "clause_ref": "Module Type",
+        "original_text": "Module Two",
+        "issue_type": "module_mismatch",
+        "severity": "HIGH",
+        "risk_analysis": "Exporter role 'processor' + Importer role 'processor' → expected Module Three, but document declares Module Two.",
+        "legal_basis": "EU 2021/914; GDPR Article 46",
+        "recommendation": "Use Module Three instead of Module Two, or verify that the party roles in Annex I.A match the declared module.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "location": "Annex I.A",
+        "clause_ref": "Annex I.A",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "MEDIUM",
+        "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+        "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+        "location": "Annex II",
+        "clause_ref": "Annex II",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "HIGH",
+        "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+        "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-TIA-MISSING",
+        "location": "Clause 14",
+        "clause_ref": "14",
+        "original_text": "",
+        "issue_type": "tia_missing",
+        "severity": "HIGH",
+        "risk_analysis": "Third country transfer identified to: Serbia. No Transfer Impact Assessment (TIA) has been provided. Under GDPR and Schrems II (C-311/18), a documented TIA is required before transferring personal data to a third country without an adequacy decision.",
+        "legal_basis": "GDPR Article 46; Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Clause 14",
+        "recommendation": "Complete a TIA for transfers to Serbia. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "location": "Annex II",
+        "clause_ref": "Annex II & Clause 14",
+        "original_text": "",
+        "issue_type": "supplementary_measures_insufficient",
+        "severity": "HIGH",
+        "risk_analysis": "Third country transfer to non-adequate jurisdiction 'Serbia' requires Schrems II supplementary measures. Technical: NOT FOUND. Contractual: NOT FOUND. Organizational: NOT FOUND.",
+        "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Annex II",
+        "recommendation": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+        "suggested_text": ""
+      }
+    ],
+    "overall_rating": "HIGH"
+  }
+}

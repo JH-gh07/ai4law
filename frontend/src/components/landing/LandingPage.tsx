@@ -45,6 +45,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
   const navigate = useNavigate();
   const { state } = useAppStore();
   const isZh = lang === "zh";
+  const homepageVideoSrc = "/media/homepage.mp4?v=20260605-1";
   const [openQuestModalOpen, setOpenQuestModalOpen] = useState(false);
   const [openQuestQuery, setOpenQuestQuery] = useState("");
 
@@ -188,7 +189,7 @@ export function LandingPage({ onStart: _onStart, onQuickCreate: _onQuickCreate }
             <div className="landing-blue-hero landing-blue-hero-video-mode">
               <video
                 className="landing-blue-hero-video-bg"
-                src="/media/homepage.mp4"
+                src={homepageVideoSrc}
                 autoPlay
                 muted
                 loop

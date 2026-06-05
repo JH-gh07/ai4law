@@ -1,0 +1,23 @@
+{
+  "name": "transfer_chain_raw",
+  "seq": 4,
+  "created_at": "2026-06-05T02:35:47.853672+00:00",
+  "payload": {
+    "exporter_name": "",
+    "exporter_role": "controller",
+    "importer_name": "",
+    "importer_role": "processor",
+    "sub_processors": [
+      "None"
+    ],
+    "onward_transfer_locations": [
+      "India"
+    ],
+    "storage_locations": [
+      "India"
+    ],
+    "access_locations": [
+      "India"
+    ]
+  }
+}

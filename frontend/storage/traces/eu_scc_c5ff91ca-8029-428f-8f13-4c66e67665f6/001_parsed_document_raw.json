@@ -1,0 +1,114 @@
+{
+  "name": "parsed_document_raw",
+  "seq": 1,
+  "created_at": "2026-06-05T02:32:47.365369+00:00",
+  "payload": {
+    "module_type": "Module Two",
+    "clauses": [
+      {
+        "clause_no": 1,
+        "title": "Clause 1",
+        "content": "CTION I\n\nClause 1 — Purpose and scope\nThe purpose of these standard contractual clauses is to ensure comp",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 7,
+        "title": "Clause 7",
+        "content": "liance.\n\nClause 7 — Docking clause\nAdditional parties may accede to these C",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 9,
+        "title": "Clause 9",
+        "content": "lauses.\n\nClause 9 — Use of sub-processors\nThe data importer shall not sub-contract without the data exporter's prior specific written authoriz",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 14,
+        "title": "Clause 14",
+        "content": "ation.\n\nClause 14 — Local laws and practices\nThe Parties warrant that they have no reason to believe that the laws in the third country prevent the data importer from fulfilling its obligations. The data importer shall provide the assessment documentation upon request.\n\nClause 15 — Obl",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 15,
+        "title": "Clause 15",
+        "content": "igations in case of access by public authorities\nThe data importer shall notify the data exporter as soon as legally permissible if it receives a request from a public authority. The data importer shall review the legality at its discretion. The data importer shall provide information to the extent reasonably practi",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 16,
+        "title": "Clause 16",
+        "content": "cable.\n\nClause 16 — Non-compliance and termination\nFollowing termination, the data importer shall delete or return",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 17,
+        "title": "Clause 17",
+        "content": "data.\n\nClause 17 — Governing law\nThese Clauses shall be governed by the law of Ir",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      },
+      {
+        "clause_no": 18,
+        "title": "Clause 18",
+        "content": "eland.\n\nClause 18 — Choice of forum and jurisdiction\nAny dispute shall be resolved by the courts of Ireland.",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      }
+    ],
+    "annex_i_a": {
+      "parties": [
+        {
+          "name": "",
+          "address": "",
+          "contact": "",
+          "role": "",
+          "signature": "",
+          "is_incomplete": false
+        }
+      ],
+      "signing_info": ""
+    },
+    "annex_i_b": {
+      "data_subjects": "clinical trial participants",
+      "data_categories": "patient health data, clinical trial results, diagnostic records, medical history",
+      "special_category_data": [
+        "health data"
+      ],
+      "processing_purpose": "medical research analytics",
+      "processing_nature": "",
+      "transfer_frequency": "continuous",
+      "retention_period": "10 years"
+    },
+    "annex_ii": {
+      "tom_items": [
+        "TLS encryption",
+        "Access controls",
+        "Data pseudonymization"
+      ],
+      "supplementary_measures": []
+    },
+    "annex_iii": {
+      "sub_processors": [
+        {
+          "name": "None"
+        }
+      ]
+    },
+    "raw_text": "\nMODULE TWO\n\nTransfer from controller to processor\n\nSECTION I\n\nClause 1 — Purpose and scope\nThe purpose of these standard contractual clauses is to ensure compliance.\n\nClause 7 — Docking clause\nAdditional parties may accede to these Clauses.\n\nClause 9 — Use of sub-processors\nThe data importer shall not sub-contract without the data exporter's prior specific written authorization.\n\nClause 14 — Local laws and practices\nThe Parties warrant that they have no reason to believe that the laws in the third country prevent the data importer from fulfilling its obligations. The data importer shall provide the assessment documentation upon request.\n\nClause 15 — Obligations in case of access by public authorities\nThe data importer shall notify the data exporter as soon as legally permissible if it receives a request from a public authority. The data importer shall review the legality at its discretion. The data importer shall provide information to the extent reasonably practicable.\n\nClause 16 — Non-compliance and termination\nFollowing termination, the data importer shall delete or return data.\n\nClause 17 — Governing law\nThese Clauses shall be governed by the law of Ireland.\n\nClause 18 — Choice of forum and jurisdiction\nAny dispute shall be resolved by the courts of Ireland.\n\nANNEX I\n\nA. LIST OF PARTIES\nData exporter: German Health Research GmbH (Controller)\nData importer: India Data Analytics Pvt Ltd (Processor)\n\nB. DESCRIPTION OF TRANSFER\nData subjects: clinical trial participants\nData categories: patient health data, clinical trial results, diagnostic records, medical history\nPurpose: medical research analytics\nFrequency: continuous\nRetention: 10 years\n\nANNEX II\nTECHNICAL AND ORGANISATIONAL MEASURES\n- TLS encryption\n- Access controls\n- Data pseudonymization\n\nANNEX III\nLIST OF SUB-PROCESSORS\n- None\n"
+  }
+}

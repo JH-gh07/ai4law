@@ -1,0 +1,11 @@
+{
+  "name": "tool_result",
+  "seq": 13,
+  "created_at": "2026-06-05T00:42:40.770117+00:00",
+  "payload": {
+    "summary": "SPI 风险评估完成：0 个候选差距",
+    "detail": {
+      "spi_gap_count": 0
+    }
+  }
+}

@@ -192,22 +192,6 @@ type PipiaFormValues = {
   attachment_role: PipiaAttachmentRole;
 };
 
-type DocumentReviewFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
-
-type DocumentReviewFieldConfig = {
-  name: keyof DocumentReviewFormValues;
-  label: string;
-  type: DocumentReviewFieldType;
-  options?: string[];
-  min?: number;
-  step?: number;
-};
-
-type DocumentReviewStepConfig = {
-  title: string;
-  fields: DocumentReviewFieldConfig[];
-};
-
 type DocumentReviewFormValues = {
   company_name: string;
   document_title: string;
@@ -921,59 +905,6 @@ const PIPIA_STEPS: PipiaStepConfig[] = [
         type: "select",
         options: ["scc_contract", "certification_material", "internal_policy", "supporting_evidence"]
       }
-    ]
-  }
-];
-
-const DOCUMENT_REVIEW_STEPS: DocumentReviewStepConfig[] = [
-  {
-    title: "审查对象",
-    fields: [
-      { name: "company_name", label: "企业名称", type: "text" },
-      { name: "publisher_entity", label: "发布主体", type: "text" },
-      { name: "document_title", label: "文档名称", type: "text" },
-      { name: "document_version", label: "文档版本号", type: "text" },
-      { name: "effective_date", label: "生效日期", type: "text" },
-      { name: "applicable_products", label: "适用产品/站点", type: "text" },
-      { name: "applicable_scope", label: "适用范围说明", type: "textarea" },
-      { name: "is_live_version", label: "是否线上生效版本", type: "checkbox" },
-      {
-        name: "document_type",
-        label: "文档类型",
-        type: "select",
-        options: ["privacy_policy", "scc_contract", "dpa", "other"]
-      }
-    ]
-  },
-  {
-    title: "披露完整性检查",
-    fields: [
-      { name: "processor_identity_disclosed", label: "是否披露处理者身份", type: "checkbox" },
-      { name: "scope_disclosed", label: "是否披露适用范围", type: "checkbox" },
-      { name: "collection_purpose_disclosed", label: "是否披露收集与处理目的", type: "checkbox" },
-      { name: "processing_method_disclosed", label: "是否披露处理方式", type: "checkbox" },
-      { name: "category_disclosed", label: "是否披露个人信息种类", type: "checkbox" },
-      { name: "sensitive_pi_disclosed", label: "是否披露敏感个人信息处理", type: "checkbox" },
-      { name: "crossborder_rule_disclosed", label: "是否披露出境规则与接收方", type: "checkbox" },
-      { name: "rights_channel_disclosed", label: "是否披露个人权利行使方式", type: "checkbox" },
-      { name: "contact_channel", label: "投诉/联系渠道", type: "text" }
-    ]
-  },
-  {
-    title: "出境与处理背景",
-    fields: [
-      { name: "receiver_name", label: "境外接收方（如适用）", type: "text" },
-      { name: "receiver_country", label: "接收方国家/地区", type: "text" },
-      { name: "transfer_purpose", label: "处理/出境目的", type: "textarea" },
-      { name: "pii_count", label: "涉及个人信息规模（估算）", type: "number", min: 0, step: 1000 },
-      { name: "spi_count", label: "涉及敏感个人信息规模（估算）", type: "number", min: 0, step: 100 },
-      { name: "has_scc_draft", label: "是否已有可审查合同草案", type: "checkbox" }
-    ]
-  },
-  {
-    title: "审查重点与附件",
-    fields: [
-      { name: "review_focus", label: "本次重点关注条款", type: "textarea" }
     ]
   }
 ];
@@ -4047,16 +3978,26 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
       {isDocumentReviewTask ? (
         <section className="doc-review-workbench">
-          {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
           <aside className="doc-review-input-pane">
             <header className="doc-review-panel-head">
-              <div className="doc-review-panel-copy">
-                <span className="doc-review-kicker">Input Workspace</span>
-                <div className="schema-wizard-head">
-                  <div className="runner-title">文档输入管理</div>
-                  <span className="doc-review-count-badge">{documentReviewSourceCount} 份材料</span>
+              <div className="doc-review-panel-title-row">
+                <div className="doc-review-panel-copy">
+                  <span className="doc-review-kicker">Input Workspace</span>
+                  <div className="schema-wizard-head">
+                    <div className="runner-title">文档输入管理</div>
+                    <span className="doc-review-count-badge">{documentReviewSourceCount} 份材料</span>
+                  </div>
+                  <p>集中管理上传材料、预置文件与解析进度。点击文件后，右侧立即切换到对应预览与确认状态。</p>
                 </div>
-                <p>集中管理上传材料、预置文件与解析进度。点击文件后，右侧立即切换到对应预览与确认状态。</p>
+                {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (
+                  <button
+                    type="button"
+                    className="pill-btn doc-review-head-action"
+                    onClick={() => setShowCasePicker(true)}
+                  >
+                    🧪 测试案例
+                  </button>
+                ) : null}
               </div>
               <div className="doc-review-panel-stats">
                 <article>
@@ -4178,27 +4119,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
               <article className="doc-review-empty-state">
                 <div className="doc-review-empty-state-hero">
                   <span className="doc-review-kicker">Preview Workspace</span>
-                  <h3>右侧会在选中文件后切换为完整的预览与状态面板</h3>
-                  <p>PDF、图片、文本可直接预览；DOC / DOCX 等格式也不会只停留在占位态，而会进入更明确的解析说明与下一步引导。</p>
+                  <h3>选择左侧文件后，这里会直接进入正文预览与审查控制</h3>
+                  <p>
+                    {documentReviewSourceCount > 0
+                      ? `当前已纳入 ${documentReviewSourceCount} 份材料，请从左侧选择一个文件开始。`
+                      : "先从左侧上传文档，系统会自动解析标题、类型和审查重点。"}
+                  </p>
                 </div>
-                <div className="doc-review-empty-state-grid">
-                  <article>
-                    <strong>1. 上传或使用预置材料</strong>
-                    <p>将审查对象纳入统一文件队列，建立本次工作台的输入集合。</p>
-                  </article>
-                  <article>
-                    <strong>2. 切换预览对象</strong>
-                    <p>点击任一文件，右侧立即显示预览、解析状态、格式能力与人工确认入口。</p>
-                  </article>
-                  <article>
-                    <strong>3. 确认字段并执行审查</strong>
-                    <p>核对自动回填结果后直接运行专项审查，输出条款级建议和审查报告。</p>
-                  </article>
-                </div>
-                <div className="doc-review-empty-state-footer">
-                  {documentReviewSourceCount > 0
-                    ? `当前已纳入 ${documentReviewSourceCount} 份材料，请从左侧选择一个文件开始。`
-                    : "当前还没有材料，先从左侧上传文档即可进入工作状态。"}
+                <div className="doc-review-empty-state-steps">
+                  <span>上传材料</span>
+                  <span>切换预览</span>
+                  <span>确认字段并执行</span>
                 </div>
               </article>
             ) : (
@@ -4209,8 +4140,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                     <strong>{selectedDocumentReviewFile.name}</strong>
                     <p>
                       {selectedDocumentReviewCanPreview
-                        ? "当前格式支持内嵌预览，你可以边看正文边核对自动回填字段。"
-                        : "当前格式暂不支持内嵌预览，但仍可参与自动解析与专项审查，不会中断流程。"}
+                        ? "可直接边看正文边确认自动回填字段。"
+                        : "当前格式不支持内嵌预览，但仍可继续自动解析与专项审查。"}
                     </p>
                   </div>
                   <div className="doc-review-preview-meta">
@@ -4269,40 +4200,45 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
               <header className="doc-review-confirm-head">
                 <div>
                   <span className="doc-review-kicker">Review Controls</span>
-                  <h4>结构化确认与审查准备</h4>
-                  <p>系统会基于当前文档自动回填关键字段；你只需确认或修正，再执行专项审查生成报告。</p>
+                  <h4>结构化确认</h4>
+                  <p>确认标题、类型与重点条款后，直接执行专项审查。</p>
                 </div>
-                <div className="doc-review-confirm-head-side">
+                <div className="doc-review-confirm-head-side doc-review-confirm-toolbar">
+                  <div className="doc-review-confirm-quickmeta">
+                    <span className="doc-review-meta-pill">
+                      {selectedDocumentReviewFile ? selectedDocumentReviewFile.name : "待选择文档"}
+                    </span>
+                    {selectedDocumentReviewFile ? (
+                      <span className="doc-review-meta-pill">
+                        {selectedDocumentReviewTypeLabel} · {getDocumentReviewDocTypeLabel(documentReviewValues.document_type)}
+                      </span>
+                    ) : null}
+                  </div>
                   <span className={`doc-review-status-pill is-${selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.tone : "neutral"}`}>
                     {selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.label : "等待选择文件"}
                   </span>
+                  <div className="schema-actions-row doc-review-actions-row">
+                    {DEV_ACCEL_ENABLED ? (
+                      <button
+                        className="pill-btn"
+                        type="button"
+                        onClick={runDocumentReviewDevPreset}
+                        disabled={loading}
+                        title="开发期一键注入文档审查预设并运行真实后端流程"
+                      >
+                        一键体验
+                      </button>
+                    ) : null}
+                    <button className="pill-btn-primary" onClick={execute} disabled={loading}>
+                      {loading ? t("runningNow") : "执行审查"}
+                    </button>
+                  </div>
                 </div>
               </header>
-              <div className="doc-review-confirm-summary">
-                <article>
-                  <span>当前文档</span>
-                  <strong>{selectedDocumentReviewFile ? selectedDocumentReviewFile.name : "尚未选择"}</strong>
-                  <small>
-                    {selectedDocumentReviewFile
-                      ? `${selectedDocumentReviewTypeLabel} · ${getDocumentReviewDocTypeLabel(documentReviewValues.document_type)}`
-                      : "先从左侧文件队列选择一个对象"}
-                  </small>
-                </article>
-                <article>
-                  <span>回填状态</span>
-                  <strong>{selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.label : "等待解析"}</strong>
-                  <small>{selectedDocumentReviewFile ? "系统会自动尝试提取标题、类型与审查重点。" : "选择文件后自动启动解析。"}</small>
-                </article>
-                <article>
-                  <span>执行前动作</span>
-                  <strong>{selectedDocumentReviewFile ? "确认字段后执行专项审查" : "先完成文件选择"}</strong>
-                  <small>预置确认分组：{DOCUMENT_REVIEW_STEPS.length} 组。</small>
-                </article>
-              </div>
               <p className={`doc-review-autofill-note is-${selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.tone : "neutral"}`}>
                 {selectedDocumentReviewFile
                   ? selectedDocumentReviewExtractState?.note || "已选中文件，准备进入自动提取与人工确认。"
-                  : "选择文件后，这里会显示自动提取结果、风险提醒和下一步建议。"}
+                  : "选择文件后，这里会显示自动提取结果并进入人工确认。"}
               </p>
               <div className="schema-field-grid">
                 <label className="field-wrap">
@@ -4334,22 +4270,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                     onChange={(event) => updateDocumentReviewValue("review_focus", event.target.value)}
                   />
                 </label>
-              </div>
-              <div className="schema-actions-row">
-                {DEV_ACCEL_ENABLED ? (
-                  <button
-                    className="pill-btn"
-                    type="button"
-                    onClick={runDocumentReviewDevPreset}
-                    disabled={loading}
-                    title="开发期一键注入文档审查预设并运行真实后端流程"
-                  >
-                    一键体验文档审查
-                  </button>
-                ) : null}
-                <button className="pill-btn-primary" onClick={execute} disabled={loading}>
-                  {loading ? t("runningNow") : "执行专项审查并生成报告"}
-                </button>
               </div>
               {loading && asyncRunProgress ? (
                 <p className="doc-review-autofill-note is-loading">

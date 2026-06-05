@@ -1,0 +1,48 @@
+{
+  "name": "agent_document_structure",
+  "seq": 2,
+  "created_at": "2026-06-05T02:35:47.852170+00:00",
+  "payload": {
+    "patches": [
+      {
+        "field_path": "annex_ia.exporter",
+        "old_value": "",
+        "new_value": "'s prior specific written authorization.",
+        "source_quote": "exporter's prior specific written authorization.",
+        "confidence": 0.85
+      },
+      {
+        "field_path": "annex_ia.importer",
+        "old_value": "",
+        "new_value": "shall not sub-contract without the data exporter's prior specific written authorization.",
+        "source_quote": "importer shall not sub-contract without the data exporter's prior specific written authorization.",
+        "confidence": 0.85
+      },
+      {
+        "field_path": "annex_iii.sub_processors",
+        "old_value": "",
+        "new_value": "aws",
+        "source_quote": "t the data exporter's prior specific written authorization.\n\nClause 14 — Local laws and practices\nThe Parties warrant that they have no reason to believe that the ",
+        "confidence": 0.82,
+        "note": "Cloud provider detected — verify if listed in Annex III"
+      },
+      {
+        "field_path": "annex_iii.sub_processors",
+        "old_value": "",
+        "new_value": "aws",
+        "source_quote": "and practices\nThe Parties warrant that they have no reason to believe that the laws in the third country prevent the data importer from fulfilling its obligations.",
+        "confidence": 0.82,
+        "note": "Cloud provider detected — verify if listed in Annex III"
+      }
+    ],
+    "uncertainties": [],
+    "patch_count": 4,
+    "regions_found": [
+      "ANNEX I.A",
+      "ANNEX I.B",
+      "ANNEX II",
+      "ANNEX III"
+    ],
+    "completeness": "ok"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "profile_extracted",
+  "seq": 13,
+  "created_at": "2026-06-05T02:35:47.441308+00:00",
+  "payload": {
+    "project_name": "EU SCC Test",
+    "scc_text": "\nMODULE ONE\n\nTransfer from controller to controller\n\nSECTION I\n\nClause 1 — Purpose and scope\nThe purpose of these standard contractual clauses is to ensure compliance with the requirements of Regulation (EU) 2016/679.\n\nClause 2 — Effect and invariability of the Clauses\nThese Clauses set out appropriate safeguards, including enforceable data subject rights.\n\nClause 7 — Docking clause\nAdditional parties may accede to these Clauses throughout the life-cycle of the contract.\n\nClause 9 — Use of sub-processors\nThe data importer shall not sub-contract without the data exporter's prior specific written authorization.\n\nClause 14 — Local laws and practices affecting compliance with the Clauses\nThe Parties warrant that they have no reason to believe that the laws and practices in the third country prevent the data importer from fulfilling its obligations.\n\nClause 15 — Obligations in case of access by public authorities\nThe data importer shall promptly notify the data exporter if it receives a legally binding request from a public authority to disclose personal data.\n\nClause 16 — Non-compliance with the Clauses and termination\nFollowing termination, the data importer shall delete all personal data or return them.\n\nClause 17 — Governing law\nThese Clauses shall be governed by the law of one of the EU Member States.\n\nClause 18 — Choice of forum and jurisdiction\nAny dispute shall be resolved by the courts of an EU Member State.\n\nANNEX I\n\nA. LIST OF PARTIES\nData exporter: French Retail Group SA (Controller)\nData importer: UK Store Ltd (Controller)\n\nB. DESCRIPTION OF TRANSFER\nData subjects: online shoppers\nData categories: order history data, contact details\nPurpose: order processing and customer service\nFrequency: continuous\nRetention: 5 years\n\nANNEX II\nTECHNICAL AND ORGANISATIONAL MEASURES\n- TLS encryption in transit\n- AES-256 encryption at rest\n- Access controls with RBAC\n\nANNEX III\nLIST OF SUB-PROCESSORS\n- Amazon Web Services (AWS) — cloud hosting — United States\n",
+    "declared_module_type": "Module One",
+    "exporter_role": "controller",
+    "importer_role": "controller",
+    "has_tia": false,
+    "has_supplementary_measures": false,
+    "uploaded_files": [],
+    "company_name": "Test Company"
+  }
+}

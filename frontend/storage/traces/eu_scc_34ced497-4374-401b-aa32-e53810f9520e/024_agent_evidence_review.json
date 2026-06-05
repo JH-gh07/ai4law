@@ -1,0 +1,304 @@
+{
+  "name": "agent_evidence_review",
+  "seq": 24,
+  "created_at": "2026-06-05T02:35:47.943567+00:00",
+  "payload": {
+    "revised_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-CLAUSE-DEVIATIONS",
+        "claim": "标准条款被修改: 1处偏离",
+        "fact_refs": [
+          "EU-SCC-FACT-review-deviations-found"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155",
+          "EU 2021/914 Recital 3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "逐项复核偏离条款。涉及不可冲突条款的修改应恢复为标准文本。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-CLAUSE-DEVIATIONS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "claim": "第三国传输风险: India",
+        "fact_refs": [
+          "EU-SCC-FACT-review-has-third-country-transfer"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155",
+          "Schrems II C-311/18",
+          "EDPB 01/2020"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "完成 TIA；针对第三国法律环境实施 Schrems II 补充措施。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-THIRD-COUNTRY",
+          "overall_rating",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-DEVIATION",
+        "claim": "[HIGH] Clause 15(a) notification: Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "restore 'promptly notify'",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-CLAUSE-15-DEVIATION",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "claim": "[HIGH] Clause 14: Third country transfer identified to: India. No Transfer Impact Assessment (TIA) has been provided. ",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete a TIA for transfers to India. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "claim": "[HIGH] Annex II: Third country transfer to non-adequate jurisdiction 'India' requires Schrems II supplementary measur",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION-PROVISION",
+        "claim": "[HIGH] Clause 15: Semantic weakening (information_provision): Information provision made discretionary",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Restore the standard EU 2021/914 text for this provision.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION_PROVISION",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: partial (Technical measures are limited or not detected.). Contractual: missing. Organiza",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "evidence_patches": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155",
+          "Schrems II C-311/18",
+          "EDPB 01/2020"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-DEVIATION",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION-PROVISION",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-005",
+          "EU-LAW-002-155"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      }
+    ],
+    "low_confidence_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-DEVIATION",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION-PROVISION",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      }
+    ],
+    "patch_count": 6
+  }
+}

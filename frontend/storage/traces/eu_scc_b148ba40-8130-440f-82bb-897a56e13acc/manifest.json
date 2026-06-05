@@ -1,0 +1,144 @@
+{
+  "created_at": "2026-06-05T02:32:47.328017+00:00",
+  "event_count": 23,
+  "events": [
+    {
+      "seq": 1,
+      "name": "parsed_document_raw",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/001_parsed_document_raw.json",
+      "created_at": "2026-06-05T02:32:47.006747+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "agent_document_structure",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/002_agent_document_structure.json",
+      "created_at": "2026-06-05T02:32:47.010607+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/003_thought.json",
+      "created_at": "2026-06-05T02:32:47.011218+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "transfer_chain_raw",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/004_transfer_chain_raw.json",
+      "created_at": "2026-06-05T02:32:47.012071+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "agent_transfer_chain",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/005_agent_transfer_chain.json",
+      "created_at": "2026-06-05T02:32:47.014892+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/006_thought.json",
+      "created_at": "2026-06-05T02:32:47.015802+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "rule_engine_result_raw",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/007_rule_engine_result_raw.json",
+      "created_at": "2026-06-05T02:32:47.020202+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "agent_clause_semantic",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/008_agent_clause_semantic.json",
+      "created_at": "2026-06-05T02:32:47.026353+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/009_thought.json",
+      "created_at": "2026-06-05T02:32:47.026885+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "agent_tia_effectiveness",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/010_agent_tia_effectiveness.json",
+      "created_at": "2026-06-05T02:32:47.031025+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/011_thought.json",
+      "created_at": "2026-06-05T02:32:47.031773+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "eu_scc_request",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/012_eu_scc_request.json",
+      "created_at": "2026-06-05T02:32:47.032530+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "profile_extracted",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/013_profile_extracted.json",
+      "created_at": "2026-06-05T02:32:47.033483+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "diagnosis",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/014_diagnosis.json",
+      "created_at": "2026-06-05T02:32:47.034277+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "path_validation",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/015_path_validation.json",
+      "created_at": "2026-06-05T02:32:47.035367+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "facts_built",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/016_facts_built.json",
+      "created_at": "2026-06-05T02:32:47.036335+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "retrieval_hits",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/017_retrieval_hits.json",
+      "created_at": "2026-06-05T02:32:47.306826+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "issues_built",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/018_issues_built.json",
+      "created_at": "2026-06-05T02:32:47.307587+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "evidence_built",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/019_evidence_built.json",
+      "created_at": "2026-06-05T02:32:47.308463+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "context_pack_built",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/020_context_pack_built.json",
+      "created_at": "2026-06-05T02:32:47.310028+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "chapters_generated",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/021_chapters_generated.json",
+      "created_at": "2026-06-05T02:32:47.326832+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "consistency_issues",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/022_consistency_issues.json",
+      "created_at": "2026-06-05T02:32:47.327351+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "alignment_issues",
+      "path": "storage/traces/eu_scc_b148ba40-8130-440f-82bb-897a56e13acc/023_alignment_issues.json",
+      "created_at": "2026-06-05T02:32:47.327726+00:00"
+    }
+  ]
+}

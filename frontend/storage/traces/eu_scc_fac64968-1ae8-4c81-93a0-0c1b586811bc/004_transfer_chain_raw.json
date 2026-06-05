@@ -1,0 +1,24 @@
+{
+  "name": "transfer_chain_raw",
+  "seq": 4,
+  "created_at": "2026-06-05T02:32:47.526954+00:00",
+  "payload": {
+    "exporter_name": "",
+    "exporter_role": "processor",
+    "importer_name": "",
+    "importer_role": "processor",
+    "sub_processors": [],
+    "onward_transfer_locations": [
+      "Serbia",
+      "Serbia"
+    ],
+    "storage_locations": [
+      "Serbia",
+      "Serbia"
+    ],
+    "access_locations": [
+      "Serbia",
+      "Serbia"
+    ]
+  }
+}

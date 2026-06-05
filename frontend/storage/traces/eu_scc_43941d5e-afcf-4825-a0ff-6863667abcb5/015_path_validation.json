@@ -1,0 +1,9 @@
+{
+  "name": "path_validation",
+  "seq": 15,
+  "created_at": "2026-06-05T02:35:48.223881+00:00",
+  "payload": {
+    "warning": null,
+    "recommended_path": "eu_scc"
+  }
+}
