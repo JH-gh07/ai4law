@@ -1,4 +1,8 @@
+import type { Language } from "../../lib/i18n";
+import { getTraceI18n, getTraceLocale } from "../../lib/trace-i18n";
+
 type Props = {
+  lang: Language;
   moduleLabel: string;
   status: "running" | "completed" | "failed" | "empty";
   taskId: string | null;
@@ -17,17 +21,18 @@ type Props = {
   totalTokens?: number;
 };
 
-function fmtTime(iso?: string): string {
+function fmtTime(iso: string | undefined, lang: Language): string {
   if (!iso) return "--";
-  return new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date(iso).toLocaleTimeString(getTraceLocale(lang), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function fmtCount(value?: number): string {
+function fmtCount(value: number | undefined, lang: Language): string {
   if (!value || value <= 0) return "--";
-  return value.toLocaleString("zh-CN");
+  return value.toLocaleString(getTraceLocale(lang));
 }
 
 export function TraceRunHeader({
+  lang,
   moduleLabel,
   status,
   taskId,
@@ -45,20 +50,21 @@ export function TraceRunHeader({
   totalCompletionTokens,
   totalTokens,
 }: Props) {
+  const t = getTraceI18n(lang);
   const liveCompletedAt = completedAt ?? (status === "running" ? new Date().toISOString() : undefined);
   const durationMs =
     startedAt && liveCompletedAt
       ? Math.max(0, new Date(liveCompletedAt).getTime() - new Date(startedAt).getTime())
       : null;
   const durationLabel = durationMs != null ? `${Math.round(durationMs / 1000)}s` : "--";
-  const workspaceLabel = moduleLabel.trim().length > 0 ? moduleLabel : "workspace";
+  const workspaceLabel = moduleLabel.trim().length > 0 ? moduleLabel : t.workspace;
 
   return (
     <div className="trace-run-header">
       <div className="trace-run-header-left">
         <div className="trace-run-title-group">
           <span className="trace-run-module">{workspaceLabel}</span>
-          <span className="trace-run-title">执行历史记录</span>
+          <span className="trace-run-title">{t.executionHistory}</span>
         </div>
         <span className={`trace-run-badge badge-${status}`}>
           {status === "running"
@@ -72,33 +78,33 @@ export function TraceRunHeader({
         {taskId ? <code className="trace-run-id">{taskId.slice(0, 12)}…</code> : null}
       </div>
       <div className="trace-run-header-right">
-        <span>开始 {fmtTime(startedAt)}</span>
+        <span>{t.started} {fmtTime(startedAt, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>{status === "running" ? "最近" : "完成"} {fmtTime(completedAt ?? liveCompletedAt)}</span>
+        <span>{status === "running" ? t.latest : t.completed} {fmtTime(completedAt ?? liveCompletedAt, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>用时 {durationLabel}</span>
+        <span>{t.duration} {durationLabel}</span>
         <span className="trace-run-sep">·</span>
-        <span>事件 {eventCount}</span>
+        <span>{t.events} {eventCount}</span>
         <span className="trace-run-sep">·</span>
-        <span>节点 {nodeCount}</span>
+        <span>{t.nodes} {nodeCount}</span>
         <span className="trace-run-sep">·</span>
-        <span>模块 Token {fmtCount(workflowTotalTokens)}</span>
+        <span>{t.workflowTokens} {fmtCount(workflowTotalTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>模块输入 {fmtCount(workflowPromptTokens)}</span>
+        <span>{t.workflowInput} {fmtCount(workflowPromptTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>模块输出 {fmtCount(workflowCompletionTokens)}</span>
+        <span>{t.workflowOutput} {fmtCount(workflowCompletionTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>Copilot Token {fmtCount(copilotTotalTokens)}</span>
+        <span>{t.copilotTokens} {fmtCount(copilotTotalTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>Copilot 输入 {fmtCount(copilotPromptTokens)}</span>
+        <span>{t.copilotInput} {fmtCount(copilotPromptTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>Copilot 输出 {fmtCount(copilotCompletionTokens)}</span>
+        <span>{t.copilotOutput} {fmtCount(copilotCompletionTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>总 Token {fmtCount(totalTokens)}</span>
+        <span>{t.totalTokens} {fmtCount(totalTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>总输入 {fmtCount(totalPromptTokens)}</span>
+        <span>{t.totalInput} {fmtCount(totalPromptTokens, lang)}</span>
         <span className="trace-run-sep">·</span>
-        <span>总输出 {fmtCount(totalCompletionTokens)}</span>
+        <span>{t.totalOutput} {fmtCount(totalCompletionTokens, lang)}</span>
       </div>
     </div>
   );

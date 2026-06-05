@@ -1,4 +1,6 @@
 import type { TraceNode } from "../../lib/domain";
+import type { Language } from "../../lib/i18n";
+import { getTraceLocale } from "../../lib/trace-i18n";
 import { TraceExpandableBlock } from "./TraceExpandableBlock";
 
 const STAGE_COLORS: Record<string, string> = {
@@ -11,11 +13,11 @@ const STAGE_COLORS: Record<string, string> = {
   Review: "#0891b2",
 };
 
-function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+function fmtTime(iso: string, lang: Language): string {
+  return new Date(iso).toLocaleTimeString(getTraceLocale(lang), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-export function TraceNodeView({ node }: { node: TraceNode }) {
+export function TraceNodeView({ node, lang }: { node: TraceNode; lang: Language }) {
   const color = STAGE_COLORS[node.stage] ?? "#6b7280";
   const dotColor = node.status === "error" ? "#dc2626" : color;
 
@@ -31,7 +33,7 @@ export function TraceNodeView({ node }: { node: TraceNode }) {
           </span>
           <span className="trace-node-action">｜{node.action}</span>
         </span>
-        <span className="trace-node-time">{fmtTime(node.timestamp)}</span>
+        <span className="trace-node-time">{fmtTime(node.timestamp, lang)}</span>
       </div>
 
       {node.description ? <div className="trace-node-desc">{node.description}</div> : null}
@@ -41,8 +43,8 @@ export function TraceNodeView({ node }: { node: TraceNode }) {
         <div className="trace-node-duration">⏱ {(node.durationMs / 1000).toFixed(1)}s</div>
       ) : null}
 
-      {node.input ? <TraceExpandableBlock block={node.input} /> : null}
-      {node.output ? <TraceExpandableBlock block={node.output} /> : null}
+      {node.input ? <TraceExpandableBlock block={node.input} lang={lang} /> : null}
+      {node.output ? <TraceExpandableBlock block={node.output} lang={lang} /> : null}
     </div>
   );
 }

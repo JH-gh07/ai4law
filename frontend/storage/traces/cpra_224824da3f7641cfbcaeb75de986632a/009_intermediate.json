@@ -1,0 +1,38 @@
+{
+  "name": "intermediate",
+  "seq": 9,
+  "created_at": "2026-06-05T00:02:47.558429+00:00",
+  "payload": {
+    "summary": "差距分析完成：5 项差距",
+    "detail": {
+      "category": "gap_items",
+      "data": [
+        {
+          "domain": "notice_and_consent",
+          "risk_level": "HIGH",
+          "gap": "隐私告知或同意机制不完整"
+        },
+        {
+          "domain": "notice_and_consent",
+          "risk_level": "MEDIUM",
+          "gap": "隐私告知可能未涵盖数据类别、处理目的或留存期限"
+        },
+        {
+          "domain": "consumer_rights_process",
+          "risk_level": "MEDIUM",
+          "gap": "消费者权利响应时限与SLA未明确"
+        },
+        {
+          "domain": "opt_out_and_sale_sharing",
+          "risk_level": "MEDIUM",
+          "gap": "opt-out链接可能不规范（缺标准文字/图标/GPC支持）"
+        },
+        {
+          "domain": "consent_ui",
+          "risk_level": "MEDIUM",
+          "gap": "同意界面使用混淆性或不清晰的语言"
+        }
+      ]
+    }
+  }
+}

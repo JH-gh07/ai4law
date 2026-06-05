@@ -13,13 +13,55 @@ DELILEGAL_COMPETITION_APP_ID = "QthdBErlyaYvyXul"
 DELILEGAL_COMPETITION_SECRET = "EC5D455E6BD348CE8E18BE05926D2EBE"
 
 DEFAULT_LLM_MODELS = [
-    "hunyuan-lite",
-    "hunyuan-turbos-latest",
-    "hunyuan-standard",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-ai/DeepSeek-V3",
+    "hy3-preview",
     "Qwen/Qwen2.5-7B-Instruct",
     "Qwen/Qwen2.5-72B-Instruct",
-    "deepseek-ai/DeepSeek-V3",
 ]
+
+
+def _builtin_provider_templates(settings) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": "siliconflow",
+            "name": "SiliconFlow",
+            "provider_type": "openai_compatible",
+            "api_key": settings.siliconflow_api_key or "",
+            "api_url": normalize_openai_base_url(settings.siliconflow_api_url),
+            "model": settings.siliconflow_model,
+            "enabled": bool(settings.siliconflow_api_key),
+            "timeout": 60,
+        },
+        {
+            "id": "tencent_hunyuan",
+            "name": "Tencent Hunyuan",
+            "provider_type": "openai_compatible",
+            "api_key": settings.tencent_api_key or "",
+            "api_url": normalize_openai_base_url(settings.tencent_api_url),
+            "model": settings.tencent_model,
+            "enabled": bool(settings.tencent_api_key),
+            "timeout": 60,
+        },
+    ]
+
+
+def _merge_builtin_providers(settings, providers: list[LLMProviderConfig]) -> list[LLMProviderConfig]:
+    merged: dict[str, LLMProviderConfig] = {item.id: item for item in providers}
+    for raw in _builtin_provider_templates(settings):
+        if raw["id"] in merged:
+            continue
+        merged[raw["id"]] = LLMProviderConfig(
+            id=raw["id"],
+            name=raw["name"],
+            provider_type=raw["provider_type"],
+            api_url=raw["api_url"],
+            api_key=raw["api_key"] or None,
+            model=raw["model"],
+            enabled=raw["enabled"],
+            timeout=raw["timeout"],
+        )
+    return list(merged.values())
 
 
 def _runtime_file_path(settings) -> Path:
@@ -45,7 +87,7 @@ def save_runtime_overrides(settings, payload: dict[str, Any]) -> None:
 
 def build_effective_runtime_payload(settings) -> dict[str, Any]:
     registry = LLMProviderRegistry(settings)
-    providers = registry.list_providers()
+    providers = _merge_builtin_providers(settings, registry.list_providers())
     active = registry.get_active_provider(allow_disabled=True)
     base = {
         "delilegal": {

@@ -1,0 +1,26 @@
+{
+  "name": "profile_extracted",
+  "seq": 2,
+  "created_at": "2026-06-05T00:12:13.301833+00:00",
+  "payload": {
+    "company_name": "AT618333",
+    "industry": "互联网SaaS",
+    "is_ciio": false,
+    "contains_important_data": false,
+    "pii_count": 50000,
+    "spi_count": 500,
+    "transfer_purpose": "全球客服与风控联防",
+    "receiver_country": "新加坡",
+    "extracted_notes": [],
+    "attachment_metadata": [],
+    "data_inventory_items": [],
+    "recipient_info": null,
+    "downstream_processors": [],
+    "legal_document_review": null,
+    "security_capability": null,
+    "compliance_history": null,
+    "personal_info_protection": null,
+    "system_link": null,
+    "self_assessment_info": null
+  }
+}

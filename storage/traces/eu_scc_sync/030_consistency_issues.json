@@ -1,0 +1,14 @@
+{
+  "name": "consistency_issues",
+  "seq": 30,
+  "created_at": "2026-06-05T00:34:04.690438+00:00",
+  "payload": {
+    "issues": [
+      "SCC document text is too short or missing.",
+      "Contains HIGH risk items — recommend legal review before filing."
+    ],
+    "checks": [
+      "eu_scc_rules"
+    ]
+  }
+}

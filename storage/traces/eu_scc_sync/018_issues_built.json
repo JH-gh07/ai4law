@@ -1,0 +1,151 @@
+{
+  "name": "issues_built",
+  "seq": 18,
+  "created_at": "2026-06-05T00:32:01.948474+00:00",
+  "payload": {
+    "issues": [
+      {
+        "issue_id": "EU-SCC-ISSUE-MODULE-MISMATCH",
+        "title": "模块选择错误: 应为Module Two, 实际m2",
+        "description": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2.",
+        "category": "documentation",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-declared-module-type",
+          "EU-SCC-FACT-doc-module-type"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065",
+          "EU 2021/914"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "将文档模块从 m2 改为 Module Two 并确认 Annex I.A 中的角色与模块一致。",
+        "affects_outputs": [
+          "overall_rating",
+          "clause_findings"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "title": "[HIGH] Document Header: Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares ",
+        "description": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Use Module Two instead of m2, or verify that the party roles in Annex I.A match the declared module.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "title": "[HIGH] Annex I.A: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "description": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "title": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "description": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "title": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "description": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ]
+  }
+}

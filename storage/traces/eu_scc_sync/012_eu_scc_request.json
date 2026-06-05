@@ -1,0 +1,16 @@
+{
+  "name": "eu_scc_request",
+  "seq": 12,
+  "created_at": "2026-06-05T00:32:01.904985+00:00",
+  "payload": {
+    "project_name": "EUT619521",
+    "scc_text": "Standard Contractual Clauses (Module 2: controller to processor)...",
+    "declared_module_type": "m2",
+    "exporter_role": "controller",
+    "importer_role": "processor",
+    "has_tia": true,
+    "has_supplementary_measures": true,
+    "uploaded_files": [],
+    "company_name": "EUT619521"
+  }
+}

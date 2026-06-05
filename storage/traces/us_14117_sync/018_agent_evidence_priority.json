@@ -1,0 +1,15 @@
+{
+  "name": "agent_evidence_priority",
+  "seq": 18,
+  "created_at": "2026-06-05T00:28:45.427754+00:00",
+  "payload": {
+    "critical_evidence": [
+      "AI公司 × 精确GPS轨迹 (status=confirmed, threshold_hit=True)"
+    ],
+    "priority_order": [
+      "AI公司 × 精确GPS轨迹"
+    ],
+    "diminishing_items": [],
+    "recommendation": "Focus the report on the confirmed restricted transaction involving AI公司's access to bulk sensitive personal data (precise GPS trajectories) and the required security measures under §100.3."
+  }
+}

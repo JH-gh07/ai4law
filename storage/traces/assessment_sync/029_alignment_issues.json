@@ -1,0 +1,11 @@
+{
+  "name": "alignment_issues",
+  "seq": 29,
+  "created_at": "2026-06-05T00:17:16.734090+00:00",
+  "payload": {
+    "issues": [
+      "内容提及CIIO/关基，但输入is_ciio=False。",
+      "内容出现“金融/银行”相关表述，但输入行业非金融。"
+    ]
+  }
+}

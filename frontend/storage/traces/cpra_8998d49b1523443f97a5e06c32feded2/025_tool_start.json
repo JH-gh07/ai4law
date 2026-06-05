@@ -1,0 +1,8 @@
+{
+  "name": "tool_start",
+  "seq": 25,
+  "created_at": "2026-06-05T00:34:04.159103+00:00",
+  "payload": {
+    "summary": "报告渲染输出"
+  }
+}

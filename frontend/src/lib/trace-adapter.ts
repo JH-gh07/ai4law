@@ -7,6 +7,7 @@
 
 import type { RunEvent } from "./useTaskEvents";
 import type { TraceBlock, TraceNode, TraceStage } from "./domain";
+import { getTraceI18n, type TraceLang } from "./trace-i18n";
 
 type SemanticMapping = {
   stage: TraceStage;
@@ -15,16 +16,19 @@ type SemanticMapping = {
   badge?: string;
 };
 
-const EVENT_TO_SEMANTIC: Record<RunEvent["event_type"], SemanticMapping> = {
-  status: { stage: "Task", action: "任务状态更新", icon: "●", badge: "TASK" },
-  thought: { stage: "LLM", action: "判断摘要", icon: "◌", badge: "THOUGHT" },
-  tool_start: { stage: "Tool", action: "调用工具", icon: "●", badge: "CALL" },
-  tool_result: { stage: "Tool", action: "返回结果", icon: "●", badge: "RESULT" },
-  intermediate: { stage: "Review", action: "中间结果", icon: "●", badge: "INTERMEDIATE" },
-  warning: { stage: "Review", action: "风险提示", icon: "●", badge: "WARNING" },
-  final: { stage: "Task", action: "工作流完成", icon: "●", badge: "FINAL" },
-  final_brief: { stage: "Review", action: "客户简报", icon: "●", badge: "BRIEF" },
-};
+function createEventToSemantic(lang: TraceLang): Record<RunEvent["event_type"], SemanticMapping> {
+  const t = getTraceI18n(lang);
+  return {
+    status: { stage: "Task", action: t.actions.taskStatusUpdate, icon: "●", badge: "TASK" },
+    thought: { stage: "LLM", action: t.actions.thoughtSummary, icon: "◌", badge: "THOUGHT" },
+    tool_start: { stage: "Tool", action: t.actions.invokeTool, icon: "●", badge: "CALL" },
+    tool_result: { stage: "Tool", action: t.actions.returnResult, icon: "●", badge: "RESULT" },
+    intermediate: { stage: "Review", action: t.actions.intermediateResult, icon: "●", badge: "INTERMEDIATE" },
+    warning: { stage: "Review", action: t.actions.warning, icon: "●", badge: "WARNING" },
+    final: { stage: "Task", action: t.actions.workflowCompleted, icon: "●", badge: "FINAL" },
+    final_brief: { stage: "Review", action: t.actions.clientBrief, icon: "●", badge: "BRIEF" },
+  };
+}
 
 function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
@@ -49,8 +53,9 @@ function normalizeWhitespace(value: string | undefined): string | undefined {
   return value.replace(/\s+/g, " ").trim();
 }
 
-function summarizeArray(value: unknown): string | undefined {
+function summarizeArray(value: unknown, lang: TraceLang): string | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
+  const t = getTraceI18n(lang);
   const preview = value
     .slice(0, 3)
     .map((item) => {
@@ -64,8 +69,8 @@ function summarizeArray(value: unknown): string | undefined {
       }
       return String(item);
     })
-    .join("；");
-  return value.length > 3 ? `${preview} 等 ${value.length} 项` : preview;
+    .join(t.format.listJoiner);
+  return value.length > 3 ? `${preview} ${t.format.moreItems(value.length)}` : preview;
 }
 
 function formatDetailValue(value: unknown, indent = "  "): string[] {
@@ -163,7 +168,9 @@ function computeDuration(startIso: string, endIso: string): number | undefined {
   return e - s;
 }
 
-function semanticFromDetail(event: RunEvent): SemanticMapping {
+function semanticFromDetail(event: RunEvent, lang: TraceLang): SemanticMapping {
+  const t = getTraceI18n(lang);
+  const eventToSemantic = createEventToSemantic(lang);
   const detail = event.detail ?? {};
   const tool = readString(detail.tool);
   const agent = readString(detail.agent);
@@ -174,7 +181,11 @@ function semanticFromDetail(event: RunEvent): SemanticMapping {
   if (event.event_type === "status") {
     return {
       stage: "Task",
-      action: /开始|创建|启动/.test(summary) ? "创建并启动任务" : /完成|结束/.test(summary) ? "任务完成" : "任务状态更新",
+      action: /开始|创建|启动/.test(summary)
+        ? t.actions.createAndStartTask
+        : /完成|结束/.test(summary)
+          ? t.actions.taskCompleted
+          : t.actions.taskStatusUpdate,
       icon: "●",
       badge: "TASK",
     };
@@ -184,76 +195,87 @@ function semanticFromDetail(event: RunEvent): SemanticMapping {
     const name = tool || agent || "";
 
     if (/retriev|rag|search|检索|citation/i.test(name) || /检索|引用|命中/.test(summary)) {
-      return { stage: "RAG", action: "检索法规与依据", icon: "●", badge: "RAG" };
+      return { stage: "RAG", action: t.actions.searchLegalReferences, icon: "●", badge: "RAG" };
     }
     if (/parse|extract|document_structure|attachment/i.test(name) || /解析|提取|文档结构/.test(summary)) {
-      return { stage: "Parser", action: "解析输入与附件", icon: "●", badge: "PARSER" };
+      return { stage: "Parser", action: t.actions.parseInputAttachments, icon: "●", badge: "PARSER" };
     }
     if (/chapter|draft|generation|render/i.test(name) || /章节生成|报告渲染|外部草拟|生成/.test(summary)) {
-      return { stage: "Generator", action: "生成报告内容", icon: "●", badge: "GEN" };
+      return { stage: "Generator", action: t.actions.generateReportContent, icon: "●", badge: "GEN" };
     }
     if (/consistency|review|qa|evidence|verify/i.test(name) || /一致性|审查|证据|校验/.test(summary)) {
-      return { stage: "Review", action: "审查与校验", icon: "●", badge: "REVIEW" };
+      return { stage: "Review", action: t.actions.reviewAndValidate, icon: "●", badge: "REVIEW" };
     }
     if (/llm|chat/i.test(name)) {
-      return { stage: "LLM", action: "请求模型生成", icon: "●", badge: "LLM" };
+      return { stage: "LLM", action: t.actions.requestModelGeneration, icon: "●", badge: "LLM" };
     }
-    return { stage: "Tool", action: shorten(name, 40) ?? "调用工具", icon: "●", badge: "TOOL" };
+    return { stage: "Tool", action: shorten(name, 40) ?? t.actions.invokeTool, icon: "●", badge: "TOOL" };
   }
 
   if (rawName) {
     if (/per_issue_rag|agent_rag_reformulation/i.test(rawName)) {
-      return { stage: "RAG", action: /reformulation/i.test(rawName) ? "重构检索查询" : "按问题补充检索", icon: "●", badge: "RAG" };
+      return {
+        stage: "RAG",
+        action: /reformulation/i.test(rawName) ? t.actions.reframeRetrievalQuery : t.actions.retrievePerIssue,
+        icon: "●",
+        badge: "RAG",
+      };
     }
     if (/retrieval_hits|rag_plans|rag_hit/i.test(rawName)) {
-      return { stage: "RAG", action: /plans/i.test(rawName) ? "规划检索策略" : "检索法规与依据", icon: "●", badge: "RAG" };
+      return {
+        stage: "RAG",
+        action: /plans/i.test(rawName) ? t.actions.planRetrievalStrategy : t.actions.searchLegalReferences,
+        icon: "●",
+        badge: "RAG",
+      };
     }
     if (/parsed_document_raw|profile_extracted|facts_built|transfer_chain_raw/i.test(rawName)) {
-      return { stage: "Parser", action: "提取结构化事实", icon: "●", badge: "PARSER" };
+      return { stage: "Parser", action: t.actions.extractStructuredFacts, icon: "●", badge: "PARSER" };
     }
     if (/issues_built/i.test(rawName)) {
-      return { stage: "Review", action: "生成问题清单", icon: "●", badge: "REVIEW" };
+      return { stage: "Review", action: t.actions.buildIssueList, icon: "●", badge: "REVIEW" };
     }
     if (/evidence_built/i.test(rawName)) {
-      return { stage: "Review", action: "构建证据链", icon: "●", badge: "REVIEW" };
+      return { stage: "Review", action: t.actions.buildEvidenceChain, icon: "●", badge: "REVIEW" };
     }
     if (/context_pack_built/i.test(rawName)) {
-      return { stage: "Generator", action: "构建生成上下文", icon: "●", badge: "GEN" };
+      return { stage: "Generator", action: t.actions.buildGenerationContext, icon: "●", badge: "GEN" };
     }
     if (/agent_external_draft|chapters_generated|generate_chapters|render/i.test(rawName)) {
-      return { stage: "Generator", action: "生成报告章节", icon: "●", badge: "GEN" };
+      return { stage: "Generator", action: t.actions.generateReportChapters, icon: "●", badge: "GEN" };
     }
     if (/agent_internal_review|agent_consistency_repair|report_review|alignment|repair_pass|agent_repair_check|agent_chapter_consistency/i.test(rawName)) {
-      return { stage: "Review", action: "执行一致性审查", icon: "●", badge: "REVIEW" };
+      return { stage: "Review", action: t.actions.consistencyReview, icon: "●", badge: "REVIEW" };
     }
     if (/agent_rule_boundary|rule_engine_result/i.test(rawName)) {
-      return { stage: "Review", action: "执行规则边界分析", icon: "●", badge: "REVIEW" };
+      return { stage: "Review", action: t.actions.ruleBoundaryReview, icon: "●", badge: "REVIEW" };
     }
     if (/agent_dpia_need|path_diagnosis|need_detection_rule|need_diagnosis_enriched/i.test(rawName)) {
-      return { stage: "LLM", action: "生成判断与路径分析", icon: "●", badge: "LLM" };
+      return { stage: "LLM", action: t.actions.pathAnalysis, icon: "●", badge: "LLM" };
     }
     if (/agent_processing_activity|agent_risk_assessment|agent_mitigation_mapping|agent_dpo_consultation|agent_clause_semantic|agent_tia_effectiveness|agent_remediation|agent_evidence_priority/i.test(rawName)) {
-      return { stage: "Generator", action: "生成专项分析结果", icon: "●", badge: "GEN" };
+      return { stage: "Generator", action: t.actions.specializedAnalysis, icon: "●", badge: "GEN" };
     }
   }
 
   if (category) {
     if (/artifact|output|report/i.test(category)) {
-      return { stage: "Generator", action: "生成中间产物", icon: "●", badge: "OUTPUT" };
+      return { stage: "Generator", action: t.actions.intermediateArtifact, icon: "●", badge: "OUTPUT" };
     }
     if (/retrieval|rag/i.test(category)) {
-      return { stage: "RAG", action: "输出检索结果", icon: "●", badge: "RAG" };
+      return { stage: "RAG", action: t.actions.retrievalOutput, icon: "●", badge: "RAG" };
     }
-    return { stage: "Review", action: shorten(category, 32) ?? "中间结果", icon: "●", badge: "INTERMEDIATE" };
+    return { stage: "Review", action: shorten(category, 32) ?? t.actions.intermediateResult, icon: "●", badge: "INTERMEDIATE" };
   }
 
-  const base = EVENT_TO_SEMANTIC[event.event_type];
+  const base = eventToSemantic[event.event_type];
   return base ?? { stage: "Task", action: event.event_type, icon: "●" };
 }
 
 function detailToBlock(
   label: TraceBlock["label"],
   detail: Record<string, unknown> | null | undefined,
+  lang: TraceLang,
   maxPreviewLines = 8,
 ): TraceBlock | undefined {
   if (!detail || Object.keys(detail).length === 0) return undefined;
@@ -268,7 +290,7 @@ function detailToBlock(
     language: "text",
     preview,
     isTruncated: lines.length > maxPreviewLines,
-    summary: summarizeDetail(detail),
+    summary: summarizeDetail(detail, lang),
   };
 }
 
@@ -292,9 +314,10 @@ function textToBlock(
   };
 }
 
-function summarizeDetail(detail: Record<string, unknown> | null | undefined): string | undefined {
+function summarizeDetail(detail: Record<string, unknown> | null | undefined, lang: TraceLang): string | undefined {
   if (!detail) return undefined;
 
+  const t = getTraceI18n(lang);
   const tool = readString(detail.tool);
   const agent = readString(detail.agent);
   const category = readString(detail.category);
@@ -318,12 +341,12 @@ function summarizeDetail(detail: Record<string, unknown> | null | undefined): st
   const countFragments = countKeys
     .map((key) => detail[key])
     .filter((value) => typeof value === "number")
-    .map((value) => `${value} 项`);
+    .map((value) => t.format.itemCount(value));
 
-  const filesSummary = summarizeArray(detail.files);
-  const risksSummary = summarizeArray(detail.risks);
-  const issuesSummary = summarizeArray(detail.issues);
-  const hitsSummary = summarizeArray(detail.hits);
+  const filesSummary = summarizeArray(detail.files, lang);
+  const risksSummary = summarizeArray(detail.risks, lang);
+  const issuesSummary = summarizeArray(detail.issues, lang);
+  const hitsSummary = summarizeArray(detail.hits, lang);
 
   const parts = [
     tool || agent,
@@ -343,7 +366,7 @@ function summarizeDetail(detail: Record<string, unknown> | null | undefined): st
     .slice(0, 4);
 
   if (error) {
-    parts.unshift(`错误：${error}`);
+    parts.unshift(`${t.fields.errorPrefix}${error}`);
   }
   if (parts.length > 0) return parts.join(" · ");
   return rawName;
@@ -367,9 +390,7 @@ function chooseOutputLabel(
   return "RESULT";
 }
 
-function buildHumanDetail(
-  lines: Array<string | undefined>,
-): string | undefined {
+function buildHumanDetail(lines: Array<string | undefined>): string | undefined {
   const normalized = lines
     .map((line) => normalizeWhitespace(line))
     .filter((line, index, arr): line is string => !!line && arr.indexOf(line) === index);
@@ -402,11 +423,12 @@ function makeNode(event: RunEvent, sem: SemanticMapping, overrides: Partial<Trac
   };
 }
 
-function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent | null): TraceNode {
-  const sem = semanticFromDetail(toolStart);
+function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent | null, lang: TraceLang): TraceNode {
+  const t = getTraceI18n(lang);
+  const sem = semanticFromDetail(toolStart, lang);
   const toolName = readString(toolStart.detail?.tool) ?? readString(toolStart.detail?.agent);
-  const callSummary = summarizeDetail(toolStart.detail);
-  const resultSummary = summarizeDetail(toolResult.detail);
+  const callSummary = summarizeDetail(toolStart.detail, lang);
+  const resultSummary = summarizeDetail(toolResult.detail, lang);
   const status = readString(toolResult.detail?.error) ? "error" : "success";
 
   return makeNode(toolStart, sem, {
@@ -415,90 +437,93 @@ function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent 
       ? summaryLine(thought, sem.action)
       : summaryLine(toolStart, sem.action),
     detail: buildHumanDetail([
-      toolName ? `调用对象：${toolName}` : undefined,
-      callSummary ? `调用摘要：${callSummary}` : undefined,
-      resultSummary ? `结果摘要：${resultSummary}` : undefined,
+      toolName ? `${t.fields.callTarget}${toolName}` : undefined,
+      callSummary ? `${t.fields.callSummary}${callSummary}` : undefined,
+      resultSummary ? `${t.fields.resultSummary}${resultSummary}` : undefined,
     ]),
     status,
     durationMs: computeDuration(toolStart.timestamp, toolResult.timestamp),
-    input: toolStart.detail ? detailToBlock(chooseInputLabel(sem), toolStart.detail) : undefined,
+    input: toolStart.detail ? detailToBlock(chooseInputLabel(sem), toolStart.detail, lang) : undefined,
     output: toolResult.detail
-      ? detailToBlock(chooseOutputLabel(sem, toolResult.detail, status, toolResult.event_type), toolResult.detail)
+      ? detailToBlock(chooseOutputLabel(sem, toolResult.detail, status, toolResult.event_type), toolResult.detail, lang)
       : textToBlock(chooseOutputLabel(sem, null, status, toolResult.event_type), toolResult.summary),
     rawEventIds: rawEventIds(toolStart, thought, toolResult),
   });
 }
 
-function flushToolStart(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function flushToolStart(event: RunEvent, lang: TraceLang): TraceNode {
+  const t = getTraceI18n(lang);
+  const sem = semanticFromDetail(event, lang);
   const toolName = readString(event.detail?.tool) ?? readString(event.detail?.agent);
+  const detailSummary = summarizeDetail(event.detail, lang);
   return makeNode(event, sem, {
     description: summaryLine(event, sem.action),
     detail: buildHumanDetail([
-      toolName ? `调用对象：${toolName}` : undefined,
-      summarizeDetail(event.detail) ? `调用摘要：${summarizeDetail(event.detail)}` : undefined,
+      toolName ? `${t.fields.callTarget}${toolName}` : undefined,
+      detailSummary ? `${t.fields.callSummary}${detailSummary}` : undefined,
     ]),
     status: "running",
-    input: event.detail ? detailToBlock(chooseInputLabel(sem), event.detail) : undefined,
+    input: event.detail ? detailToBlock(chooseInputLabel(sem), event.detail, lang) : undefined,
   });
 }
 
-function standaloneNode(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function standaloneNode(event: RunEvent, lang: TraceLang): TraceNode {
+  const sem = semanticFromDetail(event, lang);
   const status = readString(event.detail?.error) ? "error" : "success";
   return makeNode(event, sem, {
     description: summaryLine(event, sem.action),
-    detail: summarizeDetail(event.detail),
+    detail: summarizeDetail(event.detail, lang),
     status,
     output: event.detail
-      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail)
+      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail, lang)
       : undefined,
   });
 }
 
-function intermediateNode(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function intermediateNode(event: RunEvent, lang: TraceLang): TraceNode {
+  const sem = semanticFromDetail(event, lang);
   const status = event.event_type === "warning" ? "error" : "success";
   return makeNode(event, sem, {
     description: summaryLine(event, sem.action),
-    detail: summarizeDetail(event.detail),
+    detail: summarizeDetail(event.detail, lang),
     status,
     output: event.detail
-      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail)
+      ? detailToBlock(chooseOutputLabel(sem, event.detail, status, event.event_type), event.detail, lang)
       : undefined,
   });
 }
 
-function finalNode(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function finalNode(event: RunEvent, lang: TraceLang): TraceNode {
+  const sem = semanticFromDetail(event, lang);
   return makeNode(event, sem, {
     description: summaryLine(event, sem.action),
-    detail: summarizeDetail(event.detail),
-    output: event.detail ? detailToBlock("RESULT", event.detail) : undefined,
+    detail: summarizeDetail(event.detail, lang),
+    output: event.detail ? detailToBlock("RESULT", event.detail, lang) : undefined,
   });
 }
 
-function briefNode(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function briefNode(event: RunEvent, lang: TraceLang): TraceNode {
+  const sem = semanticFromDetail(event, lang);
   const conclusion = readString(event.detail?.conclusion);
   return makeNode(event, sem, {
     description: conclusion ?? summaryLine(event, sem.action),
-    detail: summarizeDetail(event.detail),
-    output: event.detail ? detailToBlock("OUTPUT", event.detail) : undefined,
+    detail: summarizeDetail(event.detail, lang),
+    output: event.detail ? detailToBlock("OUTPUT", event.detail, lang) : undefined,
   });
 }
 
-function bareNode(event: RunEvent): TraceNode {
-  const sem = semanticFromDetail(event);
+function bareNode(event: RunEvent, lang: TraceLang): TraceNode {
+  const t = getTraceI18n(lang);
+  const sem = semanticFromDetail(event, lang);
   const status = readString(event.detail?.state);
   return makeNode(event, sem, {
-    description: status ? `${summaryLine(event, sem.action)} · ${status}` : summaryLine(event, sem.action),
-    detail: summarizeDetail(event.detail),
+    description: status ? t.format.statusWithValue(summaryLine(event, sem.action), status) : summaryLine(event, sem.action),
+    detail: summarizeDetail(event.detail, lang),
     status: /failed|error|cancel/i.test(status ?? "") ? "error" : "success",
   });
 }
 
-export function adaptEvents(rawEvents: RunEvent[]): TraceNode[] {
+export function adaptEvents(rawEvents: RunEvent[], lang: TraceLang): TraceNode[] {
   const nodes: TraceNode[] = [];
   let pendingToolStart: RunEvent | null = null;
   let pendingThought: RunEvent | null = null;
@@ -508,71 +533,71 @@ export function adaptEvents(rawEvents: RunEvent[]): TraceNode[] {
 
     switch (event.event_type) {
       case "tool_start": {
-        if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart));
+        if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart, lang));
         pendingToolStart = event;
         break;
       }
       case "tool_result": {
         if (pendingToolStart) {
-          nodes.push(mergeTool(pendingToolStart, event, pendingThought));
+          nodes.push(mergeTool(pendingToolStart, event, pendingThought, lang));
           pendingToolStart = null;
         } else {
-          nodes.push(standaloneNode(event));
+          nodes.push(standaloneNode(event, lang));
         }
         pendingThought = null;
         break;
       }
       case "thought": {
-        if (pendingThought) nodes.push(standaloneNode(pendingThought));
+        if (pendingThought) nodes.push(standaloneNode(pendingThought, lang));
         pendingThought = event;
         break;
       }
       case "intermediate":
       case "warning": {
         if (pendingToolStart) {
-          nodes.push(flushToolStart(pendingToolStart));
+          nodes.push(flushToolStart(pendingToolStart, lang));
           pendingToolStart = null;
         }
         if (pendingThought) {
-          nodes.push(standaloneNode(pendingThought));
+          nodes.push(standaloneNode(pendingThought, lang));
           pendingThought = null;
         }
-        nodes.push(intermediateNode(event));
+        nodes.push(intermediateNode(event, lang));
         break;
       }
       case "final": {
         if (pendingToolStart) {
-          nodes.push(flushToolStart(pendingToolStart));
+          nodes.push(flushToolStart(pendingToolStart, lang));
           pendingToolStart = null;
         }
         if (pendingThought) {
-          nodes.push(standaloneNode(pendingThought));
+          nodes.push(standaloneNode(pendingThought, lang));
           pendingThought = null;
         }
-        nodes.push(finalNode(event));
+        nodes.push(finalNode(event, lang));
         break;
       }
       case "final_brief": {
-        nodes.push(briefNode(event));
+        nodes.push(briefNode(event, lang));
         break;
       }
       case "status": {
         if (pendingToolStart) {
-          nodes.push(flushToolStart(pendingToolStart));
+          nodes.push(flushToolStart(pendingToolStart, lang));
           pendingToolStart = null;
         }
         if (pendingThought) {
-          nodes.push(standaloneNode(pendingThought));
+          nodes.push(standaloneNode(pendingThought, lang));
           pendingThought = null;
         }
-        nodes.push(bareNode(event));
+        nodes.push(bareNode(event, lang));
         break;
       }
     }
   }
 
-  if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart));
-  if (pendingThought) nodes.push(standaloneNode(pendingThought));
+  if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart, lang));
+  if (pendingThought) nodes.push(standaloneNode(pendingThought, lang));
 
   return nodes;
 }

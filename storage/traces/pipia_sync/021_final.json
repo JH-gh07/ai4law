@@ -1,0 +1,15 @@
+{
+  "name": "final",
+  "seq": 21,
+  "created_at": "2026-06-05T00:19:56.365521+00:00",
+  "payload": {
+    "summary": "PIPIA 评估完成",
+    "detail": {
+      "output_files": {
+        "markdown": "outputs/pipia/a04e3f9e470442fc9a72ecff12acab6d/outputs/PT618636_PIPIA_报告_草案_20260605.md",
+        "docx": "outputs/pipia/a04e3f9e470442fc9a72ecff12acab6d/outputs/PT618636_PIPIA_报告_草案_20260605.docx",
+        "zip": "outputs/pipia/a04e3f9e470442fc9a72ecff12acab6d/outputs/PT618636_PIPIA_输出包_草案_20260605.zip"
+      }
+    }
+  }
+}

@@ -188,7 +188,7 @@ def chat_with_copilot(
                     "summary": "Copilot 对话返回",
                     "detail": {
                         "tool": "copilot_chat",
-                        "model": container.settings.llm_model if container.llm_client.enabled else "local-copilot-fallback",
+                        "model": container.llm_client._model if container.llm_client.enabled else "local-copilot-fallback",
                         "fallback": fallback,
                         "content": reply[:1200],
                         "raw_name": "copilot_chat_response",
@@ -198,7 +198,7 @@ def chat_with_copilot(
 
         return CopilotChatResponse(
             reply=reply,
-            model=container.settings.llm_model if container.llm_client.enabled else "local-copilot-fallback",
+            model=container.llm_client._model if container.llm_client.enabled else "local-copilot-fallback",
             enabled=container.llm_client.enabled,
             fallback=fallback,
             usage=usage_payload,

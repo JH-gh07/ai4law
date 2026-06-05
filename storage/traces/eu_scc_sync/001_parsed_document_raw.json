@@ -1,0 +1,30 @@
+{
+  "name": "parsed_document_raw",
+  "seq": 1,
+  "created_at": "2026-06-05T00:32:01.883293+00:00",
+  "payload": {
+    "module_type": "Module Two",
+    "clauses": [],
+    "annex_i_a": {
+      "parties": [],
+      "signing_info": ""
+    },
+    "annex_i_b": {
+      "data_subjects": "",
+      "data_categories": "",
+      "special_category_data": [],
+      "processing_purpose": "",
+      "processing_nature": "",
+      "transfer_frequency": "",
+      "retention_period": ""
+    },
+    "annex_ii": {
+      "tom_items": [],
+      "supplementary_measures": []
+    },
+    "annex_iii": {
+      "sub_processors": []
+    },
+    "raw_text": "Standard Contractual Clauses (Module 2: controller to processor)..."
+  }
+}

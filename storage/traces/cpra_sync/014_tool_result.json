@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 14,
+  "created_at": "2026-06-05T00:35:23.973699+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 59,
+        "completion_tokens": 800,
+        "total_tokens": 859
+      },
+      "content": "```json\n{\n  \"compliance_facts\": {\n    \"sensitive_personal_information_categories\": [\n      {\n        \"category\": \"Government Identifiers\",\n        \"subcategories\": [\"Social Security Number\", \"Driver's License Number\", \"Passport Number\"],\n        \"risk_level\": \"High\",\n        \"sharing_restrictions\": [\"Opt-in consent required for sharing with third parties\", \"Cannot be shared for cross-context behavioral advertising\"],\n        \"notes\": \"Explicit CPRA definition as SPI; requires separate collection and affirmative opt-in\"\n      },\n      {\n        \"category\": \"Financial Information\",\n        \"subcategories\": [\"Account Log-in Credentials\", \"Financial Account Numbers\", \"Credit/Debit Card Numbers\"],\n        \"risk_level\": \"High\",\n        \"sharing_restrictions\": [\"Opt-in consent required for sharing with third parties\", \"Cannot be shared for cross-context behavioral advertising\"],\n        \"notes\": \"Security breach of this data triggers additional notification requirements under CA law\"\n      },\n      {\n        \"category\": \"Precise Geolocation\",\n        \"subcategories\": [\"Coordinates within 1850 feet radius\"],\n        \"risk_level\": \"High\",\n        \"sharing_restrictions\": [\"Opt-in consent req",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

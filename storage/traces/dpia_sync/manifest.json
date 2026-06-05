@@ -1,0 +1,198 @@
+{
+  "created_at": "2026-06-05T00:23:58.473786+00:00",
+  "event_count": 32,
+  "events": [
+    {
+      "seq": 1,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/001_thought.json",
+      "created_at": "2026-06-05T00:20:28.784415+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "profile_extracted",
+      "path": "storage/traces/dpia_sync/002_profile_extracted.json",
+      "created_at": "2026-06-05T00:20:28.785026+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "need_detection_rule",
+      "path": "storage/traces/dpia_sync/003_need_detection_rule.json",
+      "created_at": "2026-06-05T00:20:28.787604+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "facts_built",
+      "path": "storage/traces/dpia_sync/004_facts_built.json",
+      "created_at": "2026-06-05T00:20:28.788591+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/005_tool_start.json",
+      "created_at": "2026-06-05T00:20:28.792528+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/006_tool_result.json",
+      "created_at": "2026-06-05T00:20:53.450526+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "agent_dpia_need",
+      "path": "storage/traces/dpia_sync/007_agent_dpia_need.json",
+      "created_at": "2026-06-05T00:20:53.452443+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/008_thought.json",
+      "created_at": "2026-06-05T00:20:53.454269+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/009_tool_start.json",
+      "created_at": "2026-06-05T00:20:53.457476+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/010_tool_result.json",
+      "created_at": "2026-06-05T00:21:27.576442+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "agent_processing_activity",
+      "path": "storage/traces/dpia_sync/011_agent_processing_activity.json",
+      "created_at": "2026-06-05T00:21:27.577586+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/012_thought.json",
+      "created_at": "2026-06-05T00:21:27.578478+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "retrieval_hits",
+      "path": "storage/traces/dpia_sync/013_retrieval_hits.json",
+      "created_at": "2026-06-05T00:21:27.740224+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "issues_built",
+      "path": "storage/traces/dpia_sync/014_issues_built.json",
+      "created_at": "2026-06-05T00:21:27.743597+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "evidence_built",
+      "path": "storage/traces/dpia_sync/015_evidence_built.json",
+      "created_at": "2026-06-05T00:21:27.744350+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/016_tool_start.json",
+      "created_at": "2026-06-05T00:21:27.745424+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/017_tool_result.json",
+      "created_at": "2026-06-05T00:21:58.458249+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "agent_necessity_proportionality",
+      "path": "storage/traces/dpia_sync/018_agent_necessity_proportionality.json",
+      "created_at": "2026-06-05T00:21:58.458892+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/019_thought.json",
+      "created_at": "2026-06-05T00:21:58.459208+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/020_tool_start.json",
+      "created_at": "2026-06-05T00:21:58.459717+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/021_tool_result.json",
+      "created_at": "2026-06-05T00:22:58.384987+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "agent_risk_assessment",
+      "path": "storage/traces/dpia_sync/022_agent_risk_assessment.json",
+      "created_at": "2026-06-05T00:22:58.386949+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/023_thought.json",
+      "created_at": "2026-06-05T00:22:58.388259+00:00"
+    },
+    {
+      "seq": 24,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/024_tool_start.json",
+      "created_at": "2026-06-05T00:22:58.390238+00:00"
+    },
+    {
+      "seq": 25,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/025_tool_result.json",
+      "created_at": "2026-06-05T00:23:46.816127+00:00"
+    },
+    {
+      "seq": 26,
+      "name": "agent_mitigation_mapping",
+      "path": "storage/traces/dpia_sync/026_agent_mitigation_mapping.json",
+      "created_at": "2026-06-05T00:23:46.825361+00:00"
+    },
+    {
+      "seq": 27,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/027_thought.json",
+      "created_at": "2026-06-05T00:23:46.827139+00:00"
+    },
+    {
+      "seq": 28,
+      "name": "tool_start",
+      "path": "storage/traces/dpia_sync/028_tool_start.json",
+      "created_at": "2026-06-05T00:23:46.833255+00:00"
+    },
+    {
+      "seq": 29,
+      "name": "tool_result",
+      "path": "storage/traces/dpia_sync/029_tool_result.json",
+      "created_at": "2026-06-05T00:23:58.455552+00:00"
+    },
+    {
+      "seq": 30,
+      "name": "agent_dpo_consultation",
+      "path": "storage/traces/dpia_sync/030_agent_dpo_consultation.json",
+      "created_at": "2026-06-05T00:23:58.457196+00:00"
+    },
+    {
+      "seq": 31,
+      "name": "thought",
+      "path": "storage/traces/dpia_sync/031_thought.json",
+      "created_at": "2026-06-05T00:23:58.458445+00:00"
+    },
+    {
+      "seq": 32,
+      "name": "need_diagnosis_enriched",
+      "path": "storage/traces/dpia_sync/032_need_diagnosis_enriched.json",
+      "created_at": "2026-06-05T00:23:58.460159+00:00"
+    }
+  ]
+}

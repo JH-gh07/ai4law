@@ -1,0 +1,13 @@
+{
+  "name": "intermediate",
+  "seq": 7,
+  "created_at": "2026-06-05T00:32:45.902235+00:00",
+  "payload": {
+    "summary": "事实合并完成",
+    "detail": {
+      "category": "facts",
+      "data_item_count": 0,
+      "vendor_count": 0
+    }
+  }
+}

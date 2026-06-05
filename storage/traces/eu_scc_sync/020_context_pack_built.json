@@ -1,0 +1,851 @@
+{
+  "name": "context_pack_built",
+  "seq": 20,
+  "created_at": "2026-06-05T00:32:01.955103+00:00",
+  "payload": {
+    "module_key": "eu_scc",
+    "request_id": "20f5b336-655d-4723-8831-b705e6e4074f",
+    "facts": [
+      {
+        "fact_id": "EU-SCC-FACT-request-project-name",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.project_name",
+        "value": "EUT619521",
+        "normalized_value": "EUT619521",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-declared-module-type",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.declared_module_type",
+        "value": "m2",
+        "normalized_value": "m2",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-exporter-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.exporter_role",
+        "value": "controller",
+        "normalized_value": "controller",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-importer-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.importer_role",
+        "value": "processor",
+        "normalized_value": "processor",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-has-tia",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.has_tia",
+        "value": true,
+        "normalized_value": true,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-has-supplementary-measures",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.has_supplementary_measures",
+        "value": true,
+        "normalized_value": true,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-module-type",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.module_type",
+        "value": "Module Two",
+        "normalized_value": "Module Two",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-clause-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.clause_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-ia-party-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_ia.party_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-ii-tom-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_ii.tom_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-iii-sub-processor-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_iii.sub_processor_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-exporter-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.exporter_role",
+        "value": "controller",
+        "normalized_value": "controller",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-importer-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.importer_role",
+        "value": "processor",
+        "normalized_value": "processor",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-sub-processor-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.sub_processor_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-module-is-correct",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.module_is_correct",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-expected-module",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.expected_module",
+        "value": "Module Two",
+        "normalized_value": "Module Two",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-clauses-checked",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.clauses_checked",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-deviations-found",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.deviations_found",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-has-third-country-transfer",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.has_third_country_transfer",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-tia-present",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.tia_present",
+        "value": true,
+        "normalized_value": true,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-schrems-ii-measures",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.schrems_ii_measures",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-overall-rating",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.overall_rating",
+        "value": "HIGH",
+        "normalized_value": "HIGH",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-finding-count",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.finding_count",
+        "value": 4,
+        "normalized_value": 4,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      }
+    ],
+    "diagnosis_result": {
+      "recommended_path": "eu_scc",
+      "rationale": "EU SCC deterministic rule engine review",
+      "document": {
+        "module_type": "Module Two",
+        "clauses": [],
+        "annex_i_a": {
+          "parties": [],
+          "signing_info": ""
+        },
+        "annex_i_b": {
+          "data_subjects": "",
+          "data_categories": "",
+          "special_category_data": [],
+          "processing_purpose": "",
+          "processing_nature": "",
+          "transfer_frequency": "",
+          "retention_period": ""
+        },
+        "annex_ii": {
+          "tom_items": [],
+          "supplementary_measures": []
+        },
+        "annex_iii": {
+          "sub_processors": []
+        },
+        "raw_text": "Standard Contractual Clauses (Module 2: controller to processor)..."
+      },
+      "transfer_chain": {
+        "exporter_name": "",
+        "exporter_role": "controller",
+        "importer_name": "",
+        "importer_role": "processor",
+        "sub_processors": [],
+        "onward_transfer_locations": [],
+        "storage_locations": [],
+        "access_locations": []
+      },
+      "module_validation": {
+        "expected_module": "Module Two",
+        "actual_module": "m2",
+        "is_correct": false,
+        "mismatch_reason": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2."
+      },
+      "clause_comparison": {
+        "clauses_checked": 0,
+        "deviations_found": 0,
+        "findings": []
+      },
+      "annex_review": {
+        "findings": [
+          {
+            "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+            "location": "Annex I.A",
+            "clause_ref": "Annex I.A",
+            "original_text": "",
+            "issue_type": "annex_incomplete",
+            "severity": "HIGH",
+            "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+            "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+            "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+            "suggested_text": ""
+          },
+          {
+            "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+            "location": "Annex II",
+            "clause_ref": "Annex II",
+            "original_text": "",
+            "issue_type": "annex_incomplete",
+            "severity": "HIGH",
+            "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+            "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+            "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+            "suggested_text": ""
+          }
+        ]
+      },
+      "tia_review": {
+        "has_third_country_transfer": false,
+        "third_country_transfers": [],
+        "tia_present": true,
+        "has_supplementary_measures": true,
+        "schrems_ii_measures_present": false,
+        "findings": []
+      },
+      "all_findings": [
+        {
+          "finding_id": "EU-SCC-MODULE-MISMATCH",
+          "location": "Document Header",
+          "clause_ref": "Module Type",
+          "original_text": "m2",
+          "issue_type": "module_mismatch",
+          "severity": "HIGH",
+          "risk_analysis": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2.",
+          "legal_basis": "EU 2021/914; GDPR Article 46",
+          "recommendation": "Use Module Two instead of m2, or verify that the party roles in Annex I.A match the declared module.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "location": "Annex I.A",
+          "clause_ref": "Annex I.A",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "HIGH",
+          "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+          "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+          "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+          "location": "Annex II",
+          "clause_ref": "Annex II",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "HIGH",
+          "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+          "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+          "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "location": "Annex II / TIA",
+          "clause_ref": "",
+          "original_text": "",
+          "issue_type": "supplementary_measures_insufficient",
+          "severity": "HIGH",
+          "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+          "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+          "recommendation": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+          "suggested_text": ""
+        }
+      ],
+      "overall_rating": "HIGH"
+    },
+    "regulations": [
+      {
+        "source_id": "EU-LAW-002-014",
+        "title": "GDPR（一般数据保护条例）中文版",
+        "article": "第9条 对特殊类型个人数据的处理",
+        "snippet": "第9条 对特殊类型个人数据的处理 \n1．对于那些显示种族或民族背景、政治观念、宗教或哲学信仰或工会成员的个人数据、基因数据、为了特定识别自然人的生物性识别数据、以及和自然人健康、个人性生活或性取向相关的数据，应当禁止处理。\n2．如果具有如下条件之一，第1段将不适用：\n(a)数据主体明确同意基于一个或多个特定目的而授权处理其个人数据，但依照欧盟或成员国的法律规定，数据主体无权解除第1段中所规定的禁令的除外；\n(b)处理对于控制者履行责任以及行使其特定权利是必要的，或者对于在雇佣、社会安全与社会保障法领域采取符合欧盟或成员国法律或集体协议的措施以保护数据主体的根本权利和利益是必要的；\n(c)数据主体因为身体原因或法律原因而无法表达同意，但处理对于保护数据主体或另一自然人的核心利益却是必要的；\n(d)基金、协会或其它具有政治、哲学、宗教或工会目的的非盈利机构的正当性活动中所进行的处理，并且已经采取了恰当的保护措施；或者处理目的仅仅和机构成员、之前成员或具有经常联系的人相关，并且个人数据在未经数据主体同意前不对实体外的人公开；\n(e)对数据主体已经明显公开的相关个人数据的处理；\n(f)当处理对于提起、行使或辩护法律性主张必要时，或者法院在其所有的司法活动中所进行的处理；\n(g)处理对实现实质性的公共利益必要的，建立在欧盟或成员国的法律基准之上、对实现目标是相称的，尊重数据保护权的核心要素，并且为数据主体的基本权利和利益提供合适和特定的保护措施；\n(h)处理对于预防性医学或临床医学目的是必要的，或者对于评估雇员的工作能力、医疗诊断、提供——基于欧盟或成员国法律，或遵循和健康职业机构签订的契约并遵循第3段所规定的情形与保障措施——健康或社会保健或治疗或管理健康或社会保健体系是必要的；\n(i)在公共健康领域，处理是为了实现公共利益所必要的，例如，在欧盟或成员国内已经为保障数据主体的权利与自由而采取合适与特定措施的法律基础上，处理对于预防严重的跨境健康威胁是必要的，或者为了保障医疗质量和安全、医疗产品或医疗设备的高质量和安全是必要的；或者\n(j)处理对于实现符合第89(1)条公共利益、科学或历史研究目的或统计目的是必要的，处理采取了与其期望目的所相称的处理，尊重数据保护权的核心要素，并且对数据主体的基本权利与利益采取了合适与特定的措施。\n3．根据欧盟或成员国的有权机构所制定的法律或"
+      },
+      {
+        "source_id": "EU-LAW-002-123",
+        "title": "GDPR（一般数据保护条例）中文版",
+        "article": "第50条 为保护个人数据的国际合作",
+        "snippet": "第50条 为保护个人数据的国际合作 \n在涉及到第三国或国际组织的情形中，欧盟委员会和监管机构应当采取合适的措施以：\n(a)发展国际合作机制，以便促进对个人数据保护立法的有效实施；\n(b)在采取合适安全措施保障个人数据保护和其它基本权利与自由的前提下，通过告知、申诉转介、调查帮助和信息互换为个人数据保护立法的实施提供国际性互助；\n(c)在实施个人数据保护立法中，使相关利益方密切参与为了进一步国际合作而进行的讨论和活动；\n(d)促进个人数据立法与实践——包括与第三国管辖权冲突——的交换与记录。\n第六章  独立监管机构\n第一部分 独立性地位"
+      },
+      {
+        "source_id": "EU-LAW-002-056",
+        "title": "GDPR（一般数据保护条例）中文版",
+        "article": "第32条 处理的安全",
+        "snippet": "第32条 处理的安全 \n1．在考虑了最新水平、实施成本、处理的性质、处理的范围、处理的语境与目的之后，以及处理给自然人权利与自由带来的伤害可能性与严重性之后，控制者和处理者应当采取包括但不限于如下的适当技术与组织措施，以便保证和风险相称的安全水平：\n(a)个人数据的匿名化和加密；\n(b)保持处理系统与服务的保密性、公正性、有效性以及重新恢复的能力；\n(c)在遭受物理性或技术性事件的情形中，有能力恢复对个人数据的获取与访问；\n(d)具有为保证处理安全而常规性地测试、评估与评价技术性与组织性手段有效性的流程。\n2．在评估合适的安全级别的时候，应当特别考虑处理所带来的风险，特别是在个人数据传输、储存或处理过程中的的意外或非法销毁、丢失、篡改、未经授权的披露或访问。\n3．遵守"
+      },
+      {
+        "source_id": "EU-LAW-002-150",
+        "title": "GDPR（一般数据保护条例）中文版",
+        "article": "第36条",
+        "snippet": "第36条 规定的提前咨询条款向控制者提出建议；\n(b)主动或根据要求为全国性议会、成员国政府提供意见，或者根据成员国法为其他机构、实体与公众提供和个人数据保护相关的保护；\n(c)如果成员国的法律要求此类提前咨询，根据第36（5）条而授权处理；\n(d)根据第40（5）条而发布意见以及行为准则；\n(e)根据"
+      },
+      {
+        "source_id": "EU-LAW-002-065",
+        "title": "GDPR（一般数据保护条例）中文版",
+        "article": "第63条",
+        "snippet": "第63条 所规定的一致性机制。\n7．评估应当至少包括：\n(a)对计划的处理操作和处理目的的系统性描述，以及——如果适用的话——对控制者所追求的正当利益的描述；\n(b)对和目的相关的处理操作的必要性与相称性进行分析；\n(c)对第1段所规定的给数据主体的权利与自由带来的风险的评估；\n(d)结合数据主体和其他相关个人的权利与正当利益，采取的计划性风险应对措施，包括保障个人数据保护和证明遵循本条例的安全保障、安全措施和机制。\n8．评估相关控制者或处理者的处理操作的影响时，特别是评估数据保护影响时，应当合理考虑其对"
+      }
+    ],
+    "issues": [
+      {
+        "issue_id": "EU-SCC-ISSUE-MODULE-MISMATCH",
+        "title": "模块选择错误: 应为Module Two, 实际m2",
+        "description": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2.",
+        "category": "documentation",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-declared-module-type",
+          "EU-SCC-FACT-doc-module-type"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065",
+          "EU 2021/914"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-ISSUE-MODULE-MISMATCH"
+        ],
+        "recommended_action": "将文档模块从 m2 改为 Module Two 并确认 Annex I.A 中的角色与模块一致。",
+        "affects_outputs": [
+          "overall_rating",
+          "clause_findings"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "title": "[HIGH] Document Header: Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares ",
+        "description": "Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares m2.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH"
+        ],
+        "recommended_action": "Use Module Two instead of m2, or verify that the party roles in Annex I.A match the declared module.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "title": "[HIGH] Annex I.A: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "description": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES"
+        ],
+        "recommended_action": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "title": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "description": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY"
+        ],
+        "recommended_action": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "title": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "description": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS"
+        ],
+        "recommended_action": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ],
+    "evidence_chain": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-MODULE-MISMATCH",
+        "claim": "模块选择错误: 应为Module Two, 实际m2",
+        "fact_refs": [
+          "EU-SCC-FACT-request-declared-module-type",
+          "EU-SCC-FACT-doc-module-type"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065",
+          "EU 2021/914"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "将文档模块从 m2 改为 Module Two 并确认 Annex I.A 中的角色与模块一致。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-MODULE-MISMATCH",
+          "overall_rating",
+          "clause_findings"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "claim": "[HIGH] Document Header: Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares ",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Use Module Two instead of m2, or verify that the party roles in Annex I.A match the declared module.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "claim": "[HIGH] Annex I.A: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "path_warning": null,
+    "risk_summary": {
+      "overall_rating": "HIGH",
+      "finding_count": 4
+    },
+    "attachment_notes": [],
+    "output_requirements": {
+      "chapter_keys": [
+        "document_overview",
+        "overall_rating",
+        "clause_findings",
+        "legal_basis_and_recommendations"
+      ]
+    },
+    "legal_grounding": null,
+    "case_grounding": null,
+    "writing_strategy": null,
+    "generation_basis_pack": null,
+    "citation_registry": null,
+    "legal_grounding_context": [],
+    "workflow_rule_context": [],
+    "template_context": [],
+    "evaluation_context": []
+  }
+}

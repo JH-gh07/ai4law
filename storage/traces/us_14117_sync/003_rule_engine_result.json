@@ -1,0 +1,357 @@
+{
+  "name": "rule_engine_result",
+  "seq": 3,
+  "created_at": "2026-06-05T00:28:30.166189+00:00",
+  "payload": {
+    "recommended_path": "us_14117",
+    "rationale": "EO 14117 deterministic rule engine assessment",
+    "data_classifications": [
+      {
+        "data_item_name": "精确GPS轨迹",
+        "doj_category": "precise_geolocation_data",
+        "bulk_threshold": 1000,
+        "threshold_hit": true,
+        "us_person_count": 5000,
+        "is_government_related": false,
+        "confidence": 0.9,
+        "reasoning": "User-specified category: precise_geolocation_data"
+      }
+    ],
+    "entity_assessments": [
+      {
+        "entity_name": "AI公司",
+        "is_country_of_concern": true,
+        "country_of_concern_reason": "Registered in country of concern: China (中国)",
+        "is_covered_person": true,
+        "covered_person_status": "confirmed",
+        "covered_person_reasons": [
+          "Registered in country of concern: China (中国)",
+          "Access person '王工' resides in country of concern (中国, 中国) and has actual data access."
+        ],
+        "missing_information": [],
+        "confidence": 0.9
+      }
+    ],
+    "transaction_classification": {
+      "transaction_type": "vendor_agreement",
+      "is_data_brokerage": false,
+      "involves_covered_person": true,
+      "involves_bulk_sensitive": true,
+      "involves_government_data": false,
+      "is_prohibited": false,
+      "is_restricted": true,
+      "prohibition_reasons": [],
+      "restriction_reasons": [
+        "Restricted transaction type (vendor_agreement) involving covered person(s) and bulk sensitive personal data — requires security measures under EO 14117 §100.3."
+      ]
+    },
+    "security_gap_report": {
+      "required_measures": [
+        "logical_isolation_of_covered_data",
+        "multi_factor_authentication",
+        "least_privilege_access",
+        "role_based_access_control",
+        "encryption_at_rest",
+        "encryption_in_transit",
+        "key_management",
+        "data_aggregation",
+        "de_identification_or_pseudonymization",
+        "purpose_limitation_controls",
+        "comprehensive_activity_logs",
+        "log_retention_minimum_1_year",
+        "real_time_alerting",
+        "independent_audit_quarterly",
+        "employee_training_program",
+        "confidentiality_agreements",
+        "background_checks",
+        "onward_transfer_restrictions",
+        "data_deletion_on_termination",
+        "audit_rights_clause",
+        "breach_notification_clause"
+      ],
+      "implemented": [],
+      "missing": [
+        "logical_isolation_of_covered_data",
+        "multi_factor_authentication",
+        "least_privilege_access",
+        "role_based_access_control",
+        "encryption_at_rest",
+        "encryption_in_transit",
+        "key_management",
+        "data_aggregation",
+        "de_identification_or_pseudonymization",
+        "purpose_limitation_controls",
+        "comprehensive_activity_logs",
+        "log_retention_minimum_1_year",
+        "real_time_alerting",
+        "independent_audit_quarterly",
+        "employee_training_program",
+        "confidentiality_agreements",
+        "background_checks",
+        "onward_transfer_restrictions",
+        "data_deletion_on_termination",
+        "audit_rights_clause",
+        "breach_notification_clause"
+      ],
+      "partial_measures": [],
+      "is_compliant": false
+    },
+    "traffic_light": {
+      "overall_light": "YELLOW",
+      "per_entity_lights": {
+        "AI公司": "YELLOW"
+      },
+      "summary": "限制性交易（整改前不得进行）：该交易属于 EO 14117 §100.3 限制性交易类别。当前存在 21 项安全措施缺口，在全部整改完成并经法务审批前，不得继续推进数据传输。建议在 90 天内完成整改。",
+      "is_prohibited": false,
+      "is_restricted": true,
+      "prohibition_reasons": [],
+      "restriction_reasons": [
+        "Restricted transaction type (vendor_agreement) involving covered person(s) and bulk sensitive personal data — requires security measures under EO 14117 §100.3."
+      ],
+      "required_security_measures": [
+        "logical_isolation_of_covered_data",
+        "multi_factor_authentication",
+        "least_privilege_access",
+        "role_based_access_control",
+        "encryption_at_rest",
+        "encryption_in_transit",
+        "key_management",
+        "data_aggregation",
+        "de_identification_or_pseudonymization",
+        "purpose_limitation_controls",
+        "comprehensive_activity_logs",
+        "log_retention_minimum_1_year",
+        "real_time_alerting",
+        "independent_audit_quarterly",
+        "employee_training_program",
+        "confidentiality_agreements",
+        "background_checks",
+        "onward_transfer_restrictions",
+        "data_deletion_on_termination",
+        "audit_rights_clause",
+        "breach_notification_clause"
+      ],
+      "missing_security_measures": [
+        "logical_isolation_of_covered_data",
+        "multi_factor_authentication",
+        "least_privilege_access",
+        "role_based_access_control",
+        "encryption_at_rest",
+        "encryption_in_transit",
+        "key_management",
+        "data_aggregation",
+        "de_identification_or_pseudonymization",
+        "purpose_limitation_controls",
+        "comprehensive_activity_logs",
+        "log_retention_minimum_1_year",
+        "real_time_alerting",
+        "independent_audit_quarterly",
+        "employee_training_program",
+        "confidentiality_agreements",
+        "background_checks",
+        "onward_transfer_restrictions",
+        "data_deletion_on_termination",
+        "audit_rights_clause",
+        "breach_notification_clause"
+      ],
+      "yellow_status": "blocked",
+      "can_proceed_conditionally": false,
+      "clarification_questions": [
+        "The following 21 security measures are required but not yet implemented: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest.... Please provide implementation timeline and responsible parties."
+      ]
+    },
+    "risk_matrix": [
+      {
+        "entity_name": "AI公司",
+        "covered_person_status": "confirmed",
+        "covered_person_reason": "Registered in country of concern: China (中国); Access person '王工' resides in country of concern (中国, 中国) and has actual data access.",
+        "data_item_name": "精确GPS轨迹",
+        "data_category": "precise_geolocation_data",
+        "us_person_count": 5000,
+        "threshold": 1000,
+        "threshold_hit": true,
+        "transaction_type": "vendor_agreement",
+        "access_method": "direct_entity_relationship; person:王工:remote",
+        "rule_hit_refs": [],
+        "traffic_light": "YELLOW",
+        "reason": "Restricted transaction type (vendor_agreement) involving covered person(s) and bulk sensitive personal data — requires security measures under EO 14117 §100.3.",
+        "required_actions": [
+          "实施必要安全措施",
+          "完成法务审批",
+          "签署修订协议",
+          "建立定期审计机制"
+        ]
+      }
+    ],
+    "all_rule_hits": [
+      {
+        "rule_id": "EO14117-S100.3-RESTRICTED",
+        "rule_name": "Restricted Transaction",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Restricted transaction type (vendor_agreement) involving covered person(s) and bulk sensitive personal data — requires security measures under EO 14117 §100.3."
+      },
+      {
+        "rule_id": "EO14117-THRESHOLD-PRECISE_GEOLOCATION_DATA",
+        "rule_name": "Bulk Threshold Hit: precise_geolocation_data",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "精确GPS轨迹: 5000 US persons >= 1000 threshold"
+      },
+      {
+        "rule_id": "EO14117-COVERED-AI公司",
+        "rule_name": "Covered Person (confirmed): AI公司",
+        "section_ref": "§100.1",
+        "hit": true,
+        "reason": "Registered in country of concern: China (中国); Access person '王工' resides in country of concern (中国, 中国) and has actual data access."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-LOGICAL_ISOLATION_OF_COVERED_DATA",
+        "rule_name": "Security Gap: logical_isolation_of_covered_data",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'logical_isolation_of_covered_data' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-MULTI_FACTOR_AUTHENTICATION",
+        "rule_name": "Security Gap: multi_factor_authentication",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'multi_factor_authentication' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-LEAST_PRIVILEGE_ACCESS",
+        "rule_name": "Security Gap: least_privilege_access",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'least_privilege_access' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-ROLE_BASED_ACCESS_CONTROL",
+        "rule_name": "Security Gap: role_based_access_control",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'role_based_access_control' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-ENCRYPTION_AT_REST",
+        "rule_name": "Security Gap: encryption_at_rest",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'encryption_at_rest' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-ENCRYPTION_IN_TRANSIT",
+        "rule_name": "Security Gap: encryption_in_transit",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'encryption_in_transit' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-KEY_MANAGEMENT",
+        "rule_name": "Security Gap: key_management",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'key_management' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-DATA_AGGREGATION",
+        "rule_name": "Security Gap: data_aggregation",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'data_aggregation' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-DE_IDENTIFICATION_OR_PSEUDONYMIZATION",
+        "rule_name": "Security Gap: de_identification_or_pseudonymization",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'de_identification_or_pseudonymization' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-PURPOSE_LIMITATION_CONTROLS",
+        "rule_name": "Security Gap: purpose_limitation_controls",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'purpose_limitation_controls' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-COMPREHENSIVE_ACTIVITY_LOGS",
+        "rule_name": "Security Gap: comprehensive_activity_logs",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'comprehensive_activity_logs' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-LOG_RETENTION_MINIMUM_1_YEAR",
+        "rule_name": "Security Gap: log_retention_minimum_1_year",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'log_retention_minimum_1_year' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-REAL_TIME_ALERTING",
+        "rule_name": "Security Gap: real_time_alerting",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'real_time_alerting' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-INDEPENDENT_AUDIT_QUARTERLY",
+        "rule_name": "Security Gap: independent_audit_quarterly",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'independent_audit_quarterly' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-EMPLOYEE_TRAINING_PROGRAM",
+        "rule_name": "Security Gap: employee_training_program",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'employee_training_program' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-CONFIDENTIALITY_AGREEMENTS",
+        "rule_name": "Security Gap: confidentiality_agreements",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'confidentiality_agreements' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-BACKGROUND_CHECKS",
+        "rule_name": "Security Gap: background_checks",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'background_checks' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-ONWARD_TRANSFER_RESTRICTIONS",
+        "rule_name": "Security Gap: onward_transfer_restrictions",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'onward_transfer_restrictions' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-DATA_DELETION_ON_TERMINATION",
+        "rule_name": "Security Gap: data_deletion_on_termination",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'data_deletion_on_termination' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-AUDIT_RIGHTS_CLAUSE",
+        "rule_name": "Security Gap: audit_rights_clause",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'audit_rights_clause' is missing."
+      },
+      {
+        "rule_id": "EO14117-SECGAP-BREACH_NOTIFICATION_CLAUSE",
+        "rule_name": "Security Gap: breach_notification_clause",
+        "section_ref": "§100.3",
+        "hit": true,
+        "reason": "Required security measure 'breach_notification_clause' is missing."
+      }
+    ]
+  }
+}

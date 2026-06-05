@@ -1,0 +1,13 @@
+{
+  "name": "tool_result",
+  "seq": 23,
+  "created_at": "2026-06-05T00:32:45.949822+00:00",
+  "payload": {
+    "summary": "一致性审查完成：1 个问题",
+    "detail": {
+      "issues": [
+        "报告遗漏了 SPI / Limit SPI 相关高风险事项。"
+      ]
+    }
+  }
+}

@@ -89,4 +89,3 @@ def test_runtime_provider_test_endpoint_accepts_openai_compatible_provider(tmp_p
         assert payload["provider_id"] == "probe-openai"
         assert payload["provider_type"] == "openai_compatible"
         assert payload["model"] == "demo-model"
-

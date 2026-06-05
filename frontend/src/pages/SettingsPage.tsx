@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../lib/system-settings-api";
 import { fetchRuntimeSettings, saveRuntimeSettings, testRuntimeProvider } from "../lib/system-settings-api";
 
-const FALLBACK_MODELS = ["hunyuan-lite", "hunyuan-turbos-latest", "hunyuan-standard"];
+const FALLBACK_MODELS = ["deepseek-ai/DeepSeek-V3.2", "deepseek-ai/DeepSeek-V3", "Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-72B-Instruct"];
 
 const emptyPayload: RuntimeSettingsPayload = {
   delilegal: {
@@ -12,15 +12,15 @@ const emptyPayload: RuntimeSettingsPayload = {
     enabled: false,
   },
   llm: {
-    active_provider_id: "default",
+    active_provider_id: "siliconflow",
     providers: [
       {
-        id: "default",
-        name: "Default Provider",
+        id: "siliconflow",
+        name: "SiliconFlow",
         provider_type: "openai_compatible",
         api_key: "",
-        api_url: "https://api.hunyuan.cloud.tencent.com/v1",
-        model: "hunyuan-lite",
+        api_url: "https://api.siliconflow.cn/v1",
+        model: "deepseek-ai/DeepSeek-V3.2",
         enabled: false,
         timeout: 60,
       },
@@ -297,7 +297,12 @@ export function SettingsPage() {
                     </label>
                     <label className="settings-provider-field-wide">
                       <span>API Key</span>
-                      <input type="password" value={provider.api_key} onChange={(event) => updateProvider(provider.id, { api_key: event.target.value })} />
+                      <input
+                        type="password"
+                        value={provider.api_key}
+                        placeholder="请输入 API Key"
+                        onChange={(event) => updateProvider(provider.id, { api_key: event.target.value })}
+                      />
                     </label>
                     <label className="settings-provider-field-wide">
                       <span>Model</span>
@@ -314,7 +319,7 @@ export function SettingsPage() {
                       <span>启用该 Provider</span>
                     </label>
                     <p className="settings-hint">
-                      {provider.api_key_configured || provider.api_key ? "API Key 已配置" : "API Key 未配置"}
+                      {provider.api_key ? "API Key 已填入" : "API Key 未填入"}
                     </p>
                   </div>
                   <div className="settings-provider-actions">

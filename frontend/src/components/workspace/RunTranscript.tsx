@@ -19,8 +19,8 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
   // 语义聚合: 原始事件 -> 语义节点
   const nodes: TraceNode[] = useMemo(() => {
     if (events.length === 0) return [];
-    return adaptEvents(events);
-  }, [events]);
+    return adaptEvents(events, lang);
+  }, [events, lang]);
 
   const tokenUsage = useMemo(() => extractTokenUsage(events), [events]);
 
@@ -65,6 +65,7 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
   return (
     <section className="execution-timeline">
       <TraceRunHeader
+        lang={lang}
         moduleLabel={moduleLabel}
         status={runStatus}
         taskId={taskId}
@@ -99,7 +100,7 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
         ) : (
           <div className="trace-timeline-line">
             {nodes.map((node) => (
-              <TraceNodeView key={node.id} node={node} />
+              <TraceNodeView key={node.id} node={node} lang={lang} />
             ))}
           </div>
         )}

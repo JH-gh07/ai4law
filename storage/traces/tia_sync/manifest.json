@@ -1,0 +1,114 @@
+{
+  "created_at": "2026-06-05T00:28:30.093302+00:00",
+  "event_count": 18,
+  "events": [
+    {
+      "seq": 1,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/001_tool_start.json",
+      "created_at": "2026-06-05T00:23:58.492514+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/002_tool_result.json",
+      "created_at": "2026-06-05T00:24:16.455235+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/003_tool_start.json",
+      "created_at": "2026-06-05T00:24:16.501471+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/004_tool_result.json",
+      "created_at": "2026-06-05T00:24:37.159715+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/005_tool_start.json",
+      "created_at": "2026-06-05T00:24:37.160315+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/006_tool_result.json",
+      "created_at": "2026-06-05T00:25:18.546617+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/007_tool_start.json",
+      "created_at": "2026-06-05T00:25:18.547359+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/008_tool_result.json",
+      "created_at": "2026-06-05T00:25:55.806691+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/009_tool_start.json",
+      "created_at": "2026-06-05T00:25:55.808205+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/010_tool_result.json",
+      "created_at": "2026-06-05T00:26:26.940705+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/011_tool_start.json",
+      "created_at": "2026-06-05T00:26:26.942652+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/012_tool_result.json",
+      "created_at": "2026-06-05T00:27:08.555592+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/013_tool_start.json",
+      "created_at": "2026-06-05T00:27:08.558000+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/014_tool_result.json",
+      "created_at": "2026-06-05T00:27:41.068520+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/015_tool_start.json",
+      "created_at": "2026-06-05T00:27:41.070163+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/016_tool_result.json",
+      "created_at": "2026-06-05T00:28:09.388040+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "tool_start",
+      "path": "storage/traces/tia_sync/017_tool_start.json",
+      "created_at": "2026-06-05T00:28:09.394184+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "tool_result",
+      "path": "storage/traces/tia_sync/018_tool_result.json",
+      "created_at": "2026-06-05T00:28:30.038442+00:00"
+    }
+  ]
+}

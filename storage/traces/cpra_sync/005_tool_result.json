@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 5,
+  "created_at": "2026-06-05T00:34:53.435149+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 140,
+        "completion_tokens": 800,
+        "total_tokens": 940
+      },
+      "content": "```json\n{\n    \"extracted_data_items\": [\n        {\n            \"data_category\": \"Identifiers\",\n            \"specific_items\": [\"name\", \"email address\", \"phone number\", \"mailing address\"],\n            \"collection_purpose\": [\"Account creation\", \"Service delivery\", \"Customer support\"],\n            \"retention_period\": \"Not specified\",\n            \"evidence_span\": \"Section 1: Information We Collect - We collect personal information such as your name, email address, phone number, and mailing address when you create an account or use our services.\",\n            \"certainty\": \"high\"\n        },\n        {\n            \"data_category\": \"Commercial Information\",\n            \"specific_items\": [\"purchase history\", \"service usage data\"],\n            \"collection_purpose\": [\"Service improvement\", \"Analytics\"],\n            \"retention_period\": \"Not specified\",\n            \"evidence_span\": \"Section 2: How We Use Information - We use purchase history and service usage data to improve our services and for analytics purposes.\",\n            \"certainty\": \"medium\"\n        },\n        {\n            \"data_category\": \"Internet Activity\",\n            \"specific_items\": [\"IP address\", \"browser type\", \"device informati",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

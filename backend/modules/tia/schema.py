@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from backend.modules.cpra.schema import CPRACitationRef
+
 
 class TIAAttachment(BaseModel):
     file_role: Literal["transfer_agreement", "country_law_analysis", "technical_control_doc", "other"]
@@ -106,6 +108,7 @@ class TIAChapter(BaseModel):
     title: str
     content: str
     citations: list[str] = Field(default_factory=list)
+    citation_refs: list[CPRACitationRef] = Field(default_factory=list)
     risk_level: str
 
 

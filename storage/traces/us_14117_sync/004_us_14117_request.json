@@ -1,0 +1,64 @@
+{
+  "name": "us_14117_request",
+  "seq": 4,
+  "created_at": "2026-06-05T00:28:30.168824+00:00",
+  "payload": {
+    "project_name": "EOT619310",
+    "transaction_description": "通过供应商协议向中国AI公司提供美国人的精确地理位置数据用于算法训练",
+    "transaction_type": "vendor_agreement",
+    "data_items": [
+      {
+        "data_item_name": "精确GPS轨迹",
+        "data_description": "轨迹数据",
+        "business_context": "",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": true,
+        "us_person_count": 5000,
+        "data_subject_type": "consumer",
+        "doj_data_category": "precise_geolocation_data",
+        "precision_level": "",
+        "is_government_related": false,
+        "export_necessity": ""
+      }
+    ],
+    "recipient_entities": [
+      {
+        "entity_name": "AI公司",
+        "country_of_registration": "China",
+        "tax_id": "",
+        "ownership_structure": "",
+        "governing_law": "",
+        "government_control": false,
+        "government_investment": "",
+        "parent_company": "",
+        "entity_role": "processor",
+        "is_covered_person": null
+      }
+    ],
+    "access_persons": [
+      {
+        "person_name": "王工",
+        "nationality": "中国",
+        "country_of_residence": "中国",
+        "department": "AI",
+        "position": "工程师",
+        "employer": "AI公司",
+        "has_actual_access": true,
+        "access_type": "remote"
+      }
+    ],
+    "security_measures": [
+      {
+        "measure_name": "encryption",
+        "category": "encryption",
+        "status": "planned",
+        "description": "AES加密"
+      }
+    ],
+    "onward_transfer": false,
+    "onward_transfer_description": "",
+    "attachments": [],
+    "company_name": "EOT619310",
+    "override_thresholds": null
+  }
+}

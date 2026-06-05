@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 2,
+  "created_at": "2026-06-05T00:20:03.707987+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 760,
+        "completion_tokens": 149,
+        "total_tokens": 909
+      },
+      "content": "# BCR合规审查报告摘要\n\n## (1) BCR整体合规评级\n部分合规。\n【依据：未检索到】\n\n## (2) 发现问题数量及严重程度分布\n本次审查共涉及1个审查项，发现1个问题。该问题风险等级为“MEDIUM”（中等）。\n【依据：未检索到】\n\n## (3) 核心结论\n经审查，BT618796公司的BCR在结构完整性方面存在缺失，不符合GDPR对BCR内容的要求，导致整体评级为部分合规。公司需依据GDPR第47条补齐BCR文件，以确保其作为向第三国传输个人数据的适当保障措施的有效性。\n【依据：GDPR第47条】",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

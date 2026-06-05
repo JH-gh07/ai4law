@@ -1,0 +1,353 @@
+{
+  "name": "evidence_built",
+  "seq": 15,
+  "created_at": "2026-06-05T00:28:37.422788+00:00",
+  "payload": {
+    "issues": [
+      {
+        "issue_id": "US14117-ISSUE-RESTRICTED-TRANSACTION",
+        "title": "限制性交易 (Restricted Transaction)",
+        "description": "检测到 EO 14117 §100.3 限制性交易: Restricted transaction type (vendor_agreement) involving covered person(s) and bulk sensitive personal data — requires security measures under EO 14117 §100.3.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-tx-is-restricted"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-RESTRICTED-TRANSACTION"
+        ],
+        "recommended_action": "在实施所有必要安全措施并经法务审批后方可继续交易。",
+        "affects_outputs": [
+          "overall_conclusion",
+          "risk_details",
+          "compliance_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "US14117-ISSUE-THRESHOLD-精确GPS轨迹",
+        "title": "批量阈值命中: 精确GPS轨迹",
+        "description": "数据项 '精确GPS轨迹' (precise_geolocation_data) 的美国人数量 (5000) 超过批量阈值 (1000)。",
+        "category": "data_scope",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-data-item-GPS-us-person-count",
+          "US14117-FACT-data-item-GPS-data-subject-type"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-THRESHOLD-GPS"
+        ],
+        "recommended_action": "评估 精确GPS轨迹 的传输必要性，考虑数据最小化、聚合或去标识化。",
+        "affects_outputs": [
+          "risk_details",
+          "compliance_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "US14117-ISSUE-COVERED-AI公司",
+        "title": "涵盖人员/实体: AI公司",
+        "description": "实体 'AI公司' 被识别为 EO 14117 涵盖人员/实体: Registered in country of concern: China (中国); Access person '王工' resides in country of concern (中国, 中国) and has actual data access.",
+        "category": "recipient",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-entity-AI-country-of-registration",
+          "US14117-FACT-entity-AI-governing-law"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.1"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-COVERED-AI"
+        ],
+        "recommended_action": "审查与 AI公司 的交易关系，评估是否属于禁止或限制性交易。",
+        "affects_outputs": [
+          "risk_details",
+          "compliance_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "US14117-ISSUE-SECURITY-GAPS",
+        "title": "安全措施缺口",
+        "description": "限制性交易缺少 21 项 EO 14117 要求的安全措施: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit",
+        "category": "security_measure",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-request-security-measure-count"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-SECURITY-GAPS"
+        ],
+        "recommended_action": "补充缺失的安全措施: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。具体要求参见 EO 14117 实施指南。",
+        "affects_outputs": [
+          "compliance_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "US14117-ISSUE-YELLOW-BLOCKED",
+        "title": "黄灯-整改前禁止推进",
+        "description": "限制性交易存在 21 项安全措施缺口，在整改完成前不得继续推进数据传输。",
+        "category": "security_measure",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-request-security-measure-count"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-YELLOW-BLOCKED"
+        ],
+        "recommended_action": "在90天内完成以下措施整改: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。完成后重新提交评估。",
+        "affects_outputs": [
+          "compliance_actions",
+          "overall_conclusion"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "US14117-ISSUE-CLARIFICATION-NEEDED",
+        "title": "需补充尽调材料",
+        "description": "评估过程中发现 1 项信息缺口，需补充材料后方可作出最终判断。",
+        "category": "documentation",
+        "severity": "MEDIUM",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "US14117-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3"
+        ],
+        "evidence_refs": [
+          "US14117-EVIDENCE-US14117-ISSUE-CLARIFICATION-NEEDED"
+        ],
+        "recommended_action": "参见报告中的追问清单，补充相关材料后重新提交评估。",
+        "affects_outputs": [
+          "overall_conclusion",
+          "attachments_monitoring"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ],
+    "evidence_chain": [
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-RESTRICTED-TRANSACTION",
+        "claim": "限制性交易 (Restricted Transaction)",
+        "fact_refs": [
+          "US14117-FACT-tx-is-restricted"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "在实施所有必要安全措施并经法务审批后方可继续交易。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "US14117-ISSUE-RESTRICTED-TRANSACTION",
+          "overall_conclusion",
+          "risk_details",
+          "compliance_actions"
+        ]
+      },
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-THRESHOLD-GPS",
+        "claim": "批量阈值命中: 精确GPS轨迹",
+        "fact_refs": [
+          "US14117-FACT-data-item-GPS-us-person-count",
+          "US14117-FACT-data-item-GPS-data-subject-type"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "评估 精确GPS轨迹 的传输必要性，考虑数据最小化、聚合或去标识化。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "US14117-ISSUE-THRESHOLD-精确GPS轨迹",
+          "risk_details",
+          "compliance_actions"
+        ]
+      },
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-COVERED-AI",
+        "claim": "涵盖人员/实体: AI公司",
+        "fact_refs": [
+          "US14117-FACT-entity-AI-country-of-registration",
+          "US14117-FACT-entity-AI-governing-law"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.1"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "审查与 AI公司 的交易关系，评估是否属于禁止或限制性交易。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "US14117-ISSUE-COVERED-AI公司",
+          "risk_details",
+          "compliance_actions"
+        ]
+      },
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-SECURITY-GAPS",
+        "claim": "安全措施缺口",
+        "fact_refs": [
+          "US14117-FACT-request-security-measure-count"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "补充缺失的安全措施: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。具体要求参见 EO 14117 实施指南。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "US14117-ISSUE-SECURITY-GAPS",
+          "compliance_actions"
+        ]
+      },
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-YELLOW-BLOCKED",
+        "claim": "黄灯-整改前禁止推进",
+        "fact_refs": [
+          "US14117-FACT-request-security-measure-count"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3",
+          "EO 14117 §100.3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "在90天内完成以下措施整改: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。完成后重新提交评估。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "US14117-ISSUE-YELLOW-BLOCKED",
+          "compliance_actions",
+          "overall_conclusion"
+        ]
+      },
+      {
+        "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-CLARIFICATION-NEEDED",
+        "claim": "需补充尽调材料",
+        "fact_refs": [
+          "US14117-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EO 14117 §100.1",
+          "EO 14117 §100.2",
+          "EO 14117 §100.3"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "参见报告中的追问清单，补充相关材料后重新提交评估。",
+        "usage_constraint": "",
+        "confidence": 0.75,
+        "used_by": [
+          "US14117-ISSUE-CLARIFICATION-NEEDED",
+          "overall_conclusion",
+          "attachments_monitoring"
+        ]
+      }
+    ]
+  }
+}

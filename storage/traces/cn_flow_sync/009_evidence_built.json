@@ -1,0 +1,103 @@
+{
+  "name": "evidence_built",
+  "seq": 9,
+  "created_at": "2026-06-05T00:28:30.133469+00:00",
+  "payload": {
+    "issues": [
+      {
+        "issue_id": "CNF-ISSUE-SENSITIVE-DATA",
+        "title": "存在敏感数据跨境传输",
+        "description": "敏感数据标记存在，需验证最小化、脱敏和接收方控制措施。",
+        "category": "data_scope",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "FACT-request-sensitive-data-flags"
+        ],
+        "rule_refs": [],
+        "evidence_refs": [
+          "EVIDENCE-CNF-ISSUE-SENSITIVE-DATA"
+        ],
+        "recommended_action": "补充敏感字段清单、去标识化策略与接收方限制条款。",
+        "affects_outputs": [
+          "data_entity_structure",
+          "risk_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "CNF-ISSUE-CNF-R1",
+        "title": "存在敏感数据跨境流动",
+        "description": "EO 14117 敏感数据外流限制框架",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "FACT-derived-risk-item-ids"
+        ],
+        "rule_refs": [],
+        "evidence_refs": [
+          "EVIDENCE-CNF-ISSUE-CNF-R1"
+        ],
+        "recommended_action": "优先评估敏感字段脱敏、最小化及本地化处理方案。",
+        "affects_outputs": [
+          "risk_actions"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ],
+    "evidence_chain": [
+      {
+        "evidence_id": "EVIDENCE-CNF-ISSUE-SENSITIVE-DATA",
+        "claim": "存在敏感数据跨境传输",
+        "fact_refs": [
+          "FACT-request-sensitive-data-flags"
+        ],
+        "rule_refs": [],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "补充敏感字段清单、去标识化策略与接收方限制条款。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "CNF-ISSUE-SENSITIVE-DATA",
+          "data_entity_structure",
+          "risk_actions"
+        ]
+      },
+      {
+        "evidence_id": "EVIDENCE-CNF-ISSUE-CNF-R1",
+        "claim": "存在敏感数据跨境流动",
+        "fact_refs": [
+          "FACT-derived-risk-item-ids"
+        ],
+        "rule_refs": [],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "优先评估敏感字段脱敏、最小化及本地化处理方案。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "CNF-ISSUE-CNF-R1",
+          "risk_actions"
+        ]
+      }
+    ]
+  }
+}

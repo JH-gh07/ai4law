@@ -6,7 +6,15 @@ import uuid
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from backend.common.citation.module_grounding import (
+    CitationBundle,
+    ModuleIssue,
+    build_module_citation_bundle,
+)
+from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
+from backend.common.llm.postprocess import convert_citation_markers
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.retriever import retrieve_regulations
 from backend.common.render.report import (
@@ -26,6 +34,7 @@ from backend.modules.tia.agents import create_tia_agents
 from backend.modules.tia.schema import (
     TIAAsyncAccepted, TIAAsyncStatus, TIAChapter, TIARequest, TIAResult,
 )
+from backend.modules.cpra.schema import CPRACitationRef
 
 TEMPLATE_PATH = Path("doc/v2/assets/templates/3.4_tia_template_v0.docx")
 TEMPLATE_MD = Path("doc/v2/assets/templates/3.4_tia_template_v0.md")
@@ -67,6 +76,7 @@ class TIAService:
         _, token = prepare_run(module="tia", task_id=run_task_id, trace=trace)
         # ── Structured assessment (NEW) ──
         try:
+            citation_registry = CitationRegistry()
             if trace:
                 trace.record("status", {"summary": "开始 TIA 传输影响评估", "detail": {"module": "tia"}})
                 trace.record("thought", {"summary": "路径判断：基于传输工具类型和目的地法律环境确定 TIA 评估范围"})
@@ -139,7 +149,6 @@ class TIAService:
                     seen_ids.add(rid)
                     regs.append(r)
             regs = regs[:8]
-            citations = [f"{item.title}{item.article}" for item in regs]
             reg_snippet = "\n".join(
                 f"- {item.title}{item.article}：{(item.content or '')[:120]}"
                 for item in regs
@@ -186,13 +195,42 @@ class TIAService:
             context_block = self._build_context(payload, level, route, country_risk_result,
                                                  data_sens, measure_assessments, reg_snippet)
 
+            citation_bundle = self._build_tia_citation_bundle(
+                payload=payload,
+                regs=regs,
+                level=level,
+                route=route,
+                country_risk_result=country_risk_result,
+                measure_overall=measure_overall,
+            )
+            citation_registry._items = dict(citation_bundle.registry._items)  # noqa: SLF001
+            citation_refs = self._bundle_to_refs(citation_bundle)
+
             chapters: list[TIAChapter] = []
             for idx, title in enumerate(TIA_CHAPTERS, start=1):
                 if self.llm_client and self.llm_client.enabled:
-                    content = generate_chapter(self.llm_client, "tia", title, context_block, citations=citations)
+                    content = generate_chapter(
+                        self.llm_client,
+                        "tia",
+                        title,
+                        f"{context_block}\n【可引用法规依据】\n{citation_bundle.prompt_block}\n",
+                        citations=[ref.display_label for ref in citation_refs],
+                        citation_marker_section=citation_bundle.prompt_block,
+                        use_citation_markers=True,
+                    )
+                    content = convert_citation_markers(content, citation_registry)
                 else:
                     content = f"（{title}：LLM未配置，此处为占位内容）"
-                chapters.append(TIAChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=level))
+                chapters.append(
+                    TIAChapter(
+                        chapter_no=idx,
+                        title=title,
+                        content=content,
+                        citations=[ref.citation_id for ref in citation_refs],
+                        citation_refs=citation_refs,
+                        risk_level=level,
+                    )
+                )
 
             dpo_review = self.agents["dpo_review"].run(
                 route=route.route if route else "unknown",
@@ -225,7 +263,7 @@ class TIAService:
             issues = self._check_consistency(payload, level, route, country_risk_result,
                                               data_sens, measure_assessments, attachment_evidences)
 
-            outputs = self._render(run_task_id, payload, chapters, attachment_notes)
+            outputs = self._render(run_task_id, payload, chapters, attachment_notes, citation_registry)
 
             if trace:
                 trace.record("final", {
@@ -389,7 +427,14 @@ class TIAService:
 
     # ── Render ──
 
-    def _render(self, task_id: str, payload: TIARequest, chapters: list[TIAChapter], attachment_notes: list[str]) -> dict[str, str]:
+    def _render(
+        self,
+        task_id: str,
+        payload: TIARequest,
+        chapters: list[TIAChapter],
+        attachment_notes: list[str],
+        citation_registry: CitationRegistry,
+    ) -> dict[str, str]:
         output_dir = Path("outputs/tia") / task_id / "outputs"
         date_stamp = format_date_stamp()
         base_name = safe_filename(f"{payload.data_exporter_profile}_{payload.transfer_tool}_TIA")
@@ -403,7 +448,45 @@ class TIAService:
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
-        return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+        footnote_map = {
+            str(num): item.to_dict()
+            for num, item in citation_registry.get_footnote_map().items()
+        }
+        citation_map_json = write_citation_map_json(
+            output_dir=output_dir,
+            module="tia",
+            task_id=task_id,
+            footnote_map=footnote_map,
+            all_items=citation_registry.to_list(),
+        )
+        return {
+            "markdown": str(md_output),
+            "docx": str(docx_output),
+            "zip": str(zip_output),
+            "citation_map_json": citation_map_json,
+        }
+
+    def _build_tia_citation_bundle(
+        self,
+        *,
+        payload: TIARequest,
+        regs: list,
+        level: str,
+        route,
+        country_risk_result,
+        measure_overall: str,
+    ) -> CitationBundle:
+        issues = _tia_module_issues(payload, level, route, country_risk_result, measure_overall)
+        return build_module_citation_bundle(
+            module="tia",
+            jurisdiction="EU",
+            issues=issues,
+            regulations_by_issue=_tia_regulations_by_issue(issues, regs),
+        )
+
+    @staticmethod
+    def _bundle_to_refs(bundle: CitationBundle) -> list[CPRACitationRef]:
+        return [_tia_ref_from_item(item) for item in bundle.items]
 
     @staticmethod
     def _snapshot_to_accepted(snapshot: TaskSnapshot) -> TIAAsyncAccepted:
@@ -431,3 +514,106 @@ def _build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> 
         "supplementary_measures": pick(4) or payload.supplementary_measures,
         "final_assessment": "\n".join(filter(None, [pick(5), pick(6), payload.final_conclusion])),
     }
+
+
+def _reg_to_dict(reg) -> dict:
+    source_id = str(getattr(reg, "source_id", "") or getattr(reg, "id", "") or "")
+    title = str(getattr(reg, "title", "") or "")
+    article = str(getattr(reg, "article", "") or "")
+    content = str(getattr(reg, "content", "") or "")
+    if not source_id:
+        if "GDPR" in title.upper():
+            source_id = "eu_gdpr"
+        elif "EDPB" in title.upper():
+            source_id = "eu_edpb_recommendations"
+        else:
+            source_id = title.lower().replace(" ", "_")
+    return {
+        "source_id": source_id,
+        "source_title": title,
+        "title": title,
+        "article": article,
+        "snippet": content[:500],
+        "content": content,
+        "source_kind": "official_guide" if "EDPB" in title.upper() else "law_article",
+        "authority_level": "medium" if "EDPB" in title.upper() else "high",
+        "binding_force": "recommended" if "EDPB" in title.upper() else "mandatory",
+    }
+
+
+def _tia_module_issues(
+    payload: TIARequest,
+    level: str,
+    route,
+    country_risk_result,
+    measure_overall: str,
+) -> list[ModuleIssue]:
+    issues = [
+        ModuleIssue(
+            issue_id="TIA-001-transfer-tool",
+            category="transfer_tool",
+            title=f"传输工具适用性判断：{payload.transfer_tool}",
+            description=f"{payload.final_conclusion} {payload.third_country_assessment}",
+            severity=level,
+            legal_basis="GDPR Article 46 / Article 44",
+            recommendation="确认使用的传输工具具备 Article 46 合法基础。",
+        ),
+        ModuleIssue(
+            issue_id="TIA-002-country-risk",
+            category="country_risk",
+            title="第三国法律与实践评估",
+            description=payload.third_country_assessment,
+            severity=level,
+            legal_basis="GDPR Article 44",
+            recommendation="补充第三国执法访问与救济机制分析。",
+        ),
+        ModuleIssue(
+            issue_id="TIA-003-supplementary-measures",
+            category="supplementary_measures",
+            title="补充措施可执行性评估",
+            description=payload.supplementary_measures,
+            severity=level,
+            legal_basis="EDPB Recommendations 01/2020",
+            recommendation="确认技术/组织/合同补充措施是否足以覆盖风险。",
+        ),
+    ]
+    if measure_overall:
+        issues.append(
+            ModuleIssue(
+                issue_id="TIA-004-residual-risk",
+                category="residual_risk",
+                title="剩余风险与合规结论",
+                description=f"{payload.final_conclusion} measures={measure_overall}",
+                severity=level,
+                legal_basis="GDPR Article 46",
+                recommendation="对剩余风险形成可审计结论。",
+            )
+        )
+    return issues
+
+
+def _tia_regulations_by_issue(issues: list[ModuleIssue], regs: list) -> dict[str, list[dict]]:
+    reg_dicts = [_reg_to_dict(reg) for reg in regs]
+    return {issue.issue_id: reg_dicts for issue in issues}
+
+
+def _tia_ref_from_item(item) -> CPRACitationRef:
+    return CPRACitationRef(
+        citation_id=item.citation_id,
+        source_id=item.source_id,
+        source_title=item.title,
+        article_no=item.article_no,
+        display_label=item.display_label,
+        snippet=item.quote_text,
+        confidence_score=item.confidence_score,
+        authority_level=item.authority_level,
+        binding_force=item.binding_force,
+        citation_type=item.citation_type,
+        source_kind=item.source_kind,
+        jurisdiction=item.jurisdiction or "EU",
+        knowledge_url="",
+    )
+
+
+def _bundle_refs(bundle: CitationBundle) -> list[CPRACitationRef]:
+    return [_tia_ref_from_item(item) for item in bundle.items]

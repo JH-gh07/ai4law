@@ -18,6 +18,8 @@ _LLM_ENV_KEYS = [
     "AI4LAW_TENCENT_API_KEY",
     "TENCENT_API_URL",
     "AI4LAW_TENCENT_API_URL",
+    "TENCENT_MODEL",
+    "AI4LAW_TENCENT_MODEL",
     "SILICONFLOW_API_KEY",
     "SICICONFLOW_API_KEY",
     "AI4LAW_SILICONFLOW_API_KEY",
@@ -42,28 +44,28 @@ def test_settings_accepts_siciconflow_typo_env_aliases(monkeypatch) -> None:
     _clear_llm_env(monkeypatch)
     monkeypatch.setenv("SICICONFLOW_API_KEY", "sf-test-key")
     monkeypatch.setenv("SICICONFLOW_API_URL", "https://api.siliconflow.cn/v1/chat/completions")
-    monkeypatch.setenv("SICICONFLOW_MODEL", "Qwen/Qwen2.5-72B-Instruct")
+    monkeypatch.setenv("SICICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3.2")
 
     settings = Settings(_env_file=None)
 
     assert settings.resolved_llm_provider == "siliconflow"
     assert settings.resolved_llm_api_key == "sf-test-key"
     assert settings.resolved_llm_api_url == "https://api.siliconflow.cn/v1"
-    assert settings.resolved_llm_model == "Qwen/Qwen2.5-72B-Instruct"
+    assert settings.resolved_llm_model == "deepseek-ai/DeepSeek-V3.2"
 
 
 def test_llm_client_uses_resolved_siliconflow_config(monkeypatch) -> None:
     _clear_llm_env(monkeypatch)
     monkeypatch.setenv("SILICONFLOW_API_KEY", "sf-test-key")
     monkeypatch.setenv("SILICONFLOW_API_URL", "https://api.siliconflow.cn/v1")
-    monkeypatch.setenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3")
+    monkeypatch.setenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3.2")
 
     client = LLMClient(Settings(_env_file=None))
 
     assert client._provider == "siliconflow"
     assert client._api_key == "sf-test-key"
     assert client._api_url == "https://api.siliconflow.cn/v1"
-    assert client._model == "deepseek-ai/DeepSeek-V3"
+    assert client._model == "deepseek-ai/DeepSeek-V3.2"
 
 
 def test_runtime_settings_can_apply_siliconflow_provider(tmp_path) -> None:
@@ -85,4 +87,19 @@ def test_runtime_settings_can_apply_siliconflow_provider(tmp_path) -> None:
     assert payload["llm"]["api_key"] == "runtime-sf-key"
     assert payload["llm"]["api_url"] == "https://api.siliconflow.cn/v1"
     assert payload["llm"]["model"] == "Qwen/Qwen2.5-7B-Instruct"
+    assert payload["llm"]["providers"][0]["api_key"] == "runtime-sf-key"
+    assert payload["llm"]["providers"][0]["api_key_configured"] is True
     assert build_effective_runtime_payload(settings)["llm"]["enabled"] is True
+
+
+def test_settings_use_tencent_defaults_when_tencent_provider_is_active(monkeypatch) -> None:
+    _clear_llm_env(monkeypatch)
+    monkeypatch.setenv("LLM_PROVIDER", "tencent_hunyuan")
+    monkeypatch.setenv("TENCENT_API_KEY", "tx-test-key")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.resolved_llm_provider == "tencent_hunyuan"
+    assert settings.resolved_llm_api_key == "tx-test-key"
+    assert settings.resolved_llm_api_url == "https://tokenhub.tencentmaas.com/v1"
+    assert settings.resolved_llm_model == "hy3-preview"

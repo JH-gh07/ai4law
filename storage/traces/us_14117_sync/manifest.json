@@ -1,0 +1,252 @@
+{
+  "created_at": "2026-06-05T00:32:01.805397+00:00",
+  "event_count": 41,
+  "events": [
+    {
+      "seq": 1,
+      "name": "status",
+      "path": "storage/traces/us_14117_sync/001_status.json",
+      "created_at": "2026-06-05T00:28:30.162441+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/002_thought.json",
+      "created_at": "2026-06-05T00:28:30.163296+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "rule_engine_result",
+      "path": "storage/traces/us_14117_sync/003_rule_engine_result.json",
+      "created_at": "2026-06-05T00:28:30.166189+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "us_14117_request",
+      "path": "storage/traces/us_14117_sync/004_us_14117_request.json",
+      "created_at": "2026-06-05T00:28:30.168824+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "profile_extracted",
+      "path": "storage/traces/us_14117_sync/005_profile_extracted.json",
+      "created_at": "2026-06-05T00:28:30.169408+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "diagnosis",
+      "path": "storage/traces/us_14117_sync/006_diagnosis.json",
+      "created_at": "2026-06-05T00:28:30.170461+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "path_validation",
+      "path": "storage/traces/us_14117_sync/007_path_validation.json",
+      "created_at": "2026-06-05T00:28:30.171371+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "facts_built",
+      "path": "storage/traces/us_14117_sync/008_facts_built.json",
+      "created_at": "2026-06-05T00:28:30.173159+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/009_tool_start.json",
+      "created_at": "2026-06-05T00:28:30.175361+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/010_tool_result.json",
+      "created_at": "2026-06-05T00:28:37.404300+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "agent_rag_reformulation",
+      "path": "storage/traces/us_14117_sync/011_agent_rag_reformulation.json",
+      "created_at": "2026-06-05T00:28:37.405883+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/012_thought.json",
+      "created_at": "2026-06-05T00:28:37.407032+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "retrieval_hits",
+      "path": "storage/traces/us_14117_sync/013_retrieval_hits.json",
+      "created_at": "2026-06-05T00:28:37.419525+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "issues_built",
+      "path": "storage/traces/us_14117_sync/014_issues_built.json",
+      "created_at": "2026-06-05T00:28:37.420503+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "evidence_built",
+      "path": "storage/traces/us_14117_sync/015_evidence_built.json",
+      "created_at": "2026-06-05T00:28:37.422788+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/016_tool_start.json",
+      "created_at": "2026-06-05T00:28:37.426343+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/017_tool_result.json",
+      "created_at": "2026-06-05T00:28:45.427005+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "agent_evidence_priority",
+      "path": "storage/traces/us_14117_sync/018_agent_evidence_priority.json",
+      "created_at": "2026-06-05T00:28:45.427754+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/019_thought.json",
+      "created_at": "2026-06-05T00:28:45.428017+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/020_tool_start.json",
+      "created_at": "2026-06-05T00:28:45.428318+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/021_tool_result.json",
+      "created_at": "2026-06-05T00:29:03.791521+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "agent_repair_check",
+      "path": "storage/traces/us_14117_sync/022_agent_repair_check.json",
+      "created_at": "2026-06-05T00:29:03.794809+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/023_thought.json",
+      "created_at": "2026-06-05T00:29:03.795452+00:00"
+    },
+    {
+      "seq": 24,
+      "name": "context_pack_built",
+      "path": "storage/traces/us_14117_sync/024_context_pack_built.json",
+      "created_at": "2026-06-05T00:29:03.797719+00:00"
+    },
+    {
+      "seq": 25,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/025_tool_start.json",
+      "created_at": "2026-06-05T00:29:03.805961+00:00"
+    },
+    {
+      "seq": 26,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/026_tool_result.json",
+      "created_at": "2026-06-05T00:29:25.160795+00:00"
+    },
+    {
+      "seq": 27,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/027_tool_start.json",
+      "created_at": "2026-06-05T00:29:25.162056+00:00"
+    },
+    {
+      "seq": 28,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/028_tool_result.json",
+      "created_at": "2026-06-05T00:29:57.339894+00:00"
+    },
+    {
+      "seq": 29,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/029_tool_start.json",
+      "created_at": "2026-06-05T00:29:57.341223+00:00"
+    },
+    {
+      "seq": 30,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/030_tool_result.json",
+      "created_at": "2026-06-05T00:30:51.337045+00:00"
+    },
+    {
+      "seq": 31,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/031_tool_start.json",
+      "created_at": "2026-06-05T00:30:51.344883+00:00"
+    },
+    {
+      "seq": 32,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/032_tool_result.json",
+      "created_at": "2026-06-05T00:31:22.228784+00:00"
+    },
+    {
+      "seq": 33,
+      "name": "tool_start",
+      "path": "storage/traces/us_14117_sync/033_tool_start.json",
+      "created_at": "2026-06-05T00:31:22.233490+00:00"
+    },
+    {
+      "seq": 34,
+      "name": "tool_result",
+      "path": "storage/traces/us_14117_sync/034_tool_result.json",
+      "created_at": "2026-06-05T00:32:01.641161+00:00"
+    },
+    {
+      "seq": 35,
+      "name": "agent_chapter_consistency",
+      "path": "storage/traces/us_14117_sync/035_agent_chapter_consistency.json",
+      "created_at": "2026-06-05T00:32:01.643033+00:00"
+    },
+    {
+      "seq": 36,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/036_thought.json",
+      "created_at": "2026-06-05T00:32:01.643959+00:00"
+    },
+    {
+      "seq": 37,
+      "name": "chapters_generated",
+      "path": "storage/traces/us_14117_sync/037_chapters_generated.json",
+      "created_at": "2026-06-05T00:32:01.646726+00:00"
+    },
+    {
+      "seq": 38,
+      "name": "consistency_issues",
+      "path": "storage/traces/us_14117_sync/038_consistency_issues.json",
+      "created_at": "2026-06-05T00:32:01.647712+00:00"
+    },
+    {
+      "seq": 39,
+      "name": "alignment_issues",
+      "path": "storage/traces/us_14117_sync/039_alignment_issues.json",
+      "created_at": "2026-06-05T00:32:01.648654+00:00"
+    },
+    {
+      "seq": 40,
+      "name": "status",
+      "path": "storage/traces/us_14117_sync/040_status.json",
+      "created_at": "2026-06-05T00:32:01.803051+00:00"
+    },
+    {
+      "seq": 41,
+      "name": "thought",
+      "path": "storage/traces/us_14117_sync/041_thought.json",
+      "created_at": "2026-06-05T00:32:01.804197+00:00"
+    }
+  ]
+}

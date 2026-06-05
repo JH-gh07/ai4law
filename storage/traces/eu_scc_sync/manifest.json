@@ -1,0 +1,228 @@
+{
+  "created_at": "2026-06-05T00:34:22.574143+00:00",
+  "event_count": 37,
+  "events": [
+    {
+      "seq": 1,
+      "name": "parsed_document_raw",
+      "path": "storage/traces/eu_scc_sync/001_parsed_document_raw.json",
+      "created_at": "2026-06-05T00:32:01.883293+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "agent_document_structure",
+      "path": "storage/traces/eu_scc_sync/002_agent_document_structure.json",
+      "created_at": "2026-06-05T00:32:01.886899+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/003_thought.json",
+      "created_at": "2026-06-05T00:32:01.887490+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "transfer_chain_raw",
+      "path": "storage/traces/eu_scc_sync/004_transfer_chain_raw.json",
+      "created_at": "2026-06-05T00:32:01.888607+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "agent_transfer_chain",
+      "path": "storage/traces/eu_scc_sync/005_agent_transfer_chain.json",
+      "created_at": "2026-06-05T00:32:01.891122+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/006_thought.json",
+      "created_at": "2026-06-05T00:32:01.892677+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "rule_engine_result_raw",
+      "path": "storage/traces/eu_scc_sync/007_rule_engine_result_raw.json",
+      "created_at": "2026-06-05T00:32:01.896514+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "agent_clause_semantic",
+      "path": "storage/traces/eu_scc_sync/008_agent_clause_semantic.json",
+      "created_at": "2026-06-05T00:32:01.897407+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/009_thought.json",
+      "created_at": "2026-06-05T00:32:01.897783+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "agent_tia_effectiveness",
+      "path": "storage/traces/eu_scc_sync/010_agent_tia_effectiveness.json",
+      "created_at": "2026-06-05T00:32:01.903233+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/011_thought.json",
+      "created_at": "2026-06-05T00:32:01.903842+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "eu_scc_request",
+      "path": "storage/traces/eu_scc_sync/012_eu_scc_request.json",
+      "created_at": "2026-06-05T00:32:01.904985+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "profile_extracted",
+      "path": "storage/traces/eu_scc_sync/013_profile_extracted.json",
+      "created_at": "2026-06-05T00:32:01.907271+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "diagnosis",
+      "path": "storage/traces/eu_scc_sync/014_diagnosis.json",
+      "created_at": "2026-06-05T00:32:01.912133+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "path_validation",
+      "path": "storage/traces/eu_scc_sync/015_path_validation.json",
+      "created_at": "2026-06-05T00:32:01.913738+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "facts_built",
+      "path": "storage/traces/eu_scc_sync/016_facts_built.json",
+      "created_at": "2026-06-05T00:32:01.916678+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "retrieval_hits",
+      "path": "storage/traces/eu_scc_sync/017_retrieval_hits.json",
+      "created_at": "2026-06-05T00:32:01.946612+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "issues_built",
+      "path": "storage/traces/eu_scc_sync/018_issues_built.json",
+      "created_at": "2026-06-05T00:32:01.948474+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "evidence_built",
+      "path": "storage/traces/eu_scc_sync/019_evidence_built.json",
+      "created_at": "2026-06-05T00:32:01.951288+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "context_pack_built",
+      "path": "storage/traces/eu_scc_sync/020_context_pack_built.json",
+      "created_at": "2026-06-05T00:32:01.955103+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "tool_start",
+      "path": "storage/traces/eu_scc_sync/021_tool_start.json",
+      "created_at": "2026-06-05T00:32:01.959538+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "tool_result",
+      "path": "storage/traces/eu_scc_sync/022_tool_result.json",
+      "created_at": "2026-06-05T00:32:32.562364+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "tool_start",
+      "path": "storage/traces/eu_scc_sync/023_tool_start.json",
+      "created_at": "2026-06-05T00:32:32.565432+00:00"
+    },
+    {
+      "seq": 24,
+      "name": "tool_result",
+      "path": "storage/traces/eu_scc_sync/024_tool_result.json",
+      "created_at": "2026-06-05T00:32:58.642677+00:00"
+    },
+    {
+      "seq": 25,
+      "name": "tool_start",
+      "path": "storage/traces/eu_scc_sync/025_tool_start.json",
+      "created_at": "2026-06-05T00:32:58.643949+00:00"
+    },
+    {
+      "seq": 26,
+      "name": "tool_result",
+      "path": "storage/traces/eu_scc_sync/026_tool_result.json",
+      "created_at": "2026-06-05T00:33:30.597727+00:00"
+    },
+    {
+      "seq": 27,
+      "name": "tool_start",
+      "path": "storage/traces/eu_scc_sync/027_tool_start.json",
+      "created_at": "2026-06-05T00:33:30.598624+00:00"
+    },
+    {
+      "seq": 28,
+      "name": "tool_result",
+      "path": "storage/traces/eu_scc_sync/028_tool_result.json",
+      "created_at": "2026-06-05T00:34:04.685423+00:00"
+    },
+    {
+      "seq": 29,
+      "name": "chapters_generated",
+      "path": "storage/traces/eu_scc_sync/029_chapters_generated.json",
+      "created_at": "2026-06-05T00:34:04.687815+00:00"
+    },
+    {
+      "seq": 30,
+      "name": "consistency_issues",
+      "path": "storage/traces/eu_scc_sync/030_consistency_issues.json",
+      "created_at": "2026-06-05T00:34:04.690438+00:00"
+    },
+    {
+      "seq": 31,
+      "name": "alignment_issues",
+      "path": "storage/traces/eu_scc_sync/031_alignment_issues.json",
+      "created_at": "2026-06-05T00:34:04.691717+00:00"
+    },
+    {
+      "seq": 32,
+      "name": "agent_evidence_review",
+      "path": "storage/traces/eu_scc_sync/032_agent_evidence_review.json",
+      "created_at": "2026-06-05T00:34:04.702482+00:00"
+    },
+    {
+      "seq": 33,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/033_thought.json",
+      "created_at": "2026-06-05T00:34:04.704322+00:00"
+    },
+    {
+      "seq": 34,
+      "name": "tool_start",
+      "path": "storage/traces/eu_scc_sync/034_tool_start.json",
+      "created_at": "2026-06-05T00:34:04.710200+00:00"
+    },
+    {
+      "seq": 35,
+      "name": "tool_result",
+      "path": "storage/traces/eu_scc_sync/035_tool_result.json",
+      "created_at": "2026-06-05T00:34:22.568944+00:00"
+    },
+    {
+      "seq": 36,
+      "name": "agent_remediation",
+      "path": "storage/traces/eu_scc_sync/036_agent_remediation.json",
+      "created_at": "2026-06-05T00:34:22.571891+00:00"
+    },
+    {
+      "seq": 37,
+      "name": "thought",
+      "path": "storage/traces/eu_scc_sync/037_thought.json",
+      "created_at": "2026-06-05T00:34:22.572829+00:00"
+    }
+  ]
+}

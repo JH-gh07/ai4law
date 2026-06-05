@@ -59,6 +59,13 @@ class Settings(BaseSettings):
             "AI4LAW_TENCENT_API_URL",
         ),
     )
+    tencent_model: str = Field(
+        default="hy3-preview",
+        validation_alias=AliasChoices(
+            "TENCENT_MODEL",
+            "AI4LAW_TENCENT_MODEL",
+        ),
+    )
     siliconflow_api_key: str | None = Field(
         default=None,
         validation_alias=AliasChoices(
@@ -78,7 +85,7 @@ class Settings(BaseSettings):
         ),
     )
     siliconflow_model: str = Field(
-        default="Qwen/Qwen2.5-7B-Instruct",
+        default="deepseek-ai/DeepSeek-V3.2",
         validation_alias=AliasChoices(
             "SILICONFLOW_MODEL",
             "SICICONFLOW_MODEL",
@@ -87,7 +94,7 @@ class Settings(BaseSettings):
         ),
     )
     llm_model: str = Field(
-        default="hunyuan-lite",
+        default="deepseek-ai/DeepSeek-V3.2",
         validation_alias=AliasChoices("LLM_MODEL", "AI4LAW_LLM_MODEL"),
     )
 
@@ -145,6 +152,8 @@ class Settings(BaseSettings):
         provider = self.resolved_llm_provider
         if provider == "siliconflow":
             return self.siliconflow_model
+        if provider in {"tencent", "tencent_hunyuan"}:
+            return self.tencent_model
         return self.llm_model
 
     @staticmethod

@@ -1,0 +1,24 @@
+{
+  "name": "final",
+  "seq": 25,
+  "created_at": "2026-06-05T00:02:18.406944+00:00",
+  "payload": {
+    "summary": "CPRA 合规诊断完成：1 项高风险，4 项中风险，0 项低风险",
+    "detail": {
+      "output_files": {
+        "markdown": "outputs/cpra/test.md",
+        "docx": "outputs/cpra/test.docx",
+        "pdf": "outputs/cpra/test.pdf",
+        "xlsx": "outputs/cpra/test.xlsx",
+        "zip": "outputs/cpra/test.zip",
+        "citation_map_json": "outputs/cpra/citation_map.json"
+      },
+      "risk_distribution": {
+        "HIGH": 1,
+        "MEDIUM": 4,
+        "LOW": 0
+      },
+      "total_duration_ms": 15
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "agent_rag_reformulation",
+  "seq": 11,
+  "created_at": "2026-06-05T00:28:37.405883+00:00",
+  "payload": {
+    "primary_query": "EO 14117 §100.2 prohibited data transactions with countries of concern",
+    "secondary_queries": [
+      "EO 14117 §100.3 restricted data transactions with countries of concern",
+      "EO 14117 definitions of 'covered persons' and 'countries of concern'",
+      "EO 14117 vendor agreements and data brokerage transactions"
+    ],
+    "jurisdiction_hints": [
+      "EO 14117 §100.2",
+      "EO 14117 §100.3",
+      "31 CFR Part 100",
+      "BIS regulations on sensitive personal data"
+    ],
+    "filter_criteria": "Exclude general privacy regulations (GDPR, CCPA), non-US data protection laws, and pre-2024 executive orders on data transfers"
+  }
+}

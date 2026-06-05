@@ -1,0 +1,241 @@
+{
+  "name": "agent_evidence_review",
+  "seq": 32,
+  "created_at": "2026-06-05T00:34:04.702482+00:00",
+  "payload": {
+    "revised_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-MODULE-MISMATCH",
+        "claim": "模块选择错误: 应为Module Two, 实际m2",
+        "fact_refs": [
+          "EU-SCC-FACT-request-declared-module-type",
+          "EU-SCC-FACT-doc-module-type"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065",
+          "EU 2021/914"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "将文档模块从 m2 改为 Module Two 并确认 Annex I.A 中的角色与模块一致。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-MODULE-MISMATCH",
+          "overall_rating",
+          "clause_findings"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "claim": "[HIGH] Document Header: Exporter role 'controller' + Importer role 'processor' → expected Module Two, but document declares ",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Use Module Two instead of m2, or verify that the party roles in Annex I.A match the declared module.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "claim": "[HIGH] Annex I.A: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "evidence_patches": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-014",
+          "EU-LAW-002-123",
+          "EU-LAW-002-056",
+          "EU-LAW-002-150",
+          "EU-LAW-002-065"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      }
+    ],
+    "low_confidence_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      }
+    ],
+    "patch_count": 4
+  }
+}

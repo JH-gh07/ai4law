@@ -1,0 +1,44 @@
+{
+  "name": "need_diagnosis_enriched",
+  "seq": 32,
+  "created_at": "2026-06-05T00:23:58.460159+00:00",
+  "payload": {
+    "dpia_required": true,
+    "trigger_reasons": [
+      {
+        "type": "automated_decision_making",
+        "fact_refs": [
+          "FACT-001"
+        ],
+        "reason": "项目DT618828涉及AI健康数据评估与分级，明确包含自动化决策处理（automated_decision_making: True）。根据WP248 rev.01，使用AI技术对个人健康数据进行评估和分级，构成对数据主体产生法律或类似重大影响的自动化决策，属于高风险处理活动。"
+      },
+      {
+        "type": "special_category_inference",
+        "fact_refs": [
+          "FACT-002"
+        ],
+        "reason": "项目处理的数据类别包括'体检数据'和'心率'，这些数据属于GDPR第9条定义的特殊类别数据（健康数据）。即使项目可能不直接处理原始特殊类别数据，但通过AI进行健康评估与分级，实质上是对健康数据的推断和处理（special_category_inference: True），符合WP248标准3。"
+      },
+      {
+        "type": "new_technology",
+        "fact_refs": [
+          "FACT-003"
+        ],
+        "reason": "项目明确使用AI技术进行健康数据评估（new_technology: True）。根据WP248 rev.01，新技术的使用，特别是AI在敏感领域的应用，可能带来数据主体难以预见的风险，需要评估其合规性和对权利的影响。"
+      },
+      {
+        "type": "rights_impact",
+        "fact_refs": [
+          "FACT-004"
+        ],
+        "reason": "项目信号显示对数据主体权利可能产生影响（rights_impact: True）。AI健康评估与分级的结果可能影响数据主体的就业、保险获取或其他重要权益，构成对个人权利与自由的潜在重大影响。"
+      }
+    ],
+    "legal_basis": [
+      "GDPR_ART35",
+      "WP248_HIGH_RISK_CRITERIA"
+    ],
+    "prior_consultation_possible": true,
+    "reasoning": "根据GDPR第35条及第29条工作组指南WP248 rev.01，对项目'DT618828（AI健康数据评估与分级）'进行数据处理活动风险评估后，确认需要进行数据保护影响评估（DPIA）。本项目涉及使用人工智能技术对5000名数据主体的健康数据（包括体检数据、心率等）进行自动化评估与分级，该处理活动同时触发了多项高风险标准：1）对数据主体产生法律或类似重大影响的自动化决策；2）对特殊类别数据（健康数据）的大规模或系统性处理；3）新技术的应用（AI健康评估）；4）对数据主体权利与自由的潜在重大影响。这些因素的叠加显著提高了处理活动的风险等级，符合GDPR第35(3)条及WP248中关于必须进行DPIA的情形。"
+  }
+}
