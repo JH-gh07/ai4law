@@ -9,6 +9,10 @@ function normalizeHeadingSpacing(value: string): string {
     .replace(/^\s*•\s+/gm, "- ");
 }
 
+// ---------------------------------------------------------------------------
+// Pipe table normalization
+// ---------------------------------------------------------------------------
+
 function splitPipeRow(line: string): string[] {
   const normalized = line.trim().replace(/^\|/, "").replace(/\|$/, "");
   return normalized.split("|").map((cell) => cell.trim());
@@ -103,72 +107,78 @@ function normalizePipeTables(value: string): string {
   return output.join("\n");
 }
 
-function isLegalNumberContext(before: string): boolean {
-  return (
-    /(?:Article|Art\.?|Art|Section|Sec\.?|Sec|§|Regulation|Directive|GDPR|CPRA|SCC|BCR|DPIA|TIA)(?:\s*\d+(?:[.]\d+)*)*[.]?\s*$/i.test(before) ||
-    /第\s*\d*\s*条?\s*$/.test(before)
-  );
-}
-
-function isVersionPrefix(before: string): boolean {
-  return /[vV]$/.test(before);
-}
-
-function followedByDigit(after: string): boolean {
-  return /^\d/.test(after);
-}
+// ---------------------------------------------------------------------------
+// explodePackedLine — 仅保留安全组的拆行规则
+//
+// 已删除的规则（原因：假阳性太高，永远补不完）：
+//   · 阿拉伯数字 + 、（会把 Article 28、中的 28、拆出来）
+//   · (数字) / 数字.（会把 §1798.100(b) 中的 100. 拆出来）
+//
+// 保留的规则（中文法律文本专用，零假阳性）：
+//   1. 【依据：...】 → 独立行（后端经常内嵌在段中）
+//   2. 第X章          → 独立行
+//   3. 纯中文数字 + 、 → 独立行（不含 0-9，不与法条号冲突）
+//   4. （全角数字）     → 独立行
+//
+// 策略：LLM 的输出已经高度结构化（# h1、## h2、空行分段），
+// 前端不应替 LLM 做段落拆分。分段质量由 LLM prompt 控制。
+// ---------------------------------------------------------------------------
 
 function explodePackedLine(line: string): string[] {
+  // 1. 拆【依据：...】— 后端经常把依据块内嵌在段中
   let next = line.replace(/\s*(【依据：[^】]+】)/g, "\n$1");
 
+  // 已结构化 → 不拆
   if (isMarkdownStructured(next)) {
     return next.split("\n").map((s) => s.trim()).filter(Boolean);
   }
 
-  next = next.replace(/(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)/g, "\n$1");
-  next = next.replace(/(?<!\n)([一二三四五六七八九十百千万零〇两]+、)/g, "\n$1");
-  next = next.replace(/(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)/g, "\n$1");
-
-  next = next.replace(/(?<!\n)(\d+、)(?=\S)/g, (match, _m, offset) => {
-    const before = next.slice(0, offset);
-    if (isLegalNumberContext(before)) return match;
-    return `\n${match}`;
-  });
-
-  next = next.replace(/(?<!\n)(\(?\d+\)|\d+\.)\s*(?=\S)/g, (match, marker, offset) => {
-    const before = next.slice(0, offset);
-    const after = next.slice(offset + match.length);
-    if (isVersionPrefix(before)) return match;
-    if (isLegalNumberContext(before)) return match;
-    if (followedByDigit(after)) return match;
-    return `\n${marker} `;
-  });
+  // 2. 第X章
+  next = next.replace(
+    /(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)/g,
+    "\n$1",
+  );
+  // 3. 纯中文数字 + 、
+  next = next.replace(
+    /(?<!\n)([一二三四五六七八九十百千万零〇两]+、)/g,
+    "\n$1",
+  );
+  // 4. 全角括号数字
+  next = next.replace(
+    /(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)/g,
+    "\n$1",
+  );
 
   return next.split("\n").map((s) => s.trim()).filter(Boolean);
 }
+
+// ---------------------------------------------------------------------------
+// classifyLine — 将拆好的行映射为 markdown 角色
+//
+// 只处理 LLM 输出中自然出现在行首的模式（# / - / 第X章 / 一、/ （一））。
+// 不再对行中出现的阿拉伯数字做任何角色分配。
+// ---------------------------------------------------------------------------
 
 function classifyLine(line: string): string {
   if (/^【依据：[^】]+】$/.test(line)) return line;
   if (line.startsWith("|")) return line;
   if (isMarkdownStructured(line)) return line;
+
+  // 中文章节 → h1
   if (/^第[一二三四五六七八九十百千万零〇两0-9]+章\b/.test(line)) return `# ${line}`;
+
+  // 纯中文数字 + 、→ h2
   if (/^[一二三四五六七八九十百千万零〇两]+、/.test(line)) return `## ${line}`;
+
+  // 全角括号数字 → h3
   if (/^（[一二三四五六七八九十百千万零〇两0-9]+）/.test(line)) return `### ${line}`;
-
-  const chineseDotOrder = line.match(/^(\d+)、\s*(.*)$/);
-  if (chineseDotOrder) {
-    return `${chineseDotOrder[1]}. ${chineseDotOrder[2] || ""}`.trim();
-  }
-
-  const ordered = line.match(/^(?:\(?(\d+)\)|(\d+)\.)\s*(.*)$/);
-  if (ordered) {
-    const no = ordered[1] || ordered[2] || "1";
-    const content = ordered[3] || "";
-    return `${no}. ${content}`.trim();
-  }
 
   return line;
 }
+
+// ---------------------------------------------------------------------------
+// lineKind — 行角色分类（用于段间距拼装）
+// ---------------------------------------------------------------------------
 
 function lineKind(line: string): "heading" | "list" | "basis" | "table" | "paragraph" {
   if (/^【依据：[^】]+】$/.test(line)) return "basis";
@@ -178,15 +188,23 @@ function lineKind(line: string): "heading" | "list" | "basis" | "table" | "parag
   return "paragraph";
 }
 
+// ---------------------------------------------------------------------------
+// normalizeFallbackMarkdown — 对外入口
+// ---------------------------------------------------------------------------
+
 export function normalizeFallbackMarkdown(value: string): string {
   const normalized = normalizePipeTables(
-    normalizeHeadingSpacing(value.replace(/\r\n?/g, "\n").replace(/ /g, " ").replace(/　/g, " ")),
+    normalizeHeadingSpacing(
+      value.replace(/\r\n?/g, "\n").replace(/ /g, " ").replace(/　/g, " "),
+    ),
   );
-  const lines = normalized.split("\n").flatMap((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return [""];
-    return explodePackedLine(trimmed).map(classifyLine);
-  });
+  const lines = normalized
+    .split("\n")
+    .flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return [""];
+      return explodePackedLine(trimmed).map(classifyLine);
+    });
 
   const parts: string[] = [];
   let prevKind: ReturnType<typeof lineKind> | null = null;
