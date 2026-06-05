@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations
+from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations, strip_markdown_inline
+from backend.common.render.summary import attach_citations
 from backend.common.risk.scoring import risk_level
 from backend.common.workflow import GenerationContextPack
 from backend.modules.assessment.schema import ChapterContent, CompanyProfile, RegulationHit
@@ -282,6 +283,15 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         for item in context_pack.evidence_chain
     ] or ["- 本阶段尚未生成 evidence_chain"]
 
+    reasoning_lines = [
+        (
+            f"- {item.get('target', '')} | 事实状态: {item.get('fact_status', '')} "
+            f"| 风险: {item.get('legal_risk', '')} "
+            f"| 对外表达: {item.get('correct_expression', '')}"
+        )
+        for item in (context_pack.compliance_reasoning or [])[:6]
+    ] or ["- 本阶段尚未生成规则分析结论"]
+
     # Citation marker list for LLM
     citation_marker_section = "（未启用引用系统）"
     if context_pack.citation_registry is not None:
@@ -305,6 +315,8 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
         + "\n".join(attachment_lines)
         + "\n\n【证据链】\n"
         + "\n".join(evidence_lines)
+        + "\n\n【规则分析结论（compliance_reasoning）】\n"
+        + "\n".join(reasoning_lines)
         + "\n\n【法规绑定（legal_grounding）】\n"
         + "\n".join(grounding_lines)
         + "\n\n【可引用法规依据】\n"
@@ -349,7 +361,14 @@ class AssessmentChapterGenerator:
             )
             citation_registry = context_pack.citation_registry if context_pack else None
             content = self._generate_chapter(
-                chapter_title, chapter_instruction, context_block, citation_keys, citation_registry
+                chapter_title,
+                chapter_instruction,
+                context_block,
+                citation_keys,
+                citation_registry,
+                profile,
+                context_pack,
+                chapter_id,
             )
             chapters.append(
                 ChapterContent(
@@ -369,6 +388,9 @@ class AssessmentChapterGenerator:
         context: str,
         citations: list[str] | None = None,
         citation_registry: object = None,
+        profile: CompanyProfile | None = None,
+        context_pack: GenerationContextPack | None = None,
+        chapter_id: str | None = None,
     ) -> str:
         if self.llm and self.llm.enabled:
             user_prompt = (
@@ -376,14 +398,128 @@ class AssessmentChapterGenerator:
                 f"{_STRICT_CONSTRAINT}\n\n"
                 "请直接输出章节正文，格式为结构化段落，无需重复章节标题。"
             )
-            raw = self.llm.chat(
+            response = self.llm.chat_with_metadata(
                 system=_SYSTEM_PROMPT,
                 user=user_prompt,
                 temperature=0.2,
                 max_tokens=800,
             )
+            raw = str(response.get("content") or "").strip()
+            # 剥离 LLM 输出的 markdown 内联格式（**粗体**, `代码` 等）
+            # DOCX 渲染器不认识 markdown，保留会变成字面 ** 和 _
+            raw = strip_markdown_inline(raw)
+            if response.get("fallback") or "LLM服务暂时不可用" in raw:
+                return self._build_fallback_chapter(
+                    title=title,
+                    citations=citations,
+                    profile=profile,
+                    context_pack=context_pack,
+                    chapter_id=chapter_id,
+                )
             if citation_registry is not None:
                 return convert_citation_markers(raw, citation_registry)
             return ensure_paragraph_citations(raw, citations)
-        # 降级占位
-        return f"（{title}：LLM未配置，此处为占位内容）"
+        return self._build_fallback_chapter(
+            title=title,
+            citations=citations,
+            profile=profile,
+            context_pack=context_pack,
+            chapter_id=chapter_id,
+        )
+
+    @staticmethod
+    def _build_fallback_chapter(
+        *,
+        title: str,
+        citations: list[str] | None,
+        profile: CompanyProfile | None,
+        context_pack: GenerationContextPack | None,
+        chapter_id: str | None,
+    ) -> str:
+        if profile is None:
+            return attach_citations("当前未获取到企业事实，无法生成章节内容。", citations)
+
+        matched_issues = []
+        if context_pack is not None and chapter_id is not None:
+            matched_issues = [
+                issue for issue in context_pack.issues
+                if chapter_id in issue.affects_outputs
+            ]
+            if not matched_issues:
+                matched_issues = [
+                    issue for issue in context_pack.issues
+                    if issue.severity in {"HIGH", "BLOCKER"}
+                ][:3]
+        diagnosis = context_pack.diagnosis_result if context_pack else {}
+        risk_summary = context_pack.risk_summary if context_pack else {}
+        writing_strategy = context_pack.writing_strategy if context_pack else {}
+        strategy_by_issue = {
+            item.get("issue_id"): item
+            for item in (writing_strategy.get("strategies", []) if isinstance(writing_strategy, dict) else [])
+            if isinstance(item, dict) and item.get("issue_id")
+        }
+
+        issue_text_parts: list[str] = []
+        for issue in matched_issues[:3]:
+            strategy = strategy_by_issue.get(issue.issue_id, {})
+            external_expression = str(strategy.get("external_expression", "")).strip()
+            if external_expression:
+                issue_text_parts.append(f"{issue.issue_id}（{issue.title}）：{external_expression}")
+            else:
+                issue_text_parts.append(f"{issue.issue_id}（{issue.title}）：需补充相关事实、证据和整改安排。")
+        issue_text = "；".join(issue_text_parts) or "当前未识别到与本章节直接冲突的高风险问题，但仍需结合申报材料进一步人工复核。"
+        high_issue_list = [
+            issue for issue in (context_pack.issues if context_pack else [])
+            if issue.severity in {"HIGH", "BLOCKER"}
+        ]
+        high_issue_summary = "；".join(
+            f"{issue.issue_id}（{issue.title}）"
+            for issue in high_issue_list[:6]
+        ) or "当前未识别到HIGH/BLOCKER等级问题。"
+
+        paragraphs: dict[str, list[str]] = {
+            "出境活动概述": [
+                f"{profile.company_name}属于{profile.industry or '相关'}行业，当前拟将境内收集和产生的数据传输至{profile.receiver_country}，主要目的为{profile.transfer_purpose}。",
+                f"结合诊断结果，系统当前推荐路径为{diagnosis.get('recommended_path', '未提供')}，整体风险等级为{risk_summary.get('risk_level', '未提供')}。",
+                f"从现有输入看，本次出境活动的核心关注点包括：{issue_text}",
+            ],
+            "数据类型与规模": [
+                f"现有输入显示，拟出境数据至少涉及普通个人信息约{profile.pii_count:,}人、敏感个人信息约{profile.spi_count:,}人。",
+                f"企业当前关于重要数据的自我判断为{'涉及' if profile.contains_important_data else '暂未明确涉及'}重要数据；是否CIIO的输入结论为{'是' if profile.is_ciio else '否'}。",
+                "如正式申报，需要进一步细化数据字段、数据主体范围、出境频率及统计口径，并补充重要数据识别依据。",
+            ],
+            "出境必要性与合法性基础": [
+                f"企业主张本次出境系为实现{profile.transfer_purpose}所必需，但现有材料仍需进一步说明为何无法通过境内处理替代，以及数据项范围是否已控制在必要最小限度。",
+                "如涉及个人信息出境，应结合《个人信息保护法》第十三条、第三十八条、第三十九条等要求补充合法性基础、单独同意及告知留痕材料。",
+                f"与本章节直接相关的关注点包括：{issue_text}",
+            ],
+            "境外接收方保障能力": [
+                f"境外接收方所在地区为{profile.receiver_country}。现有输入说明企业已描述部分技术和管理措施，但仍需结合合同、认证、审计报告等材料验证接收方是否具备与出境风险相匹配的保障能力。",
+                "重点应核查接收方是否存在超范围处理、再转移安排、访问控制不足以及当地法律环境变化带来的履约风险。",
+                f"当前系统识别的相关问题为：{issue_text}",
+            ],
+            "个人信息权益影响分析": [
+                "对于个人信息主体权益影响，现有输入尚不足以支持作出完全正面的外部结论，尤其需要补充单独同意、告知内容、权利响应流程及留痕证据。",
+                "若相关材料不完整，报告中应保持审慎表述，仅说明企业已主张采取相应措施，尚待进一步核验。",
+                f"相关风险关注点包括：{issue_text}",
+            ],
+            "安全措施与传输机制": [
+                "现有输入已提及若干技术与管理措施，但正式报告仍需说明传输通道、加密方式、访问控制、日志审计、应急响应以及与境外接收方合同约束的具体落地情况。",
+                "对外表述时不得将用户主张直接表述为既成事实，应明确哪些措施已有附件支持，哪些仍属于待补充或待核验状态。",
+                f"本章节重点问题为：{issue_text}",
+            ],
+            "剩余风险与整改建议": [
+                f"根据当前诊断与问题识别结果，需优先整改或补强的事项包括：{issue_text}",
+                "建议围绕重要数据识别依据、数据字段与规模统计口径、合法性基础证明、境外接收方保障能力文件以及持续监督机制逐项补充材料。",
+                "在材料未补齐前，报告结论应保持保守，不宜直接形成“完全合规”或“可直接申报通过”的表述。",
+            ],
+            "综合评估结论": [
+                f"综合现有输入，系统当前推荐路径为{diagnosis.get('recommended_path', '未提供')}，风险等级为{risk_summary.get('risk_level', '未提供')}。",
+                f"推荐路径的主要理由为：{diagnosis.get('rationale', '未提供')}。",
+                f"本次报告必须重点关注的高风险问题包括：{high_issue_summary}。",
+                "本报告在当前模型不可用的情况下根据结构化输入、规则判断、问题项和证据链自动生成，可作为内部补料和人工复核的草案，不宜直接作为最终对外法律意见。",
+            ],
+        }
+
+        body = "\n\n".join(paragraphs.get(title, ["当前章节缺少专门模板，需结合事实进一步补充。"]))
+        return attach_citations(body, citations)

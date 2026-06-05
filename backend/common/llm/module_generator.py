@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import ensure_paragraph_citations
+from backend.common.llm.postprocess import ensure_paragraph_citations, strip_markdown_inline
 
 # ── 各模块系统 Prompt ───────────────────────────────────────────────
 
@@ -374,4 +374,7 @@ def generate_chapter(
         temperature=0.2,
         max_tokens=800,
     )
-    return ensure_paragraph_citations(raw, citations)
+    # 剥离 LLM 输出的 markdown 内联格式（**粗体**, `代码` 等）
+    # DOCX 渲染器不处理 markdown → 保留会变成字面 ** 和 _
+    cleaned = strip_markdown_inline(raw)
+    return ensure_paragraph_citations(cleaned, citations)

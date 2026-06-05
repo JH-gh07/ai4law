@@ -11,8 +11,13 @@ _CHAPTER_LABEL_RE = re.compile(r"^第[一二三四五六七八九十百千万零
 _SECTION_LABEL_RE = re.compile(r"^[一二三四五六七八九十百千万零〇两0-9]+、")
 _SUBSECTION_LABEL_RE = re.compile(r"^（[一二三四五六七八九十百千万零〇两0-9]+）")
 _ORDERED_ITEM_RE = re.compile(r"^(?:\(?(\d+)\)|(\d+)[、.])\s*")
-_MARKDOWN_PREFIX_RE = re.compile(r"^\s*(?:#{1,6}\s|[-*]\s|\d+\.\s|>\s|\|)")
+_MARKDOWN_PREFIX_RE = re.compile(
+    r"^\s*(?:#{1,6}\s|[*_]{2,3}[^*_\s]|[-*]\s|\d+\.\s|>\s|\|)"
+)
 _BASIS_BLOCK_RE = re.compile(r"【依据：[^】]+】")
+# Matches markdown inline formatting: **bold**, __bold__, *italic*, _italic_, `code`
+# Group 2 captures the inner content so we can strip the markers
+_MD_INLINE_RE = re.compile(r"(\*{1,3}|_{1,3})([^*_\n]+?)\1|`([^`\n]+)`")
 
 
 def normalize_legal_markdown_structure(text: str) -> str:
@@ -119,6 +124,23 @@ def _classify_legal_block(line: str) -> tuple[str, str]:
     return "paragraph", line
 
 
+def strip_markdown_inline(text: str) -> str:
+    """Strip markdown inline formatting from text destined for DOCX rendering.
+
+    Converts **bold**, __bold__, *italic*, _italic_ and `code` to plain text
+    while preserving the inner content.  Does NOT touch block-level constructs
+    like headings, lists, tables, or citation markers.
+    """
+    if not text:
+        return text
+
+    def _strip(m: re.Match) -> str:
+        inner = m.group(2) or m.group(3) or ""
+        return inner
+
+    return _MD_INLINE_RE.sub(_strip, text)
+
+
 def ensure_paragraph_citations(
     text: str,
     citations: list[str] | None,
@@ -126,6 +148,10 @@ def ensure_paragraph_citations(
 ) -> str:
     if not text:
         return text
+    # Strip markdown inline formatting before structural postprocessing.
+    # This prevents ** from being split across lines in _explode_packed_line
+    # and removes literal ** / __ / _ that DOCX renderers cannot handle.
+    text = strip_markdown_inline(text)
     items = [str(c).strip() for c in (citations or []) if str(c).strip()]
     basis = "；".join(items[:max_items]) if items else "未检索到"
 
@@ -147,6 +173,8 @@ def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
     """
     if not text:
         return text
+    # Strip markdown inline formatting before structural postprocessing
+    text = strip_markdown_inline(text)
 
     def _replace_marker(match: re.Match) -> str:
         cid = match.group(1)
