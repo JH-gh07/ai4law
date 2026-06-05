@@ -18,6 +18,8 @@ export type DevTestCase = {
   jurisdiction: "CN" | "EU" | "US";
   /** 可选：用于回填调试表单的默认值 */
   formDefaults?: Record<string, unknown>;
+  /** 可选：开发模式下直接传给后端的测试文件路径 */
+  backendFilePaths?: string[];
   /** 该案例的完整 JSON payload，可直接 POST */
   payload: Record<string, unknown>;
 };
@@ -258,49 +260,65 @@ const diagMedical: DevTestCase = {
 };
 
 const diagAnonymous: DevTestCase = {
-  name: "诊断-3: 智驾未来 匿名地图数据（豁免路径）",
-  description: "自动驾驶公司出境匿名化传感器数据，不含个人信息也不涉重要数据→豁免路径",
+  name: "诊断-3: 智造未来科技有限公司（路径判断）",
+  description: "工业物联网企业向德国研发中心共享设备数据，涉及个人信息与企业数据跨境传输，测试路径判断输入链路",
   jurisdiction: "CN",
   formDefaults: {
-    company_name: "智驾未来",
+    company_name: "智造未来科技有限公司",
     m1_industry: "智能制造",
-    m1_business_channels: ["数据合作（与其他公司共享 / 交换数据）", "跨境服务（面向国外用户 / 业务涉及国外）"],
+    m1_business_channels: [
+      "线上平台（APP / 小程序 / 官网）",
+      "数据合作（与其他公司共享 / 交换数据）",
+      "跨境服务（面向国外用户 / 业务涉及国外）"
+    ],
     m1_service_targets: "企业用户",
-    m1_company_size: "大型（201-500人）",
-    m2_core_needs: ["识别业务合规风险点"],
+    m1_company_size: "中型（51-200人）",
+    m2_core_needs: ["不确定业务是否需要数据跨境", "识别业务合规风险点"],
     m2_had_compliance_issue: "no",
-    m2_deadline: "无紧急需求（3个月以上）",
-    m3_processes_personal_info: "no",
-    m3_processes_important_data: "no",
-    m3_data_sources: ["设备自动采集"],
+    m2_deadline: "一般需求（1-3个月）",
+    m3_processes_personal_info: "yes",
+    m3_personal_info_types: ["姓名", "手机号", "邮箱地址", "账号信息"],
+    m3_processes_enterprise_public_data: "yes",
+    m3_enterprise_public_data_desc: "处理客户工厂的设备传感器数据、生产日志、性能报告等企业运营数据",
+    m3_data_sources: ["用户主动提交", "设备自动采集"],
+    m3_processing_activities: ["收集", "存储", "传输", "跨境传输"],
+    m3_data_volume_range: "10万条以下",
     m3_retention_period: "业务必要期限内留存",
-    m4_share_to_third_party: "no",
+    m3_retention_desc: "客户合同期内持续存储，合同终止后180天内匿名化处理",
+    m4_share_to_third_party: "yes",
+    m4_third_party_types: "德国研发中心",
     m4_cross_border_transfer: "yes",
     m4_cross_border_regions: "德国",
-    m4_commercialization: "no",
-    m4_entrusted_processing: "no",
-    m4_authorization_method: "无授权机制",
-    m5_systems: ["定制化业务系统"],
-    m5_security_measures: ["数据加密", "数据脱敏", "访问权限控制"],
-    m5_compliance_docs: ["数据安全管理制度"],
+    m4_commercialization: "yes",
+    m4_commercialization_mode: "作为核心产品“预测性维护”功能的改进依据，用于持续优化AI模型",
+    m4_entrusted_processing: "yes",
+    m4_entrusted_party_type: "使用国际云服务商的德国法兰克福区域服务器进行存储和计算",
+    m4_authorization_method: '单独点击"同意"按钮',
+    m5_systems: ["自有 APP", "官方网站", "定制化业务系统"],
+    m5_security_measures: ["数据加密", "访问权限控制", "操作日志审计"],
+    m5_compliance_docs: ["隐私政策", "用户协议"],
     m5_penalty_or_complaint: "无相关记录"
   },
   payload: {
-    company_name: "智驾未来",
+    company_name: "智造未来科技有限公司",
     answers: {
       q1_is_ciio: "no",
-      q2_has_important_data: "no",
-      q3_pii_count: 0,
+      q2_has_important_data: "unknown",
+      q3_pii_count: 2000,
       q4_spi_count: 0,
-      q5_no_personal_info: "yes",
+      q5_no_personal_info: "no",
       q6_scenario: "technology_development",
-      q7_receiver_type: "parent_company",
-      q8_purpose: "向德国母公司提供匿名化传感器数据包用于改进全球自动驾驶算法",
-      m1_enterprise_name: "智驾未来",
+      q7_receiver_type: "affiliated_company",
+      q8_purpose: "向德国慕尼黑研发中心持续共享设备运行状态、故障日志等数据以优化算法模型，并结合企业规模、数据性质等因素判断适用的数据出境合规路径",
+      m1_enterprise_name: "智造未来科技有限公司",
       m1_industry: "智能制造",
-      m1_business_channels: ["数据合作（与其他公司共享 / 交换数据）", "跨境服务（面向国外用户 / 业务涉及国外）"],
+      m1_business_channels: [
+        "线上平台（APP / 小程序 / 官网）",
+        "数据合作（与其他公司共享 / 交换数据）",
+        "跨境服务（面向国外用户 / 业务涉及国外）"
+      ],
       m1_service_targets: "企业用户",
-      m1_company_size: "大型（201-500人）"
+      m1_company_size: "中型（51-200人）"
     }
   }
 };
@@ -362,54 +380,90 @@ const assessCIO: DevTestCase = {
 };
 
 const assessEcommerce: DevTestCase = {
-  name: "评估-2: 优选购物 大型电商用户行为数据",
-  description: "非CIIO电商平台，出境120万用户行为日志至开曼母公司，链路复杂涉及多次跨境",
+  name: "评估-2: 智慧云联科技（上海）有限公司（安全评估路径）",
+  description: "中外合资云计算服务商向新加坡子公司实时传输客户服务与交易行为数据，含重要数据与百万级PI，测试安全评估完整输入链路",
   jurisdiction: "CN",
   formDefaults: {
-    company_name: "优选购物",
-    company_uscc: "91330000MA1TEST002",
-    industry: "电商零售",
-    is_ciio: false,
-    contains_important_data: false,
-    pii_count: 1200000,
-    spi_count: 0,
-    transfer_purpose: "将用户浏览、点击、购买行为日志传输至母公司数据湖用于训练全球推荐算法模型",
-    receiver_country: "开曼群岛",
-    force_override_path: true,
+    company_name: "智慧云联科技（上海）有限公司",
+    company_uscc: "91310000MA7F123456",
+    legal_representative: "张伟",
+    registered_address: "中国（上海）自由贸易试验区张江高科技园区亮秀路112号Y1座1001室",
+    company_nature: "有限责任公司（中外合资）",
+    industry: "云计算与数据服务",
+    receiver_country: "新加坡",
+    receiver_name: "Wisdom Cloud Connect Pte. Ltd.",
+    assessment_start_date: "2025-08-01",
+    assessment_end_date: "2025-09-15",
+    lead_department: "集团法律合规与公共事务部",
+    participant_departments: "信息技术部，网络安全部，亚太区业务运营部，数据中心管理部",
+    third_party_support: true,
+    third_party_name: "德勤企业风险管理咨询（上海）有限公司",
+    third_party_scope:
+      "对数据出境活动的风险评估方法、已采取的安全措施有效性进行审阅与验证，并出具第三方核查报告；协助对新加坡子公司的数据保护环境进行合规性差距分析",
+    scenario_name: "亚太区客户支持与实时风险控制数据同步",
     transfer_frequency: "continuous",
-    receiver_name: "Global E-commerce Inc.",
-    data_inventory_summary: "用户浏览记录、点击流、搜索关键词、购买历史、设备信息（已去标识化）。年出境用户数约120万人",
-    system_chain_summary: "通过阿里云国际站从杭州区域同步至新加坡区域，再转至母公司AWS美西区数据湖。链路长，涉及多次跨境和云服务商转换",
-    security_capability_summary: "传输加密：TLS 1.3 + AES-256。访问控制：基于角色。去标识化：哈希+盐值。审计：操作日志留存180天",
-    legal_basis: "履行合同+用户同意",
-    necessity_basis: "全球推荐算法依赖多地区数据，单独使用中国数据无法有效训练模型",
-    scenario_name: "全球推荐算法训练数据同步",
-    assessment_start_date: "2025-05-01",
-    assessment_end_date: "2025-05-20",
-    lead_department: "数据平台部",
-    participant_departments: "法务合规部、安全部",
-    legal_representative: "（略）",
-    registered_address: "杭州市",
-    company_nature: "互联网平台企业"
+    is_long_term: true,
+    transfer_purpose:
+      "全球统一客户服务、集中化风险分析与建模、履行与境外关联方的《全球运营支持与数据处理协议》",
+    legal_basis:
+      "根据《个人信息保护法》第十三条第一款第二项、第一款第七项以及《数据安全法》《网络安全法》相关规定，在完成安全评估后开展跨境传输",
+    necessity_basis:
+      "保障全球服务连续性与质量；满足跨国欺诈侦测与集中风控建模需求；基于网络延迟、基础设施稳定性和运营成本综合评估后，新加坡数据中心为最优技术架构",
+    is_ciio: false,
+    contains_important_data: true,
+    pii_count: 1200000,
+    spi_count: 15000,
+    data_inventory_summary:
+      "场景一：客户服务支持，字段包括客户唯一标识符、姓名、联系方式、服务请求内容、沟通记录、问题解决状态；场景二：交易风险控制，字段包括Device ID、IP地址、交易时间、金额、类型、收款方信息、行为序列、风险评分标签、加密后的证件号码及验证结果；场景三：系统运维与安全，字段包括系统日志、匿名化性能监控数据、安全事件告警信息",
+    system_chain_summary:
+      "数据来源于中国境内应用服务器和数据库；先在上海数据中心进行清洗、脱敏和格式化；随后通过IPSec VPN专线与TLS 1.3加密实时传输至新加坡数据中心；境外供客户服务系统、风控引擎和运维平台调用；风控结果与客户服务归档信息再回流境内",
+    security_capability_summary:
+      "技术措施：传输全程加密、敏感个人信息AES-256加密存储、密钥由境内总部HSM管理、RBAC+MFA访问控制、日志留存不少于6年、非生产环境仅用合成/深度脱敏数据；管理措施：签署集团内数据跨境传输协议、每年两次内部审计和一次渗透测试、建立中新两地数据泄露应急响应预案并定期演练",
+    force_override_path: true
   },
   payload: {
-    company_name: "优选购物",
-    industry: "电商零售",
-    is_ciio: false,
-    contains_important_data: false,
-    pii_count: 1200000,
-    spi_count: 0,
-    transfer_purpose: "将用户浏览、点击、购买行为日志传输至母公司数据湖用于训练全球推荐算法模型",
-    receiver_country: "开曼群岛",
-    force_override_path: true,
+    company_name: "智慧云联科技（上海）有限公司",
+    company_uscc: "91310000MA7F123456",
+    legal_representative: "张伟",
+    registered_address: "中国（上海）自由贸易试验区张江高科技园区亮秀路112号Y1座1001室",
+    company_nature: "有限责任公司（中外合资）",
+    industry: "云计算与数据服务",
+    receiver_country: "新加坡",
+    receiver_name: "Wisdom Cloud Connect Pte. Ltd.",
+    assessment_start_date: "2025-08-01",
+    assessment_end_date: "2025-09-15",
+    lead_department: "集团法律合规与公共事务部",
+    participant_departments: "信息技术部，网络安全部，亚太区业务运营部，数据中心管理部",
+    third_party_support: true,
+    third_party_name: "德勤企业风险管理咨询（上海）有限公司",
+    third_party_scope:
+      "对本数据出境活动的风险评估方法、已采取的安全措施有效性进行审阅与验证，并出具《第三方核查报告》；协助对新加坡子公司的数据保护环境进行合规性差距分析",
+    scenario_name: "亚太区客户支持与实时风险控制数据同步",
     transfer_frequency: "continuous",
-    receiver_name: "Global E-commerce Inc.",
-    data_inventory_summary: "用户浏览记录、点击流、搜索关键词、购买历史、设备信息（已去标识化处理）。年出境用户数预计达120万人。数据类别：行为日志、交易记录",
-    system_chain_summary: "通过阿里云国际站从杭州区域同步至新加坡区域，再转至母公司AWS美西区数据湖。链路长，涉及多次跨境和云服务商转换",
-    security_capability_summary: "传输加密：TLS 1.3 + AES-256。访问控制：基于角色。去标识化：哈希+盐值处理用户ID。审计：操作日志留存180天",
-    legal_document_review: "与母公司签订了《数据处理与共享协议》，但关于'再转移至AWS美西区的控制措施'描述不充分",
-    personal_info_protection: "在APP隐私政策中披露了数据出境情况，但未对120万用户单独取得数据出境的'单独同意'（依赖隐私政策的概括同意）"
-  }
+    is_long_term: true,
+    transfer_purpose:
+      "全球统一客户服务；集中化风险分析与建模；履行与境外关联方的服务合同",
+    legal_basis:
+      "根据《个人信息保护法》第十三条第一款第二项、第一款第七项，以及《数据安全法》《网络安全法》及相关监管规定，在完成安全评估后进行数据出境",
+    necessity_basis:
+      "业务连续性与服务质量、风险防控有效性以及技术架构与成本最优共同决定需向新加坡数据中心持续实时传输相关数据",
+    is_ciio: false,
+    contains_important_data: true,
+    pii_count: 1200000,
+    spi_count: 15000,
+    force_override_path: true,
+    data_inventory_summary:
+      "客户服务支持：客户唯一标识符、姓名、联系方式、服务请求内容、沟通记录、问题解决状态；交易风险控制：Device ID、IP地址、交易时间、金额、类型、收款方信息、行为序列、风险评分标签、加密后的证件号码及验证结果；系统运维与安全：系统日志、匿名化性能监控数据、安全事件告警信息",
+    system_chain_summary:
+      "中国境内应用服务器与数据库产生日志和业务数据；在上海数据中心进行初步清洗、脱敏和格式化；通过IPSec VPN专线和TLS 1.3加密实时传输至新加坡；境外处理后风控结果与工单归档信息再回传境内",
+    security_capability_summary:
+      "传输全程加密；敏感个人信息AES-256加密存储，密钥由境内总部HSM管理；最小权限+MFA；全链路日志留存不少于6年并实时监控；非生产环境仅使用合成数据或深度脱敏数据；每年两次内部审计和一次渗透测试；中、新两地数据泄露应急响应预案并定期演练"
+  },
+  backendFilePaths: [
+    "doc/knowledge/cn-assessment/references/数据出境风险自评估报告（模板）.docx",
+    "doc/knowledge/cn-assessment/references/数据出境安全评估申报指南（第三版） (1).docx",
+    "doc/knowledge/cn-assessment/references/个人信息出境标准合同备案指南（第二版） (1).docx"
+  ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1395,22 +1449,22 @@ const reviewPrivacyPolicy: DevTestCase = {
 };
 
 const reviewSccContract: DevTestCase = {
-  name: "审查-2: 标准合同条款审查",
-  description: "审查个人信息出境标准合同，检查条款完整性、责任分配、数据主体权利保障和补充措施",
+  name: "审查-2: 智付通科技有限公司（个人信息出境标准合同）",
+  description: "审查与新加坡支付网关服务商签订的个人信息出境标准合同草案，核查条款完整性、再委托、通知时限和数据主体权利保障",
   jurisdiction: "CN",
   formDefaults: {
-    company_name: "数字支付科技（深圳）有限公司",
-    publisher_entity: "数字支付科技（深圳）有限公司",
-    document_title: "个人信息出境标准合同（与新加坡支付处理商）",
-    document_version: "v1.0（草案）",
+    company_name: "智付通科技有限公司",
+    publisher_entity: "智付通科技有限公司",
+    document_title: "个人信息出境标准合同",
+    document_version: "标准化补充整合草案",
     effective_date: "",
-    applicable_products: "跨境支付清结算服务",
-    applicable_scope: "向新加坡支付处理商传输支付交易数据用于清结算",
+    applicable_products: "跨境支付与结算解决方案",
+    applicable_scope: "向新加坡支付网关服务商传输中国用户支付交易信息用于风险筛查和结算处理",
     is_live_version: false,
     document_type: "scc_contract",
-    receiver_name: "PayTech Singapore Pte Ltd",
+    receiver_name: "星洲支付处理有限公司 (Starstate Payment Processing Pte. Ltd.)",
     receiver_country: "新加坡",
-    transfer_purpose: "跨境支付清结算数据处理",
+    transfer_purpose: "跨境支付交易的风险筛查、欺诈监测、合规审计及资金结算所必需的数据处理服务",
     processor_identity_disclosed: true,
     scope_disclosed: true,
     collection_purpose_disclosed: true,
@@ -1419,23 +1473,28 @@ const reviewSccContract: DevTestCase = {
     sensitive_pi_disclosed: true,
     crossborder_rule_disclosed: true,
     rights_channel_disclosed: true,
-    contact_channel: "dpo@digitalpay.cn",
+    contact_channel: "法务合规与数据保护负责人（待合同定稿后确认）",
     pii_count: 500000,
-    spi_count: 120000,
+    spi_count: 500000,
     has_scc_draft: true,
-    review_focus: "重点审查标准合同条款完整性、数据接收方义务、再转移限制、安全事件通知时限、和个人信息主体权利保障机制"
+    review_focus:
+      "重点审查个人信息出境标准合同条款完整性、双方义务、再委托限制、删除与留存规则、安全事件通知时限、监管报告表述、以及个人信息主体权利保障机制"
   },
   payload: {
-    company_name: "数字支付科技（深圳）有限公司",
+    company_name: "智付通科技有限公司",
     document_type: "scc_contract",
-    receiver_name: "PayTech Singapore Pte Ltd",
+    receiver_name: "星洲支付处理有限公司 (Starstate Payment Processing Pte. Ltd.)",
     receiver_country: "新加坡",
-    transfer_purpose: "跨境支付清结算数据处理",
-    review_focus: "审查标准合同条款完整性、数据接收方义务、再转移限制",
+    transfer_purpose: "跨境支付交易的风险筛查、欺诈监测、合规审计及资金结算处理",
+    review_focus:
+      "审查标准合同条款完整性、数据接收方义务、再委托限制、安全事件通知时限、删除规则与个人信息主体权利保障",
     pii_count: 500000,
-    spi_count: 120000,
+    spi_count: 500000,
     has_scc_draft: true
-  }
+  },
+  backendFilePaths: [
+    "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/个人信息出境标准合同【模板】.docx"
+  ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -2707,7 +2707,23 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     else if (isCnFlowModule) setCnFlowValues((prev) => ({ ...prev, ...fd } as CnFlowFormValues));
     else if (isUs14117Module) setUs14117Values((prev) => ({ ...prev, ...fd } as Us14117FormValues));
     else if (isEuSccTask) setEuSccValues((prev) => ({ ...prev, ...fd } as EuSccFormValues));
-    else if (isDocumentReviewTask) setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
+    else if (isDocumentReviewTask) {
+      setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
+      setDocumentReviewFiles([]);
+      setDocumentReviewDevFilePaths(
+        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
+      );
+      setDocumentReviewSelectedFileIndex(0);
+      setDocumentReviewPreviewUrl(null);
+      setDocumentReviewTextPreview("");
+      setDocumentReviewFileFormValues({});
+      setDocumentReviewExtractStates({});
+    }
+    if (isAssessmentModule) {
+      setAssessmentDevFilePaths(
+        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
+      );
+    }
     setShowCasePicker(false);
   };
 
