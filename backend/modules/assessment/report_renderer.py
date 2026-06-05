@@ -94,6 +94,7 @@ class AssessmentReportRenderer:
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
+        render_warnings: list[str] = []
         date_stamp = format_date_stamp()
         safe_company = safe_filename(company_name)
         md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
@@ -106,11 +107,27 @@ class AssessmentReportRenderer:
 
         # Render internal (8-chapter) report
         internal_md_output = output_dir / f"{safe_company}_内部风险分析报告_{date_stamp}.md"
-        render_markdown_template(internal_md_output, TEMPLATE_MD, mapping)
+        if TEMPLATE_MD.exists():
+            render_markdown_template(internal_md_output, TEMPLATE_MD, mapping)
+        else:
+            render_warnings.append(
+                f"内部报告 Markdown 模板缺失：{TEMPLATE_MD}。已自动降级为基础 Markdown 渲染。"
+            )
+            _render_internal_markdown_fallback(
+                output_path=internal_md_output,
+                profile=profile,
+                chapters=chapters,
+                date_stamp=date_stamp,
+                path_warning=path_warning,
+                alignment_warning=alignment_warning,
+                citation_registry=citation_registry,
+            )
         docx_rendered = False
         if TEMPLATE_PATH.exists():
             render_docx_template(docx_output, TEMPLATE_PATH, mapping)
             docx_rendered = True
+        else:
+            render_warnings.append(f"DOCX 模板缺失：{TEMPLATE_PATH}。已跳过 DOCX 导出。")
 
         # Render official (3-section) external report
         official_md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
@@ -152,7 +169,7 @@ class AssessmentReportRenderer:
         if official_md_output and OFFICIAL_MD_TEMPLATE.exists():
             result["official_markdown"] = str(official_md_output)
         else:
-            result["official_markdown_warning"] = (
+            render_warnings.append(
                 "官方报告模板不存在，无法生成对外正式文书。"
                 "请将 official_risk_self_assessment_template.md 放入 backend/modules/assessment/templates/ 目录。"
             )
@@ -213,6 +230,10 @@ class AssessmentReportRenderer:
 
         if citation_registry is not None:
             result["citation_map_json"] = _write_citation_map_json(citation_registry, output_dir)
+
+        if render_warnings:
+            result["render_warnings_txt"] = _write_render_warnings_txt(render_warnings, output_dir)
+            result["render_warnings_json"] = _write_render_warnings_json(render_warnings, output_dir)
 
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             seen_arcnames: set[str] = set()
@@ -306,6 +327,49 @@ def _build_template_mapping(
     }
 
 
+def _render_internal_markdown_fallback(
+    *,
+    output_path: Path,
+    profile: CompanyProfile,
+    chapters: list[ChapterContent],
+    date_stamp: str,
+    path_warning: str | None,
+    alignment_warning: str | None,
+    citation_registry: "CitationRegistry | None",
+) -> None:
+    warning_lines = [item for item in [path_warning, alignment_warning] if item]
+    body: list[str] = [
+        "# 数据出境风险自评估内部风险分析报告",
+        "",
+        f"- 企业名称：{profile.company_name}",
+        f"- 生成日期：{date_stamp}",
+        f"- 接收方地区：{profile.receiver_country or '未提供'}",
+        f"- 传输目的：{profile.transfer_purpose or '未提供'}",
+        f"- 普通个人信息规模：{profile.pii_count:,}人",
+        f"- 敏感个人信息规模：{profile.spi_count:,}人",
+        "",
+    ]
+    if warning_lines:
+        body.extend([
+            "## 生成告警",
+            "",
+            *[f"- {item}" for item in warning_lines],
+            "",
+        ])
+
+    for index, chapter in enumerate(chapters, start=1):
+        title = chapter.title.strip() or f"章节 {index}"
+        content = chapter.content.strip() or "未提供"
+        body.extend([f"## {index}. {title}", "", content, ""])
+
+    if citation_registry is not None:
+        citation_map = citation_registry.build_citation_map_section().strip()
+        if citation_map:
+            body.extend(["## 引用依据索引", "", citation_map, ""])
+
+    output_path.write_text("\n".join(body).strip() + "\n", encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # Phase 7: intermediate artifact writers
 # ---------------------------------------------------------------------------
@@ -385,6 +449,20 @@ def _write_material_checklist_xlsx(material_rows: list[dict[str, str]], output_d
         ])
     path = output_dir / "material_checklist.xlsx"
     wb.save(path)
+    return str(path)
+
+
+def _write_render_warnings_txt(warnings: list[str], output_dir: Path) -> str:
+    path = output_dir / "render_warnings.txt"
+    path.write_text("\n".join(f"- {item}" for item in warnings) + "\n", encoding="utf-8")
+    return str(path)
+
+
+def _write_render_warnings_json(warnings: list[str], output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "render_warnings.json"
+    path.write_text(json.dumps({"warnings": warnings}, ensure_ascii=False, indent=2), encoding="utf-8")
     return str(path)
 
 

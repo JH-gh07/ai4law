@@ -91,12 +91,13 @@ class AssessmentService:
         finally:
             finalize_run(token)
 
+        report_path = self._select_report_path(run_result.outputs)
         if trace:
-            trace.record("final", {"summary": "安全自评估完成", "detail": {"report_path": run_result.outputs.get("docx", "")}})
+            trace.record("final", {"summary": "安全自评估完成", "detail": {"report_path": report_path}})
         return AssessmentResult(
             task_id=run_task_id,
             state=AssessmentTaskState.COMPLETED,
-            report_path=run_result.outputs["docx"],
+            report_path=report_path,
             output_files=run_result.outputs,
             profile=run_result.profile,
             regulations=run_result.regulations,
@@ -315,6 +316,14 @@ class AssessmentService:
             case_grounding=context_pack.case_grounding if context_pack else None,
             citation_registry=context_pack.citation_registry if context_pack else None,
         )
+
+    @staticmethod
+    def _select_report_path(outputs: dict[str, str]) -> str:
+        for key in ("docx", "official_markdown", "internal_markdown", "markdown"):
+            value = outputs.get(key)
+            if isinstance(value, str) and value.strip():
+                return value
+        raise ValueError("Assessment renderer produced no usable report artifact.")
 
     def submit_async(self, payload: AssessmentRequest) -> AssessmentAsyncAccepted:
         task_id = str(uuid.uuid4())

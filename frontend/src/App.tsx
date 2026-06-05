@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TopNav } from "./components/common/TopNav";
@@ -11,6 +11,7 @@ import type { Jurisdiction, LaunchMode } from "./lib/domain";
 import { AppStoreProvider, useAppStore } from "./lib/app-store";
 import { LanguageProvider } from "./lib/language";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./lib/task-templates";
+import { checkBackendHealth } from "./lib/module-adapter";
 import { DocsPlaceholderPage } from "./pages/DocsPlaceholderPage";
 import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
@@ -37,9 +38,38 @@ function AppShell() {
 
   const [modeModalOpen, setModeModalOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<LaunchMode | null>(null);
+  const [backendHealth, setBackendHealth] = useState<{
+    checked: boolean;
+    ok: boolean;
+    detail?: string;
+  }>({ checked: false, ok: true });
   const [quickStartOpen, setQuickStartOpen] = useState<boolean>(
     () => globalThis.localStorage?.getItem(QUICK_START_DISMISSED_KEY) !== "1"
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncBackendHealth = async () => {
+      const health = await checkBackendHealth();
+      if (cancelled) return;
+      setBackendHealth({
+        checked: true,
+        ok: health.ok,
+        detail: health.detail,
+      });
+    };
+
+    void syncBackendHealth();
+    const timer = globalThis.setInterval(() => {
+      void syncBackendHealth();
+    }, 30000);
+
+    return () => {
+      cancelled = true;
+      globalThis.clearInterval(timer);
+    };
+  }, []);
 
   const startFlow = () => {
     setModeModalOpen(true);
@@ -97,6 +127,16 @@ function AppShell() {
 
   return (
     <div className="app-root">
+      {backendHealth.checked && !backendHealth.ok ? (
+        <div className="backend-health-banner" role="status" aria-live="polite">
+          <strong>后端未连通</strong>
+          <span>
+            当前只能查看与编辑，本轮执行请求可能失败。
+            {backendHealth.detail ? ` 诊断信息：${backendHealth.detail}` : ""}
+          </span>
+        </div>
+      ) : null}
+
       {hideGlobalTopNav ? null : (
         <TopNav
           onStart={startFlow}

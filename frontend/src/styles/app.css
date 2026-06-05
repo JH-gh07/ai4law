@@ -17,6 +17,27 @@
   min-height: 100vh;
 }
 
+.backend-health-banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 18px;
+  background: #fff1f2;
+  color: #9f1239;
+  border-bottom: 1px solid rgba(190, 24, 93, 0.18);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.backend-health-banner strong {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.backend-health-banner span {
+  min-width: 0;
+}
+
 .app-main {
   min-height: 100vh;
   min-height: 100dvh;

@@ -2,6 +2,34 @@ import { getAuthHeaders } from "./auth/auth-service";
 import { buildDemoPayload } from "./demoPayloads";
 import type { ModuleKey, RunMode } from "./domain";
 
+export class BackendConnectionError extends Error {
+  code: "backend_unreachable" | "backend_http_empty" | "backend_http_error";
+  status?: number;
+  url?: string;
+
+  constructor(
+    message: string,
+    options: {
+      code: "backend_unreachable" | "backend_http_empty" | "backend_http_error";
+      status?: number;
+      url?: string;
+    }
+  ) {
+    super(message);
+    this.name = "BackendConnectionError";
+    this.code = options.code;
+    this.status = options.status;
+    this.url = options.url;
+  }
+}
+
+export function getModuleRunErrorCode(error: unknown): string | undefined {
+  if (error instanceof BackendConnectionError) {
+    return error.code;
+  }
+  return undefined;
+}
+
 export type ModuleDefinition = {
   key: ModuleKey;
   label: string;
@@ -186,10 +214,11 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
     });
   } catch (error) {
     if (url.startsWith("/api/")) {
-      throw new Error(
+      throw new BackendConnectionError(
         uiLang() === "zh"
-          ? "无法连接后端服务。请确认后端已启动（127.0.0.1:8000）后重试。"
-          : "Cannot connect to backend. Please ensure backend is running at 127.0.0.1:8000.",
+          ? "无法连接后端服务。请确认前端代理与后端服务均已启动后重试。"
+          : "Cannot connect to backend. Please ensure the frontend proxy and backend service are both running.",
+        { code: "backend_unreachable", url }
       );
     }
     throw error;
@@ -213,10 +242,11 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
       throw new Error(parseErrorMessage(data));
     }
     if (url.startsWith("/api/")) {
-      throw new Error(
+      throw new BackendConnectionError(
         uiLang() === "zh"
-          ? `后端请求失败（HTTP ${response.status}，空响应）。请确认后端已启动并监听 127.0.0.1:8000。`
-          : `Backend request failed (HTTP ${response.status}, empty response). Please confirm backend is running on 127.0.0.1:8000.`,
+          ? `后端请求失败（HTTP ${response.status}，空响应）。请检查服务是否可用。`
+          : `Backend request failed (HTTP ${response.status}, empty response). Please verify the service is available.`,
+        { code: "backend_http_empty", status: response.status, url }
       );
     }
     throw new Error(`HTTP ${response.status} from ${url}: empty response body`);
@@ -227,6 +257,30 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
   }
 
   return data;
+}
+
+export async function checkBackendHealth(): Promise<{ ok: boolean; status: string; detail?: string }> {
+  try {
+    const response = await fetch("/health", { method: "GET" });
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: "error",
+        detail: `HTTP ${response.status}`,
+      };
+    }
+    const data = (await response.json()) as { status?: string };
+    return {
+      ok: (data.status ?? "").toLowerCase() === "ok",
+      status: typeof data.status === "string" ? data.status : "unknown",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: "unreachable",
+      detail: error instanceof Error ? error.message : "unknown error",
+    };
+  }
 }
 
 export async function uploadTaskFile(file: File): Promise<UploadedTaskFile> {

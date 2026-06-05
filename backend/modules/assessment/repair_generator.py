@@ -64,6 +64,7 @@ class RepairGenerator:
         "forbidden_expression",
         "internal_leakage",
         "user_claim_positive",
+        "missing_high_issue",
     }
 
     # Issues that require input changes — cannot be auto-fixed
@@ -189,6 +190,8 @@ class RepairGenerator:
             return self._fix_internal_leakage(classified["original"], chapters)
         if marker == "user_claim_positive":
             return self._fix_user_claim_positive(classified["original"], chapters)
+        if marker == "missing_high_issue":
+            return self._fix_missing_high_issue(classified["original"], chapters)
 
         return None
 
@@ -300,6 +303,26 @@ class RepairGenerator:
                 )
                 return f"Added user_claim_only caveat for '{marker}'"
         return None
+
+    def _fix_missing_high_issue(self, issue: str, chapters: list[ChapterContent]) -> str | None:
+        """Append a high-risk issue summary to the conclusion chapter."""
+        match = re.search(r"Report does not mention HIGH/BLOCKER issue ([^:]+): (.+)\.", issue)
+        if not match or not chapters:
+            return None
+
+        issue_id = match.group(1).strip()
+        issue_title = match.group(2).strip()
+        conclusion = chapters[-1]
+        marker = f"【高风险问题提示】{issue_id}"
+        if marker in conclusion.content:
+            return None
+
+        conclusion.content += (
+            f"\n\n> {marker}：{issue_title}。"
+            "该问题属于必须重点披露和整改的高风险事项，"
+            "正式申报或对外使用前应补充对应事实依据、整改动作与控制措施。"
+        )
+        return f"Added high-risk issue summary for {issue_id}"
 
 
 def run_repair_pass(

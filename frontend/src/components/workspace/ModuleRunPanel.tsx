@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
+  getModuleRunErrorCode,
   findModule,
   getDefaultPayload,
   hasAsync,
@@ -21,6 +22,7 @@ export type RunOutput = {
   response?: unknown;
   success: boolean;
   error?: string;
+  errorCode?: string;
   asyncTaskId?: string;
   asyncState?: string;
 };
@@ -3115,22 +3117,54 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份DPIA附件（流程图/制度/合同等）。");
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const attachments = uploadedFiles.map((path) => {
+    uploadedFiles.forEach((path) => {
       const format = inferDpiaAttachmentFormat(path);
       assertInput(!!format, `DPIA附件仅支持 .docx/.pdf/.png/.jpg：${basenameFromPath(path)}`);
-      return {
-        file_role: values.attachment_role,
-        file_name: basenameFromPath(path),
-        file_format: format,
-        storage_uri: path
-      };
     });
+
+    const splitLines = (input: string): string[] =>
+      input
+        .split(/[\n;；]+/)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+
+    const dataCategories = splitLines(values.data_types);
+    const lawfulBasis = splitLines(values.lawful_basis);
+    const triggerReasons = splitLines(values.need_reason);
+
+    const specialCategoryTypes = values.includes_special_data
+      ? (dataCategories.length > 0 ? dataCategories.slice(0, 5) : ["special_category_data"])
+      : [];
+
+    const riskLines = splitLines(values.risk_assessment);
+    const identifiedRisks = riskLines.map((risk, index) => ({
+      risk_id: `RISK-${String(index + 1).padStart(3, "0")}`,
+      risk_description: risk,
+      likelihood: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
+      impact: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
+      affected_data_subjects: values.subject_scale.trim(),
+      risk_source:
+        values.has_crossborder_transfer ? "third_party" :
+        values.novel_technology.trim() ? "technology" :
+        values.includes_special_data ? "data_type" :
+        "processing_activity"
+    }));
+
+    const mitigationLines = splitLines(values.mitigation_measures);
+    const mitigationMeasures = mitigationLines.map((measure, index) => ({
+      mitigation_id: `MIT-${String(index + 1).padStart(3, "0")}`,
+      description: measure,
+      target_risk_ids: identifiedRisks.map((risk) => risk.risk_id),
+      status: "planned",
+      responsible_party: values.signoff_owner.trim() || values.controller_name.trim() || values.dpo_role.trim()
+    }));
 
     return {
       project_name: values.project_name.trim(),
-      processing_description: [
+      project_goal: values.project_goal.trim(),
+      dpia_trigger_reasons: triggerReasons,
+      processing_flow_description: [
         values.processing_description,
-        values.project_goal ? `项目目标：${values.project_goal}` : "",
         values.data_types ? `数据类型：${values.data_types}` : "",
         values.subject_scale ? `主体规模：${values.subject_scale}` : "",
         values.frequency ? `频率：${values.frequency}` : "",
@@ -3143,34 +3177,53 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         values.vulnerable_group ? `脆弱群体：${values.vulnerable_group}` : "",
         values.novel_technology ? `新技术：${values.novel_technology}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      purpose_and_necessity: [
+      data_categories: dataCategories,
+      special_category_data: values.includes_special_data,
+      special_category_types: specialCategoryTypes,
+      data_subject_categories: splitLines(values.relationship_context),
+      data_subject_count: values.subject_scale.trim(),
+      retention_period: values.retention_period.trim(),
+      cross_border_transfer: values.has_crossborder_transfer,
+      transfer_destination: values.geo_scope.trim(),
+      automated_decision_making: values.novel_technology.trim().length > 0,
+      systematic_monitoring: /持续|监控|monitor/i.test(`${values.frequency} ${values.processing_description}`),
+      large_scale_processing: /万|large|大量|规模/i.test(values.subject_scale),
+      data_matching: /匹配|关联|融合|match/i.test(`${values.processing_description} ${values.project_goal}`),
+      new_technology: values.novel_technology.trim().length > 0,
+      vulnerable_data_subjects: values.vulnerable_group.trim().length > 0,
+      consulted_internal_departments: splitLines(values.processor_management),
+      external_experts: splitLines(values.contact_channel),
+      data_subject_consultation_plan: [
+        values.notice_plan,
+        values.rights_support,
+        values.expectation_control
+      ].filter((item) => item.trim().length > 0).join("；"),
+      lawful_basis: lawfulBasis,
+      necessity_statement: [
         values.purpose_and_necessity,
         values.need_reason ? `触发理由：${values.need_reason}` : "",
-        values.expectation_control ? `合理预期：${values.expectation_control}` : "",
-        values.function_creep_control ? `防功能漂移：${values.function_creep_control}` : "",
-        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : "",
-        values.notice_plan ? `告知安排：${values.notice_plan}` : "",
-        values.rights_support ? `权利支持：${values.rights_support}` : "",
-        values.processor_management ? `处理者管理：${values.processor_management}` : ""
+        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      lawful_basis: values.lawful_basis.trim(),
-      risk_assessment: [
-        values.risk_assessment,
-        values.prior_concerns ? `历史风险：${values.prior_concerns}` : ""
+      proportionality_statement: [
+        values.function_creep_control,
+        values.processor_management,
+        values.relationship_context ? `关系背景：${values.relationship_context}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      mitigation_measures: [
-        values.mitigation_measures,
-        values.signoff_owner ? `签署责任人：${values.signoff_owner}` : "",
-        values.controller_name ? `控制者：${values.controller_name}` : "",
-        values.dpo_role ? `DPO：${values.dpo_role}` : "",
+      transparency_information: [
+        values.notice_plan,
         values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
-        values.dpo_advice ? `DPO意见：${values.dpo_advice}` : ""
+        values.controller_name ? `控制者：${values.controller_name}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      residual_risk: [
-        values.residual_risk,
-        values.review_schedule ? `复审安排：${values.review_schedule}` : ""
+      identified_risks: identifiedRisks,
+      mitigation_measures: mitigationMeasures,
+      dpia_owner: values.signoff_owner.trim() || values.controller_name.trim(),
+      dpo_name: values.dpo_role.trim(),
+      dpo_opinion: [
+        values.dpo_advice,
+        values.residual_risk ? `剩余风险：${values.residual_risk}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      attachments
+      review_date: values.review_schedule.trim(),
+      uploaded_files: uploadedFiles
     };
   };
 
@@ -3561,7 +3614,12 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     setAsyncRunProgress(null);
     try {
       const preferredRunMode: RunMode = hasAsync(definition) ? "async" : "sync";
-      const timeoutMs = moduleKey === "review" ? 900000 : 180000;
+      const timeoutMs =
+        moduleKey === "review"
+          ? 900000
+          : moduleKey === "assessment"
+            ? 900000
+            : 180000;
       const result = await runModule(
         definition,
         requestPayload,
@@ -3582,6 +3640,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       });
     } catch (runErr) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
+      const errorCode = getModuleRunErrorCode(runErr);
       const asyncTaskId =
         runErr instanceof Error && "asyncTaskId" in runErr && typeof runErr.asyncTaskId === "string"
           ? runErr.asyncTaskId
@@ -3598,6 +3657,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         request: requestPayload,
         success: false,
         error: message,
+        errorCode,
         asyncTaskId,
         asyncState,
       });
