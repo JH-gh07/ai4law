@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleKey, RunMode, TaskSpace } from "../../lib/domain";
 import {
-  getModuleRunErrorCode,
   findModule,
   getDefaultPayload,
   hasAsync,
@@ -22,7 +21,6 @@ export type RunOutput = {
   response?: unknown;
   success: boolean;
   error?: string;
-  errorCode?: string;
   asyncTaskId?: string;
   asyncState?: string;
 };
@@ -396,91 +394,6 @@ type CnFlowFormValues = {
   additional_recipients: string;
   internal_access_note: string;
 };
-
-type Us14117FieldType = "text" | "textarea" | "number" | "checkbox" | "select";
-type Us14117FieldConfig = {
-  name: keyof Us14117FormValues;
-  label: string;
-  type: Us14117FieldType;
-  options?: string[];
-  min?: number;
-  step?: number;
-};
-type Us14117StepConfig = {
-  title: string;
-  fields: Us14117FieldConfig[];
-};
-type Us14117FormValues = {
-  company_name: string;
-  project_name: string;
-  transaction_description: string;
-  transaction_type: string;
-  data_item_name: string;
-  data_description: string;
-  doj_data_category: string;
-  us_person_count: number;
-  entity_name: string;
-  country_of_registration: string;
-  government_control: boolean;
-  entity_role: string;
-  onward_transfer: boolean;
-  onward_transfer_description: string;
-  security_measures_summary: string;
-  review_focus: string;
-};
-
-const US14117_STEPS: Us14117StepConfig[] = [
-  {
-    title: "交易基本信息",
-    fields: [
-      { name: "company_name", label: "企业名称", type: "text" },
-      { name: "project_name", label: "项目名称", type: "text" },
-      { name: "transaction_description", label: "交易描述（业务场景、数据传输内容、目的）", type: "textarea" },
-      {
-        name: "transaction_type",
-        label: "交易类型",
-        type: "select",
-        options: ["vendor_agreement", "employment_agreement", "investment_agreement", "data_brokerage", "cooperative_research", "cloud_remote_access", "onward_transfer", "other"]
-      }
-    ]
-  },
-  {
-    title: "数据分类与实体",
-    fields: [
-      { name: "data_item_name", label: "主要数据项名称", type: "text" },
-      { name: "data_description", label: "数据描述（内容、格式、来源）", type: "textarea" },
-      {
-        name: "doj_data_category",
-        label: "DOJ 数据类别",
-        type: "select",
-        options: ["human_genomic_data", "biometric_identifiers", "precise_geolocation_data", "personal_health_data", "personal_financial_data", "covered_personal_identifiers", "government_related_data", "not_14117_data"]
-      },
-      { name: "us_person_count", label: "涉及美国人数量（估算）", type: "number", min: 0, step: 1000 },
-      { name: "entity_name", label: "接收方实体名称", type: "text" },
-      { name: "country_of_registration", label: "接收方注册国家/地区", type: "text" },
-      { name: "government_control", label: "接收方是否受政府控制", type: "checkbox" },
-      {
-        name: "entity_role",
-        label: "接收方角色",
-        type: "select",
-        options: ["processor", "controller", "subprocessor", "affiliate", "vendor"]
-      }
-    ]
-  },
-  {
-    title: "安全与再传输",
-    fields: [
-      { name: "onward_transfer", label: "是否涉及再传输", type: "checkbox" },
-      { name: "onward_transfer_description", label: "再传输说明（如涉及）", type: "textarea" },
-      { name: "security_measures_summary", label: "安全措施摘要（加密、访问控制、审计等）", type: "textarea" },
-      { name: "review_focus", label: "本次重点审查关注项", type: "textarea" }
-    ]
-  },
-  {
-    title: "附件上传",
-    fields: []
-  }
-];
 
 type CpraFieldType = "text" | "textarea" | "checkbox";
 type CpraFieldConfig = {
@@ -1990,25 +1903,6 @@ const createDefaultCnFlowValues = (): CnFlowFormValues => {
   };
 };
 
-const createDefaultUs14117Values = (): Us14117FormValues => ({
-  company_name: "",
-  project_name: "",
-  transaction_description: "",
-  transaction_type: "vendor_agreement",
-  data_item_name: "",
-  data_description: "",
-  doj_data_category: "not_14117_data",
-  us_person_count: 0,
-  entity_name: "",
-  country_of_registration: "",
-  government_control: false,
-  entity_role: "processor",
-  onward_transfer: false,
-  onward_transfer_description: "",
-  security_measures_summary: "",
-  review_focus: ""
-});
-
 const createDefaultCpraValues = (): CpraFormValues => {
   const demo = asRecord(getDefaultPayload("cpra"));
   return {
@@ -2561,9 +2455,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
   const [cnFlowEntityInventoryFiles, setCnFlowEntityInventoryFiles] = useState<File[]>([]);
   const [cnFlowSupportingFiles, setCnFlowSupportingFiles] = useState<File[]>([]);
-  const [us14117StepIndex, setUs14117StepIndex] = useState(0);
-  const [us14117Values, setUs14117Values] = useState<Us14117FormValues>(createDefaultUs14117Values);
-  const [us14117Files, setUs14117Files] = useState<File[]>([]);
   const [cpraStepIndex, setCpraStepIndex] = useState(0);
   const [cpraValues, setCpraValues] = useState<CpraFormValues>(createDefaultCpraValues);
   const [cpraPrivacyPolicyFiles, setCpraPrivacyPolicyFiles] = useState<File[]>([]);
@@ -2661,11 +2552,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setCnFlowEntityInventoryFiles([]);
       setCnFlowSupportingFiles([]);
     }
-    if (moduleKey === "us_14117") {
-      setUs14117StepIndex(0);
-      setUs14117Values(createDefaultUs14117Values());
-      setUs14117Files([]);
-    }
     if (moduleKey === "cpra") {
       setCpraStepIndex(0);
       setCpraValues(createDefaultCpraValues());
@@ -2687,7 +2573,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const isDpiaModule = moduleKey === "dpia";
   const isTiaModule = moduleKey === "tia";
   const isCnFlowModule = moduleKey === "cn_flow";
-  const isUs14117Module = moduleKey === "us_14117";
   const isCpraModule = moduleKey === "cpra";
 
   // ── 开发者测试案例 ──
@@ -2705,7 +2590,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     else if (isDpiaModule) setDpiaValues((prev) => ({ ...prev, ...fd } as DpiaFormValues));
     else if (isTiaModule) setTiaValues((prev) => ({ ...prev, ...fd } as TiaFormValues));
     else if (isCnFlowModule) setCnFlowValues((prev) => ({ ...prev, ...fd } as CnFlowFormValues));
-    else if (isUs14117Module) setUs14117Values((prev) => ({ ...prev, ...fd } as Us14117FormValues));
     else if (isEuSccTask) setEuSccValues((prev) => ({ ...prev, ...fd } as EuSccFormValues));
     else if (isDocumentReviewTask) setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
     setShowCasePicker(false);
@@ -2823,10 +2707,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
   const updateCnFlowValue = <K extends keyof CnFlowFormValues>(name: K, value: CnFlowFormValues[K]) => {
     setCnFlowValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const updateUs14117Value = <K extends keyof Us14117FormValues>(name: K, value: Us14117FormValues[K]) => {
-    setUs14117Values((prev) => ({ ...prev, [name]: value }));
   };
 
   const updateCpraValue = <K extends keyof CpraFormValues>(name: K, value: CpraFormValues[K]) => {
@@ -3235,54 +3115,22 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份DPIA附件（流程图/制度/合同等）。");
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    uploadedFiles.forEach((path) => {
+    const attachments = uploadedFiles.map((path) => {
       const format = inferDpiaAttachmentFormat(path);
       assertInput(!!format, `DPIA附件仅支持 .docx/.pdf/.png/.jpg：${basenameFromPath(path)}`);
+      return {
+        file_role: values.attachment_role,
+        file_name: basenameFromPath(path),
+        file_format: format,
+        storage_uri: path
+      };
     });
-
-    const splitLines = (input: string): string[] =>
-      input
-        .split(/[\n;；]+/)
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0);
-
-    const dataCategories = splitLines(values.data_types);
-    const lawfulBasis = splitLines(values.lawful_basis);
-    const triggerReasons = splitLines(values.need_reason);
-
-    const specialCategoryTypes = values.includes_special_data
-      ? (dataCategories.length > 0 ? dataCategories.slice(0, 5) : ["special_category_data"])
-      : [];
-
-    const riskLines = splitLines(values.risk_assessment);
-    const identifiedRisks = riskLines.map((risk, index) => ({
-      risk_id: `RISK-${String(index + 1).padStart(3, "0")}`,
-      risk_description: risk,
-      likelihood: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
-      impact: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
-      affected_data_subjects: values.subject_scale.trim(),
-      risk_source:
-        values.has_crossborder_transfer ? "third_party" :
-        values.novel_technology.trim() ? "technology" :
-        values.includes_special_data ? "data_type" :
-        "processing_activity"
-    }));
-
-    const mitigationLines = splitLines(values.mitigation_measures);
-    const mitigationMeasures = mitigationLines.map((measure, index) => ({
-      mitigation_id: `MIT-${String(index + 1).padStart(3, "0")}`,
-      description: measure,
-      target_risk_ids: identifiedRisks.map((risk) => risk.risk_id),
-      status: "planned",
-      responsible_party: values.signoff_owner.trim() || values.controller_name.trim() || values.dpo_role.trim()
-    }));
 
     return {
       project_name: values.project_name.trim(),
-      project_goal: values.project_goal.trim(),
-      dpia_trigger_reasons: triggerReasons,
-      processing_flow_description: [
+      processing_description: [
         values.processing_description,
+        values.project_goal ? `项目目标：${values.project_goal}` : "",
         values.data_types ? `数据类型：${values.data_types}` : "",
         values.subject_scale ? `主体规模：${values.subject_scale}` : "",
         values.frequency ? `频率：${values.frequency}` : "",
@@ -3295,53 +3143,34 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         values.vulnerable_group ? `脆弱群体：${values.vulnerable_group}` : "",
         values.novel_technology ? `新技术：${values.novel_technology}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      data_categories: dataCategories,
-      special_category_data: values.includes_special_data,
-      special_category_types: specialCategoryTypes,
-      data_subject_categories: splitLines(values.relationship_context),
-      data_subject_count: values.subject_scale.trim(),
-      retention_period: values.retention_period.trim(),
-      cross_border_transfer: values.has_crossborder_transfer,
-      transfer_destination: values.geo_scope.trim(),
-      automated_decision_making: values.novel_technology.trim().length > 0,
-      systematic_monitoring: /持续|监控|monitor/i.test(`${values.frequency} ${values.processing_description}`),
-      large_scale_processing: /万|large|大量|规模/i.test(values.subject_scale),
-      data_matching: /匹配|关联|融合|match/i.test(`${values.processing_description} ${values.project_goal}`),
-      new_technology: values.novel_technology.trim().length > 0,
-      vulnerable_data_subjects: values.vulnerable_group.trim().length > 0,
-      consulted_internal_departments: splitLines(values.processor_management),
-      external_experts: splitLines(values.contact_channel),
-      data_subject_consultation_plan: [
-        values.notice_plan,
-        values.rights_support,
-        values.expectation_control
-      ].filter((item) => item.trim().length > 0).join("；"),
-      lawful_basis: lawfulBasis,
-      necessity_statement: [
+      purpose_and_necessity: [
         values.purpose_and_necessity,
         values.need_reason ? `触发理由：${values.need_reason}` : "",
-        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : ""
+        values.expectation_control ? `合理预期：${values.expectation_control}` : "",
+        values.function_creep_control ? `防功能漂移：${values.function_creep_control}` : "",
+        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : "",
+        values.notice_plan ? `告知安排：${values.notice_plan}` : "",
+        values.rights_support ? `权利支持：${values.rights_support}` : "",
+        values.processor_management ? `处理者管理：${values.processor_management}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      proportionality_statement: [
-        values.function_creep_control,
-        values.processor_management,
-        values.relationship_context ? `关系背景：${values.relationship_context}` : ""
+      lawful_basis: values.lawful_basis.trim(),
+      risk_assessment: [
+        values.risk_assessment,
+        values.prior_concerns ? `历史风险：${values.prior_concerns}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      transparency_information: [
-        values.notice_plan,
+      mitigation_measures: [
+        values.mitigation_measures,
+        values.signoff_owner ? `签署责任人：${values.signoff_owner}` : "",
+        values.controller_name ? `控制者：${values.controller_name}` : "",
+        values.dpo_role ? `DPO：${values.dpo_role}` : "",
         values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
-        values.controller_name ? `控制者：${values.controller_name}` : ""
+        values.dpo_advice ? `DPO意见：${values.dpo_advice}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      identified_risks: identifiedRisks,
-      mitigation_measures: mitigationMeasures,
-      dpia_owner: values.signoff_owner.trim() || values.controller_name.trim(),
-      dpo_name: values.dpo_role.trim(),
-      dpo_opinion: [
-        values.dpo_advice,
-        values.residual_risk ? `剩余风险：${values.residual_risk}` : ""
+      residual_risk: [
+        values.residual_risk,
+        values.review_schedule ? `复审安排：${values.review_schedule}` : ""
       ].filter((item) => item.trim().length > 0).join("；"),
-      review_date: values.review_schedule.trim(),
-      uploaded_files: uploadedFiles
+      attachments
     };
   };
 
@@ -3616,46 +3445,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     };
   };
 
-  const buildUs14117Payload = async (): Promise<unknown> => {
-    assertInput(hasText(us14117Values.company_name), "请填写企业名称。");
-    assertInput(hasText(us14117Values.project_name), "请填写项目名称。");
-    assertInput(hasText(us14117Values.transaction_description), "请填写交易描述。");
-    assertInput(hasText(us14117Values.data_item_name), "请填写数据项名称。");
-    assertInput(hasText(us14117Values.entity_name), "请填写接收方实体名称。");
-    assertInput(hasText(us14117Values.country_of_registration), "请填写接收方注册国家/地区。");
-
-    const uploadedPaths = us14117Files.length > 0 ? await uploadFiles(us14117Files) : [];
-    const attachments = uploadedPaths.map((path) => ({
-      file_role: "supporting_material" as const,
-      file_name: basenameFromPath(path),
-      file_format: "docx" as const,
-      storage_uri: path
-    }));
-
-    return {
-      company_name: us14117Values.company_name.trim(),
-      project_name: us14117Values.project_name.trim(),
-      transaction_description: us14117Values.transaction_description.trim(),
-      transaction_type: us14117Values.transaction_type,
-      attachments: attachments.length > 0 ? attachments.map((a: { storage_uri: string }) => a.storage_uri) : [],
-      data_items: [{
-        data_item_name: us14117Values.data_item_name.trim(),
-        data_description: us14117Values.data_description.trim(),
-        doj_data_category: us14117Values.doj_data_category,
-        us_person_count: us14117Values.us_person_count
-      }],
-      recipient_entities: [{
-        entity_name: us14117Values.entity_name.trim(),
-        country_of_registration: us14117Values.country_of_registration.trim(),
-        government_control: us14117Values.government_control,
-        entity_role: us14117Values.entity_role
-      }],
-      security_measures: us14117Values.security_measures_summary.trim() ? [{ measure_name: us14117Values.security_measures_summary.trim().slice(0, 80), category: "access_control", status: "implemented", description: us14117Values.security_measures_summary.trim() }] : [],
-      onward_transfer: us14117Values.onward_transfer,
-      onward_transfer_description: us14117Values.onward_transfer_description.trim()
-    };
-  };
-
   const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown => {
     const asText = (key: string): string => {
       const value = values[key];
@@ -3798,7 +3587,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       });
     } catch (runErr) {
       const message = runErr instanceof Error ? runErr.message : "Request failed";
-      const errorCode = getModuleRunErrorCode(runErr);
       const asyncTaskId =
         runErr instanceof Error && "asyncTaskId" in runErr && typeof runErr.asyncTaskId === "string"
           ? runErr.asyncTaskId
@@ -3815,7 +3603,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         request: requestPayload,
         success: false,
         error: message,
-        errorCode,
         asyncTaskId,
         asyncState,
       });
@@ -3845,8 +3632,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         requestPayload = await buildTiaPayload();
       } else if (isCnFlowModule) {
         requestPayload = await buildCnFlowPayload();
-      } else if (isUs14117Module) {
-        requestPayload = await buildUs14117Payload();
       } else if (isCpraModule) {
         requestPayload = await buildCpraPayload();
       } else {
@@ -4034,8 +3819,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const tiaProgress = Math.round(((tiaStepIndex + 1) / TIA_STEPS.length) * 100);
   const currentCnFlowStep = CN_FLOW_STEPS[cnFlowStepIndex];
   const cnFlowProgress = Math.round(((cnFlowStepIndex + 1) / CN_FLOW_STEPS.length) * 100);
-  const currentUs14117Step = US14117_STEPS[us14117StepIndex];
-  const us14117Progress = Math.round(((us14117StepIndex + 1) / US14117_STEPS.length) * 100);
   const currentCpraStep = CPRA_STEPS[cpraStepIndex];
   const cpraProgress = Math.round(((cpraStepIndex + 1) / CPRA_STEPS.length) * 100);
   const panelModuleLabel =
@@ -5564,7 +5347,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         <section className="schema-wizard">
                     {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
 <div className="schema-wizard-head">
-            <div className="runner-title">CN Flow Wizard</div>
+            <div className="runner-title">EO 14117 Wizard</div>
             <span>{cnFlowProgress}%</span>
           </div>
           <div className="schema-stepper">
@@ -5720,89 +5503,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成14117风险评估结论报告"}
             </button>
-          </div>
-        </section>
-      ) : isUs14117Module ? (
-        <section className="schema-wizard">
-                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
-          <div className="schema-wizard-head">
-            <div className="runner-title">EO 14117 Wizard</div>
-            <span>{us14117Progress}%</span>
-          </div>
-          <div className="schema-stepper">
-            {US14117_STEPS.map((step, index) => (
-              <button key={localizeStepTitle(lang, step.title)} className={`schema-step-dot ${index === us14117StepIndex ? "active" : ""}`} onClick={() => setUs14117StepIndex(index)} type="button">
-                {index + 1}. {localizeStepTitle(lang, step.title)}
-              </button>
-            ))}
-          </div>
-
-          <div className="schema-current-title">{localizeStepTitle(lang, currentUs14117Step.title)}</div>
-          {currentUs14117Step.fields.length > 0 ? (
-            <div className="schema-field-grid">
-              {currentUs14117Step.fields.map((field) => {
-                if (field.type === "text") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <input value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "textarea") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap schema-field-wide">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <textarea className="runner-textarea schema-textarea" value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "number") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <input type="number" min={(field as Us14117FieldConfig).min ?? 0} step={(field as Us14117FieldConfig).step ?? 1} value={Number(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, Number(event.target.value) as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "select") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <select value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)}>
-                        {(field.options ?? []).map((option) => (<option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>))}
-                      </select>
-                    </label>
-                  );
-                }
-                return (
-                  <label key={String(field.name)} className="schema-checkbox-field">
-                    <input type="checkbox" checked={Boolean(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.checked as never)} />
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                  </label>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {us14117StepIndex === US14117_STEPS.length - 1 ? (
-            <>
-              <section className="schema-upload-card">
-                <div className="runner-title">辅助材料（可选）</div>
-                <input type="file" multiple onChange={(event) => setUs14117Files(Array.from(event.target.files ?? []))} />
-                <div className="schema-upload-list">
-                  {us14117Files.map((file) => (<article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item"><strong>{file.name}</strong><small>{Math.max(1, Math.round(file.size / 1024))} KB</small></article>))}
-                  {us14117Files.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
-                </div>
-              </section>
-            </>
-          ) : null}
-
-          <div className="schema-actions-row">
-            <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.max(0, prev - 1))} disabled={us14117StepIndex === 0}>上一步</button>
-            <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.min(US14117_STEPS.length - 1, prev + 1))} disabled={us14117StepIndex === US14117_STEPS.length - 1}>下一步</button>
-            <button className="pill-btn-primary" onClick={execute} disabled={loading}>{loading ? t("runningNow") : "运行 EO 14117 评估"}</button>
-            {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>) : null}
           </div>
         </section>
       ) : isCpraModule ? (

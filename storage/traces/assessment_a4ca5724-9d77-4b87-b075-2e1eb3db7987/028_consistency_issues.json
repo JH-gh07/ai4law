@@ -1,0 +1,16 @@
+{
+  "name": "consistency_issues",
+  "seq": 28,
+  "created_at": "2026-06-05T04:37:13.647182+00:00",
+  "payload": {
+    "issues": [
+      "Report does not mention HIGH/BLOCKER issue ISSUE-ciio-security-assessment: CIIO 触发安全评估路径.",
+      "Report does not mention HIGH/BLOCKER issue ISSUE-recipient-security-evidence-missing: 境外接收方安全保障能力证明不足."
+    ],
+    "checks": [
+      "legacy_chapter",
+      "context_pack_references",
+      "report_against_context"
+    ]
+  }
+}

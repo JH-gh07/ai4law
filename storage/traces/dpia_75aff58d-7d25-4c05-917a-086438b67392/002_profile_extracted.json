@@ -1,0 +1,41 @@
+{
+  "name": "profile_extracted",
+  "seq": 2,
+  "created_at": "2026-06-05T04:52:55.769707+00:00",
+  "payload": {
+    "project_name": "DPIA异步测试项目",
+    "project_goal": "通过AI算法对员工健康数据进行评估和分类",
+    "processing_flow_description": "收集员工体检报告和可穿戴设备健康数据，进行健康风险评分和个性化健康计划推荐",
+    "data_categories": [
+      "体检数据",
+      "心率"
+    ],
+    "special_category_data": true,
+    "special_category_types": [
+      "健康数据"
+    ],
+    "data_subject_categories": [
+      "员工"
+    ],
+    "data_subject_count": "5000人",
+    "retention_period": "",
+    "cross_border_transfer": true,
+    "transfer_destination": "United States",
+    "automated_decision_making": true,
+    "systematic_monitoring": false,
+    "large_scale_processing": false,
+    "data_matching": false,
+    "new_technology": true,
+    "vulnerable_data_subjects": true,
+    "lawful_basis": [
+      "GDPR Art 6(1)(b)"
+    ],
+    "dpia_trigger_reasons": [],
+    "dpo_name": "李律师",
+    "dpo_opinion": "初步审阅通过",
+    "extracted_notes": [
+      "flow.pdf: [parse skipped] File not found: flow.pdf"
+    ],
+    "attachment_metadata": []
+  }
+}

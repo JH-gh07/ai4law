@@ -1,0 +1,39 @@
+{
+  "name": "agent_transfer_chain",
+  "seq": 5,
+  "created_at": "2026-06-05T04:46:05.194995+00:00",
+  "payload": {
+    "patched_chain": {
+      "exporter_name": "",
+      "exporter_role": "processor",
+      "importer_name": "",
+      "importer_role": "processor",
+      "sub_processors": [],
+      "onward_transfer_locations": [
+        "Serbia",
+        "Serbia"
+      ],
+      "storage_locations": [
+        "Serbia",
+        "Serbia"
+      ],
+      "access_locations": [
+        "Serbia",
+        "Serbia"
+      ]
+    },
+    "chain_graph": {
+      "nodes": [],
+      "edges": []
+    },
+    "risk_hints": [
+      {
+        "type": "role_warning",
+        "detail": "Both exporter and importer are processor — verify module selection",
+        "confidence": 0.7
+      }
+    ],
+    "nodes_found": 0,
+    "edges_found": 0
+  }
+}

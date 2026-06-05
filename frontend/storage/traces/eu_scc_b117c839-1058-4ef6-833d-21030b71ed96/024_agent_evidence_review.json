@@ -1,0 +1,344 @@
+{
+  "name": "agent_evidence_review",
+  "seq": 24,
+  "created_at": "2026-06-05T04:46:05.348022+00:00",
+  "payload": {
+    "revised_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-MODULE-MISMATCH",
+        "claim": "模块选择错误: 应为Module Three, 实际Module Two",
+        "fact_refs": [
+          "EU-SCC-FACT-request-declared-module-type",
+          "EU-SCC-FACT-doc-module-type"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028",
+          "EU 2021/914"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "将文档模块从 Module Two 改为 Module Three 并确认 Annex I.A 中的角色与模块一致。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-MODULE-MISMATCH",
+          "overall_rating",
+          "clause_findings"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "claim": "第三国传输风险: Serbia",
+        "fact_refs": [
+          "EU-SCC-FACT-review-has-third-country-transfer"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028",
+          "Schrems II C-311/18",
+          "EDPB 01/2020"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "完成 TIA；针对第三国法律环境实施 Schrems II 补充措施。",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-ISSUE-THIRD-COUNTRY",
+          "overall_rating",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "claim": "[HIGH] Document Header: Exporter role 'processor' + Importer role 'processor' → expected Module Three, but document declares",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Use Module Three instead of Module Two, or verify that the party roles in Annex I.A match the declared module.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "claim": "[HIGH] Clause 14: Third country transfer identified to: Serbia. No Transfer Impact Assessment (TIA) has been provided.",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete a TIA for transfers to Serbia. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "claim": "[HIGH] Annex II: Third country transfer to non-adequate jurisdiction 'Serbia' requires Schrems II supplementary measu",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: partial (Technical measures are limited or not detected.). Contractual: missing. Organiza",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "evidence_patches": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028",
+          "Schrems II C-311/18",
+          "EDPB 01/2020"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-LAW-002-158",
+          "EU-LAW-002-014",
+          "EU-LAW-002-121",
+          "EU-LAW-002-116",
+          "EU-LAW-002-028"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      }
+    ],
+    "low_confidence_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-ISSUE-THIRD-COUNTRY",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-MODULE-MISMATCH",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      }
+    ],
+    "patch_count": 6
+  }
+}

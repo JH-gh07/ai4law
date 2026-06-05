@@ -1,0 +1,44 @@
+{
+  "name": "need_diagnosis_enriched",
+  "seq": 26,
+  "created_at": "2026-06-05T04:53:05.283352+00:00",
+  "payload": {
+    "dpia_required": true,
+    "trigger_reasons": [
+      {
+        "type": "automated_decision_making",
+        "fact_refs": [
+          "FACT-automated-decision"
+        ],
+        "reason": "系统涉及对个人的自动化评估或决策"
+      },
+      {
+        "type": "special_category_inference",
+        "fact_refs": [
+          "FACT-special-category"
+        ],
+        "reason": "可能间接推断特殊类别个人数据"
+      },
+      {
+        "type": "new_technology",
+        "fact_refs": [
+          "FACT-new-tech"
+        ],
+        "reason": "使用新技术处理个人数据"
+      },
+      {
+        "type": "vulnerable_subjects",
+        "fact_refs": [
+          "FACT-vulnerable"
+        ],
+        "reason": "涉及弱势数据主体群体"
+      }
+    ],
+    "legal_basis": [
+      "GDPR Article 35",
+      "WP29 WP248 rev.01"
+    ],
+    "prior_consultation_possible": true,
+    "reasoning": "该项目命中WP248高风险标准中的4项指标，符合WP248规定的高风险处理多因素累积标准，应在上线前开展DPIA"
+  }
+}

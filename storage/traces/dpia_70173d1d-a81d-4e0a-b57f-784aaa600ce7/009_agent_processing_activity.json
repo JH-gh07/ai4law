@@ -1,0 +1,44 @@
+{
+  "name": "agent_processing_activity",
+  "seq": 9,
+  "created_at": "2026-06-05T04:50:14.587129+00:00",
+  "payload": {
+    "processing_steps": [
+      {
+        "step": "数据处理",
+        "actor": "未指明",
+        "data_sources": [
+          "数据主体"
+        ],
+        "data_categories": [
+          "体检数据",
+          "心率"
+        ],
+        "processing": "收集员工体检报告和可穿戴设备健康数据，进行健康风险评分和个性化健康计划推荐",
+        "risk_notes": []
+      }
+    ],
+    "data_sources": [
+      "数据主体"
+    ],
+    "data_categories": [
+      "体检数据",
+      "心率"
+    ],
+    "data_subjects": [
+      "员工"
+    ],
+    "recipients": [],
+    "retention_periods": [],
+    "cross_border_transfer": {
+      "exists": true,
+      "destination": "United States",
+      "description": "United States"
+    },
+    "ambiguities": [
+      "数据流转路径不够清晰，缺少系统级数据流描述",
+      "数据保留期限未明确"
+    ],
+    "draft_text": "共识别1个处理环节。存在跨境传输。发现2项模糊信息需补充。"
+  }
+}

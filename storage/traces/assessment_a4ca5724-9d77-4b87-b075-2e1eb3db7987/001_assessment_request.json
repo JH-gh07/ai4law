@@ -1,0 +1,31 @@
+{
+  "name": "assessment_request",
+  "seq": 1,
+  "created_at": "2026-06-05T04:31:27.721727+00:00",
+  "payload": {
+    "company_name": "东方信托有限责任公司",
+    "industry": "金融科技 / 持牌金融机构",
+    "is_ciio": true,
+    "contains_important_data": true,
+    "pii_count": 80000,
+    "spi_count": 80000,
+    "transfer_purpose": "跨境集团财务报告与风险管理，满足集团合并报表监管要求；场景：跨境集团财务报告与风险管理；合法性：履行集团内部管理与监管报告义务；必要性：集团合并报表监管要求，境内无法完全替代；数据清单：每日交易结算数据、高净值客户资产配置信息（含金融账户信息）；链路：境内存储：公司本地数据中心；传输链路：通过IPSec-VPN专线加密传输至香港母公司私有云；境外存储：香港数据中心；保障能力：管理：有《数据分类分级管理规范》。技术：传输采用AES-256加密，存储采用令牌化。认证：通过网络安全等级保护（三级）测评；自评估周期：2025-04-01 至 2025-04-20；牵头部门：合规部；参与部门：信息技术部、业务部门；第三方支持：合规顾问机构A；协助梳理出境链路与风险自评估材料",
+    "receiver_country": "香港",
+    "force_override_path": true,
+    "uploaded_files": [
+      "storage/uploads/cn_regen_data_inventory_20260408_134644.csv",
+      "storage/uploads/cn_regen_entity_inventory_20260408_134644.csv",
+      "storage/uploads/regen_sample_scc.txt"
+    ],
+    "path_check_mode": "warn_only",
+    "self_assessment_info": null,
+    "data_inventory_items": [],
+    "recipient_info": null,
+    "downstream_processors": [],
+    "legal_document_review": null,
+    "security_capability": null,
+    "compliance_history": null,
+    "personal_info_protection": null,
+    "system_link": null
+  }
+}

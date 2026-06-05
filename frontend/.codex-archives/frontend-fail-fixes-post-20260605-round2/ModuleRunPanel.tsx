@@ -397,91 +397,6 @@ type CnFlowFormValues = {
   internal_access_note: string;
 };
 
-type Us14117FieldType = "text" | "textarea" | "number" | "checkbox" | "select";
-type Us14117FieldConfig = {
-  name: keyof Us14117FormValues;
-  label: string;
-  type: Us14117FieldType;
-  options?: string[];
-  min?: number;
-  step?: number;
-};
-type Us14117StepConfig = {
-  title: string;
-  fields: Us14117FieldConfig[];
-};
-type Us14117FormValues = {
-  company_name: string;
-  project_name: string;
-  transaction_description: string;
-  transaction_type: string;
-  data_item_name: string;
-  data_description: string;
-  doj_data_category: string;
-  us_person_count: number;
-  entity_name: string;
-  country_of_registration: string;
-  government_control: boolean;
-  entity_role: string;
-  onward_transfer: boolean;
-  onward_transfer_description: string;
-  security_measures_summary: string;
-  review_focus: string;
-};
-
-const US14117_STEPS: Us14117StepConfig[] = [
-  {
-    title: "交易基本信息",
-    fields: [
-      { name: "company_name", label: "企业名称", type: "text" },
-      { name: "project_name", label: "项目名称", type: "text" },
-      { name: "transaction_description", label: "交易描述（业务场景、数据传输内容、目的）", type: "textarea" },
-      {
-        name: "transaction_type",
-        label: "交易类型",
-        type: "select",
-        options: ["vendor_agreement", "employment_agreement", "investment_agreement", "data_brokerage", "cooperative_research", "cloud_remote_access", "onward_transfer", "other"]
-      }
-    ]
-  },
-  {
-    title: "数据分类与实体",
-    fields: [
-      { name: "data_item_name", label: "主要数据项名称", type: "text" },
-      { name: "data_description", label: "数据描述（内容、格式、来源）", type: "textarea" },
-      {
-        name: "doj_data_category",
-        label: "DOJ 数据类别",
-        type: "select",
-        options: ["human_genomic_data", "biometric_identifiers", "precise_geolocation_data", "personal_health_data", "personal_financial_data", "covered_personal_identifiers", "government_related_data", "not_14117_data"]
-      },
-      { name: "us_person_count", label: "涉及美国人数量（估算）", type: "number", min: 0, step: 1000 },
-      { name: "entity_name", label: "接收方实体名称", type: "text" },
-      { name: "country_of_registration", label: "接收方注册国家/地区", type: "text" },
-      { name: "government_control", label: "接收方是否受政府控制", type: "checkbox" },
-      {
-        name: "entity_role",
-        label: "接收方角色",
-        type: "select",
-        options: ["processor", "controller", "subprocessor", "affiliate", "vendor"]
-      }
-    ]
-  },
-  {
-    title: "安全与再传输",
-    fields: [
-      { name: "onward_transfer", label: "是否涉及再传输", type: "checkbox" },
-      { name: "onward_transfer_description", label: "再传输说明（如涉及）", type: "textarea" },
-      { name: "security_measures_summary", label: "安全措施摘要（加密、访问控制、审计等）", type: "textarea" },
-      { name: "review_focus", label: "本次重点审查关注项", type: "textarea" }
-    ]
-  },
-  {
-    title: "附件上传",
-    fields: []
-  }
-];
-
 type CpraFieldType = "text" | "textarea" | "checkbox";
 type CpraFieldConfig = {
   name: keyof CpraFormValues;
@@ -1990,25 +1905,6 @@ const createDefaultCnFlowValues = (): CnFlowFormValues => {
   };
 };
 
-const createDefaultUs14117Values = (): Us14117FormValues => ({
-  company_name: "",
-  project_name: "",
-  transaction_description: "",
-  transaction_type: "vendor_agreement",
-  data_item_name: "",
-  data_description: "",
-  doj_data_category: "not_14117_data",
-  us_person_count: 0,
-  entity_name: "",
-  country_of_registration: "",
-  government_control: false,
-  entity_role: "processor",
-  onward_transfer: false,
-  onward_transfer_description: "",
-  security_measures_summary: "",
-  review_focus: ""
-});
-
 const createDefaultCpraValues = (): CpraFormValues => {
   const demo = asRecord(getDefaultPayload("cpra"));
   return {
@@ -2561,9 +2457,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
   const [cnFlowEntityInventoryFiles, setCnFlowEntityInventoryFiles] = useState<File[]>([]);
   const [cnFlowSupportingFiles, setCnFlowSupportingFiles] = useState<File[]>([]);
-  const [us14117StepIndex, setUs14117StepIndex] = useState(0);
-  const [us14117Values, setUs14117Values] = useState<Us14117FormValues>(createDefaultUs14117Values);
-  const [us14117Files, setUs14117Files] = useState<File[]>([]);
   const [cpraStepIndex, setCpraStepIndex] = useState(0);
   const [cpraValues, setCpraValues] = useState<CpraFormValues>(createDefaultCpraValues);
   const [cpraPrivacyPolicyFiles, setCpraPrivacyPolicyFiles] = useState<File[]>([]);
@@ -2661,11 +2554,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setCnFlowEntityInventoryFiles([]);
       setCnFlowSupportingFiles([]);
     }
-    if (moduleKey === "us_14117") {
-      setUs14117StepIndex(0);
-      setUs14117Values(createDefaultUs14117Values());
-      setUs14117Files([]);
-    }
     if (moduleKey === "cpra") {
       setCpraStepIndex(0);
       setCpraValues(createDefaultCpraValues());
@@ -2687,7 +2575,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const isDpiaModule = moduleKey === "dpia";
   const isTiaModule = moduleKey === "tia";
   const isCnFlowModule = moduleKey === "cn_flow";
-  const isUs14117Module = moduleKey === "us_14117";
   const isCpraModule = moduleKey === "cpra";
 
   // ── 开发者测试案例 ──
@@ -2705,7 +2592,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     else if (isDpiaModule) setDpiaValues((prev) => ({ ...prev, ...fd } as DpiaFormValues));
     else if (isTiaModule) setTiaValues((prev) => ({ ...prev, ...fd } as TiaFormValues));
     else if (isCnFlowModule) setCnFlowValues((prev) => ({ ...prev, ...fd } as CnFlowFormValues));
-    else if (isUs14117Module) setUs14117Values((prev) => ({ ...prev, ...fd } as Us14117FormValues));
     else if (isEuSccTask) setEuSccValues((prev) => ({ ...prev, ...fd } as EuSccFormValues));
     else if (isDocumentReviewTask) setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
     setShowCasePicker(false);
@@ -2823,10 +2709,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
   const updateCnFlowValue = <K extends keyof CnFlowFormValues>(name: K, value: CnFlowFormValues[K]) => {
     setCnFlowValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const updateUs14117Value = <K extends keyof Us14117FormValues>(name: K, value: Us14117FormValues[K]) => {
-    setUs14117Values((prev) => ({ ...prev, [name]: value }));
   };
 
   const updateCpraValue = <K extends keyof CpraFormValues>(name: K, value: CpraFormValues[K]) => {
@@ -3616,46 +3498,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     };
   };
 
-  const buildUs14117Payload = async (): Promise<unknown> => {
-    assertInput(hasText(us14117Values.company_name), "请填写企业名称。");
-    assertInput(hasText(us14117Values.project_name), "请填写项目名称。");
-    assertInput(hasText(us14117Values.transaction_description), "请填写交易描述。");
-    assertInput(hasText(us14117Values.data_item_name), "请填写数据项名称。");
-    assertInput(hasText(us14117Values.entity_name), "请填写接收方实体名称。");
-    assertInput(hasText(us14117Values.country_of_registration), "请填写接收方注册国家/地区。");
-
-    const uploadedPaths = us14117Files.length > 0 ? await uploadFiles(us14117Files) : [];
-    const attachments = uploadedPaths.map((path) => ({
-      file_role: "supporting_material" as const,
-      file_name: basenameFromPath(path),
-      file_format: "docx" as const,
-      storage_uri: path
-    }));
-
-    return {
-      company_name: us14117Values.company_name.trim(),
-      project_name: us14117Values.project_name.trim(),
-      transaction_description: us14117Values.transaction_description.trim(),
-      transaction_type: us14117Values.transaction_type,
-      attachments: attachments.length > 0 ? attachments.map((a: { storage_uri: string }) => a.storage_uri) : [],
-      data_items: [{
-        data_item_name: us14117Values.data_item_name.trim(),
-        data_description: us14117Values.data_description.trim(),
-        doj_data_category: us14117Values.doj_data_category,
-        us_person_count: us14117Values.us_person_count
-      }],
-      recipient_entities: [{
-        entity_name: us14117Values.entity_name.trim(),
-        country_of_registration: us14117Values.country_of_registration.trim(),
-        government_control: us14117Values.government_control,
-        entity_role: us14117Values.entity_role
-      }],
-      security_measures: us14117Values.security_measures_summary.trim() ? [{ measure_name: us14117Values.security_measures_summary.trim().slice(0, 80), category: "access_control", status: "implemented", description: us14117Values.security_measures_summary.trim() }] : [],
-      onward_transfer: us14117Values.onward_transfer,
-      onward_transfer_description: us14117Values.onward_transfer_description.trim()
-    };
-  };
-
   const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown => {
     const asText = (key: string): string => {
       const value = values[key];
@@ -3845,8 +3687,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         requestPayload = await buildTiaPayload();
       } else if (isCnFlowModule) {
         requestPayload = await buildCnFlowPayload();
-      } else if (isUs14117Module) {
-        requestPayload = await buildUs14117Payload();
       } else if (isCpraModule) {
         requestPayload = await buildCpraPayload();
       } else {
@@ -4034,8 +3874,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const tiaProgress = Math.round(((tiaStepIndex + 1) / TIA_STEPS.length) * 100);
   const currentCnFlowStep = CN_FLOW_STEPS[cnFlowStepIndex];
   const cnFlowProgress = Math.round(((cnFlowStepIndex + 1) / CN_FLOW_STEPS.length) * 100);
-  const currentUs14117Step = US14117_STEPS[us14117StepIndex];
-  const us14117Progress = Math.round(((us14117StepIndex + 1) / US14117_STEPS.length) * 100);
   const currentCpraStep = CPRA_STEPS[cpraStepIndex];
   const cpraProgress = Math.round(((cpraStepIndex + 1) / CPRA_STEPS.length) * 100);
   const panelModuleLabel =
@@ -5564,7 +5402,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
         <section className="schema-wizard">
                     {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
 <div className="schema-wizard-head">
-            <div className="runner-title">CN Flow Wizard</div>
+            <div className="runner-title">EO 14117 Wizard</div>
             <span>{cnFlowProgress}%</span>
           </div>
           <div className="schema-stepper">
@@ -5720,89 +5558,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成14117风险评估结论报告"}
             </button>
-          </div>
-        </section>
-      ) : isUs14117Module ? (
-        <section className="schema-wizard">
-                    {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginBottom: 12 }}>🧪 测试案例</button>) : null}
-          <div className="schema-wizard-head">
-            <div className="runner-title">EO 14117 Wizard</div>
-            <span>{us14117Progress}%</span>
-          </div>
-          <div className="schema-stepper">
-            {US14117_STEPS.map((step, index) => (
-              <button key={localizeStepTitle(lang, step.title)} className={`schema-step-dot ${index === us14117StepIndex ? "active" : ""}`} onClick={() => setUs14117StepIndex(index)} type="button">
-                {index + 1}. {localizeStepTitle(lang, step.title)}
-              </button>
-            ))}
-          </div>
-
-          <div className="schema-current-title">{localizeStepTitle(lang, currentUs14117Step.title)}</div>
-          {currentUs14117Step.fields.length > 0 ? (
-            <div className="schema-field-grid">
-              {currentUs14117Step.fields.map((field) => {
-                if (field.type === "text") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <input value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "textarea") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap schema-field-wide">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <textarea className="runner-textarea schema-textarea" value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "number") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <input type="number" min={(field as Us14117FieldConfig).min ?? 0} step={(field as Us14117FieldConfig).step ?? 1} value={Number(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, Number(event.target.value) as never)} />
-                    </label>
-                  );
-                }
-                if (field.type === "select") {
-                  return (
-                    <label key={String(field.name)} className="field-wrap">
-                      <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                      <select value={String(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.value as never)}>
-                        {(field.options ?? []).map((option) => (<option key={option} value={option}>{localizeOptionLabel(lang, String(option), option)}</option>))}
-                      </select>
-                    </label>
-                  );
-                }
-                return (
-                  <label key={String(field.name)} className="schema-checkbox-field">
-                    <input type="checkbox" checked={Boolean(us14117Values[field.name as keyof Us14117FormValues])} onChange={(event) => updateUs14117Value(field.name as keyof Us14117FormValues, event.target.checked as never)} />
-                    <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
-                  </label>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {us14117StepIndex === US14117_STEPS.length - 1 ? (
-            <>
-              <section className="schema-upload-card">
-                <div className="runner-title">辅助材料（可选）</div>
-                <input type="file" multiple onChange={(event) => setUs14117Files(Array.from(event.target.files ?? []))} />
-                <div className="schema-upload-list">
-                  {us14117Files.map((file) => (<article key={`${file.name}-${file.size}-${file.lastModified}`} className="schema-upload-item"><strong>{file.name}</strong><small>{Math.max(1, Math.round(file.size / 1024))} KB</small></article>))}
-                  {us14117Files.length === 0 ? <p className="resource-empty">可选上传。</p> : null}
-                </div>
-              </section>
-            </>
-          ) : null}
-
-          <div className="schema-actions-row">
-            <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.max(0, prev - 1))} disabled={us14117StepIndex === 0}>上一步</button>
-            <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.min(US14117_STEPS.length - 1, prev + 1))} disabled={us14117StepIndex === US14117_STEPS.length - 1}>下一步</button>
-            <button className="pill-btn-primary" onClick={execute} disabled={loading}>{loading ? t("runningNow") : "运行 EO 14117 评估"}</button>
-            {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>) : null}
           </div>
         </section>
       ) : isCpraModule ? (

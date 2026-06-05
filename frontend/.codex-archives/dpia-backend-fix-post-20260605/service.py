@@ -257,8 +257,8 @@ class DPIAService:
             gen_basis["dpia_need_pack"] = dpia_need_output.model_dump()
             gen_basis["processing_activity_pack"] = proc_pack.model_dump()
             gen_basis["necessity_findings"] = nec_findings.model_dump()
-            gen_basis["risk_matrix"] = risk_dicts
-            gen_basis["mitigation_plan"] = mit_dicts
+            gen_basis["risk_matrix"] = risk_matrix.model_dump()
+            gen_basis["mitigation_plan"] = mit_plan.model_dump()
             gen_basis["dpo_decision_pack"] = dpo_pack.model_dump()
 
             regulation_dicts = [hit.model_dump() for hit in regulations]

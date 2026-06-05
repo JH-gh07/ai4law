@@ -1,0 +1,26 @@
+{
+  "name": "need_detection_rule",
+  "seq": 3,
+  "created_at": "2026-06-05T04:50:11.408440+00:00",
+  "payload": {
+    "dpia_required": true,
+    "trigger_reasons": [
+      "自动化决策或画像可能对个人产生法律效力或类似重大影响 (GDPR Art 22)",
+      "处理特殊类别个人数据 (GDPR Art 9)",
+      "使用新技术处理方式 (GDPR Art 35(1))",
+      "处理弱势数据主体的个人数据 (WP248 criterion)",
+      "跨境数据传输需额外保障评估 (GDPR Art 44-49)"
+    ],
+    "legal_basis": [
+      "GDPR Article 35",
+      "GDPR Article 22",
+      "WP251",
+      "GDPR Article 9",
+      "WP248",
+      "GDPR Article 44",
+      "GDPR Article 46"
+    ],
+    "prior_consultation_possible": true,
+    "reasoning": "触发 5 项高风险标准：\n  - 自动化决策或画像可能对个人产生法律效力或类似重大影响 (GDPR Art 22)\n  - 处理特殊类别个人数据 (GDPR Art 9)\n  - 使用新技术处理方式 (GDPR Art 35(1))\n  - 处理弱势数据主体的个人数据 (WP248 criterion)\n  - 跨境数据传输需额外保障评估 (GDPR Art 44-49)\n多项高风险标准同时满足，若剩余风险无法充分降低，建议依据 GDPR Art 36 进行监管机构事先咨询。"
+  }
+}
