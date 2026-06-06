@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 27,
+  "created_at": "2026-06-06T05:23:36.895779+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "temperature": 0.2,
+      "max_tokens": 800,
+      "system": "你是一名专注于中国数据跨境合规的资深律师，深度掌握《个人信息保护法》《数据安全法》《数据出境安全评估办法》《数据出境安全评估申报指南（第三版）》等法规。请严格按照《数据出境风险自评估报告》的行文规范，用专业、严谨的中文撰写报告章节内容。每章节结构清晰、有据可查，避免空话套话，直接针对企业实际情况分析。",
+      "user": "请根据以下企业信息，撰写第八章「综合评估结论」，包含：(1)总体合规评级（高风险/中风险/低风险）；(2)核心结论摘要（不超过150字）；(3)申报建议（是否建议提交安全评估申报，注意事项）；(4)有效期说明（通常为2年，如业务或法律环境重大变化须重新评估）。\n\n【统一生成上下文包】\n- module_key：assessment\n- request_id：siliconflow_assessment\n- chapter_id：conclusion\n- recommended_path：exemption\n- path_warning：诊断推荐路径为 exemption：因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛\n- risk_summary：{'risk_level': 'LOW', 'recommended_path': 'exemption', 'rationale': '因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛'}\n\n【企业事实与诊断事实】\n- diagnosis_result.recommended_path：exemption\n- request.receiver_country：新加坡\n- request.spi_count：500\n- request.uploaded_files：未提供\n\n【法规依据（使用 source_id 作为 rule_ref）】\n- CN-QA-012 | 数据出境安全管理政策问答（2025年4月）第六十二条：第六十二条规定，重要数据是指特定领域、特定群体、特定区域或者达到一定精度和规模，一旦遭到篡改、破坏、泄露或者非法获取、非法利用，可能直接危害国家安全、经济运行、社会稳定、公共健康和安全的数据。《数据安全技术 数据分类分级规则》（GB/T 43697-2024）附录G《重要数",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

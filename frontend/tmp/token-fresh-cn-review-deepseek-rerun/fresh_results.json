@@ -1,0 +1,17 @@
+[
+  {
+    "module": "review",
+    "provider": "DeepSeek",
+    "trace_dir": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-deepseek-rerun/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/traces/review_ce6dcb8e-2606-476d-9ddf-31a2b06890af",
+    "report_path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-deepseek-rerun/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/reports/review/ce6dcb8e-2606-476d-9ddf-31a2b06890af/review_report.docx",
+    "outputs": {
+      "docx": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-deepseek-rerun/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/reports/review/ce6dcb8e-2606-476d-9ddf-31a2b06890af/review_report.docx",
+      "report": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-deepseek-rerun/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/reports/review/ce6dcb8e-2606-476d-9ddf-31a2b06890af/review_report.docx"
+    },
+    "risk_level": "高风险",
+    "prompt_tokens": 3838,
+    "completion_tokens": 2400,
+    "total_tokens": 6238,
+    "llm_calls": 2
+  }
+]

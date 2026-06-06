@@ -1,7 +1,7 @@
 {
   "name": "tool_result",
   "seq": 2,
-  "created_at": "2026-06-06T04:38:18.777528+00:00",
+  "created_at": "2026-06-06T06:50:35.105968+00:00",
   "payload": {
     "summary": "模型响应返回",
     "detail": {
@@ -16,10 +16,10 @@
       "usage": {
         "usage_source": "provider",
         "prompt_tokens": 283,
-        "completion_tokens": 152,
-        "total_tokens": 435
+        "completion_tokens": 158,
+        "total_tokens": 441
       },
-      "content": "```json\n{\n    \"assessment_type\": \"important_data\",\n    \"result\": \"unlikely_important_data\",\n    \"suggested_answer\": \"no\",\n    \"confidence\": 0.8,\n    \"matched_features\": [\"数据类型为个人身份信息\", \"数据量10万条以下\"],\n    \"legal_basis\": [\"《数据安全法》第21条\", \"《数据安全法》第31条\", \"《网络数据安全管理条例（征求意见稿）》第73条\"],\n    \"recommended_user_message\": \"根据现有信息，该数据主要为个人身份信息，且数据量未达规模，通常不被认定为'重要数据'，但需结合具体业务场景和数据处理活动进一步判断。\"\n}\n```",
+      "content": "```json\n{\n    \"assessment_type\": \"important_data\",\n    \"result\": \"unlikely_important_data\",\n    \"suggested_answer\": \"no\",\n    \"confidence\": 0.8,\n    \"matched_features\": [\"数据类型为个人身份信息\", \"数据量10万条以下\"],\n    \"legal_basis\": [\"《数据安全法》第21条\", \"《数据安全法》第31条\", \"《重要数据识别指南（征求意见稿）》\"],\n    \"recommended_user_message\": \"根据现有信息，该数据集主要为个人身份信息，且数量未达10万条，通常不构成'重要数据'；但需结合具体业务场景、数据聚合后的影响及行业主管部门的具体规定进行最终判断。\"\n}\n```",
       "raw_name": "llm_chat_response"
     }
   }

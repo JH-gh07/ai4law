@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 33,
+  "created_at": "2026-06-06T05:37:44.779644+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "temperature": 0.2,
+      "max_tokens": 1600,
+      "system": "你是企业内部合规风险解释 Agent。你的输出给企业法务、合规负责人和项目人员自己看，不是对外正式文书。请直接指出风险、缺失证据、不能直接写入正式文书的表述和下一步补充材料。",
+      "user": "请基于以下结构化风险数据生成内部 AI 检验文本。\n必须包含：总体风险判断、高风险问题、证据不足项、不能写入正式文书的表述、用户下一步应补充的材料。\n要求：直接、清楚、中文输出，不要写成正式报告语言。\n\n{\n  \"module\": \"assessment\",\n  \"overall_risk\": \"HIGH\",\n  \"high_risk_issues\": [\n    {\n      \"issue_id\": \"ISSUE-recommended-path-mismatch\",\n      \"title\": \"诊断路径与安全评估报告不匹配\",\n      \"description\": \"诊断模块推荐路径为 exemption，当前仍在生成安全评估报告。\",\n      \"category\": \"path\",\n      \"severity\": \"HIGH\",\n      \"issue_certainty\": \"default_review_item\",\n      \"fact_refs\": [\n        \"FACT-diagnosis-result-recommended-path\"\n      ],\n      \"rule_refs\": [\n        \"diagnosis:exemption_contract\"\n      ],\n      \"evidence_refs\": [\n        \"EVIDENCE-recommended-path-mismatch\"\n      ],\n      \"recommended_action\": \"[confirmed_issue] 复核合规路径；如继续生成，应在报告中标注为强制生成的参考草案。\",\n      \"affects_outputs\": [\n        \"overview\",\n        \"risk_r",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

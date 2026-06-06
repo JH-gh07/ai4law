@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 4,
+  "created_at": "2026-06-06T14:25:39.130391+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 1944,
+        "completion_tokens": 745,
+        "total_tokens": 2689
+      },
+      "content": "[\n  {\n    \"severity\": \"LOW\",\n    \"title\": \"数据传输安全措施\",\n    \"problem_type\": \"AMBIGUOUS_LANGUAGE\",\n    \"risk_analysis\": \"条款中提到的安全API接口进行数据传输，但没有明确说明是基于TLS 1.3协议，可能导致理解上的歧义。\",\n    \"recommendation\": \"建议明确指出数据传输应基于TLS 1.3协议。\",\n    \"facts_uncertain\": false,\n    \"uncertainty_rationale\": \"\",\n    \"original_text\": \"双方之间通过基于TLS 1.3的安全API接口进行数据传输\",\n    \"suggested_text\": \"双方之间通过基于TLS 1.3协议的安全API接口进行数据传输\",\n    \"revision_rationale\": \"明确协议版本，避免歧义\"\n  },\n  {\n    \"severity\": \"LOW\",\n    \"title\": \"数据存储与删除\",\n    \"problem_type\": \"AMBIGUOUS_LANGUAGE\",\n    \"risk_analysis\": \"条款中提到乙方应在甲方要求下返还或删除个人信息，但没有明确删除后的数据保存期限。\",\n    \"recommendation\": \"建议明确乙方删除个人信息后的保存期限。\",\n    \"facts_uncertain\": false,\n    \"uncertainty_rationale\": \"\",\n    \"original_text\": \"合同终止后，乙方应在甲方要求下，返还或删除从甲方获得的个人信息，并向甲方书面确认已完成返还或删除。\",\n    \"suggested_text\": \"合同终止后，乙方应在甲方要求下，返还或删除从甲方获得的个人信息，并向甲方书面确认已完成返还或删除。乙方应自单笔交易完成之日起，保存相关个人信息不超过2年，法律或监管另有更长期限要求的除外。\",\n    \"revision_rationale\": \"明确数据保存期限，增强合规性\"\n  },\n  {\n    \"severity\": \"LOW\",\n    \"title\": \"争议解决机制\",\n    \"problem_type\": \"AMBIGUOUS_LANGUAGE\",\n    \"risk_analysis\": \"条款中提到的争议解决机制提交新加坡国际仲裁中心，但没有明确仲裁语言和适用法律。\",\n    \"recommendation\": \"建议明确仲裁的语言和适用法律。\",\n    \"facts_uncertain\": false,\n    \"uncertainty_rational",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

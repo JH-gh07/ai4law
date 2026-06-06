@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 28,
+  "created_at": "2026-06-06T05:37:43.966230+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 2980,
+        "completion_tokens": 584,
+        "total_tokens": 3564
+      },
+      "content": "## 第八章「综合评估结论」\n\n### (1) 总体合规评级\n\n根据所提供的企业信息及相关法规条文，我们得出以下结论：\n\n- **关键信息基础设施运营者认定**：用户声明不属于CIIO，但建议补充主管部门确认或行业主管部门函件予以佐证。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-necessity-argument-generic】\n\n- **重要数据认定**：用户声明不涉及重要数据，但建议完成数据分类分级并取得主管部门确认后再行申报。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-spi-classification-uncertain】\n\n- **境外接收方安全保障能力**：用户已说明接收方遵循相关标准，但尚需补充认证证书、审计报告或安全制度文件予以佐证。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-recipient-security-evidence-missing】\n\n- **法律文件约定情况**：已提供相关法律文件，经审查发现以下条款需补充：{missing}。建议在正式申报前修订完善。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-legal-document-gaps】\n\n- **个人信息出境告知同意**：用户声明已取得数据主体同意，但在现有材料条件下尚无法充分验证单独同意的获取过程、范围和记录保存情况。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-consent-evidence-missing】\n\n- **再转移约束**：当前材料未充分说明境外接收方是否存在再转移安排及其约束措施，建议补充相关合同条款和审批记录。【EVIDENCE-recommended-path-mismatch】【EVIDENCE-legal-document-gaps】\n\n综合以上分析，该企业的总体合规评级为**中风险**。\n\n### (2) 核心结论摘要\n\n本次评估结果显示，企业在关键信息基础设施运营者认定、重要数据认定及境外接收方安全保障能力等方面存在一定的合规风险。建议企业补充相关材料并完善法律文件，以确保数据出境的合法性和安全性。\n\n### (3) 申报建议\n\n**建议**：企业应提交安全评估申报，但需注意补充以下材料：\n\n- 数据清单、隐私政策、合同/协议、安全措施说明等。【EVIDENCE-missing-attachments】\n\n- 补充敏感个人信息类型清单、分类依据和合法基础说明。【EVIDENCE-spi-classification-uncertain】\n\n- 补充境外接收方的数据安全管理制度、认证证明或第三方审计材料。",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "module": "assessment",
+    "provider": "Tencent Hunyuan",
+    "trace_dir": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-assessment-hunyuan/tencent_hunyuan__hunyuan-lite/storage/traces/assessment_fresh-assessment-tencent_hunyuan",
+    "report_path": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/智慧云联科技（上海）有限公司_数据出境风险自评估报告_草案_20260606.md",
+    "outputs": {
+      "markdown": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/智慧云联科技（上海）有限公司_数据出境风险自评估报告_草案_20260606.md",
+      "zip": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/智慧云联科技（上海）有限公司_安全评估路径输出包_草案_20260606.zip",
+      "internal_markdown": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/智慧云联科技（上海）有限公司_内部风险分析报告_20260606.md",
+      "official_markdown": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/智慧云联科技（上海）有限公司_数据出境风险自评估报告_草案_20260606.md",
+      "issue_list_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/issue_list.json",
+      "issue_list_xlsx": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/issue_list.xlsx",
+      "evidence_chain_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/evidence_chain.json",
+      "evidence_chain_xlsx": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/evidence_chain.xlsx",
+      "material_checklist_xlsx": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/material_checklist.xlsx",
+      "material_checklist_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/material_checklist.json",
+      "facts_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/facts.json",
+      "path_judgment_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/path_judgment.json",
+      "trace_manifest": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/trace_manifest.json",
+      "internal_review_md": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/internal_ai_review.md",
+      "legal_grounding_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/legal_grounding.json",
+      "writing_strategy_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/writing_strategy.json",
+      "generation_basis_pack_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/generation_basis_pack.json",
+      "compliance_reasoning_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/compliance_reasoning.json",
+      "compliance_reasoning_md": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/compliance_reasoning.md",
+      "citation_map_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/citation_map.json",
+      "render_warnings_txt": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/render_warnings.txt",
+      "render_warnings_json": "outputs/assessment/fresh-assessment-tencent_hunyuan/outputs/render_warnings.json"
+    },
+    "prompt_tokens": 43483,
+    "completion_tokens": 5267,
+    "total_tokens": 48750,
+    "llm_calls": 10
+  }
+]

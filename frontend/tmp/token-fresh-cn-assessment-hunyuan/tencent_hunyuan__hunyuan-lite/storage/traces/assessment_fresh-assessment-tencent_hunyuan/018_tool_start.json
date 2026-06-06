@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 18,
+  "created_at": "2026-06-06T14:23:51.651285+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "temperature": 0.2,
+      "max_tokens": 800,
+      "system": "你是一名专注于中国数据跨境合规的资深律师，深度掌握《个人信息保护法》《数据安全法》《数据出境安全评估办法》《数据出境安全评估申报指南（第三版）》等法规。请严格按照《数据出境风险自评估报告》的行文规范，用专业、严谨的中文撰写报告章节内容。每章节结构清晰、有据可查，避免空话套话，直接针对企业实际情况分析。",
+      "user": "请根据以下企业信息，撰写第三章「出境必要性与合法性基础」，包含：(1)业务必要性论证（为什么必须出境，而非境内处理）；(2)合法性基础（《个保法》第13条、第38条适用情形）；(3)是否已获取个人信息主体的单独同意（《个保法》第39条）。\n\n【统一生成上下文包】\n- module_key：assessment\n- request_id：fresh-assessment-tencent_hunyuan\n- chapter_id：necessity_legal_basis\n- recommended_path：security_assessment\n- path_warning：无\n- risk_summary：{'risk_level': 'HIGH', 'recommended_path': 'security_assessment', 'rationale': '向境外提供重要数据必须申报安全评估'}\n\n【企业事实与诊断事实】\n- request.transfer_purpose：全球统一客户服务、集中化风险分析与建模、履行与新加坡子公司的全球运营支持与数据处理协议；场景：亚太区客户支持与实时风险控制数据同步；合法性：PIPL第13条第一款第二项与第七项；必要性：业务连续性、风险防控有效性、技术架构与成本最优；链路：中国上海数据中心初步清洗脱敏后，经IPSec VPN与TLS1.3实时传输至新加坡数据中心，风控结果与工单记录再同步回境内。\n\n【法规依据（使用 source_id 作为 rule_ref）】\n- CN-LAW-001 | 中华人民共和国网络安全法（2025修正）第一条：第一条 为了保障网络安全，维护网络空间主权和国家安全、社会公共利益，保护公民、法人和其他组织的合法权益，促进经济社会信息化健康发展，制定本法。\n- CN-LAW-003 | 中华人民共和国个人",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

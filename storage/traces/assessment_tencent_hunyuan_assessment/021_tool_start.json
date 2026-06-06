@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 21,
+  "created_at": "2026-06-06T05:37:15.964735+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "temperature": 0.2,
+      "max_tokens": 800,
+      "system": "你是一名专注于中国数据跨境合规的资深律师，深度掌握《个人信息保护法》《数据安全法》《数据出境安全评估办法》《数据出境安全评估申报指南（第三版）》等法规。请严格按照《数据出境风险自评估报告》的行文规范，用专业、严谨的中文撰写报告章节内容。每章节结构清晰、有据可查，避免空话套话，直接针对企业实际情况分析。",
+      "user": "请根据以下企业信息，撰写第五章「个人信息权益影响分析」，包含：(1)数据主体知情同意权的保障情况；(2)数据主体查阅、更正、删除、转移等权利的行使途径；(3)数据出境对数据主体权益可能造成的影响及风险等级（高/中/低）。\n\n【统一生成上下文包】\n- module_key：assessment\n- request_id：tencent_hunyuan_assessment\n- chapter_id：rights_impact\n- recommended_path：exemption\n- path_warning：诊断推荐路径为 exemption：因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛\n- risk_summary：{'risk_level': 'LOW', 'recommended_path': 'exemption', 'rationale': '因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛'}\n\n【企业事实与诊断事实】\n- request.spi_count：500\n\n【法规依据（使用 source_id 作为 rule_ref）】\n- CN-QA-012 | 数据出境安全管理政策问答（2025年4月）第六十二条：第六十二条规定，重要数据是指特定领域、特定群体、特定区域或者达到一定精度和规模，一旦遭到篡改、破坏、泄露或者非法获取、非法利用，可能直接危害国家安全、经济运行、社会稳定、公共健康和安全的数据。《数据安全技术 数据分类分级规则》（GB/T 43697-2024）附录G《重要数据识别指南》提出了重要数据识别方法。数据处理者\n- CN-REG-006 | 促进和规范数据跨境流动规定（发布页）段落3：国家互联网信息办公室有关负责人表示，数据跨境流动已经成为全球资金、信息、技术、人才、货物等资源要素交换、共享的基础。",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

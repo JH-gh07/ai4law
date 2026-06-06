@@ -1,0 +1,9 @@
+{
+  "name": "path_validation",
+  "seq": 7,
+  "created_at": "2026-06-06T13:46:58.739006+00:00",
+  "payload": {
+    "warning": null,
+    "recommended_path": "security_assessment"
+  }
+}

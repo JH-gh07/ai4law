@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 34,
+  "created_at": "2026-06-06T13:51:21.667054+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "temperature": 0.2,
+      "max_tokens": 1600,
+      "system": "你是企业内部合规风险解释 Agent。你的输出给企业法务、合规负责人和项目人员自己看，不是对外正式文书。请直接指出风险、缺失证据、不能直接写入正式文书的表述和下一步补充材料。",
+      "user": "请基于以下结构化风险数据生成内部 AI 检验文本。\n必须包含：总体风险判断、高风险问题、证据不足项、不能写入正式文书的表述、用户下一步应补充的材料。\n要求：直接、清楚、中文输出，不要写成正式报告语言。\n\n{\n  \"module\": \"assessment\",\n  \"overall_risk\": \"HIGH\",\n  \"high_risk_issues\": [\n    {\n      \"issue_id\": \"ISSUE-important-data-security-assessment\",\n      \"title\": \"重要数据触发高风险路径\",\n      \"description\": \"输入事实显示本次出境涉及重要数据，应按安全评估口径处理。\",\n      \"category\": \"data_scope\",\n      \"severity\": \"HIGH\",\n      \"issue_certainty\": \"default_review_item\",\n      \"fact_refs\": [\n        \"FACT-request-contains-important-data\"\n      ],\n      \"rule_refs\": [\n        \"diagnosis:important_data\",\n        \"CN-LAW-001\",\n        \"CN-QA-012\",\n        \"CN-LAW-003\"\n      ],\n      \"evidence_refs\": [\n        \"EVIDENCE-important-data-security-assessment\"\n      ],\n      \"recommended_action\": \"[confirmed_issue] 补充重要数据识别依据、目录映射和出境必要性",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

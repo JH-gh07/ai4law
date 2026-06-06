@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 7,
+  "created_at": "2026-06-06T14:23:11.371125+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 88,
+        "completion_tokens": 55,
+        "total_tokens": 143
+      },
+      "content": "智造未来科技有限公司的合规路径诊断结论为：公司未触发强制安全评估门槛，可选择标准合同备案或认证路径进行合规。关键注意事项在于，尽管风险等级为LOW，但仍需确保所有操作符合相关法律法规要求，以维护公司的合法权益。",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

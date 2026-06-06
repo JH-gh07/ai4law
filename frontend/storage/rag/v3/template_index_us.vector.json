@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "index_name": "template_index_us",
+    "entry_count": 3,
+    "schema_version": "v3.1"
+  },
+  "entries": [
+    {
+      "doc_id": "TPL-US-EO14117-1",
+      "payload": {
+        "chunk_id": "TPL-US-EO14117-1",
+        "source_id": "US-TEMPLATE-EO14117-OFFICIAL",
+        "title": "Classify transaction and covered data",
+        "content": "Identify whether the transaction is restricted or prohibited and what covered data categories are involved.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "us_eo14117",
+        "jurisdiction": "us",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "1",
+        "scenario_tags": [
+          "eo14117",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "eo14117",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "1",
+          "number": "1"
+        }
+      },
+      "search_text": "Classify transaction and covered data Identify whether the transaction is restricted or prohibited and what covered data categories are involved. 1  eo14117 official_template",
+      "embedding": {
+        "211": 0.1796053020267749,
+        "174": 0.3592106040535498,
+        "212": 0.3592106040535498,
+        "305": 0.3592106040535498,
+        "177": 0.3592106040535498,
+        "139": 0.1796053020267749,
+        "271": 0.1796053020267749,
+        "372": 0.1796053020267749,
+        "298": 0.1796053020267749,
+        "192": 0.1796053020267749,
+        "273": 0.1796053020267749,
+        "382": 0.1796053020267749,
+        "87": 0.1796053020267749,
+        "173": 0.1796053020267749,
+        "185": 0.1796053020267749,
+        "29": 0.1796053020267749,
+        "56": 0.1796053020267749,
+        "64": 0.1796053020267749,
+        "336": 0.1796053020267749
+      }
+    },
+    {
+      "doc_id": "TPL-US-EO14117-2",
+      "payload": {
+        "chunk_id": "TPL-US-EO14117-2",
+        "source_id": "US-TEMPLATE-EO14117-OFFICIAL",
+        "title": "Assess exceptions, controls and residual risk",
+        "content": "Assess whether an exception applies, what controls exist, and what residual risk remains.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "us_eo14117",
+        "jurisdiction": "us",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "2",
+        "scenario_tags": [
+          "eo14117",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "eo14117",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "2",
+          "number": "2"
+        }
+      },
+      "search_text": "Assess exceptions, controls and residual risk Assess whether an exception applies, what controls exist, and what residual risk remains. 2  eo14117 official_template",
+      "embedding": {
+        "164": 0.34299717028501764,
+        "295": 0.17149858514250882,
+        "204": 0.34299717028501764,
+        "212": 0.34299717028501764,
+        "70": 0.34299717028501764,
+        "344": 0.34299717028501764,
+        "271": 0.17149858514250882,
+        "73": 0.17149858514250882,
+        "74": 0.17149858514250882,
+        "50": 0.17149858514250882,
+        "87": 0.34299717028501764,
+        "280": 0.17149858514250882,
+        "197": 0.17149858514250882,
+        "22": 0.17149858514250882,
+        "64": 0.17149858514250882,
+        "336": 0.17149858514250882
+      }
+    },
+    {
+      "doc_id": "TPL-US-PRIVACY-1",
+      "payload": {
+        "chunk_id": "TPL-US-PRIVACY-1",
+        "source_id": "US-TEMPLATE-PRIVACY-OFFICIAL",
+        "title": "Notice and consumer-rights disclosure",
+        "content": "Document notice at collection, rights to know, delete, correct, opt out and limit sensitive personal information use.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "us_privacy_review",
+        "jurisdiction": "us",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "1",
+        "scenario_tags": [
+          "privacy",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "privacy",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "1",
+          "number": "1"
+        }
+      },
+      "search_text": "Notice and consumer-rights disclosure Document notice at collection, rights to know, delete, correct, opt out and limit sensitive personal information use. 1  privacy official_template",
+      "embedding": {
+        "52": 0.3651483716701107,
+        "212": 0.3651483716701107,
+        "71": 0.18257418583505536,
+        "193": 0.18257418583505536,
+        "222": 0.18257418583505536,
+        "285": 0.18257418583505536,
+        "24": 0.18257418583505536,
+        "348": 0.18257418583505536,
+        "302": 0.18257418583505536,
+        "186": 0.18257418583505536,
+        "353": 0.18257418583505536,
+        "209": 0.18257418583505536,
+        "67": 0.18257418583505536,
+        "369": 0.18257418583505536,
+        "368": 0.18257418583505536,
+        "320": 0.18257418583505536,
+        "128": 0.18257418583505536,
+        "56": 0.3651483716701107,
+        "382": 0.18257418583505536,
+        "252": 0.18257418583505536,
+        "336": 0.18257418583505536
+      }
+    }
+  ]
+}

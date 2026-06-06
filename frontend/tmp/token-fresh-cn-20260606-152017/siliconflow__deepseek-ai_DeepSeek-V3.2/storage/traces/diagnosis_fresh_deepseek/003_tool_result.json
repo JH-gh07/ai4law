@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 3,
+  "created_at": "2026-06-06T13:46:37.684772+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 277,
+        "completion_tokens": 227,
+        "total_tokens": 504
+      },
+      "content": "```json\n{\n    \"candidate_exemptions\": [\n        {\n            \"type\": \"contract_performance\",\n            \"confidence\": 0.2,\n            \"missing_questions\": [\"该数据共享是否为履行与数据主体（即系统管理员、技术维护人员）签订的合同所必需？例如，这些联系信息是否用于履行对数据主体提供技术支持或系统维护服务的合同义务？\", \"向德国研发中心共享数据以优化算法模型，是否属于履行与数据主体签订的合同的核心目的？还是仅为提升内部研发效率？\", \"数据处理活动（包括出境）是否严格限于实现合同目的所必需的范围、方式和期限？\"]\n        }\n    ],\n    \"recommended_next_question\": \"请澄清：向德国研发中心共享‘系统管理员联系信息’、‘技术维护人员联系信息’、‘账号信息’这三类数据，对于实现‘优化算法模型’这一具体目的是否为‘必需’？能否通过去标识化、匿名化或仅在境内处理分析结果等方式实现相同目的？\",\n    \"suggested_scenario\": null\n}\n```",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

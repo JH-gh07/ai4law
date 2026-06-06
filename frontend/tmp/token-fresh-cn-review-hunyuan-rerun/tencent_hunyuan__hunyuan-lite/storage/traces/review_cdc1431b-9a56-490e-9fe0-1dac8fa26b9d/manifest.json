@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-06-06T14:28:00.899035+00:00",
+  "event_count": 4,
+  "events": [
+    {
+      "seq": 1,
+      "name": "tool_start",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-hunyuan-rerun/tencent_hunyuan__hunyuan-lite/storage/traces/review_cdc1431b-9a56-490e-9fe0-1dac8fa26b9d/001_tool_start.json",
+      "created_at": "2026-06-06T14:27:42.803773+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "tool_result",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-hunyuan-rerun/tencent_hunyuan__hunyuan-lite/storage/traces/review_cdc1431b-9a56-490e-9fe0-1dac8fa26b9d/002_tool_result.json",
+      "created_at": "2026-06-06T14:27:53.111154+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-hunyuan-rerun/tencent_hunyuan__hunyuan-lite/storage/traces/review_cdc1431b-9a56-490e-9fe0-1dac8fa26b9d/003_tool_start.json",
+      "created_at": "2026-06-06T14:27:53.323080+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "tool_result",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-fresh-cn-review-hunyuan-rerun/tencent_hunyuan__hunyuan-lite/storage/traces/review_cdc1431b-9a56-490e-9fe0-1dac8fa26b9d/004_tool_result.json",
+      "created_at": "2026-06-06T14:28:00.606849+00:00"
+    }
+  ]
+}

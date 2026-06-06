@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 2,
+  "created_at": "2026-06-06T05:33:06.006873+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 277,
+        "completion_tokens": 68,
+        "total_tokens": 345
+      },
+      "content": "```json\n{\n  \"candidate_exemptions\": [],\n  \"recommended_next_question\": \"请问该数据转移是否基于合法的业务需求，例如优化服务、提高运营效率或增强市场竞争力？\",\n  \"suggested Scenario\": \"低置信度，需要进一步信息来确定是否可能符合豁免条件。\"\n}\n```",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

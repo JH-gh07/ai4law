@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 14,
+  "created_at": "2026-06-06T05:36:59.379803+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 2099,
+        "completion_tokens": 220,
+        "total_tokens": 2319
+      },
+      "content": "### 第一章「出境活动概述」\n\n#### (1) 企业基本情况\n\n腾讯是一家全球领先的互联网科技公司，主要业务涵盖社交网络、在线支付、游戏、云计算等多个领域。公司致力于通过技术创新为用户提供优质服务，并在全球范围内拥有广泛的用户基础和市场份额。\n\n#### (2) 数据出境业务背景\n\n腾讯的业务涉及大量用户数据的收集、处理和传输。为了满足用户需求、提升服务质量以及进行业务拓展，腾讯需要将其部分数据传输至境外服务器。这些数据包括但不限于用户个人信息、交易记录、行为日志等。\n\n#### (3) 出境活动的必要性说明\n\n腾讯的数据出境活动主要是为了履行合同义务、向消费者提供服务以及支持其全球化战略。根据《中华人民共和国数据安全法》第十二条的规定，如果数据出境是为了履行合同所必需，且数据量未达到强制评估的门槛，则可以免于进行数据出境安全评估。腾讯在此情况下，认为其出境活动符合法律规定的豁免条件。\n\n综上所述，腾讯的数据出境活动是基于业务需求和法律规定的必然结果，具有明确的必要性和合理性。",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

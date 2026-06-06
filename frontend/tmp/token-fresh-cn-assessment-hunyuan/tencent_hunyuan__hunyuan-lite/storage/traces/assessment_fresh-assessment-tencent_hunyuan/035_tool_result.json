@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 35,
+  "created_at": "2026-06-06T14:24:46.295939+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 23151,
+        "completion_tokens": 1117,
+        "total_tokens": 24268
+      },
+      "content": "### 内部 AI 检验文本\n\n#### 总体风险判断\n本次评估结果显示，整体风险水平为**高**。多个关键领域存在显著风险，需立即采取行动进行风险缓解和合规改进。\n\n#### 高风险问题\n1. **重要数据触发高风险路径**\n   - **问题描述**: 输入事实显示本次出境涉及重要数据，应按安全评估口径处理。\n   - **证据**: EVIDENCE-important-data-security-assessment\n   - **推荐行动**: 补充重要数据识别依据、目录映射和出境必要性说明。\n\n2. **个人信息规模达到安全评估阈值**\n   - **问题描述**: 普通个人信息出境人数达到 100 万人以上，触发安全评估关注点。\n   - **证据**: EVIDENCE-pii-threshold\n   - **推荐行动**: 核验近 12 个月累计人数口径，并在报告中说明统计方法。\n\n3. **敏感个人信息规模达到安全评估阈值**\n   - **问题描述**: 敏感个人信息出境人数达到 1 万人以上，应按高风险口径处理。\n   - **证据**: EVIDENCE-spi-threshold\n   - **推荐行动**: 补充敏感个人信息类型、数量统计和单独同意材料。\n\n4. **敏感个人信息定性需进一步确认**\n   - **问题描述**: 存在敏感个人信息出境，但未提供具体敏感类型清单和分类依据。\n   - **证据**: EVIDENCE-spi-classification-uncertain\n   - **推荐行动**: 补充敏感个人信息类型清单、分类依据和合法基础说明。\n\n5. **境外接收方安全保障能力证明不足**\n   - **问题描述**: 当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足，无法充分证明其保障能力。\n   - **证据**: EVIDENCE-recipient-security-evidence-missing\n   - **推荐行动**: 补充境外接收方安全管理制度、认证证明或第三方审计材料。\n\n6. **个人信息出境单独同意记录证据不足**\n   - **问题描述**: 涉及个人信息出境时，未验证是否已取得个人信息主体的单独同意及同意记录。\n   - **证据**: 无\n   - **推荐行动**: 补充告知和单独同意记录，或说明适用的豁免情形。\n\n#### 不能直接写入正式文书的表述\n- **“完全合规”**：此表述过于绝对，可能掩盖潜在的风险点。\n- **“材料齐备”**：缺乏具体材料支持，无法确保合规性。\n- **“无风险”**：当前情况表明存在显著风险，此表述不准确。\n- **“已充分证明”**：现有证据不足以证明合规性。\n- **“必然合法”**：法律条款的适用存在不",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

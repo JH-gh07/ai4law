@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 4,
+  "created_at": "2026-06-06T10:54:45.012848+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 806,
+        "completion_tokens": 104,
+        "total_tokens": 910
+      },
+      "content": "根据《数据安全法》第二十一条及《数据出境安全评估办法》第四条第二项，本次数据出境活动因涉及向境外提供“重要数据”，触发了强制申报安全评估的法定义务。关键触发点在于问卷中明确确认了处理重要数据（q2_has_important_data: yes），且出境目的包括风险分析等可能涉及国家安全、经济运行的关键数据处理活动。建议企业立即停止相关数据出境行为，并依法向国家网信部门申报数据出境安全评估。",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "repair_pass",
+  "seq": 32,
+  "created_at": "2026-06-06T10:58:43.837996+00:00",
+  "payload": {
+    "issues_before_count": 1,
+    "issues_after_count": 0,
+    "issues_after": [],
+    "blocked": false
+  }
+}

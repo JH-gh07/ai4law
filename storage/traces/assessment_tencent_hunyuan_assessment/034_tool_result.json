@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 34,
+  "created_at": "2026-06-06T05:38:04.379840+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 22317,
+        "completion_tokens": 990,
+        "total_tokens": 23307
+      },
+      "content": "### 内部 AI 检验文本\n\n#### 总体风险判断\n整体来看，本次检验结果显示出较高的风险水平。多个关键领域存在明显的问题，包括路径不匹配、敏感个人信息定性不明确、接收方安全保障能力不足、法律文件核心条款缺失等。\n\n#### 高风险问题\n1. **诊断路径与安全评估报告不匹配**\n   - **问题描述**: 诊断模块推荐路径为 `exemption`，但当前仍在生成安全评估报告。\n   - **影响**: 影响 `overview`、`risk_remediation` 和 `conclusion` 的准确性。\n   - **建议**: 复核合规路径；如继续生成，应在报告中标注为强制生成的参考草案。\n\n2. **敏感个人信息定性需进一步确认**\n   - **问题描述**: 存在敏感个人信息出境，但未提供具体敏感类型清单和分类依据。\n   - **影响**: 影响 `data_scope`、`rights_impact` 和 `conclusion` 的准确性。\n   - **建议**: 补充敏感个人信息类型清单、分类依据和合法基础说明。\n\n3. **境外接收方安全保障能力证明不足**\n   - **问题描述**: 当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足。\n   - **影响**: 影响 `recipient_capability`、`risk_remediation` 和 `conclusion` 的准确性。\n   - **建议**: 补充境外接收方安全管理制度、认证证明或第三方审计材料。\n\n4. **法律文件核心条款可能存在缺失**\n   - **问题描述**: 与境外接收方签署的法律文件未验证是否包含处理目的、保存期限、再转移约束、安全事件处置和违约责任等核心条款。\n   - **影响**: 影响 `recipient_capability`、`security_measures`、`risk_remediation` 和 `conclusion` 的准确性。\n   - **建议**: 核验法律文件是否覆盖六项核心条款，补充缺失内容。\n\n5. **个人信息出境单独同意记录证据不足**\n   - **问题描述**: 涉及个人信息出境时，未验证是否已取得个人信息主体的单独同意及同意记录。\n   - **影响**: 影响 `necessity_legal_basis`、`rights_impact`、`risk_remediation` 和 `conclusion` 的准确性。\n   - **建议**: 补充告知和单独同意记录，或说明适用的豁免情形。\n\n#### 证据不足项\n1. **申报支撑材料缺失**\n   - **问题描述**: 当前请求未提供上传附件，报告中的材料审查和证据追溯能力不足。\n   - **影响**",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

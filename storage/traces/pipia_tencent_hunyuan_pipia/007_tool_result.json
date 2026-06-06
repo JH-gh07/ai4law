@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 7,
+  "created_at": "2026-06-06T05:38:26.287661+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "tencent_hunyuan",
+      "provider_id": "tencent_hunyuan",
+      "provider_name": "Tencent Hunyuan",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+      "model": "hunyuan-lite",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 853,
+        "completion_tokens": 401,
+        "total_tokens": 1254
+      },
+      "content": "## 第二章 个人信息出境处理活动说明\n\n### (1) 个人信息类型和字段清单\n\n华东云链科技（测试）在处理个人信息时，涉及多种类型和字段。主要个人信息包括：\n\n- 姓名、性别、出生日期、身份证号码、联系方式等基本身份信息。\n- 职业、收入、教育背景、工作经历等职业相关信息。\n- 账户密码、登录凭证等安全信息。\n- 订单信息、支付记录、物流信息等交易记录。\n- 偏好设置、浏览历史、搜索记录等用户行为数据。\n\n此外，还有敏感个人信息，如健康信息、金融账户信息等。\n\n【依据：未检索到】\n\n### (2) 处理目的和法律依据\n\n处理个人信息的目的主要是为了支持境外客服中心和风控团队的工作，具体场景包括跨境客服处理和数据分析。这些活动是基于《中华人民共和国个人信息保护法》第十三条的规定进行的，该条款适用于处理个人信息以实现特定目的的情形。\n\n【依据：《个保法》第十三条】\n\n### (3) 数据流转图说明\n\n数据从华东云链科技（测试）出发，通过API接口周期同步到OceanStar Technology Pte. Ltd.（新加坡）。数据处理流程如下：\n\n1. 用户通过华东云链科技（测试）的网站或应用提交订单和工单。\n2. 华东云链科技（测试）的后台系统处理订单和工单，并将相关数据发送至OceanStar Technology Pte. Ltd.（新加坡）。\n3. OceanStar Technology Pte. Ltd.（新加坡）的数据处理团队对数据进行分析和处理，为境外客服中心和风控团队提供支持。\n\n【依据：未检索到】\n\n### (4) 处理频率和保存期限\n\n处理频率为每日批量处理和实时工单触发处理。保存期限为根据业务需求和数据敏感性确定的合理期限，通常不超过三年。\n\n【依据：未检索到】",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}
