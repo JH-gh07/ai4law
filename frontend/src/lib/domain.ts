@@ -224,4 +224,6 @@ export type TraceNode = {
   icon?: string;
   badge?: string;
   rawEventIds?: string[];
+  tokenInput?: number;
+  tokenOutput?: number;
 };

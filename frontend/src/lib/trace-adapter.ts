@@ -161,6 +161,13 @@ function formatDetailContent(detail: Record<string, unknown>): string {
     .join("\n");
 }
 
+function extractTokenCount(usage: unknown, key: string): number | undefined {
+  if (!usage || typeof usage !== "object") return undefined;
+  const u = usage as Record<string, unknown>;
+  const val = u[key];
+  return typeof val === "number" && val > 0 ? val : undefined;
+}
+
 function computeDuration(startIso: string, endIso: string): number | undefined {
   const s = new Date(startIso).getTime();
   const e = new Date(endIso).getTime();
@@ -448,6 +455,8 @@ function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent 
       ? detailToBlock(chooseOutputLabel(sem, toolResult.detail, status, toolResult.event_type), toolResult.detail, lang)
       : textToBlock(chooseOutputLabel(sem, null, status, toolResult.event_type), toolResult.summary),
     rawEventIds: rawEventIds(toolStart, thought, toolResult),
+    tokenInput: extractTokenCount(toolResult.detail?.usage, "prompt_tokens") ?? extractTokenCount(toolResult.detail?.usage, "input"),
+    tokenOutput: extractTokenCount(toolResult.detail?.usage, "completion_tokens") ?? extractTokenCount(toolResult.detail?.usage, "output"),
   });
 }
 

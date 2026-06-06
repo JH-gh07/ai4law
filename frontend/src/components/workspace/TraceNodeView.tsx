@@ -43,6 +43,13 @@ export function TraceNodeView({ node, lang }: { node: TraceNode; lang: Language 
         <div className="trace-node-duration">⏱ {(node.durationMs / 1000).toFixed(1)}s</div>
       ) : null}
 
+      {node.tokenInput != null || node.tokenOutput != null ? (
+        <div className="trace-node-tokens">
+          {node.tokenInput != null ? <span>⬆ {node.tokenInput.toLocaleString()}</span> : null}
+          {node.tokenOutput != null ? <span>⬇ {node.tokenOutput.toLocaleString()}</span> : null}
+        </div>
+      ) : null}
+
       {node.input ? <TraceExpandableBlock block={node.input} lang={lang} /> : null}
       {node.output ? <TraceExpandableBlock block={node.output} lang={lang} /> : null}
     </div>

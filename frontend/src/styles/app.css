@@ -10547,6 +10547,13 @@
   font-size: 11px;
   color: #9ca3af;
 }
+.trace-node-tokens {
+  margin-top: 1px;
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  gap: 8px;
+}
 
 /* Trace block (CALL / RESULT / etc) */
 .trace-block {

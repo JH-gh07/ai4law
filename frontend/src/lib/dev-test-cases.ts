@@ -1521,3 +1521,16 @@ export const MODULES_WITH_CASES = Object.keys(DEV_TEST_CASES) as string[];
 export function getTestCases(module: string): DevTestCase[] {
   return DEV_TEST_CASES[module] ?? [];
 }
+
+const DEFAULT_CASE_INDEX: Record<string, number> = {
+  diagnosis: 2,
+  assessment: 1,
+  review: 1,
+};
+
+export function getDefaultTestCase(module: string): DevTestCase | null {
+  const cases = getTestCases(module);
+  if (cases.length === 0) return null;
+  const preferredIndex = DEFAULT_CASE_INDEX[module] ?? 0;
+  return cases[preferredIndex] ?? cases[0] ?? null;
+}
