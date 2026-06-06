@@ -30,7 +30,7 @@ def _ensure_legacy_columns(engine) -> None:
     required = {
         "diagnosis_sessions": {"user_id": "TEXT DEFAULT ''"},
         "report_artifacts": {"user_id": "TEXT DEFAULT ''"},
-        "review_tasks": {"user_id": "TEXT DEFAULT ''"},
+        "review_tasks": {"user_id": "TEXT DEFAULT ''", "request_context_json": "TEXT DEFAULT '{}'"},
         "uploaded_files": {"user_id": "TEXT DEFAULT ''"},
     }
     with engine.begin() as conn:

@@ -1,0 +1,26 @@
+{
+  "name": "tool_result",
+  "seq": 2,
+  "created_at": "2026-06-06T05:18:12.007788+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 284,
+        "completion_tokens": 88,
+        "total_tokens": 372
+      },
+      "content": "```json\n{\n    \"candidate_exemptions\": [],\n    \"recommended_next_question\": \"请确认本次数据出境是否属于为订立、履行个人作为一方当事人的合同所必需，例如向用户交付其购买的商品或服务？或者，请提供本次数据出境所依据的具体合同名称、条款及履行该合同所必需的数据范围说明。\",\n    \"suggested_scenario\": null\n}\n```",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+[
+  {
+    "module": "diagnosis",
+    "success": false,
+    "error": "ValueError: Active provider is disabled: siliconflow"
+  },
+  {
+    "module": "assessment",
+    "success": false,
+    "error": "ValueError: Active provider is disabled: siliconflow"
+  },
+  {
+    "module": "pipia",
+    "success": false,
+    "error": "TypeError: NoneType takes no arguments"
+  },
+  {
+    "module": "diagnosis",
+    "provider_id": "tencent_hunyuan",
+    "model": "hunyuan-lite",
+    "success": true,
+    "trace_dir": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/tencent_hunyuan__hunyuan-lite/storage/traces/diagnosis_tencent_hunyuan_diagnosis",
+    "outputs": {
+      "html": "outputs/diagnosis/跨境优品_diagnosis_report.html",
+      "pdf": "outputs/diagnosis/跨境优品_diagnosis_report.pdf"
+    },
+    "recommended_path": "scc_or_certification",
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "llm_calls": 0,
+    "llm_files": []
+  },
+  {
+    "module": "assessment",
+    "provider_id": "tencent_hunyuan",
+    "model": "hunyuan-lite",
+    "success": true,
+    "trace_dir": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/tencent_hunyuan__hunyuan-lite/storage/traces/assessment_tencent_hunyuan_assessment",
+    "outputs": {
+      "markdown": "outputs/assessment/tencent_hunyuan_assessment/outputs/AT618333_数据出境风险自评估报告_草案_20260606.md",
+      "zip": "outputs/assessment/tencent_hunyuan_assessment/outputs/AT618333_安全评估路径输出包_草案_20260606.zip",
+      "internal_markdown": "outputs/assessment/tencent_hunyuan_assessment/outputs/AT618333_内部风险分析报告_20260606.md",
+      "official_markdown": "outputs/assessment/tencent_hunyuan_assessment/outputs/AT618333_数据出境风险自评估报告_草案_20260606.md",
+      "issue_list_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/issue_list.json",
+      "issue_list_xlsx": "outputs/assessment/tencent_hunyuan_assessment/outputs/issue_list.xlsx",
+      "evidence_chain_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/evidence_chain.json",
+      "evidence_chain_xlsx": "outputs/assessment/tencent_hunyuan_assessment/outputs/evidence_chain.xlsx",
+      "material_checklist_xlsx": "outputs/assessment/tencent_hunyuan_assessment/outputs/material_checklist.xlsx",
+      "material_checklist_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/material_checklist.json",
+      "facts_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/facts.json",
+      "path_judgment_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/path_judgment.json",
+      "trace_manifest": "outputs/assessment/tencent_hunyuan_assessment/outputs/trace_manifest.json",
+      "internal_review_md": "outputs/assessment/tencent_hunyuan_assessment/outputs/internal_ai_review.md",
+      "legal_grounding_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/legal_grounding.json",
+      "writing_strategy_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/writing_strategy.json",
+      "generation_basis_pack_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/generation_basis_pack.json",
+      "compliance_reasoning_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/compliance_reasoning.json",
+      "compliance_reasoning_md": "outputs/assessment/tencent_hunyuan_assessment/outputs/compliance_reasoning.md",
+      "citation_map_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/citation_map.json",
+      "render_warnings_txt": "outputs/assessment/tencent_hunyuan_assessment/outputs/render_warnings.txt",
+      "render_warnings_json": "outputs/assessment/tencent_hunyuan_assessment/outputs/render_warnings.json"
+    },
+    "report_path": "outputs/assessment/tencent_hunyuan_assessment/outputs/AT618333_数据出境风险自评估报告_草案_20260606.md",
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "llm_calls": 0,
+    "llm_files": []
+  },
+  {
+    "module": "pipia",
+    "success": false,
+    "error": "TypeError: NoneType takes no arguments"
+  }
+]

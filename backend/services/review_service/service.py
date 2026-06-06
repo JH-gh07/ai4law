@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import mimetypes
 import re
 from pathlib import Path
@@ -14,6 +15,7 @@ from backend.schemas.review import (
     ReviewAnalyzeResponse,
     ReviewAsyncAccepted,
     ReviewAsyncStatus,
+    ReviewGenerateRequest,
     ReviewGenerateResponse,
     ReviewIssuesResponse,
     ReviewReportResponse,
@@ -197,14 +199,14 @@ class ReviewService:
         refreshed = self._require_task(db, task_id, user_id)
         return ReviewAnalyzeResponse(id=refreshed.id, status=ReviewTaskStatus(refreshed.status), progress=refreshed.progress)
 
-    def submit_async_from_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewAsyncAccepted:
-        task = self._create_task_with_uploaded_paths(db, user_id, uploaded_files)
+    def submit_async_from_request(self, db: Session, user_id: str, payload: ReviewGenerateRequest) -> ReviewAsyncAccepted:
+        task = self._create_task_from_request(db, user_id, payload)
         self.task_dispatcher.dispatch(self._run_pipeline, task.id, user_id)
         refreshed = self._require_task(db, task.id, user_id)
         return self._to_async_accepted(refreshed)
 
-    def generate_from_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewGenerateResponse:
-        task = self._create_task_with_uploaded_paths(db, user_id, uploaded_files)
+    def generate_from_request(self, db: Session, user_id: str, payload: ReviewGenerateRequest) -> ReviewGenerateResponse:
+        task = self._create_task_from_request(db, user_id, payload)
         self._run_pipeline(task.id, user_id)
 
         refreshed = self._require_task(db, task.id, user_id)
@@ -254,12 +256,14 @@ class ReviewService:
             self._update_task(db, task, ReviewTaskStatus.PREPARING, 2)
 
             # Parse request context from task metadata (if available)
-            raw_ctx = loads(task.summary_json, {})
+            raw_ctx = loads(task.request_context_json, {})
             scenario_ctx = None
             doc_type = raw_ctx.get("document_type") or "other"
             review_config = ReviewTaskConfig(
                 review_depth=raw_ctx.get("review_depth", "standard"),
                 max_llm_clauses=raw_ctx.get("max_llm_clauses", 20),
+                target_jurisdiction=raw_ctx.get("target_jurisdiction", "cn"),
+                enable_cross_document_check=bool(raw_ctx.get("enable_cross_document_check", False)),
             )
 
             # Classify first document's text if user didn't specify type
@@ -353,8 +357,8 @@ class ReviewService:
             for index, clause in enumerate(reviewable, start=1):
                 use_llm = clause.clause_id in llm_clause_ids
                 issues.extend(
-                    self.reviewer.review(
-                        clause,
+                    self._invoke_reviewer(
+                        clause=clause,
                         use_llm=use_llm,
                         document_type=doc_type,
                         scenario_context=scenario_dict,
@@ -455,12 +459,13 @@ class ReviewService:
         finally:
             db.close()
 
-    def _create_task_with_uploaded_paths(self, db: Session, user_id: str, uploaded_files: list[str]) -> ReviewTaskModel:
-        normalized_paths = [self._resolve_uploaded_path(path) for path in uploaded_files]
+    def _create_task_from_request(self, db: Session, user_id: str, payload: ReviewGenerateRequest) -> ReviewTaskModel:
+        normalized_paths = [self._resolve_uploaded_path(path) for path in payload.uploaded_files]
         if not normalized_paths:
             raise HTTPException(status_code=400, detail="No files uploaded for review task")
 
         task = self.repository.create_task(db, user_id)
+        task.request_context_json = dumps(self._build_request_context(payload))
         for file_path in normalized_paths:
             extracted_text = self.file_service.extract_text(file_path)
             mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
@@ -477,6 +482,21 @@ class ReviewService:
         task.progress = 10
         self.repository.save_task(db, task)
         return task
+
+    @staticmethod
+    def _build_request_context(payload: ReviewGenerateRequest) -> dict:
+        review_config = payload.review_config.model_dump() if payload.review_config else {}
+        scenario_context = payload.scenario_context.model_dump() if payload.scenario_context else {}
+        return {
+            "document_type": payload.document_type or "other",
+            "review_focus": payload.review_focus or "",
+            "scenario_context": scenario_context,
+            "review_depth": review_config.get("review_depth", "standard"),
+            "target_jurisdiction": review_config.get("target_jurisdiction", "cn"),
+            "max_llm_clauses": review_config.get("max_llm_clauses", 20),
+            "enable_cross_document_check": review_config.get("enable_cross_document_check", False),
+            "output_language": review_config.get("output_language", "zh"),
+        }
 
     def _build_generate_response(self, db: Session, user_id: str, task: ReviewTaskModel) -> ReviewGenerateResponse:
         report = self.report_service.get_owner_artifact(db, user_id, "review", task.id, "docx")
@@ -622,6 +642,28 @@ class ReviewService:
             self.repository.save_task(db, task)
         self._publish_progress(task.id, status.value, progress)
 
+    def _invoke_reviewer(
+        self,
+        *,
+        clause,
+        use_llm: bool,
+        document_type: str,
+        scenario_context: dict,
+        jurisdiction: str,
+    ):
+        kwargs = {
+            "use_llm": use_llm,
+            "document_type": document_type,
+            "scenario_context": scenario_context,
+        }
+        try:
+            signature = inspect.signature(self.reviewer.review)
+        except (TypeError, ValueError):
+            signature = None
+        if signature and "jurisdiction" in signature.parameters:
+            kwargs["jurisdiction"] = jurisdiction
+        return self.reviewer.review(clause, **kwargs)
+
     def _require_task(self, db: Session, task_id: str, user_id: str) -> ReviewTaskModel:
         task = self.repository.get_task(db, task_id, user_id)
         if not task:
@@ -638,14 +680,43 @@ class ReviewService:
             resolved = (Path.cwd() / raw).resolve()
 
         allowed_root = self.file_service.settings.storage_dir.resolve()
-        try:
-            resolved.relative_to(allowed_root)
-        except ValueError as exc:
-            raise HTTPException(status_code=403, detail="Uploaded file path is outside storage directory") from exc
+        if self._is_under_root(resolved, allowed_root):
+            if not resolved.exists() or not resolved.is_file():
+                raise HTTPException(status_code=404, detail=f"Uploaded file not found: {uploaded_path}")
+            return resolved
 
+        copied = self._copy_external_preset_into_storage(resolved)
+        if copied is None:
+            raise HTTPException(status_code=403, detail="Uploaded file path is outside storage directory")
+        return copied
+
+    @staticmethod
+    def _is_under_root(path: Path, root: Path) -> bool:
+        try:
+            path.relative_to(root)
+            return True
+        except ValueError:
+            return False
+
+    def _copy_external_preset_into_storage(self, resolved: Path) -> Path | None:
         if not resolved.exists() or not resolved.is_file():
-            raise HTTPException(status_code=404, detail=f"Uploaded file not found: {uploaded_path}")
-        return resolved
+            raise HTTPException(status_code=404, detail=f"Uploaded file not found: {resolved}")
+
+        doc_root = (Path.cwd() / "doc").resolve()
+        if not self._is_under_root(resolved, doc_root):
+            return None
+
+        ext = resolved.suffix.lower()
+        if ext not in self.file_service.allowed_extensions:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        destination = self.file_service.settings.upload_dir / "review-dev-presets"
+        destination.mkdir(parents=True, exist_ok=True)
+        sanitized_name = re.sub(r"[^A-Za-z0-9._-]+", "_", resolved.name)
+        copied_path = destination / f"{resolved.stem[:40]}_{abs(hash(str(resolved))) & 0xFFFFFFFF:x}{ext}"
+        if not copied_path.exists():
+            copied_path.write_bytes(resolved.read_bytes())
+        return copied_path
 
     def _publish_progress(self, task_id: str, status: str, progress: int) -> None:
         try:

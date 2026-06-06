@@ -14,6 +14,7 @@ class ReviewTaskModel(Base):
     user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     status: Mapped[str] = mapped_column(String(32), default="CREATED")
     progress: Mapped[int] = mapped_column(default=0)
+    request_context_json: Mapped[str] = mapped_column(Text, default="{}")
     summary_json: Mapped[str] = mapped_column(Text, default="{}")
     issues_json: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

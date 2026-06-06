@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 13,
+  "created_at": "2026-06-06T05:19:31.399264+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "SiliconFlow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "temperature": 0.2,
+      "max_tokens": 800,
+      "system": "你是一名专注于中国数据跨境合规的资深律师，深度掌握《个人信息保护法》《数据安全法》《数据出境安全评估办法》《数据出境安全评估申报指南（第三版）》等法规。请严格按照《数据出境风险自评估报告》的行文规范，用专业、严谨的中文撰写报告章节内容。每章节结构清晰、有据可查，避免空话套话，直接针对企业实际情况分析。",
+      "user": "请根据以下企业信息，撰写《数据出境风险自评估报告》第一章「出境活动概述」，包含：(1)企业基本情况；(2)数据出境业务背景；(3)出境活动的必要性说明。\n\n【统一生成上下文包】\n- module_key：assessment\n- request_id：siliconflow_assessment\n- chapter_id：overview\n- recommended_path：exemption\n- path_warning：诊断推荐路径为 exemption：因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛\n- risk_summary：{'risk_level': 'LOW', 'recommended_path': 'exemption', 'rationale': '因履行合同/向消费者提供服务所必需，且个人信息规模未触发强制评估门槛'}\n\n【企业事实与诊断事实】\n- diagnosis_result.recommended_path：exemption\n- request.uploaded_files：未提供\n\n【法规依据（使用 source_id 作为 rule_ref）】\n- 未检索到法规依据\n\n【本章节相关问题清单】\n- ISSUE-recommended-path-mismatch | HIGH | 诊断路径与安全评估报告不匹配：诊断模块推荐路径为 exemption，当前仍在生成安全评估报告。；建议：[confirmed_issue] 复核合规路径；如继续生成，应在报告中标注为强制生成的参考草案。\n- ISSUE-missing-attachments | MEDIUM | 申报支撑材料缺失：当前请求未提供上传附件，报告中的材料审查和证据追溯能力不足。；建议：[default_review_item] 补充数据清单、隐私政策、合同/协",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

@@ -1,9 +1,130 @@
 from __future__ import annotations
 
+import csv
 import json
+import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
+
+# ── 知识库 source_id 注册表（title → source_id 反向查找）──────────────
+
+_SOURCES_CSV_PATH = Path("doc/knowledge/_index/sources.csv")
+_LEGACY_SOURCES_CSV_PATH = Path("doc/knowledge/index/sources.csv")
+
+_KNOWN_SOURCE_IDS: set[str] = set()
+_TITLE_TO_SOURCE_ID: dict[str, str] = {}
+_TITLE_WORDS_TO_SOURCE_IDS: dict[str, list[tuple[str, float]]] = {}
+_SOURCES_CSV_LOADED = False
+
+
+def _normalize_title_key(title: str) -> str:
+    """Normalize a title for fuzzy lookup."""
+    return (title or "").replace("《", "").replace("》", "").replace("（", "(").replace("）", ")").strip().lower()
+
+
+def _word_overlap(a: str, b: str) -> float:
+    """Jaccard-like overlap between two strings."""
+    words_a = set(w for w in a.replace("(", " ").replace(")", " ").replace("-", " ").split() if len(w) >= 2)
+    words_b = set(w for w in b.replace("(", " ").replace(")", " ").replace("-", " ").split() if len(w) >= 2)
+    if not words_a or not words_b:
+        return 0.0
+    intersection = words_a & words_b
+    return len(intersection) / min(len(words_a), len(words_b))
+
+
+def _load_sources_csv() -> None:
+    """Load sources.csv and build title → source_id lookup tables (called once)."""
+    global _KNOWN_SOURCE_IDS, _TITLE_TO_SOURCE_ID, _TITLE_WORDS_TO_SOURCE_IDS, _SOURCES_CSV_LOADED
+    if _SOURCES_CSV_LOADED:
+        return
+    csv_path = _SOURCES_CSV_PATH if _SOURCES_CSV_PATH.exists() else _LEGACY_SOURCES_CSV_PATH
+    if not csv_path.exists():
+        _SOURCES_CSV_LOADED = True
+        return
+
+    with open(csv_path, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sid = (row.get("source_id") or row.get("id") or "").strip()
+            title = (row.get("title") or "").strip()
+            if not sid or not title:
+                continue
+            _KNOWN_SOURCE_IDS.add(sid)
+            norm_title = _normalize_title_key(title)
+            if norm_title and norm_title not in _TITLE_TO_SOURCE_ID:
+                _TITLE_TO_SOURCE_ID[norm_title] = sid
+            # Short form: title before first bracket
+            short = norm_title.split("(")[0].split("（")[0].strip()
+            if short and short != norm_title:
+                if short not in _TITLE_TO_SOURCE_ID or len(short) > len(list(_TITLE_TO_SOURCE_ID.keys())[0]):
+                    _TITLE_TO_SOURCE_ID[short] = sid
+
+    # Build word-overlap index for fallback fuzzy matching
+    for norm_title, sid in _TITLE_TO_SOURCE_ID.items():
+        for word in norm_title.split():
+            word = word.strip("()（）")
+            if len(word) >= 3:
+                if word not in _TITLE_WORDS_TO_SOURCE_IDS:
+                    _TITLE_WORDS_TO_SOURCE_IDS[word] = []
+                _TITLE_WORDS_TO_SOURCE_IDS[word].append((norm_title, 1.0))
+
+    _SOURCES_CSV_LOADED = True
+
+
+@lru_cache(maxsize=1024)
+def _resolve_source_id(source_id: str, title: str) -> str:
+    """Resolve a source_id to a canonical file ID from sources.csv.
+
+    If source_id is already a known file ID (e.g. CN-LAW-001), return it as-is.
+    Otherwise, try fuzzy matching the title against sources.csv to find the
+    correct file ID. This fixes the case where citation_map.json stores raw
+    Chinese titles instead of file IDs.
+    """
+    _load_sources_csv()
+
+    # Already a valid source_id
+    if source_id in _KNOWN_SOURCE_IDS:
+        return source_id
+
+    # Try exact normalized title match
+    candidate = title or source_id
+    norm = _normalize_title_key(candidate)
+    if norm in _TITLE_TO_SOURCE_ID:
+        return _TITLE_TO_SOURCE_ID[norm]
+
+    # Try short form (before first bracket)
+    short = norm.split("(")[0].split("（")[0].strip()
+    if short and short in _TITLE_TO_SOURCE_ID:
+        return _TITLE_TO_SOURCE_ID[short]
+
+    # Try substring / word overlap match
+    best_sid: str | None = None
+    best_score = 0.0
+    for known_title, sid in _TITLE_TO_SOURCE_ID.items():
+        # Substring match
+        if norm and (norm in known_title or known_title in norm):
+            score = len(norm) / max(len(known_title), 1)
+            if score > best_score:
+                best_score = score
+                best_sid = sid
+
+    if best_sid and best_score >= 0.3:
+        return best_sid
+
+    # Try word overlap fallback
+    for known_title, sid in _TITLE_TO_SOURCE_ID.items():
+        score = _word_overlap(norm, known_title)
+        if score > best_score and score >= 0.5:
+            best_score = score
+            best_sid = sid
+
+    if best_sid and best_score >= 0.5:
+        return best_sid
+
+    # Could not resolve — return original source_id as-is
+    return source_id
 
 
 def build_knowledge_url(
@@ -34,24 +155,35 @@ def build_knowledge_url(
 
 def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, Any]:
     source_id = str(item.get("source_id", "") or "")
+    title = str(item.get("title", "") or "")
     article_no = str(item.get("article_no", "") or "")
     anchor = str(item.get("anchor") or item.get("citation_anchor") or "")
     section_id = str(item.get("section_id", "") or "")
     clause_id = str(item.get("clause_id", "") or "")
-    knowledge_url = item.get("knowledge_url")
-    if not isinstance(knowledge_url, str) or not knowledge_url.strip():
+
+    # ── Resolve source_id via title→fileId lookup ──
+    resolved_source_id = _resolve_source_id(source_id, title)
+
+    # Rebuild knowledge_url: always regenerate if source_id was resolved (changed),
+    # or if existing URL is missing/empty. This ensures cached citation_map.json
+    # entries with stale title-based URLs get corrected.
+    existing_knowledge_url = item.get("knowledge_url")
+    source_changed = resolved_source_id != source_id
+    if source_changed or not isinstance(existing_knowledge_url, str) or not existing_knowledge_url.strip():
         knowledge_url = build_knowledge_url(
-            source_id=source_id,
+            source_id=resolved_source_id,
             article_no=article_no,
             anchor=anchor,
             section_id=section_id,
             clause_id=clause_id,
         )
+    else:
+        knowledge_url = existing_knowledge_url
 
-    can_jump = bool(source_id and knowledge_url)
+    can_jump = bool(resolved_source_id and knowledge_url)
     normalized = dict(item)
     normalized["module"] = module
-    normalized["source_id"] = source_id
+    normalized["source_id"] = resolved_source_id
     normalized["jurisdiction"] = str(item.get("jurisdiction", "") or "")
     normalized["display_label"] = str(item.get("display_label", "") or "")
     normalized["article_no"] = article_no

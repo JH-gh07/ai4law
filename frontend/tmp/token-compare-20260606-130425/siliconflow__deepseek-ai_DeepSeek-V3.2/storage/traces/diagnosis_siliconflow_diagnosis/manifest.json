@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-06-06T05:18:17.705047+00:00",
+  "event_count": 4,
+  "events": [
+    {
+      "seq": 1,
+      "name": "tool_start",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/traces/diagnosis_siliconflow_diagnosis/001_tool_start.json",
+      "created_at": "2026-06-06T05:17:59.530165+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "tool_result",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/traces/diagnosis_siliconflow_diagnosis/002_tool_result.json",
+      "created_at": "2026-06-06T05:18:12.007788+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/traces/diagnosis_siliconflow_diagnosis/003_tool_start.json",
+      "created_at": "2026-06-06T05:18:12.009329+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "tool_result",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/frontend/tmp/token-compare-20260606-130425/siliconflow__deepseek-ai_DeepSeek-V3.2/storage/traces/diagnosis_siliconflow_diagnosis/004_tool_result.json",
+      "created_at": "2026-06-06T05:18:17.524679+00:00"
+    }
+  ]
+}

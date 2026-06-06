@@ -26,7 +26,7 @@ def generate_review(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ):
-    return container.review_service.generate_from_uploaded_paths(db, current_user.id, payload.uploaded_files)
+    return container.review_service.generate_from_request(db, current_user.id, payload)
 
 
 @router.post("/generate_async", response_model=ReviewAsyncAccepted)
@@ -36,7 +36,7 @@ def generate_review_async(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ):
-    return container.review_service.submit_async_from_uploaded_paths(db, current_user.id, payload.uploaded_files)
+    return container.review_service.submit_async_from_request(db, current_user.id, payload)
 
 
 @router.get("/tasks/{task_id}", response_model=ReviewAsyncStatus)

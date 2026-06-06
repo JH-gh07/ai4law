@@ -14,6 +14,7 @@ import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates
 import { extractInsight } from "../../lib/workspace";
 import { DEV_ACCEL_ENABLED, getAssessmentDevPreset, getModuleDevPreset } from "../../lib/dev-presets";
 import { getTestCases } from "../../lib/dev-test-cases";
+import { getAuthHeaders } from "../../lib/auth/auth-service";
 
 export type RunOutput = {
   module: ModuleKey;
@@ -37,6 +38,7 @@ type UserFacingResult = {
   headline: string;
   chips: string[];
   deliverables: string[];
+  deliverablePaths: string[];
   highlights: string[];
   nextSteps: string[];
 };
@@ -2474,6 +2476,12 @@ const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): UserFacing
     headline,
     chips,
     deliverables: deliverableNames,
+    deliverablePaths: Array.from(
+      new Set(
+        [insight.reportPath, ...Object.values(insight.outputFiles)]
+          .filter((item): item is string => typeof item === "string" && item.length > 0)
+      )
+    ),
     highlights,
     nextSteps
   };
@@ -4077,6 +4085,35 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     documentReviewParsedKeysRef.current.has(getDocumentReviewFileKey(file))
   ).length;
   const selectedDocumentReviewCanPreview = canInlinePreviewDocumentReviewExt(selectedDocumentReviewFileExt);
+
+  const openArtifactPath = async (path: string) => {
+    const response = await fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(path)}`, {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!response.ok) {
+      throw new Error("打开文件失败");
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  };
+
+  const downloadArtifactPath = async (path: string) => {
+    const response = await fetch(`/api/v1/artifacts/download?path=${encodeURIComponent(path)}`, {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!response.ok) {
+      throw new Error("下载文件失败");
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = blobUrl;
+    anchor.download = toFileName(path);
+    anchor.click();
+    URL.revokeObjectURL(blobUrl);
+  };
   const selectedDocumentReviewTypeLabel = getDocumentReviewTypeLabel(selectedDocumentReviewFileExt);
   const selectedDocumentReviewSummaryDate = selectedDocumentReviewFile
     ? formatDocumentReviewFileDate(selectedDocumentReviewFile.lastModified, lang)
@@ -6031,8 +6068,26 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <article className="runner-user-block">
               <h4>{lang === "zh" ? "已生成文件" : "Generated Files"}</h4>
               <ul>
-                {userFacingResult.deliverables.map((item) => (
-                  <li key={item}>{item}</li>
+                {userFacingResult.deliverablePaths.map((path) => (
+                  <li key={path} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                    <span>{toFileName(path)}</span>
+                    <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="pill-btn"
+                        onClick={() => void openArtifactPath(path)}
+                      >
+                        {lang === "zh" ? "打开" : "Open"}
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-btn"
+                        onClick={() => void downloadArtifactPath(path)}
+                      >
+                        {lang === "zh" ? "下载" : "Download"}
+                      </button>
+                    </span>
+                  </li>
                 ))}
               </ul>
             </article>
