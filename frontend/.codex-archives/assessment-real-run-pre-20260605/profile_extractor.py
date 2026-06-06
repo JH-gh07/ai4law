@@ -38,13 +38,4 @@ class ProfileExtractor:
             receiver_country=payload.receiver_country,
             extracted_notes=notes,
             attachment_metadata=attachment_metadata,
-            data_inventory_items=list(payload.data_inventory_items),
-            recipient_info=payload.recipient_info,
-            downstream_processors=list(payload.downstream_processors),
-            legal_document_review=payload.legal_document_review,
-            security_capability=payload.security_capability,
-            compliance_history=payload.compliance_history,
-            personal_info_protection=payload.personal_info_protection,
-            system_link=payload.system_link,
-            self_assessment_info=payload.self_assessment_info,
         )

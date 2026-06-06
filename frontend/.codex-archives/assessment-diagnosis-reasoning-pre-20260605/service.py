@@ -27,13 +27,6 @@ from backend.modules.assessment.report_renderer import AssessmentReportRenderer
 from backend.modules.assessment.retriever import AssessmentRetriever
 from backend.modules.assessment.writing_strategy_builder import build_writing_strategy
 from backend.modules.assessment.compliance_reasoning import build_compliance_reasoning
-from backend.modules.diagnosis.schema import (
-    DiagnosisAnswers,
-    ReceiverType,
-    TransferScenario,
-    YesNoUnknown,
-)
-from backend.modules.diagnosis.service import DiagnosisService
 from backend.modules.assessment.schema import (
     AssessmentAsyncAccepted,
     AssessmentAsyncStatus,
@@ -46,6 +39,24 @@ if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
     from backend.services.legal_api_service import DeliLegalService
 
+
+class _DiagnosisStub:
+    """Stub replacing DiagnosisService — upstream diagnosis already done."""
+    def __init__(self, recommended_path: str = "security_assessment"):
+        self.recommended_path = recommended_path
+        self.rationale = "上游路径诊断模块已判定进入安全评估路径，本模块仅负责文书生成。"
+        self.risk_level = "HIGH"
+        self.matched_rule_id = None
+
+    def model_dump(self) -> dict:
+        return {
+            "recommended_path": self.recommended_path,
+            "rationale": self.rationale,
+            "risk_level": self.risk_level,
+            "matched_rule_id": self.matched_rule_id,
+        }
+
+
 class AssessmentService:
     def __init__(self, llm_client: LLMClient | None = None, legal_api_service: DeliLegalService | None = None) -> None:
         from backend.core.settings import get_settings
@@ -56,7 +67,6 @@ class AssessmentService:
             from backend.services.legal_api_service import DeliLegalService as _DeliLegalService
             legal_api_service = _DeliLegalService(get_settings())
         self.legal_service = legal_api_service
-        self.diagnosis_service = DiagnosisService()
         self.extractor = ProfileExtractor()
         self.retriever = AssessmentRetriever(legal_service=legal_api_service)
         self.generator = AssessmentChapterGenerator(llm_client=llm_client)
@@ -114,115 +124,11 @@ class AssessmentService:
             render_artifacts=self._render_outputs,
         )
 
-    def _evaluate_diagnosis(self, payload: AssessmentRequest):
-        return self.diagnosis_service.evaluate(self._to_diagnosis_answers(payload))
-
     @staticmethod
-    def _to_yes_no_unknown(value: bool | None) -> YesNoUnknown:
-        if value is True:
-            return YesNoUnknown.YES
-        if value is False:
-            return YesNoUnknown.NO
-        return YesNoUnknown.UNKNOWN
-
-    @staticmethod
-    def _infer_transfer_scenario(payload: AssessmentRequest) -> TransferScenario:
-        text = " ".join(
-            [
-                payload.transfer_purpose or "",
-                payload.industry or "",
-                payload.receiver_country or "",
-            ]
-        ).lower()
-        if any(token in text for token in ["人力", "hr", "员工", "雇员", "payroll"]):
-            return TransferScenario.HR_MANAGEMENT
-        if any(token in text for token in ["紧急", "emergency", "生命", "健康", "救助"]):
-            return TransferScenario.EMERGENCY
-        if any(token in text for token in ["法定", "监管", "司法", "执法", "compliance filing"]):
-            return TransferScenario.LEGAL_DUTY
-        if any(token in text for token in ["合同", "服务", "客户", "客服", "履约", "support", "crm"]):
-            return TransferScenario.CONTRACT_PERFORMANCE
-        return TransferScenario.OTHER
-
-    @staticmethod
-    def _infer_receiver_type(payload: AssessmentRequest) -> ReceiverType:
-        recipient_info = payload.recipient_info
-        if recipient_info is not None:
-            relation = " ".join(
-                [
-                    recipient_info.relationship or "",
-                    recipient_info.role or "",
-                    recipient_info.name or "",
-                ]
-            ).lower()
-            if any(token in relation for token in ["子公司", "母公司", "集团", "关联", "affiliate", "subsidiary", "group"]):
-                return ReceiverType.INTRA_GROUP
-        for processor in payload.downstream_processors:
-            relation = " ".join([processor.name or "", processor.role or ""]).lower()
-            if any(token in relation for token in ["子公司", "母公司", "集团", "关联", "affiliate", "subsidiary", "group"]):
-                return ReceiverType.INTRA_GROUP
-        return ReceiverType.THIRD_PARTY
-
-    @staticmethod
-    def _build_data_type_lists(payload: AssessmentRequest) -> tuple[list[str], list[str], list[str]]:
-        personal_types: list[str] = []
-        sensitive_types: list[str] = []
-        important_types: list[str] = []
-        for item in payload.data_inventory_items:
-            label = item.name or item.description or "未命名数据项"
-            dtype = (item.personal_info_type or "").strip().lower()
-            if dtype in {"personal_information", "general"}:
-                personal_types.append(label)
-            elif dtype == "sensitive_personal_information":
-                personal_types.append(label)
-                sensitive_types.append(label)
-            elif dtype == "important_data":
-                important_types.append(label)
-            if item.is_important_data_candidate and label not in important_types:
-                important_types.append(label)
-        return personal_types, sensitive_types, important_types
-
-    def _to_diagnosis_answers(self, payload: AssessmentRequest) -> DiagnosisAnswers:
-        personal_types, sensitive_types, important_types = self._build_data_type_lists(payload)
-        receiver_type = self._infer_receiver_type(payload)
-        scenario = self._infer_transfer_scenario(payload)
-        no_personal_info = (
-            payload.pii_count <= 0
-            and payload.spi_count <= 0
-            and not payload.contains_important_data
-            and not personal_types
-            and not sensitive_types
-            and not important_types
-        )
-        return DiagnosisAnswers(
-            q1_is_ciio=self._to_yes_no_unknown(payload.is_ciio),
-            q2_has_important_data=(
-                YesNoUnknown.YES
-                if payload.contains_important_data or bool(important_types)
-                else YesNoUnknown.NO
-            ),
-            q3_pii_count=payload.pii_count,
-            q4_spi_count=payload.spi_count,
-            q5_no_personal_info=YesNoUnknown.YES if no_personal_info else YesNoUnknown.NO,
-            q6_scenario=scenario,
-            q7_receiver_type=receiver_type,
-            q8_purpose=payload.transfer_purpose,
-            m1_enterprise_name=payload.company_name,
-            m1_industry=payload.industry,
-            m3_processes_personal_info="yes" if payload.pii_count > 0 or payload.spi_count > 0 or bool(personal_types) else "no",
-            m3_personal_info_types=personal_types,
-            m3_sensitive_info_types=sensitive_types,
-            m3_processes_important_data="yes" if payload.contains_important_data or bool(important_types) else "no",
-            m3_important_data_types=important_types,
-            m4_cross_border_transfer="yes" if payload.receiver_country.strip() else "unknown",
-            m4_cross_border_regions=payload.receiver_country,
-            m4_entrusted_processing="yes" if payload.downstream_processors else "no",
-            m5_security_measures=list(payload.security_capability.technical_measures if payload.security_capability else []),
-            m5_compliance_docs=[
-                *list(payload.recipient_info.security_certifications if payload.recipient_info else []),
-                *list(payload.security_capability.certifications if payload.security_capability else []),
-            ],
-        )
+    def _evaluate_diagnosis(payload: AssessmentRequest):
+        """Upstream diagnosis already determined security_assessment path.
+        This module only generates the report — no re-diagnosis."""
+        return _DiagnosisStub(recommended_path="security_assessment")
 
     def _retrieve_per_issue(self, *, issues, profile, regulations) -> dict[str, dict]:
         """为每个 HIGH/BLOCKER issue 调用 DeliLegal search_laws + search_cases。"""
@@ -282,13 +188,6 @@ class AssessmentService:
             legal_grounding_context=legal_grounding_context,
         )
         writing_strategy = build_writing_strategy(issues=issues)
-        compliance_reasoning_items = build_compliance_reasoning(
-            facts=facts,
-            issues=issues,
-            payload=None,
-            attachment_metadata=attachment_notes,
-        )
-        compliance_reasoning = [item.__dict__ for item in compliance_reasoning_items]
         generation_basis_pack = build_generation_basis_pack(
             task_id=task_id,
             facts=facts,
@@ -301,7 +200,6 @@ class AssessmentService:
             writing_strategy=writing_strategy,
             workflow_rules=workflow_rule_context,
             template_context=template_context,
-            compliance_reasoning=compliance_reasoning,
         )
 
         # Build citation registry from pipeline data
@@ -348,8 +246,7 @@ class AssessmentService:
             legal_grounding_context=legal_grounding_context,
             workflow_rule_context=workflow_rule_context,
             template_context=template_context,
-            evaluation_context=compliance_reasoning,
-            compliance_reasoning=compliance_reasoning,
+            evaluation_context=[],
         )
 
     @staticmethod
@@ -417,7 +314,6 @@ class AssessmentService:
             generation_basis_pack=context_pack.generation_basis_pack if context_pack else None,
             legal_grounding=context_pack.legal_grounding if context_pack else None,
             case_grounding=context_pack.case_grounding if context_pack else None,
-            compliance_reasoning=context_pack.compliance_reasoning if context_pack else None,
             citation_registry=context_pack.citation_registry if context_pack else None,
         )
 

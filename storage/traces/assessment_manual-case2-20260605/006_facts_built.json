@@ -1,0 +1,784 @@
+{
+  "name": "facts_built",
+  "seq": 6,
+  "created_at": "2026-06-05T09:27:29.863255+00:00",
+  "payload": {
+    "facts": [
+      {
+        "fact_id": "FACT-request-company-name",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.company_name",
+        "value": "智慧云联科技（上海）有限公司",
+        "normalized_value": "智慧云联科技（上海）有限公司",
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-industry",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.industry",
+        "value": "云计算与数据服务",
+        "normalized_value": "云计算与数据服务",
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-is-ciio",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.is_ciio",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-contains-important-data",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.contains_important_data",
+        "value": true,
+        "normalized_value": true,
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-pii-count",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.pii_count",
+        "value": 1200000,
+        "normalized_value": 1200000,
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-spi-count",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.spi_count",
+        "value": 15000,
+        "normalized_value": 15000,
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-transfer-purpose",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.transfer_purpose",
+        "value": "亚太区客户支持与实时风险控制数据同步",
+        "normalized_value": "亚太区客户支持与实时风险控制数据同步",
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-receiver-country",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.receiver_country",
+        "value": "新加坡",
+        "normalized_value": "新加坡",
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-uploaded-files",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.uploaded_files",
+        "value": [
+          "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md",
+          "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md",
+          "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md"
+        ],
+        "normalized_value": [
+          "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md",
+          "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md",
+          "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md",
+          "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md"
+        ],
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": "Uploaded file paths are captured as a list, not as parsed content.",
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-data-inventory-items",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.data_inventory_items",
+        "value": [
+          {
+            "name": "客户唯一标识符",
+            "description": "客户服务支持数据",
+            "data_subject": "客户",
+            "personal_info_type": "personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "识别客户身份与服务历史",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "姓名与联系方式",
+            "description": "邮箱、手机号",
+            "data_subject": "客户",
+            "personal_info_type": "personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "客户支持与工单处理",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "身份证件号码及验证结果",
+            "description": "高风险交易二次验证",
+            "data_subject": "客户",
+            "personal_info_type": "sensitive_personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "高风险交易核验",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "聚合化风控指标与报告",
+            "description": "反映特定金融市场波动趋势和异常资金流动模式",
+            "data_subject": "金融客户及交易行为",
+            "personal_info_type": "important_data",
+            "is_important_data_candidate": true,
+            "necessity": "集中化风险分析与建模",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          }
+        ],
+        "normalized_value": [
+          {
+            "name": "客户唯一标识符",
+            "description": "客户服务支持数据",
+            "data_subject": "客户",
+            "personal_info_type": "personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "识别客户身份与服务历史",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "姓名与联系方式",
+            "description": "邮箱、手机号",
+            "data_subject": "客户",
+            "personal_info_type": "personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "客户支持与工单处理",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "身份证件号码及验证结果",
+            "description": "高风险交易二次验证",
+            "data_subject": "客户",
+            "personal_info_type": "sensitive_personal_information",
+            "is_important_data_candidate": false,
+            "necessity": "高风险交易核验",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          },
+          {
+            "name": "聚合化风控指标与报告",
+            "description": "反映特定金融市场波动趋势和异常资金流动模式",
+            "data_subject": "金融客户及交易行为",
+            "personal_info_type": "important_data",
+            "is_important_data_candidate": true,
+            "necessity": "集中化风险分析与建模",
+            "example": "",
+            "volume": "",
+            "retention_period": "",
+            "remarks": ""
+          }
+        ],
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": "Structured data inventory items supplied by the user.",
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-recipient-info",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.recipient_info",
+        "value": {
+          "name": "Wisdom Cloud Connect Pte. Ltd.",
+          "country_or_region": "新加坡",
+          "role": "境外接收方",
+          "relationship": "全资子公司",
+          "security_certifications": [
+            "ISO/IEC 27001:2022",
+            "SOC 2 Type II"
+          ],
+          "audit_reports": [
+            "SOC2 Type II审计报告（摘要）"
+          ],
+          "legal_environment_summary": "已进行新加坡数据保护环境差距分析，整体具备数据保护制度基础，但仍需持续评估法律环境变化。",
+          "processing_purpose": "亚太区客户支持与实时风险控制",
+          "processing_method": "接收、存储、分析并回传风控结论",
+          "storage_location": "新加坡数据中心"
+        },
+        "normalized_value": {
+          "name": "Wisdom Cloud Connect Pte. Ltd.",
+          "country_or_region": "新加坡",
+          "role": "境外接收方",
+          "relationship": "全资子公司",
+          "security_certifications": [
+            "ISO/IEC 27001:2022",
+            "SOC 2 Type II"
+          ],
+          "audit_reports": [
+            "SOC2 Type II审计报告（摘要）"
+          ],
+          "legal_environment_summary": "已进行新加坡数据保护环境差距分析，整体具备数据保护制度基础，但仍需持续评估法律环境变化。",
+          "processing_purpose": "亚太区客户支持与实时风险控制",
+          "processing_method": "接收、存储、分析并回传风控结论",
+          "storage_location": "新加坡数据中心"
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-downstream-processors",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.downstream_processors",
+        "value": [
+          {
+            "name": "Wisdom Cloud Connect Pte. Ltd.",
+            "country_or_region": "新加坡",
+            "role": "actual_processor",
+            "processing_activity": "客户服务系统、实时风控引擎和运维监控平台处理",
+            "contract_covered": true,
+            "onward_transfer_constraint": "未经境内方书面同意不得向协议外第三方披露或再转移"
+          }
+        ],
+        "normalized_value": [
+          {
+            "name": "Wisdom Cloud Connect Pte. Ltd.",
+            "country_or_region": "新加坡",
+            "role": "actual_processor",
+            "processing_activity": "客户服务系统、实时风控引擎和运维监控平台处理",
+            "contract_covered": true,
+            "onward_transfer_constraint": "未经境内方书面同意不得向协议外第三方披露或再转移"
+          }
+        ],
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-legal-document-review",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.legal_document_review",
+        "value": {
+          "document_name": "集团内数据跨境传输协议",
+          "clause_coverage": {
+            "purpose_method_scope": "covered",
+            "overseas_retention_location_period": "covered",
+            "onward_transfer_constraint": "covered",
+            "legal_environment_change_response": "covered",
+            "breach_liability_dispute_resolution": "covered",
+            "incident_response_and_individual_rights": "covered"
+          },
+          "raw_clause_refs": [
+            "传输范围与目的限制",
+            "境外接收方义务",
+            "安全事件通知与应急",
+            "审计与监督"
+          ],
+          "missing_items": [],
+          "risk_level": "LOW"
+        },
+        "normalized_value": {
+          "document_name": "集团内数据跨境传输协议",
+          "clause_coverage": {
+            "purpose_method_scope": "covered",
+            "overseas_retention_location_period": "covered",
+            "onward_transfer_constraint": "covered",
+            "legal_environment_change_response": "covered",
+            "breach_liability_dispute_resolution": "covered",
+            "incident_response_and_individual_rights": "covered"
+          },
+          "raw_clause_refs": [
+            "传输范围与目的限制",
+            "境外接收方义务",
+            "安全事件通知与应急",
+            "审计与监督"
+          ],
+          "missing_items": [],
+          "risk_level": "LOW"
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-security-capability",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.security_capability",
+        "value": {
+          "management_measures": [
+            "集团内数据跨境传输协议",
+            "每年两次数据安全内部审计",
+            "跨境数据泄露应急响应预案",
+            "定期渗透测试"
+          ],
+          "technical_measures": [
+            "IPSec VPN",
+            "TLS 1.3",
+            "AES-256静态加密",
+            "最小权限访问控制",
+            "多因素认证",
+            "6年日志留存"
+          ],
+          "certifications": [
+            "ISO/IEC 27001:2022",
+            "SOC 2 Type II"
+          ],
+          "compliance_records": [
+            "德勤第三方核查报告支持申报",
+            "2025年第一季度联合应急演练"
+          ]
+        },
+        "normalized_value": {
+          "management_measures": [
+            "集团内数据跨境传输协议",
+            "每年两次数据安全内部审计",
+            "跨境数据泄露应急响应预案",
+            "定期渗透测试"
+          ],
+          "technical_measures": [
+            "IPSec VPN",
+            "TLS 1.3",
+            "AES-256静态加密",
+            "最小权限访问控制",
+            "多因素认证",
+            "6年日志留存"
+          ],
+          "certifications": [
+            "ISO/IEC 27001:2022",
+            "SOC 2 Type II"
+          ],
+          "compliance_records": [
+            "德勤第三方核查报告支持申报",
+            "2025年第一季度联合应急演练"
+          ]
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-compliance-history",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.compliance_history",
+        "value": {
+          "has_penalty": false,
+          "penalty_time": "",
+          "penalty_reason": "",
+          "rectification_status": "无监管处罚记录"
+        },
+        "normalized_value": {
+          "has_penalty": false,
+          "penalty_time": "",
+          "penalty_reason": "",
+          "rectification_status": "无监管处罚记录"
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-personal-info-protection",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.personal_info_protection",
+        "value": {
+          "separate_consent_status": "partial",
+          "notice_content": "服务条款已明确告知集团内必要跨境传输安排，但单独同意留痕仍需结合正式材料核验。",
+          "rights_response": "由境内方统一受理访问、更正、删除等请求，境外接收方提供协助。",
+          "archive_evidence": "需进一步补充单独同意记录、隐私政策版本快照和日志。"
+        },
+        "normalized_value": {
+          "separate_consent_status": "partial",
+          "notice_content": "服务条款已明确告知集团内必要跨境传输安排，但单独同意留痕仍需结合正式材料核验。",
+          "rights_response": "由境内方统一受理访问、更正、删除等请求，境外接收方提供协助。",
+          "archive_evidence": "需进一步补充单独同意记录、隐私政策版本快照和日志。"
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-system-link",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.system_link",
+        "value": {
+          "domestic_systems": [
+            "中国上海应用服务器",
+            "中国上海数据库",
+            "境内交易网关"
+          ],
+          "transfer_links": [
+            "上海数据中心 -> IPSec VPN/TLS 1.3 -> 新加坡数据中心"
+          ],
+          "transit_locations": [
+            "上海",
+            "新加坡"
+          ],
+          "overseas_systems": [
+            "新加坡数据库集群",
+            "客户服务系统",
+            "实时风控引擎",
+            "运维监控平台"
+          ]
+        },
+        "normalized_value": {
+          "domestic_systems": [
+            "中国上海应用服务器",
+            "中国上海数据库",
+            "境内交易网关"
+          ],
+          "transfer_links": [
+            "上海数据中心 -> IPSec VPN/TLS 1.3 -> 新加坡数据中心"
+          ],
+          "transit_locations": [
+            "上海",
+            "新加坡"
+          ],
+          "overseas_systems": [
+            "新加坡数据库集群",
+            "客户服务系统",
+            "实时风控引擎",
+            "运维监控平台"
+          ]
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-request-self-assessment-info",
+        "source_type": "schema",
+        "source_ref": "AssessmentRequest",
+        "field_path": "request.self_assessment_info",
+        "value": {
+          "start_date": "2025-08-01",
+          "end_date": "2025-09-15",
+          "participating_departments": [
+            "集团法律合规与公共事务部",
+            "信息技术部",
+            "网络安全部",
+            "亚太区业务运营部",
+            "数据中心管理部"
+          ],
+          "preliminary_conclusion": "初步判断可能触发安全评估申报条件，因此启动正式自评估流程。"
+        },
+        "normalized_value": {
+          "start_date": "2025-08-01",
+          "end_date": "2025-09-15",
+          "participating_departments": [
+            "集团法律合规与公共事务部",
+            "信息技术部",
+            "网络安全部",
+            "亚太区业务运营部",
+            "数据中心管理部"
+          ],
+          "preliminary_conclusion": "初步判断可能触发安全评估申报条件，因此启动正式自评估流程。"
+        },
+        "confidence": 0.6,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-1",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md",
+        "field_path": "profile.extracted_notes[0]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md: 传输范围与目的限制：明确列明本协议涵盖的数据类型、字段、传输频率（持续实时）及仅限于亚太区客户支持与实时风险控制的特定目的。 境内方义务：保证数据出境的合法性，已进行安全自评估，并获得必要授权；对数据进行源头加密和脱敏处理。 境外接收方义务：承诺按照不低于中国法律法规要求的保护标准处理数据；仅依据境内方的书面指令处理数 [type=audit_report]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md: 传输范围与目的限制：明确列明本协议涵盖的数据类型、字段、传输频率（持续实时）及仅限于亚太区客户支持与实时风险控制的特定目的。 境内方义务：保证数据出境的合法性，已进行安全自评估，并获得必要授权；对数据进行源头加密和脱敏处理。 境外接收方义务：承诺按照不低于中国法律法规要求的保护标准处理数据；仅依据境内方的书面指令处理数 [type=audit_report]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-2",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md",
+        "field_path": "profile.extracted_notes[1]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md: 评估范围与方法：覆盖亚太区客户支持与实时风险控制数据同步这一出境场景，采用文档审阅、访谈、技术测试等方法。 对自评估过程的核查意见：认可自评估工作组织完备，牵头与参与部门职责清晰，评估时间线合理。 对出境风险识别的核查：确认已识别的风险点包括重要数据出境风险、跨境传输安全风险、境外法律环境差异风险。 对安全措施有效性的 [type=audit_report]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md: 评估范围与方法：覆盖亚太区客户支持与实时风险控制数据同步这一出境场景，采用文档审阅、访谈、技术测试等方法。 对自评估过程的核查意见：认可自评估工作组织完备，牵头与参与部门职责清晰，评估时间线合理。 对出境风险识别的核查：确认已识别的风险点包括重要数据出境风险、跨境传输安全风险、境外法律环境差异风险。 对安全措施有效性的 [type=audit_report]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-3",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md",
+        "field_path": "profile.extracted_notes[2]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md: 数据分类分级管理制度：定义重要数据、敏感个人信息、一般个人信息和企业数据的分类标准和处理规范。 数据全生命周期安全管理规定：涵盖数据收集、存储、使用、加工、传输、提供、公开、删除等各环节的安全要求。 数据跨境传输管理办法：专门规定数据出境的风险评估、审批流程、协议签订和持续监督要求。 权限管理与访问控制制度：详细规定了 [type=contract] | 法律文件缺少以下核心条款：处理目的、保存期限、再转移约束、违约责任。建议补充相应内容。",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md: 数据分类分级管理制度：定义重要数据、敏感个人信息、一般个人信息和企业数据的分类标准和处理规范。 数据全生命周期安全管理规定：涵盖数据收集、存储、使用、加工、传输、提供、公开、删除等各环节的安全要求。 数据跨境传输管理办法：专门规定数据出境的风险评估、审批流程、协议签订和持续监督要求。 权限管理与访问控制制度：详细规定了 [type=contract] | 法律文件缺少以下核心条款：处理目的、保存期限、再转移约束、违约责任。建议补充相应内容。",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-4",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md",
+        "field_path": "profile.extracted_notes[3]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md: 获证组织：智慧云联科技（上海）有限公司。 认证范围：与云计算服务、客户关系管理（CRM）及实时风控（RTC）解决方案相关的信息安全管理活动。 证书编号：IS 123456。 有效期：2024年1月1日至2027年1月1日。 认证标准：ISO/IEC 27001:2022。 认证机构：British Standards  [type=certification]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md: 获证组织：智慧云联科技（上海）有限公司。 认证范围：与云计算服务、客户关系管理（CRM）及实时风控（RTC）解决方案相关的信息安全管理活动。 证书编号：IS 123456。 有效期：2024年1月1日至2027年1月1日。 认证标准：ISO/IEC 27001:2022。 认证机构：British Standards  [type=certification]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-5",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md",
+        "field_path": "profile.extracted_notes[4]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md: 审计对象：Wisdom Cloud Connect Pte. Ltd. 与客户数据托管和处理相关的系统与控制。 审计准则：基于AICPA制定的信托服务标准，包括安全性、可用性、处理完整性、保密性、隐私性。 审计类型：SOC 2 Type II。 审计结论：审计师无保留意见，认为新加坡子公司在报告期间内，在安全性、保密性 [type=certification]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md: 审计对象：Wisdom Cloud Connect Pte. Ltd. 与客户数据托管和处理相关的系统与控制。 审计准则：基于AICPA制定的信托服务标准，包括安全性、可用性、处理完整性、保密性、隐私性。 审计类型：SOC 2 Type II。 审计结论：审计师无保留意见，认为新加坡子公司在报告期间内，在安全性、保密性 [type=certification]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-6",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md",
+        "field_path": "profile.extracted_notes[5]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md: 应急响应小组：明确组长、副组长及来自法务、合规、公关、IT等部门成员职责和联系方式。 事件分级：根据影响范围和数据敏感程度分为Ⅰ级、Ⅱ级、Ⅲ级。 响应流程：检测与报告、评估与定级、遏制与消除、通告、恢复、总结与改进。 演练记录：包含最近一次跨中、新两地的联合演练记录和总结。 [type=other]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md: 应急响应小组：明确组长、副组长及来自法务、合规、公关、IT等部门成员职责和联系方式。 事件分级：根据影响范围和数据敏感程度分为Ⅰ级、Ⅱ级、Ⅲ级。 响应流程：检测与报告、评估与定级、遏制与消除、通告、恢复、总结与改进。 演练记录：包含最近一次跨中、新两地的联合演练记录和总结。 [type=other]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-attachment-note-7",
+        "source_type": "attachment",
+        "source_ref": "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md",
+        "field_path": "profile.extracted_notes[6]",
+        "value": "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md: 评估依据：引用《数据安全法》《网络安全法》以及金融行业关于重要数据识别的指引文件。 数据样本分析：展示被识别为重要数据的聚合化风控指标与报告样本，说明其如何反映亚太区特定金融市场波动趋势、异常资金流动模式。 影响分析：论证该类数据一旦泄露或被非法利用，可能危害金融安全与经济稳定。 管理措施：针对该重要数据明确更高访问审 [type=certification]",
+        "normalized_value": "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md: 评估依据：引用《数据安全法》《网络安全法》以及金融行业关于重要数据识别的指引文件。 数据样本分析：展示被识别为重要数据的聚合化风控指标与报告样本，说明其如何反映亚太区特定金融市场波动趋势、异常资金流动模式。 影响分析：论证该类数据一旦泄露或被非法利用，可能危害金融安全与经济稳定。 管理措施：针对该重要数据明确更高访问审 [type=certification]",
+        "confidence": 0.8,
+        "evidence_status": "partial_evidence",
+        "supporting_material_refs": [
+          "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md"
+        ],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-diagnosis-result-recommended-path",
+        "source_type": "diagnosis",
+        "source_ref": "DiagnosisResult",
+        "field_path": "diagnosis_result.recommended_path",
+        "value": "security_assessment",
+        "normalized_value": "security_assessment",
+        "confidence": 1.0,
+        "evidence_status": "documented_evidence",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": true,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-diagnosis-result-rationale",
+        "source_type": "diagnosis",
+        "source_ref": "DiagnosisResult",
+        "field_path": "diagnosis_result.rationale",
+        "value": "向境外提供重要数据必须申报安全评估",
+        "normalized_value": "向境外提供重要数据必须申报安全评估",
+        "confidence": 1.0,
+        "evidence_status": "documented_evidence",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": true,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-diagnosis-result-risk-level",
+        "source_type": "diagnosis",
+        "source_ref": "DiagnosisResult",
+        "field_path": "diagnosis_result.risk_level",
+        "value": "HIGH",
+        "normalized_value": "HIGH",
+        "confidence": 1.0,
+        "evidence_status": "documented_evidence",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": true,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "FACT-diagnosis-result-matched-rule-id",
+        "source_type": "diagnosis",
+        "source_ref": "DiagnosisResult",
+        "field_path": "diagnosis_result.matched_rule_id",
+        "value": "important_data",
+        "normalized_value": "important_data",
+        "confidence": 1.0,
+        "evidence_status": "documented_evidence",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": true,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      }
+    ]
+  }
+}

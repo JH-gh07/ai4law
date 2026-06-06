@@ -1,0 +1,10 @@
+{
+  "name": "alignment_issues",
+  "seq": 22,
+  "created_at": "2026-06-05T09:27:31.935195+00:00",
+  "payload": {
+    "issues": [
+      "内容提及CIIO/关基，但输入is_ciio=False。"
+    ]
+  }
+}

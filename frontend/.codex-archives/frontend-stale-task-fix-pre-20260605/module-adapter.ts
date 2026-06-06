@@ -23,18 +23,6 @@ export class BackendConnectionError extends Error {
   }
 }
 
-export class AsyncTaskNotFoundError extends Error {
-  taskId: string;
-  url?: string;
-
-  constructor(message: string, options: { taskId: string; url?: string }) {
-    super(message);
-    this.name = "AsyncTaskNotFoundError";
-    this.taskId = options.taskId;
-    this.url = options.url;
-  }
-}
-
 export function getModuleRunErrorCode(error: unknown): string | undefined {
   if (error instanceof BackendConnectionError) {
     return error.code;
@@ -251,13 +239,6 @@ async function requestJson(url: string, method: "GET" | "POST", body?: unknown):
 
   if (!response.ok) {
     if (hasBody) {
-      if (url.startsWith("/api/")) {
-        throw new BackendConnectionError(parseErrorMessage(data), {
-          code: "backend_http_error",
-          status: response.status,
-          url,
-        });
-      }
       throw new Error(parseErrorMessage(data));
     }
     if (url.startsWith("/api/")) {
@@ -488,21 +469,7 @@ export async function fetchModuleTaskStatus(module: ModuleDefinition, taskId: st
     throw new Error("Async status is not supported by this module");
   }
 
-  const statusUrl = module.asyncStatusEndpoint(taskId);
-  let statusResponse: unknown;
-  try {
-    statusResponse = await requestJson(statusUrl, "GET");
-  } catch (error) {
-    if (error instanceof BackendConnectionError && error.status === 404) {
-      throw new AsyncTaskNotFoundError(
-        uiLang() === "zh"
-          ? "异步任务状态不存在，可能是服务重启后旧任务已失效。"
-          : "Async task status was not found. The task may be stale after a service restart.",
-        { taskId, url: statusUrl }
-      );
-    }
-    throw error;
-  }
+  const statusResponse = await requestJson(module.asyncStatusEndpoint(taskId), "GET");
   const state = parseTaskState(statusResponse);
   const progress = parseTaskProgress(statusResponse);
   const result = parseTaskResult(statusResponse);

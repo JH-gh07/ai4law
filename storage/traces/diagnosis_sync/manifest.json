@@ -1,18 +1,30 @@
 {
-  "created_at": "2026-06-05T00:12:09.105828+00:00",
-  "event_count": 2,
+  "created_at": "2026-06-05T08:24:10.161182+00:00",
+  "event_count": 4,
   "events": [
     {
       "seq": 1,
       "name": "tool_start",
       "path": "storage/traces/diagnosis_sync/001_tool_start.json",
-      "created_at": "2026-06-05T00:12:02.939579+00:00"
+      "created_at": "2026-06-05T08:23:48.632087+00:00"
     },
     {
       "seq": 2,
       "name": "tool_result",
       "path": "storage/traces/diagnosis_sync/002_tool_result.json",
-      "created_at": "2026-06-05T00:12:09.104684+00:00"
+      "created_at": "2026-06-05T08:24:04.669500+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "storage/traces/diagnosis_sync/003_tool_start.json",
+      "created_at": "2026-06-05T08:24:04.671629+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "tool_result",
+      "path": "storage/traces/diagnosis_sync/004_tool_result.json",
+      "created_at": "2026-06-05T08:24:10.159227+00:00"
     }
   ]
 }

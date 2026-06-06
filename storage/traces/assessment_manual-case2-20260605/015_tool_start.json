@@ -1,0 +1,23 @@
+{
+  "name": "tool_start",
+  "seq": 15,
+  "created_at": "2026-06-05T09:27:31.931010+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "temperature": 0.2,
+      "max_tokens": 800,
+      "system": "你是一名专注于中国数据跨境合规的资深律师，深度掌握《个人信息保护法》《数据安全法》《数据出境安全评估办法》《数据出境安全评估申报指南（第三版）》等法规。请严格按照《数据出境风险自评估报告》的行文规范，用专业、严谨的中文撰写报告章节内容。每章节结构清晰、有据可查，避免空话套话，直接针对企业实际情况分析。",
+      "user": "请根据以下企业信息，撰写第四章「境外接收方保障能力评估」，包含：(1)接收方基本情况（名称、国家/地区、法律地位）；(2)接收方所在地数据保护法律环境分析；(3)接收方已建立的个人信息保护制度和技术措施；(4)接收方处理个人信息的目的、方式、范围是否超出合同约定。\n\n【统一生成上下文包】\n- module_key：assessment\n- request_id：manual-case2-20260605\n- chapter_id：recipient_capability\n- recommended_path：security_assessment\n- path_warning：无\n- risk_summary：{'risk_level': 'HIGH', 'recommended_path': 'security_assessment', 'rationale': '向境外提供重要数据必须申报安全评估'}\n\n【企业事实与诊断事实】\n- 本章节无确认事实\n\n【法规依据（使用 source_id 作为 rule_ref）】\n- CN-LAW-001 | 中华人民共和国网络安全法（2025修正）第七十八条：第七十八条 本法下列用语的含义：\n （一）网络，是指由计算机或者其他信息终端及相关设备组成的按照一定的规则和程序对信息进行收集、存储、传输、交换、处理的系统。\n （二）网络安全，是指通过采取必要措施，防范对网络的攻击、侵入、干扰、破坏和非法使用以及意外事故，使网络处于稳定可靠运行的状态，以及保障网络数据的完整性、保密性\n- CN-QA-012 | 数据出境安全管理政策问答（2025年4月）第六十二条：第六十二条规定，重要数据是指特定领域、特定群体、特定区域或者达到一定精度和规模，一旦遭到篡改、破坏、泄露或者非法获取、非法利用，可能直接危害国家安全、经济运行、社会稳定、公共健康和",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

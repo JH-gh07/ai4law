@@ -101,6 +101,7 @@ def build_generation_basis_pack(
     writing_strategy: dict[str, Any] | None = None,
     workflow_rules: list[dict[str, Any]] | None = None,
     template_context: list[dict[str, Any]] | None = None,
+    compliance_reasoning: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build the audit pack explaining what the generator is allowed to rely on."""
 
@@ -165,6 +166,7 @@ def build_generation_basis_pack(
         "evidence_chain": [_evidence_summary(evidence) for evidence in evidence_chain],
         "legal_grounding": legal_grounding or {"by_issue": {}},
         "writing_strategy": writing_strategy or {"strategies": []},
+        "compliance_reasoning": list(compliance_reasoning or []),
         "attachment_summaries": list(attachment_notes),
         "template_context": list(template_context or []),
         "section_packs": section_packs,

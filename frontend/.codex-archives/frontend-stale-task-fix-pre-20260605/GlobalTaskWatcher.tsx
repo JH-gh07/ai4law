@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "../../lib/app-store";
-import { AsyncTaskNotFoundError, findModule, fetchModuleTaskStatus } from "../../lib/module-adapter";
+import { findModule, fetchModuleTaskStatus } from "../../lib/module-adapter";
 import {
   isFinalAsyncState,
   isSuccessAsyncState,
@@ -73,28 +73,8 @@ export function GlobalTaskWatcher() {
               },
             });
           }
-        } catch (error) {
-          if (error instanceof AsyncTaskNotFoundError) {
-            const now = new Date().toISOString();
-            dispatch({
-              type: "append_run",
-              payload: {
-                id: run.id,
-                taskSpaceId: run.taskSpaceId,
-                module: run.module,
-                runMode: "async",
-                startedAt: run.startedAt,
-                finishedAt: now,
-                success: false,
-                request: run.request,
-                response: run.response,
-                error: error.message,
-                errorCode: "async_task_not_found",
-                asyncTaskId: taskId,
-                asyncState: "failed",
-              },
-            });
-          }
+        } catch {
+          // 静默失败，下一轮重试
         } finally {
           inFlightRef.current.delete(taskId);
         }

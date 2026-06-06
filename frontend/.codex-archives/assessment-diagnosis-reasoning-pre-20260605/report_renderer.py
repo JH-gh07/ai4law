@@ -22,7 +22,6 @@ from backend.modules.assessment.internal_review_generator import (
     build_internal_review_payload,
     generate_internal_review_markdown,
 )
-from backend.modules.assessment.compliance_reasoning import render_compliance_reasoning_markdown
 from backend.modules.assessment.external_report_generator import (
     TemplateMissingError,
     build_official_report_mapping,
@@ -91,7 +90,6 @@ class AssessmentReportRenderer:
         generation_basis_pack: dict[str, Any] | None = None,
         legal_grounding: dict[str, Any] | None = None,
         case_grounding: dict[str, Any] | None = None,
-        compliance_reasoning: list[dict[str, Any]] | None = None,
         citation_registry: "CitationRegistry | None" = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
@@ -229,10 +227,6 @@ class AssessmentReportRenderer:
 
         if generation_basis_pack:
             result["generation_basis_pack_json"] = _write_generation_basis_pack_json(generation_basis_pack, output_dir)
-
-        if compliance_reasoning:
-            result["compliance_reasoning_json"] = _write_compliance_reasoning_json(compliance_reasoning, output_dir)
-            result["compliance_reasoning_md"] = _write_compliance_reasoning_md(compliance_reasoning, output_dir)
 
         if citation_registry is not None:
             result["citation_map_json"] = _write_citation_map_json(citation_registry, output_dir)
@@ -616,23 +610,6 @@ def _write_generation_basis_pack_json(generation_basis_pack: dict[str, Any], out
 
     path = output_dir / "generation_basis_pack.json"
     path.write_text(json.dumps(generation_basis_pack, ensure_ascii=False, indent=2), encoding="utf-8")
-    return str(path)
-
-
-def _write_compliance_reasoning_json(compliance_reasoning: list[dict[str, Any]], output_dir: Path) -> str:
-    import json
-
-    path = output_dir / "compliance_reasoning.json"
-    path.write_text(json.dumps(compliance_reasoning, ensure_ascii=False, indent=2), encoding="utf-8")
-    return str(path)
-
-
-def _write_compliance_reasoning_md(compliance_reasoning: list[dict[str, Any]], output_dir: Path) -> str:
-    from backend.modules.assessment.compliance_reasoning import ComplianceReasoningItem
-
-    items = [ComplianceReasoningItem(**item) for item in compliance_reasoning]
-    path = output_dir / "compliance_reasoning.md"
-    path.write_text(render_compliance_reasoning_markdown(items), encoding="utf-8")
     return str(path)
 
 

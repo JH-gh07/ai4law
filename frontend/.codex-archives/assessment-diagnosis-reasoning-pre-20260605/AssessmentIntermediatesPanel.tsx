@@ -11,7 +11,6 @@ type IntermediatesSubTab =
   | "spi"
   | "vendor"
   | "materials"
-  | "compliance_reasoning"
   | "report";
 
 interface SubTabDef {
@@ -30,7 +29,6 @@ const SUB_TABS: SubTabDef[] = [
   { id: "spi", labelZh: "敏感信息风险", labelEn: "SPI Risks", fileKey: "spi_risks_json" },
   { id: "vendor", labelZh: "供应商问题", labelEn: "Vendor Issues", fileKey: "vendor_issues_json" },
   { id: "materials", labelZh: "材料清单", labelEn: "Material Checklist", fileKey: "material_checklist_json" },
-  { id: "compliance_reasoning", labelZh: "规则分析结论", labelEn: "Compliance Reasoning", fileKey: "compliance_reasoning_json" },
   { id: "report", labelZh: "报告输出", labelEn: "Report Output", fileKey: "markdown" },
 ];
 
@@ -267,14 +265,6 @@ const COLUMNS: Record<string, ColumnDef[]> = {
     { key: "source_ref", labelZh: "材料编号", labelEn: "Source Ref" },
     { key: "summary", labelZh: "摘要", labelEn: "Summary" },
     { key: "status", labelZh: "状态", labelEn: "Status" },
-  ],
-  compliance_reasoning: [
-    { key: "target", labelZh: "评估维度", labelEn: "Target" },
-    { key: "fact_status", labelZh: "事实状态", labelEn: "Fact Status" },
-    { key: "reasonableness", labelZh: "合理性", labelEn: "Reasonableness" },
-    { key: "legal_risk", labelZh: "法律风险", labelEn: "Legal Risk" },
-    { key: "correct_expression", labelZh: "建议表达", labelEn: "Correct Expression" },
-    { key: "external_claim_allowed", labelZh: "允许正面结论", labelEn: "External Claim Allowed", render: (v) => (v ? "是" : "否") },
   ],
 };
 

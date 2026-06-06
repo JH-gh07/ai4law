@@ -1,0 +1,144 @@
+{
+  "created_at": "2026-06-05T09:27:31.937095+00:00",
+  "event_count": 23,
+  "events": [
+    {
+      "seq": 1,
+      "name": "assessment_request",
+      "path": "storage/traces/assessment_manual-case2-20260605/001_assessment_request.json",
+      "created_at": "2026-06-05T09:27:29.735865+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "profile_extracted",
+      "path": "storage/traces/assessment_manual-case2-20260605/002_profile_extracted.json",
+      "created_at": "2026-06-05T09:27:29.745451+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/003_tool_start.json",
+      "created_at": "2026-06-05T09:27:29.746942+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "diagnosis",
+      "path": "storage/traces/assessment_manual-case2-20260605/004_diagnosis.json",
+      "created_at": "2026-06-05T09:27:29.861649+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "path_validation",
+      "path": "storage/traces/assessment_manual-case2-20260605/005_path_validation.json",
+      "created_at": "2026-06-05T09:27:29.862213+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "facts_built",
+      "path": "storage/traces/assessment_manual-case2-20260605/006_facts_built.json",
+      "created_at": "2026-06-05T09:27:29.863255+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "retrieval_hits",
+      "path": "storage/traces/assessment_manual-case2-20260605/007_retrieval_hits.json",
+      "created_at": "2026-06-05T09:27:30.995700+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "issues_built",
+      "path": "storage/traces/assessment_manual-case2-20260605/008_issues_built.json",
+      "created_at": "2026-06-05T09:27:30.997550+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "evidence_built",
+      "path": "storage/traces/assessment_manual-case2-20260605/009_evidence_built.json",
+      "created_at": "2026-06-05T09:27:30.998775+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "per_issue_rag",
+      "path": "storage/traces/assessment_manual-case2-20260605/010_per_issue_rag.json",
+      "created_at": "2026-06-05T09:27:31.602819+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "context_pack_built",
+      "path": "storage/traces/assessment_manual-case2-20260605/011_context_pack_built.json",
+      "created_at": "2026-06-05T09:27:31.834218+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/012_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.868706+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/013_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.929659+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/014_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.930432+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/015_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.931010+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/016_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.931524+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/017_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.932047+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/018_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.932560+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "tool_start",
+      "path": "storage/traces/assessment_manual-case2-20260605/019_tool_start.json",
+      "created_at": "2026-06-05T09:27:31.933072+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "chapters_generated",
+      "path": "storage/traces/assessment_manual-case2-20260605/020_chapters_generated.json",
+      "created_at": "2026-06-05T09:27:31.933544+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "consistency_issues",
+      "path": "storage/traces/assessment_manual-case2-20260605/021_consistency_issues.json",
+      "created_at": "2026-06-05T09:27:31.934342+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "alignment_issues",
+      "path": "storage/traces/assessment_manual-case2-20260605/022_alignment_issues.json",
+      "created_at": "2026-06-05T09:27:31.935195+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "repair_pass",
+      "path": "storage/traces/assessment_manual-case2-20260605/023_repair_pass.json",
+      "created_at": "2026-06-05T09:27:31.936604+00:00"
+    }
+  ]
+}

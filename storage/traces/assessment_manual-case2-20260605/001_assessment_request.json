@@ -1,0 +1,190 @@
+{
+  "name": "assessment_request",
+  "seq": 1,
+  "created_at": "2026-06-05T09:27:29.735865+00:00",
+  "payload": {
+    "company_name": "智慧云联科技（上海）有限公司",
+    "industry": "云计算与数据服务",
+    "is_ciio": false,
+    "contains_important_data": true,
+    "pii_count": 1200000,
+    "spi_count": 15000,
+    "transfer_purpose": "亚太区客户支持与实时风险控制数据同步",
+    "receiver_country": "新加坡",
+    "force_override_path": true,
+    "uploaded_files": [
+      "/private/tmp/ai4law-assessment-case2/materials/智慧云联-与新加坡子公司数据跨境传输协议.md",
+      "/private/tmp/ai4law-assessment-case2/materials/德勤-数据出境风险评估第三方核查报告（终版）.md",
+      "/private/tmp/ai4law-assessment-case2/materials/数据安全管理制度汇编（V3.2）.md",
+      "/private/tmp/ai4law-assessment-case2/materials/ISO27001认证证书.md",
+      "/private/tmp/ai4law-assessment-case2/materials/SOC2 Type II审计报告（摘要）.md",
+      "/private/tmp/ai4law-assessment-case2/materials/数据泄露应急响应预案（2025版）.md",
+      "/private/tmp/ai4law-assessment-case2/materials/关于重要数据识别的内部评估报告.md"
+    ],
+    "path_check_mode": "warn_only",
+    "self_assessment_info": {
+      "start_date": "2025-08-01",
+      "end_date": "2025-09-15",
+      "participating_departments": [
+        "集团法律合规与公共事务部",
+        "信息技术部",
+        "网络安全部",
+        "亚太区业务运营部",
+        "数据中心管理部"
+      ],
+      "preliminary_conclusion": "初步判断可能触发安全评估申报条件，因此启动正式自评估流程。"
+    },
+    "data_inventory_items": [
+      {
+        "name": "客户唯一标识符",
+        "description": "客户服务支持数据",
+        "data_subject": "客户",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "识别客户身份与服务历史",
+        "example": "",
+        "volume": "",
+        "retention_period": "",
+        "remarks": ""
+      },
+      {
+        "name": "姓名与联系方式",
+        "description": "邮箱、手机号",
+        "data_subject": "客户",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "客户支持与工单处理",
+        "example": "",
+        "volume": "",
+        "retention_period": "",
+        "remarks": ""
+      },
+      {
+        "name": "身份证件号码及验证结果",
+        "description": "高风险交易二次验证",
+        "data_subject": "客户",
+        "personal_info_type": "sensitive_personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "高风险交易核验",
+        "example": "",
+        "volume": "",
+        "retention_period": "",
+        "remarks": ""
+      },
+      {
+        "name": "聚合化风控指标与报告",
+        "description": "反映特定金融市场波动趋势和异常资金流动模式",
+        "data_subject": "金融客户及交易行为",
+        "personal_info_type": "important_data",
+        "is_important_data_candidate": true,
+        "necessity": "集中化风险分析与建模",
+        "example": "",
+        "volume": "",
+        "retention_period": "",
+        "remarks": ""
+      }
+    ],
+    "recipient_info": {
+      "name": "Wisdom Cloud Connect Pte. Ltd.",
+      "country_or_region": "新加坡",
+      "role": "境外接收方",
+      "relationship": "全资子公司",
+      "security_certifications": [
+        "ISO/IEC 27001:2022",
+        "SOC 2 Type II"
+      ],
+      "audit_reports": [
+        "SOC2 Type II审计报告（摘要）"
+      ],
+      "legal_environment_summary": "已进行新加坡数据保护环境差距分析，整体具备数据保护制度基础，但仍需持续评估法律环境变化。",
+      "processing_purpose": "亚太区客户支持与实时风险控制",
+      "processing_method": "接收、存储、分析并回传风控结论",
+      "storage_location": "新加坡数据中心"
+    },
+    "downstream_processors": [
+      {
+        "name": "Wisdom Cloud Connect Pte. Ltd.",
+        "country_or_region": "新加坡",
+        "role": "actual_processor",
+        "processing_activity": "客户服务系统、实时风控引擎和运维监控平台处理",
+        "contract_covered": true,
+        "onward_transfer_constraint": "未经境内方书面同意不得向协议外第三方披露或再转移"
+      }
+    ],
+    "legal_document_review": {
+      "document_name": "集团内数据跨境传输协议",
+      "clause_coverage": {
+        "purpose_method_scope": "covered",
+        "overseas_retention_location_period": "covered",
+        "onward_transfer_constraint": "covered",
+        "legal_environment_change_response": "covered",
+        "breach_liability_dispute_resolution": "covered",
+        "incident_response_and_individual_rights": "covered"
+      },
+      "raw_clause_refs": [
+        "传输范围与目的限制",
+        "境外接收方义务",
+        "安全事件通知与应急",
+        "审计与监督"
+      ],
+      "missing_items": [],
+      "risk_level": "LOW"
+    },
+    "security_capability": {
+      "management_measures": [
+        "集团内数据跨境传输协议",
+        "每年两次数据安全内部审计",
+        "跨境数据泄露应急响应预案",
+        "定期渗透测试"
+      ],
+      "technical_measures": [
+        "IPSec VPN",
+        "TLS 1.3",
+        "AES-256静态加密",
+        "最小权限访问控制",
+        "多因素认证",
+        "6年日志留存"
+      ],
+      "certifications": [
+        "ISO/IEC 27001:2022",
+        "SOC 2 Type II"
+      ],
+      "compliance_records": [
+        "德勤第三方核查报告支持申报",
+        "2025年第一季度联合应急演练"
+      ]
+    },
+    "compliance_history": {
+      "has_penalty": false,
+      "penalty_time": "",
+      "penalty_reason": "",
+      "rectification_status": "无监管处罚记录"
+    },
+    "personal_info_protection": {
+      "separate_consent_status": "partial",
+      "notice_content": "服务条款已明确告知集团内必要跨境传输安排，但单独同意留痕仍需结合正式材料核验。",
+      "rights_response": "由境内方统一受理访问、更正、删除等请求，境外接收方提供协助。",
+      "archive_evidence": "需进一步补充单独同意记录、隐私政策版本快照和日志。"
+    },
+    "system_link": {
+      "domestic_systems": [
+        "中国上海应用服务器",
+        "中国上海数据库",
+        "境内交易网关"
+      ],
+      "transfer_links": [
+        "上海数据中心 -> IPSec VPN/TLS 1.3 -> 新加坡数据中心"
+      ],
+      "transit_locations": [
+        "上海",
+        "新加坡"
+      ],
+      "overseas_systems": [
+        "新加坡数据库集群",
+        "客户服务系统",
+        "实时风控引擎",
+        "运维监控平台"
+      ]
+    }
+  }
+}

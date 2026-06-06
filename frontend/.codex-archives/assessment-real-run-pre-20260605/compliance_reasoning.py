@@ -133,27 +133,20 @@ def _get_attachment_evidence_map(attachment_metadata: list[dict]) -> dict[str, b
     }
     for meta in attachment_metadata:
         atype = meta.get("type", "")
-        filename = str(meta.get("filename") or meta.get("source_ref", "")).lower()
-        summary = str(meta.get("summary", "")).lower()
+        filename = str(meta.get("filename", "")).lower()
         if "contract" in atype or "协议" in filename:
             evidence["has_contract"] = True
-        if "privacy_policy" in atype or "隐私" in filename or "privacy" in summary:
+        if "privacy_policy" in atype or "隐私" in filename:
             evidence["has_privacy_policy"] = True
-        if (
-            "certification" in atype
-            or "认证" in filename
-            or "iso" in filename
-            or "soc" in filename
-            or "cert" in summary
-        ):
+        if "certification" in atype or "认证" in filename:
             evidence["has_certification"] = True
-        if "audit" in atype or "审计" in filename or "审计" in summary:
+        if "audit" in atype or "审计" in filename:
             evidence["has_audit_report"] = True
-        if "consent" in atype or "同意" in filename or "同意" in summary or "告知" in summary:
+        if "consent" in atype or "同意" in filename:
             evidence["has_consent_record"] = True
-        if "data_inventory" in atype or "数据清单" in filename or "字段" in summary:
+        if "data_inventory" in atype or "数据清单" in filename:
             evidence["has_data_inventory"] = True
-        if "policy" in atype or "制度" in filename or "制度" in summary or "预案" in filename:
+        if "policy" in atype or "制度" in filename:
             evidence["has_internal_policy"] = True
     return evidence
 
