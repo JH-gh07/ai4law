@@ -226,12 +226,11 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                         "publish_date": (row.get("publish_date") or "").strip(),
                         "effective_date": (row.get("effective_date") or "").strip(),
                         "snapshot_path": (row.get("snapshot_path") or "").strip(),
-                        "source_url": (row.get("url") or "").strip(),
+                        "external_url": (row.get("url") or "").strip(),
                         "usage": (row.get("usage") or "").strip(),
                         "suitable_for": (row.get("suitable_for") or "").strip(),
                         "report_usage": (row.get("report_usage") or "").strip(),
                         "summary": (row.get("summary") or "").strip(),
-                        "knowledge_url": (row.get("knowledge_url") or "").strip(),
                     },
                 )
             )

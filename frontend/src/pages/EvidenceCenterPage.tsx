@@ -70,7 +70,8 @@ export function EvidenceCenterPage() {
       caseFilterScenario: "按适用场景过滤",
       selectAll: "全选",
       clearAll: "清空",
-      openSource: "打开来源链接",
+      openSource: "查看官方来源",
+      openInLawReader: "在法规阅读器中查看",
       openCase: "打开案例来源",
       previewTitle: "内容预览",
       casePreviewTitle: "案例内容预览",
@@ -135,7 +136,8 @@ export function EvidenceCenterPage() {
       caseFilterScenario: "Filter by scenario",
       selectAll: "Select All",
       clearAll: "Clear",
-      openSource: "Open Source Link",
+      openSource: "Open Official Source",
+      openInLawReader: "Open in Law Reader",
       openCase: "Open Case Source",
       previewTitle: "Preview",
       casePreviewTitle: "Case Preview",
@@ -794,7 +796,8 @@ export function EvidenceCenterPage() {
                     <strong>{copy.summaryTitle}</strong>
                     <p>{rowText(selectedSource, "summary", "-")}</p>
                   </div>
-                  {selectedSource.url ? <a className="ghost-btn link-btn" href={selectedSource.url} target="_blank" rel="noreferrer">{copy.openSource}</a> : null}
+                  {selectedSource.external_url || selectedSource.url ? <a className="ghost-btn link-btn" href={selectedSource.external_url || selectedSource.url} target="_blank" rel="noreferrer">{copy.openSource}</a> : null}
+                  {selectedSource.knowledge_url ? <a className="ghost-btn link-btn" href={selectedSource.knowledge_url}>{copy.openInLawReader}</a> : null}
                   {sourcePreview ? <div className="knowledge-preview-block"><strong>{copy.previewTitle}</strong><p>{sourcePreview}</p></div> : null}
                 </article>
               ) : <p className="resource-empty">{copy.noData}</p>
