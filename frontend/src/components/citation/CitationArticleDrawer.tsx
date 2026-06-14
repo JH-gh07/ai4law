@@ -51,11 +51,12 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
   }, [citation.source_id, citation.article_no]);
 
   const handleViewFullLaw = () => {
-    const targetUrl = citation.knowledge_url || (
-      citation.source_id
-        ? `/knowledge/laws/${encodeURIComponent(citation.source_id)}?article=${encodeURIComponent(citation.article_no)}`
-        : ""
-    );
+    // Prefer locally-constructed URL — source_id + article_no are canonical.
+    // Backend knowledge_url can be stale from cached citation_map.json files.
+    const localUrl = citation.source_id
+      ? `/knowledge/laws/${encodeURIComponent(citation.source_id)}?article=${encodeURIComponent(citation.article_no)}`
+      : "";
+    const targetUrl = localUrl || citation.knowledge_url;
     if (targetUrl) {
       navigate(targetUrl);
     }

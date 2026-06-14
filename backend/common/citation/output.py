@@ -127,6 +127,55 @@ def _resolve_source_id(source_id: str, title: str) -> str:
     return source_id
 
 
+def _normalize_article_no(article_no: str) -> str:
+    """Convert Chinese-numeral article number (六十六) to Arabic (66).
+
+    LawViewerPage and get_article_detail expect Arabic numerals for lookup.
+    Passing Chinese numerals in the URL query string causes a mismatch —
+    the backend can convert them but keeping Arabic in the URL is the
+    canonical form and avoids any client-side parsing difference.
+    """
+    value = (article_no or "").strip()
+    if not value:
+        return ""
+    if value.isdigit():
+        return value
+    # Try "第X条" pattern first
+    match = re.search(r"第\s*([0-9]+|[零〇一二两三四五六七八九十百千万]+)\s*条", value)
+    if match:
+        raw_num = match.group(1)
+    else:
+        raw_num = value
+    if raw_num.isdigit():
+        return raw_num
+    # Try Chinese numeral conversion using the same algorithm as knowledge_index.py
+    digit_map: dict[str, int] = {
+        "零": 0, "〇": 0, "一": 1, "二": 2, "两": 2, "三": 3,
+        "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9,
+    }
+    unit_map: dict[str, int] = {"十": 10, "百": 100, "千": 1000, "万": 10000}
+    total = 0
+    section = 0
+    number = 0
+    for char in raw_num:
+        if char in digit_map:
+            number = digit_map[char]
+        elif char in unit_map:
+            unit = unit_map[char]
+            if unit == 10000:
+                section = (section + (number or 0)) * unit
+                total += section
+                section = 0
+                number = 0
+            else:
+                if number == 0:
+                    number = 1
+                section += number * unit
+                number = 0
+    result = total + section + number
+    return str(result) if result > 0 else value
+
+
 def build_knowledge_url(
     *,
     source_id: str,
@@ -141,7 +190,7 @@ def build_knowledge_url(
 
     query: dict[str, str] = {}
     if article_no:
-        query["article"] = article_no
+        query["article"] = _normalize_article_no(article_no)
     elif section_id:
         query["section"] = section_id
     elif clause_id:
@@ -164,21 +213,20 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     # ── Resolve source_id via title→fileId lookup ──
     resolved_source_id = _resolve_source_id(source_id, title)
 
-    # Rebuild knowledge_url: always regenerate if source_id was resolved (changed),
-    # or if existing URL is missing/empty. This ensures cached citation_map.json
-    # entries with stale title-based URLs get corrected.
-    existing_knowledge_url = item.get("knowledge_url")
-    source_changed = resolved_source_id != source_id
-    if source_changed or not isinstance(existing_knowledge_url, str) or not existing_knowledge_url.strip():
-        knowledge_url = build_knowledge_url(
-            source_id=resolved_source_id,
-            article_no=article_no,
-            anchor=anchor,
-            section_id=section_id,
-            clause_id=clause_id,
-        )
-    else:
-        knowledge_url = existing_knowledge_url
+    # Always regenerate knowledge_url from the canonical source_id + article_no.
+    # Never trust cached values from citation_map.json — old runs may have written
+    # stale/wrong URLs (external HTML, /evidence, empty, etc.) that survive the
+    # previous conditional-regeneration logic when source_id doesn't change.
+    knowledge_url = build_knowledge_url(
+        source_id=resolved_source_id,
+        article_no=article_no,
+        anchor=anchor,
+        section_id=section_id,
+        clause_id=clause_id,
+    )
+
+    # Normalize article_no to Arabic numerals for consistency with LawViewerPage
+    normalized_article_no = _normalize_article_no(article_no) or article_no
 
     can_jump = bool(resolved_source_id and knowledge_url)
     normalized = dict(item)
@@ -186,7 +234,7 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     normalized["source_id"] = resolved_source_id
     normalized["jurisdiction"] = str(item.get("jurisdiction", "") or "")
     normalized["display_label"] = str(item.get("display_label", "") or "")
-    normalized["article_no"] = article_no
+    normalized["article_no"] = normalized_article_no
     normalized["anchor"] = anchor
     normalized["section_id"] = section_id
     normalized["clause_id"] = clause_id

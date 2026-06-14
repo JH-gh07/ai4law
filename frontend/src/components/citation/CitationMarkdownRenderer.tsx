@@ -327,7 +327,12 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
   }
 
   const handleOpenCitation = (citation: CitationDetail) => {
-    const targetUrl = citation.knowledge_url || buildFallbackKnowledgeUrl(citation);
+    // Prefer the locally-constructed URL over the backend-supplied knowledge_url.
+    // source_id + article_no are the canonical source of truth — the backend's
+    // knowledge_url can be stale from cached citation_map.json files written by
+    // older code that didn't set the field or set it to an incorrect value.
+    const localUrl = buildFallbackKnowledgeUrl(citation);
+    const targetUrl = localUrl || citation.knowledge_url;
     if (citation.can_jump && targetUrl) {
       window.open(targetUrl, "_blank", "noopener,noreferrer");
       return;
