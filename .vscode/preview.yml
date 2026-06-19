@@ -15,7 +15,7 @@ apps:
       BACKEND_PID=$!
       trap 'kill "$BACKEND_PID" 2>/dev/null || true' EXIT INT TERM
       npm --prefix frontend run dev -- --host 0.0.0.0 --port 3000
-    root: /workspace
+    root: .
     name: ai4law
     description: AI4Law 智能法律合规平台
     autoOpen: true
