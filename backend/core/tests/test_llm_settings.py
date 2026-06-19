@@ -68,6 +68,17 @@ def test_llm_client_uses_resolved_siliconflow_config(monkeypatch) -> None:
     assert client._model == "deepseek-ai/DeepSeek-V3.2"
 
 
+def test_llm_client_without_provider_credentials_uses_fallback(monkeypatch) -> None:
+    _clear_llm_env(monkeypatch)
+
+    client = LLMClient(Settings(_env_file=None))
+    result = client.chat_with_metadata(system="system", user="user")
+
+    assert client.enabled is False
+    assert client._provider == "none"
+    assert result["fallback"] is True
+
+
 def test_runtime_settings_can_apply_siliconflow_provider(tmp_path) -> None:
     settings = Settings(storage_dir=tmp_path, _env_file=None)
 

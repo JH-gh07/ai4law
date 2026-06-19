@@ -54,7 +54,9 @@ class LLMClient:
     """
 
     def __init__(self, settings: Settings) -> None:
-        provider = LLMProviderRegistry(settings).get_active_provider()
+        # Routers construct some services before create_app() applies runtime
+        # provider overrides. Keep the client disabled until that refresh runs.
+        provider = LLMProviderRegistry(settings).get_active_provider(allow_disabled=True)
         self._provider_id = provider.id
         self._provider_name = provider.name
         self._provider_type = provider.provider_type
