@@ -1,0 +1,17 @@
+# Cloud Studio preview configuration for the AI4Law web application.
+autoOpen: true
+
+apps:
+  - port: 3000
+    run: |
+      set -e
+      uv sync --frozen
+      npm --prefix frontend ci
+      .venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+      BACKEND_PID=$!
+      trap 'kill "$BACKEND_PID" 2>/dev/null || true' EXIT INT TERM
+      npm --prefix frontend run dev -- --host 0.0.0.0 --port 3000
+    root: /
+    name: ai4law
+    description: AI4Law 智能法律合规平台
+    autoOpen: true
