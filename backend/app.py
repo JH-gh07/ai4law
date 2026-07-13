@@ -50,7 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     refresh_runtime_clients(container)
 
     app = FastAPI(
-        title="AI4Law Backend MVP",
+        title="DataComplyFlow Backend",
         version="0.1.0",
         lifespan=lifespan,
     )

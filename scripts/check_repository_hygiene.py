@@ -9,15 +9,28 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN_EXACT = {
     ".DS_Store",
+    ".claude/settings.local.json",
+    ".streamlit/config.toml",
     "doc/.DS_Store",
+    "frontend/vite.config.d.ts",
+    "frontend/vite.config.js",
+    "storage/ai4law.db",
     "storage/runtime_settings.json",
 }
 FORBIDDEN_PREFIXES = (
     ".vite/",
+    ".superpowers/",
     "frontend/.codex-archives/",
     "frontend/storage/",
+    "frontend/tmp/",
+    "storage/drafts/",
+    "storage/rag/",
+    "storage/reports/",
+    "storage/traces/",
+    "storage/uploads/",
 )
-FORBIDDEN_SUFFIXES = (".pyc",)
+FORBIDDEN_SEGMENTS = {"__pycache__", "node_modules", ".pytest_cache", ".vite"}
+FORBIDDEN_SUFFIXES = (".pyc", ".pyo", ".tsbuildinfo")
 ACTIVE_TEXT_PREFIXES = ("backend/", "frontend/src/", "scripts/")
 SECRET_PATTERNS = {
     "embedded competition credential": re.compile(r"DELILEGAL_COMPETITION_(?:APP_ID|SECRET)"),
@@ -42,8 +55,10 @@ def repository_violations(paths: list[str]) -> list[str]:
             violations.append(f"forbidden tracked file: {path}")
         if path.startswith(FORBIDDEN_PREFIXES):
             violations.append(f"forbidden tracked runtime/generated path: {path}")
-        if path.endswith(FORBIDDEN_SUFFIXES) or "/__pycache__/" in path:
-            violations.append(f"forbidden generated Python artifact: {path}")
+        if path.endswith(FORBIDDEN_SUFFIXES):
+            violations.append(f"forbidden generated artifact: {path}")
+        if FORBIDDEN_SEGMENTS.intersection(Path(path).parts):
+            violations.append(f"forbidden generated directory: {path}")
     return violations
 
 
