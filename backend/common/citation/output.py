@@ -11,7 +11,6 @@ from urllib.parse import urlencode
 # ── 知识库 source_id 注册表（title → source_id 反向查找）──────────────
 
 _SOURCES_CSV_PATH = Path("doc/knowledge/_index/sources.csv")
-_LEGACY_SOURCES_CSV_PATH = Path("doc/knowledge/index/sources.csv")
 
 _KNOWN_SOURCE_IDS: set[str] = set()
 _TITLE_TO_SOURCE_ID: dict[str, str] = {}
@@ -39,12 +38,11 @@ def _load_sources_csv() -> None:
     global _KNOWN_SOURCE_IDS, _TITLE_TO_SOURCE_ID, _TITLE_WORDS_TO_SOURCE_IDS, _SOURCES_CSV_LOADED
     if _SOURCES_CSV_LOADED:
         return
-    csv_path = _SOURCES_CSV_PATH if _SOURCES_CSV_PATH.exists() else _LEGACY_SOURCES_CSV_PATH
-    if not csv_path.exists():
+    if not _SOURCES_CSV_PATH.exists():
         _SOURCES_CSV_LOADED = True
         return
 
-    with open(csv_path, encoding="utf-8") as f:
+    with open(_SOURCES_CSV_PATH, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             sid = (row.get("source_id") or row.get("id") or "").strip()

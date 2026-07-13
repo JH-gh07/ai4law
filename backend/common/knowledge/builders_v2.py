@@ -8,8 +8,8 @@ from backend.common.knowledge.registry import ROOT, ensure_source_registry
 from backend.common.knowledge.v2 import KnowledgeChunkV2
 from backend.services.review_service.rulebook_loader import RulebookLoader
 
-SOURCES_CSV = ROOT / "doc" / "knowledge" / "index" / "sources.csv"
-NORMALIZED_JSONL = ROOT / "doc" / "knowledge" / "normalized" / "regulation_articles.jsonl"
+SOURCES_CSV = ROOT / "doc" / "knowledge" / "_index" / "sources.csv"
+NORMALIZED_JSONL = ROOT / "doc" / "knowledge" / "_registry" / "regulation_articles.jsonl"
 OFFICIAL_TEMPLATE_SCHEMA = ROOT / "backend" / "modules" / "assessment" / "templates" / "official_template_schema.json"
 OFFICIAL_TEMPLATE_MD = ROOT / "backend" / "modules" / "assessment" / "templates" / "official_risk_self_assessment_template.md"
 

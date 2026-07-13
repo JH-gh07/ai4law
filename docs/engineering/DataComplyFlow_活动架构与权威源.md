@@ -19,7 +19,7 @@
 | 模块目录 | `backend/modules/` | 当前实现位置；稳定业务 ID 见模块注册表 |
 | LLM 公共入口 | `backend/common/llm/` | `docs/archive/legacy/ai_engine/` 为历史资产，不是活动入口 |
 | RAG 公共入口 | `backend/common/rag/` | v2 检索服务与 v3 编排仍处于兼容共存阶段 |
-| 法律知识源 | `doc/knowledge/` | `_index`、`_registry` 为新路径；旧路径暂作 fallback |
+| 法律知识源 | `doc/knowledge/` | `_index`、`_registry` 是唯一索引和注册表源 |
 | RAG 评测数据 | `doc/knowledge/_evaluation/` | 不使用已删除的 `evaluation/` |
 | 报告模板 | `doc/v2/assets/templates/` | 名称历史化但仍被活动代码调用，暂不能删除 |
 | 运行 Trace/报告/上传 | `storage/` 本地目录 | 运行产物，不作为产品源码提交 |
