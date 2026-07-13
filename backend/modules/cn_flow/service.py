@@ -161,6 +161,7 @@ class CNFlowService:
         evidence_chain,
         path_warning: str | None,
         attachment_notes: list[dict[str, str]],
+        per_issue_rag: dict[str, dict] | None = None,
     ) -> GenerationContextPack:
         return GenerationContextPack(
             module_key="cn_flow",
@@ -358,6 +359,7 @@ class CNFlowService:
         trace_manifest_path: str,
         facts,
         diagnosis: "_CNFlowDiagnosis",
+        context_pack: GenerationContextPack,
     ) -> dict[str, str]:
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
