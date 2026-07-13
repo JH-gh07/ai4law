@@ -96,7 +96,7 @@ class RetrievalOrchestrator:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.embedder = HashingEmbedder(self.settings.rag_embedding_dimension)
-        self.rag_dir = self.settings.storage_dir / "rag" / "v3"
+        self.rag_dir = self.settings.rag_v3_dir
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalBundle:
         if request.module == "cn_diagnosis":

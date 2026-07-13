@@ -1,6 +1,7 @@
 from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.knowledge.v2 import RetrievalRequest
 from backend.common.knowledge.v2 import KnowledgeChunkV2
+from backend.core.settings import Settings
 
 
 def test_cn_assessment_routes_to_workflow_and_templates() -> None:
@@ -114,3 +115,21 @@ def test_us_module_returns_scaffold_debug_bundle() -> None:
     assert bundle.workflow_rules
     assert bundle.debug["jurisdiction"] == "us"
     assert any(item.module == "us_eo14117" for item in bundle.workflow_rules)
+
+
+def test_orchestrator_rebuilds_generated_indexes_in_empty_storage(tmp_path) -> None:
+    settings = Settings(rag_v3_dir=tmp_path / "rag" / "v3")
+    orchestrator = RetrievalOrchestrator(settings)
+
+    bundle = orchestrator.retrieve(
+        RetrievalRequest(
+            module="cn_diagnosis",
+            task_stage="legal_grounding",
+            query="关键信息基础设施运营者 重要数据 个人信息数量",
+            path="diagnosis",
+            top_k=3,
+        )
+    )
+
+    assert bundle.legal_grounding
+    assert (tmp_path / "rag" / "v3" / "legal_index_cn.jsonl").exists()
