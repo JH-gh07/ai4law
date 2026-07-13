@@ -5,3 +5,8 @@ __pycache__/
 .env
 outputs/
 .DS_Store
+.vite/
+**/.vite/
+**/__pycache__/
+.superpowers/**/state/
+frontend/.codex-archives/
