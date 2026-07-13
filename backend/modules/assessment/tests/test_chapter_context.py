@@ -146,9 +146,12 @@ def test_final_llm_prompt_contains_context_pack_issue() -> None:
     class FakeLLM:
         enabled = True
 
-        def chat(self, system: str, user: str, temperature: float, max_tokens: int) -> str:
+        def chat_with_metadata(self, system: str, user: str, temperature: float, max_tokens: int) -> dict:
             captured_prompts.append(user)
-            return "测试段落【依据：个人信息保护法第40条】"
+            return {
+                "content": "测试段落【依据：个人信息保护法第40条】",
+                "fallback": False,
+            }
 
     generator = AssessmentChapterGenerator(llm_client=FakeLLM())
     profile = CompanyProfile(

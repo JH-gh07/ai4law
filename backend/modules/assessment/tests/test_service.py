@@ -4,6 +4,8 @@ from zipfile import ZipFile
 
 import openpyxl
 
+from backend.common.knowledge.v2 import RetrievalBundle
+
 from backend.modules.assessment.task_state import AssessmentTaskState
 from docx import Document
 
@@ -246,6 +248,10 @@ def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None
     monkeypatch.setattr(
         "backend.modules.assessment.retriever.retrieve_regulations",
         fake_retrieve_regulations,
+    )
+    monkeypatch.setattr(
+        "backend.modules.assessment.retriever.RetrievalOrchestrator.retrieve",
+        lambda *_args, **_kwargs: RetrievalBundle(),
     )
     profile = _build_service().extractor.extract(
         AssessmentRequest(
