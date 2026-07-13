@@ -17,7 +17,7 @@
 | 前端依赖 | `frontend/package.json`、`frontend/package-lock.json` | 不提交 `node_modules` 和 `dist` |
 | 运行配置定义 | `backend/core/settings.py`、`backend/core/runtime_settings.py` | 本地覆盖文件不进入 Git |
 | 模块目录 | `backend/modules/` | 当前实现位置；稳定业务 ID 见模块注册表 |
-| LLM 公共入口 | `backend/common/llm/` | `ai_engine/` 为历史资产，不是活动入口 |
+| LLM 公共入口 | `backend/common/llm/` | `docs/archive/legacy/ai_engine/` 为历史资产，不是活动入口 |
 | RAG 公共入口 | `backend/common/rag/` | v2 检索服务与 v3 编排仍处于兼容共存阶段 |
 | 法律知识源 | `doc/knowledge/` | `_index`、`_registry` 为新路径；旧路径暂作 fallback |
 | RAG 评测数据 | `doc/knowledge/_evaluation/` | 不使用已删除的 `evaluation/` |
