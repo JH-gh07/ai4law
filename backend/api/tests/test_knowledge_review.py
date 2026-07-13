@@ -55,7 +55,8 @@ def client(test_db_path: Path, db_session: Session):
 
     app = FastAPI()
     app.include_router(router, prefix="/knowledge/review")
-    yield TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
 
     del os.environ["AI4LAW_DATABASE_URL"]
     get_settings.cache_clear()

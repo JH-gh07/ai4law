@@ -5,6 +5,8 @@ Endpoints for human-in-the-loop review of ingested regulatory documents.
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import text
@@ -62,11 +64,16 @@ class PublishResponse(BaseModel):
     status: str
 
 
-def _get_db() -> Session:
+def _get_db() -> Generator[Session, None, None]:
     settings = get_settings()
     engine = build_engine(settings.database_url)
     factory = build_session_factory(engine)
-    return factory()
+    db = factory()
+    try:
+        yield db
+    finally:
+        db.close()
+        engine.dispose()
 
 
 @router.get("/queue", response_model=ReviewQueueResponse)
