@@ -18,6 +18,7 @@ Agent failures never block the pipeline — they silently fall back to rule-base
 from __future__ import annotations
 
 import json
+import uuid
 from pathlib import Path
 from typing import Any
 
