@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.common.rag.orchestrator import RetrievalOrchestrator
+from backend.common.knowledge.paths import NEW_EVALUATION_DIR
 from backend.common.knowledge.v2 import RetrievalRequest
 from backend.modules.assessment.legal_grounding import build_legal_grounding
 from backend.modules.assessment.schema import AssessmentRequest
@@ -19,8 +20,7 @@ from backend.services.review_service.clause_reviewer import ClauseReviewer
 from backend.schemas.review import ClauseType
 from docx import Document
 
-ROOT = Path(__file__).resolve().parents[3]
-EVAL_DIR = ROOT / "doc" / "knowledge" / "evaluation"
+EVAL_DIR = NEW_EVALUATION_DIR
 
 
 class _DisabledLLM:
