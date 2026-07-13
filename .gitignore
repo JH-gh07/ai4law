@@ -12,3 +12,7 @@ outputs/
 frontend/.codex-archives/
 storage/runtime_settings.json
 frontend/storage/
+storage/traces/
+storage/reports/
+storage/uploads/
+storage/*.db
