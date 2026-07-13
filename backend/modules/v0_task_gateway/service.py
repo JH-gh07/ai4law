@@ -270,24 +270,63 @@ class V0TaskGatewayService:
 
     def _build_dpia_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> DPIARequest:
         resolved = dict(payload)
-        attachments = [dict(item) for item in (resolved.get("attachments") or [])]
-        for item in attachments:
-            item["storage_uri"] = self._resolve_storage_uri(item.get("storage_uri", ""))
-            if "file_format" in item and isinstance(item["file_format"], str):
-                item["file_format"] = item["file_format"].lower()
 
-        for file_path_str in self._resolve_attachment_paths(attachment_ids):
-            file_path = Path(file_path_str)
-            suffix = file_path.suffix.lower().lstrip(".")
-            attachments.append(
+        project_goal = str(
+            resolved.get("project_goal")
+            or resolved.get("purpose_and_necessity")
+            or resolved.get("processing_description")
+            or resolved.get("project_name")
+            or "未提供"
+        )
+        resolved.setdefault("project_goal", project_goal)
+        resolved.setdefault(
+            "processing_flow_description",
+            str(resolved.get("processing_description") or project_goal),
+        )
+        resolved.setdefault(
+            "necessity_statement",
+            str(resolved.get("purpose_and_necessity") or ""),
+        )
+
+        lawful_basis = resolved.get("lawful_basis")
+        if isinstance(lawful_basis, str):
+            resolved["lawful_basis"] = [lawful_basis] if lawful_basis.strip() else []
+
+        risk_description = str(resolved.get("risk_assessment") or "").strip()
+        if risk_description and not resolved.get("identified_risks"):
+            resolved["identified_risks"] = [
                 {
-                    "file_role": "other",
-                    "file_name": file_path.name,
-                    "file_format": self._normalize_file_format(suffix, {"docx", "pdf", "png", "jpg"}, "pdf"),
-                    "storage_uri": str(file_path),
+                    "risk_id": "RISK-v0-1",
+                    "risk_description": risk_description,
+                    "likelihood": "medium",
+                    "impact": "medium",
+                    "risk_source": "other",
                 }
+            ]
+
+        mitigation_description = resolved.get("mitigation_measures")
+        if isinstance(mitigation_description, str):
+            mitigation_description = mitigation_description.strip()
+            resolved["mitigation_measures"] = (
+                [
+                    {
+                        "mitigation_id": "MIT-v0-1",
+                        "description": mitigation_description,
+                        "target_risk_ids": ["RISK-v0-1"] if risk_description else [],
+                        "status": "planned",
+                    }
+                ]
+                if mitigation_description
+                else []
             )
-        resolved["attachments"] = attachments
+
+        uploaded_files = list(resolved.get("uploaded_files") or [])
+        for item in resolved.get("attachments") or []:
+            storage_uri = self._resolve_storage_uri(str(item.get("storage_uri") or ""))
+            if storage_uri:
+                uploaded_files.append(storage_uri)
+        uploaded_files.extend(self._resolve_attachment_paths(attachment_ids))
+        resolved["uploaded_files"] = uploaded_files
         return DPIARequest.model_validate(resolved)
 
     def _build_tia_payload(self, payload: dict[str, Any], attachment_ids: list[str]) -> TIARequest:

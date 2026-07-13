@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import openpyxl
 
-from backend.common.render.report import format_date_stamp, safe_filename
+from backend.common.render.report import format_date_stamp, render_docx_report, safe_filename
 from backend.common.workflow.evidence import EvidenceItem
 from backend.common.workflow.facts import FactItem
 from backend.common.workflow.issues import IssueItem
@@ -284,12 +284,24 @@ class DPIAReportRenderer:
         safe_name = safe_filename(profile.project_name)
         result: dict[str, str] = {}
 
-        # 1. Markdown draft
+        # 1. Markdown and DOCX drafts
         md_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.md"
         result["markdown"] = _render_dpia_markdown(
             md_path, profile, chapters, date_stamp, need_assessment
         )
 
+        docx_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.docx"
+        docx_sections = [
+            ("项目概况", f"项目目标：{profile.project_goal}"),
+            *[(chapter.title, chapter.content) for chapter in chapters],
+        ]
+        result["docx"] = str(
+            render_docx_report(
+                docx_path,
+                f"{profile.project_name} — DPIA 草案",
+                docx_sections,
+            )
+        )
         # 2. Issue list
         if issues:
             result["issue_list_json"] = _write_issue_list_json(issues, output_dir)
