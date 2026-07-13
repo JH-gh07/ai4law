@@ -114,3 +114,14 @@ def test_settings_use_tencent_defaults_when_tencent_provider_is_active(monkeypat
     assert settings.resolved_llm_api_key == "tx-test-key"
     assert settings.resolved_llm_api_url == "https://tokenhub.tencentmaas.com/v1"
     assert settings.resolved_llm_model == "hy3-preview"
+
+def test_delilegal_has_no_embedded_competition_credentials(monkeypatch, tmp_path) -> None:
+    monkeypatch.delenv("AI4LAW_DELILEGAL_APP_ID", raising=False)
+    monkeypatch.delenv("AI4LAW_DELILEGAL_SECRET", raising=False)
+
+    settings = Settings(storage_dir=tmp_path, _env_file=None)
+    payload = build_effective_runtime_payload(settings)
+
+    assert payload["delilegal"]["app_id"] == ""
+    assert payload["delilegal"]["secret"] == ""
+    assert payload["delilegal"]["enabled"] is False

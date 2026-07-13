@@ -10,3 +10,5 @@ outputs/
 **/__pycache__/
 .superpowers/**/state/
 frontend/.codex-archives/
+storage/runtime_settings.json
+frontend/storage/

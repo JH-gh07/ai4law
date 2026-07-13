@@ -9,9 +9,6 @@ from backend.common.llm.client import LLMClient
 from backend.common.llm.provider_registry import LLMProviderConfig, LLMProviderRegistry, normalize_openai_base_url
 from backend.services.legal_api_service import DeliLegalService
 
-DELILEGAL_COMPETITION_APP_ID = "QthdBErlyaYvyXul"
-DELILEGAL_COMPETITION_SECRET = "EC5D455E6BD348CE8E18BE05926D2EBE"
-
 DEFAULT_LLM_MODELS = [
     "deepseek-ai/DeepSeek-V3.2",
     "deepseek-ai/DeepSeek-V3",
@@ -92,8 +89,8 @@ def build_effective_runtime_payload(settings) -> dict[str, Any]:
     base = {
         "delilegal": {
             "base_url": settings.delilegal_base_url,
-            "app_id": settings.delilegal_app_id or DELILEGAL_COMPETITION_APP_ID,
-            "secret": settings.delilegal_secret or DELILEGAL_COMPETITION_SECRET,
+            "app_id": settings.delilegal_app_id or "",
+            "secret": settings.delilegal_secret or "",
         },
         "llm": {
             "active_provider_id": active.id,
