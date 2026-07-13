@@ -7,7 +7,7 @@ from backend.main import app
 client = TestClient(app)
 
 
-def test_cpra_async_flow() -> None:
+def test_cpra_async_flow(authenticated_user) -> None:
     accepted = client.post(
         "/api/v1/cpra/generate_async",
         json={

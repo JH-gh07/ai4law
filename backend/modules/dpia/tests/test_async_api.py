@@ -30,12 +30,12 @@ _VALID_PAYLOAD = {
 }
 
 
-def test_dpia_async_flow() -> None:
+def test_dpia_async_flow(authenticated_user) -> None:
     accepted = client.post("/api/v1/dpia/generate_async", json=_VALID_PAYLOAD)
     assert accepted.status_code == 200
     data = accepted.json()
     assert "task_id" in data
-    assert data["state"] == "PENDING"
+    assert data["state"] in {"CREATED", "RUNNING"}
     task_id = data["task_id"]
 
     for _ in range(200):

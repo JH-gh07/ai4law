@@ -9,7 +9,7 @@ from backend.main import app
 client = TestClient(app)
 
 
-def test_pipia_async_flow(tmp_path: Path) -> None:
+def test_pipia_async_flow(tmp_path: Path, authenticated_user) -> None:
     attachment_path = tmp_path / "scc.txt"
     attachment_path.write_text("标准合同条款示例", encoding="utf-8")
 

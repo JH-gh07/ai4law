@@ -8,7 +8,7 @@ from backend.main import app
 client = TestClient(app)
 
 
-def test_scc_async_flow() -> None:
+def test_scc_async_flow(authenticated_user) -> None:
     accepted = client.post(
         "/api/v1/scc/generate_async",
         json={
