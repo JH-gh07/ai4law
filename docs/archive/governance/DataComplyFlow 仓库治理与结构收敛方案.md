@@ -246,7 +246,7 @@ flowchart LR
   FE -->|"主入口 /api/v1 与 /api/v0"| BE["FastAPI<br/>backend.main:app → backend.app:create_app"]
   FE -->|"活动演示入口 /superdesign/002"| SD["SuperDesign002 integration"]
 
-  BE --> API["通用 API Router<br/>backend/api/router.py"]
+  BE --> API["版本 API Routers<br/>backend/api/v0 + backend/api/v1"]
   BE --> MOD["业务模块 Routers<br/>diagnosis + 10 modules"]
   BE --> V0["兼容 Gateway /api/v0"]
   API --> D1["Diagnosis Session API<br/>兼容 / 重复入口"]

@@ -1,5 +1,7 @@
 # AI4Law 项目事实基线与真实系统理解
 
+> 文档状态：事实审计快照。本文保留审计时点的代码证据，不代表所有结论仍是当前状态。后续已完成的结构治理和修复见 `DataComplyFlow_目录结构与工程规范治理实施报告_20260713.md`；当前工程入口以 `../engineering/DataComplyFlow_活动架构与权威源.md` 为准。
+
 > 产品：数规通 DataComplyFlow  
 > 审计对象：本地 Git 仓库当前检出版本  
 > 审计日期：2026-07-13（Asia/Shanghai）  
@@ -407,7 +409,7 @@ Benchmark 资产不是“只有 demo”：`qa/rag_baseline_v1.json`、`qa/rag_ev
 
 ### 证据索引（关键文件）
 
-- 入口与路由：`backend/main.py`、`backend/app.py`、`backend/api/router.py`、`frontend/src/main.tsx`、`frontend/src/App.tsx`、`frontend/src/lib/module-adapter.ts`
+- 入口与路由：`backend/main.py`、`backend/app.py`、`backend/api/v0/router.py`、`backend/api/v1/router.py`、`frontend/src/main.tsx`、`frontend/src/App.tsx`、`frontend/src/lib/module-adapter.ts`
 - 模块选择：`frontend/src/lib/task-templates.ts`
 - 公共 IR/流水线：`backend/common/workflow/`
 - LLM：`backend/common/llm/client.py`、`backend/common/llm/module_generator.py`

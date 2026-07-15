@@ -1,5 +1,7 @@
 # DataComplyFlow 评测资产与 Benchmark 实现可行性分析
 
+> 文档状态：评测可行性快照。本文用于识别可复用资产与缺口，不表示规划中的 Harness、Gold 或指标已经实现。评测运行必须重新记录当前代码版本、固定 RAG 后端/索引并核对最新 Schema。
+
 > 项目：AI4Law / 数规通 DataComplyFlow  
 > 专项：评测资产、Benchmark 可行性与最小实现路径  
 > 审计日期：2026-07-13（Asia/Shanghai）  

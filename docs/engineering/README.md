@@ -3,6 +3,9 @@
 本目录是当前代码工程规范的权威入口。事实审计与阶段性交接材料仍位于
 `docs/handoff/`，软件著作权和来源治理位于 `docs/governance/`。
 
+仓库文档总导航见 `../README.md`；分阶段规范化任务以
+`../governance/DataComplyFlow_仓库规范化分阶段治理计划.md` 为准。
+
 当前规范：
 
 - `DataComplyFlow_AI辅助开发与代码规范.md`：架构边界、法域与模块命名、API、Schema、LLM、测试和 AI 辅助开发验收要求。

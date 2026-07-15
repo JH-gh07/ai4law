@@ -76,6 +76,18 @@ us.cpra
 6. API Schema 变更必须更新后端测试、前端 Adapter、OpenAPI 示例和 Benchmark Adapter。
 7. 兼容路由必须声明弃用状态、替代路由和计划移除条件。
 
+### 4.1 FastAPI 路由装配规范
+
+1. `backend/main.py` 仅暴露 ASGI 应用，不直接注册 Router。
+2. `create_app()` 必须返回包含中间件、异常处理、lifespan 和全部版本路由的完整应用。
+3. `backend/app.py` 是 API 版本前缀的唯一装配位置，只在此注册 `/api/v0`、`/api/v1` 等版本 Router。
+4. `backend/api/v{n}/router.py` 是对应 API 版本的唯一聚合入口，负责公共接口、兼容接口和业务模块 Router 的装配。
+5. 单一资源模块将公共资源前缀和 tags 声明在 `APIRouter` 上；endpoint decorator 只声明动作或资源子路径。跨多个顶层资源的兼容网关可以保留完整资源路径。
+6. 模块 Router 不得包含 `/api/v0`、`/api/v1` 等版本前缀，也不得自行挂载到全局 FastAPI 应用。
+7. 路由重构必须保持 HTTP 方法、完整 URL、Schema、依赖、状态码和 endpoint 函数不变，并用路由快照核对修改前后差异。
+8. 重复路由按 `HTTP method + 完整 path` 判断；检测报告应包含 route name、endpoint module 和 operation ID，并忽略合理的 `HEAD`、`OPTIONS`。
+9. 应用工厂测试必须检查完整路由、版本前缀、OpenAPI 和健康检查；需要执行 lifespan 时使用 `with TestClient(app)`。
+
 ## 5. Schema 与领域数据规范
 
 1. API DTO、领域对象、数据库实体和渲染模型分离，禁止为了省事全流程共用一个可变字典。

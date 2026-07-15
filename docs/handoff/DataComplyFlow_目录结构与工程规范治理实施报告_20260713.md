@@ -177,3 +177,120 @@ doc/knowledge/_evaluation/
 下一阶段建议按独立提交推进：Diagnosis 双入口契约收敛、`/api/v2` 与 v1 兼容适配、逐模块法域目录迁移、RAG v2/v3 调用收敛、前端依赖安全升级与拆包、Benchmark Harness 骨架。
 
 用户现有未跟踪文件 `docs/handoff/DataComplyFlow_理论前沿与DataComplyBench-CN研究基线_20260713.md` 未被修改或纳入本轮提交。
+
+## 16. 后续安全修复与结构收敛实施结果
+
+本节记录 2026-07-13 在前述治理基线之上继续完成的低风险修复。历史章节中的依赖和警告数量是修复前快照，以本节验证结果为当前状态。
+
+### 16.1 前端依赖与开发服务器
+
+- React Router DOM 升级到 6.30.4；
+- PostCSS 升级到 8.5.10 以上的锁定解析版本；
+- Vite 升级到 8.1.4，@vitejs/plugin-react 升级到 6.0.3；
+- 默认开发服务器监听地址从 0.0.0.0 收紧为 127.0.0.1；
+- scripts/cloud_studio_start.sh 仍通过显式 host 参数保留受控远程开发入口；
+- 未执行强制 audit 修复；
+- npm audit 从 6 个漏洞降为 0 个漏洞。
+
+前端生产构建通过。路由级懒加载后，首屏主 JavaScript 从约 1,315.77 kB（gzip 375.39 kB）下降到约 289.40 kB（gzip 94.47 kB）。Workspace、SuperDesign、报告、证据和法规查看等页面成为独立 chunk。SuperDesign chunk 仍略高于 500 kB，属于后续局部拆分事项。
+
+### 16.2 Diagnosis 契约与确定性规则边界
+
+新增 backend/domains/cn/transfer_diagnosis/，作为中国数据出境路径诊断的法域领域层：
+
+- `models.py` 定义实际接入规则流程的 `DiagnosisFacts`、路径枚举与事实来源；未被生产代码消费的 `DiagnosisDecision` 预设抽象已在 GATE-001 收敛中删除；
+- adapters.py 显式映射会话 API 与模块 API 的两套字段和枚举；
+- rule_engine.py 从模块 Service 中提取纯确定性规则表匹配器；
+- 12 个决策树回归组合覆盖豁免、CIIO、重要数据、普通/敏感个人信息阈值、边界值和 unknown 默认路径；
+- 模块 Service 已使用领域规则引擎；Agent 可辅助补全 unknown 事实，但其来源会被标记为 llm_inference，依赖该事实命中的规则结论降为中等置信度并强制人工复核。
+
+本轮没有强行合并两套公开 API，也没有修改数据库中既有 JSON。当前会话 Service 与模块决策树在“紧急或法定义务场景同时达到高数量阈值”时存在结论优先级差异；在法律团队确认 Gold 前保留两者，不将任一结果静默认定为权威结论。
+
+### 16.3 RAG 统一调用边界
+
+新增 backend/common/rag/service.py：
+
+- LegalRetrievalService 为业务模块和 Benchmark Adapter 提供稳定入口；
+- 默认调用 RetrievalOrchestrator v3；
+- legacy_v2 Adapter 直接调用 RegulationRAGService.retrieve，compatibility_api 单独保留旧 retrieve_regulations 行为；两者不再混称为 v2；
+- 每次调用返回 RetrievalManifest，记录实际后端、模块、阶段、查询、法域、路径、top-k、命中数、索引 Schema 版本、真实 fallback 原因和耗时；显式选择兼容后端不再伪装成 fallback。
+
+本轮没有批量修改现有模块，旧 retrieve_regulations 仍保留。后续可以按模块迁移并通过同一 Manifest 做 v2/v3 shadow 对比。
+
+### 16.4 UTC、测试和兼容性
+
+- 新增 backend/core/time.py；
+- Trace 时间改为带 +00:00 的 timezone-aware ISO-8601；
+- 既有 SQLAlchemy DateTime 字段继续写入 naive UTC，避免在没有生产数据库迁移的情况下改变存储契约；
+- 注册 pytest slow marker；
+- datetime.utcnow() 警告已清零；
+- 后端全量测试为 351 passed, 1 warning；
+- 唯一剩余警告是 Starlette TestClient/httpx 兼容弃用提示，不能通过未经验证地安装 httpx2 处理。
+
+### 16.5 尚未在本轮实施
+
+- API v2 公开契约及 v1 deprecation；
+- SuperDesign 与 Workspace 的二级组件拆包；
+- React 19、React Router 7、Tailwind 4、TypeScript 7；
+- 生产数据库 timezone 字段迁移；
+- 法域目录物理搬迁和 Legacy 模块删除。
+
+这些事项均需要独立验收或法律 Gold，不应与本轮已通过测试的安全修复混成一次高风险改动。
+
+### 16.6 2026-07-14 复核修正
+
+本次复核不是新的架构迁移，而是对 16.2—16.4 中已发现风险的进一步收敛：
+
+- 删除 Diagnosis 归一化中把用户显式 third_party 静默改写成 intra_group 的逻辑；
+- DiagnosisResult 增加 fact_provenance、missing_facts 和 requires_human_review；
+- 用户值、默认值、确定性派生值、估算值和 LLM 推断值不再统一标记为 user；
+- q5_no_personal_info=yes 与个人信息、敏感个人信息或重要数据事实冲突时，自动结论被阻断并返回 manual_review；
+- 规则表加载时拒绝未知条件键，避免字段拼写错误被静默忽略；
+- 会话 API 的 hit_rules 作为说明文本进入 rule_explanations，不再冒充稳定规则 ID；
+- RAG Facade 明确区分 v3、真实 v2 和兼容 API；该 Facade 仍未批量接入业务模块，状态仍为“已实现边界、部分接入”；
+- 前端声明 Vite 8 所需 Node 版本 ^20.19.0 || >=22.12.0，新增 .nvmrc，并为懒加载路由增加中文错误边界和重载入口；
+- 前端生产构建通过，npm audit 为 0；主入口 chunk 约 289.91 kB（gzip 94.68 kB），SuperDesign chunk 仍为 506.40 kB；
+- 后端全量回归为 351 passed、1 个既有 Starlette/httpx 弃用警告；Diagnosis 领域与模块专项 27 passed，RAG Facade 专项 2 passed。
+
+两套 Diagnosis 入口已按“模块版为最新权威实现”的工程决策统一；法律 Gold 改为最终评测与法规口径校验事项，不再阻塞代码收敛。
+
+### 16.7 Diagnosis 收敛、RAG 业务迁移与最终验证
+
+- 删除旧 `backend/services/diagnosis_service.py` 中的重复判断逻辑和已无引用的 `backend/data/diagnosis_citations.json`；
+- 新增 `DiagnosisSessionService` 作为会话、报告、handoff 和数据库持久化兼容层，其判断统一委托给最新模块版 `DiagnosisService`；
+- 保留 `/api/v1/diagnosis/sessions/*`、`DiagnosisSessionModel` 和 `DiagnosisRepository`，因为个人任务列表、项目历史删除和现有会话 API 仍真实依赖这些契约；
+- Assessment、BCR、CN Flow、CPRA、DPIA、EU SCC、PIPIA、CN SCC、TIA、EO 14117 和通用 Review 已迁移至统一 RAG Facade；生产业务模块不再直接调用 `retrieve_regulations`；
+- 真实回退链为 v3 Orchestrator → v2 `RegulationRAGService` → compatibility API，并在 Manifest 中记录实际后端、原因和总耗时；
+- 前端增加 Vitest、Testing Library 和懒加载错误边界回归测试。
+
+最终验证：后端 353 passed、1 个既有 Starlette/httpx 弃用警告；前端 1 test passed；前端构建通过；npm audit 为 0；`git diff --check` 通过。
+
+仍未删除 frontend/src/integrations/superdesign002/：它存在活动路由和治理来源记录，不属于已确认旧冗余资产。其 506.40 kB 独立 chunk 需在确认生成式 UI 的长期产品地位后再拆分或退役。
+
+## 16.8 FastAPI 路由装配收敛
+
+当前工作树已把版本路由装配集中到应用工厂：`backend/main.py` 仅暴露 `create_app()` 的结果；`backend/app.py` 统一挂载 `/api/v0` 和 `/api/v1`；`backend/api/v0/router.py`、`backend/api/v1/router.py` 分别聚合版本路由。公共 Diagnosis 会话契约与模块版 Diagnosis 业务接口均保留，完整 Method + Path 不冲突。
+
+新增 `backend/api/tests/route_baseline.json` 和 `test_route_assembly.py`。基线包含 104 个显式 Method + Path：`/health` 1 个、v0 7 个、v1 96 个；测试覆盖完整应用、重复路由、operation ID、版本前缀、Diagnosis 兼容路径、lifespan、健康检查和 OpenAPI 生成。该变更属于路由组织与测试收敛，不改变业务处理函数、请求响应 Schema 或前端协议。
+## 17. 2026-07-15 文档体系收敛
+
+本批次仅治理文档，不修改业务逻辑：
+
+- 新增 `docs/README.md`，作为文档唯一总入口；
+- 新增 `docs/handoff/README.md`，区分事实快照、评测分析和当前实施记录；
+- 新增 `docs/governance/DataComplyFlow_仓库规范化分阶段治理计划.md`，将缓存、API 版本、RAG 回退、依赖注入、任务状态和法域迁移拆成独立阶段；
+- 修正治理入口中已经失效的 `doc/knowledge/normalized/` 权威路径；
+- 将已被替代的旧治理方案、第一版实施报告和 2026-06 Superpowers 设计/计划移入 `docs/archive/`；
+- 没有删除字节唯一的历史材料，也没有修改或提交未受跟踪的理论研究文档。
+
+此后，现行规范以 `docs/engineering/` 为准，执行顺序以 `docs/governance/` 为准，有日期的事实报告以 `docs/handoff/` 为准，`docs/archive/` 只用于追溯。
+
+## 18. GATE-001 现有工作树收敛审查
+
+2026-07-15 按路由、Diagnosis、RAG、通用基础设施、前端和文档六组审查当前工作树。治理原则是删除无消费者抽象、保留真实兼容边界、暂停无独立验收条件的扩改。
+
+本批唯一业务源码收敛是删除未被生产代码消费的 `DiagnosisDecision`、`ConclusionSource`、`decision_from_module()` 及其孤立测试；实际主流程继续使用 `DiagnosisFacts`、`FactSource`、`DiagnosisPath`、`facts_from_module()` 和确定性规则引擎，没有新增替代层。
+
+验证结果：分组专项 38 passed、1 warning；后端全量 356 passed、1 warning；前端 1 test passed；前端生产构建通过；仓库卫生与 `git diff --check` 通过。测试总数从 357 变为 356，原因仅为删除上述孤立测试，不是功能测试丢失。
+
+RAG 组仅认定为“统一边界及业务迁移已接入”：多数消费者仍只取 `.documents`，Manifest 未形成完整业务审计链；issue-discovery 非 legal bundle、异常 fallback、后端固定配置和缓存刷新仍属于阶段 D，不得写成治理完成。前端依赖升级、懒加载和开发服务器安全也必须按不同提交目标审查。
