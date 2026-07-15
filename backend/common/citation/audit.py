@@ -11,6 +11,7 @@ from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from backend.core.db import Base
+from backend.core.time import utc_now_naive
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class CitationAuditLog(Base):
     report_id: Mapped[str] = mapped_column(String(128), default="")
     task_id: Mapped[str] = mapped_column(String(128), default="")
     detail: Mapped[str] = mapped_column(Text, default="")
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
 
 
 def log_citation_event(

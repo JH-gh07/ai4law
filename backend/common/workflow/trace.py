@@ -11,11 +11,11 @@ Two-layer design:
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from backend.core.time import utc_now_iso
 
 # ── Utility (kept for backward compatibility with pipeline.py) ────────────
 
@@ -133,7 +133,7 @@ class TraceManifest(BaseModel):
 
     run_id: str = Field(min_length=1, description="Unique run identifier")
     module: str = Field(min_length=1)
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=utc_now_iso)
     jurisdiction: str = Field(default="")
 
     # ── Version snapshot ──

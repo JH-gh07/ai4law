@@ -6,7 +6,6 @@ Orchestrates: save → parse → chunk → store metadata → embed → index.
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -16,6 +15,7 @@ from backend.common.knowledge.chunker import ChineseLegalChunker
 from backend.common.knowledge.document_parser import DocumentParser
 from backend.common.knowledge.models import IngestedFile, KnowledgeChunk, KnowledgeDocument
 from backend.common.knowledge.storage_manager import KnowledgeStorageManager
+from backend.core.time import utc_now_naive
 
 
 class IngestionPipeline:
@@ -61,7 +61,7 @@ class IngestionPipeline:
             status="uploaded",
             source=source,
             user_id=user_id,
-            uploaded_at=datetime.utcnow(),
+            uploaded_at=utc_now_naive(),
         )
         db.add(ingested)
         db.flush()
