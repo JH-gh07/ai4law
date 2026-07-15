@@ -1,7 +1,7 @@
 from backend.common.llm.client import LLMClient
 from backend.core.db import build_engine, build_session_factory
 from backend.core.settings import Settings
-from backend.services.diagnosis_service import DiagnosisService
+from backend.services.diagnosis_session_service import DiagnosisSessionService
 from backend.services.file_service import FileService
 from backend.services.legal_api_service import DeliLegalService
 from backend.services.report_service import ReportService
@@ -28,7 +28,7 @@ class AppContainer:
         self.report_service = ReportService(settings)
         self.session_service = SessionService()
         self.legal_api_service = DeliLegalService(settings)
-        self.diagnosis_service = DiagnosisService(
+        self.diagnosis_service = DiagnosisSessionService(
             self.report_service, self.session_service, self.legal_api_service, self.llm_client
         )
         self.review_service = ReviewService(

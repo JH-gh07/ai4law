@@ -6,6 +6,9 @@ from backend.common.llm.client import LLMClient
 from backend.common.risk.scoring import risk_level
 from backend.core.settings import get_settings
 from backend.common.trace.recorder import TraceRecorder
+from backend.domains.cn.transfer_diagnosis.adapters import facts_from_module
+from backend.domains.cn.transfer_diagnosis.models import DiagnosisFacts, FactSource
+from backend.domains.cn.transfer_diagnosis.rule_engine import DiagnosisRuleEngine, RuleMatch
 from backend.modules.diagnosis.schema import DiagnosisAnswers, DiagnosisResult
 from backend.modules.diagnosis.agents import create_diag_agents
 
@@ -20,10 +23,15 @@ _RATIONALE_I18N = {
 
 
 class DiagnosisService:
-    def __init__(self, tree_path: str | None = None) -> None:
+    def __init__(
+        self,
+        tree_path: str | None = None,
+        llm_client: LLMClient | None = None,
+    ) -> None:
         self.tree_path = tree_path or str(Path(__file__).with_name("decision_tree.json"))
         self._tree = self._load_tree(self.tree_path)
-        self._llm_client = LLMClient(get_settings())
+        self._rule_engine = DiagnosisRuleEngine(self._tree)
+        self._llm_client = llm_client or LLMClient(get_settings())
         self.agents = create_diag_agents(self._llm_client)
 
     @staticmethod
@@ -32,7 +40,7 @@ class DiagnosisService:
             return json.load(fp)
 
     def evaluate(self, answers: DiagnosisAnswers, *, trace: TraceRecorder | None = None) -> DiagnosisResult:
-        answers = self._normalize_answers(answers)
+        answers, provenance, missing_facts = self._resolve_answers(answers)
 
         if trace:
             trace.record("status", {"summary": "开始路径诊断", "detail": {"module": "diagnosis"}})
@@ -60,6 +68,9 @@ class DiagnosisService:
                 if suggested in ("yes", "no"):
                     payload["q2_has_important_data"] = suggested
                     answers = DiagnosisAnswers(**payload)
+                    provenance["contains_important_data"] = FactSource.LLM_INFERENCE
+                    if "contains_important_data" in missing_facts:
+                        missing_facts.remove("contains_important_data")
 
         # Agent 3 (P2): PIClassifyAgent — when q5 is still unknown
         if answers.q5_no_personal_info.value == "unknown":
@@ -80,6 +91,9 @@ class DiagnosisService:
                 if suggested in ("yes", "no"):
                     payload["q5_no_personal_info"] = suggested
                     answers = DiagnosisAnswers(**payload)
+                    provenance["no_personal_info"] = FactSource.LLM_INFERENCE
+                    if "no_personal_info" in missing_facts:
+                        missing_facts.remove("no_personal_info")
 
         # Agent 4 (P3): ExemptionAgent — when scenario is "other" (may miss exemption)
         if answers.q6_scenario.value == "other":
@@ -98,51 +112,77 @@ class DiagnosisService:
                     trace.record("thought", {"summary": "豁免情形分析 Agent 完成"})
                 agent_trace["exemption"] = ex_result
 
+        agent_notes = self._build_agent_notes(agent_trace)
+        facts = facts_from_module(
+            answers,
+            field_provenance=provenance,
+            missing_facts=missing_facts,
+        )
+        validation_result = self._validate_fact_consistency(answers)
+        if validation_result is not None:
+            result = self._attach_fact_metadata(
+                validation_result,
+                facts,
+                additional_notes=agent_notes,
+            )
+            if trace:
+                trace.record(
+                    "final",
+                    {
+                        "summary": "路径诊断因事实冲突转人工复核",
+                        "detail": {"mode": "validation", "conflicts": result.uncertainty_notes},
+                    },
+                )
+            return result
+
         # ── Decision tree ──
-        for rule in self._tree["rules"]:
-            when = rule["when"]
-            if self._rule_match(when, answers):
-                if trace:
-                    trace.record("final", {"summary": "路径诊断完成", "detail": {"matched_rule": rule.get("id", ""), "recommended_path": rule.get("path", "")}})
-                return self._build_rule_result(answers, rule)
+        rule_match = self._rule_engine.evaluate(facts)
+        if not rule_match.is_default:
+            result = self._build_rule_result(answers, rule_match)
+            result = self._attach_fact_metadata(
+                result,
+                facts,
+                rule_match=rule_match,
+                additional_notes=agent_notes,
+            )
+            if trace:
+                trace.record(
+                    "final",
+                    {
+                        "summary": "路径诊断完成",
+                        "detail": {
+                            "matched_rule": rule_match.rule_id,
+                            "recommended_path": rule_match.path.value,
+                            "conclusion_source": result.conclusion_source,
+                        },
+                    },
+                )
+            return result
 
         # 明显信息不足时，走 AI 推测路径（并显式标注为推测结论）。
         if self._needs_ai_inference(answers):
             inferred = self._build_ai_inference_result(answers)
             if inferred is not None:
+                inferred = self._attach_fact_metadata(
+                    inferred,
+                    facts,
+                    additional_notes=agent_notes,
+                )
                 if trace:
-                    trace.record("final", {"summary": "路径诊断完成", "detail": {"mode": "ai_inference", "recommended_path": inferred.recommended_path}})
+                    trace.record(
+                        "final",
+                        {
+                            "summary": "路径诊断完成",
+                            "detail": {
+                                "mode": "ai_inference",
+                                "recommended_path": inferred.recommended_path,
+                            },
+                        },
+                    )
                 return inferred
 
-        # ── Attach agent findings to uncertainty notes ──
-        agent_notes: list[str] = []
-        if agent_trace.get("important_data"):
-            ad = agent_trace["important_data"]
-            agent_notes.append(
-                f"[Agent] 重要数据辅助判断: {ad.get('result','?')} "
-                f"(置信度 {ad.get('confidence',0):.0%}), "
-                f"建议值: q2={ad.get('suggested_answer','?')}"
-            )
-        if agent_trace.get("pi_classify"):
-            pd = agent_trace["pi_classify"]
-            agent_notes.append(
-                f"[Agent] 个人信息辅助判断: {pd.get('personal_information_result','?')}, "
-                f"重识别风险: {pd.get('re_identification_risk','?')}"
-            )
-        if agent_trace.get("exemption"):
-            ed = agent_trace["exemption"]
-            cands = ed.get("candidate_exemptions", [])
-            if cands:
-                top = cands[0]
-                agent_notes.append(
-                    f"[Agent] 豁免情形辅助判断: {top.get('type','?')} "
-                    f"(置信度 {top.get('confidence',0):.0%})"
-                )
-
         default = self._tree["default"]
-        if trace:
-            trace.record("final", {"summary": "路径诊断完成", "detail": {"mode": "default", "recommended_path": default.get("path", "")}})
-        return self._build_result(
+        result = self._build_result(
             answers,
             default["path"],
             default["legal_basis"],
@@ -150,8 +190,21 @@ class DiagnosisService:
             conclusion_source="rule",
             confidence="MEDIUM",
             matched_rule_id="default",
-            uncertainty_notes=agent_notes if agent_notes else None,
+            uncertainty_notes=agent_notes or None,
         )
+        result = self._attach_fact_metadata(result, facts)
+        if trace:
+            trace.record(
+                "final",
+                {
+                    "summary": "路径诊断完成",
+                    "detail": {
+                        "mode": "default",
+                        "recommended_path": default.get("path", ""),
+                    },
+                },
+            )
+        return result
 
     @staticmethod
     def _contains_sensitive_personal_info(items: list[str]) -> bool:
@@ -171,75 +224,240 @@ class DiagnosisService:
         return 0
 
     def _normalize_answers(self, answers: DiagnosisAnswers) -> DiagnosisAnswers:
+        normalized, _, _ = self._resolve_answers(answers)
+        return normalized
+
+    def _resolve_answers(
+        self,
+        answers: DiagnosisAnswers,
+    ) -> tuple[DiagnosisAnswers, dict[str, FactSource], list[str]]:
         payload = answers.model_dump()
-        personal_types = [str(item) for item in payload.get("m3_personal_info_types", []) if str(item).strip()]
-        sensitive_types = [str(item) for item in payload.get("m3_sensitive_info_types", []) if str(item).strip()]
-        important_types = [str(item) for item in payload.get("m3_important_data_types", []) if str(item).strip()]
+        explicit_fields = answers.model_fields_set
+        module_to_canonical = {
+            "q1_is_ciio": "is_ciio",
+            "q2_has_important_data": "contains_important_data",
+            "q3_pii_count": "personal_info_count",
+            "q4_spi_count": "sensitive_personal_info_count",
+            "q5_no_personal_info": "no_personal_info",
+            "q6_scenario": "transfer_scenario",
+            "q7_receiver_type": "receiver_type",
+            "q8_purpose": "transfer_purpose",
+        }
+        provenance = {
+            canonical: (
+                FactSource.USER if module_field in explicit_fields else FactSource.DEFAULT
+            )
+            for module_field, canonical in module_to_canonical.items()
+        }
+
+        personal_types = [
+            str(item)
+            for item in payload.get("m3_personal_info_types", [])
+            if str(item).strip()
+        ]
+        sensitive_types = [
+            str(item)
+            for item in payload.get("m3_sensitive_info_types", [])
+            if str(item).strip()
+        ]
+        important_types = [
+            str(item)
+            for item in payload.get("m3_important_data_types", [])
+            if str(item).strip()
+        ]
 
         has_personal_info = (
             payload.get("m3_processes_personal_info") == "yes"
-            or len(personal_types) > 0
+            or bool(personal_types)
         )
-        has_sensitive_info = len(sensitive_types) > 0 or self._contains_sensitive_personal_info(personal_types)
+        has_sensitive_info = bool(
+            sensitive_types
+        ) or self._contains_sensitive_personal_info(personal_types)
         has_important_data = (
             payload.get("m3_processes_important_data") == "yes"
-            or len(important_types) > 0
+            or bool(important_types)
         )
 
         if payload.get("q2_has_important_data") == "unknown" and has_important_data:
             payload["q2_has_important_data"] = "yes"
-        elif payload.get("q2_has_important_data") == "unknown" and not has_important_data and payload.get("m3_processes_important_data") == "no":
+            provenance["contains_important_data"] = FactSource.RULE
+        elif (
+            payload.get("q2_has_important_data") == "unknown"
+            and payload.get("m3_processes_important_data") == "no"
+        ):
             payload["q2_has_important_data"] = "no"
+            provenance["contains_important_data"] = FactSource.RULE
 
         if payload.get("q5_no_personal_info") == "unknown":
-            payload["q5_no_personal_info"] = "yes" if (not has_personal_info and not has_important_data) else "no"
+            payload["q5_no_personal_info"] = (
+                "yes" if not has_personal_info and not has_important_data else "no"
+            )
+            provenance["no_personal_info"] = FactSource.RULE
 
         if int(payload.get("q3_pii_count") or 0) == 0 and has_personal_info:
-            payload["q3_pii_count"] = self._estimate_pii_count(str(payload.get("m3_data_volume_range") or ""))
+            estimated_count = self._estimate_pii_count(
+                str(payload.get("m3_data_volume_range") or "")
+            )
+            if estimated_count:
+                payload["q3_pii_count"] = estimated_count
+                provenance["personal_info_count"] = FactSource.ESTIMATE
 
         if int(payload.get("q4_spi_count") or 0) == 0 and has_sensitive_info:
             volume_hint = str(payload.get("m3_data_volume_range") or "")
-            payload["q4_spi_count"] = 12_000 if volume_hint in {"1000万条以上", "100-1000万条"} else 2_000
+            payload["q4_spi_count"] = (
+                12_000
+                if volume_hint in {"1000万条以上", "100-1000万条"}
+                else 2_000
+            )
+            provenance["sensitive_personal_info_count"] = FactSource.ESTIMATE
 
-        if payload.get("q7_receiver_type") == "third_party":
-            share_to_third_party = payload.get("m4_share_to_third_party") == "yes"
-            entrusted_processing = payload.get("m4_entrusted_processing") == "yes"
-            if not share_to_third_party and not entrusted_processing:
-                payload["q7_receiver_type"] = "intra_group"
-
-        return DiagnosisAnswers(**payload)
+        normalized = DiagnosisAnswers(**payload)
+        missing_facts = [
+            canonical
+            for module_field, canonical in (
+                ("q1_is_ciio", "is_ciio"),
+                ("q2_has_important_data", "contains_important_data"),
+                ("q5_no_personal_info", "no_personal_info"),
+            )
+            if getattr(normalized, module_field).value == "unknown"
+        ]
+        return normalized, provenance, missing_facts
 
     @staticmethod
-    def _rule_match(when: dict, answers: DiagnosisAnswers) -> bool:
-        if "q1_is_ciio" in when and answers.q1_is_ciio.value not in when["q1_is_ciio"]:
-            return False
-        if "q2_has_important_data" in when and answers.q2_has_important_data.value not in when["q2_has_important_data"]:
-            return False
-        if "q3_pii_count_gte" in when and answers.q3_pii_count < int(when["q3_pii_count_gte"]):
-            return False
-        if "q4_spi_count_gte" in when and answers.q4_spi_count < int(when["q4_spi_count_gte"]):
-            return False
-        if "q3_pii_count_lt" in when and answers.q3_pii_count >= int(when["q3_pii_count_lt"]):
-            return False
-        if "q4_spi_count_lt" in when and answers.q4_spi_count >= int(when["q4_spi_count_lt"]):
-            return False
-        if "q5_no_personal_info" in when and answers.q5_no_personal_info.value not in when["q5_no_personal_info"]:
-            return False
-        if "q6_scenario" in when and answers.q6_scenario.value not in when["q6_scenario"]:
-            return False
-        if "q7_receiver_type" in when and answers.q7_receiver_type.value not in when["q7_receiver_type"]:
-            return False
-        return True
+    def _build_agent_notes(agent_trace: dict) -> list[str]:
+        notes: list[str] = []
+        if agent_trace.get("important_data"):
+            item = agent_trace["important_data"]
+            notes.append(
+                f"[Agent] 重要数据辅助判断: {item.get('result', '?')} "
+                f"(置信度 {item.get('confidence', 0):.0%}), "
+                f"建议值: q2={item.get('suggested_answer', '?')}"
+            )
+        if agent_trace.get("pi_classify"):
+            item = agent_trace["pi_classify"]
+            notes.append(
+                f"[Agent] 个人信息辅助判断: "
+                f"{item.get('personal_information_result', '?')}, "
+                f"重识别风险: {item.get('re_identification_risk', '?')}"
+            )
+        if agent_trace.get("exemption"):
+            candidates = agent_trace["exemption"].get("candidate_exemptions", [])
+            if candidates:
+                item = candidates[0]
+                notes.append(
+                    f"[Agent] 豁免情形辅助判断: {item.get('type', '?')} "
+                    f"(置信度 {item.get('confidence', 0):.0%})"
+                )
+        return notes
 
-    def _build_rule_result(self, answers: DiagnosisAnswers, rule: dict) -> DiagnosisResult:
+    def _validate_fact_consistency(
+        self,
+        answers: DiagnosisAnswers,
+    ) -> DiagnosisResult | None:
+        claims_no_regulated_data = answers.q5_no_personal_info.value == "yes"
+        has_personal_signals = (
+            answers.q3_pii_count > 0
+            or answers.q4_spi_count > 0
+            or answers.m3_processes_personal_info == "yes"
+            or bool(answers.m3_personal_info_types)
+            or bool(answers.m3_sensitive_info_types)
+        )
+        has_important_signals = (
+            answers.q2_has_important_data.value == "yes"
+            or answers.m3_processes_important_data == "yes"
+            or bool(answers.m3_important_data_types)
+        )
+        if not claims_no_regulated_data or not (
+            has_personal_signals or has_important_signals
+        ):
+            return None
+
+        conflicts = [
+            "q5 声明不含个人信息且不涉及重要数据，但其他字段给出了相反事实。",
+            "系统未执行豁免判定；请核实数据类型、人数规模与重要数据属性。",
+        ]
+        return DiagnosisResult(
+            recommended_path="manual_review",
+            legal_basis=[],
+            rationale="输入事实存在直接冲突，无法可靠执行自动路径判定。",
+            action_items=[
+                "核实 q5 与个人信息、敏感个人信息、重要数据字段。",
+                "由合规人员确认事实后重新运行路径诊断。",
+            ],
+            risk_level="HIGH",
+            conclusion_source="validation",
+            confidence="LOW",
+            final_explanation="事实冲突已阻断自动结论并转人工复核。",
+            uncertainty_notes=conflicts,
+            requires_human_review=True,
+        )
+
+    @staticmethod
+    def _attach_fact_metadata(
+        result: DiagnosisResult,
+        facts: DiagnosisFacts,
+        *,
+        rule_match: RuleMatch | None = None,
+        additional_notes: list[str] | None = None,
+    ) -> DiagnosisResult:
+        result.fact_provenance = {
+            field_name: source.value
+            for field_name, source in facts.field_provenance.items()
+        }
+        result.missing_facts = list(facts.missing_facts)
+        if additional_notes:
+            result.uncertainty_notes.extend(
+                note for note in additional_notes if note not in result.uncertainty_notes
+            )
+
+        condition_to_fact = {
+            "q1_is_ciio": "is_ciio",
+            "q2_has_important_data": "contains_important_data",
+            "q3_pii_count_gte": "personal_info_count",
+            "q3_pii_count_lt": "personal_info_count",
+            "q4_spi_count_gte": "sensitive_personal_info_count",
+            "q4_spi_count_lt": "sensitive_personal_info_count",
+            "q5_no_personal_info": "no_personal_info",
+            "q6_scenario": "transfer_scenario",
+            "q7_receiver_type": "receiver_type",
+        }
+        decisive_facts = {
+            condition_to_fact[field]
+            for field in (rule_match.condition_fields if rule_match else [])
+            if field in condition_to_fact
+        }
+        inferred_sources = {FactSource.LLM_INFERENCE, FactSource.ESTIMATE}
+        inferred_decisive_facts = sorted(
+            field
+            for field in decisive_facts
+            if facts.source_for(field) in inferred_sources
+        )
+        if result.conclusion_source == "rule" and inferred_decisive_facts:
+            result.conclusion_source = "rule_with_inferred_facts"
+            result.confidence = "MEDIUM"
+            result.uncertainty_notes.append(
+                "规则命中依赖推断或估算事实："
+                + "、".join(inferred_decisive_facts)
+                + "。"
+            )
+        if (
+            inferred_decisive_facts
+            or result.missing_facts
+            or result.confidence.upper() == "LOW"
+            or result.conclusion_source != "rule"
+        ):
+            result.requires_human_review = True
+        return result
+
+    def _build_rule_result(self, answers: DiagnosisAnswers, rule: RuleMatch) -> DiagnosisResult:
         result = self._build_result(
             answers,
-            rule["path"],
-            rule.get("legal_basis", []),
-            rule.get("description", ""),
+            rule.path.value,
+            rule.legal_basis,
+            rule.description,
             conclusion_source="rule",
             confidence="HIGH",
-            matched_rule_id=rule.get("id"),
+            matched_rule_id=rule.rule_id,
         )
         result.final_explanation = self._build_rule_explanation(result, answers)
         return result

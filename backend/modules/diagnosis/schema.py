@@ -108,6 +108,9 @@ class DiagnosisResult(BaseModel):
     matched_rule_id: str | None = None
     final_explanation: str = ""
     uncertainty_notes: list[str] = Field(default_factory=list)
+    fact_provenance: dict[str, str] = Field(default_factory=dict)
+    missing_facts: list[str] = Field(default_factory=list)
+    requires_human_review: bool = False
 
 
 class DiagnosisReportRequest(BaseModel):
