@@ -227,7 +227,7 @@ GATE-001 至此形成可回滚 Git 基线。下一阶段准入项为 `/api/v0` �
 
 | 批次 | 单一目标 | 最小验收 | 非目标 |
 |---|---|---|---|
-| API-C0 | 恢复被历史清理误删但仍由活动代码引用的 2.2/4.1 报告模板，并消除模块测试对全局模板常量的污染 | v0 Assessment/CN Flow 可独立运行；全量与孤立执行结果一致；模板来源 commit/hash 可追溯 | 不修改模板法律内容；不与安全修复混合 |
+| API-C0（已完成） | 恢复被历史清理误删但仍由活动代码引用的 2.2/4.1 报告模板，并消除模块测试对全局模板常量的污染 | v0 Assessment/CN Flow 可独立运行；全量与孤立执行结果一致；模板来源 commit/hash 可追溯 | 不修改模板法律内容；不与安全修复混合 |
 | API-C1 | 给 7 条 v0 路由增加真实登录要求和对象 owner 绑定；拒绝未注册的本地路径 | 未登录 401；用户 A 不能读/取消/下载用户 B 资源；注册文件正常流转；现有 7 模块流程在带身份下通过 | 不改 URL；不迁移数据库；不建立 v1 副本 |
 | API-C2 | 建立受控上传契约：允许类型、大小上限、分块写入、受控根目录、失败清理 | 超限/不支持类型被拒绝；路径越界测试通过；合法六类文档通过 | 不改文件解析算法 |
 | API-C3 | 前端从物理 `path` 迁移到 opaque file reference；停止公开 `path/file_path` | 前端测试和构建通过；请求不再包含本地路径；OpenAPI 契约变更有迁移记录 | 不顺手改业务表单 |
@@ -245,3 +245,24 @@ API-C1 实施前还必须确定临时 owner 元数据的权威存储。若只把
 - CN Flow 模块测试直接赋值全局 `TEMPLATE_PATH` 而不恢复，存在测试顺序污染，可能掩盖缺失模板。此前“356 passed”仍是当时全量执行记录，但不能替代当前孤立失败事实。
 
 因此下一批先准入 API-C0，而不是直接进入 API-C1。API-C0 只能从删除前可追溯 commit 恢复活动模板，并修复测试隔离；不得自行生成新的法律模板内容。API-C0 通过后，API-C1 必须先建立未登录、跨用户、未知文件引用和合法同用户流程四类回归测试。任何法律判断、报告正文、RAG 算法、Schema 全局重构和 `/api/v1` 复制均不属于这些批次。
+### 8.6 API-C0 实施结果
+
+API-C0 已按单一目标完成：从删除提交 `d6e882d` 的直接父版本 `3e09a3c594550ccef6c548b9aaea080b939f042e` 原样恢复 4 个活动模板；没有生成或修改模板法律内容。恢复文件的 SHA-256 为：
+
+| 文件 | SHA-256 |
+|---|---|
+| `2.2_risk_assessment_template_v0.docx` | `5A5999F5EFFC4A3D17418759758B6A29211FF92154A71A03B15522C4085C1296` |
+| `2.2_risk_assessment_template_v0.md` | `8423A2DEF41B43DC410B060A2AEC595E79432FB92560946A95A9CC45C3D46805` |
+| `4.1_cn_flow_compliance_template_v0.docx` | `3A142CBD25EA1BD0470E391C685F423D7827A102CD01676A382FAC7563D55E58` |
+| `4.1_cn_flow_compliance_template_v0.md` | `D3D40DAB150420BC9C187111EA74E4AA2782FD75CFA803F4DD5A53DF27BAD931` |
+
+`backend/modules/cn_flow/tests/test_service.py` 与 `test_async_api.py` 改用 pytest `tmp_path` 和 `monkeypatch`，测试模板不再写入固定 `outputs/cn_flow/_test_templates`，模块全局模板路径会在测试后恢复。
+
+验收结果：
+
+- CN Flow 两项模块测试 + v0 Assessment/CN Flow 孤立流程：4 passed、1 个既有警告；
+- 全量后端：356 passed、1 个既有 Starlette/httpx 警告；
+- `git diff --check` 与仓库卫生检查通过；
+- 全量测试新增的 52 个输出目录、1 个上传文件和 pytest 临时目录已清理。
+
+API-C0 不改变 URL、Schema、法律规则或 Service 逻辑。下一准入项恢复为 API-C1；API-C1 仍须保持鉴权/owner/本地路径边界单一目标，不混入上传协议和状态持久化迁移。

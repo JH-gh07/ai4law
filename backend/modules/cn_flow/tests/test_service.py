@@ -12,9 +12,8 @@ class _DisabledLLM:
     enabled = False
 
 
-def test_cn_flow_generate_report() -> None:
-    tmp_dir = Path("outputs/cn_flow/_test_templates")
-    tmp_dir.mkdir(parents=True, exist_ok=True)
+def test_cn_flow_generate_report(tmp_path, monkeypatch) -> None:
+    tmp_dir = tmp_path
     md_template = tmp_dir / "cn_flow_template.md"
     md_template.write_text("# {{business_overview}}\n\n{{risk_rating}}\n", encoding="utf-8")
     docx_template = tmp_dir / "cn_flow_template.docx"
@@ -22,8 +21,8 @@ def test_cn_flow_generate_report() -> None:
     document.add_heading("{{business_overview}}", level=1)
     document.add_paragraph("{{risk_rating}}")
     document.save(docx_template)
-    cn_flow_service.TEMPLATE_MD = md_template
-    cn_flow_service.TEMPLATE_PATH = docx_template
+    monkeypatch.setattr(cn_flow_service, "TEMPLATE_MD", md_template)
+    monkeypatch.setattr(cn_flow_service, "TEMPLATE_PATH", docx_template)
 
     service = CNFlowService(llm_client=_DisabledLLM())
     payload = CNFlowRequest.model_validate(
