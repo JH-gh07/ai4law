@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from zipfile import ZipFile
 
 import openpyxl
@@ -237,22 +238,18 @@ def test_assessment_zip_has_no_duplicate_names(monkeypatch, tmp_path) -> None:
     assert len(names) == len(set(names))
 
 
-def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None:
+def test_assessment_retriever_query_contains_profile_fields() -> None:
     captured: dict[str, object] = {}
 
-    def fake_retrieve_regulations(query, **kwargs):
-        captured["query"] = query
-        captured["kwargs"] = kwargs
-        return []
+    class StubRetrievalService:
+        def retrieve_with_fallback(self, request, **kwargs):
+            captured["request"] = request
+            captured["kwargs"] = kwargs
+            return SimpleNamespace(
+                bundle=RetrievalBundle(),
+                manifest=None,
+            )
 
-    monkeypatch.setattr(
-        "backend.modules.assessment.retriever.retrieve_regulations",
-        fake_retrieve_regulations,
-    )
-    monkeypatch.setattr(
-        "backend.modules.assessment.retriever.RetrievalOrchestrator.retrieve",
-        lambda *_args, **_kwargs: RetrievalBundle(),
-    )
     profile = _build_service().extractor.extract(
         AssessmentRequest(
             company_name="测试公司",
@@ -266,17 +263,19 @@ def test_assessment_retriever_query_contains_profile_fields(monkeypatch) -> None
         )
     )
 
-    hits = AssessmentRetriever().search(profile)
+    hits = AssessmentRetriever(
+        retrieval_service=StubRetrievalService(),
+    ).search(profile)
 
     assert hits == []
-    query = str(captured["query"])
-    assert "互联网医疗" in query
-    assert "模型训练" in query
-    assert "新加坡" in query
-    assert "CIIO" in query
-    assert "important data" in query
-    assert captured["kwargs"]["jurisdiction"] == "cn"
-    assert captured["kwargs"]["path"] == "assessment"
+    request = captured["request"]
+    assert "互联网医疗" in request.query
+    assert "模型训练" in request.query
+    assert "新加坡" in request.query
+    assert "CIIO" in request.query
+    assert "important data" in request.query
+    assert request.jurisdiction == "cn"
+    assert request.path == "assessment"
 
 
 def test_assessment_fails_when_issue_builder_is_unavailable(monkeypatch, tmp_path) -> None:

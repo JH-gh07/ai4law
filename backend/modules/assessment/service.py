@@ -261,7 +261,7 @@ class AssessmentService:
             chunk.model_dump()
             for chunk in getattr(retrieval_bundle, "workflow_rules", []) or []
         ]
-        template_bundle = self.retriever._orchestrator.retrieve(  # noqa: SLF001
+        template_result = self.retriever.retrieve_context(
             RetrievalRequest(
                 module="cn_assessment",
                 task_stage="report_generation",
@@ -273,7 +273,10 @@ class AssessmentService:
                 path="assessment",
             )
         )
-        template_context = [chunk.model_dump() for chunk in template_bundle.templates]
+        template_context = [
+            chunk.model_dump()
+            for chunk in template_result.bundle.templates
+        ]
         legal_grounding, case_grounding = build_legal_grounding(
             issues=issues,
             facts=facts,

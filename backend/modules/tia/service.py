@@ -16,7 +16,7 @@ from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import convert_citation_markers
 from backend.common.llm.module_generator import generate_chapter
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
 )
@@ -132,15 +132,24 @@ class TIAService:
             reg_queries = agent_rag.get("queries", [])
             for q in reg_queries[:4]:
                 try:
-                    hits = retrieve_regulations(q["query"], top_k=3, jurisdiction="eu", path="all")
+                    hits = retrieve_legal_documents(
+                        q["query"],
+                        module="eu_tia",
+                        top_k=3,
+                        jurisdiction="eu",
+                        path="all",
+                    ).documents
                     all_regs.extend(hits)
                 except Exception:
                     pass
             if not all_regs:
-                all_regs = retrieve_regulations(
+                all_regs = retrieve_legal_documents(
                     f"TIA EDPB transfer tool {payload.transfer_tool} {dest} third country law assessment",
-                    top_k=5, jurisdiction="eu", path="all",
-                )
+                    module="eu_tia",
+                    top_k=5,
+                    jurisdiction="eu",
+                    path="all",
+                ).documents
             seen_ids = set()
             regs = []
             for r in all_regs:

@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import re
 
+from backend.common.rag.service import retrieve_legal_documents
+
 from backend.modules.cpra.schema import CPRAGapItem
 
 _DOMAIN_QUERIES = {
@@ -32,13 +34,17 @@ class CPRALegalRetriever:
         if cache_key in self._retrieve_cache:
             return self._retrieve_cache[cache_key]
 
-        from backend.common.rag.retriever import retrieve_regulations
-
         base = _DOMAIN_QUERIES.get(domain, "CPRA CCPA consumer privacy compliance")
         query = f"{base} {extra_context}"[:500]
 
         try:
-            hits = retrieve_regulations(query, top_k=3, jurisdiction="us", path="all")
+            hits = retrieve_legal_documents(
+                query,
+                module="us_privacy_review",
+                top_k=3,
+                jurisdiction="us",
+                path="all",
+            ).documents
         except Exception:
             self._retrieve_cache[cache_key] = []
             return []

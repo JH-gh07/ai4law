@@ -9,7 +9,7 @@ from typing import Any
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
 from backend.common.render.report import (
     format_date_stamp,
@@ -171,7 +171,13 @@ class US14117Service:
             _t.record("thought", {"summary": thought})
         if agent_rag.get("primary_query"):
             query = agent_rag["primary_query"]
-        docs = retrieve_regulations(query, top_k=6, jurisdiction="us", path="eo14117")
+        docs = retrieve_legal_documents(
+            query,
+            module="us_eo14117",
+            top_k=6,
+            jurisdiction="us",
+            path="eo14117",
+        ).documents
         return [
             {
                 "source_id": item.id,

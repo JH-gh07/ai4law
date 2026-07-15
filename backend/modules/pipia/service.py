@@ -7,7 +7,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.quality.alignment import check_cn_alignment
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp,
     render_docx_report,
@@ -79,12 +79,13 @@ class PIPIAService:
                 pii_count=profile.outbound_pi_count,
                 spi_count=profile.outbound_spi_count,
             )
-            regs = retrieve_regulations(
+            regs = retrieve_legal_documents(
                 f"PIPIA standard contract certification {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
+                module="cn_assessment",
                 top_k=4,
                 jurisdiction="cn",
                 path="scc" if payload.route_type == "scc_filing" else "all",
-            )
+            ).documents
             citations = [f"{item.title}{item.article}" for item in regs]
             reg_snippet = "\n".join(
                 f"- {item.title}{item.article}：{(item.content or '')[:120]}"

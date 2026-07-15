@@ -25,7 +25,7 @@ from typing import Any
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.quality.alignment import check_cn_alignment
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp,
     render_docx_template,
@@ -521,7 +521,13 @@ class SCCService:
             all_citations: list[str] = []
             for plan in rag_plans:
                 for query in plan.queries[:2]:
-                    regs = retrieve_regulations(query, top_k=3, jurisdiction="cn", path="scc")
+                    regs = retrieve_legal_documents(
+                        query,
+                        module="cn_review",
+                        top_k=3,
+                        jurisdiction="cn",
+                        path="scc",
+                    ).documents
                     all_regs.extend(regs)
                     all_citations.extend(f"{r.title}{r.article}" for r in regs)
         # Deduplicate citations

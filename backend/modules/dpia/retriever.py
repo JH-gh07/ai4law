@@ -1,22 +1,26 @@
-"""DPIA regulation retriever — searches EU GDPR knowledge base for DPIA-relevant regulations."""
+"""DPIA regulation retrieval through the shared legal retrieval boundary."""
 
 from __future__ import annotations
 
 from backend.common.knowledge.v2 import RetrievalRequest
-from backend.common.rag.orchestrator import RetrievalOrchestrator
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import LegalRetrievalService
 from backend.modules.dpia.schema import DPIAProjectProfile, RegulationHit
 
 
 class DPIARetriever:
-    """Retrieve GDPR / WP29 / ICO / EDPB regulations relevant to the DPIA."""
-
-    def __init__(self) -> None:
-        self._orchestrator = RetrievalOrchestrator()
+    def __init__(
+        self,
+        retrieval_service: LegalRetrievalService | None = None,
+    ) -> None:
+        self.retrieval_service = retrieval_service or LegalRetrievalService()
         self.last_bundle = None
+        self.last_manifest = None
 
-    def search(self, profile: DPIAProjectProfile, top_k: int = 8) -> list[RegulationHit]:
-        # Build a DPIA-relevant query from processing profile
+    def search(
+        self,
+        profile: DPIAProjectProfile,
+        top_k: int = 8,
+    ) -> list[RegulationHit]:
         parts: list[str] = [
             "DPIA GDPR Article 35",
             profile.project_goal,
@@ -29,12 +33,14 @@ class DPIARetriever:
         if profile.systematic_monitoring:
             parts.append("systematic monitoring WP248")
         if profile.cross_border_transfer:
-            parts.append(f"cross border transfer {profile.transfer_destination}")
+            parts.append(
+                f"cross border transfer {profile.transfer_destination}"
+            )
         if profile.lawful_basis:
             parts.extend(profile.lawful_basis)
         query = " ".join(parts)
 
-        self.last_bundle = self._orchestrator.retrieve(
+        result = self.retrieval_service.retrieve_with_fallback(
             RetrievalRequest(
                 module="eu_dpia",
                 task_stage="legal_grounding",
@@ -46,19 +52,14 @@ class DPIARetriever:
                 path="dpia",
             )
         )
-
-        docs = retrieve_regulations(
-            query,
-            top_k=top_k,
-            jurisdiction="eu",
-            path="dpia",
-        )
+        self.last_bundle = result.bundle
+        self.last_manifest = result.manifest
         return [
             RegulationHit(
-                source_id=doc.id,
-                title=doc.title,
-                article=doc.article,
-                snippet=doc.content,
+                source_id=chunk.source_id,
+                title=chunk.title,
+                article=chunk.citation_anchor or chunk.article_no,
+                snippet=chunk.content,
             )
-            for doc in docs
+            for chunk in result.bundle.legal_grounding
         ]

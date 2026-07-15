@@ -9,7 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
 )
@@ -480,7 +480,13 @@ class BCRService:
         issues = self._check_consistency(payload)
         attachment_notes = self._extract_attachment_notes(payload)
 
-        regs = retrieve_regulations("GDPR BCR Article 47 onward transfer liability", top_k=4, jurisdiction="eu", path="all")
+        regs = retrieve_legal_documents(
+            "GDPR BCR Article 47 onward transfer liability",
+            module="eu_bcr",
+            top_k=4,
+            jurisdiction="eu",
+            path="all",
+        ).documents
         citations = [f"{item.title}{item.article}" for item in regs]
         reg_snippet = "\n".join(f"- {item.title}{item.article}：{(item.content or '')[:120]}" for item in regs) or "（暂无检索到相关法条）"
         chapters = self._generate_chapters(payload, rating, problems, citations, reg_snippet)

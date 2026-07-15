@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from backend.common.rag.service import retrieve_legal_documents
+
 if TYPE_CHECKING:
     from backend.services.legal_api_service import DeliLegalService
 
@@ -13,11 +15,15 @@ class BCRLegalRetriever:
         self.legal_service = legal_service
 
     def retrieve(self, requirement_id: str, bcr_type: str, clause_text: str) -> list[dict]:
-        from backend.common.rag.retriever import retrieve_regulations
-
         query = self._build_query(requirement_id, bcr_type, clause_text)
         try:
-            hits = retrieve_regulations(query, top_k=3, jurisdiction="eu", path="all")
+            hits = retrieve_legal_documents(
+                query,
+                module="eu_bcr",
+                top_k=3,
+                jurisdiction="eu",
+                path="all",
+            ).documents
         except Exception:
             return []
 

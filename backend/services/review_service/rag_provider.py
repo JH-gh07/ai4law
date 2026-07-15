@@ -2,8 +2,7 @@ import json
 from pathlib import Path
 
 from backend.common.knowledge.v2 import RetrievalRequest
-from backend.common.rag.orchestrator import RetrievalOrchestrator
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import LegalRetrievalService
 from backend.schemas.review import ClauseType
 from backend.services.legal_api_service import DeliLegalService
 
@@ -14,7 +13,7 @@ class LocalRegulationKnowledgeBase:
         self.rulebook = json.loads(path.read_text(encoding="utf-8"))
         self.legal_api_service = legal_api_service
         self._cache: dict[tuple[str, str, bool], dict] = {}
-        self.orchestrator = RetrievalOrchestrator()
+        self.retrieval_service = LegalRetrievalService()
 
     def lookup(
         self,
@@ -50,7 +49,7 @@ class LocalRegulationKnowledgeBase:
         should_enrich = enrich and clause_type != ClauseType.OTHER and bool(clause_text and len(clause_text.strip()) >= 40)
         if should_enrich:
             path = "review"
-            issue_bundle = self.orchestrator.retrieve(
+            issue_result = self.retrieval_service.retrieve_with_fallback(
                 RetrievalRequest(
                     module=resolved_module,
                     task_stage="issue_discovery",
@@ -62,7 +61,8 @@ class LocalRegulationKnowledgeBase:
                     path=path,
                 )
             )
-            compare_bundle = self.orchestrator.retrieve(
+            issue_bundle = issue_result.bundle
+            compare_result = self.retrieval_service.retrieve(
                 RetrievalRequest(
                     module=resolved_module,
                     task_stage="clause_compare",
@@ -74,14 +74,8 @@ class LocalRegulationKnowledgeBase:
                     path=path,
                 )
             )
-            rag_hits = issue_bundle.legal_grounding or retrieve_regulations(
-                query=f"{config.get('display_name', clause_type.value)} {clause_text[:400]}",
-                top_k=3,
-                jurisdiction=resolved_jurisdiction,
-                path=path,
-                mode="hybrid",
-                legal_service=self.legal_api_service,
-            )
+            compare_bundle = compare_result.bundle
+            rag_hits = issue_bundle.legal_grounding
             rag_citations = []
             for item in rag_hits:
                 if hasattr(item, "article") and not hasattr(item, "article_no"):
@@ -146,6 +140,12 @@ class LocalRegulationKnowledgeBase:
             "workflow_rule_count": len(workflow_rules),
             "standard_clause_candidate_count": len(standard_clause_candidates),
             "structured_citation_count": len(structured_citations),
+            "issue_retrieval_manifest": (
+                issue_result.manifest.model_dump() if should_enrich else {}
+            ),
+            "compare_retrieval_manifest": (
+                compare_result.manifest.model_dump() if should_enrich else {}
+            ),
         }
         self._cache[cache_key] = dict(config)
         return dict(config)

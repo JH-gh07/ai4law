@@ -16,7 +16,7 @@ from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import convert_citation_markers
 from backend.common.llm.module_generator import generate_chapter
-from backend.common.rag.retriever import retrieve_regulations
+from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import format_date_stamp, render_docx_template, render_markdown_template, safe_filename
 from backend.common.render.docx_comments import DocxComment, render_commented_docx
 from backend.common.render.summary import attach_citations, summarize_for_slot
@@ -248,7 +248,13 @@ class EU_SCCService:
             f"EDPB recommendations Schrems II transfer impact assessment "
             f"{payload.declared_module_type} {payload.exporter_role} {payload.importer_role}"
         )
-        docs = retrieve_regulations(query, top_k=5, jurisdiction="eu", path="scc")
+        docs = retrieve_legal_documents(
+            query,
+            module="eu_scc",
+            top_k=5,
+            jurisdiction="eu",
+            path="scc",
+        ).documents
         return [{"source_id": d.id, "title": d.title, "article": d.article, "snippet": d.content} for d in docs]
 
     def _extract_notes(self, payload: SCCReviewRequest) -> list[dict[str, str]]:
