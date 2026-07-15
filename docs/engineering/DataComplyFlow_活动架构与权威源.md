@@ -30,7 +30,7 @@
 
 ## 兼容与历史边界
 
-- `/api/v0` 的 `v0_task_gateway` 仍被前端文件上传和兼容流程使用，不能按版本名直接删除；
+- `/api/v0` 的 `v0_task_gateway` 仍是兼容边界：当前前端只直接调用文件上传，并依赖响应中的物理 `path` 继续构造 v1 模块请求；v0 任务接口主要由模块测试、QA 脚本和历史 demo 消费。迁移前不能按版本名直接删除，也不得把旧实现复制成 v1；安全与退役顺序以分阶段治理计划的 API-001 审计为准；
 - `/api/v1` 是当前主 API，未来规范化 API 应新增版本而不是原地破坏；
 - backend/modules/diagnosis/ 是唯一诊断规则与推理实现；backend/api/diagnosis.py 仅保留会话持久化兼容契约，由 backend/services/diagnosis_session_service.py 转调权威评估器；
 - `doc/v2/` 中模板仍为运行依赖；

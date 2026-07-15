@@ -294,3 +294,17 @@ doc/knowledge/_evaluation/
 验证结果：分组专项 38 passed、1 warning；后端全量 356 passed、1 warning；前端 1 test passed；前端生产构建通过；仓库卫生与 `git diff --check` 通过。测试总数从 357 变为 356，原因仅为删除上述孤立测试，不是功能测试丢失。
 
 RAG 组仅认定为“统一边界及业务迁移已接入”：多数消费者仍只取 `.documents`，Manifest 未形成完整业务审计链；issue-discovery 非 legal bundle、异常 fallback、后端固定配置和缓存刷新仍属于阶段 D，不得写成治理完成。前端依赖升级、懒加载和开发服务器安全也必须按不同提交目标审查。
+
+## 19. `/api/v0` 安全与生命周期只读审计
+
+2026-07-15 在 GATE-001 基线上完成只读专项审计，没有修改 Router、Service、Schema、前端协议或业务逻辑。
+
+- 动态加载完整应用后，OpenAPI 正常生成 102 个 path；7 条 `/api/v0` 路由的 FastAPI dependency 列表均为空；
+- 前端只直接调用 `POST /api/v0/files/upload`，虽发送 Bearer header，但后端不解析；上传响应中的物理 `path` 被继续传给 v1 业务模块；
+- v0 task/status/cancel/artifacts/download/audit 没有检出当前前端调用，消费者为模块兼容测试、QA 脚本及历史 demo；
+- 网关 `_task_refs`、`_file_index`、`_artifact_index` 不记录用户，任务和产物仅凭 ID 访问；
+- 未注册的 attachment ID 会被当作本地文件路径，下游文件解析器可读取受支持格式；上传实现没有大小和类型控制，并一次性读入内存；
+- 网关索引及底层 `InMemoryTaskManager` 都是进程内状态，重启和多 worker 行为不可持续；
+- `runtime_settings.py` 仍反向 import Router 的模块级 v0 Service，是后续退役前必须解除的真实运行消费者。
+
+最终认定：v0 不是应立即复制或整体删除的“旧版本”，而是含一个前端活动上传入口及一组测试/脚本兼容任务入口的安全债边界。专项验证还发现 2.2/4.1 共 4 个活动报告模板曾被历史提交 `d6e882d` 删除而代码引用仍保留；Assessment/CN Flow 的 v0 测试孤立执行失败，CN Flow 模块测试存在全局模板路径污染。下一批必须先做 API-C0：从可追溯历史恢复活动模板并修复测试隔离；通过后再进入 API-C1 的鉴权、对象 owner、拒绝未注册本地路径及相应回归测试。上传协议去物理路径、状态持久化和 v0 退役必须分别实施。完整证据、风险分级、验收与非目标记录在 `docs/governance/DataComplyFlow_仓库规范化分阶段治理计划.md` 第 8 节。

@@ -180,3 +180,68 @@ GATE-001 安全收敛实际删除的是一组没有生产消费者的预设 Diag
 - 工作树仅保留未受跟踪的理论研究文档，未被任何治理提交纳入。
 
 GATE-001 至此形成可回滚 Git 基线。下一阶段准入项为 `/api/v0` 安全与生命周期只读审计；在形成新的事实与测试计划前，不直接迁移或复制 v0 接口。
+
+## 8. API-001：`/api/v0` 安全与生命周期只读审计（2026-07-15）
+
+### 8.1 审计范围与结论
+
+本批次仅检查路由、Schema、Service、文件解析、运行设置、前端消费者、测试和脚本，没有修改业务代码或公开契约。动态加载 `create_app()` 后确认 OpenAPI 可生成 102 个 path；`/api/v0` 共 7 条路由，FastAPI dependency 列表均为空。
+
+| 路由 | 当前消费者 | 鉴权/所有权 | 状态 |
+|---|---|---|---|
+| `POST /api/v0/files/upload` | 前端 `module-adapter.ts`；v0 测试 | 无服务端鉴权；文件索引无用户字段 | 活动兼容入口，不能直接删除 |
+| `POST /api/v0/tasks` | v0 测试、QA 脚本、历史 demo | 无服务端鉴权；`session_id` 只进入摘要 | 无当前前端调用，待迁移消费者后退役 |
+| `GET /api/v0/tasks/{task_id}` | v0 测试、QA 脚本、历史 demo | 仅凭 `task_id` | 同上 |
+| `POST /api/v0/tasks/{task_id}/cancel` | 路由基线；可由兼容客户端调用 | 仅凭 `task_id` | 同上 |
+| `GET /api/v0/tasks/{task_id}/artifacts` | v0 测试、QA 脚本、历史 demo | 仅凭 `task_id` | 同上 |
+| `GET /api/v0/artifacts/{artifact_id}/download` | v0 测试及返回的下载 URL | 仅凭 `artifact_id` | 同上 |
+| `GET /api/v0/tasks/{task_id}/audit` | v0 测试、QA 脚本、历史 demo | 仅凭 `task_id` | 同上 |
+
+`frontend/src/lib/module-adapter.ts` 虽发送 Bearer header，但后端路由不消费该 header，因此不能构成访问控制。前端还将上传响应中的物理 `path` 作为业务模块附件路径继续提交；这说明上传契约与 v1 业务输入存在真实耦合，不能把整个 v0 Router 直接移除或机械复制到 v1。
+
+### 8.2 已确认问题与现有控制
+
+| 编号 | 类型 | 事实证据 | 影响 | 认定 |
+|---|---|---|---|---|
+| V0-SEC-001 | 身份认证 | `v0_task_gateway/router.py` 7 个 endpoint 均未使用 `Depends(get_current_user)`；运行时依赖列表为空 | 未登录请求可上传、创建/查询/取消任务和下载产物 | 已确认，P0 |
+| V0-SEC-002 | 对象级授权 | `_task_refs`、`_file_index`、`_artifact_index` 不保存 owner；访问只接收 ID | 知道或获得 ID 的调用者之间没有服务端隔离 | 已确认，P0 |
+| V0-SEC-003 | 本地文件读取边界 | `_resolve_attachment_paths()` 对未知 ID 直接当文件系统路径；`_resolve_storage_uri()` 可返回原始 URI/路径；下游 `FileParser` 会读取受支持后缀 | 外部输入可越过上传注册表指向进程可读的本地文档 | 已确认，P0 |
+| V0-SEC-004 | 上传资源控制 | `upload.file.read()` 一次性读入内存；无大小、扩展名、内容类型或内容校验 | 内存/磁盘耗尽与非预期文件落盘风险 | 已确认，P0 |
+| V0-SEC-005 | 内部路径暴露 | 上传响应 `path`、artifact 响应 `file_path`；前端显式依赖上传 `path` | 暴露部署目录并固化不安全契约 | 已确认，P1；需先迁移消费者 |
+| V0-SEC-006 | 错误信息 | `create_task` 将异常类名和原始异常文本作为 422 detail 返回 | 可能泄露文件路径或内部实现信息 | 已确认，P1 |
+| V0-LIFE-001 | 状态持久化 | 网关三个索引和各模块 `InMemoryTaskManager._tasks` 均为进程内字典 | 重启后任务/文件 ID/产物 ID 失效；多 worker 状态不一致 | 已确认，P1/P2 |
+| V0-ARCH-001 | 依赖方向 | `runtime_settings.py` 反向 import Router 的模块级 `service` 并修改内部 LLM client | 阻碍依赖注入、测试隔离和多实例治理 | 已确认，P2 |
+
+现有控制也必须保留记录：上传文件名使用 `Path(...).name`，可阻断直接通过原始文件名进行的简单目录穿越；产物 ID 使用摘要而非直接路径；公共 v1 artifact API 已有允许根目录和数据库 owner 检查。上述控制不能抵消 v0 的鉴权、对象授权和原始路径问题。
+
+### 8.3 生命周期事实
+
+1. v0 上传是当前前端的活动依赖；v0 任务编排没有检出当前前端消费者，主要由 7 条兼容流程测试、`scripts/qa_v0_baseline.py`、`scripts/qa_v0_smoke.sh` 和 `scripts/legacy/demo_v0.sh` 使用。
+2. `session_id` 不是安全主体，只被写入请求摘要；不得用它替代用户身份或对象所有权。
+3. 上传文件本体在重启后仍可能留在磁盘，但内存 `file_id → path` 映射丢失；任务管理器和网关 task/artifact 索引同样不可恢复。
+4. `runtime_settings.py` 仍直接持有 v0 Router 的模块级 Service，因此删除路由前必须先解除该运行时消费者。
+
+### 8.4 分批修复门禁
+
+本审计不准入“一次完成 v0 迁移”。后续必须拆为可独立回滚批次：
+
+| 批次 | 单一目标 | 最小验收 | 非目标 |
+|---|---|---|---|
+| API-C0 | 恢复被历史清理误删但仍由活动代码引用的 2.2/4.1 报告模板，并消除模块测试对全局模板常量的污染 | v0 Assessment/CN Flow 可独立运行；全量与孤立执行结果一致；模板来源 commit/hash 可追溯 | 不修改模板法律内容；不与安全修复混合 |
+| API-C1 | 给 7 条 v0 路由增加真实登录要求和对象 owner 绑定；拒绝未注册的本地路径 | 未登录 401；用户 A 不能读/取消/下载用户 B 资源；注册文件正常流转；现有 7 模块流程在带身份下通过 | 不改 URL；不迁移数据库；不建立 v1 副本 |
+| API-C2 | 建立受控上传契约：允许类型、大小上限、分块写入、受控根目录、失败清理 | 超限/不支持类型被拒绝；路径越界测试通过；合法六类文档通过 | 不改文件解析算法 |
+| API-C3 | 前端从物理 `path` 迁移到 opaque file reference；停止公开 `path/file_path` | 前端测试和构建通过；请求不再包含本地路径；OpenAPI 契约变更有迁移记录 | 不顺手改业务表单 |
+| API-C4 | 迁移 QA/兼容消费者并缩减 v0 task Router | `git grep /api/v0` 仅剩经批准兼容项；路由基线明确删除项；全量回归通过 | 不复制实现到 v1 |
+| API-C5 | 为任务/文件/产物元数据定义持久状态接口并解除 runtime settings 对 Router 的反向依赖 | 单 worker 重启恢复测试；多 worker 契约测试；依赖可覆盖 | 不一次迁移全部模块的异步执行器 |
+
+API-C1 实施前还必须确定临时 owner 元数据的权威存储。若只把 owner 加入现有内存字典，只能作为单进程过渡控制，不能宣称支持重启恢复或多 worker。API-C3 会改变当前前端协议，必须独立实施，不能混入 C1。
+
+### 8.5 当前验证偏差与下一准入项
+
+本次专项重跑得到两组不同性质的结果：
+
+- 路由装配测试在工作区可写的 `--basetemp` 下为 4 passed、1 个既有 Starlette/httpx 警告；默认临时目录的 `PermissionError` 属于当前执行环境限制，不是路由缺陷；
+- v0 兼容测试孤立执行时，Assessment 因 `2.2_risk_assessment_template_v0.docx` 不存在而跳过 DOCX 输出，CN Flow 因 `4.1_cn_flow_compliance_template_v0.md` 不存在而失败；对应 2.2/4.1 的 md/docx 共 4 个文件曾存在于 Git，后被 `d6e882d` 删除，但活动代码引用未同步移除；
+- CN Flow 模块测试直接赋值全局 `TEMPLATE_PATH` 而不恢复，存在测试顺序污染，可能掩盖缺失模板。此前“356 passed”仍是当时全量执行记录，但不能替代当前孤立失败事实。
+
+因此下一批先准入 API-C0，而不是直接进入 API-C1。API-C0 只能从删除前可追溯 commit 恢复活动模板，并修复测试隔离；不得自行生成新的法律模板内容。API-C0 通过后，API-C1 必须先建立未登录、跨用户、未知文件引用和合法同用户流程四类回归测试。任何法律判断、报告正文、RAG 算法、Schema 全局重构和 `/api/v1` 复制均不属于这些批次。
