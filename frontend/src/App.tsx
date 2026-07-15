@@ -1,6 +1,14 @@
-import { useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { LazyRouteErrorBoundary } from "./components/common/LazyRouteErrorBoundary";
 import { TopNav } from "./components/common/TopNav";
 import { CreateWorkspaceModal } from "./components/modals/CreateWorkspaceModal";
 import { ModeSelectModal } from "./components/modals/ModeSelectModal";
@@ -12,20 +20,65 @@ import { AppStoreProvider, useAppStore } from "./lib/app-store";
 import { LanguageProvider } from "./lib/language";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./lib/task-templates";
 import { checkBackendHealth } from "./lib/module-adapter";
-import { DocsPlaceholderPage } from "./pages/DocsPlaceholderPage";
-import { EvidenceCenterPage } from "./pages/EvidenceCenterPage";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
-import { LawViewerPage } from "./pages/LawViewerPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { ReportCenterPage } from "./pages/ReportCenterPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { SuperDesign002Page } from "./pages/SuperDesign002Page";
-import { TaskSpacesPage } from "./pages/TaskSpacesPage";
-import { WorkspacePage } from "./pages/WorkspacePage";
 import { GlobalTaskWatcher } from "./components/workspace/GlobalTaskWatcher";
+
+const DocsPlaceholderPage = lazy(() =>
+  import("./pages/DocsPlaceholderPage").then((module) => ({
+    default: module.DocsPlaceholderPage,
+  })),
+);
+const EvidenceCenterPage = lazy(() =>
+  import("./pages/EvidenceCenterPage").then((module) => ({
+    default: module.EvidenceCenterPage,
+  })),
+);
+const LawViewerPage = lazy(() =>
+  import("./pages/LawViewerPage").then((module) => ({
+    default: module.LawViewerPage,
+  })),
+);
+const ProfilePage = lazy(() =>
+  import("./pages/ProfilePage").then((module) => ({
+    default: module.ProfilePage,
+  })),
+);
+const ReportCenterPage = lazy(() =>
+  import("./pages/ReportCenterPage").then((module) => ({
+    default: module.ReportCenterPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import("./pages/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
+const SuperDesign002Page = lazy(() =>
+  import("./pages/SuperDesign002Page").then((module) => ({
+    default: module.SuperDesign002Page,
+  })),
+);
+const TaskSpacesPage = lazy(() =>
+  import("./pages/TaskSpacesPage").then((module) => ({
+    default: module.TaskSpacesPage,
+  })),
+);
+const WorkspacePage = lazy(() =>
+  import("./pages/WorkspacePage").then((module) => ({
+    default: module.WorkspacePage,
+  })),
+);
+
+function PageLoadingFallback() {
+  return (
+    <div className="page-loading" role="status" aria-live="polite">
+      页面加载中…
+    </div>
+  );
+}
 
 function AppShell() {
   const QUICK_START_DISMISSED_KEY = "ai4law_quick_start_dismissed_v1";
@@ -33,7 +86,8 @@ function AppShell() {
   const location = useLocation();
   const { state, dispatch } = useAppStore();
   const isWorkspaceRoute = location.pathname.startsWith("/workspace");
-  const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
+  const isAuthRoute =
+    location.pathname === "/login" || location.pathname === "/register";
   const hideGlobalTopNav = isWorkspaceRoute || isAuthRoute;
 
   const [modeModalOpen, setModeModalOpen] = useState(false);
@@ -44,7 +98,7 @@ function AppShell() {
     detail?: string;
   }>({ checked: false, ok: true });
   const [quickStartOpen, setQuickStartOpen] = useState<boolean>(
-    () => globalThis.localStorage?.getItem(QUICK_START_DISMISSED_KEY) !== "1"
+    () => globalThis.localStorage?.getItem(QUICK_START_DISMISSED_KEY) !== "1",
   );
 
   useEffect(() => {
@@ -90,7 +144,9 @@ function AppShell() {
   }) => {
     const id = `task-${Date.now()}`;
     const now = new Date().toISOString();
-    const taskTemplate = findTaskTemplate(params.taskTemplateId) ?? getDefaultTaskTemplate(params.jurisdiction);
+    const taskTemplate =
+      findTaskTemplate(params.taskTemplateId) ??
+      getDefaultTaskTemplate(params.jurisdiction);
 
     dispatch({
       type: "create_task_space",
@@ -103,8 +159,8 @@ function AppShell() {
         module: taskTemplate.module,
         workspaceStyle: taskTemplate.workspaceStyle,
         createdAt: now,
-        updatedAt: now
-      }
+        updatedAt: now,
+      },
     });
     setSelectedMode(null);
     setModeModalOpen(false);
@@ -120,8 +176,8 @@ function AppShell() {
         completed: true,
         stepIndex: 0,
         source: undefined,
-        targetTaskId: undefined
-      }
+        targetTaskId: undefined,
+      },
     });
   };
 
@@ -148,101 +204,118 @@ function AppShell() {
                 completed: false,
                 stepIndex: 0,
                 source: "replay",
-                targetTaskId: undefined
-              }
+                targetTaskId: undefined,
+              },
             })
           }
         />
       )}
 
-      <main className={`app-main ${isWorkspaceRoute ? "workspace-main workspace-main-embedded" : ""}`}>
-        <Routes>
-          <Route path="/" element={<HomePage onStart={startFlow} onQuickCreate={createTask} />} />
-          <Route path="/jurisdictions/:code" element={<JurisdictionHubPage onStart={startFlow} />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute>
-                <TaskSpacesPage onStart={startFlow} onQuickCreate={createTask} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/workspace"
-            element={
-              <ProtectedRoute>
-                <WorkspacePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/workspace/:taskId"
-            element={
-              <ProtectedRoute>
-                <WorkspacePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <ReportCenterPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/evidence"
-            element={
-              <ProtectedRoute>
-                <EvidenceCenterPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/knowledge/laws/:sourceId"
-            element={
-              <ProtectedRoute>
-                <LawViewerPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/docs"
-            element={
-              <ProtectedRoute>
-                <DocsPlaceholderPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/superdesign/002"
-            element={
-              <ProtectedRoute>
-                <SuperDesign002Page />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <main
+        className={`app-main ${isWorkspaceRoute ? "workspace-main workspace-main-embedded" : ""}`}
+      >
+        <LazyRouteErrorBoundary>
+          <Suspense fallback={<PageLoadingFallback />}>
+            <Routes>
+            <Route
+              path="/"
+              element={
+                <HomePage onStart={startFlow} onQuickCreate={createTask} />
+              }
+            />
+            <Route
+              path="/jurisdictions/:code"
+              element={<JurisdictionHubPage onStart={startFlow} />}
+            />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute>
+                  <TaskSpacesPage
+                    onStart={startFlow}
+                    onQuickCreate={createTask}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace"
+              element={
+                <ProtectedRoute>
+                  <WorkspacePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:taskId"
+              element={
+                <ProtectedRoute>
+                  <WorkspacePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <ReportCenterPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/evidence"
+              element={
+                <ProtectedRoute>
+                  <EvidenceCenterPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/knowledge/laws/:sourceId"
+              element={
+                <ProtectedRoute>
+                  <LawViewerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/docs"
+              element={
+                <ProtectedRoute>
+                  <DocsPlaceholderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superdesign/002"
+              element={
+                <ProtectedRoute>
+                  <SuperDesign002Page />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </LazyRouteErrorBoundary>
       </main>
 
       {modeModalOpen ? (
@@ -280,8 +353,8 @@ function AppShell() {
                 completed: false,
                 stepIndex: 0,
                 source: "replay",
-                targetTaskId: undefined
-              }
+                targetTaskId: undefined,
+              },
             });
           }}
         />
