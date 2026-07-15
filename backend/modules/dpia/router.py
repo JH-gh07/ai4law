@@ -8,7 +8,7 @@ from backend.schemas.auth import AuthUser
 from backend.modules.dpia.schema import DPIAAsyncAccepted, DPIAAsyncStatus, DPIARequest, DPIAResult
 from backend.modules.dpia.service import DPIAService
 
-router = APIRouter(tags=["dpia"])
+router = APIRouter(prefix="/dpia", tags=["dpia"])
 service = DPIAService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -19,7 +19,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/dpia/generate", response_model=DPIAResult)
+@router.post("/generate", response_model=DPIAResult)
 def generate_dpia(
     payload: DPIARequest,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def generate_dpia(
     return result
 
 
-@router.post("/dpia/generate_async", response_model=DPIAAsyncAccepted)
+@router.post("/generate_async", response_model=DPIAAsyncAccepted)
 def generate_dpia_async(
     payload: DPIARequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def generate_dpia_async(
     return accepted
 
 
-@router.get("/dpia/tasks/{task_id}", response_model=DPIAAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=DPIAAsyncStatus)
 def get_dpia_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def get_dpia_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/dpia/tasks/{task_id}/retry", response_model=DPIAAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=DPIAAsyncStatus)
 def retry_dpia_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

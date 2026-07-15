@@ -10,7 +10,7 @@ from backend.schemas.auth import AuthUser
 from backend.modules.eu_scc.schema import SCCAsyncAccepted, SCCAsyncStatus, SCCReviewRequest, SCCReviewResult
 from backend.modules.eu_scc.service import EU_SCCService
 
-router = APIRouter(tags=["eu_scc"])
+router = APIRouter(prefix="/eu_scc", tags=["eu_scc"])
 service = EU_SCCService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -20,21 +20,21 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/eu_scc/generate", response_model=SCCReviewResult)
+@router.post("/generate", response_model=SCCReviewResult)
 def generate_eu_scc(payload: SCCReviewRequest, db: Session = Depends(get_db), current_user: AuthUser = Depends(get_current_user), container=Depends(get_container)) -> SCCReviewResult:
     result = trace_sync("eu_scc", lambda: service.generate_report(payload))
     register_module_result_artifacts(db=db, container=container, user=current_user, module_key="eu_scc", result=result)
     return result
 
 
-@router.post("/eu_scc/generate_async", response_model=SCCAsyncAccepted)
+@router.post("/generate_async", response_model=SCCAsyncAccepted)
 def generate_eu_scc_async(payload: SCCReviewRequest, current_user: AuthUser = Depends(get_current_user)) -> SCCAsyncAccepted:
     accepted = service.submit_async(payload)
     TASK_OWNERS[accepted.task_id] = current_user.id
     return accepted
 
 
-@router.get("/eu_scc/tasks/{task_id}", response_model=SCCAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=SCCAsyncStatus)
 def get_eu_scc_task(task_id: str, db: Session = Depends(get_db), current_user: AuthUser = Depends(get_current_user), container=Depends(get_container)) -> SCCAsyncStatus:
     _assert_owner(task_id, current_user.id)
     try:
@@ -46,7 +46,7 @@ def get_eu_scc_task(task_id: str, db: Session = Depends(get_db), current_user: A
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
-@router.post("/eu_scc/tasks/{task_id}/retry", response_model=SCCAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=SCCAsyncStatus)
 def retry_eu_scc_task(task_id: str, current_user: AuthUser = Depends(get_current_user)) -> SCCAsyncStatus:
     _assert_owner(task_id, current_user.id)
     try:

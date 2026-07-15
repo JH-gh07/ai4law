@@ -13,7 +13,7 @@ from backend.modules.assessment.schema import (
 )
 from backend.modules.assessment.service import AssessmentService
 
-router = APIRouter(tags=["assessment"])
+router = APIRouter(prefix="/assessment", tags=["assessment"])
 service = AssessmentService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -24,7 +24,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/assessment/generate", response_model=AssessmentResult)
+@router.post("/generate", response_model=AssessmentResult)
 def generate_assessment(
     payload: AssessmentRequest,
     db: Session = Depends(get_db),
@@ -45,7 +45,7 @@ def generate_assessment(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.post("/assessment/generate_async", response_model=AssessmentAsyncAccepted)
+@router.post("/generate_async", response_model=AssessmentAsyncAccepted)
 def generate_assessment_async(
     payload: AssessmentRequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -58,7 +58,7 @@ def generate_assessment_async(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/assessment/tasks/{task_id}", response_model=AssessmentAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=AssessmentAsyncStatus)
 def get_assessment_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -82,7 +82,7 @@ def get_assessment_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/assessment/tasks/{task_id}/retry", response_model=AssessmentAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=AssessmentAsyncStatus)
 def retry_assessment_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

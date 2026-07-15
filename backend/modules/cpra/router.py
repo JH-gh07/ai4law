@@ -8,7 +8,7 @@ from backend.common.trace.tracer import trace_sync
 from backend.modules.cpra.schema import CPRAAsyncAccepted, CPRAAsyncStatus, CPRARequest, CPRAResult
 from backend.modules.cpra.service import CPRAService
 
-router = APIRouter(tags=["cpra"])
+router = APIRouter(prefix="/cpra", tags=["cpra"])
 service = CPRAService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -19,7 +19,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/cpra/generate", response_model=CPRAResult)
+@router.post("/generate", response_model=CPRAResult)
 def generate_cpra(
     payload: CPRARequest,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def generate_cpra(
     return result
 
 
-@router.post("/cpra/generate_async", response_model=CPRAAsyncAccepted)
+@router.post("/generate_async", response_model=CPRAAsyncAccepted)
 def generate_cpra_async(
     payload: CPRARequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def generate_cpra_async(
     return accepted
 
 
-@router.get("/cpra/tasks/{task_id}", response_model=CPRAAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=CPRAAsyncStatus)
 def get_cpra_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def get_cpra_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/cpra/tasks/{task_id}/retry", response_model=CPRAAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=CPRAAsyncStatus)
 def retry_cpra_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

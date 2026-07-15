@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from backend.api.router import api_router
+from backend.api.v0.router import v0_router
+from backend.api.v1.router import v1_router
 from backend.core.container import AppContainer
 from backend.core.runtime_settings import (
     apply_runtime_payload,
@@ -55,7 +56,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
-    app.include_router(api_router, prefix="/api/v1")
+    app.include_router(v0_router, prefix="/api/v0")
+    app.include_router(v1_router, prefix="/api/v1")
 
     @app.get("/health")
     def health() -> dict[str, str]:

@@ -13,7 +13,7 @@ from backend.modules.pipia.schema import (
 )
 from backend.modules.pipia.service import PIPIAService
 
-router = APIRouter(tags=["pipia"])
+router = APIRouter(prefix="/pipia", tags=["pipia"])
 service = PIPIAService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -24,7 +24,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/pipia/generate", response_model=PIPIAResult)
+@router.post("/generate", response_model=PIPIAResult)
 def generate_pipia(
     payload: PIPIARequest,
     db: Session = Depends(get_db),
@@ -42,7 +42,7 @@ def generate_pipia(
     return result
 
 
-@router.post("/pipia/generate_async", response_model=PIPIAAsyncAccepted)
+@router.post("/generate_async", response_model=PIPIAAsyncAccepted)
 def generate_pipia_async(
     payload: PIPIARequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -52,7 +52,7 @@ def generate_pipia_async(
     return accepted
 
 
-@router.get("/pipia/tasks/{task_id}", response_model=PIPIAAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=PIPIAAsyncStatus)
 def get_pipia_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -76,7 +76,7 @@ def get_pipia_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/pipia/tasks/{task_id}/retry", response_model=PIPIAAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=PIPIAAsyncStatus)
 def retry_pipia_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

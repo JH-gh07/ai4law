@@ -17,18 +17,18 @@ from backend.modules.diagnosis.schema import (
 from backend.schemas.auth import AuthUser
 from backend.modules.diagnosis.service import DiagnosisService
 
-router = APIRouter(tags=["diagnosis"])
+router = APIRouter(prefix="/diagnosis", tags=["diagnosis"])
 service = DiagnosisService()
 renderer = DiagnosisReportRenderer()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/diagnosis/evaluate", response_model=DiagnosisResult)
+@router.post("/evaluate", response_model=DiagnosisResult)
 def evaluate(answers: DiagnosisAnswers) -> DiagnosisResult:
     return service.evaluate(answers)
 
 
-@router.post("/diagnosis/report", response_model=DiagnosisReportResponse)
+@router.post("/report", response_model=DiagnosisReportResponse)
 def generate_report(
     payload: DiagnosisReportRequest,
     db: Session = Depends(get_db),

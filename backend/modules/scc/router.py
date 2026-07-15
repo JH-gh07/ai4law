@@ -8,7 +8,7 @@ from backend.schemas.auth import AuthUser
 from backend.modules.scc.schema import SCCAsyncAccepted, SCCAsyncStatus, SCCRequest, SCCResult
 from backend.modules.scc.service import SCCService
 
-router = APIRouter(tags=["scc"])
+router = APIRouter(prefix="/scc", tags=["scc"])
 service = SCCService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -19,7 +19,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/scc/generate", response_model=SCCResult)
+@router.post("/generate", response_model=SCCResult)
 def generate_scc(
     payload: SCCRequest,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def generate_scc(
     return result
 
 
-@router.post("/scc/generate_async", response_model=SCCAsyncAccepted)
+@router.post("/generate_async", response_model=SCCAsyncAccepted)
 def generate_scc_async(
     payload: SCCRequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def generate_scc_async(
     return accepted
 
 
-@router.get("/scc/tasks/{task_id}", response_model=SCCAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=SCCAsyncStatus)
 def get_scc_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def get_scc_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/scc/tasks/{task_id}/retry", response_model=SCCAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=SCCAsyncStatus)
 def retry_scc_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

@@ -8,7 +8,7 @@ from backend.schemas.auth import AuthUser
 from backend.modules.bcr.schema import BCRAsyncAccepted, BCRAsyncStatus, BCRRequest, BCRResult
 from backend.modules.bcr.service import BCRService
 
-router = APIRouter(tags=["bcr"])
+router = APIRouter(prefix="/bcr", tags=["bcr"])
 service = BCRService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -19,7 +19,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/bcr/generate", response_model=BCRResult)
+@router.post("/generate", response_model=BCRResult)
 def generate_bcr(
     payload: BCRRequest,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def generate_bcr(
     return result
 
 
-@router.post("/bcr/generate_async", response_model=BCRAsyncAccepted)
+@router.post("/generate_async", response_model=BCRAsyncAccepted)
 def generate_bcr_async(
     payload: BCRRequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def generate_bcr_async(
     return accepted
 
 
-@router.get("/bcr/tasks/{task_id}", response_model=BCRAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=BCRAsyncStatus)
 def get_bcr_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def get_bcr_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/bcr/tasks/{task_id}/retry", response_model=BCRAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=BCRAsyncStatus)
 def retry_bcr_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

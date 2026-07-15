@@ -8,7 +8,7 @@ from backend.schemas.auth import AuthUser
 from backend.modules.tia.schema import TIAAsyncAccepted, TIAAsyncStatus, TIARequest, TIAResult
 from backend.modules.tia.service import TIAService
 
-router = APIRouter(tags=["tia"])
+router = APIRouter(prefix="/tia", tags=["tia"])
 service = TIAService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -19,7 +19,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/tia/generate", response_model=TIAResult)
+@router.post("/generate", response_model=TIAResult)
 def generate_tia(
     payload: TIARequest,
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def generate_tia(
     return result
 
 
-@router.post("/tia/generate_async", response_model=TIAAsyncAccepted)
+@router.post("/generate_async", response_model=TIAAsyncAccepted)
 def generate_tia_async(
     payload: TIARequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -47,7 +47,7 @@ def generate_tia_async(
     return accepted
 
 
-@router.get("/tia/tasks/{task_id}", response_model=TIAAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=TIAAsyncStatus)
 def get_tia_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ def get_tia_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/tia/tasks/{task_id}/retry", response_model=TIAAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=TIAAsyncStatus)
 def retry_tia_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

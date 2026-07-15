@@ -13,7 +13,7 @@ from backend.modules.cn_flow.schema import (
 )
 from backend.modules.cn_flow.service import CNFlowService
 
-router = APIRouter(tags=["cn-flow"])
+router = APIRouter(prefix="/cn-flow", tags=["cn-flow"])
 service = CNFlowService()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -24,7 +24,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/cn-flow/generate", response_model=CNFlowResult)
+@router.post("/generate", response_model=CNFlowResult)
 def generate_cn_flow(
     payload: CNFlowRequest,
     db: Session = Depends(get_db),
@@ -42,7 +42,7 @@ def generate_cn_flow(
     return result
 
 
-@router.post("/cn-flow/generate_async", response_model=CNFlowAsyncAccepted)
+@router.post("/generate_async", response_model=CNFlowAsyncAccepted)
 def generate_cn_flow_async(
     payload: CNFlowRequest,
     current_user: AuthUser = Depends(get_current_user),
@@ -52,7 +52,7 @@ def generate_cn_flow_async(
     return accepted
 
 
-@router.get("/cn-flow/tasks/{task_id}", response_model=CNFlowAsyncStatus)
+@router.get("/tasks/{task_id}", response_model=CNFlowAsyncStatus)
 def get_cn_flow_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -76,7 +76,7 @@ def get_cn_flow_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/cn-flow/tasks/{task_id}/retry", response_model=CNFlowAsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=CNFlowAsyncStatus)
 def retry_cn_flow_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),

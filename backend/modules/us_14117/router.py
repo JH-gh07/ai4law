@@ -15,7 +15,7 @@ from backend.modules.us_14117.schema import (
 )
 from backend.modules.us_14117.service import US14117Service
 
-router = APIRouter(tags=["us_14117"])
+router = APIRouter(prefix="/us_14117", tags=["us_14117"])
 service = US14117Service()
 TASK_OWNERS: dict[str, str] = {}
 
@@ -26,7 +26,7 @@ def _assert_owner(task_id: str, user_id: str) -> None:
         raise HTTPException(status_code=404, detail="Task not found")
 
 
-@router.post("/us_14117/generate", response_model=US14117Result)
+@router.post("/generate", response_model=US14117Result)
 def generate_us_14117_report(
     payload: US14117Request,
     db: Session = Depends(get_db),
@@ -44,7 +44,7 @@ def generate_us_14117_report(
     return result
 
 
-@router.post("/us_14117/generate_async", response_model=US14117AsyncAccepted)
+@router.post("/generate_async", response_model=US14117AsyncAccepted)
 def generate_us_14117_async(
     payload: US14117Request,
     current_user: AuthUser = Depends(get_current_user),
@@ -54,7 +54,7 @@ def generate_us_14117_async(
     return accepted
 
 
-@router.get("/us_14117/tasks/{task_id}", response_model=US14117AsyncStatus)
+@router.get("/tasks/{task_id}", response_model=US14117AsyncStatus)
 def get_us_14117_task(
     task_id: str,
     db: Session = Depends(get_db),
@@ -78,7 +78,7 @@ def get_us_14117_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/us_14117/tasks/{task_id}/retry", response_model=US14117AsyncStatus)
+@router.post("/tasks/{task_id}/retry", response_model=US14117AsyncStatus)
 def retry_us_14117_task(
     task_id: str,
     current_user: AuthUser = Depends(get_current_user),
