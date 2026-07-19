@@ -1,2 +1,0 @@
-{"case_id":"GEN-EU-SCC-001","module":"eu_scc","must_find_issues":["scc_onward_transfer_weakened"],"must_cite_source_ids":["STD-EU-SCC-ONWARD","EU-GUIDE-002"],"must_not_use_layers":["L2_business_rule","L3_testcase","L4_template"],"must_not_claim":["SCC clauses are fully preserved"]}
-{"case_id":"GEN-EU-BCR-001","module":"eu_bcr","must_find_issues":["bcr_enforceable_rights_missing"],"must_cite_source_ids":["STD-EU-BCR-RIGHTS","EU-LAW-001"],"must_not_use_layers":["L2_business_rule","L3_testcase","L4_template"],"must_not_claim":["BCR requirements are fully met"]}

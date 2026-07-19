@@ -1,0 +1,22 @@
+{
+  "delilegal": {
+    "base_url": "https://openapi.delilegal.com",
+    "app_id": "",
+    "secret": ""
+  },
+  "llm": {
+    "active_provider_id": "siliconflow",
+    "providers": [
+      {
+        "id": "siliconflow",
+        "name": "SiliconFlow",
+        "provider_type": "openai_compatible",
+        "api_key": "",
+        "api_url": "https://api.siliconflow.cn/v1",
+        "model": "deepseek-ai/DeepSeek-V3.2",
+        "enabled": false,
+        "timeout": 60
+      }
+    ]
+  }
+}

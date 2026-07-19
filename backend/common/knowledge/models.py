@@ -7,6 +7,7 @@ from sqlalchemy import Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.core.db import Base
+from backend.core.time import utc_now_naive
 
 
 class IngestStatus(str, Enum):
@@ -35,7 +36,7 @@ class KnowledgeDocument(Base):
     review_status: Mapped[str] = mapped_column(String(32), default="review_pending")
     source: Mapped[str] = mapped_column(String(32), default="regulatory")
     user_id: Mapped[str] = mapped_column(String(64), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
 
 
 class IngestedFile(Base):
@@ -51,7 +52,7 @@ class IngestedFile(Base):
     source: Mapped[str] = mapped_column(String(32), default="regulatory")
     user_id: Mapped[str] = mapped_column(String(64), default="")
     document_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
 
 
 class KnowledgeChunk(Base):

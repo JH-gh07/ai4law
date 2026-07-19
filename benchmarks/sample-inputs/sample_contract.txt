@@ -1,0 +1,9 @@
+SYNTHETIC DATA PROCESSING AGREEMENT
+
+Exporter: Example Exporter Ltd.
+Importer: Example Processor Ltd.
+Purpose: provide hosted analytics support.
+Data: synthetic customer identifiers and service logs.
+Security: encryption in transit, role-based access, incident notice within 48 hours.
+Retention: delete or return data after service termination.
+This file is a development fixture and is not a legal Gold answer.

@@ -1,7 +1,49 @@
-__pycache__/
+# Python
+**/__pycache__/
+*.py[cod]
 .pytest_cache/
-*.pyc
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
 .venv/
+venv/
+
+# Node and frontend builds
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/*.tsbuildinfo
+**/coverage/
+
+# Local environment and credentials
 .env
+.env.*
+!.env.example
+# Runtime and generated data
 outputs/
+frontend/tmp/
+frontend/storage/
+frontend/.codex-archives/
+storage/*
+!storage/README.md
+!storage/runtime_settings.example.json
+
+# Developer-tool local state
+.agents/
+.repo-backups/
+.claude/
+.streamlit/
+.superpowers/
+.vscode/settings.json
+
+# Logs, temporary files, editor and OS metadata
+*.log
+*.tmp
+*.temp
+*.bak
+~$*
 .DS_Store
+Thumbs.db

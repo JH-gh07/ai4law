@@ -2,15 +2,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from backend.api.router import api_router
+from backend.api.v0.router import v0_router
+from backend.api.v1.router import v1_router
 from backend.core.container import AppContainer
 from backend.core.runtime_settings import (
     apply_runtime_payload,
     load_runtime_overrides,
-    refresh_runtime_clients,
 )
 from backend.core.db import init_db
 from backend.core.settings import Settings, get_settings
+from backend.services.runtime_client_refresher import refresh_runtime_clients
 
 
 @asynccontextmanager
@@ -50,12 +51,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     refresh_runtime_clients(container)
 
     app = FastAPI(
-        title="AI4Law Backend MVP",
+        title="DataComplyFlow Backend",
         version="0.1.0",
         lifespan=lifespan,
     )
     app.state.container = container
-    app.include_router(api_router, prefix="/api/v1")
+    app.include_router(v0_router, prefix="/api/v0")
+    app.include_router(v1_router, prefix="/api/v1")
 
     @app.get("/health")
     def health() -> dict[str, str]:

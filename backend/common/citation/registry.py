@@ -182,9 +182,6 @@ class CitationRegistry:
 
         return "\n".join(lines)
 
-    def get_external_citation_items(self) -> list[CitationItem]:
-        """Return only CitationItems allowed in external reports."""
-        return [item for item in self._items.values() if item.can_enter_external_report]
 
     def to_list(self) -> list[dict]:
         return [item.to_dict() for item in self._items.values()]

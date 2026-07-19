@@ -48,26 +48,6 @@ INDEX_NAMES = (
 )
 
 
-def _search_text(chunk: KnowledgeChunkV2) -> str:
-    structured = " ".join(f"{k}:{v}" for k, v in chunk.structured_payload.items())
-    keywords = " ".join(chunk.keywords)
-    refs = " ".join(chunk.reference_ids)
-    tags = " ".join(chunk.scenario_tags)
-    return " ".join(
-        [
-            chunk.title,
-            chunk.citation_anchor,
-            chunk.content,
-            chunk.source_id,
-            chunk.module,
-            chunk.path,
-            keywords,
-            refs,
-            tags,
-            structured,
-        ]
-    ).strip()
-
 
 def _lexical_score(query: str, chunk: KnowledgeChunkV2) -> float:
     q = normalize_text(query or "")
@@ -96,7 +76,7 @@ class RetrievalOrchestrator:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.embedder = HashingEmbedder(self.settings.rag_embedding_dimension)
-        self.rag_dir = self.settings.storage_dir / "rag" / "v3"
+        self.rag_dir = self.settings.rag_v3_dir
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalBundle:
         if request.module == "cn_diagnosis":

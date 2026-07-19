@@ -15,6 +15,7 @@ class DiagnosisOutcome(str, Enum):
     SECURITY_ASSESSMENT = "SECURITY_ASSESSMENT"
     SCC_OR_CERTIFICATION = "SCC_OR_CERTIFICATION"
     EXEMPTION = "EXEMPTION"
+    MANUAL_REVIEW = "MANUAL_REVIEW"
 
 
 class DiagnosisSessionStatus(str, Enum):

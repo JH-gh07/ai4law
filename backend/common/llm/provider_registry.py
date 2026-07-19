@@ -68,8 +68,6 @@ class LLMProviderRegistry:
             raise ValueError(f"Unsupported provider type: {provider.provider_type}")
         return provider
 
-    def sanitize_provider(self, provider: LLMProviderConfig) -> dict[str, Any]:
-        return provider.sanitized()
 
     def _coerce_provider(self, item: Any) -> LLMProviderConfig:
         raw = item if isinstance(item, dict) else {}

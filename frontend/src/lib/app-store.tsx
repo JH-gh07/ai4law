@@ -21,8 +21,9 @@ import {
   type MyReportItem,
   type MyTaskItem,
   type RecoveredWorkspaceItem
-} from "./me-api";
+} from "../api/me";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
+import { getModuleJurisdiction, getModuleTaskTemplateId } from "./module-registry";
 
 const STORAGE_KEY = "ai4law_app_state_v1";
 
@@ -105,36 +106,6 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-
-const MODULE_TEMPLATE_ID_MAP: Record<string, string> = {
-  diagnosis: "cn_diagnosis",
-  assessment: "cn_assessment",
-  pipia: "cn_pipia",
-  review: "cn_document_review",
-  scc: "eu_scc",
-  bcr: "eu_bcr",
-  dpia: "eu_dpia",
-  tia: "eu_tia",
-  cn_flow: "us_14117",
-  cpra: "us_cpra",
-  us_14117: "us_14117",
-  eu_scc: "eu_scc",
-};
-
-const MODULE_JURISDICTION_MAP: Record<string, Jurisdiction> = {
-  diagnosis: "CN",
-  assessment: "CN",
-  pipia: "CN",
-  review: "CN",
-  scc: "EU",
-  bcr: "EU",
-  dpia: "EU",
-  tia: "EU",
-  cn_flow: "US",
-  cpra: "US",
-  us_14117: "US",
-  eu_scc: "EU",
-};
 
 function normalizePanelState(raw: unknown): PanelState {
   if (!isRecord(raw)) {
@@ -333,11 +304,11 @@ const inferModuleKey = (item: MyTaskItem): string => {
   return item.source;
 };
 
-const inferJurisdiction = (module: string): Jurisdiction => MODULE_JURISDICTION_MAP[module] ?? "CN";
+const inferJurisdiction = (module: string): Jurisdiction => getModuleJurisdiction(module) ?? "CN";
 
 const resolveTaskTemplate = (module: string, jurisdiction: Jurisdiction) => {
-  const templateId = MODULE_TEMPLATE_ID_MAP[module];
-  return findTaskTemplate(templateId) ?? getDefaultTaskTemplate(jurisdiction);
+  const templateId = getModuleTaskTemplateId(module);
+  return (templateId ? findTaskTemplate(templateId) : undefined) ?? getDefaultTaskTemplate(jurisdiction);
 };
 
 const buildRecoveredTaskName = (item: MyTaskItem, module: string, jurisdiction: Jurisdiction): string => {

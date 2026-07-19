@@ -10,10 +10,9 @@ import remarkGfm from "remark-gfm";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../lib/app-store";
 import type { ModuleRun, OutputArtifact, TaskSpace, WorkflowStepKey } from "../../lib/domain";
-import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
-import { getAuthHeaders } from "../../lib/auth/auth-service";
+import { fetchArtifactBlob, fetchArtifactPreview, type ArtifactPreview } from "../../api/artifacts";
 import { useLang } from "../../lib/language";
-import { findModule, fetchModuleTaskStatus } from "../../lib/module-adapter";
+import { findModule, fetchModuleTaskStatus } from "../../api/modules";
 import {
   findTaskTemplate,
   getTaskTemplateInputHint,
@@ -607,16 +606,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
     let cancelled = false;
     let createdObjectUrl: string | null = null;
-    fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(previewPath)}`, {
-      headers: { ...getAuthHeaders() }
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load PDF (${response.status})`);
-        }
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
-      })
+    fetchArtifactBlob(previewPath, "file", "Failed to load PDF ({status})")
+      .then((blob) => URL.createObjectURL(blob))
       .then((nextObjectUrl) => {
         if (cancelled) {
           URL.revokeObjectURL(nextObjectUrl);
@@ -689,16 +680,8 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
     let cancelled = false;
     let createdObjectUrl: string | null = null;
-    fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(previewPath)}`, {
-      headers: { ...getAuthHeaders() }
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load PDF (${response.status})`);
-        }
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
-      })
+    fetchArtifactBlob(previewPath, "file", "Failed to load PDF ({status})")
+      .then((blob) => URL.createObjectURL(blob))
       .then((nextObjectUrl) => {
         if (cancelled) {
           URL.revokeObjectURL(nextObjectUrl);
@@ -730,14 +713,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const downloadArtifact = async (path: string) => {
     setArtifactDownloadBusy(true);
     try {
-      const response = await fetch(`/api/v1/artifacts/download?path=${encodeURIComponent(path)}`, {
-        headers: { ...getAuthHeaders() }
-      });
-      if (!response.ok) {
-        throw new Error(`Download failed (${response.status})`);
-      }
-
-      const blob = await response.blob();
+      const blob = await fetchArtifactBlob(path, "download", "Download failed ({status})");
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = objectUrl;
@@ -764,13 +740,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
 
   const openArtifactByBlob = async (path: string) => {
     try {
-      const response = await fetch(`/api/v1/artifacts/file?path=${encodeURIComponent(path)}`, {
-        headers: { ...getAuthHeaders() }
-      });
-      if (!response.ok) {
-        throw new Error(`Open failed (${response.status})`);
-      }
-      const blob = await response.blob();
+      const blob = await fetchArtifactBlob(path, "file", "Open failed ({status})");
       const objectUrl = URL.createObjectURL(blob);
       window.open(objectUrl, "_blank", "noopener,noreferrer");
       setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);

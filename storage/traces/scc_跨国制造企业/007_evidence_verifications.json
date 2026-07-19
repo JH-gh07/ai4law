@@ -1,9 +1,0 @@
-{
-  "name": "evidence_verifications",
-  "seq": 7,
-  "created_at": "2026-06-04T05:46:30.539095+00:00",
-  "payload": {
-    "count": 4,
-    "user_claim_only": 3
-  }
-}

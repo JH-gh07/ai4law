@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { listModules } from "../lib/module-adapter";
+import { listModules } from "../api/modules";
 import { useLang } from "../lib/language";
 
 type JurisdictionHubPageProps = {

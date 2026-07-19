@@ -9,7 +9,7 @@ import {
   fetchKnowledgeSourceDetail,
   syncKnowledgeIndex,
   type KnowledgeSearchItem,
-} from "../lib/knowledge-api";
+} from "../api/knowledge";
 
 type KnowledgeRow = Record<string, string>;
 type KnowledgeTab = "sources" | "cases" | "citation" | "articles";

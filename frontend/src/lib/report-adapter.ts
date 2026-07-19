@@ -7,17 +7,7 @@ import type {
   TaskSpace,
   TraceLink
 } from "./domain";
-import { getAuthHeaders } from "./auth/auth-service";
 import { extractInsight } from "./workspace";
-
-type RemoteReportMetadata = {
-  risk_level?: string;
-  version?: string;
-  summary?: string;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const safeLower = (value: string) => value.toLowerCase();
 
@@ -112,20 +102,4 @@ export function buildTraceLinks(
   }
 
   return links.slice(0, 120);
-}
-
-export async function fetchReportMetadata(taskId: string): Promise<RemoteReportMetadata | null> {
-  try {
-    const response = await fetch(`/api/v1/reports/${taskId}/metadata`, { headers: { ...getAuthHeaders() } });
-    if (!response.ok) return null;
-    const data: unknown = await response.json();
-    if (!isRecord(data)) return null;
-    return {
-      risk_level: typeof data.risk_level === "string" ? data.risk_level : undefined,
-      version: typeof data.version === "string" ? data.version : undefined,
-      summary: typeof data.summary === "string" ? data.summary : undefined
-    };
-  } catch {
-    return null;
-  }
 }

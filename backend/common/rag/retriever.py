@@ -17,7 +17,7 @@ from backend.common.rag.vector_store import LocalVectorStore
 from backend.core.settings import Settings, get_settings
 
 if TYPE_CHECKING:
-    from backend.services.legal_api_service import DeliLegalService
+    from backend.integrations.delilegal import DeliLegalService
 
 
 _default_legal_service: object = None
@@ -30,7 +30,7 @@ def _get_default_legal_service() -> object:
         return _default_legal_service
     _default_legal_service_loaded = True
     try:
-        from backend.services.legal_api_service import DeliLegalService
+        from backend.integrations.delilegal import DeliLegalService
 
         _default_legal_service = DeliLegalService(get_settings())
     except Exception:
@@ -334,10 +334,6 @@ class RegulationRAGService:
                 break
         return deduped
 
-    def rebuild_index(self) -> Path:
-        path = build_regulation_index(self.settings)
-        self._ensure_entries.cache_clear()  # type: ignore[attr-defined]
-        return path
 
     @lru_cache(maxsize=1)
     def _ensure_entries(self) -> tuple:
@@ -366,6 +362,11 @@ def _service() -> RegulationRAGService:
     return RegulationRAGService(get_settings())
 
 
+@lru_cache(maxsize=1)
+def _orchestrator() -> RetrievalOrchestrator:
+    return RetrievalOrchestrator(get_settings())
+
+
 def retrieve_regulations(
     query: str,
     top_k: int = 8,
@@ -385,7 +386,7 @@ def retrieve_regulations(
         module_hint = "cn_diagnosis"
 
     if jurisdiction == "cn":
-        orchestrator = RetrievalOrchestrator(get_settings())
+        orchestrator = _orchestrator()
         chunks = orchestrator.retrieve_legal_chunks(
             query=query,
             top_k=top_k,
@@ -480,9 +481,6 @@ def retrieve_regulations(
     )
     return docs
 
-
-def rebuild_regulation_index() -> Path:
-    return _service().rebuild_index()
 
 
 def _log_rag_hits(

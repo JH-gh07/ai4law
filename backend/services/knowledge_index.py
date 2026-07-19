@@ -66,9 +66,6 @@ def refresh_knowledge_cache() -> None:
     _load_spec_asset_manifest.cache_clear()
 
 
-def load_sources_index() -> list[dict[str, str]]:
-    return list(_load_sources_index())
-
 
 def load_practice_cases() -> list[dict[str, str]]:
     return list(_load_practice_cases())
@@ -116,26 +113,6 @@ def read_text_preview(snapshot_path: str, *, limit: int = 600) -> str:
     preview = _build_preview_text(text)
     return preview[: max(0, limit)]
 
-
-def resolve_citation(query: str, *, sources: list[dict[str, str]]) -> dict[str, str] | None:
-    """Best-effort citation resolver for the Knowledge Center UI.
-
-    This endpoint is primarily for mapping a free-form citation string back to a row
-    in `sources.csv`. It intentionally stays lightweight and local.
-    """
-    text = (query or "").strip()
-    if not text:
-        return None
-
-    lowered = text.lower()
-    for row in sources:
-        source_id = (row.get("source_id") or "").strip()
-        title = (row.get("title") or "").strip()
-        if source_id and source_id.lower() in lowered:
-            return row
-        if title and title.lower() in lowered:
-            return row
-    return None
 
 
 def get_article_detail(source_id: str, article_no: str) -> dict | None:

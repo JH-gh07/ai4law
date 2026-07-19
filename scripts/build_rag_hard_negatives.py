@@ -11,9 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.common.knowledge.paths import NEW_EVALUATION_DIR
+from backend.common.knowledge.paths import RETRIEVAL_DATASET_DIR
 
-OUT_CSV = NEW_EVALUATION_DIR / "rag_eval_v2_hard_negatives.csv"
+OUT_CSV = RETRIEVAL_DATASET_DIR / "hard_negatives.csv"
 
 FIELDNAMES = [
     "query_id",

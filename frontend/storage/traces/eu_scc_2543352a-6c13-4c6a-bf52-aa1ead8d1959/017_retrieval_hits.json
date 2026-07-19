@@ -1,9 +1,0 @@
-{
-  "name": "retrieval_hits",
-  "seq": 17,
-  "created_at": "2026-06-05T02:35:47.816371+00:00",
-  "payload": {
-    "hit_count": 0,
-    "hits": []
-  }
-}

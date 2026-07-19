@@ -4,8 +4,10 @@ class SessionService:
             next_module = "assessment"
         elif outcome == "SCC_OR_CERTIFICATION":
             next_module = "scc"
-        else:
+        elif outcome == "EXEMPTION":
             next_module = "general"
+        else:
+            next_module = None
 
         return {
             "diagnosis_outcome": outcome,

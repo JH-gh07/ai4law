@@ -20,6 +20,7 @@ class DeliLegalConfig(BaseModel):
     app_id: str = ""
     secret: str = ""
     enabled: bool = False
+    secret_configured: bool = False
 
 
 class LLMConfig(BaseModel):

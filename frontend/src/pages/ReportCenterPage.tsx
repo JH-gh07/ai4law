@@ -3,8 +3,9 @@ import { ReportTaskTreeSidebar, type ReportTaskTreeNode } from "../components/re
 import { useAppStore } from "../lib/app-store";
 import type { ModuleRun, ReportReviewSnapshot } from "../lib/domain";
 import { useLang } from "../lib/language";
-import { fetchMyReports, type MyReportItem } from "../lib/me-api";
-import { buildReportSnapshots, buildTraceLinks, fetchReportMetadata } from "../lib/report-adapter";
+import { fetchMyReports, type MyReportItem } from "../api/me";
+import { fetchReportMetadata } from "../api/reports";
+import { buildReportSnapshots, buildTraceLinks } from "../lib/report-adapter";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

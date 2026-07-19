@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { fetchCitationMap, type CitationDetail } from "../../lib/citation-api";
-import { fetchKnowledgeCitation } from "../../lib/knowledge-api";
+import { fetchCitationMap, type CitationDetail } from "../../api/citations";
+import { fetchKnowledgeCitation } from "../../api/knowledge";
 import type { ModuleKey } from "../../lib/domain";
 import { CitationArticleDrawer } from "./CitationArticleDrawer";
 import { CitationPopover } from "./CitationPopover";

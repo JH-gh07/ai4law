@@ -1,0 +1,730 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/v0/artifacts/{artifact_id}/download",
+    "route_name": "download_artifact",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "download_artifact_api_v0_artifacts__artifact_id__download_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v0/files/upload",
+    "route_name": "upload_file",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "upload_file_api_v0_files_upload_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v0/tasks",
+    "route_name": "create_task",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "create_task_api_v0_tasks_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v0/tasks/{task_id}",
+    "route_name": "get_task",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "get_task_api_v0_tasks__task_id__get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v0/tasks/{task_id}/artifacts",
+    "route_name": "list_task_artifacts",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "list_task_artifacts_api_v0_tasks__task_id__artifacts_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v0/tasks/{task_id}/audit",
+    "route_name": "get_task_audit",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "get_task_audit_api_v0_tasks__task_id__audit_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v0/tasks/{task_id}/cancel",
+    "route_name": "cancel_task",
+    "endpoint_module": "backend.api.v0.task_gateway.router",
+    "operation_id": "cancel_task_api_v0_tasks__task_id__cancel_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/artifacts/download",
+    "route_name": "download_artifact_file",
+    "endpoint_module": "backend.api.v1.endpoints.artifacts",
+    "operation_id": "download_artifact_file_api_v1_artifacts_download_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/artifacts/file",
+    "route_name": "read_artifact_file",
+    "endpoint_module": "backend.api.v1.endpoints.artifacts",
+    "operation_id": "read_artifact_file_api_v1_artifacts_file_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/artifacts/preview",
+    "route_name": "preview_artifact",
+    "endpoint_module": "backend.api.v1.endpoints.artifacts",
+    "operation_id": "preview_artifact_api_v1_artifacts_preview_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/assessment/generate",
+    "route_name": "generate_assessment",
+    "endpoint_module": "backend.domains.cn.security_assessment.router",
+    "operation_id": "generate_assessment_api_v1_assessment_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/assessment/generate_async",
+    "route_name": "generate_assessment_async",
+    "endpoint_module": "backend.domains.cn.security_assessment.router",
+    "operation_id": "generate_assessment_async_api_v1_assessment_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/assessment/tasks/{task_id}",
+    "route_name": "get_assessment_task",
+    "endpoint_module": "backend.domains.cn.security_assessment.router",
+    "operation_id": "get_assessment_task_api_v1_assessment_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/assessment/tasks/{task_id}/retry",
+    "route_name": "retry_assessment_task",
+    "endpoint_module": "backend.domains.cn.security_assessment.router",
+    "operation_id": "retry_assessment_task_api_v1_assessment_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/login",
+    "route_name": "login",
+    "endpoint_module": "backend.api.v1.endpoints.auth",
+    "operation_id": "login_api_v1_auth_login_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/logout",
+    "route_name": "logout",
+    "endpoint_module": "backend.api.v1.endpoints.auth",
+    "operation_id": "logout_api_v1_auth_logout_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/auth/me",
+    "route_name": "me",
+    "endpoint_module": "backend.api.v1.endpoints.auth",
+    "operation_id": "me_api_v1_auth_me_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "route_name": "register",
+    "endpoint_module": "backend.api.v1.endpoints.auth",
+    "operation_id": "register_api_v1_auth_register_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bcr/generate",
+    "route_name": "generate_bcr",
+    "endpoint_module": "backend.domains.eu.bcr_review.router",
+    "operation_id": "generate_bcr_api_v1_bcr_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bcr/generate_async",
+    "route_name": "generate_bcr_async",
+    "endpoint_module": "backend.domains.eu.bcr_review.router",
+    "operation_id": "generate_bcr_async_api_v1_bcr_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/{task_id}",
+    "route_name": "get_bcr_task",
+    "endpoint_module": "backend.domains.eu.bcr_review.router",
+    "operation_id": "get_bcr_task_api_v1_bcr_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bcr/tasks/{task_id}/retry",
+    "route_name": "retry_bcr_task",
+    "endpoint_module": "backend.domains.eu.bcr_review.router",
+    "operation_id": "retry_bcr_task_api_v1_bcr_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/citations/batch",
+    "route_name": "get_citations_batch",
+    "endpoint_module": "backend.api.v1.endpoints.citations",
+    "operation_id": "get_citations_batch_api_v1_citations_batch_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/reports/{task_id}",
+    "route_name": "get_report_citations",
+    "endpoint_module": "backend.api.v1.endpoints.citations",
+    "operation_id": "get_report_citations_api_v1_citations_reports__task_id__get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/{citation_id}",
+    "route_name": "get_citation_detail",
+    "endpoint_module": "backend.api.v1.endpoints.citations",
+    "operation_id": "get_citation_detail_api_v1_citations__citation_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cn-flow/generate",
+    "route_name": "generate_cn_flow",
+    "endpoint_module": "backend.domains.us.eo14117_flow_review.router",
+    "operation_id": "generate_cn_flow_api_v1_cn_flow_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cn-flow/generate_async",
+    "route_name": "generate_cn_flow_async",
+    "endpoint_module": "backend.domains.us.eo14117_flow_review.router",
+    "operation_id": "generate_cn_flow_async_api_v1_cn_flow_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cn-flow/tasks/{task_id}",
+    "route_name": "get_cn_flow_task",
+    "endpoint_module": "backend.domains.us.eo14117_flow_review.router",
+    "operation_id": "get_cn_flow_task_api_v1_cn_flow_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cn-flow/tasks/{task_id}/retry",
+    "route_name": "retry_cn_flow_task",
+    "endpoint_module": "backend.domains.us.eo14117_flow_review.router",
+    "operation_id": "retry_cn_flow_task_api_v1_cn_flow_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/copilot/chat",
+    "route_name": "chat_with_copilot",
+    "endpoint_module": "backend.api.v1.endpoints.copilot",
+    "operation_id": "chat_with_copilot_api_v1_copilot_chat_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cpra/generate",
+    "route_name": "generate_cpra",
+    "endpoint_module": "backend.domains.us.cpra.router",
+    "operation_id": "generate_cpra_api_v1_cpra_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cpra/generate_async",
+    "route_name": "generate_cpra_async",
+    "endpoint_module": "backend.domains.us.cpra.router",
+    "operation_id": "generate_cpra_async_api_v1_cpra_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cpra/tasks/{task_id}",
+    "route_name": "get_cpra_task",
+    "endpoint_module": "backend.domains.us.cpra.router",
+    "operation_id": "get_cpra_task_api_v1_cpra_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cpra/tasks/{task_id}/retry",
+    "route_name": "retry_cpra_task",
+    "endpoint_module": "backend.domains.us.cpra.router",
+    "operation_id": "retry_cpra_task_api_v1_cpra_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/diagnosis/evaluate",
+    "route_name": "evaluate",
+    "endpoint_module": "backend.domains.cn.transfer_diagnosis.router",
+    "operation_id": "evaluate_api_v1_diagnosis_evaluate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/diagnosis/report",
+    "route_name": "generate_report",
+    "endpoint_module": "backend.domains.cn.transfer_diagnosis.router",
+    "operation_id": "generate_report_api_v1_diagnosis_report_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/diagnosis/sessions",
+    "route_name": "create_session",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "create_session_api_v1_diagnosis_sessions_post"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/answers",
+    "route_name": "submit_answers",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "submit_answers_api_v1_diagnosis_sessions__session_id__answers_put"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/context",
+    "route_name": "get_context",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "get_context_api_v1_diagnosis_sessions__session_id__context_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/handoff/assessment",
+    "route_name": "get_assessment_handoff",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "get_assessment_handoff_api_v1_diagnosis_sessions__session_id__handoff_assessment_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/handoff/scc",
+    "route_name": "get_scc_handoff",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "get_scc_handoff_api_v1_diagnosis_sessions__session_id__handoff_scc_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/report",
+    "route_name": "generate_report",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "generate_report_api_v1_diagnosis_sessions__session_id__report_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/result",
+    "route_name": "get_result",
+    "endpoint_module": "backend.api.v1.endpoints.diagnosis",
+    "operation_id": "get_result_api_v1_diagnosis_sessions__session_id__result_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dpia/generate",
+    "route_name": "generate_dpia",
+    "endpoint_module": "backend.domains.eu.dpia.router",
+    "operation_id": "generate_dpia_api_v1_dpia_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dpia/generate_async",
+    "route_name": "generate_dpia_async",
+    "endpoint_module": "backend.domains.eu.dpia.router",
+    "operation_id": "generate_dpia_async_api_v1_dpia_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/dpia/tasks/{task_id}",
+    "route_name": "get_dpia_task",
+    "endpoint_module": "backend.domains.eu.dpia.router",
+    "operation_id": "get_dpia_task_api_v1_dpia_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/dpia/tasks/{task_id}/retry",
+    "route_name": "retry_dpia_task",
+    "endpoint_module": "backend.domains.eu.dpia.router",
+    "operation_id": "retry_dpia_task_api_v1_dpia_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eu_scc/generate",
+    "route_name": "generate_eu_scc",
+    "endpoint_module": "backend.domains.eu.scc_review.router",
+    "operation_id": "generate_eu_scc_api_v1_eu_scc_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eu_scc/generate_async",
+    "route_name": "generate_eu_scc_async",
+    "endpoint_module": "backend.domains.eu.scc_review.router",
+    "operation_id": "generate_eu_scc_async_api_v1_eu_scc_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eu_scc/tasks/{task_id}",
+    "route_name": "get_eu_scc_task",
+    "endpoint_module": "backend.domains.eu.scc_review.router",
+    "operation_id": "get_eu_scc_task_api_v1_eu_scc_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eu_scc/tasks/{task_id}/retry",
+    "route_name": "retry_eu_scc_task",
+    "endpoint_module": "backend.domains.eu.scc_review.router",
+    "operation_id": "retry_eu_scc_task_api_v1_eu_scc_tasks__task_id__retry_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/events/task/{task_id}/events",
+    "route_name": "task_events_since",
+    "endpoint_module": "backend.api.v1.endpoints.events",
+    "operation_id": "task_events_since_api_v1_events_task__task_id__events_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/events/task/{task_id}/stream",
+    "route_name": "task_event_stream",
+    "endpoint_module": "backend.api.v1.endpoints.events",
+    "operation_id": "task_event_stream_api_v1_events_task__task_id__stream_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/cases/{case_id}",
+    "route_name": "get_case_detail",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "get_case_detail_api_v1_knowledge_cases__case_id__get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/citation",
+    "route_name": "match_citation",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "match_citation_api_v1_knowledge_citation_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/index",
+    "route_name": "get_knowledge_index",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "get_knowledge_index_api_v1_knowledge_index_get"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/knowledge/review/chunks/{chunk_id}",
+    "route_name": "update_chunk",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "update_chunk_api_v1_knowledge_review_chunks__chunk_id__put"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/review/queue",
+    "route_name": "get_review_queue",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "get_review_queue_api_v1_knowledge_review_queue_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/review/queue/{doc_id}",
+    "route_name": "get_review_document",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "get_review_document_api_v1_knowledge_review_queue__doc_id__get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/review/queue/{doc_id}/chunks",
+    "route_name": "get_document_chunks",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "get_document_chunks_api_v1_knowledge_review_queue__doc_id__chunks_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/knowledge/review/{doc_id}/approve",
+    "route_name": "approve_document",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "approve_document_api_v1_knowledge_review__doc_id__approve_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/knowledge/review/{doc_id}/publish",
+    "route_name": "publish_document",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "publish_document_api_v1_knowledge_review__doc_id__publish_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/knowledge/review/{doc_id}/reject",
+    "route_name": "reject_document",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge_review",
+    "operation_id": "reject_document_api_v1_knowledge_review__doc_id__reject_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/search",
+    "route_name": "search_regulations",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "search_regulations_api_v1_knowledge_search_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/{source_id}",
+    "route_name": "get_source_detail",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "get_source_detail_api_v1_knowledge_sources__source_id__get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/{source_id}/articles/{article_no}",
+    "route_name": "get_source_article",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "get_source_article_api_v1_knowledge_sources__source_id__articles__article_no__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/knowledge/sync",
+    "route_name": "sync_knowledge_index",
+    "endpoint_module": "backend.api.v1.endpoints.knowledge",
+    "operation_id": "sync_knowledge_index_api_v1_knowledge_sync_post"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/me/projects/{task_id}",
+    "route_name": "delete_project_history",
+    "endpoint_module": "backend.api.v1.endpoints.me",
+    "operation_id": "delete_project_history_api_v1_me_projects__task_id__delete"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/me/reports",
+    "route_name": "list_my_reports",
+    "endpoint_module": "backend.api.v1.endpoints.me",
+    "operation_id": "list_my_reports_api_v1_me_reports_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/me/reports/{owner_id}/metadata",
+    "route_name": "get_report_metadata",
+    "endpoint_module": "backend.api.v1.endpoints.me",
+    "operation_id": "get_report_metadata_api_v1_me_reports__owner_id__metadata_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/me/tasks",
+    "route_name": "list_my_tasks",
+    "endpoint_module": "backend.api.v1.endpoints.me",
+    "operation_id": "list_my_tasks_api_v1_me_tasks_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/me/workspace-recovery",
+    "route_name": "get_workspace_recovery",
+    "endpoint_module": "backend.api.v1.endpoints.me",
+    "operation_id": "get_workspace_recovery_api_v1_me_workspace_recovery_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/pipia/generate",
+    "route_name": "generate_pipia",
+    "endpoint_module": "backend.domains.cn.pipia.router",
+    "operation_id": "generate_pipia_api_v1_pipia_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/pipia/generate_async",
+    "route_name": "generate_pipia_async",
+    "endpoint_module": "backend.domains.cn.pipia.router",
+    "operation_id": "generate_pipia_async_api_v1_pipia_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pipia/tasks/{task_id}",
+    "route_name": "get_pipia_task",
+    "endpoint_module": "backend.domains.cn.pipia.router",
+    "operation_id": "get_pipia_task_api_v1_pipia_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/pipia/tasks/{task_id}/retry",
+    "route_name": "retry_pipia_task",
+    "endpoint_module": "backend.domains.cn.pipia.router",
+    "operation_id": "retry_pipia_task_api_v1_pipia_tasks__task_id__retry_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/reports/{owner_id}/metadata",
+    "route_name": "get_report_metadata",
+    "endpoint_module": "backend.api.v1.endpoints.reports",
+    "operation_id": "get_report_metadata_api_v1_reports__owner_id__metadata_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/review/generate",
+    "route_name": "generate_review",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "generate_review_api_v1_review_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/review/generate_async",
+    "route_name": "generate_review_async",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "generate_review_async_api_v1_review_generate_async_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/review/tasks",
+    "route_name": "create_task",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "create_task_api_v1_review_tasks_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/review/tasks/{task_id}",
+    "route_name": "get_review_task",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "get_review_task_api_v1_review_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/review/tasks/{task_id}/analyze",
+    "route_name": "analyze_task",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "analyze_task_api_v1_review_tasks__task_id__analyze_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/review/tasks/{task_id}/files",
+    "route_name": "upload_file",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "upload_file_api_v1_review_tasks__task_id__files_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/review/tasks/{task_id}/issues",
+    "route_name": "get_issues",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "get_issues_api_v1_review_tasks__task_id__issues_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/review/tasks/{task_id}/report",
+    "route_name": "get_report",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "get_report_api_v1_review_tasks__task_id__report_get"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/review/tasks/{task_id}/status",
+    "route_name": "get_status",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "get_status_api_v1_review_tasks__task_id__status_get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/scc/generate",
+    "route_name": "generate_scc",
+    "endpoint_module": "backend.domains.cn.scc_review.router",
+    "operation_id": "generate_scc_api_v1_scc_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/scc/generate_async",
+    "route_name": "generate_scc_async",
+    "endpoint_module": "backend.domains.cn.scc_review.router",
+    "operation_id": "generate_scc_async_api_v1_scc_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/scc/tasks/{task_id}",
+    "route_name": "get_scc_task",
+    "endpoint_module": "backend.domains.cn.scc_review.router",
+    "operation_id": "get_scc_task_api_v1_scc_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/scc/tasks/{task_id}/retry",
+    "route_name": "retry_scc_task",
+    "endpoint_module": "backend.domains.cn.scc_review.router",
+    "operation_id": "retry_scc_task_api_v1_scc_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/system/settings/llm/test-provider",
+    "route_name": "test_runtime_provider",
+    "endpoint_module": "backend.api.v1.endpoints.system_settings",
+    "operation_id": "test_runtime_provider_api_v1_system_settings_llm_test_provider_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/system/settings/runtime",
+    "route_name": "get_runtime_settings",
+    "endpoint_module": "backend.api.v1.endpoints.system_settings",
+    "operation_id": "get_runtime_settings_api_v1_system_settings_runtime_get"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/system/settings/runtime",
+    "route_name": "update_runtime_settings",
+    "endpoint_module": "backend.api.v1.endpoints.system_settings",
+    "operation_id": "update_runtime_settings_api_v1_system_settings_runtime_put"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tia/generate",
+    "route_name": "generate_tia",
+    "endpoint_module": "backend.domains.eu.tia.router",
+    "operation_id": "generate_tia_api_v1_tia_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tia/generate_async",
+    "route_name": "generate_tia_async",
+    "endpoint_module": "backend.domains.eu.tia.router",
+    "operation_id": "generate_tia_async_api_v1_tia_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tia/tasks/{task_id}",
+    "route_name": "get_tia_task",
+    "endpoint_module": "backend.domains.eu.tia.router",
+    "operation_id": "get_tia_task_api_v1_tia_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tia/tasks/{task_id}/retry",
+    "route_name": "retry_tia_task",
+    "endpoint_module": "backend.domains.eu.tia.router",
+    "operation_id": "retry_tia_task_api_v1_tia_tasks__task_id__retry_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/us_14117/generate",
+    "route_name": "generate_us_14117_report",
+    "endpoint_module": "backend.domains.us.eo14117.router",
+    "operation_id": "generate_us_14117_report_api_v1_us_14117_generate_post"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/us_14117/generate_async",
+    "route_name": "generate_us_14117_async",
+    "endpoint_module": "backend.domains.us.eo14117.router",
+    "operation_id": "generate_us_14117_async_api_v1_us_14117_generate_async_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/us_14117/tasks/{task_id}",
+    "route_name": "get_us_14117_task",
+    "endpoint_module": "backend.domains.us.eo14117.router",
+    "operation_id": "get_us_14117_task_api_v1_us_14117_tasks__task_id__get"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/us_14117/tasks/{task_id}/retry",
+    "route_name": "retry_us_14117_task",
+    "endpoint_module": "backend.domains.us.eo14117.router",
+    "operation_id": "retry_us_14117_task_api_v1_us_14117_tasks__task_id__retry_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/workspace-state",
+    "route_name": "get_workspace_state",
+    "endpoint_module": "backend.api.v1.endpoints.workspace_state",
+    "operation_id": "get_workspace_state_api_v1_workspace_state_get"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/workspace-state",
+    "route_name": "upsert_workspace_state",
+    "endpoint_module": "backend.api.v1.endpoints.workspace_state",
+    "operation_id": "upsert_workspace_state_api_v1_workspace_state_put"
+  },
+  {
+    "method": "GET",
+    "path": "/health",
+    "route_name": "health",
+    "endpoint_module": "backend.app",
+    "operation_id": "health_health_get"
+  }
+]

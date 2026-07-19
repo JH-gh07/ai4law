@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 from uuid import uuid4
 
@@ -58,6 +57,3 @@ class FileService:
         if not extracted:
             raise HTTPException(status_code=400, detail="Plain text extraction failed; file is empty")
         return extracted
-
-    def split_lines(self, text: str) -> list[str]:
-        return [line.strip() for line in re.split(r"\r?\n", text) if line.strip()]

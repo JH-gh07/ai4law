@@ -11,11 +11,11 @@ Two-layer design:
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from backend.core.time import utc_now_iso
 
 # ── Utility (kept for backward compatibility with pipeline.py) ────────────
 
@@ -133,7 +133,7 @@ class TraceManifest(BaseModel):
 
     run_id: str = Field(min_length=1, description="Unique run identifier")
     module: str = Field(min_length=1)
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=utc_now_iso)
     jurisdiction: str = Field(default="")
 
     # ── Version snapshot ──
@@ -151,42 +151,3 @@ class TraceManifest(BaseModel):
     agent_calls: int = 0
     fallback_count: int = 0
     error_count: int = 0
-
-    def audit_summary(self) -> str:
-        """Return a human-readable audit summary suitable for the report appendix."""
-        lines = [
-            f"本次生成链路审计摘要",
-            f"  运行标识: {self.run_id}",
-            f"  模块: {self.module}",
-            f"  法域: {self.jurisdiction}",
-            f"  模型版本: {self.model_version or 'N/A'}",
-            f"  Prompt 版本: {self.prompt_version or 'N/A'}",
-            f"  法规库版本: {self.regulation_library_version or 'N/A'}",
-            f"  总耗时: {self.total_duration_ms}ms",
-            f"  LLM 调用: {self.total_llm_calls} 次 ({self.total_tokens} tokens)",
-            f"  Agent 调用: {self.agent_calls} 次",
-            f"  降级次数: {self.fallback_count}",
-            f"  错误次数: {self.error_count}",
-        ]
-        return "\n".join(lines)
-
-    def export_for_report(self) -> dict[str, Any]:
-        """Export audit-layer events only, suitable for inclusion in report artefacts."""
-        return {
-            "run_id": self.run_id,
-            "module": self.module,
-            "jurisdiction": self.jurisdiction,
-            "created_at": self.created_at,
-            "summary": self.audit_summary(),
-            "events": [
-                {
-                    "step": e.step,
-                    "inputs_summary": e.inputs_summary,
-                    "outputs_summary": e.outputs_summary,
-                    "warnings": e.warnings,
-                    "fallback_used": e.fallback_used,
-                }
-                for e in self.events
-                if e.layer == "audit"
-            ],
-        }
