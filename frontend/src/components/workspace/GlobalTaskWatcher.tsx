@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "../../lib/app-store";
-import { AsyncTaskNotFoundError, findModule, fetchModuleTaskStatus } from "../../lib/module-adapter";
+import { AsyncTaskNotFoundError, findModule, fetchModuleTaskStatus } from "../../api/modules";
 import {
   isFinalAsyncState,
   isSuccessAsyncState,

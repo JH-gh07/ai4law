@@ -8,9 +8,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+from backend.common.knowledge.paths import sources_csv_path
+
 # ── 知识库 source_id 注册表（title → source_id 反向查找）──────────────
 
-_SOURCES_CSV_PATH = Path("doc/knowledge/_index/sources.csv")
+_SOURCES_CSV_PATH = sources_csv_path()
 
 _KNOWN_SOURCE_IDS: set[str] = set()
 _TITLE_TO_SOURCE_ID: dict[str, str] = {}

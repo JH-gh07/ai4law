@@ -1,5 +1,7 @@
 # DataComplyFlow 评测资产与 Benchmark 实现可行性分析
 
+> 2026-07-17 治理更新：本文中的 `qa/`、`doc/knowledge/_evaluation/`、`backend/common/rag/eval.py` 等路径是审计时历史事实。当前权威入口已收敛为 `benchmarks/datasets/product_smoke/`、`benchmarks/datasets/rag_retrieval/`、`benchmarks/smoke_eval.py` 和 `benchmarks/rag_retrieval_eval.py`；执行结果见 `docs/archive/governance/executed-batches/DataComplyFlow_BENCHMARKS评测目录治理契约.md`。
+
 > 文档状态：评测可行性快照。本文用于识别可复用资产与缺口，不表示规划中的 Harness、Gold 或指标已经实现。评测运行必须重新记录当前代码版本、固定 RAG 后端/索引并核对最新 Schema。
 
 > 项目：AI4Law / 数规通 DataComplyFlow  
@@ -83,7 +85,7 @@ must_use_official_template_sections（仅部分 CN case）
 |---|---|---:|---|---|
 | 单元测试 | `backend/common/citation/tests`、knowledge、schema、规则/agent tests | citation 27、knowledge 19、RAG 15、assessment 65 等 | 可提取边界条件和断言 | 多为函数内 inline 数据，无统一 case id |
 | API/集成测试 | `backend/api/test_*.py`、各模块 `test_async_api.py` | API 43 tests；各模块 async tests | 可验证契约、状态和文件 | 当前多处鉴权预期不一致 |
-| 准 E2E | `backend/modules/v0_task_gateway/tests/test_api.py` | 7 流程 | 输入→任务→artifact/download/audit | DPIA、CN Flow 当前失败；不含 diagnosis/SCC/EO14117 |
+| 准 E2E | `backend/api/v0/task_gateway/tests/test_api.py` | 7 流程 | 输入→任务→artifact/download/audit | DPIA、CN Flow 当前失败；不含 diagnosis/SCC/EO14117 |
 | 生成/渲染回归 | assessment renderer、service tests；v0 hashes | 多项 | Schema、报告结构、artifact 存在性 | LLM 文本非确定时 hash 脆弱 |
 | RAG 评测 | `backend/common/rag/tests/test_eval.py` 和 `eval.py` | 7 eval tests + 数据集 | 可直接复用 | 与产品路径 Benchmark 尚未统一 |
 
@@ -519,8 +521,8 @@ Smoke 阶段最低报告：
 ### 10.6 下一轮建议修改的文件和任务（本轮不实施）
 
 - 新增 `qa/benchmark/` 下 dataset、schema、adapter、metric、runner、report。
-- 修复 `backend/modules/scc/service.py` 的 `uuid` 导入。
-- 若扩展到 CN Flow，修复 `backend/modules/cn_flow/service.py` 的 Pipeline 参数契约及 `module_generator.py` 中错误法域 prompt。
+- 修复 `backend/domains/cn/scc_review/service.py` 的 `uuid` 导入。
+- 若扩展到 CN Flow，修复 `backend/domains/us/eo14117_flow_review/service.py` 的 Pipeline 参数契约及 `module_generator.py` 中错误法域 prompt。
 - 为 diagnosis 增加只读 decision trace 导出方式；优先通过 Adapter，不先改公共 API。
 - 为 LLMClient/Runner 增加聚合 usage/cost 记录，但不得写入 API key。
 - 给 `doc/knowledge/_evaluation` 建 DATA_CARD，并将重复 `evaluation/` 标记为历史镜像或移除。
@@ -533,7 +535,7 @@ Smoke 阶段最低报告：
 ## 11. 关键证据索引
 
 - 项目事实基线：`docs/handoff/AI4Law_项目事实基线与真实系统理解.md`
-- 路径 Schema/规则/服务：`backend/modules/diagnosis/schema.py`、`service.py`、`decision_tree.json`
+- 路径 Schema/规则/服务：`backend/domains/cn/transfer_diagnosis/schema.py`、`service.py`、`decision_tree.json`
 - 下游：中国 assessment/SCC/PIPIA 的 `schema.py`、`service.py`、fact/issue/evidence builders
 - 公共 IR：`backend/common/workflow/`
 - RAG 评测：`backend/common/rag/eval.py`、`run_eval.py`、`doc/knowledge/_evaluation/`、`qa/`

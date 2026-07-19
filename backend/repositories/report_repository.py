@@ -11,13 +11,6 @@ class ReportRepository:
         db.refresh(report)
         return report
 
-    def list_for_owner(self, db: Session, user_id: str, owner_type: str, owner_id: str) -> list[ReportArtifactModel]:
-        stmt = select(ReportArtifactModel).where(
-            ReportArtifactModel.user_id == user_id,
-            ReportArtifactModel.owner_type == owner_type,
-            ReportArtifactModel.owner_id == owner_id,
-        )
-        return list(db.scalars(stmt))
 
     def get_by_owner_and_type(self, db: Session, user_id: str, owner_type: str, owner_id: str, artifact_type: str) -> ReportArtifactModel | None:
         stmt = select(ReportArtifactModel).where(

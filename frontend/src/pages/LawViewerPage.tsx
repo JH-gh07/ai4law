@@ -4,7 +4,7 @@ import {
   fetchArticleDetail,
   fetchKnowledgeSourceDetail,
   type ArticleDetail,
-} from "../lib/knowledge-api";
+} from "../api/knowledge";
 import { useLang } from "../lib/language";
 
 const AUTHORITY_LABELS: Record<string, string> = {

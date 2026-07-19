@@ -48,26 +48,6 @@ INDEX_NAMES = (
 )
 
 
-def _search_text(chunk: KnowledgeChunkV2) -> str:
-    structured = " ".join(f"{k}:{v}" for k, v in chunk.structured_payload.items())
-    keywords = " ".join(chunk.keywords)
-    refs = " ".join(chunk.reference_ids)
-    tags = " ".join(chunk.scenario_tags)
-    return " ".join(
-        [
-            chunk.title,
-            chunk.citation_anchor,
-            chunk.content,
-            chunk.source_id,
-            chunk.module,
-            chunk.path,
-            keywords,
-            refs,
-            tags,
-            structured,
-        ]
-    ).strip()
-
 
 def _lexical_score(query: str, chunk: KnowledgeChunkV2) -> float:
     q = normalize_text(query or "")

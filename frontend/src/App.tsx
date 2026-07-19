@@ -19,7 +19,7 @@ import type { Jurisdiction, LaunchMode } from "./lib/domain";
 import { AppStoreProvider, useAppStore } from "./lib/app-store";
 import { LanguageProvider } from "./lib/language";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./lib/task-templates";
-import { checkBackendHealth } from "./lib/module-adapter";
+import { checkBackendHealth } from "./api/modules";
 import { HomePage } from "./pages/HomePage";
 import { JurisdictionHubPage } from "./pages/JurisdictionHubPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -56,11 +56,7 @@ const SettingsPage = lazy(() =>
     default: module.SettingsPage,
   })),
 );
-const SuperDesign002Page = lazy(() =>
-  import("./pages/SuperDesign002Page").then((module) => ({
-    default: module.SuperDesign002Page,
-  })),
-);
+
 const TaskSpacesPage = lazy(() =>
   import("./pages/TaskSpacesPage").then((module) => ({
     default: module.TaskSpacesPage,
@@ -304,14 +300,7 @@ function AppShell() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/superdesign/002"
-              element={
-                <ProtectedRoute>
-                  <SuperDesign002Page />
-                </ProtectedRoute>
-              }
-            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

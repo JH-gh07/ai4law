@@ -183,12 +183,3 @@ class EvidencePack(BaseModel):
     partial_support_count: int = 0
     background_only_count: int = 0
     low_confidence_count: int = 0
-
-    def summarize(self) -> str:
-        return (
-            f"EvidencePack({self.module}): {len(self.evidence_items)} items | "
-            f"exact: {self.exact_support_count}, "
-            f"partial: {self.partial_support_count}, "
-            f"background: {self.background_only_count}, "
-            f"low_conf: {self.low_confidence_count}"
-        )

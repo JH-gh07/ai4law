@@ -8,10 +8,10 @@ from backend.core.container import AppContainer
 from backend.core.runtime_settings import (
     apply_runtime_payload,
     load_runtime_overrides,
-    refresh_runtime_clients,
 )
 from backend.core.db import init_db
 from backend.core.settings import Settings, get_settings
+from backend.services.runtime_client_refresher import refresh_runtime_clients
 
 
 @asynccontextmanager

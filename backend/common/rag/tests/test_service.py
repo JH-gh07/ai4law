@@ -44,50 +44,50 @@ def test_orchestrator_result_includes_manifest() -> None:
     result = service.retrieve(_request())
 
     assert result.bundle.legal_grounding == [chunk]
-    assert result.manifest.backend == "orchestrator_v3"
+    assert result.manifest.backend == "multi_index"
     assert result.manifest.hit_count == 1
     assert result.manifest.query == "cross-border transfer"
     assert result.manifest.index_schema_version
 
 
-def test_legacy_v2_dispatch_is_distinct_from_compatibility_api() -> None:
+def test_single_index_dispatch_is_distinct_from_enriched_compatibility() -> None:
     calls: list[str] = []
 
-    def v2_retriever(query: str, **kwargs: object) -> list[RegulationDoc]:
-        calls.append("legacy_v2")
+    def single_index_retriever(query: str, **kwargs: object) -> list[RegulationDoc]:
+        calls.append("single_index")
         return [_doc()]
 
-    def compatibility_retriever(
+    def enriched_compatibility_retriever(
         query: str,
         **kwargs: object,
     ) -> list[RegulationDoc]:
-        calls.append("compatibility_api")
+        calls.append("enriched_compatibility")
         return [_doc()]
 
     service = LegalRetrievalService(
-        legacy_v2_retriever=v2_retriever,
-        compatibility_retriever=compatibility_retriever,
+        single_index_retriever=single_index_retriever,
+        enriched_compatibility_retriever=enriched_compatibility_retriever,
     )
 
-    v2_result = service.retrieve(_request(), backend="legacy_v2")
+    single_index_result = service.retrieve(_request(), backend="single_index")
     compatibility_result = service.retrieve(
         _request(),
-        backend="compatibility_api",
+        backend="enriched_compatibility",
     )
 
-    assert calls == ["legacy_v2", "compatibility_api"]
-    assert v2_result.manifest.backend == "legacy_v2"
-    assert compatibility_result.manifest.backend == "compatibility_api"
-    assert v2_result.manifest.fallback_reason == ""
+    assert calls == ["single_index", "enriched_compatibility"]
+    assert single_index_result.manifest.backend == "single_index"
+    assert compatibility_result.manifest.backend == "enriched_compatibility"
+    assert single_index_result.manifest.fallback_reason == ""
     assert compatibility_result.manifest.fallback_reason == ""
     assert (
-        v2_result.bundle.legal_grounding[0].structured_payload["adapter_source"]
-        == "legacy_v2"
+        single_index_result.bundle.legal_grounding[0].structured_payload["adapter_source"]
+        == "single_index"
     )
     assert (
         compatibility_result.bundle.legal_grounding[0]
         .structured_payload["adapter_source"]
-        == "compatibility_api"
+        == "enriched_compatibility"
     )
 
 
@@ -96,7 +96,7 @@ def test_document_retrieval_records_real_fallback() -> None:
         def retrieve(self, request: RetrievalRequest) -> RetrievalBundle:
             return RetrievalBundle()
 
-    def legacy_v2_retriever(
+    def single_index_retriever(
         query: str,
         **kwargs: object,
     ) -> list[RegulationDoc]:
@@ -104,24 +104,24 @@ def test_document_retrieval_records_real_fallback() -> None:
 
     service = LegalRetrievalService(
         orchestrator=EmptyOrchestrator(),
-        legacy_v2_retriever=legacy_v2_retriever,
+        single_index_retriever=single_index_retriever,
     )
     result = service.retrieve_documents(_request())
 
     assert result.documents[0].id == "law-40"
-    assert result.manifest.backend == "legacy_v2"
+    assert result.manifest.backend == "single_index"
     assert (
         result.manifest.fallback_reason
-        == "orchestrator_v3_returned_no_legal_grounding"
+        == "multi_index_returned_no_legal_grounding"
     )
 
 
-def test_document_retrieval_uses_compatibility_after_empty_v2() -> None:
+def test_document_retrieval_uses_compatibility_after_empty_single_index() -> None:
     class EmptyOrchestrator:
         def retrieve(self, request: RetrievalRequest) -> RetrievalBundle:
             return RetrievalBundle()
 
-    def empty_v2(
+    def empty_single_index(
         query: str,
         **kwargs: object,
     ) -> list[RegulationDoc]:
@@ -135,17 +135,17 @@ def test_document_retrieval_uses_compatibility_after_empty_v2() -> None:
 
     service = LegalRetrievalService(
         orchestrator=EmptyOrchestrator(),
-        legacy_v2_retriever=empty_v2,
-        compatibility_retriever=compatibility,
+        single_index_retriever=empty_single_index,
+        enriched_compatibility_retriever=compatibility,
     )
     result = service.retrieve_documents(_request())
 
     assert result.documents[0].id == "law-40"
-    assert result.manifest.backend == "compatibility_api"
+    assert result.manifest.backend == "enriched_compatibility"
     assert (
         result.manifest.fallback_reason
         == (
-            "orchestrator_v3_and_legacy_v2"
+            "multi_index_and_single_index"
             "_returned_no_legal_grounding"
         )
     )

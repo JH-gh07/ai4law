@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { authService } from "./auth-service";
+import { authService } from "../../api/auth";
 import type { AuthUser, LoginPayload, RegisterPayload } from "./types";
 
 type AuthContextValue = {

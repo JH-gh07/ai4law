@@ -9,8 +9,10 @@
 | `AI4Law_项目事实基线与真实系统理解.md` | `snapshot` | 项目全貌、真实调用链和能力基线 | 后续治理已修复其中部分缺口，结合最新实施报告阅读 |
 | `DataComplyFlow 评测资产与 Benchmark 实现可行性分析.md` | `snapshot` | 评测资产、指标和最小 Harness 可行性 | 法律 Gold 和正式 Benchmark 尚不能由规划文字替代 |
 | `DataComplyFlow_目录结构与工程规范治理实施报告_20260713.md` | `current implementation record` | 记录 2026-07-13 起的结构治理和后续增量验证 | 章节中的早期数字是历史快照，以最后一节和当前测试为准 |
+| `DataComplyFlow_理论前沿与DataComplyBench-CN研究基线_20260713.md` | `retained research baseline` | 理论研究、DataComplyBench-CN 构念与后续 Benchmark 设计支撑 | 不是当前已实现能力或法律 Gold；使用时须与代码事实基线区分 |
+| `DataComplyFlow_产品能力补强与后续工作清单_20260719.md` | `current product backlog snapshot` | 保存治理收口后经实测确认的 RAG、生成、Gold、Verifier 与工程补强任务 | 是后续任务依据，不代表补强已经实现；指标须结合数据与 Gold 边界解释 |
 
-未纳入版本控制的研究材料由其所有者决定是否进入正式文档体系；文档治理不得擅自修改或提交。
+上述理论研究基线已由项目负责人明确决定纳入治理并长期留存；治理只登记其身份与版本，不得把研究设想写成当前代码事实，也不得在人工审查前执行 Git 提交。
 
 ## 已归档材料
 

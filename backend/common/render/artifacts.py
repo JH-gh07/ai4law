@@ -133,19 +133,6 @@ def _escape_xml(value: str) -> str:
     )
 
 
-def _wrap_lines(text: str, max_chars: int = 70) -> list[str]:
-    lines: list[str] = []
-    for raw in text.splitlines() or [""]:
-        raw = raw.strip()
-        if not raw:
-            lines.append("")
-            continue
-        while len(raw) > max_chars:
-            lines.append(raw[:max_chars])
-            raw = raw[max_chars:]
-        lines.append(raw)
-    return lines
-
 
 def _resolve_pdf_font() -> str:
     font_name = "Helvetica"

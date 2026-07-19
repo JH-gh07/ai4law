@@ -61,19 +61,6 @@ class FulltextIndex:
         )
         self.db.commit()
 
-    def rebuild_all(self, chunks: list[dict]) -> None:
-        """Rebuild FTS index from a list of chunk dicts."""
-        # Drop and recreate
-        self.db.execute(text("DROP TABLE IF EXISTS knowledge_chunks_fts"))
-        self._ensure_fts_table()
-        for chunk in chunks:
-            self.index_chunk(
-                chunk_id=chunk.get("chunk_id", ""),
-                title=chunk.get("title", ""),
-                content=chunk.get("content", ""),
-                article_no=chunk.get("article_no", ""),
-                structural_path=chunk.get("structural_path", ""),
-            )
 
     def search(
         self,
@@ -118,12 +105,3 @@ class FulltextIndex:
                 "rank": row[5],
             })
         return results
-
-    def search_article(
-        self,
-        keyword: str,
-        jurisdiction: Optional[str] = None,
-        limit: int = 10,
-    ) -> list[dict]:
-        """Search for a specific article number or keyword."""
-        return self.search(keyword, jurisdiction=jurisdiction, limit=limit)

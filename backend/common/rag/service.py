@@ -24,23 +24,23 @@ from backend.common.rag.retriever import (
 from backend.core.settings import get_settings
 
 RetrievalBackend = Literal[
-    "orchestrator_v3",
-    "legacy_v2",
-    "compatibility_api",
+    "multi_index",
+    "single_index",
+    "enriched_compatibility",
 ]
 Retriever = Callable[..., list[RegulationDoc]]
 
 
 @lru_cache(maxsize=1)
-def _legacy_v2_service() -> RegulationRAGService:
+def _single_index_service() -> RegulationRAGService:
     return RegulationRAGService(get_settings())
 
 
-def _retrieve_with_legacy_v2(
+def _retrieve_with_single_index(
     query: str,
     **kwargs: object,
 ) -> list[RegulationDoc]:
-    return _legacy_v2_service().retrieve(query, **kwargs)
+    return _single_index_service().retrieve(query, **kwargs)
 
 
 class RetrievalManifest(BaseModel):
@@ -74,29 +74,29 @@ class LegalRetrievalService:
     def __init__(
         self,
         orchestrator: RetrievalOrchestrator | None = None,
-        legacy_v2_retriever: Retriever = _retrieve_with_legacy_v2,
-        compatibility_retriever: Retriever = retrieve_regulations,
+        single_index_retriever: Retriever = _retrieve_with_single_index,
+        enriched_compatibility_retriever: Retriever = retrieve_regulations,
     ) -> None:
         self.orchestrator = orchestrator or RetrievalOrchestrator()
-        self.legacy_v2_retriever = legacy_v2_retriever
-        self.compatibility_retriever = compatibility_retriever
+        self.single_index_retriever = single_index_retriever
+        self.enriched_compatibility_retriever = enriched_compatibility_retriever
 
     def retrieve(
         self,
         request: RetrievalRequest,
         *,
-        backend: RetrievalBackend = "orchestrator_v3",
+        backend: RetrievalBackend = "multi_index",
         retriever_options: dict[str, object] | None = None,
     ) -> LegalRetrievalResult:
         started = perf_counter()
 
-        if backend == "orchestrator_v3":
+        if backend == "multi_index":
             bundle = self.orchestrator.retrieve(request)
         else:
             retriever = (
-                self.legacy_v2_retriever
-                if backend == "legacy_v2"
-                else self.compatibility_retriever
+                self.single_index_retriever
+                if backend == "single_index"
+                else self.enriched_compatibility_retriever
             )
             options: dict[str, object] = {
                 "top_k": request.top_k,
@@ -106,7 +106,7 @@ class LegalRetrievalService:
             if request.document_type != "other":
                 options["doc_type"] = request.document_type
             options.update(retriever_options or {})
-            if backend == "legacy_v2":
+            if backend == "single_index":
                 options.pop("legal_service", None)
                 options.pop("min_local", None)
             docs = retriever(request.query, **options)
@@ -143,7 +143,7 @@ class LegalRetrievalService:
             hit_count=hit_count,
             index_schema_version=(
                 MULTI_INDEX_SCHEMA_VERSION
-                if backend == "orchestrator_v3"
+                if backend == "multi_index"
                 else ""
             ),
             duration_ms=duration_ms,
@@ -154,8 +154,8 @@ class LegalRetrievalService:
         self,
         request: RetrievalRequest,
         *,
-        backend: RetrievalBackend = "orchestrator_v3",
-        fallback_backend: RetrievalBackend | None = "legacy_v2",
+        backend: RetrievalBackend = "multi_index",
+        fallback_backend: RetrievalBackend | None = "single_index",
         retriever_options: dict[str, object] | None = None,
     ) -> LegalRetrievalResult:
         primary = self.retrieve(
@@ -179,13 +179,13 @@ class LegalRetrievalService:
         fallback.manifest.duration_ms += primary.manifest.duration_ms
         if (
             fallback.bundle.legal_grounding
-            or fallback_backend == "compatibility_api"
+            or fallback_backend == "enriched_compatibility"
         ):
             return fallback
 
         compatibility = self.retrieve(
             request,
-            backend="compatibility_api",
+            backend="enriched_compatibility",
             retriever_options=retriever_options,
         )
         compatibility.manifest.fallback_reason = (
@@ -199,8 +199,8 @@ class LegalRetrievalService:
         self,
         request: RetrievalRequest,
         *,
-        backend: RetrievalBackend = "orchestrator_v3",
-        fallback_backend: RetrievalBackend | None = "legacy_v2",
+        backend: RetrievalBackend = "multi_index",
+        fallback_backend: RetrievalBackend | None = "single_index",
         retriever_options: dict[str, object] | None = None,
     ) -> LegalDocumentRetrievalResult:
         result = self.retrieve_with_fallback(

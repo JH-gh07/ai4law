@@ -70,6 +70,19 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     outputHint: { zh: "", en: "Output: document compliance report" }
   },
   {
+    id: "cn_scc",
+    jurisdiction: "CN",
+    module: "scc",
+    workspaceStyle: "cn_scc",
+    title: { zh: "中国标准合同审查", en: "China Standard Contract Review" },
+    subtitle: {
+      zh: "审查个人信息出境标准合同并生成条款整改建议",
+      en: "Review China personal-information export standard contracts and remediation items"
+    },
+    inputHint: { zh: "上传或输入中国标准合同文本", en: "Input: China standard contract text" },
+    outputHint: { zh: "", en: "Output: China SCC review report" }
+  },
+  {
     id: "eu_scc",
     jurisdiction: "EU",
     module: "eu_scc",
@@ -121,6 +134,19 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     subtitle: { zh: "识别涵盖人员/受关注国家 输出红黄绿结论", en: "Identify covered persons and output RED/YELLOW/GREEN" },
     inputHint: { zh: "输入数据清单、实体清单、交易信息", en: "Input: data inventory + entity inventory + transaction details" },
     outputHint: { zh: "", en: "Output: EO 14117 risk conclusion report" }
+  },
+  {
+    id: "us_14117_flow",
+    jurisdiction: "US",
+    module: "cn_flow",
+    workspaceStyle: "us_14117",
+    title: { zh: "EO 14117 数据流评估（兼容入口）", en: "EO 14117 Data Flow Review (Compatibility)" },
+    subtitle: {
+      zh: "保留历史 cn_flow 接口，按当前美国 EO 14117 实现执行数据流风险评估",
+      en: "Retain the historical cn_flow endpoint while applying the current US EO 14117 flow review"
+    },
+    inputHint: { zh: "输入数据、实体与传输链路信息", en: "Input: data, entities, and transfer chain" },
+    outputHint: { zh: "", en: "Output: EO 14117 data-flow risk report" }
   },
   {
     id: "us_cpra",

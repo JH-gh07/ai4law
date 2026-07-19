@@ -23,6 +23,7 @@ export type WorkspaceStyleKey =
   | "cn_assessment"
   | "cn_pipia"
   | "cn_document_review"
+  | "cn_scc"
   | "eu_scc"
   | "eu_bcr"
   | "eu_dpia"

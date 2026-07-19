@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { fetchTaskEvents, getTaskEventStreamUrl } from "../api/events";
 
 export type RunEvent = {
   event_id: string;
@@ -73,7 +74,7 @@ const listeners = new Map<string, Set<(events: RunEvent[]) => void>>();
 const eventBuffers = new Map<string, RunEvent[]>();
 
 function connectSSE(taskId: string): EventSource {
-  const es = new EventSource(`/api/v1/events/task/${taskId}/stream`);
+  const es = new EventSource(getTaskEventStreamUrl(taskId));
 
   es.onmessage = (e) => {
     if (!e.data || e.data.startsWith(":")) return;
@@ -119,8 +120,7 @@ function startPolling(taskId: string, since: number): () => void {
   const poll = async () => {
     while (active) {
       try {
-        const res = await fetch(`/api/v1/events/task/${taskId}/events?since=${latestSeq}`);
-        const data = await res.json();
+        const data = await fetchTaskEvents<RunEvent>(taskId, latestSeq);
         if (data.events && data.events.length > 0) {
           const buffer = eventBuffers.get(taskId) ?? [];
           for (const e of data.events) {

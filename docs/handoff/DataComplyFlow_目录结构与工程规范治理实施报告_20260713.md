@@ -40,7 +40,7 @@
 
 ## 4. 法域与模块结构
 
-新增 `backend/modules/catalog.py`，定义 11 个稳定模块 ID：
+治理早期曾新增 Python Catalog 作为稳定模块 ID 视图；该重复视图已在第 29 节退役，当前唯一权威源为 `config/module_registry.json`：
 
 ```text
 cn.transfer_diagnosis
@@ -58,7 +58,7 @@ us.cpra
 
 每项记录 jurisdiction、frontend_key、当前实现包、当前 `/api/v1` 前缀和未来 target package。新增 13 项测试验证 ID、前端 key、实现包和 API 前缀。
 
-`backend/modules/README.md` 明确当前目录是兼容实现位置。后续可以逐模块迁往 `backend/domains/{cn,eu,us}/`，但不能绕过注册表新增另一个顶层模块。
+法律业务实现现已逐模块迁入 `backend/domains/{cn,eu,us}/`，API 兼容网关已归入 `backend/api/v0/`，历史 `backend/modules/` 在第 29 节完成退役。
 
 ## 5. `.gitignore` 与仓库卫生
 
@@ -121,7 +121,7 @@ us.cpra
 
 ```text
 doc/knowledge/_index/
-doc/knowledge/_registry/
+resources/legal/registry/
 doc/knowledge/_evaluation/
 ```
 
@@ -137,12 +137,12 @@ doc/knowledge/_evaluation/
 
 以下项目仍保留，不能根据名称直接删除：
 
-- `backend/modules/v0_task_gateway`：前端文件上传和兼容测试仍调用；
+- `backend/api/v0/task_gateway`：前端文件上传和兼容测试仍调用；
 - `doc/v2/assets/templates`：多个活动报告渲染器直接读取；
 - `/api/v1` 模块路由：当前前端主调用契约；
 - 两套 Diagnosis 契约：尚未完成输入、状态、报告和 handoff 对齐；
 - RAG v2 服务：多个业务模块仍通过 `retrieve_regulations` 使用；
-- `doc/tmp` 和 `doc/addition`：存在设计引用、研究价值或来源待确认。
+- `doc/tmp`：仍被 SCC、DPIA 等活动代码的设计注释引用，暂不处理；原 `doc/addition` 已于 2026-07-15 迁入 `resources/research/product-design-sources/`。
 
 物理法域目录迁移应作为独立阶段，每次迁移一个模块并保留兼容测试。
 
@@ -211,8 +211,8 @@ doc/knowledge/_evaluation/
 新增 backend/common/rag/service.py：
 
 - LegalRetrievalService 为业务模块和 Benchmark Adapter 提供稳定入口；
-- 默认调用 RetrievalOrchestrator v3；
-- legacy_v2 Adapter 直接调用 RegulationRAGService.retrieve，compatibility_api 单独保留旧 retrieve_regulations 行为；两者不再混称为 v2；
+- 默认调用 `multi_index` 策略（实现为 `RetrievalOrchestrator`）；
+- `single_index` 策略直接调用 `RegulationRAGService.retrieve`，`enriched_compatibility` 单独保留公共 `retrieve_regulations` 的兼容增强行为；二者按职责命名，不再按代码代际混称；
 - 每次调用返回 RetrievalManifest，记录实际后端、模块、阶段、查询、法域、路径、top-k、命中数、索引 Schema 版本、真实 fallback 原因和耗时；显式选择兼容后端不再伪装成 fallback。
 
 本轮没有批量修改现有模块，旧 retrieve_regulations 仍保留。后续可以按模块迁移并通过同一 Manifest 做 v2/v3 shadow 对比。
@@ -265,7 +265,7 @@ doc/knowledge/_evaluation/
 
 最终验证：后端 353 passed、1 个既有 Starlette/httpx 弃用警告；前端 1 test passed；前端构建通过；npm audit 为 0；`git diff --check` 通过。
 
-仍未删除 frontend/src/integrations/superdesign002/：它存在活动路由和治理来源记录，不属于已确认旧冗余资产。其 506.40 kB 独立 chunk 需在确认生成式 UI 的长期产品地位后再拆分或退役。
+后续更新（2026-07-19）：经人工确认，该目录仅为临时设计稿预览、不属于正式产品能力，已连同 `/superdesign/002` 路由、承载页面和专用 JSX 类型声明整体删除；来源审计记录保留在治理文档与 Git 历史中。
 
 ## 16.8 FastAPI 路由装配收敛
 
@@ -283,7 +283,7 @@ doc/knowledge/_evaluation/
 - 将已被替代的旧治理方案、第一版实施报告和 2026-06 Superpowers 设计/计划移入 `docs/archive/`；
 - 没有删除字节唯一的历史材料，也没有修改或提交未受跟踪的理论研究文档。
 
-此后，现行规范以 `docs/engineering/` 为准，执行顺序以 `docs/governance/` 为准，有日期的事实报告以 `docs/handoff/` 为准，`docs/archive/` 只用于追溯。
+本节记录 2026-07-15 当时的文档分层。2026-07-19 收敛后，现行规范与治理知识资产统一以 `docs/standards/` 为准，有日期的事实报告以 `docs/handoff/` 为准，旧 `engineering/`、`governance/` 文档已移入 `docs/archive/governance/replaced-active-docs-20260719/`。
 
 ## 18. GATE-001 现有工作树收敛审查
 
@@ -307,10 +307,136 @@ RAG 组仅认定为“统一边界及业务迁移已接入”：多数消费者�
 - 网关索引及底层 `InMemoryTaskManager` 都是进程内状态，重启和多 worker 行为不可持续；
 - `runtime_settings.py` 仍反向 import Router 的模块级 v0 Service，是后续退役前必须解除的真实运行消费者。
 
-最终认定：v0 不是应立即复制或整体删除的“旧版本”，而是含一个前端活动上传入口及一组测试/脚本兼容任务入口的安全债边界。专项验证还发现 2.2/4.1 共 4 个活动报告模板曾被历史提交 `d6e882d` 删除而代码引用仍保留；Assessment/CN Flow 的 v0 测试孤立执行失败，CN Flow 模块测试存在全局模板路径污染。下一批必须先做 API-C0：从可追溯历史恢复活动模板并修复测试隔离；通过后再进入 API-C1 的鉴权、对象 owner、拒绝未注册本地路径及相应回归测试。上传协议去物理路径、状态持久化和 v0 退役必须分别实施。完整证据、风险分级、验收与非目标记录在 `docs/governance/DataComplyFlow_仓库规范化分阶段治理计划.md` 第 8 节。
+最终认定：v0 不是应立即复制或整体删除的“旧版本”，而是含一个前端活动上传入口及一组测试/脚本兼容任务入口的安全债边界。专项验证还发现 2.2/4.1 共 4 个活动报告模板曾被历史提交 `d6e882d` 删除而代码引用仍保留；Assessment/CN Flow 的 v0 测试孤立执行失败，CN Flow 模块测试存在全局模板路径污染。下一批必须先做 API-C0：从可追溯历史恢复活动模板并修复测试隔离；通过后再进入 API-C1 的鉴权、对象 owner、拒绝未注册本地路径及相应回归测试。上传协议去物理路径、状态持久化和 v0 退役必须分别实施。完整证据、风险分级、验收与非目标记录在 `docs/archive/governance/replaced-active-docs-20260719/DataComplyFlow_仓库规范化分阶段治理计划.md` 第 8 节。
 
 ### 19.1 API-C0 活动模板恢复与测试隔离
 
 按审计门禁完成独立的基线修复：从 `d6e882d^`（`3e09a3c594550ccef6c548b9aaea080b939f042e`）原样恢复 `doc/v2/assets/templates/` 下 2.2 与 4.1 的 md/docx 四个文件；其 SHA-256 已记录在分阶段治理计划 8.6 节。CN Flow 的同步和异步测试改用 `tmp_path + monkeypatch`，不再污染模块全局模板常量或固定输出目录。
 
 孤立验证为 4 passed、1 warning；全量后端为 356 passed、1 warning。本批只恢复活动运行资产和测试隔离，不修改模板内容、业务 Service、API、Schema 或法律判断。测试新增的 52 个输出目录、1 个上传文件和 pytest 临时目录均已清理。
+
+
+## 20. 资源路径与研究材料收敛
+
+2026-07-15 按“运行资源与研究材料分离、先验证引用再移动”的原则完成低风险物理收敛：
+
+- 新增 `backend/core/resource_paths.py`，集中定义项目根、当前知识库兼容位置和报告模板根；活动后端不再直接硬编码 `doc/knowledge` 或 `doc/v2/assets/templates`；
+- 13 个活动报告模板按 `cn`、`eu`、`us` 迁入 `resources/templates/`，迁移前后 Git 对象 Hash 逐项一致；没有伪造仓库中缺失的 PIPIA 和 EO 14117 DOCX 模板；
+- 原 `paper/` 的 14 个文件迁入 `resources/research/papers/`，原 `doc/addition/` 的 28 个文件迁入 `resources/research/product-design-sources/`；42 个文件迁移前后 Git 对象 Hash 逐项一致；
+- `resources/research/README.md` 明确研究材料不是法规、Prompt、模板、Fixture 或运行配置入口；路径测试阻止活动后端读取该目录；
+- `doc/tmp` 因仍被 SCC、DPIA 等活动源码的设计注释引用而保留；`docs/archive/` 因承担历史追溯且仍被现行文档链接而保留；`doc/开发文档/` 本批只完成无运行消费者认定，未与资源迁移混合删除。
+
+本批验证：资源路径及 EO 14117 报告相关测试 38 passed；仓库卫生检查通过（1,368 个已跟踪文件）；`git diff --check` 通过。研究材料移动不改变业务代码、知识索引、API、Schema 或报告内容。
+## 21. DOC-ROOT 第一批：活动知识资源与评测数据迁移
+
+2026-07-16 依据 `DataComplyFlow_DOC-ROOT文档与知识资源收敛执行契约.md` 完成第一批物理收敛：
+
+- 472 个 `doc/knowledge/` 文件迁入 `resources/legal/`，迁移前后 SHA-256 集合一致；
+- 原 `_evaluation/` 独立为 `benchmarks/datasets/retrieval/`，原 `_index/`、`_registry/` 分别更名为 `catalog/`、`registry/`；
+- 活动资源根和评测数据根由 `backend/core/resource_paths.py` 统一提供；
+- 知识 builder、RAG 评测脚本、前端开发用例和当前治理文档已切换到新路径；
+- 删除无消费者的 `scripts/migrate_knowledge_base.py`，QA 结果改写入 `outputs/benchmarks/`；
+- `doc/knowledge/` 已不存在，但 `doc/` 根目录尚未删除，剩余 130 个文件（含此前统计遗漏的根目录 12 个文件）必须在下一批按现行文档、历史材料、运行资产、法律资产和测试资产分类。
+
+本批验证：专项 88 passed；后端六组回归共 376 passed；前端 5 passed；前端生产构建成功；仓库卫生检查通过。条款注册表仍有 12 个只存在于 `regulation_articles.jsonl` 的历史 source ID 指向缺失的 `doc/v3` 快照，因权威来源注册缺失而未猜测修复，已列入下一阶段数据完整性事项。
+## 22. DOC-ROOT 第二批：消除历史 `doc/` 根目录
+
+2026-07-16 完成剩余资产的逐文件 Hash 审计与分类。执行前 `doc/` 真实包含 130 个文件；先前 118 的数字只统计了三个子目录，遗漏根目录 12 个文件，本节以备份复核结果纠正。
+
+- 65 个法规或模板副本已有相同 SHA-256 的权威副本，删除后不损失内容；
+- 24 个唯一案例和功能说明原件按 `cn/eu/us/shared` 迁入 `benchmarks/source-materials/`，明确标记为待清洗、待专家标注的来源材料而非 Gold；
+- 40 个唯一历史开发记录、系统说明和模块设计依据迁入 `docs/archive/legacy-*`；
+- 1 个空 Markdown 删除；
+- 活动源码注释和前端开发用例引用已同步到新路径；
+- 顶层 `doc/` 已不存在，卫生检查已将整个 `doc/` 设为禁止跟踪和禁止活动引用的路径。
+
+迁移后从备份复核全部 130 个内容 Hash，缺失为 0；64 个迁移文件全部可回溯到备份。验证结果：后端 376 passed；前端 5 passed；前端生产构建成功；仓库卫生检查和 `git diff --check` 通过。本批没有修改业务判断、API、Schema、Prompt、RAG 算法或法律内容。
+## 23. 美国法域模块物理收敛
+
+2026-07-16 将 CPRA 与 EO 14117 从 `backend/modules/` 迁入 `backend/domains/us/`，新权威实现包分别为 `backend.domains.us.cpra` 和 `backend.domains.us.eo14117`。旧包已删除且未保留兼容转发层。
+
+41 个源文件在反向归一化 import 后逐项一致；路由基线只改变 8 个 endpoint module，HTTP 方法、URL、route name 和 operation ID 不变。权威模块注册表、Router、运行配置注入、v0 兼容网关、模块目录和跨模块引用均已更新。测试公共鉴权 fixture 从 `backend/modules/conftest.py` 提升到 `backend/conftest.py`，仅修正 pytest 目录继承范围。
+
+验证结果：迁移前后专项均为 63 passed；后端完整分组回归 376 passed；前端 5 passed；生产构建成功；仓库卫生检查扩展为覆盖已跟踪和未暂存文件后通过。本批没有修改业务逻辑、API、Schema 字段、规则、Prompt、RAG 或数据库。
+## 24. 欧盟法域模块物理收敛
+
+2026-07-16 将 EU SCC、BCR、DPIA、TIA 从 `backend/modules/` 迁入 `backend/domains/eu/`，权威包分别为 `scc_review`、`bcr_review`、`dpia` 和 `tia`。旧目录已删除且未保留兼容转发层。
+
+98 个源文件反向归一化 import 后逐项一致；欧盟 16 条路由仅 endpoint module 改变，HTTP 方法、URL、route name 和 operation ID 不变。权威注册表、Router、运行设置注入、v0 兼容网关及测试均已更新。迁移前后专项均为 62 passed；后端完整回归 376 passed；前端 5 passed；生产构建成功；104 条路由无重复 Method+Path。
+
+本批没有修改业务逻辑、Schema 字段、规则、Prompt、RAG、数据库或前端协议。EU SCC/TIA 复用美国 CPRA Citation DTO 的耦合已记录，但未在目录迁移中顺带重构。
+## 25. 中国法域第一批模块物理收敛
+
+2026-07-16 将安全评估、PIPIA 和中国 SCC 从 `backend/modules/` 迁入 `backend/domains/cn/`，权威包分别为 `security_assessment`、`pipia` 和 `scc_review`。旧目录已删除且未保留兼容转发层。
+
+81 个源文件反向归一化 import 后逐项一致；中国模块 12 条路由只改变 endpoint module，HTTP 方法、URL、route name 和 operation ID 不变。权威注册表、版本 Router、运行设置注入、v0 兼容网关、模块目录与跨模块引用已更新。迁移前后专项均为 96 passed；后端完整回归最终为 376 passed；前端 5 passed；生产构建成功；104 条路由无重复。
+
+全量后端首轮曾出现知识搜索用例 1 次非确定性失败，单测复跑和第二次全量均通过，已作为测试共享状态风险记录，不与本批物理迁移混同。本批未处理 Diagnosis 双层结构；`cn_flow` 经注册表确认属于美国 EO 14117 兼容流，也未迁入中国法域。
+## 26. 中国路径诊断实现包物理收敛
+
+2026-07-16 将分散于 `backend/domains/cn/transfer_diagnosis/` 与 `backend/domains/cn/transfer_diagnosis/` 的同一诊断实现收敛到后者。迁移前领域适配器反向依赖模块 Schema，而模块 Service 又依赖领域规则核心；迁移后 Schema、Service、Router、Renderer、Agents、规则表与测试均位于唯一权威包，旧实现目录已删除。
+
+备份中的 20 个非重复文件归一化 import 后内容一致，重复的空包入口删除；唯一必要测试调整是让迁入 `tests/` 的规则测试从权威包读取 `decision_tree.json`。模块注册表、Router、运行设置、Diagnosis Session Service、Assessment 消费者与测试引用已同步。
+
+专项迁移前后均为 44 passed；后端完整回归 376 passed；前端 5 passed，生产构建成功。104 条路由无新增、删除或重复，只有 `/api/v1/diagnosis/evaluate` 与 `/api/v1/diagnosis/report` 的 endpoint module 改变。公共会话型 Diagnosis API 完整保留，本批没有修改 Schema、规则、法律结论、Prompt、数据库或前端协议。
+## 27. EO 14117 兼容流物理归位
+
+2026-07-16 对历史 `cn_flow` 与完整 `us_14117` 实现完成差异审计。前者是较轻量的对华数据流风险审查，使用 8 个 `CNFlow*` Schema、4.1 模板及独立输出；后者具有 13 个 `US14117*` Schema、规则引擎、5 个 Agent、4.2 模板和交通灯结论。两者不是可直接合并的重复代码。
+
+本批将兼容流从 `backend/domains/us/eo14117_flow_review/` 迁入 `backend/domains/us/eo14117_flow_review/`，10 个文件归一化 import 后逐项一致。module ID `us.eo_14117_flow_review`、frontend key `cn_flow`、任务模板、Trace 标识和 `/api/v1/cn-flow` 接口保持不变；注册表当前包和目标包已经统一。
+
+迁移前后专项均为 52 passed；后端完整回归 376 passed；前端 5 passed，生产构建成功。104 条路由无新增、删除或重复，兼容流四条路由只改变 endpoint module。本批没有修改业务逻辑、法律判断、Schema、Prompt、RAG、模板、输出协议或完整 EO 14117 模块。
+## 28. v0 任务网关 API 层物理归位
+
+2026-07-16 将 `v0_task_gateway` 从业务模块目录迁入 `backend/api/v0/task_gateway/`。审计确认该包负责上传、统一任务创建、状态、产物、下载和审计封装，并将 v0 请求适配到七个下游法域模块，属于 API 兼容适配层而非法律业务模块。
+
+5 个文件归一化 import 后逐项一致；`backend/api/v0/router.py`、运行设置注入和路由基线已更新。迁移前后专项均为 11 passed；后端完整回归 376 passed；前端 5 passed，生产构建成功。104 条路由无新增、删除或重复，7 条 v0 路由只改变 endpoint module。
+
+本批没有复制 v0 到 v1，也没有修改上传、任务、Schema、状态、产物或前端协议。此前确认的鉴权、owner、本地路径、上传资源控制、内存状态和 Router 单例注入问题继续按 API-C1 至 API-C4 独立治理。
+## 29. 重复 Module Catalog 与历史 modules 目录退役
+
+2026-07-16 审计确认 `backend/modules/catalog.py` 没有生产消费者，仅被自身测试导入；其 12 条 `ModuleDefinition` 与 `config/module_registry.json` 重复，且 JSON 还包含 task template、lifecycle 和 note。将该副本原样迁入 Core 会延续双重事实源，因此本批直接退役 Python Catalog。
+
+新增 `backend/core/tests/test_module_registry.py`，直接读取 JSON 权威源并验证 ID/frontend key 唯一性、法域、API prefix、生命周期、迁移目标及 12 个 implementation package 的可导入性。旧 Catalog、测试和 README 删除后，`backend/modules/` 已完全退出并加入卫生禁止路径。
+
+原 Catalog 专项为 17 passed；新注册表与路由专项为 19 passed，其中注册表测试 15 项。后端完整回归为 374 passed；相对此前 376 减少 2 项，是将“未知 ID”“JSON 对照”等重复 Catalog 断言合并到直接权威源验证，不是业务能力测试丢失。前端 5 passed，生产构建成功；API 路由未发生变化。本批没有修改任何模块身份、API、Schema 或业务逻辑。
+
+## 31. 结构治理收口复核（2026-07-17）
+
+本轮以当前检出代码和回归结果覆盖报告中的早期路径描述。
+
+### 31.1 当前活动结构
+
+- 后端：`backend/api/`（版本与公共接口）、`backend/domains/{cn,eu,us}/`（法域业务）、`backend/common/`（公共能力）、`backend/core/`（配置与运行基础设施）；
+- 前端：`frontend/src/`；
+- 模块身份：`config/module_registry.json`；
+- 运行资源：`resources/legal/`、`resources/templates/{cn,eu,us}/`；
+- Benchmark：`benchmarks/`；
+- 文档：唯一根 `docs/`，历史材料仅在 `docs/archive/`；
+- 本地产物：`outputs/` 与 `storage/{rag,reports,traces,uploads}/`，均不作为源码权威源。
+
+原 `doc/`、`paper/`、`ai_engine/`、`backend/modules/` 已退出活动结构。目录卫生检查会阻止旧 `backend/modules/` 重新出现。
+
+### 31.2 RAG 本轮结论
+
+RAG 的三类真实职责没有被错误合并。统一 Facade 的运行策略已改为 `multi_index`、`single_index` 与 `enriched_compatibility`；持久化索引的 `v2` 文件名和 `v3.1` Schema 仍代表真实数据格式，继续保留。专项测试 20 项通过，全量后端 374 项通过。
+
+第三层兼容增强调用内部可能重新尝试本地检索，但它同时承担可选外部法律服务补充；现有业务大多只消费文档而未完整持久化 Manifest。缺少运行 Trace 统计时，直接删除该层会改变失败场景行为，因此列入后续可观测性与 Fallback 专项，不在结构治理中处理。
+
+### 31.3 验收与剩余边界
+
+- 后端：`374 passed, 1 warning`；
+- 前端：`5 passed`，生产构建成功；
+- RAG 专项：`20 passed`；
+- 仓库卫生：`1377 repository files checked`，通过；
+- `git diff --check`：通过；
+- 运行生成的 RAG pytest 临时目录与 Python `__pycache__` 已清理；根 `.pytest_cache` 因当前文件系统拒绝访问而仍存在，但已被 `.gitignore` 排除，不属于源码。
+
+当前不能完成 staging/commit/tag：执行环境对 `.git` 为只读。正式 Git 收口必须在可写环境中完成 rename 识别、分批提交和最终 tag；在此之前不得继续叠加无关结构变更。
+## 32. Docs 活动文档与历史归档收敛（2026-07-17）
+
+本节记录 2026-07-17 当时的四类文档结构。2026-07-19 已进一步将活动规范和治理知识合并到 `docs/standards/`，并将被替代文档移入 `docs/archive/governance/replaced-active-docs-20260719/`；已完成批次仍位于 `docs/archive/governance/executed-batches/`。
+
+旧系统讲解、旧开发记录、旧测试报告、旧 Superpowers 计划、旧 Prompt/Schema 和历史 UI 二进制文档共 51 个文件已删除。12 份设计来源材料作为代码与业务构想的 provenance 全部保留，并统一放入 `docs/archive/design-provenance/`；其中 8 份无扩展名文本补充 `.md`，27 个 Python 文件中的 28 行引用只更新文档路径，没有业务行为变化。
+
+治理后 `docs/` 从 93 个文件、约 3.65 MB 收敛为 47 个文件、约 0.73 MB。活动 Markdown 本地断链为 0，旧设计路径引用为 0；仓库卫生检查、SCC/DPIA Python 编译及 28 项定向测试通过。

@@ -1,0 +1,3 @@
+data_item,category,volume,purpose,destination
+synthetic_customer_id,general_personal_information,1000,service_support,Example Region
+synthetic_service_log,operational_data,5000,security_monitoring,Example Region

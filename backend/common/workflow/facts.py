@@ -132,16 +132,7 @@ class FactPack(BaseModel):
         description="Non-fatal warnings logged during fact extraction",
     )
 
-    def summarize(self) -> str:
-        total = len(self.facts)
-        by_src = ", ".join(f"{k}: {v}" for k, v in self.fact_count_by_source.items())
-        by_ev = ", ".join(f"{k}: {v}" for k, v in self.fact_count_by_evidence.items())
-        return (
-            f"FactPack({self.module}): {total} facts | "
-            f"sources: {{{by_src}}} | "
-            f"evidence: {{{by_ev}}} | "
-            f"uncertain: {len(self.uncertain_fact_ids)}"
-        )
+
 
 
 # ── Fact merge log (for multi-source conflict resolution) ─────────────────

@@ -81,7 +81,7 @@ const demoPipia = () => ({
       file_role: "scc_contract",
       file_name: "regen_sample_scc.txt",
       file_format: "txt",
-      storage_uri: "storage/uploads/regen_sample_scc.txt"
+      storage_uri: "benchmarks/sample-inputs/sample_contract.txt"
     }
   ]
 });
@@ -241,13 +241,13 @@ const demoCnFlow = () => ({
       file_role: "data_inventory",
       file_name: "data_inventory.csv",
       file_format: "csv",
-      storage_uri: "storage/uploads/cn_regen_data_inventory_20260408_134644.csv"
+      storage_uri: "benchmarks/sample-inputs/data_inventory.csv"
     },
     {
       file_role: "entity_inventory",
       file_name: "entity_inventory.csv",
       file_format: "csv",
-      storage_uri: "storage/uploads/cn_regen_entity_inventory_20260408_134644.csv"
+      storage_uri: "benchmarks/sample-inputs/entity_inventory.csv"
     }
   ]
 });

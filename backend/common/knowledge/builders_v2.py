@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import csv
 import json
-from pathlib import Path
 
-from backend.common.knowledge.registry import ROOT, ensure_source_registry
+from backend.common.knowledge.paths import (
+    regulation_articles_jsonl_path,
+    sources_csv_path,
+)
+from backend.common.knowledge.registry import ensure_source_registry
 from backend.common.knowledge.v2 import KnowledgeChunkV2
-from backend.services.review_service.rulebook_loader import RulebookLoader
+from backend.core.resource_paths import report_template_path, rule_resource_path
 
-SOURCES_CSV = ROOT / "doc" / "knowledge" / "_index" / "sources.csv"
-NORMALIZED_JSONL = ROOT / "doc" / "knowledge" / "_registry" / "regulation_articles.jsonl"
-OFFICIAL_TEMPLATE_SCHEMA = ROOT / "backend" / "modules" / "assessment" / "templates" / "official_template_schema.json"
-OFFICIAL_TEMPLATE_MD = ROOT / "backend" / "modules" / "assessment" / "templates" / "official_risk_self_assessment_template.md"
+SOURCES_CSV = sources_csv_path()
+NORMALIZED_JSONL = regulation_articles_jsonl_path()
+OFFICIAL_TEMPLATE_SCHEMA = report_template_path("cn", "official_template_schema.json")
+OFFICIAL_TEMPLATE_MD = report_template_path("cn", "official_risk_self_assessment_template.md")
 
 
 def _load_source_rows() -> dict[str, dict[str, str]]:
@@ -351,7 +354,9 @@ def build_template_chunks_cn() -> list[KnowledgeChunkV2]:
 
 
 def build_standard_clause_chunks_cn() -> list[KnowledgeChunkV2]:
-    rulebook = RulebookLoader()
+    rulebook = json.loads(
+        rule_resource_path("cn", "review_rulebook.json").read_text(encoding="utf-8")
+    )
     rows = [
         {
             "chunk_id": "STD-CN-SCC-PRIORITY",
@@ -406,7 +411,17 @@ def build_standard_clause_chunks_cn() -> list[KnowledgeChunkV2]:
     ]
     chunks: list[KnowledgeChunkV2] = []
     for row in rows:
-        citation_strings = rulebook.get_citation_strings(row["clause_type"])
+        citations = (
+            rulebook.get("clause_types", {})
+            .get(row["clause_type"], {})
+            .get("citations", [])
+        )
+        citation_strings = [
+            f"《{citation.get('source', '')}》{citation.get('article', '')}"
+            .strip("》")
+            .strip()
+            for citation in citations
+        ]
         chunks.append(
             KnowledgeChunkV2(
                 chunk_id=row["chunk_id"],

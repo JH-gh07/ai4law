@@ -1,7 +1,7 @@
 /**
  * 开发者模式 — 预编译测试案例 JSON payload。
  *
- * 每个案例对应 doc/数规通功能路径描述/ 中的一个测试案例 docx。
+ * 每个案例源自 benchmarks/source-materials/ 中保留的历史测试材料。
  * 选中案例后直接 POST 到对应模块的 async endpoint，配合 SSE 事件流实时观察执行。
  *
  * 用法:
@@ -460,9 +460,9 @@ const assessEcommerce: DevTestCase = {
       "传输全程加密；敏感个人信息AES-256加密存储，密钥由境内总部HSM管理；最小权限+MFA；全链路日志留存不少于6年并实时监控；非生产环境仅使用合成数据或深度脱敏数据；每年两次内部审计和一次渗透测试；中、新两地数据泄露应急响应预案并定期演练"
   },
   backendFilePaths: [
-    "doc/knowledge/cn-assessment/references/数据出境风险自评估报告（模板）.docx",
-    "doc/knowledge/cn-assessment/references/数据出境安全评估申报指南（第三版） (1).docx",
-    "doc/knowledge/cn-assessment/references/个人信息出境标准合同备案指南（第二版） (1).docx"
+    "resources/legal/sources/cn/references/数据出境风险自评估报告（模板）.docx",
+    "resources/legal/sources/cn/references/数据出境安全评估申报指南（第三版）.docx",
+    "resources/legal/sources/cn/references/个人信息出境标准合同备案指南（第二版）.docx"
   ]
 };
 
@@ -1030,7 +1030,7 @@ const tiaBasicSCC: DevTestCase = {
     third_country_assessment: "印度目前没有获得欧盟充分性认定。印度的数据保护法律（DPDP Act 2023）提供了基本保护框架，但政府机构的数据访问权限仍然较宽。根据Schrems II判决标准，印度法律在政府访问数据的必要性和相称性方面存在一定风险。印度《信息技术法》第69条赋予政府广泛的监控权力",
     supplementary_measures: "技术措施：端到端加密（数据在传输前加密，密钥由出口方管理，进口方无法解密）；数据最小化（仅传输分析所必需的数据字段）；假名化处理。合同措施：在SCC基础上增加透明度义务（进口方须在收到政府数据请求24小时内通知出口方）；定期审计权。组织措施：进口方员工定期数据保护培训；访问控制日志；事件响应SLA",
     final_conclusion: "经评估，在实施上述技术、合同和组织补充措施后，第三国法律不会损害SCC提供的实质等同保护水平。传输可继续进行，但需每年复审目的地法律变化",
-    attachments: [{ file_role: "tia_main_report", file_name: "tia_report.docx", file_format: "docx", storage_uri: "storage/uploads/tia_report.docx" }]
+    attachments: [{ file_role: "tia_main_report", file_name: "sample_contract.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }]
   }
 };
 
@@ -1067,7 +1067,7 @@ const tiaChinaBCR: DevTestCase = {
     third_country_assessment: "中国法律环境评估：中国的《网络安全法》《数据安全法》《个人信息保护法》建立了全面的数据保护框架，但根据Schrems II标准，中国法律中存在若干可能影响传输保护水平的因素：（1）《网络安全法》第37条和《数据安全法》第21条赋予监管机构广泛的数据访问权限；（2）《国家情报法》第7条允许情报机构依法收集信息；（3）缺乏独立的司法审查机制来挑战政府数据请求。此外，中国尚未获得欧盟充分性认定",
     supplementary_measures: "技术措施：数据在传输前进行强加密（256-bit），密钥完全由德国出口方管理；实施了数据拆分存储策略（关键业务数据保留在德国，仅匿名化的运营指标传输至中国）；部署了安全的远程访问环境（数据不落地中国本地存储）。合同措施：在中国子公司员工合同中加入数据保护条款；与子公司签订强化的集团内部数据保护协议。组织措施：BCR框架下的年度审计（由德国母公司DPO主导）；中国子公司员工每季度数据保护培训",
     final_conclusion: "经评估，尽管中国法律环境存在风险，但通过以下因素组合，可以认为传输能提供GDPR要求的实质等同保护水平：（1）BCR-C已获批准，提供了全面的集团内部保护框架；（2）技术措施（加密+密钥分离+数据不落地）极大限制了政府实际访问数据的可能性；（3）定期审计机制确保了合规持续性。结论：有条件通过——前提是所有补充措施持续有效并每年复审",
-    attachments: [{ file_role: "tia_main_report", file_name: "tia_report_bcr.docx", file_format: "docx", storage_uri: "storage/uploads/tia_report_bcr.docx" }]
+    attachments: [{ file_role: "tia_main_report", file_name: "sample_contract.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }]
   }
 };
 
@@ -1164,7 +1164,7 @@ const pipiaSCCFiling: DevTestCase = {
       data_breach_notification_plan: "24小时内通知受影响的用户，48小时内向网信办报告"
     },
     attachments: [
-      { file_role: "scc_contract", file_name: "个人信息出境标准合同（草案）.docx", file_format: "docx", storage_uri: "storage/uploads/scc_draft.docx" }
+      { file_role: "scc_contract", file_name: "sample_contract.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }
     ]
   }
 };
@@ -1252,7 +1252,7 @@ const pipiaCertification: DevTestCase = {
       data_breach_notification_plan: "4小时内通知受影响用户和网信办"
     },
     attachments: [
-      { file_role: "certification_material", file_name: "个人信息保护认证申请材料.docx", file_format: "docx", storage_uri: "storage/uploads/cert_material.docx" }
+      { file_role: "certification_material", file_name: "sample_evidence.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_evidence.txt" }
     ]
   }
 };
@@ -1359,8 +1359,8 @@ const cnFlowBasic: DevTestCase = {
     ],
     transfer_chain: "美国总部→AWS美东区→通过加密API→中国供应商ERP系统。传输频率：每日实时",
     attachments: [
-      { file_role: "data_inventory", file_name: "data_inventory.xlsx", file_format: "xlsx", storage_uri: "storage/uploads/data_inventory.xlsx" },
-      { file_role: "entity_inventory", file_name: "entity_inventory.xlsx", file_format: "xlsx", storage_uri: "storage/uploads/entity_inventory.xlsx" }
+      { file_role: "data_inventory", file_name: "data_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
+      { file_role: "entity_inventory", file_name: "entity_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
     ]
   }
 };
@@ -1394,8 +1394,8 @@ const cnFlowRestricted: DevTestCase = {
     transfer_chain: "美国总部安全服务器→通过加密VPN→上海公司内部服务器→（可能）再传输至北京研究所",
     internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据",
     attachments: [
-      { file_role: "data_inventory", file_name: "tech_data_inventory.xlsx", file_format: "xlsx", storage_uri: "storage/uploads/tech_data.xlsx" },
-      { file_role: "entity_inventory", file_name: "entity_check.xlsx", file_format: "xlsx", storage_uri: "storage/uploads/entity_check.xlsx" }
+      { file_role: "data_inventory", file_name: "data_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
+      { file_role: "entity_inventory", file_name: "entity_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
     ]
   }
 };
@@ -1493,7 +1493,7 @@ const reviewSccContract: DevTestCase = {
     has_scc_draft: true
   },
   backendFilePaths: [
-    "doc/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/个人信息出境标准合同【模板】.docx"
+    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"
   ]
 };
 

@@ -5,7 +5,7 @@ from backend.domains.cn.transfer_diagnosis.models import (
     FactSource,
     TriState,
 )
-from backend.modules.diagnosis.schema import DiagnosisAnswers
+from backend.domains.cn.transfer_diagnosis.schema import DiagnosisAnswers
 
 _MODULE_TO_CANONICAL_FIELDS = {
     "q1_is_ciio": "is_ciio",

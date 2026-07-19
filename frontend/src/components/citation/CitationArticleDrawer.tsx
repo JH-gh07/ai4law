@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { CitationDetail } from "../../lib/citation-api";
+import type { CitationDetail } from "../../api/citations";
 import {
   fetchArticleDetail,
   type ArticleDetail,
-} from "../../lib/knowledge-api";
+} from "../../api/knowledge";
 
 const AUTHORITY_LABELS: Record<string, string> = {
   high: "高权威",

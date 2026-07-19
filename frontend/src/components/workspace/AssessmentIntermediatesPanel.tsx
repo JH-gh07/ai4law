@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchArtifactPreview, type ArtifactPreview } from "../../lib/artifact-preview";
+import { fetchArtifactPreview, type ArtifactPreview } from "../../api/artifacts";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 
 type IntermediatesSubTab =

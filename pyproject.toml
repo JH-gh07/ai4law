@@ -22,7 +22,7 @@ dependencies = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["backend"]
+testpaths = ["backend", "benchmarks"]
 markers = [
   "slow: deterministic tests that are intentionally expensive"
 ]

@@ -1,6 +1,8 @@
 # AI4Law 项目事实基线与真实系统理解
 
-> 文档状态：事实审计快照。本文保留审计时点的代码证据，不代表所有结论仍是当前状态。后续已完成的结构治理和修复见 `DataComplyFlow_目录结构与工程规范治理实施报告_20260713.md`；当前工程入口以 `../engineering/DataComplyFlow_活动架构与权威源.md` 为准。
+> 2026-07-17 治理更新：评测目录和执行入口已在事实审计后完成物理收敛。本文保留审计时历史路径用于追溯；当前 Benchmark 权威事实见 `docs/archive/governance/executed-batches/DataComplyFlow_BENCHMARKS评测目录治理契约.md` 与 `benchmarks/README.md`。
+
+> 文档状态：事实审计快照。本文保留审计时点的代码证据，不代表所有结论仍是当前状态。后续已完成的结构治理和修复见 `DataComplyFlow_目录结构与工程规范治理实施报告_20260713.md`；当前工程入口以 `../standards/DataComplyFlow_活动架构与权威源.md` 为准。
 
 > 产品：数规通 DataComplyFlow  
 > 审计对象：本地 Git 仓库当前检出版本  
@@ -8,6 +10,8 @@
 > 结论口径：代码与运行证据优先；本文是事实基线，不是法律意见、产品规划或重构方案。
 
 ## 1. 文档目的、审计范围与事实认定规则
+
+> 2026-07-17 治理更新：本文所述 `qa/` 等路径是审计时历史事实。当前活动评测唯一入口为 `benchmarks/`，旧 `qa/` 的非重复结果已归档至 `docs/archive/evaluation/legacy-qa/`。
 
 本文用于为后续产品开发、比赛准备、理论研究、Benchmark 建设和论文分析建立共同事实底座。扫描范围包括 `backend/`、`frontend/`、`ai_engine/`、`doc/`、`docs/`、`qa/`、`scripts/`、`storage/`、`paper/` 以及顶层启动、依赖和说明文件，共约 4,158 个受 Git 管理文件。
 
@@ -36,7 +40,7 @@
 | 维度 | 最终认定 | 核心证据 |
 |---|---|---|
 | 产品形态 | 已确认：证据约束、规则引导、可审计 Legal Agentic RAG 工作台的雏形 | `frontend/src/`；`backend/common/workflow/`；`backend/common/rag/`；`backend/common/citation/` |
-| 路径层 | 部分确认：中国路径真实实现；EO 14117 为功能模块内路径；独立 EU 路径未实现 | `backend/modules/diagnosis/`；`backend/modules/us_14117/`；`doc/addition/01_pathway_layer/03_eu_pathway_tbd/README.md` |
+| 路径层 | 部分确认：中国路径真实实现；EO 14117 为功能模块内路径；独立 EU 路径未实现 | `backend/domains/cn/transfer_diagnosis/`；`backend/domains/us/eo14117/`；`doc/addition/01_pathway_layer/03_eu_pathway_tbd/README.md` |
 | 功能层 | 已确认有 10 类前端任务模板和 11 个模块路由；成熟度不一 | `frontend/src/lib/task-templates.ts`；`backend/main.py` |
 | 结构化中间产物 | 部分确认：Fact/Issue/Evidence/ContextPack 存在并被部分模块贯穿；Claim/RuleItem 不存在 | `backend/common/workflow/*.py`；全仓搜索无 `ClaimItem`/`RuleItem` |
 | RAG | 已确认：分层、条款/结构化 chunk、本地哈希向量+词法检索+启发式重排；不是语义模型 embedding | `backend/common/rag/`；`storage/rag/v3/` |
@@ -63,7 +67,7 @@
 
 未发现 Dockerfile、Compose、Kubernetes 或 Alembic 配置。数据库默认 SQLite `sqlite:///./storage/ai4law.db`；迁移为 `Base.metadata.create_all()` 加 `_ensure_legacy_columns()` 中的 SQLite `ALTER TABLE`，不是正式迁移体系（`backend/core/db.py`）。异步任务为进程内 `ThreadPoolExecutor`，不是 Celery/RQ/消息队列（`backend/common/tasks/manager.py`）。
 
-历史/重复实现包括：`frontend/.codex-archives/` 多轮前端修复快照、`frontend/tmp/` 比较脚本与运行结果、知识库带下划线和不带下划线的重复目录、v2/v3 RAG 并存、`backend/api/diagnosis.py` 与 `backend/modules/diagnosis/router.py` 两套诊断 API、`ai_engine/prompts` 与 Python 内嵌 prompt 并存。
+历史/重复实现包括：`frontend/.codex-archives/` 多轮前端修复快照、`frontend/tmp/` 比较脚本与运行结果、知识库带下划线和不带下划线的重复目录、v2/v3 RAG 并存、`backend/api/diagnosis.py` 与 `backend/domains/cn/transfer_diagnosis/router.py` 两套诊断 API、`ai_engine/prompts` 与 Python 内嵌 prompt 并存。
 
 ## 4. 系统启动方式与运行依赖
 
@@ -87,7 +91,7 @@ README 的 `streamlit run app_streamlit/Home.py` 与仓库不符：没有 `app_s
 
 ### 5.1 中国数据出境路径诊断
 
-真实入口有两套：模块路由 `POST /api/v1/diagnosis/evaluate`、`/diagnosis/report`（`backend/modules/diagnosis/router.py`），以及通用会话 API（`backend/api/diagnosis.py`）。核心为 `DiagnosisService.evaluate()` 和 `backend/modules/diagnosis/decision_tree.json`。
+真实入口有两套：模块路由 `POST /api/v1/diagnosis/evaluate`、`/diagnosis/report`（`backend/domains/cn/transfer_diagnosis/router.py`），以及通用会话 API（`backend/api/diagnosis.py`）。核心为 `DiagnosisService.evaluate()` 和 `backend/domains/cn/transfer_diagnosis/decision_tree.json`。
 
 规则按文件顺序首次命中：no personal information、合同履行、HR、紧急、法定义务豁免优先，之后 CIIO、重要数据、100 万个人信息、1 万敏感个人信息强制安全评估，默认 SCC 或认证。**规则文件没有 schema version、法规则版本号、生效/失效时间或冲突检测。** 法律依据是规则内字符串。
 
@@ -169,7 +173,7 @@ SCC、PIPIA、BCR、DPIA、EU SCC、TIA、CPRA 各自有专用 service；公共 
 
 | 结构 | 定义与关键字段 | 创建/消费 | 贯穿性与 Benchmark 价值 |
 |---|---|---|---|
-| CompanyProfile | `backend/modules/assessment/schema.py`；公司、数据、接收方、系统、措施等 | ProfileExtractor→assessment pipeline/generator/renderer | 仅 assessment 主类型；其他模块各有 Profile/Request，存在重复 |
+| CompanyProfile | `backend/domains/cn/security_assessment/schema.py`；公司、数据、接收方、系统、措施等 | ProfileExtractor→assessment pipeline/generator/renderer | 仅 assessment 主类型；其他模块各有 Profile/Request，存在重复 |
 | FactItem | `backend/common/workflow/facts.py`；provenance、value、confidence、evidence_status、外部正向陈述权限 | 各 fact_builder→Issue/ContextPack/renderer | assessment/CN Flow/EO14117 等较真实；适合作 Benchmark，但枚举注释与实际 literal 口径有历史不一致 |
 | FactPack/MergeLog | 同文件；facts、来源/证据统计、冲突候选与 winner | CPRA 有独立 `CPRAFactPack`/FactMerger；公共 MergeLog 使用有限 | 可用于 Gold fact extraction，需先统一多套 schema |
 | RuleItem | **不存在** | 各规则用 JSON、函数、dict 或 RuleHit | 不能直接作为统一规则 Benchmark schema |
@@ -195,7 +199,7 @@ SCC、PIPIA、BCR、DPIA、EU SCC、TIA、CPRA 各自有专用 service；公共 
 - CPRA：`gap_rules.py` 10 组 if-else 规则。
 - BCR：`bcr_rulebook.json` + loader + checklist/条款/TIA/责任/后续传输 checkers。
 - TIA/DPIA：静态 riskbook/规则 assessor + Agent 辅助。
-- 通用合同审查：`backend/data/review_rulebook.json` + specialized reviewers。
+- 通用合同审查：`resources/rules/cn/review_rulebook.json` + `backend/domains/cn/document_review/` specialized reviewers。
 
 规则和法规依据多数绑定在同一 JSON/Python 常量中，未形成统一“条件—例外—法律效果—优先级—版本”的 RuleItem。中国 diagnosis 有显式顺序优先级，其他模块主要由调用顺序隐式决定。普遍缺少：统一版本管理、effective date gating、规则冲突求解、未命中解释、可重放规则版本快照。缺失事实能通过 unknown、missing materials、Issue certainty 表达，但非全模块统一。
 
@@ -275,7 +279,7 @@ AI 冲突处理不统一：中国 diagnosis 在确定性命中后不允许解释
 
 ## 14. 可观测性、运行记录和输出文件
 
-`TraceRecorder` 为每一步写 `NNN_name.json`，内容含 name、seq、created_at、payload，并生成 manifest。SSEManager 将 trace 转 RunEvent；前端有 `ExecutionTimeline`、`LiveRunConsole`、`RunTranscript`、`TraceNodeView`、`GlobalTaskWatcher` 等真实组件。
+`TraceRecorder` 为每一步写 `NNN_name.json`，内容含 name、seq、created_at、payload，并生成 manifest。SSEManager 将 trace 转 RunEvent；前端当前由 `RunTranscript`、`TraceNodeView`、`GlobalTaskWatcher` 等活动组件展示运行事件；未接入入口的 `ExecutionTimeline` 与 `LiveRunConsole` 已在前端结构治理中移除。
 
 受控历史资产：`storage/traces` 约 751 文件、25 个原始 manifest（本轮测试前），覆盖 assessment、BCR、CN Flow、CPRA、diagnosis、DPIA、EU SCC、PIPIA、SCC、TIA、EO14117；事件包括 facts、retrieval hits、issues、evidence、context pack、chapters、consistency、repair 和少量 llm request/response。`storage/reports` 有 16 份通用审查 DOCX。
 
@@ -289,7 +293,7 @@ AI 冲突处理不统一：中国 diagnosis 在确定性命中后不允许解释
 
 关键失败类别：
 
-1. SCC 5 个 service 测试及 async 流程受 `NameError: uuid is not defined` 阻断（`backend/modules/scc/service.py:generate_report`）。
+1. SCC 5 个 service 测试及 async 流程受 `NameError: uuid is not defined` 阻断（`backend/domains/cn/scc_review/service.py:generate_report`）。
 2. CN Flow service/async/v0 失败：`_build_context_pack()` 与 `WorkflowPipeline` 的 `per_issue_rag` 参数不兼容。
 3. BCR/CPRA/DPIA/PIPIA/TIA 等 async API 测试预期 200，但现路由要求 auth，返回 401；属于测试与接口契约不一致，不能直接等同业务逻辑失败。
 4. v0 DPIA 返回 400，表明 gateway payload 映射与当前 schema 不一致。
@@ -341,7 +345,7 @@ Benchmark 资产不是“只有 demo”：`qa/rag_baseline_v1.json`、`qa/rag_ev
 
 ### 18.1 已由运行确认
 
-- `backend/modules/scc/service.py` 缺少 `import uuid`，SCC 主链直接失败。
+- `backend/domains/cn/scc_review/service.py` 缺少 `import uuid`，SCC 主链直接失败。
 - `CNFlowService._build_context_pack()` 与 `WorkflowPipeline.run()` 参数契约不一致。
 - v0 gateway 对 DPIA payload 映射失败；支持模块集合也不完整。
 - 异步 API 鉴权契约与多模块测试不一致。
@@ -415,6 +419,6 @@ Benchmark 资产不是“只有 demo”：`qa/rag_baseline_v1.json`、`qa/rag_ev
 - LLM：`backend/common/llm/client.py`、`backend/common/llm/module_generator.py`
 - RAG/知识：`backend/common/rag/`、`backend/common/knowledge/`、`doc/knowledge/`、`storage/rag/`
 - 引用与 trace：`backend/common/citation/`、`backend/common/trace/`、`storage/traces/`
-- 规则：`backend/modules/diagnosis/decision_tree.json`、各模块 `rule_engine.py`/`gap_rules.py`/rulebook
+- 规则：`backend/domains/cn/transfer_diagnosis/decision_tree.json`、各模块 `rule_engine.py`/`gap_rules.py`/rulebook
 - 测试与评测：`backend/**/test_*.py`、`qa/`、`doc/knowledge/_evaluation/`
 - 部署与配置：`pyproject.toml`、`.env.example`、`backend/core/settings.py`、`backend/core/runtime_settings.py`、`backend/core/db.py`

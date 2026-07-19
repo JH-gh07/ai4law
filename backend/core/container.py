@@ -3,9 +3,9 @@ from backend.core.db import build_engine, build_session_factory
 from backend.core.settings import Settings
 from backend.services.diagnosis_session_service import DiagnosisSessionService
 from backend.services.file_service import FileService
-from backend.services.legal_api_service import DeliLegalService
+from backend.integrations.delilegal import DeliLegalService
 from backend.services.report_service import ReportService
-from backend.services.review_service.service import ReviewService
+from backend.domains.cn.document_review.service import ReviewService
 from backend.services.session_service import SessionService
 from backend.services.task_dispatcher import build_task_dispatcher
 from backend.services.websocket_manager import WebSocketManager

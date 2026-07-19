@@ -1,0 +1,111 @@
+[
+  {
+    "module_id": "cn.transfer_diagnosis",
+    "jurisdiction": "cn",
+    "frontend_key": "diagnosis",
+    "task_template_id": "cn_diagnosis",
+    "implementation_package": "backend.domains.cn.transfer_diagnosis",
+    "v1_api_prefix": "/api/v1/diagnosis",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "cn.security_assessment",
+    "jurisdiction": "cn",
+    "frontend_key": "assessment",
+    "task_template_id": "cn_assessment",
+    "implementation_package": "backend.domains.cn.security_assessment",
+    "v1_api_prefix": "/api/v1/assessment",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "cn.document_review",
+    "jurisdiction": "cn",
+    "frontend_key": "review",
+    "task_template_id": "cn_document_review",
+    "implementation_package": "backend.domains.cn.document_review",
+    "v1_api_prefix": "/api/v1/review",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "cn.scc_review",
+    "jurisdiction": "cn",
+    "frontend_key": "scc",
+    "task_template_id": "cn_scc",
+    "implementation_package": "backend.domains.cn.scc_review",
+    "v1_api_prefix": "/api/v1/scc",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "cn.pipia",
+    "jurisdiction": "cn",
+    "frontend_key": "pipia",
+    "task_template_id": "cn_pipia",
+    "implementation_package": "backend.domains.cn.pipia",
+    "v1_api_prefix": "/api/v1/pipia",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "us.eo_14117_flow_review",
+    "jurisdiction": "us",
+    "frontend_key": "cn_flow",
+    "task_template_id": "us_14117_flow",
+    "implementation_package": "backend.domains.us.eo14117_flow_review",
+    "v1_api_prefix": "/api/v1/cn-flow",
+    "lifecycle": "legacy-compatible",
+    "note": "The historical key is retained for API compatibility; current retrieval, rules and output are EO 14117/US oriented."
+  },
+  {
+    "module_id": "eu.scc_review",
+    "jurisdiction": "eu",
+    "frontend_key": "eu_scc",
+    "task_template_id": "eu_scc",
+    "implementation_package": "backend.domains.eu.scc_review",
+    "v1_api_prefix": "/api/v1/eu_scc",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "eu.bcr_review",
+    "jurisdiction": "eu",
+    "frontend_key": "bcr",
+    "task_template_id": "eu_bcr",
+    "implementation_package": "backend.domains.eu.bcr_review",
+    "v1_api_prefix": "/api/v1/bcr",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "eu.dpia",
+    "jurisdiction": "eu",
+    "frontend_key": "dpia",
+    "task_template_id": "eu_dpia",
+    "implementation_package": "backend.domains.eu.dpia",
+    "v1_api_prefix": "/api/v1/dpia",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "eu.tia",
+    "jurisdiction": "eu",
+    "frontend_key": "tia",
+    "task_template_id": "eu_tia",
+    "implementation_package": "backend.domains.eu.tia",
+    "v1_api_prefix": "/api/v1/tia",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "us.eo_14117",
+    "jurisdiction": "us",
+    "frontend_key": "us_14117",
+    "task_template_id": "us_14117",
+    "implementation_package": "backend.domains.us.eo14117",
+    "v1_api_prefix": "/api/v1/us_14117",
+    "lifecycle": "active"
+  },
+  {
+    "module_id": "us.cpra",
+    "jurisdiction": "us",
+    "frontend_key": "cpra",
+    "task_template_id": "us_cpra",
+    "implementation_package": "backend.domains.us.cpra",
+    "v1_api_prefix": "/api/v1/cpra",
+    "lifecycle": "active"
+  }
+]

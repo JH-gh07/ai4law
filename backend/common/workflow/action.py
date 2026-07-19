@@ -127,10 +127,3 @@ class ActionPlan(BaseModel):
     p0_count: int = 0
     p1_count: int = 0
     p2_count: int = 0
-
-    def summarize(self) -> str:
-        return (
-            f"ActionPlan({self.module}): "
-            f"P0={self.p0_count} P1={self.p1_count} P2={self.p2_count} | "
-            f"actions={len(self.actions)} materials={len(self.materials)}"
-        )

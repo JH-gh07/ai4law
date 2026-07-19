@@ -22,26 +22,19 @@ venv/
 .env
 .env.*
 !.env.example
-storage/runtime_settings.json
-
 # Runtime and generated data
 outputs/
 frontend/tmp/
 frontend/storage/
 frontend/.codex-archives/
-storage/drafts/
-storage/rag/
-storage/traces/
-storage/reports/
-storage/uploads/
-storage/*.db
-storage/*.sqlite*
-storage/*.db-wal
-storage/*.db-shm
+storage/*
+!storage/README.md
+!storage/runtime_settings.example.json
 
 # Developer-tool local state
+.agents/
 .repo-backups/
-.claude/settings.local.json
+.claude/
 .streamlit/
 .superpowers/
 .vscode/settings.json

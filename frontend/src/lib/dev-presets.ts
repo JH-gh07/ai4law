@@ -27,8 +27,8 @@ export type AssessmentDevPreset = ModuleDevPreset & {
   expectedPath: "security_assessment" | "scc_or_certification" | "exemption";
 };
 
-const SHARED_DOCX_FILE = "storage/uploads/f_2cfeebc5e5c64b4e_CC源码分析.docx";
-const SHARED_TXT_FILE = "storage/uploads/regen_sample_scc.txt";
+const SHARED_CONTRACT_FIXTURE = "benchmarks/sample-inputs/sample_contract.txt";
+const SHARED_EVIDENCE_FIXTURE = "benchmarks/sample-inputs/sample_evidence.txt";
 
 function assertCase(module: string) {
   const found = getDefaultTestCase(module);
@@ -96,7 +96,7 @@ const PIPIA_BASELINE_PRESET: ModuleDevPreset = {
     org_structure_privacy_team: "设DPO与专项隐私治理小组",
     attachment_role: "scc_contract"
   },
-  backendFilePaths: [SHARED_DOCX_FILE, SHARED_TXT_FILE]
+  backendFilePaths: [SHARED_CONTRACT_FIXTURE, SHARED_EVIDENCE_FIXTURE]
 };
 
 const SCC_BASELINE_PRESET: ModuleDevPreset = {
@@ -124,7 +124,7 @@ const SCC_BASELINE_PRESET: ModuleDevPreset = {
     spi_count: 5000,
     has_scc_draft: true
   },
-  backendFilePaths: [SHARED_DOCX_FILE]
+  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
 };
 
 const BCR_BASELINE_PRESET: ModuleDevPreset = {
@@ -151,7 +151,7 @@ const BCR_BASELINE_PRESET: ModuleDevPreset = {
     definitions_quality: "术语体系与GDPR保持一致",
     review_focus: "重点审查责任承担、补充措施和第三方受益人条款"
   },
-  backendFilePaths: [SHARED_DOCX_FILE]
+  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
 };
 
 const DPIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -195,7 +195,7 @@ const DPIA_BASELINE_PRESET: ModuleDevPreset = {
     review_schedule: "每季度复核",
     attachment_role: "data_flow_diagram"
   },
-  backendFilePaths: [SHARED_DOCX_FILE]
+  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
 };
 
 const TIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -225,7 +225,7 @@ const TIA_BASELINE_PRESET: ModuleDevPreset = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  backendFilePaths: [SHARED_DOCX_FILE]
+  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
 };
 
 const DIAGNOSIS_BASELINE_PRESET: ModuleDevPreset = {

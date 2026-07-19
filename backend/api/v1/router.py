@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.api import (
+from backend.api.v1.endpoints import (
     artifacts,
     auth,
     citations,
@@ -11,21 +11,21 @@ from backend.api import (
     knowledge_review,
     me,
     reports,
-    review,
     system_settings,
     workspace_state,
 )
-from backend.modules.assessment.router import router as assessment_router
-from backend.modules.bcr.router import router as bcr_router
-from backend.modules.cn_flow.router import router as cn_flow_router
-from backend.modules.cpra.router import router as cpra_router
-from backend.modules.diagnosis.router import router as diagnosis_module_router
-from backend.modules.dpia.router import router as dpia_router
-from backend.modules.eu_scc.router import router as eu_scc_router
-from backend.modules.pipia.router import router as pipia_router
-from backend.modules.scc.router import router as scc_router
-from backend.modules.tia.router import router as tia_router
-from backend.modules.us_14117.router import router as us_14117_router
+from backend.domains.cn.document_review.router import router as review_router
+from backend.domains.cn.security_assessment.router import router as assessment_router
+from backend.domains.eu.bcr_review.router import router as bcr_router
+from backend.domains.us.eo14117_flow_review.router import router as cn_flow_router
+from backend.domains.us.cpra.router import router as cpra_router
+from backend.domains.cn.transfer_diagnosis.router import router as diagnosis_module_router
+from backend.domains.eu.dpia.router import router as dpia_router
+from backend.domains.eu.scc_review.router import router as eu_scc_router
+from backend.domains.cn.pipia.router import router as pipia_router
+from backend.domains.cn.scc_review.router import router as scc_router
+from backend.domains.eu.tia.router import router as tia_router
+from backend.domains.us.eo14117.router import router as us_14117_router
 
 v1_router = APIRouter()
 
@@ -37,7 +37,7 @@ v1_router.include_router(citations.router, prefix="/citations", tags=["citations
 v1_router.include_router(copilot.router, prefix="/copilot", tags=["copilot"])
 v1_router.include_router(diagnosis.router, prefix="/diagnosis", tags=["diagnosis"])
 v1_router.include_router(reports.router, prefix="/reports", tags=["reports"])
-v1_router.include_router(review.router, prefix="/review", tags=["review"])
+v1_router.include_router(review_router, prefix="/review", tags=["review"])
 v1_router.include_router(
     workspace_state.router,
     prefix="/workspace-state",

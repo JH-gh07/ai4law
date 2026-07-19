@@ -7,13 +7,13 @@ from sqlalchemy.orm import Session
 from backend.common.llm.client import LLMClient
 from backend.core.json_utils import dumps, loads
 from backend.models.diagnosis import DiagnosisSessionModel
-from backend.modules.diagnosis.schema import (
+from backend.domains.cn.transfer_diagnosis.schema import (
     DiagnosisAnswers as ModuleDiagnosisAnswers,
 )
-from backend.modules.diagnosis.schema import (
+from backend.domains.cn.transfer_diagnosis.schema import (
     DiagnosisResult as ModuleDiagnosisResult,
 )
-from backend.modules.diagnosis.service import DiagnosisService as TransferDiagnosisService
+from backend.domains.cn.transfer_diagnosis.service import DiagnosisService as TransferDiagnosisService
 from backend.repositories.diagnosis_repository import DiagnosisRepository
 from backend.schemas.diagnosis import (
     AssessmentHandoffResponse,
@@ -28,7 +28,7 @@ from backend.schemas.diagnosis import (
     DiagnosisSessionStatus,
     SCCHandoffResponse,
 )
-from backend.services.legal_api_service import DeliLegalService
+from backend.integrations.delilegal import DeliLegalService
 from backend.services.report_service import ReportService
 from backend.services.session_service import SessionService
 

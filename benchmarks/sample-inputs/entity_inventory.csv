@@ -1,0 +1,3 @@
+entity_name,role,jurisdiction,risk_note
+Example Exporter Ltd.,exporter,CN,synthetic fixture
+Example Processor Ltd.,recipient,Example Region,synthetic fixture

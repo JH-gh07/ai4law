@@ -4,7 +4,7 @@ import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal"
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
 import { useLang } from "../lib/language";
-import { deleteProjectHistory } from "../lib/me-api";
+import { deleteProjectHistory } from "../api/me";
 
 import { getRunLifecycleState } from "../lib/run-state";
 import {

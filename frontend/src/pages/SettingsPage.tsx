@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../lib/system-settings-api";
-import { fetchRuntimeSettings, saveRuntimeSettings, testRuntimeProvider } from "../lib/system-settings-api";
+import type { RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../api/system-settings";
+import { fetchRuntimeSettings, saveRuntimeSettings, testRuntimeProvider } from "../api/system-settings";
 
 const FALLBACK_MODELS = ["deepseek-ai/DeepSeek-V3.2", "deepseek-ai/DeepSeek-V3", "Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-72B-Instruct"];
 
@@ -10,6 +10,7 @@ const emptyPayload: RuntimeSettingsPayload = {
     app_id: "",
     secret: "",
     enabled: false,
+    secret_configured: false,
   },
   llm: {
     active_provider_id: "siliconflow",
@@ -319,7 +320,7 @@ export function SettingsPage() {
                       <span>启用该 Provider</span>
                     </label>
                     <p className="settings-hint">
-                      {provider.api_key ? "API Key 已填入" : "API Key 未填入"}
+                      {provider.api_key || provider.api_key_configured ? "API Key 已配置" : "API Key 未配置"}
                     </p>
                   </div>
                   <div className="settings-provider-actions">

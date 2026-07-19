@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.core.runtime_settings import apply_runtime_payload, build_effective_runtime_payload
+from backend.core.runtime_settings import (
+    apply_runtime_payload,
+    build_effective_runtime_payload,
+    build_provider_test_result,
+)
 from backend.core.settings import Settings
 
 
@@ -95,10 +99,10 @@ def test_runtime_settings_can_apply_siliconflow_provider(tmp_path) -> None:
     )
 
     assert payload["llm"]["provider"] == "siliconflow"
-    assert payload["llm"]["api_key"] == "runtime-sf-key"
+    assert payload["llm"]["api_key"] == ""
     assert payload["llm"]["api_url"] == "https://api.siliconflow.cn/v1"
     assert payload["llm"]["model"] == "Qwen/Qwen2.5-7B-Instruct"
-    assert payload["llm"]["providers"][0]["api_key"] == "runtime-sf-key"
+    assert payload["llm"]["providers"][0]["api_key"] == ""
     assert payload["llm"]["providers"][0]["api_key_configured"] is True
     assert build_effective_runtime_payload(settings)["llm"]["enabled"] is True
 
@@ -125,3 +129,95 @@ def test_delilegal_has_no_embedded_competition_credentials(monkeypatch, tmp_path
     assert payload["delilegal"]["app_id"] == ""
     assert payload["delilegal"]["secret"] == ""
     assert payload["delilegal"]["enabled"] is False
+
+
+def test_runtime_settings_mask_and_preserve_existing_secrets(tmp_path) -> None:
+    settings = Settings(storage_dir=tmp_path, _env_file=None)
+
+    first = apply_runtime_payload(
+        settings,
+        {
+            "delilegal": {
+                "base_url": "https://openapi.delilegal.com",
+                "app_id": "demo-app",
+                "secret": "deli-secret",
+            },
+            "llm": {
+                "active_provider_id": "demo",
+                "providers": [
+                    {
+                        "id": "demo",
+                        "name": "Demo",
+                        "provider_type": "openai_compatible",
+                        "api_key": "llm-secret",
+                        "api_url": "https://example.com/v1",
+                        "model": "demo-model",
+                        "enabled": True,
+                        "timeout": 30,
+                    }
+                ],
+            },
+        },
+    )
+
+    assert first["delilegal"]["secret"] == ""
+    assert first["delilegal"]["secret_configured"] is True
+    assert first["llm"]["providers"][0]["api_key"] == ""
+    assert first["llm"]["providers"][0]["api_key_configured"] is True
+
+    second = apply_runtime_payload(settings, first)
+
+    assert settings.delilegal_secret == "deli-secret"
+    assert settings._runtime_llm_providers[0]["api_key"] == "llm-secret"
+    assert second["delilegal"]["secret_configured"] is True
+    assert second["llm"]["providers"][0]["api_key_configured"] is True
+
+
+def test_provider_probe_reuses_existing_secret_when_request_is_masked(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    settings = Settings(storage_dir=tmp_path, _env_file=None)
+    apply_runtime_payload(
+        settings,
+        {
+            "llm": {
+                "active_provider_id": "demo",
+                "providers": [
+                    {
+                        "id": "demo",
+                        "name": "Demo",
+                        "provider_type": "openai_compatible",
+                        "api_key": "probe-secret",
+                        "api_url": "https://example.com/v1",
+                        "model": "demo-model",
+                        "enabled": True,
+                        "timeout": 30,
+                    }
+                ],
+            },
+        },
+    )
+    observed = {}
+
+    def fake_chat(client, **_kwargs):
+        observed["api_key"] = client._api_key
+        return {"fallback": False, "usage": {}}
+
+    monkeypatch.setattr(LLMClient, "chat_with_metadata", fake_chat)
+    result = build_provider_test_result(
+        {
+            "id": "demo",
+            "name": "Demo",
+            "provider_type": "openai_compatible",
+            "api_key": "",
+            "api_url": "https://example.com/v1",
+            "model": "demo-model",
+            "enabled": True,
+            "timeout": 30,
+        },
+        settings,
+    )
+
+    assert result["ok"] is True
+    assert observed["api_key"] == "probe-secret"

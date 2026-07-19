@@ -1,4 +1,4 @@
-import type { CitationDetail } from "../../lib/citation-api";
+import type { CitationDetail } from "../../api/citations";
 
 const TYPE_LABELS: Record<string, string> = {
   law_article: "法律条文",

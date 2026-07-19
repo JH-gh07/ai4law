@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from backend.core.db import Base
@@ -81,6 +81,7 @@ def log_citation_event(
             logger.warning("Failed to write citation audit log", exc_info=True)
         finally:
             session.close()
+            engine.dispose()
     except Exception:
         logger.warning("Failed to create DB session for citation audit", exc_info=True)
 
@@ -96,33 +97,3 @@ def log_citations_created(
         log_citation_event(
             cid, CitationAction.created, task_id=task_id, report_id=report_id, db=db
         )
-
-
-def get_citation_audit_log(
-    citation_id: str,
-    db: Session,
-    limit: int = 20,
-) -> list[CitationAuditLog]:
-    """Retrieve audit log entries for a citation."""
-    return (
-        db.query(CitationAuditLog)
-        .filter(CitationAuditLog.citation_id == citation_id)
-        .order_by(CitationAuditLog.timestamp.desc())
-        .limit(limit)
-        .all()
-    )
-
-
-def get_task_audit_log(
-    task_id: str,
-    db: Session,
-    limit: int = 50,
-) -> list[CitationAuditLog]:
-    """Retrieve all citation audit entries for a task."""
-    return (
-        db.query(CitationAuditLog)
-        .filter(CitationAuditLog.task_id == task_id)
-        .order_by(CitationAuditLog.timestamp.desc())
-        .limit(limit)
-        .all()
-    )

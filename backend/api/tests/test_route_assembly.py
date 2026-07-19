@@ -62,7 +62,10 @@ def _duplicate_routes(rows: list[dict[str, str]]) -> list[str]:
 @pytest.fixture
 def complete_app(tmp_path: Path) -> FastAPI:
     database_path = tmp_path / "route-assembly.db"
-    settings = Settings(database_url=f"sqlite:///{database_path}")
+    settings = Settings(
+        database_url=f"sqlite:///{database_path}",
+        storage_dir=tmp_path / "storage",
+    )
     return create_app(settings)
 
 

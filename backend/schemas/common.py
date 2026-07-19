@@ -3,9 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-class ErrorResponse(BaseModel):
-    detail: str
-
 
 class ReportArtifact(BaseModel):
     id: str

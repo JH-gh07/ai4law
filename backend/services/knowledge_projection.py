@@ -7,7 +7,7 @@ from pathlib import Path
 from backend.common.knowledge.registry import ROOT, ensure_source_registry
 from backend.common.knowledge.v2 import KnowledgeChunkV2, SourceRegistryEntry
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
-from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
+from backend.common.rag.vector_store import LocalVectorStore
 from backend.core.settings import get_settings
 from backend.services.knowledge_index import load_practice_cases, read_text_preview
 
@@ -101,18 +101,6 @@ def _usage_labels(usages: list[str]) -> list[str]:
             labels.append(label)
     return labels
 
-
-def _search_text(chunk: KnowledgeChunkV2) -> str:
-    return " ".join(
-        [
-            chunk.title,
-            chunk.content,
-            chunk.citation_anchor,
-            " ".join(chunk.reference_ids),
-            " ".join(chunk.scenario_tags),
-            " ".join(chunk.keywords),
-        ]
-    ).strip()
 
 
 def _lexical_score(query: str, chunk: KnowledgeChunkV2) -> float:
