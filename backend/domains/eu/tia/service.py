@@ -423,6 +423,7 @@ class TIAService:
         snapshot = self.tasks.submit_with_trace(
             lambda: self.generate_report(payload, task_id=task_id, trace=trace),
             trace_recorder=trace,
+            llm_client=self.llm_client,
         )
         return self._snapshot_to_accepted(snapshot)
 

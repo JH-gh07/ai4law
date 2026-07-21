@@ -411,6 +411,7 @@ class CPRAService:
         snapshot = self.tasks.submit_with_trace(
             runner=lambda: self.generate_report(payload, task_id=task_id, trace=trace_recorder),
             trace_recorder=trace_recorder,
+            llm_client=self.llm_client,
         )
         return self._snapshot_to_accepted(snapshot)
 

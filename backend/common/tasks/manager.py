@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -23,6 +24,7 @@ class TaskSnapshot:
     updated_at: str
     error: str | None
     result: dict[str, Any] | None
+    provider_snapshot: dict[str, Any] | None
 
 
 @dataclass
@@ -37,6 +39,7 @@ class _TaskRecord:
     error: str | None
     result: dict[str, Any] | None
     runner: Callable[[], Any]
+    provider_snapshot: dict[str, Any] | None
 
 
 class InMemoryTaskManager:
@@ -48,9 +51,18 @@ class InMemoryTaskManager:
         self._tasks: dict[str, _TaskRecord] = {}
         self._lock = Lock()
 
-    def submit(self, runner: Callable[[], Any], max_attempts: int = 2) -> TaskSnapshot:
+    def submit(
+        self,
+        runner: Callable[[], Any],
+        max_attempts: int = 2,
+        llm_client: Any | None = None,
+    ) -> TaskSnapshot:
         now = _utc_now_iso()
         task_id = str(uuid.uuid4())
+        wrapped_runner, provider_snapshot = self._bind_llm_snapshot(
+            runner,
+            llm_client,
+        )
         record = _TaskRecord(
             task_id=task_id,
             module=self.module,
@@ -61,7 +73,8 @@ class InMemoryTaskManager:
             updated_at=now,
             error=None,
             result=None,
-            runner=runner,
+            runner=wrapped_runner,
+            provider_snapshot=provider_snapshot,
         )
         with self._lock:
             self._tasks[task_id] = record
@@ -73,6 +86,7 @@ class InMemoryTaskManager:
         runner: Callable[[], Any],
         trace_recorder: Any,  # TraceRecorder
         max_attempts: int = 2,
+        llm_client: Any | None = None,
     ) -> TaskSnapshot:
         """提交任务并绑定 TraceRecorder 用于事件推送。"""
         now = _utc_now_iso()
@@ -92,11 +106,16 @@ class InMemoryTaskManager:
         trace_recorder.subscribe(sm.on_event)
 
         # 包裹 runner：注入 TraceRecorder 到 contextvar
+        frozen_runner, provider_snapshot = self._bind_llm_snapshot(
+            runner,
+            llm_client,
+        )
+
         def wrapped_runner():
             from backend.common.trace.context import current_trace
             token = current_trace.set(trace_recorder)
             try:
-                return runner()
+                return frozen_runner()
             finally:
                 current_trace.reset(token)
 
@@ -111,6 +130,7 @@ class InMemoryTaskManager:
             error=None,
             result=None,
             runner=wrapped_runner,
+            provider_snapshot=provider_snapshot,
         )
         with self._lock:
             self._tasks[task_id] = record
@@ -308,6 +328,36 @@ class InMemoryTaskManager:
                 ))
 
     @staticmethod
+    def _bind_llm_snapshot(
+        runner: Callable[[], Any],
+        llm_client: Any | None,
+    ) -> tuple[Callable[[], Any], dict[str, Any] | None]:
+        if llm_client is None:
+            return runner, None
+
+        clone = getattr(llm_client, "clone", None)
+        frozen_client = clone() if callable(clone) else copy(llm_client)
+        snapshot_factory = getattr(frozen_client, "provider_snapshot", None)
+        if callable(snapshot_factory):
+            provider_snapshot = snapshot_factory().sanitized()
+        else:
+            provider_snapshot = {
+                "provider_id": type(frozen_client).__name__,
+                "snapshot_supported": False,
+            }
+
+        def scoped_runner() -> Any:
+            from backend.common.llm.context import current_llm_client
+
+            token = current_llm_client.set(frozen_client)
+            try:
+                return runner()
+            finally:
+                current_llm_client.reset(token)
+
+        return scoped_runner, provider_snapshot
+
+    @staticmethod
     def _snapshot(record: _TaskRecord) -> TaskSnapshot:
         return TaskSnapshot(
             task_id=record.task_id,
@@ -319,4 +369,5 @@ class InMemoryTaskManager:
             updated_at=record.updated_at,
             error=record.error,
             result=record.result,
+            provider_snapshot=record.provider_snapshot,
         )

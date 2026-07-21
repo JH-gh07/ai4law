@@ -409,6 +409,7 @@ class EU_SCCService:
         snapshot = self.tasks.submit_with_trace(
             lambda: self.generate_report(payload, task_id=task_id, trace=trace),
             trace_recorder=trace,
+            llm_client=self.llm_client,
         )
         return self._to_accepted(snapshot)
     def get_async_status(self, tid): return self._to_status(self.tasks.get_or_raise(tid))

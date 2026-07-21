@@ -1,6 +1,9 @@
 import time
+from dataclasses import dataclass
+from threading import Event
 
 from backend.common.events.manager import get_ssemanager
+from backend.common.llm.context import current_llm_client
 from backend.common.tasks.manager import InMemoryTaskManager
 from backend.common.trace.recorder import TraceRecorder
 
@@ -66,3 +69,44 @@ def test_traced_task_events_have_one_monotonic_transport_sequence(tmp_path) -> N
         "任务开始执行 (ut)",
         "业务追踪",
     ]
+
+
+@dataclass(frozen=True)
+class _FakeProviderSnapshot:
+    label: str
+
+    def sanitized(self) -> dict[str, str]:
+        return {"provider_id": self.label, "fingerprint": f"fp-{self.label}"}
+
+
+class _FakeLLMClient:
+    def __init__(self, label: str) -> None:
+        self.label = label
+
+    def clone(self) -> "_FakeLLMClient":
+        return _FakeLLMClient(self.label)
+
+    def provider_snapshot(self) -> _FakeProviderSnapshot:
+        return _FakeProviderSnapshot(self.label)
+
+
+def test_task_keeps_submission_provider_snapshot_across_runtime_change() -> None:
+    manager = InMemoryTaskManager(module="ut")
+    release = Event()
+    live_client = _FakeLLMClient("provider-a")
+
+    def runner() -> dict[str, str]:
+        release.wait(timeout=2)
+        frozen_client = current_llm_client.get()
+        return {"provider": frozen_client.label}
+
+    accepted = manager.submit(runner, llm_client=live_client)
+    live_client.label = "provider-b"
+    release.set()
+
+    snapshot = wait_until_terminal(manager, accepted.task_id)
+    assert snapshot.result == {"provider": "provider-a"}
+    assert snapshot.provider_snapshot == {
+        "provider_id": "provider-a",
+        "fingerprint": "fp-provider-a",
+    }

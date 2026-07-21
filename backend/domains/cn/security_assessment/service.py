@@ -55,6 +55,7 @@ class AssessmentService:
         if legal_api_service is None:
             from backend.integrations.delilegal import DeliLegalService as _DeliLegalService
             legal_api_service = _DeliLegalService(get_settings())
+        self.llm_client = llm_client
         self.legal_service = legal_api_service
         self.diagnosis_service = DiagnosisService()
         self.extractor = ProfileExtractor()
@@ -438,6 +439,7 @@ class AssessmentService:
         snapshot = self.tasks.submit_with_trace(
             lambda: self.generate_report(payload, task_id=task_id, trace=trace),
             trace_recorder=trace,
+            llm_client=self.llm_client,
         )
         return self._snapshot_to_accepted(snapshot)
 

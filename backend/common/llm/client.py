@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from backend.common.llm.provider_registry import LLMProviderRegistry
+from backend.common.llm.context import current_llm_client
+from backend.common.llm.snapshot import ProviderSnapshot
 from backend.common.trace.context import current_trace
 
 try:
@@ -65,9 +67,10 @@ class LLMClient:
         self._api_key = provider.api_key
         self._api_url = provider.api_url
         self._timeout = provider.timeout
+        self._provider_enabled = provider.enabled
         self._client: Any | None = None
         self._client_init_error: str | None = None
-        self._enabled = bool(self._api_key) and OpenAI is not None
+        self._enabled = provider.enabled and bool(self._api_key) and OpenAI is not None
         if OpenAI is None:
             logger.warning("LLMClient: openai package not installed, falling back to placeholder outputs.")
         logger.info(
@@ -83,6 +86,40 @@ class LLMClient:
     @property
     def enabled(self) -> bool:
         return self._enabled
+
+    def provider_snapshot(self) -> ProviderSnapshot:
+        return ProviderSnapshot(
+            provider_id=self._provider_id,
+            provider_name=self._provider_name,
+            provider_type=self._provider_type,
+            api_url=self._api_url,
+            model=self._model,
+            enabled=self._provider_enabled,
+            timeout=self._timeout,
+            api_key=self._api_key,
+        )
+
+    @classmethod
+    def from_provider_snapshot(cls, snapshot: ProviderSnapshot) -> "LLMClient":
+        client = cls.__new__(cls)
+        client._provider_id = snapshot.provider_id
+        client._provider_name = snapshot.provider_name
+        client._provider_type = snapshot.provider_type
+        client._provider = snapshot.provider_id
+        client._model = snapshot.model
+        client._api_key = snapshot.api_key
+        client._api_url = snapshot.api_url
+        client._timeout = snapshot.timeout
+        client._provider_enabled = snapshot.enabled
+        client._client = None
+        client._client_init_error = None
+        client._enabled = (
+            snapshot.enabled and bool(snapshot.api_key) and OpenAI is not None
+        )
+        return client
+
+    def clone(self) -> "LLMClient":
+        return self.from_provider_snapshot(self.provider_snapshot())
 
     def chat(
         self,
@@ -112,6 +149,16 @@ class LLMClient:
 
         如果 API 未配置或调用失败，返回降级占位文本（不抛异常）。
         """
+        scoped_client = current_llm_client.get()
+        if scoped_client is not None and scoped_client is not self:
+            return scoped_client.chat_with_metadata(
+                system=system,
+                user=user,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                channel=channel,
+            )
+
         trace = current_trace.get()
         if trace is not None:
             trace.record(

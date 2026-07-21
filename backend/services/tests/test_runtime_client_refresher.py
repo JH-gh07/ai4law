@@ -1,6 +1,41 @@
+import inspect
+
+import pytest
+
 from backend.app import create_app
 from backend.core.settings import Settings
 from backend.services.runtime_client_refresher import refresh_runtime_clients
+
+
+@pytest.mark.parametrize(
+    "service_class",
+    [
+        pytest.param(
+            "backend.domains.cn.security_assessment.service:AssessmentService",
+            id="assessment",
+        ),
+        pytest.param("backend.domains.cn.pipia.service:PIPIAService", id="pipia"),
+        pytest.param("backend.domains.eu.scc_review.service:EU_SCCService", id="scc"),
+        pytest.param("backend.domains.eu.bcr_review.service:BCRService", id="bcr"),
+        pytest.param("backend.domains.eu.dpia.service:DPIAService", id="dpia"),
+        pytest.param("backend.domains.eu.tia.service:TIAService", id="tia"),
+        pytest.param("backend.domains.us.cpra.service:CPRAService", id="cpra"),
+        pytest.param(
+            "backend.domains.us.eo14117.service:US14117Service",
+            id="eo14117",
+        ),
+        pytest.param(
+            "backend.domains.us.eo14117_flow_review.service:CNFlowService",
+            id="cn_flow",
+        ),
+    ],
+)
+def test_async_modules_bind_submission_provider_snapshot(service_class: str) -> None:
+    module_name, class_name = service_class.split(":", maxsplit=1)
+    module = __import__(module_name, fromlist=[class_name])
+    method = getattr(getattr(module, class_name), "submit_async")
+
+    assert "llm_client=self.llm_client" in inspect.getsource(method)
 
 
 def test_runtime_refresh_rebinds_all_module_llm_consumers(tmp_path) -> None:
