@@ -27,15 +27,6 @@
     "lifecycle": "active"
   },
   {
-    "module_id": "cn.scc_review",
-    "jurisdiction": "cn",
-    "frontend_key": "scc",
-    "task_template_id": "cn_scc",
-    "implementation_package": "backend.domains.cn.scc_review",
-    "v1_api_prefix": "/api/v1/scc",
-    "lifecycle": "active"
-  },
-  {
     "module_id": "cn.pipia",
     "jurisdiction": "cn",
     "frontend_key": "pipia",

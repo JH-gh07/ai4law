@@ -26,7 +26,7 @@ from backend.schemas.diagnosis import (
     DiagnosisSessionCreateResponse,
     DiagnosisSessionResponse,
     DiagnosisSessionStatus,
-    SCCHandoffResponse,
+    PIPIAHandoffResponse,
 )
 from backend.integrations.delilegal import DeliLegalService
 from backend.services.report_service import ReportService
@@ -141,20 +141,20 @@ class DiagnosisSessionService:
         )
         return AssessmentHandoffResponse.model_validate(payload)
 
-    def get_scc_handoff(
+    def get_pipia_handoff(
         self,
         db: Session,
         user_id: str,
         session_id: str,
-    ) -> SCCHandoffResponse:
+    ) -> PIPIAHandoffResponse:
         record = self._require_session(db, session_id, user_id)
         answers, result = self._require_completed_session(record)
-        payload = self.session_service.build_scc_handoff(
+        payload = self.session_service.build_pipia_handoff(
             record.id,
             result.outcome.value,
             answers.model_dump(),
         )
-        return SCCHandoffResponse.model_validate(payload)
+        return PIPIAHandoffResponse.model_validate(payload)
 
     def generate_report(
         self,
@@ -258,7 +258,7 @@ class DiagnosisSessionService:
         if outcome == DiagnosisOutcome.SECURITY_ASSESSMENT:
             return "assessment"
         if outcome == DiagnosisOutcome.SCC_OR_CERTIFICATION:
-            return "scc"
+            return "pipia"
         if outcome == DiagnosisOutcome.EXEMPTION:
             return "general"
         return None

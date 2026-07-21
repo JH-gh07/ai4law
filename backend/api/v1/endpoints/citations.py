@@ -17,7 +17,6 @@ router = APIRouter()
 _KNOWN_MODULES = (
     "assessment",
     "dpia",
-    "scc",
     "cn_flow",
     "eu_scc",
     "us_14117",

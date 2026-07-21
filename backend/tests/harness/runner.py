@@ -58,12 +58,6 @@ _ADAPTER_DEFINITIONS = {
         "AssessmentRequest",
         "AssessmentService",
     ),
-    "scc": (
-        "cn.scc_review",
-        "backend.domains.cn.scc_review",
-        "SCCRequest",
-        "SCCService",
-    ),
     "pipia": (
         "cn.pipia",
         "backend.domains.cn.pipia",
@@ -135,7 +129,7 @@ def _make_service(alias: str, service_class, no_llm: bool):
         )
         service.diagnosis_service = diagnosis_class(llm_client=_DisabledLLM())
         return service
-    if alias in {"scc", "pipia", "dpia"}:
+    if alias in {"pipia", "dpia"}:
         return service_class(llm_client=None)
     return service_class(llm_client=_DisabledLLM())
 

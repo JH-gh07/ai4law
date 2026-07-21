@@ -112,7 +112,6 @@ EO 14117 不是顶层统一路径诊断，而是 `/api/v1/us_14117/generate` 功
 | 模块 | 状态 | 入口与输入 | 核心处理与接入 | 实际输出/断链 |
 |---|---|---|---|---|
 | 通用合同审查 | 部分接入 | `/api/v1/review/*`；上传文件或 preset、ReviewGenerateRequest | 结构化解析→分类→条款切分→规则/专项 reviewer→可选 LLM reviewer→缺失项/一致性/引用相关性→聚合→报告 | SQLite 持久化任务，历史 16 DOCX；独立于公共 WorkflowPipeline；Agent/引用链为专用实现 |
-| 中国 SCC 审查 | 部分接入且当前阻断 | `/api/v1/scc/generate(_async)`；SCCRequest、合同/材料 | 路径规则+9 个实际 Agent 调用+Fact/Issue/Evidence+RAG plan+章节+review/clarification/explanation+DOCX | 本轮所有核心 service 测试因 `uuid` 未导入失败；不能认定当前可运行 |
 | EU SCC | 部分接入 | `/api/v1/eu_scc/generate(_async)`；SCC 文档、Annex、传输链 | parser+规则引擎+6 个 Agent（结构、链路、语义、TIA、证据、整改）+章节+trace | 11 个 service 测试通过；async 鉴权需另验；有历史 trace，无统一 Fact/Issue/Evidence 公共链 |
 | BCR | 部分接入 | `/api/v1/bcr/generate(_async)`；文档驱动，表单 fallback | parser、BCR-C/P 分类、rulebook/checkers、10 个 Agent、法律检索、聚合、渲染 | service 测试通过，async API 401；document-driven 与 legacy fallback 双流程，公共 Schema 未贯穿 |
 | CPRA | 部分接入 | `/api/v1/cpra/generate(_async)`；结构化企业/数据/DSR/vendor/UI+附件 | 附件抽取、4 Agent、FactMerger、10 组 if-else rules、法律检索、引用、章节、consistency review | service/rule 测试多数通过，async 401；有 46 事件历史 trace；无统一 Claim 层 |

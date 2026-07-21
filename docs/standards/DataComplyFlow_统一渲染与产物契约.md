@@ -51,7 +51,6 @@ Markdown 输入先执行共享规范化契约，再由 `content_adapter` 分块�
 | `cn.transfer_diagnosis` | HTML、PDF、结构化诊断结果 |
 | `cn.security_assessment` | Markdown、DOCX、PDF、JSON、XLSX、ZIP、trace、CitationMap |
 | `cn.document_review` | DOCX、annotated DOCX、JSON、PDF |
-| `cn.scc_review` | Markdown、DOCX、annotated DOCX、PDF、CitationMap |
 | `cn.pipia` | Markdown、DOCX、PDF、ZIP、CitationMap |
 | `eu.scc_review` | Markdown、DOCX、annotated DOCX、findings、PDF、CitationMap |
 | `eu.bcr_review` | 表单路径与文档路径各自的 Markdown、DOCX、PDF、ZIP |

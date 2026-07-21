@@ -67,3 +67,19 @@ def test_manual_review_has_no_automatic_handoff() -> None:
     )
 
     assert context["suggested_next_module"] is None
+
+
+def test_standard_contract_path_hands_off_to_pipia() -> None:
+    context = SessionService().build_prefill_context(
+        "SCC_OR_CERTIFICATION",
+        {"transfer_purpose": "境外客服"},
+    )
+    handoff = SessionService().build_pipia_handoff(
+        "session-1",
+        "SCC_OR_CERTIFICATION",
+        {"transfer_purpose": "境外客服"},
+    )
+
+    assert context["suggested_next_module"] == "pipia"
+    assert handoff["target_module"] == "pipia"
+    assert handoff["recommended"] is True

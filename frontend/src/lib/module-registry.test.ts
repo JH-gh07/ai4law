@@ -48,4 +48,10 @@ describe("module registry contract", () => {
       lifecycle: "legacy-compatible"
     });
   });
+
+  it("does not expose the retired China standard-contract review module", () => {
+    expect(listModuleIdentities().some((item) => item.module_id === "cn.scc_review")).toBe(false);
+    expect(listModules().map((item) => String(item.key))).not.toContain("scc");
+    expect(findTaskTemplate("cn_scc")).toBeUndefined();
+  });
 });

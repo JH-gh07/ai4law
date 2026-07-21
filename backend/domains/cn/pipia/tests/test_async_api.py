@@ -1,10 +1,16 @@
 import time
 from pathlib import Path
 
+from backend.domains.cn.pipia import router as pipia_router
+from backend.domains.cn.pipia.service import PIPIAService
 
 
-
-def test_pipia_async_flow(tmp_path: Path, authenticated_client) -> None:
+def test_pipia_async_flow(tmp_path: Path, authenticated_client, monkeypatch) -> None:
+    monkeypatch.setattr(
+        pipia_router,
+        "service",
+        PIPIAService(llm_client=None),
+    )
     attachment_path = tmp_path / "scc.txt"
     attachment_path.write_text("标准合同条款示例", encoding="utf-8")
 

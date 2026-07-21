@@ -33,7 +33,7 @@ const demoReview = () => ({
   uploaded_files: []
 });
 
-const demoScc = () => ({
+const demoEuScc = () => ({
   company_name: `DemoSCC${stamp()}`,
   receiver_name: "OceanStar Technology Inc.",
   receiver_country: "新加坡",
@@ -355,8 +355,8 @@ export function buildDemoPayload(module: ModuleKey): unknown {
       return demoAssessment();
     case "review":
       return demoReview();
-    case "scc":
-      return demoScc();
+    case "eu_scc":
+      return demoEuScc();
     case "pipia":
       return demoPipia();
     case "bcr":

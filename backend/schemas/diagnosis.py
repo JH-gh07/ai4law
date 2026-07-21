@@ -105,5 +105,5 @@ class AssessmentHandoffResponse(ModuleHandoffBase):
     target_module: str = "assessment"
 
 
-class SCCHandoffResponse(ModuleHandoffBase):
-    target_module: str = "scc"
+class PIPIAHandoffResponse(ModuleHandoffBase):
+    target_module: str = "pipia"

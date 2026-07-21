@@ -22,10 +22,12 @@ def test_registry_has_unique_stable_ids_and_frontend_keys(
     module_ids = [item["module_id"] for item in registry]
     frontend_keys = [item["frontend_key"] for item in registry]
 
-    assert len(registry) == 12
+    assert len(registry) == 11
     assert len(set(module_ids)) == len(registry)
     assert len(set(frontend_keys)) == len(registry)
     assert "cn.unknown" not in module_ids
+    assert "cn.scc_review" not in module_ids
+    assert "scc" not in frontend_keys
 
 
 @pytest.mark.parametrize(
@@ -66,6 +68,17 @@ def test_registry_api_prefixes_are_mounted_by_the_application(
     ]
 
     assert missing_prefixes == []
+
+
+def test_retired_cn_scc_api_is_not_mounted(tmp_path: Path) -> None:
+    app = create_app(
+        Settings(storage_dir=tmp_path / "storage", _env_file=None)
+    )
+
+    assert not any(
+        route.path == "/api/v1/scc" or route.path.startswith("/api/v1/scc/")
+        for route in app.routes
+    )
 
 
 def test_compatibility_and_domain_boundaries_remain_explicit(

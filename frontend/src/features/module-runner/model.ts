@@ -1315,7 +1315,7 @@ export const createDefaultPipiaValues = (): PipiaFormValues => {
 };
 
 export const createDefaultDocumentReviewValues = (): DocumentReviewFormValues => {
-  const demo = asRecord(getDefaultPayload("scc"));
+  const demo = asRecord(getDefaultPayload("eu_scc"));
   const base: DocumentReviewFormValues = {
     company_name: toString(demo.company_name, ""),
     document_title: "隐私政策",
@@ -1423,7 +1423,7 @@ export const seedDocumentReviewValuesForFile = (base: DocumentReviewFormValues, 
 });
 
 export const createDefaultEuSccValues = (): EuSccFormValues => {
-  const demo = asRecord(getDefaultPayload("scc"));
+  const demo = asRecord(getDefaultPayload("eu_scc"));
   const base: EuSccFormValues = {
     exporter_name: toString(demo.company_name, ""),
     importer_name: toString(demo.receiver_name, ""),
@@ -1445,7 +1445,7 @@ export const createDefaultEuSccValues = (): EuSccFormValues => {
     has_scc_draft: toBoolean(demo.has_scc_draft, true)
   };
   if (!DEV_ACCEL_ENABLED) return base;
-  const preset = getModuleDevPreset("scc");
+  const preset = getModuleDevPreset("eu_scc");
   return { ...base, ...(preset.formDefaults as Partial<EuSccFormValues>) };
 };
 

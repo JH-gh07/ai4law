@@ -70,3 +70,54 @@ def test_workspace_state_is_user_scoped(tmp_path: Path) -> None:
         get_b = client.get("/api/v1/workspace-state", headers={"Authorization": f"Bearer {token_b}"})
         assert get_b.status_code == 200
         assert get_b.json()["state"]["task_spaces"][0]["id"] == "task-b-1"
+
+
+def test_workspace_state_rejects_retired_cn_scc_records(tmp_path: Path) -> None:
+    with _make_client(tmp_path) as client:
+        token = _register(client, "retired-scc", "retired-scc@ws.test")
+        headers = {"Authorization": f"Bearer {token}"}
+        payload = {
+            "task_spaces": [
+                {
+                    "id": "direct-scc",
+                    "name": "中国标准合同审查",
+                    "taskTemplateId": "cn_scc",
+                    "module": "scc",
+                    "workspaceStyle": "cn_scc",
+                },
+                {
+                    "id": "migrated-scc",
+                    "name": "中国标准合同审查 2026-07-21",
+                    "taskTemplateId": "cn_diagnosis",
+                    "module": "diagnosis",
+                    "workspaceStyle": "cn_diagnosis",
+                },
+                {
+                    "id": "active-pipia",
+                    "name": "认证/标准合同路径",
+                    "taskTemplateId": "cn_pipia",
+                    "module": "pipia",
+                    "workspaceStyle": "cn_pipia",
+                },
+            ],
+            "module_runs": [
+                {"id": "scc-run", "taskSpaceId": "direct-scc", "module": "scc"},
+                {"id": "pipia-run", "taskSpaceId": "active-pipia", "module": "pipia"},
+            ],
+            "artifacts": [
+                {"id": "scc-artifact", "taskSpaceId": "direct-scc", "module": "scc"},
+                {"id": "pipia-artifact", "taskSpaceId": "active-pipia", "module": "pipia"},
+            ],
+            "evidence_hits": [{"id": "scc-evidence", "taskSpaceId": "direct-scc", "module": "scc"}],
+            "issues": [{"id": "scc-issue", "taskSpaceId": "direct-scc", "module": "scc"}],
+        }
+
+        response = client.put("/api/v1/workspace-state", headers=headers, json=payload)
+
+        assert response.status_code == 200
+        state = response.json()["state"]
+        assert [item["id"] for item in state["task_spaces"]] == ["active-pipia"]
+        assert [item["id"] for item in state["module_runs"]] == ["pipia-run"]
+        assert [item["id"] for item in state["artifacts"]] == ["pipia-artifact"]
+        assert state["evidence_hits"] == []
+        assert state["issues"] == []

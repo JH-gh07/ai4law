@@ -3,7 +3,7 @@ class SessionService:
         if outcome == "SECURITY_ASSESSMENT":
             next_module = "assessment"
         elif outcome == "SCC_OR_CERTIFICATION":
-            next_module = "scc"
+            next_module = "pipia"
         elif outcome == "EXEMPTION":
             next_module = "general"
         else:
@@ -43,12 +43,12 @@ class SessionService:
             ],
         }
 
-    def build_scc_handoff(self, session_id: str, outcome: str, answers: dict) -> dict:
+    def build_pipia_handoff(self, session_id: str, outcome: str, answers: dict) -> dict:
         recommended = outcome == "SCC_OR_CERTIFICATION"
         return {
             "session_id": session_id,
             "source_module": "diagnosis",
-            "target_module": "scc",
+            "target_module": "pipia",
             "recommended": recommended,
             "diagnosis_outcome": outcome,
             "transfer_purpose": answers.get("transfer_purpose"),

@@ -12,12 +12,12 @@ const JURISDICTION_META: Record<JurisdictionCode, { banner: string; summary: str
   cn: {
     banner: "从中国大陆向境外传输数据",
     summary: "适用于个人信息、重要数据出境合规分析与申报材料准备。",
-    modules: ["diagnosis", "assessment", "pipia", "scc"]
+    modules: ["diagnosis", "assessment", "pipia"]
   },
   eu: {
     banner: "从欧盟向境外传输数据",
     summary: "围绕 SCC、BCR、DPIA、TIA 的跨境传输合规支持。",
-    modules: ["scc", "bcr", "dpia", "tia"]
+    modules: ["eu_scc", "bcr", "dpia", "tia"]
   },
   us: {
     banner: "从美国向境外传输数据",
@@ -30,7 +30,7 @@ const MODULE_TEXT: Record<string, { input: string; output: string; scene: string
   diagnosis: { input: "动态问答", output: "合规路径诊断报告", scene: "首次判定路径" },
   assessment: { input: "表单 + 附件", output: "数据出境风险自评估报告", scene: "安全评估路径材料准备" },
   pipia: { input: "表单 + 附件", output: "PIPIA 报告草案", scene: "认证/标准合同备案准备" },
-  scc: { input: "SCC 文本/附件", output: "SCC 合规审查报告", scene: "标准合同条款审阅" },
+  eu_scc: { input: "SCC 文本/附件", output: "SCC 合规审查报告", scene: "标准合同条款审阅" },
   bcr: { input: "BCR 文本 + 集团信息", output: "BCR 审查报告", scene: "集团规则审查" },
   dpia: { input: "问卷式风险信息", output: "DPIA 草案", scene: "处理活动风险评估" },
   tia: { input: "国家 + 接收方 + 补充措施", output: "TIA 草案", scene: "第三国保护水平评估" },
@@ -88,4 +88,3 @@ export function JurisdictionHubPage({ onStart }: JurisdictionHubPageProps) {
     </section>
   );
 }
-

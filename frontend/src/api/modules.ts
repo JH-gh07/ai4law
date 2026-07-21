@@ -100,14 +100,6 @@ const MODULE_ENDPOINTS: ModuleEndpointDefinition[] = [
     asyncStatusEndpoint: (taskId) => `/api/v1/review/tasks/${taskId}`
   },
   {
-    key: "scc",
-    label: "SCC",
-    syncEndpoint: "/api/v1/scc/generate",
-    asyncSubmitEndpoint: "/api/v1/scc/generate_async",
-    asyncStatusEndpoint: (taskId) => `/api/v1/scc/tasks/${taskId}`,
-    asyncRetryEndpoint: (taskId) => `/api/v1/scc/tasks/${taskId}/retry`
-  },
-  {
     key: "pipia",
     label: "PIPIA",
     syncEndpoint: "/api/v1/pipia/generate",

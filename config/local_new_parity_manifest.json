@@ -24,7 +24,6 @@
     "cn.transfer_diagnosis",
     "cn.security_assessment",
     "cn.document_review",
-    "cn.scc_review",
     "cn.pipia",
     "us.eo_14117_flow_review",
     "eu.scc_review",
@@ -206,9 +205,9 @@
     {
       "source_path": "backend/modules/scc/service.py",
       "source_change": "M",
-      "target_path": "backend/domains/cn/scc_review/service.py",
-      "disposition": "rewrite",
-      "evidence": "Added valid template-backed PDF output while preserving Markdown, DOCX, annotated DOCX and the full SCC review pipeline."
+      "target_path": "",
+      "disposition": "reject-with-evidence",
+      "evidence": "The standalone China SCC review module was intentionally retired as redundant; standard-contract preparation remains in PIPIA and clause review remains in document review."
     },
     {
       "source_path": "backend/modules/tia/service.py",
@@ -332,9 +331,9 @@
     {
       "source_path": "backend/tests/scc/cases/01_minimal.json",
       "source_change": "A",
-      "target_path": "backend/tests/scc/cases/01_minimal.json",
-      "disposition": "migrate",
-      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
+      "target_path": "",
+      "disposition": "reject-with-evidence",
+      "evidence": "Removed with the intentionally retired standalone China SCC review module; PIPIA, document-review, and EU SCC coverage remain active."
     },
     {
       "source_path": "backend/tests/tia/cases/01_minimal.json",

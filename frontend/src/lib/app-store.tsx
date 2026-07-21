@@ -137,6 +137,7 @@ function normalizeTaskSpace(raw: unknown): TaskSpace | null {
   if (typeof raw.createdAt !== "string" || typeof raw.updatedAt !== "string") return null;
 
   const rawTemplateId = typeof raw.taskTemplateId === "string" ? raw.taskTemplateId : "";
+  if (rawTemplateId === "cn_scc") return null;
   const template = findTaskTemplate(rawTemplateId) ?? getDefaultTaskTemplate(raw.jurisdiction);
 
   return {

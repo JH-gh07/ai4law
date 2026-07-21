@@ -467,129 +467,6 @@ const assessEcommerce: DevTestCase = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CN SCC (标准合同审查) — 3 cases
-// ═══════════════════════════════════════════════════════════════════════════
-
-const sccFinancial: DevTestCase = {
-  name: "SCC-1: 金融数据处理者出境",
-  description: "金融科技公司作为数据处理者向新加坡传输数据，标准合同条款审查发现高风险修改",
-  jurisdiction: "CN",
-  formDefaults: {
-    company_name: "数字支付科技（深圳）有限公司",
-    receiver_name: "PayTech Singapore Pte Ltd",
-    receiver_country: "新加坡",
-    transfer_purpose: "为新加坡客户提供支付处理服务的境外技术支持",
-    pii_count: 500000,
-    spi_count: 120000,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "标准合同第3.4条通知义务被弱化、第8条安全事件通知时限被延长、附件个人信息类别描述过于笼统",
-    data_fields: [
-      { field_name: "姓名", category: "标识信息", is_sensitive: false },
-      { field_name: "身份证号", category: "身份信息", is_sensitive: true },
-      { field_name: "银行卡号", category: "金融账户信息", is_sensitive: true },
-      { field_name: "手机号", category: "联系方式", is_sensitive: false },
-      { field_name: "交易记录", category: "交易信息", is_sensitive: false }
-    ]
-  },
-  payload: {
-    company_name: "数字支付科技（深圳）有限公司",
-    receiver_name: "PayTech Singapore Pte Ltd",
-    receiver_country: "新加坡",
-    transfer_purpose: "为新加坡客户提供支付处理服务的境外技术支持",
-    pii_count: 500000,
-    spi_count: 120000,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "标准合同第3.4条被修改为'数据接收方应在法律允许的范围内尽力通知数据提供方'而不是范本的'应当立即通知'。第8条关于数据安全事件的通知时限从72小时被改为'合理时间内'。附件中个人信息类别描述过于笼统（仅写'支付相关信息'）",
-    data_fields: [
-      { field_name: "姓名", category: "标识信息", is_sensitive: false },
-      { field_name: "身份证号", category: "身份信息", is_sensitive: true },
-      { field_name: "银行卡号", category: "金融账户信息", is_sensitive: true },
-      { field_name: "手机号", category: "联系方式", is_sensitive: false },
-      { field_name: "交易记录", category: "交易信息", is_sensitive: false }
-    ]
-  }
-};
-
-const sccMedicalResearch: DevTestCase = {
-  name: "SCC-2: 医疗研究数据出境",
-  description: "跨国药企向印度CRO传输临床试验数据，SCC条款修改评估，SPI分类错误",
-  jurisdiction: "CN",
-  formDefaults: {
-    company_name: "辉达制药（上海）有限公司",
-    receiver_name: "MedResearch India Pvt Ltd",
-    receiver_country: "印度",
-    transfer_purpose: "委托印度CRO进行III期临床试验数据的统计分析和医学撰写",
-    pii_count: 8500,
-    spi_count: 8500,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "数据删除条款缺少前置条件、附件将患者健康数据标记为非敏感、Clause 15(a)政府请求通知被弱化",
-    data_fields: [
-      { field_name: "受试者编号", category: "标识信息", is_sensitive: false },
-      { field_name: "诊断结果", category: "健康数据", is_sensitive: true },
-      { field_name: "用药记录", category: "健康数据", is_sensitive: true },
-      { field_name: "实验室检测结果", category: "健康数据", is_sensitive: true },
-      { field_name: "不良事件记录", category: "健康数据", is_sensitive: true }
-    ]
-  },
-  payload: {
-    company_name: "辉达制药（上海）有限公司",
-    receiver_name: "MedResearch India Pvt Ltd",
-    receiver_country: "印度",
-    transfer_purpose: "委托印度CRO进行III期临床试验数据的统计分析和医学撰写",
-    pii_count: 8500,
-    spi_count: 8500,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "标准合同中关于'数据删除'的条款约定为'合同终止后6个月内删除'，缺少'在数据处理目的完成后立即删除'的前置条件。附件将患者健康数据标记为'非敏感'。Clause 15(a)被修改为在政府请求通知义务中增加了'as soon as legally permissible'的限制条件",
-    data_fields: [
-      { field_name: "受试者编号", category: "标识信息", is_sensitive: false },
-      { field_name: "年龄/性别", category: "人口统计", is_sensitive: false },
-      { field_name: "诊断结果", category: "健康数据", is_sensitive: true },
-      { field_name: "用药记录", category: "健康数据", is_sensitive: true },
-      { field_name: "实验室检测结果", category: "健康数据", is_sensitive: true },
-      { field_name: "不良事件记录", category: "健康数据", is_sensitive: true }
-    ]
-  }
-};
-
-const sccCloudProcessor: DevTestCase = {
-  name: "SCC-3: 云服务商多方加入模块选择错误",
-  description: "三层关系C→P→Sub-P应选用Module Three但误用Module Two，加入方信息缺失",
-  jurisdiction: "CN",
-  formDefaults: {
-    company_name: "橙子云科技（北京）有限公司",
-    receiver_name: "Balkan IT Support DOO",
-    receiver_country: "塞尔维亚",
-    transfer_purpose: "将客户支持工单数据转委托给塞尔维亚子处理者处理",
-    pii_count: 15000,
-    spi_count: 0,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "实际关系：北欧零售集团（C）→橙子云（P）→巴尔干IT（Sub-P），应使用Module Three(P2P)但错误选择了Module Two(C2P)。Annex I.A加入方信息仅写\"见主服务协议\"。Clause 9未明确书面授权方式"
-  },
-  payload: {
-    company_name: "橙子云科技（北京）有限公司",
-    receiver_name: "Balkan IT Support DOO",
-    receiver_country: "塞尔维亚",
-    transfer_purpose: "将客户支持工单数据转委托给塞尔维亚子处理者处理",
-    pii_count: 15000,
-    spi_count: 0,
-    has_scc_draft: true,
-    is_ciio: false,
-    has_important_data: false,
-    contract_summary: "实际关系为：北欧零售集团（C）→橙子云（P）→巴尔干IT（Sub-P），应使用Module Three (P2P)但错误选择了Module Two (C2P)。Annex I.A中'加入方'信息仅写'见主服务协议'未完整填写。Clause 9子处理者授权机制中未明确书面授权方式"
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
 // EU SCC — 3 cases (from EU data export path)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1505,7 +1382,6 @@ export const DEV_TEST_CASES: Record<string, DevTestCase[]> = {
   cpra: [cpraTrendyGoods, cpraDataFlow, cpraFitLife],
   diagnosis: [diagEcommerce, diagMedical, diagAnonymous],
   assessment: [assessCIO, assessEcommerce],
-  scc: [sccFinancial, sccMedicalResearch, sccCloudProcessor],
   eu_scc: [euSccBasic, euSccHealthIndia, euSccModuleError],
   bcr: [bcrMediumRisk, bcrHighRisk, bcrStructuralFailure],
   dpia: [dpiaAIRecruitment, dpiaSmartCity],

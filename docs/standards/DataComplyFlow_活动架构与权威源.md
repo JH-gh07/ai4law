@@ -46,7 +46,6 @@
 | `cn.transfer_diagnosis` | `backend.domains.cn.transfer_diagnosis` | `/api/v1/diagnosis` |
 | `cn.security_assessment` | `backend.domains.cn.security_assessment` | `/api/v1/assessment` |
 | `cn.document_review` | `backend.domains.cn.document_review` | `/api/v1/review` |
-| `cn.scc_review` | `backend.domains.cn.scc_review` | `/api/v1/scc` |
 | `cn.pipia` | `backend.domains.cn.pipia` | `/api/v1/pipia` |
 | `eu.scc_review` | `backend.domains.eu.scc_review` | `/api/v1/eu_scc` |
 | `eu.bcr_review` | `backend.domains.eu.bcr_review` | `/api/v1/bcr` |
@@ -56,7 +55,7 @@
 | `us.cpra` | `backend.domains.us.cpra` | `/api/v1/cpra` |
 | `us.eo_14117_flow_review` | `backend.domains.us.eo14117_flow_review` | `/api/v1/cn-flow` |
 
-`cn_flow` 是历史前端键和 API 兼容名，真实法域身份属于美国 EO 14117。中国 SCC、欧盟 SCC 以及两个 EO 14117 流程具有不同 Schema 和输出，不得仅因名称相似直接合并。
+`cn_flow` 是历史前端键和 API 兼容名，真实法域身份属于美国 EO 14117。独立的中国 SCC 审查入口已退役：标准合同备案材料继续由 `cn.pipia` 处理，合同条款审查继续由 `cn.document_review` 处理；欧盟 SCC 仍是独立模块。两个 EO 14117 流程具有不同 Schema 和输出，不得仅因名称相似直接合并。
 
 ## 4. 兼容边界
 

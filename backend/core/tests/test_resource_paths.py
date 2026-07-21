@@ -29,8 +29,6 @@ def test_resource_roots_are_absolute_and_inside_project() -> None:
     [
         ("cn", "2.2_risk_assessment_template_v0.docx"),
         ("cn", "2.2_risk_assessment_template_v0.md"),
-        ("cn", "3.1_scc_review_template_v0.docx"),
-        ("cn", "3.1_scc_review_template_v0.md"),
         ("eu", "3.2_bcr_review_template_v0.docx"),
         ("eu", "3.2_bcr_review_template_v0.md"),
         ("eu", "3.4_tia_template_v0.docx"),

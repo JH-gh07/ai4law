@@ -8,7 +8,7 @@ from backend.schemas.diagnosis import (
     DiagnosisAnswerSet,
     DiagnosisContextResponse,
     DiagnosisReportResponse,
-    SCCHandoffResponse,
+    PIPIAHandoffResponse,
     DiagnosisSessionCreateResponse,
     DiagnosisSessionResponse,
 )
@@ -95,15 +95,15 @@ def get_assessment_handoff(
         raise HTTPException(status_code=code, detail=detail) from exc
 
 
-@router.get("/sessions/{session_id}/handoff/scc", response_model=SCCHandoffResponse)
-def get_scc_handoff(
+@router.get("/sessions/{session_id}/handoff/pipia", response_model=PIPIAHandoffResponse)
+def get_pipia_handoff(
     session_id: str,
     db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ):
     try:
-        return container.diagnosis_service.get_scc_handoff(db, current_user.id, session_id)
+        return container.diagnosis_service.get_pipia_handoff(db, current_user.id, session_id)
     except ValueError as exc:
         detail = str(exc)
         code = 404 if "not found" in detail else 400

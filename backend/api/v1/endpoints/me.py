@@ -40,7 +40,6 @@ _KNOWN_MODULES = {
     "review",
     "assessment",
     "dpia",
-    "scc",
     "cn_flow",
     "eu_scc",
     "us_14117",

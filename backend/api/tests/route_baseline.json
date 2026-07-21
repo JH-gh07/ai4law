@@ -281,10 +281,10 @@
   },
   {
     "method": "GET",
-    "path": "/api/v1/diagnosis/sessions/{session_id}/handoff/scc",
-    "route_name": "get_scc_handoff",
+    "path": "/api/v1/diagnosis/sessions/{session_id}/handoff/pipia",
+    "route_name": "get_pipia_handoff",
     "endpoint_module": "backend.api.v1.endpoints.diagnosis",
-    "operation_id": "get_scc_handoff_api_v1_diagnosis_sessions__session_id__handoff_scc_get"
+    "operation_id": "get_pipia_handoff_api_v1_diagnosis_sessions__session_id__handoff_pipia_get"
   },
   {
     "method": "POST",
@@ -600,34 +600,6 @@
     "route_name": "get_status",
     "endpoint_module": "backend.domains.cn.document_review.router",
     "operation_id": "get_status_api_v1_review_tasks__task_id__status_get"
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/scc/generate",
-    "route_name": "generate_scc",
-    "endpoint_module": "backend.domains.cn.scc_review.router",
-    "operation_id": "generate_scc_api_v1_scc_generate_post"
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/scc/generate_async",
-    "route_name": "generate_scc_async",
-    "endpoint_module": "backend.domains.cn.scc_review.router",
-    "operation_id": "generate_scc_async_api_v1_scc_generate_async_post"
-  },
-  {
-    "method": "GET",
-    "path": "/api/v1/scc/tasks/{task_id}",
-    "route_name": "get_scc_task",
-    "endpoint_module": "backend.domains.cn.scc_review.router",
-    "operation_id": "get_scc_task_api_v1_scc_tasks__task_id__get"
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/scc/tasks/{task_id}/retry",
-    "route_name": "retry_scc_task",
-    "endpoint_module": "backend.domains.cn.scc_review.router",
-    "operation_id": "retry_scc_task_api_v1_scc_tasks__task_id__retry_post"
   },
   {
     "method": "POST",

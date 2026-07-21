@@ -23,7 +23,6 @@ from backend.domains.cn.transfer_diagnosis.router import router as diagnosis_mod
 from backend.domains.eu.dpia.router import router as dpia_router
 from backend.domains.eu.scc_review.router import router as eu_scc_router
 from backend.domains.cn.pipia.router import router as pipia_router
-from backend.domains.cn.scc_review.router import router as scc_router
 from backend.domains.eu.tia.router import router as tia_router
 from backend.domains.us.eo14117.router import router as us_14117_router
 
@@ -55,7 +54,6 @@ v1_router.include_router(system_settings.router, prefix="/system", tags=["system
 # Stateless and task-based business module APIs.
 v1_router.include_router(diagnosis_module_router)
 v1_router.include_router(assessment_router)
-v1_router.include_router(scc_router)
 v1_router.include_router(pipia_router)
 v1_router.include_router(bcr_router)
 v1_router.include_router(dpia_router)

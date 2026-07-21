@@ -150,7 +150,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [euSccValues, setEuSccValues] = useState<EuSccFormValues>(createDefaultEuSccValues);
   const [euSccFiles, setEuSccFiles] = useState<File[]>([]);
   const [euSccDevFilePaths, setEuSccDevFilePaths] = useState<string[]>(() =>
-    DEV_ACCEL_ENABLED ? getModuleDevPreset("scc").backendFilePaths : []
+    DEV_ACCEL_ENABLED ? getModuleDevPreset("eu_scc").backendFilePaths : []
   );
   const [bcrStepIndex, setBcrStepIndex] = useState(0);
   const [bcrValues, setBcrValues] = useState<BcrFormValues>(createDefaultBcrValues);
@@ -248,7 +248,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setEuSccStepIndex(0);
       setEuSccValues(createDefaultEuSccValues());
       setEuSccFiles([]);
-      setEuSccDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("scc").backendFilePaths : []);
+      setEuSccDevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("eu_scc").backendFilePaths : []);
     }
     if (moduleKey === "bcr") {
       setBcrStepIndex(0);
@@ -1547,7 +1547,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
 
   const runEuSccDevPreset = async () => {
     if (!DEV_ACCEL_ENABLED || !isEuSccTask || loading) return;
-    const preset = getModuleDevPreset("scc");
+    const preset = getModuleDevPreset("eu_scc");
     const nextValues: EuSccFormValues = { ...euSccValues, ...(preset.formDefaults as Partial<EuSccFormValues>) };
     setEuSccValues(nextValues);
     setEuSccFiles([]);

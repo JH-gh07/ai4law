@@ -8,7 +8,7 @@ export type DevPresetModule =
   | "pipia"
   | "dpia"
   | "tia"
-  | "scc"
+  | "eu_scc"
   | "bcr"
   | "diagnosis"
   | "document_review";
@@ -99,9 +99,9 @@ const PIPIA_BASELINE_PRESET: ModuleDevPreset = {
   backendFilePaths: [SHARED_CONTRACT_FIXTURE, SHARED_EVIDENCE_FIXTURE]
 };
 
-const SCC_BASELINE_PRESET: ModuleDevPreset = {
+const EU_SCC_BASELINE_PRESET: ModuleDevPreset = {
   id: "scc_eu_baseline",
-  module: "scc",
+  module: "eu_scc",
   title: "一键运行SCC审查",
   scenarioDescription: "自动填充SCC关键字段并引用预置合同文本，直接触发真实SCC后端流程。",
   formDefaults: {
@@ -249,7 +249,7 @@ const DOCUMENT_REVIEW_BASELINE_PRESET: ModuleDevPreset = {
 const PRESET_MAP = new Map<string, ModuleDevPreset>([
   [ASSESSMENT_SECURITY_ASSESSMENT_PRESET.id, ASSESSMENT_SECURITY_ASSESSMENT_PRESET],
   [PIPIA_BASELINE_PRESET.id, PIPIA_BASELINE_PRESET],
-  [SCC_BASELINE_PRESET.id, SCC_BASELINE_PRESET],
+  [EU_SCC_BASELINE_PRESET.id, EU_SCC_BASELINE_PRESET],
   [BCR_BASELINE_PRESET.id, BCR_BASELINE_PRESET],
   [DPIA_BASELINE_PRESET.id, DPIA_BASELINE_PRESET],
   [TIA_BASELINE_PRESET.id, TIA_BASELINE_PRESET],
@@ -260,7 +260,7 @@ const PRESET_MAP = new Map<string, ModuleDevPreset>([
 const DEFAULT_PRESET_IDS: Record<DevPresetModule, string> = {
   assessment: ASSESSMENT_SECURITY_ASSESSMENT_PRESET.id,
   pipia: PIPIA_BASELINE_PRESET.id,
-  scc: SCC_BASELINE_PRESET.id,
+  eu_scc: EU_SCC_BASELINE_PRESET.id,
   bcr: BCR_BASELINE_PRESET.id,
   dpia: DPIA_BASELINE_PRESET.id,
   tia: TIA_BASELINE_PRESET.id,

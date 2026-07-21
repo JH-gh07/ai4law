@@ -23,7 +23,6 @@ def refresh_runtime_clients(container) -> None:
     from backend.common.rag import retriever as rag_retriever
     from backend.api.v0.task_gateway.router import service as v0_gateway_service
     from backend.domains.cn.pipia.router import service as pipia_service
-    from backend.domains.cn.scc_review.router import service as scc_service
     from backend.domains.cn.security_assessment.router import (
         service as assessment_service,
     )
@@ -45,7 +44,6 @@ def refresh_runtime_clients(container) -> None:
     assessment_service.generator.llm = container.llm_client
     assessment_service.retriever.legal_service = container.legal_api_service
 
-    scc_service.llm_client = container.llm_client
     pipia_service.llm_client = container.llm_client
     bcr_service.llm_client = container.llm_client
     dpia_service.llm_client = container.llm_client

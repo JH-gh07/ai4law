@@ -70,19 +70,6 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     outputHint: { zh: "", en: "Output: document compliance report" }
   },
   {
-    id: "cn_scc",
-    jurisdiction: "CN",
-    module: "scc",
-    workspaceStyle: "cn_scc",
-    title: { zh: "中国标准合同审查", en: "China Standard Contract Review" },
-    subtitle: {
-      zh: "审查个人信息出境标准合同并生成条款整改建议",
-      en: "Review China personal-information export standard contracts and remediation items"
-    },
-    inputHint: { zh: "上传或输入中国标准合同文本", en: "Input: China standard contract text" },
-    outputHint: { zh: "", en: "Output: China SCC review report" }
-  },
-  {
     id: "eu_scc",
     jurisdiction: "EU",
     module: "eu_scc",
