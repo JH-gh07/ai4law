@@ -298,7 +298,7 @@ ProviderCapabilities
 | ENV-BLOCK-01 LLM 模型/额度不可用 | ENV-BLOCK | 需要账号额度或供应商选择；代码负责发现和清楚阻断 |
 | P1-01 引用默认新开页面 | P1 | 产品交互与知识库闭环，不等同数据泄露 |
 | P1-02 运行时配置刷新不全 | P1 | 用户已被提供热切换入口，下一阶段必须保证新任务配置一致 |
-| RunManifest/持久事件不完整 | P1 | 复验、CLI/前端一致性和故障恢复 |
+| RunManifest/持久事件不完整 | P1（已落最小账本） | 已持久化异步 run 的状态、输入摘要、输出产物、Provider、Token、fallback、耗时和 trace 引用；仍缺用户/案例/CitationMap/RAG/得理、统一读取 API、前端历史复用和持久任务恢复 |
 | Markdown/证据分层呈现 | P1 | 非技术用户核心体验和引用可理解性 |
 | ReportDocument 全模块迁移 | P1→P2 | 先迁移最小语义层，复杂块按真实需要迭代 |
 | 得理/Hybrid/Reranker 演进 | P1→P2 | 先完成外部证据归一化和基准，再按收益选型 |
@@ -524,11 +524,11 @@ ProviderCapabilities
 
 ### 6.2 仍需补齐
 
-1. 当前持久化 trace manifest 只有创建时间、事件数和事件文件，没有总耗时、Token、provider、fallback、run_id。
+1. trace manifest 仍只保存事件索引；旁路新增的最小 `run_manifest.json` 已保存 run_id、状态、总耗时、Token、provider、fallback、脱敏输入摘要和输出产物，但尚未合并用户/案例/CitationMap/RAG/得理数据，也没有统一读取 API。
 2. `backend/common/workflow/trace.py` 另有更丰富的 `TraceManifest` 模型，但实际 `TraceRecorder.write_manifest()` 没有采用，形成双契约。
 3. SSE 事件只在内存中，任务结束 30 分钟后清理，服务重启即丢失。
 4. 任务管理器也是内存态；取消操作可能只改状态，已启动的后台逻辑仍继续执行。
-5. `_execute` 在 runner 包装器返回后再读取 `current_trace`，上下文可能已经重置，最终事件补发不可靠。
+5. ~~`_execute` 在 runner 包装器返回后再读取 `current_trace`，最终事件补发不可靠。~~ 2026-07-22 已改为任务记录显式持有 TraceRecorder，并修复 `finalize_run()` 在 reset 后拿不到 recorder、无法写 manifest 的错误。
 6. `TaskEventBridge` 以栈方式匹配 tool start/result，并发或嵌套工具可能配错。
 7. 当前没有统一价格表和成本字段；Token 只代表供应商返回或估算量，不等于可核账费用。
 
@@ -1169,7 +1169,7 @@ backend/common/
 
 | 层级 | 必测内容 | 是否已有 | 缺口 |
 |---|---|---|---|
-| 后端单元 | 规则、模型、规范化、服务 | 有，519 通过 | Live API 与浏览器联动不属于该层 |
+| 后端单元 | 规则、模型、规范化、服务 | 有，522 通过 | Live API 与浏览器联动不属于该层 |
 | 前端单元 | API、store、PDF、artifact、事件、引用受控交互 | 有，48 通过 | 仍需真实浏览器 E2E 与视觉回归 |
 | CLI no-LLM | 真实可编辑案例和落盘 | 10/11 | review、批量入口、统一 manifest |
 | 外部 API contract | LLM/得理响应适配 | 零散/不足 | 得理 adapter 基本无测试 |
@@ -1383,7 +1383,20 @@ Run ID / Artifact ID：
 结果：519 passed, 1 warning in 72.71s；退出码 0
 ```
 
-**安全边界**：完整 `ProviderSnapshot` 的 `api_key` 字段禁止 repr，且 `sanitized()` 不返回密钥；fingerprint 只包含 API Key 的 SHA-256 摘要。当前 `TaskSnapshot` 仍在内存中，服务重启后不能恢复；下一切片必须写入持久 RunManifest，并继续保证落盘对象永不包含明文 Key。
+**安全边界**：完整 `ProviderSnapshot` 的 `api_key` 字段禁止 repr，且 `sanitized()` 不返回密钥；fingerprint 只包含 API Key 的 SHA-256 摘要。本切片当时仅有内存 `TaskSnapshot`，随后由 18.7 将脱敏副本写入持久 RunManifest。
+
+### 18.7 2026-07-22 最小持久 RunManifest 切片
+
+| 任务 | 已落实行为 | 关键提交 | 可核对证据 |
+|---|---|---|---|
+| P1 最小运行账本 | 每个九类异步任务在 `outputs/<module>/<task>/run_manifest.json` 原子写入 CREATED/RUNNING/COMPLETED/FAILED/CANCELED/RETRYING 状态、attempt、耗时、脱敏 ProviderSnapshot、输入规范化 SHA-256/字段名/文件引用、输出产物角色/路径、trace manifest 引用、事件数、LLM 调用数、Token 和 fallback；不复制输入正文；任务记录显式持有 recorder，成功/失败最终事件和 trace manifest 不再依赖已 reset 的 ContextVar | `4cec94e` | 红灯分别证明 `input_snapshot`/run manifest 不存在、`finalize_run()` 不写 trace manifest、9/9 模块未提供输入摘要、fallback 不产生可核账结果事件；聚焦回归进一步捕获 fallback 的 trace layer 类型错误，并发现 API 单测误读本机 `.env` 发起真实模型请求，现已由 fixture `_env_file=None` 隔离。绿灯聚焦 39 项、根目录全量 522 项通过 |
+
+```text
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/pytest -q
+结果：522 passed, 1 warning in 76.47s；退出码 0
+```
+
+**未完成边界**：这是一份可持续扩展的最小账本，不等于阶段 2 已完成。当前仍需把用户/案例归属、CitationMap、RAG/得理调用、usage source、模型延迟/重试、输入 ContentBlob、任务恢复和持久事件纳入同一契约；还需提供后端读取 API，让 CLI、前端实时与历史页面读取同一份数据。任务执行器仍为内存态，服务重启后能查看账本文件但不能恢复运行状态。
 
 ---
 
