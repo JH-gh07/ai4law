@@ -298,7 +298,7 @@ ProviderCapabilities
 | ENV-BLOCK-01 LLM 模型/额度不可用 | ENV-BLOCK | 需要账号额度或供应商选择；代码负责发现和清楚阻断 |
 | P1-01 引用默认新开页面 | P1 | 产品交互与知识库闭环，不等同数据泄露 |
 | P1-02 运行时配置刷新不全 | P1 | 用户已被提供热切换入口，下一阶段必须保证新任务配置一致 |
-| RunManifest/持久事件不完整 | P1（已落最小账本） | 已持久化异步 run 的状态、输入摘要、输出产物、Provider、Token、fallback、耗时和 trace 引用；仍缺用户/案例/CitationMap/RAG/得理、统一读取 API、前端历史复用和持久任务恢复 |
+| RunManifest/持久事件不完整 | P1（已落最小账本与归属读取 API） | 已持久化异步 run 的状态、输入摘要、输出产物、Provider、Token、fallback、耗时和 trace 引用，并提供任务所有者读取 API；仍缺案例/CitationMap/RAG/得理、前端历史复用和持久任务恢复 |
 | Markdown/证据分层呈现 | P1 | 非技术用户核心体验和引用可理解性 |
 | ReportDocument 全模块迁移 | P1→P2 | 先迁移最小语义层，复杂块按真实需要迭代 |
 | 得理/Hybrid/Reranker 演进 | P1→P2 | 先完成外部证据归一化和基准，再按收益选型 |
@@ -524,7 +524,7 @@ ProviderCapabilities
 
 ### 6.2 仍需补齐
 
-1. trace manifest 仍只保存事件索引；旁路新增的最小 `run_manifest.json` 已保存 run_id、状态、总耗时、Token、provider、fallback、脱敏输入摘要和输出产物，但尚未合并用户/案例/CitationMap/RAG/得理数据，也没有统一读取 API。
+1. trace manifest 仍只保存事件索引；旁路新增的最小 `run_manifest.json` 已保存 run_id、状态、总耗时、Token、provider、fallback、脱敏输入摘要和输出产物，并可由任务所有者通过统一 API 读取，但尚未合并案例/CitationMap/RAG/得理数据，前端历史页也尚未接入。
 2. `backend/common/workflow/trace.py` 另有更丰富的 `TraceManifest` 模型，但实际 `TraceRecorder.write_manifest()` 没有采用，形成双契约。
 3. SSE 事件只在内存中，任务结束 30 分钟后清理，服务重启即丢失。
 4. 任务管理器也是内存态；取消操作可能只改状态，已启动的后台逻辑仍继续执行。
@@ -1169,7 +1169,7 @@ backend/common/
 
 | 层级 | 必测内容 | 是否已有 | 缺口 |
 |---|---|---|---|
-| 后端单元 | 规则、模型、规范化、服务 | 有，526 通过 | Live API 与浏览器联动不属于该层 |
+| 后端单元 | 规则、模型、规范化、服务 | 有，528 通过 | Live API 与浏览器联动不属于该层 |
 | 前端单元 | API、store、PDF、artifact、事件、引用受控交互 | 有，48 通过 | 仍需真实浏览器 E2E 与视觉回归 |
 | CLI no-LLM | 真实可编辑案例和落盘 | 11/11，15 案例全通过 | 已统一最小 manifest；仍需 RAG/得理细分计量、引用/产物内容断言和更多边界案例 |
 | 外部 API contract | LLM/得理响应适配 | 零散/不足 | 得理 adapter 基本无测试 |
@@ -1396,7 +1396,7 @@ Run ID / Artifact ID：
 结果：522 passed, 1 warning in 76.47s；退出码 0
 ```
 
-**未完成边界**：这是一份可持续扩展的最小账本，不等于阶段 2 已完成。当前仍需把用户/案例归属、CitationMap、RAG/得理调用、usage source、模型延迟/重试、输入 ContentBlob、任务恢复和持久事件纳入同一契约；还需提供后端读取 API，让 CLI、前端实时与历史页面读取同一份数据。任务执行器仍为内存态，服务重启后能查看账本文件但不能恢复运行状态。
+**未完成边界**：这是一份可持续扩展的最小账本，不等于阶段 2 已完成。当前仍需把用户/案例归属、CitationMap、RAG/得理调用、usage source、模型延迟/重试、输入 ContentBlob、任务恢复和持久事件纳入同一契约；后端所有者读取 API 随后由 18.9 补齐，但前端实时与历史页面尚未接入。任务执行器仍为内存态，服务重启后能查看账本文件但不能恢复运行状态。
 
 ### 18.8 2026-07-22 11/11 CLI 与批量 no-LLM 验收切片
 
@@ -1423,6 +1423,19 @@ Run ID / Artifact ID：
 ```
 
 **未完成边界**：CLI 已达到 11/11 离线 smoke，不等于真实外部 API 验收。得理/LLM live 仍受账号、额度和模型可用性约束；CLI 尚未把每次 RAG/得理调用、CitationMap 正确性和生成文件内容完整性全部变成断言。浏览器 E2E 也尚未完成，不能用 CLI 结果替代前端真实交互验收。
+
+### 18.9 2026-07-22 RunManifest 所有者读取 API 切片
+
+| 任务 | 已落实行为 | 关键提交 | 可核对证据 |
+|---|---|---|---|
+| 所有者读取持久账本 | 新增需认证的 `GET /api/v1/events/task/{task_id}/manifest`；先复用持久任务归属验证，再从 `TaskOwnership.module` 定位 `outputs/<module>/<task>/run_manifest.json`；module/task 仅允许安全路径字符，解析后再次校验目录未越界且 JSON 的 run_id/module 与归属一致；缺失、损坏、不匹配和跨用户均返回 404，不泄露任务存在性 | `606d145` | 红灯先因读取端点/OUTPUTS_DIR 不存在失败；绿灯覆盖 owner 读取 Token、跨用户 404、安全 loader、任务访问和 102 条全应用路由契约，共 37 项通过；根目录全量 528 项通过 |
+
+```text
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/pytest -q
+结果：528 passed, 1 warning in 66.20s；退出码 0
+```
+
+**未完成边界**：API 当前只读取九类异步任务已经落盘的最小账本；文档审查生产异步链路仍使用数据库 dispatcher，尚未写同一份 production manifest。前端 RunTranscript/历史页尚未消费该 API，持久 trace 事件也仍没有独立所有者读取接口，因此只能证明“账本可安全读取”，不能声称“重启后完整时间线已经恢复”。
 
 ---
 
