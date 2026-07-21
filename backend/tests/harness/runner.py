@@ -6,12 +6,14 @@ import argparse
 import hashlib
 import importlib
 import json
+import shutil
 import sys
 import time
 import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -19,6 +21,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.runtime.run_manifest import (
+    summarize_input,
+    summarize_output,
+    summarize_trace,
+)
 
 
 RUNS_DIR = REPO_ROOT / "runs"
@@ -180,6 +187,77 @@ def _diagnosis_invoke(
     return _serialize_result(result)
 
 
+def _review_invoke(
+    case: dict[str, Any], no_llm: bool, trace_dir: Path
+) -> dict[str, Any]:
+    from backend.common.trace.context import current_trace
+    from backend.core.container import AppContainer
+    from backend.core.db import init_db
+    from backend.core.settings import Settings
+    from backend.schemas.review import ReviewGenerateRequest
+
+    run_dir = trace_dir.parent
+    settings_kwargs = {
+        "database_url": f"sqlite:///{run_dir / 'review.db'}",
+        "storage_dir": run_dir / "storage",
+        "task_mode": "inline",
+    }
+    settings = (
+        Settings(**settings_kwargs, _env_file=None)
+        if no_llm
+        else Settings(**settings_kwargs)
+    )
+    container = AppContainer(settings)
+    init_db(container.engine)
+
+    copied_files: list[str] = []
+    destination_dir = settings.upload_dir / "harness-input"
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    for raw_path in case["input"].get("uploaded_files", []):
+        source = Path(raw_path)
+        if not source.is_absolute():
+            source = REPO_ROOT / source
+        source = source.resolve()
+        if not source.exists() or not source.is_file():
+            raise FileNotFoundError(f"Review fixture not found: {source}")
+        destination = destination_dir / source.name
+        shutil.copy2(source, destination)
+        copied_files.append(str(destination))
+
+    request_data = dict(case["input"])
+    request_data["uploaded_files"] = copied_files
+    payload = ReviewGenerateRequest.model_validate(request_data)
+    recorder = TraceRecorder(trace_dir, task_id="harness-review")
+    recorder.record(
+        "status",
+        {
+            "summary": "开始文档审查 CLI 案例",
+            "detail": {"file_count": len(copied_files)},
+        },
+    )
+    db = container.session_factory()
+    token = current_trace.set(recorder)
+    try:
+        result = container.review_service.generate_from_request(
+            db,
+            "harness-review-user",
+            payload,
+        )
+        recorder.record(
+            "final",
+            {
+                "summary": "文档审查 CLI 案例完成",
+                "detail": {"status": "COMPLETED"},
+            },
+        )
+        return _serialize_result(result)
+    finally:
+        current_trace.reset(token)
+        recorder.write_manifest()
+        db.close()
+        container.engine.dispose()
+
+
 def _build_adapters() -> dict[str, ModuleAdapter]:
     product_registry = _product_registry()
     adapters: dict[str, ModuleAdapter] = {}
@@ -198,7 +276,16 @@ def _build_adapters() -> dict[str, ModuleAdapter]:
             else _generic_invoke(alias, package, request_name, service_name)
         )
         adapters[alias] = ModuleAdapter(alias, module_id, package, invoke)
-    expected = set(product_registry) - {"review"}
+    review = product_registry.get("review")
+    if not review:
+        raise RuntimeError("Harness review module is absent from module_registry.json")
+    adapters["review"] = ModuleAdapter(
+        alias="review",
+        module_id=review["module_id"],
+        implementation_package=review["implementation_package"],
+        invoke=_review_invoke,
+    )
+    expected = set(product_registry)
     if set(adapters) != expected:
         raise RuntimeError(
             f"Harness coverage drift: expected {sorted(expected)}, got {sorted(adapters)}"
@@ -235,6 +322,29 @@ def _write_json(path: Path, value: Any) -> None:
     path.write_text(
         json.dumps(value, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
     )
+
+
+def _trace_reference(trace_dir: Path) -> SimpleNamespace:
+    events = [
+        SimpleNamespace(path=str(path))
+        for path in sorted(trace_dir.glob("[0-9][0-9][0-9]_*.json"))
+    ]
+    return SimpleNamespace(trace_dir=trace_dir, _events=events)
+
+
+def _harness_provider_snapshot(no_llm: bool) -> dict[str, Any]:
+    if no_llm:
+        return {
+            "mode": "no_llm",
+            "provider_id": "disabled",
+            "model": "",
+            "api_key_configured": False,
+        }
+    from backend.common.llm.client import LLMClient
+    from backend.core.settings import get_settings
+
+    snapshot = LLMClient(get_settings()).provider_snapshot().sanitized()
+    return {"mode": "live", **snapshot}
 
 
 def _check(
@@ -305,13 +415,23 @@ def execute(
     passed, failed = _check(result or {}, case.get("expected", {}), no_llm)
     status = "FAIL" if error or failed else "PASS"
     manifest = {
+        "schema_version": "1.0",
         "run_id": run_name,
         "module": module,
         "module_id": adapter.module_id,
         "case_id": case_id,
         "status": status,
         "duration_ms": duration_ms,
+        "attempts": 1,
+        "max_attempts": 1,
         "input_hash": _hash(payload),
+        "provider_snapshot": _harness_provider_snapshot(no_llm),
+        "input": summarize_input(payload),
+        "output": summarize_output(result),
+        "observability": {
+            **summarize_trace(_trace_reference(run_dir / "trace")),
+            "error_count": 1 if error else 0,
+        },
         "checks_passed": len(passed),
         "checks_failed": len(failed),
         "recommended_path": (result or {}).get("recommended_path", ""),
@@ -320,9 +440,17 @@ def execute(
     }
     _write_json(run_dir / "run_manifest.json", manifest)
     if not quiet:
+        observability = manifest["observability"]
+        tokens = observability["tokens"]
         print(
             f"{module}/{case_id}: {status} "
             f"({duration_ms:.0f} ms, {len(passed)} passed, {len(failed)} failed)"
+        )
+        print(
+            f"events={observability['event_count']} "
+            f"llm_calls={observability['llm_calls']} "
+            f"tokens={tokens['total_tokens']} "
+            f"fallbacks={observability['fallback_count']}"
         )
         print(run_dir)
         for message in failed:
@@ -330,13 +458,63 @@ def execute(
     return {"status": status, "run_id": run_name}
 
 
+def execute_all_modules(
+    *,
+    no_llm: bool = False,
+    quiet: bool = False,
+) -> list[dict[str, str]]:
+    outcomes: list[dict[str, str]] = []
+    for module in sorted(MODULE_ADAPTERS):
+        case_dir = TESTS_DIR / module / "cases"
+        case_ids = sorted(path.stem for path in case_dir.glob("*.json"))
+        if not case_ids:
+            outcomes.append(
+                {
+                    "status": "FAIL",
+                    "run_id": "",
+                    "module": module,
+                    "error": f"No cases found in {case_dir}",
+                }
+            )
+            continue
+        for case_id in case_ids:
+            outcome = execute(
+                module,
+                case_id,
+                no_llm=no_llm,
+                quiet=quiet,
+            )
+            outcomes.append({**outcome, "module": module, "case_id": case_id})
+    return outcomes
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="AI4Law white-box test runner")
-    parser.add_argument("module", choices=sorted(MODULE_ADAPTERS))
-    parser.add_argument("case", help="case name without .json, or 'all'")
+    parser.add_argument("module", choices=["all", *sorted(MODULE_ADAPTERS)])
+    parser.add_argument(
+        "case",
+        nargs="?",
+        default="all",
+        help="case name without .json, or 'all' (default: all)",
+    )
     parser.add_argument("--no-llm", action="store_true")
     parser.add_argument("--quiet", "-q", action="store_true")
     args = parser.parse_args()
+
+    if args.module == "all":
+        outcomes = execute_all_modules(no_llm=args.no_llm, quiet=args.quiet)
+        failed = sum(outcome["status"] != "PASS" for outcome in outcomes)
+        print(
+            f"all modules: {len(outcomes) - failed} PASS, {failed} FAIL "
+            f"across {len(MODULE_ADAPTERS)} modules"
+        )
+        for outcome in outcomes:
+            if outcome["status"] != "PASS":
+                print(
+                    f"  - {outcome.get('module', '?')}/"
+                    f"{outcome.get('case_id', '?')}: {outcome.get('error', 'FAIL')}"
+                )
+        return 1 if failed else 0
 
     if args.case == "all":
         case_dir = TESTS_DIR / args.module / "cases"

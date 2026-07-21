@@ -1,0 +1,25 @@
+{
+  "input": {
+    "uploaded_files": [
+      "backend/tests/review/fixtures/minimal_data_processing_agreement.md"
+    ],
+    "document_type": "dpa",
+    "review_focus": "个人信息处理目的、跨境传输、安全事件与删除义务",
+    "scenario_context": {
+      "company_name": "CLI 测试公司",
+      "receiver_country": "Singapore",
+      "transfer_purpose": "客户支持",
+      "review_focus": "检查高风险缺失条款"
+    },
+    "review_config": {
+      "review_depth": "standard",
+      "target_jurisdiction": "cn",
+      "max_llm_clauses": 0,
+      "enable_cross_document_check": false,
+      "output_language": "zh"
+    }
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}

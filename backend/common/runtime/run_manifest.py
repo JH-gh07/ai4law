@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 
 def _canonical_hash(value: Any) -> str:
@@ -17,23 +18,45 @@ def _canonical_hash(value: Any) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def _safe_reference(value: str) -> str:
+    parts = urlsplit(value)
+    if parts.scheme:
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    return parts.path
+
+
 def _input_artifacts(value: Any) -> list[dict[str, str]]:
     artifacts: list[dict[str, str]] = []
 
-    def visit(item: Any) -> None:
+    def visit(item: Any, parent_key: str = "") -> None:
         if isinstance(item, dict):
             artifact = {
-                key: str(item[key])
+                key: (
+                    _safe_reference(str(item[key]))
+                    if key == "storage_uri"
+                    else str(item[key])
+                )
                 for key in ("file_name", "file_role", "storage_uri", "file_format")
                 if item.get(key) not in (None, "")
             }
             if artifact and ("file_name" in artifact or "storage_uri" in artifact):
                 artifacts.append(artifact)
-            for child in item.values():
-                visit(child)
+            for key, child in item.items():
+                visit(child, str(key))
         elif isinstance(item, list):
             for child in item:
-                visit(child)
+                visit(child, parent_key)
+        elif isinstance(item, str) and parent_key in {
+            "uploaded_files",
+            "files",
+            "attachments",
+        }:
+            safe_uri = _safe_reference(item)
+            file_name = Path(urlsplit(safe_uri).path).name
+            if file_name:
+                artifacts.append(
+                    {"file_name": file_name, "storage_uri": safe_uri}
+                )
 
     visit(value)
     return artifacts
@@ -51,16 +74,21 @@ def summarize_input(value: Any) -> dict[str, Any]:
 def summarize_output(value: Any) -> dict[str, Any]:
     payload = value if isinstance(value, dict) else {}
     artifacts: list[dict[str, str]] = []
-    report_path = payload.get("report_path")
-    if isinstance(report_path, str) and report_path.strip():
-        artifacts.append({"role": "report", "path": report_path})
+    seen_paths: set[str] = set()
     output_files = payload.get("output_files")
     if isinstance(output_files, dict):
         for role, path in output_files.items():
-            if isinstance(path, str) and path.strip():
+            if isinstance(path, str) and path.strip() and path not in seen_paths:
                 artifact = {"role": str(role), "path": path}
-                if artifact not in artifacts:
-                    artifacts.append(artifact)
+                artifacts.append(artifact)
+                seen_paths.add(path)
+    report_path = payload.get("report_path")
+    if (
+        isinstance(report_path, str)
+        and report_path.strip()
+        and report_path not in seen_paths
+    ):
+        artifacts.append({"role": "report", "path": report_path})
     return {
         "fields": sorted(str(key) for key in payload),
         "artifacts": artifacts,

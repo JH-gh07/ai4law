@@ -15,7 +15,6 @@ def test_module_adapters_match_authoritative_registry() -> None:
     expected = {
         item["frontend_key"]: item
         for item in registry
-        if item["frontend_key"] != "review"
     }
 
     assert set(runner.MODULE_ADAPTERS) == set(expected)
@@ -63,7 +62,12 @@ def test_execute_failure_writes_error_json_and_failed_manifest(
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     assert error["type"] == "RuntimeError"
     assert "deliberate harness failure" in error["message"]
+    assert manifest["schema_version"] == "1.0"
     assert manifest["status"] == "FAIL"
+    assert manifest["provider_snapshot"]["mode"] == "no_llm"
+    assert manifest["input"]["fields"] == ["value"]
+    assert manifest["output"]["artifacts"] == []
+    assert manifest["observability"]["tokens"]["total_tokens"] == 0
 
 
 def test_viewer_loads_cross_module_success_and_error_runs(
@@ -102,3 +106,36 @@ def test_viewer_loads_cross_module_success_and_error_runs(
     assert failed_data["error"]["type"] == "ValueError"
     assert viewer.load_run("missing") is None
     assert viewer.diff_runs(success_data, failed_data)["status"] == ("PASS", "FAIL")
+
+
+def test_execute_all_modules_runs_every_registered_case(tmp_path, monkeypatch) -> None:
+    calls: list[tuple[str, str, bool, bool]] = []
+    adapters = {
+        "alpha": object(),
+        "beta": object(),
+    }
+    for module, cases in {"alpha": ["01_a", "02_b"], "beta": ["01_c"]}.items():
+        case_dir = tmp_path / module / "cases"
+        case_dir.mkdir(parents=True)
+        for case_id in cases:
+            (case_dir / f"{case_id}.json").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(runner, "TESTS_DIR", tmp_path)
+    monkeypatch.setattr(runner, "MODULE_ADAPTERS", adapters)
+    monkeypatch.setattr(
+        runner,
+        "execute",
+        lambda module, case_id, *, no_llm, quiet: (
+            calls.append((module, case_id, no_llm, quiet))
+            or {"status": "PASS", "run_id": f"{module}-{case_id}"}
+        ),
+    )
+
+    outcomes = runner.execute_all_modules(no_llm=True, quiet=True)
+
+    assert len(outcomes) == 3
+    assert calls == [
+        ("alpha", "01_a", True, True),
+        ("alpha", "02_b", True, True),
+        ("beta", "01_c", True, True),
+    ]

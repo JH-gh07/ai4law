@@ -163,8 +163,8 @@ def test_traced_task_persists_a_sanitized_run_manifest(tmp_path) -> None:
         {"file_name": "contract.docx", "storage_uri": "storage://contract"}
     ]
     assert manifest["output"]["artifacts"] == [
-        {"role": "report", "path": "/tmp/report.md"},
         {"role": "docx", "path": "/tmp/report.docx"},
+        {"role": "report", "path": "/tmp/report.md"},
     ]
     assert manifest["observability"]["event_count"] >= 1
     assert manifest["observability"]["llm_calls"] == 1

@@ -37,7 +37,27 @@ def load_run(run_id: str) -> dict[str, Any] | None:
         "manifest": _read_optional_json(run_dir / "run_manifest.json"),
         "result": _read_optional_json(run_dir / "output" / "result.json"),
         "error": _read_optional_json(run_dir / "output" / "error.json"),
+        "events": _load_trace_events(run_dir),
     }
+
+
+def _load_trace_events(run_dir: Path) -> list[dict[str, Any]]:
+    trace_manifest = _read_optional_json(run_dir / "trace" / "manifest.json") or {}
+    events: list[dict[str, Any]] = []
+    for reference in trace_manifest.get("events", []):
+        raw_path = Path(str(reference.get("path") or ""))
+        candidates = [raw_path]
+        if not raw_path.is_absolute():
+            candidates.extend(
+                [REPO_ROOT / raw_path, run_dir / "trace" / raw_path.name]
+            )
+        event_path = next((path for path in candidates if path.is_file()), None)
+        if event_path is None:
+            continue
+        event = _read_optional_json(event_path)
+        if event:
+            events.append(event)
+    return events
 
 
 def diff_runs(left: dict[str, Any], right: dict[str, Any]) -> dict[str, tuple[Any, Any]]:
@@ -72,7 +92,7 @@ def list_runs(module: str | None = None) -> list[dict[str, Any]]:
     return sorted(manifests, key=lambda item: item.get("run_id", ""), reverse=True)
 
 
-def _print_run(data: dict[str, Any]) -> None:
+def _print_run(data: dict[str, Any], *, show_events: bool = False) -> None:
     manifest = data["manifest"] or {}
     result = data["result"] or {}
     error = data["error"] or {}
@@ -80,11 +100,38 @@ def _print_run(data: dict[str, Any]) -> None:
     print(f"module: {manifest.get('module', '?')}")
     print(f"status: {manifest.get('status', '?')}")
     print(f"duration_ms: {manifest.get('duration_ms', 0):.0f}")
+    provider = manifest.get("provider_snapshot") or {}
+    observability = manifest.get("observability") or {}
+    tokens = observability.get("tokens") or {}
+    print(
+        f"provider: {provider.get('provider_id', '?')} / "
+        f"{provider.get('model', '') or '(no model)'}"
+    )
+    print(
+        f"events: {observability.get('event_count', 0)}, "
+        f"llm_calls: {observability.get('llm_calls', 0)}, "
+        f"tokens: {tokens.get('total_tokens', 0)}, "
+        f"fallbacks: {observability.get('fallback_count', 0)}"
+    )
+    for artifact in (manifest.get("input") or {}).get("artifacts", []):
+        print(
+            f"input: {artifact.get('file_name', '')} "
+            f"{artifact.get('storage_uri', '')}".rstrip()
+        )
+    for artifact in (manifest.get("output") or {}).get("artifacts", []):
+        print(f"output[{artifact.get('role', '?')}]: {artifact.get('path', '')}")
     if result:
         print(f"risk_level: {result.get('risk_level', '')}")
         print(f"report_path: {result.get('report_path', '')}")
     if error:
         print(f"error: {error.get('type', '?')}: {error.get('message', '')}")
+    if show_events:
+        for event in data.get("events", []):
+            payload = event.get("payload") or {}
+            print(
+                f"[{int(event.get('seq', 0)):03d}] "
+                f"{event.get('name', '?')}: {payload.get('summary', '')}"
+            )
 
 
 def main() -> int:
@@ -92,6 +139,7 @@ def main() -> int:
     parser.add_argument("run_id", nargs="?")
     parser.add_argument("--diff")
     parser.add_argument("--list", "-l", nargs="?", const="__all__")
+    parser.add_argument("--events", action="store_true", help="print persisted events")
     args = parser.parse_args()
     if args.list is not None:
         module = None if args.list == "__all__" else args.list
@@ -116,7 +164,7 @@ def main() -> int:
         for field, values in diff_runs(current, other).items():
             print(f"{field}: {values[0]!r} -> {values[1]!r}")
         return 0
-    _print_run(current)
+    _print_run(current, show_events=args.events)
     return 0
 
 

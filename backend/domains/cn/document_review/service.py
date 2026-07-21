@@ -209,6 +209,7 @@ class ReviewService:
         task = self._create_task_from_request(db, user_id, payload)
         self._run_pipeline(task.id, user_id)
 
+        db.expire_all()
         refreshed = self._require_task(db, task.id, user_id)
         if refreshed.status != ReviewTaskStatus.COMPLETED.value:
             raise HTTPException(status_code=500, detail="Review generation failed")

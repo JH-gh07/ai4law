@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
@@ -7,6 +8,7 @@ from backend.app import create_app
 from backend.core.settings import Settings
 from backend.schemas.review import ClausePosition, ClauseType, ClassifiedClause
 from backend.domains.cn.document_review.service import ReviewService
+from backend.schemas.review import ReviewGenerateRequest, ReviewGenerateResponse
 
 
 @contextmanager
@@ -107,6 +109,43 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
         from pypdf import PdfReader
 
         assert len(PdfReader(pdf_path).pages) >= 1
+
+
+def test_review_sync_generation_refreshes_session_after_pipeline(monkeypatch) -> None:
+    class FakeSession:
+        expired = False
+
+        def expire_all(self) -> None:
+            self.expired = True
+
+    db = FakeSession()
+    service = object.__new__(ReviewService)
+    task = SimpleNamespace(id="review-task", status="UPLOADED")
+    monkeypatch.setattr(service, "_create_task_from_request", lambda *_args: task)
+    monkeypatch.setattr(service, "_run_pipeline", lambda *_args: None)
+    monkeypatch.setattr(
+        service,
+        "_require_task",
+        lambda *_args: SimpleNamespace(
+            id="review-task",
+            status="COMPLETED" if db.expired else "UPLOADED",
+        ),
+    )
+    expected = ReviewGenerateResponse(
+        report_path="report.docx",
+        output_files={"docx": "report.docx"},
+        risk_level="LOW",
+    )
+    monkeypatch.setattr(service, "_build_generate_response", lambda *_args: expected)
+
+    result = service.generate_from_request(
+        db,
+        "user-1",
+        ReviewGenerateRequest(uploaded_files=["input.md"]),
+    )
+
+    assert db.expired is True
+    assert result == expected
 
 
 def test_select_llm_candidates_caps_non_other_clauses() -> None:
