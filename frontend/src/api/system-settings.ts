@@ -43,8 +43,19 @@ export type RuntimeProviderTestResult = {
   available_models: string[];
 };
 
+export type DeliLegalTestResult = {
+  ok: boolean;
+  base_url: string;
+  latency_ms: number | null;
+  result_count: number;
+  error_code: string;
+  error_category: string;
+  error: string;
+};
+
 const ENDPOINT = "/api/v1/system/settings/runtime";
 const TEST_PROVIDER_ENDPOINT = "/api/v1/system/settings/llm/test-provider";
+const TEST_DELILEGAL_ENDPOINT = "/api/v1/system/settings/delilegal/test";
 
 export async function fetchRuntimeSettings(): Promise<RuntimeSettingsPayload> {
   let res: Response;
@@ -102,6 +113,30 @@ export async function testRuntimeProvider(provider: RuntimeProvider): Promise<Ru
   const data = (await res.json()) as RuntimeProviderTestResult;
   if (!res.ok) {
     throw new Error(data.error || `Test provider failed: ${res.status}`);
+  }
+  return data;
+}
+
+export async function testDeliLegal(
+  config: RuntimeSettingsPayload["delilegal"],
+): Promise<DeliLegalTestResult> {
+  let res: Response;
+  try {
+    res = await apiFetch(TEST_DELILEGAL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ config }),
+      timeoutMs: 15000,
+    });
+  } catch (error) {
+    throw new Error(toReadableRequestError(error, "Test DeliLegal failed"));
+  }
+  const data = (await res.json()) as DeliLegalTestResult;
+  if (!res.ok) {
+    throw new Error(data.error || `Test DeliLegal failed: ${res.status}`);
   }
   return data;
 }

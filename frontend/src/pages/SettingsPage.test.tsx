@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchRuntimeSettings,
+  testDeliLegal,
   testRuntimeProvider,
 } from "../api/system-settings";
 import { SettingsPage } from "./SettingsPage";
@@ -9,10 +10,12 @@ import { SettingsPage } from "./SettingsPage";
 vi.mock("../api/system-settings", () => ({
   fetchRuntimeSettings: vi.fn(),
   saveRuntimeSettings: vi.fn(),
+  testDeliLegal: vi.fn(),
   testRuntimeProvider: vi.fn(),
 }));
 
 const fetchSettings = vi.mocked(fetchRuntimeSettings);
+const testDeli = vi.mocked(testDeliLegal);
 const testProvider = vi.mocked(testRuntimeProvider);
 
 describe("SettingsPage provider health", () => {
@@ -72,5 +75,24 @@ describe("SettingsPage provider health", () => {
       "MODEL_NOT_FOUND",
     );
     expect(document.querySelector('option[value="available-model"]')).not.toBeNull();
+  });
+
+  it("shows a classified DeliLegal health failure", async () => {
+    testDeli.mockResolvedValue({
+      ok: false,
+      base_url: "https://openapi.delilegal.com",
+      latency_ms: 18,
+      result_count: 0,
+      error_code: "AUTHENTICATION_FAILED",
+      error_category: "authentication",
+      error: "得理 API 鉴权失败",
+    });
+    render(<SettingsPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "测试得理连接" }));
+
+    expect(await screen.findByText(/得理 API 鉴权失败/)).toHaveTextContent(
+      "AUTHENTICATION_FAILED",
+    );
   });
 });

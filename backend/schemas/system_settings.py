@@ -60,3 +60,17 @@ class RuntimeProviderTestResponse(BaseModel):
     error: str = ""
     model_discovery: str = "unsupported_or_failed"
     available_models: list[str] = Field(default_factory=list)
+
+
+class DeliLegalTestRequest(BaseModel):
+    config: DeliLegalConfig
+
+
+class DeliLegalTestResponse(BaseModel):
+    ok: bool
+    base_url: str = ""
+    latency_ms: int | None = None
+    result_count: int = 0
+    error_code: str = ""
+    error_category: str = ""
+    error: str = ""

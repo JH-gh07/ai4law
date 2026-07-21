@@ -74,6 +74,10 @@ def test_runtime_settings_requires_authentication(tmp_path: Path) -> None:
             "/api/v1/system/settings/llm/test-provider",
             json={"provider": _settings_payload()["llm"]["providers"][0]},
         ).status_code == 401
+        assert client.post(
+            "/api/v1/system/settings/delilegal/test",
+            json={"config": _settings_payload()["delilegal"]},
+        ).status_code == 401
 
 
 def test_runtime_settings_returns_sanitized_provider_registry(tmp_path: Path) -> None:
@@ -157,3 +161,63 @@ def test_runtime_provider_test_endpoint_accepts_authenticated_request(
 
     assert response.status_code == 200
     assert response.json()["provider_id"] == "deepseek-demo"
+
+
+def test_delilegal_probe_reports_missing_credentials_before_network(
+    tmp_path: Path,
+) -> None:
+    with _make_client(tmp_path) as (client, _settings):
+        response = client.post(
+            "/api/v1/system/settings/delilegal/test",
+            json={
+                "config": {
+                    "base_url": "https://openapi.delilegal.com",
+                    "app_id": "",
+                    "secret": "",
+                    "enabled": False,
+                }
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is False
+    assert response.json()["error_code"] == "NOT_CONFIGURED"
+
+
+def test_delilegal_probe_reuses_saved_secret_when_request_is_masked(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    observed: dict[str, str | None] = {}
+
+    def fake_probe(service):
+        observed["secret"] = service.secret
+        return {
+            "ok": True,
+            "latency_ms": 1,
+            "result_count": 1,
+            "error_code": "",
+            "error_category": "",
+            "error": "",
+        }
+
+    from backend.integrations.delilegal import DeliLegalService
+
+    monkeypatch.setattr(DeliLegalService, "probe", fake_probe)
+    payload = _settings_payload()
+    payload["delilegal"] = {
+        "base_url": "https://openapi.delilegal.com",
+        "app_id": "saved-app",
+        "secret": "saved-secret",
+        "enabled": True,
+    }
+    with _make_client(tmp_path) as (client, _settings):
+        saved = client.put("/api/v1/system/settings/runtime", json=payload)
+        response = client.post(
+            "/api/v1/system/settings/delilegal/test",
+            json={"config": saved.json()["delilegal"]},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert observed["secret"] == "saved-secret"

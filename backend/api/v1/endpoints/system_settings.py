@@ -5,11 +5,14 @@ from fastapi import APIRouter, Depends, Request
 from backend.core.dependencies import get_current_user
 from backend.core.runtime_settings import (
     apply_runtime_payload,
+    build_delilegal_test_result,
     build_effective_runtime_payload,
     build_provider_test_result,
 )
 from backend.schemas.auth import AuthUser
 from backend.schemas.system_settings import (
+    DeliLegalTestRequest,
+    DeliLegalTestResponse,
     RuntimeProviderTestRequest,
     RuntimeProviderTestResponse,
     RuntimeSettingsResponse,
@@ -53,3 +56,16 @@ def test_runtime_provider(
         request.app.state.container.settings,
     )
     return RuntimeProviderTestResponse.model_validate(payload)
+
+
+@router.post("/settings/delilegal/test", response_model=DeliLegalTestResponse)
+def test_delilegal(
+    body: DeliLegalTestRequest,
+    request: Request,
+    _current_user: AuthUser = Depends(get_current_user),
+) -> DeliLegalTestResponse:
+    payload = build_delilegal_test_result(
+        body.config.model_dump(),
+        request.app.state.container.settings,
+    )
+    return DeliLegalTestResponse.model_validate(payload)

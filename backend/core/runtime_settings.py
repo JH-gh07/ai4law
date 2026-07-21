@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.provider_registry import LLMProviderConfig, LLMProviderRegistry, normalize_openai_base_url
+from backend.integrations.delilegal import DeliLegalService
 
 DEFAULT_LLM_MODELS = [
     "deepseek-ai/DeepSeek-V3.2",
@@ -228,6 +229,27 @@ def build_provider_test_result(
         "error": "",
         "model_discovery": discovery_status,
         "available_models": available_models[:100],
+    }
+
+
+def build_delilegal_test_result(
+    config_payload: dict[str, Any],
+    settings,
+) -> dict[str, Any]:
+    requested_secret = str(config_payload.get("secret") or "").strip()
+
+    class _DeliSettings:
+        delilegal_base_url = str(
+            config_payload.get("base_url") or settings.delilegal_base_url
+        ).strip()
+        delilegal_app_id = str(config_payload.get("app_id") or "").strip() or None
+        delilegal_secret = requested_secret or settings.delilegal_secret
+
+    service = DeliLegalService(_DeliSettings())
+    result = service.probe()
+    return {
+        **result,
+        "base_url": service.base_url,
     }
 
 

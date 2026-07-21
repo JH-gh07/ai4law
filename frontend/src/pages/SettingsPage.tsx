@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../api/system-settings";
-import { fetchRuntimeSettings, saveRuntimeSettings, testRuntimeProvider } from "../api/system-settings";
+import type { DeliLegalTestResult, RuntimeProvider, RuntimeProviderTestResult, RuntimeSettingsPayload } from "../api/system-settings";
+import { fetchRuntimeSettings, saveRuntimeSettings, testDeliLegal, testRuntimeProvider } from "../api/system-settings";
 
 const FALLBACK_MODELS = ["deepseek-ai/DeepSeek-V3.2", "deepseek-ai/DeepSeek-V3", "Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-72B-Instruct"];
 
@@ -37,6 +37,8 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [testingProviderId, setTestingProviderId] = useState<string>("");
+  const [testingDeliLegal, setTestingDeliLegal] = useState(false);
+  const [deliLegalTestState, setDeliLegalTestState] = useState<DeliLegalTestResult | null>(null);
   const [providerTestState, setProviderTestState] = useState<Record<string, RuntimeProviderTestResult>>({});
   useEffect(() => {
     let alive = true;
@@ -152,6 +154,31 @@ export function SettingsPage() {
     return `连接成功 · ${state.latency_ms ?? "-"}ms · ${discoveryLabel}`;
   };
 
+  const onTestDeliLegal = async () => {
+    setTestingDeliLegal(true);
+    try {
+      setDeliLegalTestState(await testDeliLegal(form.delilegal));
+    } catch (err) {
+      setDeliLegalTestState({
+        ok: false,
+        base_url: form.delilegal.base_url,
+        latency_ms: null,
+        result_count: 0,
+        error_code: "REQUEST_FAILED",
+        error_category: "network",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setTestingDeliLegal(false);
+    }
+  };
+
+  const deliLegalTestLabel = deliLegalTestState
+    ? deliLegalTestState.ok
+      ? `连接成功 · ${deliLegalTestState.latency_ms ?? "-"}ms · 最小查询返回 ${deliLegalTestState.result_count} 条`
+      : `${deliLegalTestState.error || "测试失败"}（${deliLegalTestState.error_code || "PROVIDER_ERROR"}）`
+    : "";
+
   const activeProvider = form.llm.providers.find((item) => item.id === form.llm.active_provider_id) || null;
 
   const onSave = async () => {
@@ -218,6 +245,14 @@ export function SettingsPage() {
               />
             </label>
             <p className="settings-hint">{form.delilegal.enabled ? "当前已启用" : "当前未启用（缺少 app_id/secret）"}</p>
+            <button className="pill-btn" onClick={onTestDeliLegal} disabled={testingDeliLegal}>
+              {testingDeliLegal ? "测试中..." : "测试得理连接"}
+            </button>
+            {deliLegalTestState ? (
+              <p className={`settings-provider-test ${deliLegalTestState.ok ? "is-success" : "is-error"}`}>
+                {deliLegalTestLabel}
+              </p>
+            ) : null}
           </section>
 
           <section className="settings-card">
