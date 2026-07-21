@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,9 +16,30 @@ _MARKDOWN_PREFIX_RE = re.compile(
     r"^\s*(?:#{1,6}\s|[*_]{2,3}[^*_\s]|[-*]\s|\d+\.\s|>\s|\|)"
 )
 _BASIS_BLOCK_RE = re.compile(r"【依据：[^】]+】")
+_LEGAL_RULE_RE = re.compile(
+    r"(?:应当|必须|不得|禁止|依法|法定义务|法律要求|监管要求|违反|不符合|合规义务)"
+)
+_RISK_JUDGMENT_RE = re.compile(
+    r"(?:高风险|中风险|低风险|不合规|违规风险|剩余风险|风险等级|风险结论)"
+)
+_PLACEHOLDER_CITATIONS = {"未检索到", "未检索到相关法规", "未检索到法规依据"}
 # Matches markdown inline formatting: **bold**, __bold__, *italic*, _italic_, `code`
 # Group 2 captures the inner content so we can strip the markers
 _MD_INLINE_RE = re.compile(r"(\*{1,3}|_{1,3})([^*_\n]+?)\1|`([^`\n]+)`")
+
+
+@dataclass(frozen=True)
+class CitationPolicyViolation:
+    paragraph_index: int
+    code: str
+    claim_type: str
+    detail: str = ""
+
+
+@dataclass(frozen=True)
+class CitationPolicyResult:
+    text: str
+    violations: list[CitationPolicyViolation]
 
 
 def normalize_legal_markdown_structure(text: str) -> str:
@@ -146,23 +168,107 @@ def ensure_paragraph_citations(
     citations: list[str] | None,
     max_items: int = 3,
 ) -> str:
-    if not text:
-        return text
-    # Strip markdown inline formatting before structural postprocessing.
-    # This prevents ** from being split across lines in _explode_packed_line
-    # and removes literal ** / __ / _ that DOCX renderers cannot handle.
-    text = strip_markdown_inline(text)
-    items = [str(c).strip() for c in (citations or []) if str(c).strip()]
-    basis = "；".join(items[:max_items]) if items else "未检索到"
+    """Compatibility wrapper for the claim-aware citation policy.
 
-    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    It deliberately does not attach retrieval results to every paragraph.
+    """
+    return apply_citation_policy(text, citations, max_items=max_items).text
+
+
+def _citation_key(value: str) -> str:
+    return re.sub(r"[\s《》【】\[\]（）()]", "", value or "").lower()
+
+
+def _claim_type(paragraph: str) -> str | None:
+    without_markers = _BASIS_BLOCK_RE.sub("", paragraph)
+    if _LEGAL_RULE_RE.search(without_markers):
+        return "LEGAL_RULE"
+    if _RISK_JUDGMENT_RE.search(without_markers):
+        return "RISK_JUDGMENT"
+    return None
+
+
+def apply_citation_policy(
+    text: str,
+    allowed_citations: list[str] | None,
+    *,
+    max_items: int = 3,
+) -> CitationPolicyResult:
+    """Validate explicit citations and mark unsupported high-stakes claims.
+
+    Retrieval candidates are an allowlist, not proof that every paragraph is
+    supported by every candidate. Only citations explicitly emitted next to a
+    claim survive this gate.
+    """
+    if not text:
+        return CitationPolicyResult(text=text, violations=[])
+
+    cleaned = strip_markdown_inline(text)
+    cleaned = re.sub(r"\n\s*\n(?=【依据：)", "\n", cleaned)
+    allowed = {
+        _citation_key(str(item).strip()): str(item).strip()
+        for item in (allowed_citations or [])
+        if str(item).strip()
+    }
+    paragraphs = [item.strip() for item in re.split(r"\n\s*\n", cleaned) if item.strip()]
     rendered: list[str] = []
-    for paragraph in paragraphs:
-        if "【依据：" in paragraph:
-            rendered.append(paragraph)
-            continue
-        rendered.append(f"{paragraph} 【依据：{basis}】")
-    return normalize_legal_markdown_structure("\n\n".join(rendered))
+    violations: list[CitationPolicyViolation] = []
+
+    for index, paragraph in enumerate(paragraphs, start=1):
+        claim_type = _claim_type(paragraph) or "NONE"
+        valid_citations: list[str] = []
+        for block in _BASIS_BLOCK_RE.findall(paragraph):
+            raw_items = block[len("【依据："):-1].split("；")
+            for raw_item in raw_items:
+                item = raw_item.strip()
+                if not item:
+                    continue
+                if item in _PLACEHOLDER_CITATIONS:
+                    violations.append(
+                        CitationPolicyViolation(
+                            paragraph_index=index,
+                            code="citation_placeholder",
+                            claim_type=claim_type,
+                            detail=item,
+                        )
+                    )
+                    continue
+                canonical = allowed.get(_citation_key(item))
+                if canonical is None:
+                    violations.append(
+                        CitationPolicyViolation(
+                            paragraph_index=index,
+                            code="citation_not_allowed",
+                            claim_type=claim_type,
+                            detail=item,
+                        )
+                    )
+                    continue
+                if canonical not in valid_citations:
+                    valid_citations.append(canonical)
+
+        paragraph_without_basis = _BASIS_BLOCK_RE.sub("", paragraph).strip()
+        if valid_citations:
+            selected = "；".join(valid_citations[:max_items])
+            paragraph_without_basis = f"{paragraph_without_basis} 【依据：{selected}】"
+
+        has_verified_marker = bool(valid_citations)
+        if claim_type != "NONE" and not has_verified_marker:
+            if "【待核验：缺少法规依据】" not in paragraph_without_basis:
+                paragraph_without_basis = (
+                    f"{paragraph_without_basis} 【待核验：缺少法规依据】"
+                )
+            violations.append(
+                CitationPolicyViolation(
+                    paragraph_index=index,
+                    code="required_citation_missing",
+                    claim_type=claim_type,
+                )
+            )
+        rendered.append(paragraph_without_basis)
+
+    normalized = normalize_legal_markdown_structure("\n\n".join(rendered))
+    return CitationPolicyResult(text=normalized, violations=violations)
 
 
 def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:

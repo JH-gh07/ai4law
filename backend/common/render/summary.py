@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from backend.common.llm.postprocess import apply_citation_policy
+
 
 _HEADING_PATTERNS = (
     re.compile(r"^\s{0,3}#{1,6}\s+"),
@@ -71,14 +73,7 @@ def dedup_if_same(primary: str, secondary: str, fallback: str) -> tuple[str, str
 
 
 def attach_citations(text: str, citations: list[str] | None, max_items: int = 3) -> str:
+    """Apply the citation gate without assigning global retrieval hits as proof."""
     if not text or text == "未提供":
         return text
-    if "【依据：" in text:
-        return text
-    items = [str(c).strip() for c in (citations or []) if str(c).strip()]
-    if items:
-        basis = "；".join(items[:max_items])
-    else:
-        basis = "未检索到"
-    separator = " " if text and not text.endswith(" ") else ""
-    return f"{text}{separator}【依据：{basis}】"
+    return apply_citation_policy(text, citations, max_items=max_items).text

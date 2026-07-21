@@ -1,16 +1,91 @@
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.postprocess import (
+    apply_citation_policy,
     convert_citation_markers,
     ensure_paragraph_citations,
     normalize_legal_markdown_structure,
 )
+from backend.common.render.summary import attach_citations
 
 
-def test_ensure_paragraph_citations_still_works() -> None:
-    """Legacy function should still work for backward compatibility."""
+def test_legacy_helper_does_not_mechanically_attach_retrieval_results() -> None:
     result = ensure_paragraph_citations("这是测试文本。", ["个人信息保护法第三十九条"])
-    assert "【依据：个人信息保护法第三十九条】" in result
+    assert "【依据：" not in result
+
+
+def test_policy_never_emits_missing_retrieval_as_a_citation() -> None:
+    result = ensure_paragraph_citations("根据法律要求，企业应当完成评估。", [])
+
+    assert "【依据：未检索到】" not in result
+    assert "【待核验：缺少法规依据】" in result
+
+
+def test_policy_removes_legacy_placeholder_citation() -> None:
+    result = apply_citation_policy(
+        "企业应当完成评估。【依据：未检索到】",
+        [],
+    )
+
+    assert "【依据：未检索到】" not in result.text
+    assert [item.code for item in result.violations] == [
+        "citation_placeholder",
+        "required_citation_missing",
+    ]
+
+
+def test_policy_does_not_trust_unregistered_numeric_footnotes() -> None:
+    result = apply_citation_policy(
+        "企业应当完成评估。[999]",
+        ["个人信息保护法第五十五条"],
+    )
+
+    assert "【待核验：缺少法规依据】" in result.text
+    assert result.violations[0].code == "required_citation_missing"
+
+
+def test_policy_preserves_only_an_explicit_allowed_citation() -> None:
+    result = apply_citation_policy(
+        "企业应当履行告知义务。【依据：个人信息保护法第十七条】",
+        ["个人信息保护法第十七条"],
+    )
+
+    assert "【依据：个人信息保护法第十七条】" in result.text
+    assert result.violations == []
+
+
+def test_policy_rejects_an_unprovided_citation_and_marks_claim_pending() -> None:
+    result = apply_citation_policy(
+        "企业应当立即停止处理。【依据：虚构法律第一条】",
+        ["个人信息保护法第十七条"],
+    )
+
+    assert "虚构法律" not in result.text
+    assert "【待核验：缺少法规依据】" in result.text
+    assert [item.code for item in result.violations] == [
+        "citation_not_allowed",
+        "required_citation_missing",
+    ]
+
+
+def test_policy_does_not_force_citations_onto_transition_text() -> None:
+    result = apply_citation_policy(
+        "下文将进一步说明整改计划。",
+        ["个人信息保护法第十七条"],
+    )
+
+    assert result.text == "下文将进一步说明整改计划。"
+    assert result.violations == []
+
+
+def test_summary_helper_does_not_assign_global_retrieval_hits_as_proof() -> None:
+    result = attach_citations(
+        "企业应当完成个人信息保护影响评估。",
+        ["个人信息保护法第五十五条"],
+    )
+
+    assert "【依据：个人信息保护法第五十五条】" not in result
+    assert "【待核验：缺少法规依据】" in result
 
 
 def test_convert_citation_markers_replaces_single_marker() -> None:
