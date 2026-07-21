@@ -73,7 +73,11 @@ def get_eu_scc_task(
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
-@router.post("/tasks/{task_id}/retry", response_model=SCCAsyncStatus)
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=SCCAsyncStatus,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def retry_eu_scc_task(
     task_id: str,
     db: Session = Depends(get_db),

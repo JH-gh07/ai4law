@@ -74,7 +74,11 @@ def get_us_14117_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/tasks/{task_id}/retry", response_model=US14117AsyncStatus)
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=US14117AsyncStatus,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def retry_us_14117_task(
     task_id: str,
     db: Session = Depends(get_db),

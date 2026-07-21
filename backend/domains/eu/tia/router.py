@@ -67,7 +67,11 @@ def get_tia_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/tasks/{task_id}/retry", response_model=TIAAsyncStatus)
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=TIAAsyncStatus,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def retry_tia_task(
     task_id: str,
     db: Session = Depends(get_db),

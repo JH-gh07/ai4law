@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from backend.common.trace.tracer import trace_sync
 from backend.api.v0.task_gateway.schema import APIEnvelope, V0TaskCreateRequest
 from backend.api.v0.task_gateway.service import V0TaskGatewayService
+from backend.services.runtime_health import require_healthy_llm
 
 router = APIRouter(tags=["v0-task-gateway"])
 service = V0TaskGatewayService()
@@ -17,7 +18,11 @@ def upload_file(file: UploadFile = File(...)) -> APIEnvelope:
     return APIEnvelope(data=uploaded)
 
 
-@router.post("/tasks", response_model=APIEnvelope)
+@router.post(
+    "/tasks",
+    response_model=APIEnvelope,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def create_task(payload: V0TaskCreateRequest) -> APIEnvelope:
     try:
         created = trace_sync("v0_task_gateway", lambda: service.create_task(payload))
@@ -71,4 +76,3 @@ def get_task_audit(task_id: str) -> APIEnvelope:
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return APIEnvelope(data=audit)
-

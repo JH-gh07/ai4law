@@ -72,7 +72,11 @@ def get_cn_flow_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/tasks/{task_id}/retry", response_model=CNFlowAsyncStatus)
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=CNFlowAsyncStatus,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def retry_cn_flow_task(
     task_id: str,
     db: Session = Depends(get_db),

@@ -67,7 +67,11 @@ def get_bcr_task(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.post("/tasks/{task_id}/retry", response_model=BCRAsyncStatus)
+@router.post(
+    "/tasks/{task_id}/retry",
+    response_model=BCRAsyncStatus,
+    dependencies=[Depends(require_healthy_llm)],
+)
 def retry_bcr_task(
     task_id: str,
     db: Session = Depends(get_db),
