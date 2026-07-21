@@ -1,0 +1,48 @@
+{
+  "case_id": "01_minimal",
+  "description": "PIPIA个人信息保护影响评估—标准合同备案路径，23万处理量/4.6万出境",
+  "input": {
+    "route_type": "scc_filing",
+    "company_profile": {
+      "company_name": "数安科技有限公司",
+      "company_uscc": "91310000XXXXXXXXXX",
+      "is_ciio": false,
+      "processing_person_count": 230000,
+      "outbound_pi_count": 46000,
+      "outbound_spi_count": 2500,
+      "industry": "互联网SaaS"
+    },
+    "transfer_context": {
+      "purpose": "境外客服与系统运维",
+      "recipient_name": "OceanStar Technology Inc.",
+      "recipient_country_region": "美国加州",
+      "legal_basis": "合同履行必要"
+    },
+    "personal_info_scope": {
+      "pi_categories": ["账户信息", "联系方式", "日志信息"],
+      "spi_categories": ["身份认证信息"],
+      "subject_volume": 46000
+    },
+    "rights_protection": {
+      "notice_mechanism": "隐私政策+弹窗",
+      "consent_mechanism": "单独同意",
+      "dsar_channel": "privacy@example.com",
+      "retention_policy": "到期删除+最短必要"
+    },
+    "emergency_plan": {
+      "incident_response_sla_hours": 24,
+      "escalation_path": "DPO -> 法务 -> 管理层"
+    },
+    "attachments": [
+      {
+        "file_role": "scc_contract",
+        "file_name": "scc_draft.txt",
+        "file_format": "txt",
+        "storage_uri": "storage/uploads/scc_draft.txt"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}

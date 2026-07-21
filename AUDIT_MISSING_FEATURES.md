@@ -323,11 +323,18 @@ Checkpoint 3：✅ 12 模块矩阵全部有可执行测试证据；相关 CN/EU/
 
 不得通过恢复 `backend/modules` 兼容层解决。不同服务接口应由显式 adapter 处理，不使用隐式猜测类名。
 
+- [x] 11 个 Harness 适配器显式映射 `backend.domains.*`，启动时逐项核对 `config/module_registry.json` 的 module_id 与 implementation_package。
+- [x] `--no-llm` 路径不会发起模型请求；独立 Runner 会先初始化数据库 schema，避免 citation audit 缺表被静默吞掉。
+- [x] 生产执行异常写入 `output/error.json`，manifest 标记 FAIL，CLI 返回非零。
+
 #### Task 4.2：迁移 15 个案例和 Viewer
 
 涉及文件：H02–H06、Viewer 测试。
 
-Checkpoint 4：以下命令对 11 个 Harness 模块执行成功，失败必须产生 `error.json` 和非零退出码：
+- [x] 15 个原始案例文件按 Git blob 校验与 `archive/local-original` 完全一致。
+- [x] Viewer 支持跨模块查找、成功结果、错误结果、缺失结果和确定性字段 diff；4 项 Harness 契约测试通过。
+
+Checkpoint 4：✅ 以下命令对 11 个 Harness 模块共 15 个案例执行成功（15 PASS / 0 FAIL）；失败落盘和非零退出码由独立故障注入测试验证：
 
 ```bash
 uv run --frozen python backend/tests/harness/runner.py diagnosis all --no-llm
@@ -438,7 +445,7 @@ git status --short
 | G04 | Frontend normalization | 与后端逐 case 一致 | 待执行 | ⬜ |
 | G05 | Render unit tests | PDF/MD/HTML/DOCX 全通过；未使用 registry 有证据地拒绝 | Render + services 32 项通过 | ✅ |
 | G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 12/12 有可执行有效 PDF 证据；CN/EU/API/Service 141 项 + US 45 项通过 | ✅ |
-| G07 | Harness | 11 模块、15 cases 可运行 | 待执行 | ⬜ |
+| G07 | Harness | 11 模块、15 cases 可运行 | 15/15 no-LLM 案例通过；4 项契约测试通过；原始案例 blob 15/15 一致 | ✅ |
 | G08 | Frontend install | `npm ci` 成功 | 待执行 | ⬜ |
 | G09 | Frontend tests/build | Vitest 与 Vite build 成功 | 待执行 | ⬜ |
 | G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 待执行 | ⬜ |

@@ -234,103 +234,120 @@
       "source_path": "backend/tests/assessment/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/assessment/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/assessment/cases/02_structured.json",
       "source_change": "A",
       "target_path": "backend/tests/assessment/cases/02_structured.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/bcr/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/bcr/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/cn_flow/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/cn_flow/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/cpra/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/cpra/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/diagnosis/cases/01_scc_path.json",
       "source_change": "A",
       "target_path": "backend/tests/diagnosis/cases/01_scc_path.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/diagnosis/cases/02_security_assessment.json",
       "source_change": "A",
       "target_path": "backend/tests/diagnosis/cases/02_security_assessment.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/diagnosis/cases/03_exemption.json",
       "source_change": "A",
       "target_path": "backend/tests/diagnosis/cases/03_exemption.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/dpia/cases/01_health_ai.json",
       "source_change": "A",
       "target_path": "backend/tests/dpia/cases/01_health_ai.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/dpia/cases/02_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/dpia/cases/02_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/eu_scc/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/eu_scc/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/harness/runner.py",
       "source_change": "A",
       "target_path": "backend/tests/harness/runner.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Rewritten around explicit backend.domains adapters verified against config/module_registry.json; failures persist error.json and return nonzero, and standalone startup initializes the database schema."
     },
     {
       "source_path": "backend/tests/harness/viewer.py",
       "source_change": "A",
       "target_path": "backend/tests/harness/viewer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Viewer loads success or error runs across module directories, handles missing runs and exposes deterministic field diffs; contract tests pass."
     },
     {
       "source_path": "backend/tests/pipia/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/pipia/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/scc/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/scc/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/tia/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/tia/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "backend/tests/us_14117/cases/01_minimal.json",
       "source_change": "A",
       "target_path": "backend/tests/us_14117/cases/01_minimal.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "Original case retained byte-for-byte and passes the domains-based no-LLM harness."
     },
     {
       "source_path": "doc/AI4Law 下一阶段业务逻辑.md",

@@ -1,0 +1,33 @@
+{
+  "case_id": "01_minimal",
+  "description": "最小输入—互联网SaaS企业120万PII/1.5万SPI出境新加坡，预期触发安全评估路径",
+  "input": {
+    "company_name": "云帆数据科技有限公司",
+    "industry": "互联网SaaS",
+    "is_ciio": false,
+    "contains_important_data": false,
+    "pii_count": 1200000,
+    "spi_count": 15000,
+    "transfer_purpose": "全球客服与风控联防",
+    "receiver_country": "新加坡",
+    "force_override_path": false,
+    "uploaded_files": []
+  },
+  "expected": {
+    "profile_contains": {
+      "company_name": "云帆数据科技有限公司",
+      "is_ciio": false,
+      "contains_important_data": false,
+      "pii_count": 1200000,
+      "spi_count": 15000
+    }
+  },
+  "manual_review_points": [
+    "profile_extractor 是否正确提取了企业画像",
+    "diagnosis 是否判断 pii_count ≥ 100万 → security_assessment",
+    "path_validation 是否通过(warn_only模式下不应阻断)",
+    "regulations 是否检索到安全评估办法相关条文",
+    "chapters 是否生成了8个章节",
+    "renderer 是否产出了 report.md"
+  ]
+}

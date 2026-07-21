@@ -1,0 +1,32 @@
+{
+  "case_id": "01_minimal",
+  "description": "BCR审查—集团公司BCR文件形式审查，结构完整性和内部约束力检查",
+  "input": {
+    "company_name": "跨国科技集团",
+    "review_items": [
+      {
+        "code": "3.2-C1",
+        "title": "结构完整性",
+        "score": "partial",
+        "finding": "章节覆盖不完整",
+        "legal_basis": "GDPR 第47条",
+        "recommendation": "补齐约束力与权利章节",
+        "evidence": "BCR-v1 第3章"
+      },
+      {
+        "code": "3.2-C2",
+        "title": "集团内部约束力",
+        "score": "compliant",
+        "finding": "已覆盖",
+        "legal_basis": "GDPR 第47条",
+        "recommendation": "保持",
+        "evidence": "BCR-v1 第4章"
+      }
+    ],
+    "attachments": [],
+    "uploaded_files": []
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}

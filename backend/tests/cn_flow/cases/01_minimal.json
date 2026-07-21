@@ -1,0 +1,36 @@
+{
+  "case_id": "01_minimal",
+  "description": "CN Flow数据流合规检查—云服务监控数据出境美国，涉及生物识别标记",
+  "input": {
+    "company_name": "云服务科技有限公司",
+    "transfer_purpose": "云服务监控与客服协同",
+    "data_categories": ["账户信息", "设备日志"],
+    "sensitive_data_flags": ["biometric"],
+    "recipient_entities": [
+      {
+        "entity_name": "US ServiceCo",
+        "country_region": "美国",
+        "entity_role": "processor",
+        "is_restricted_party": false
+      }
+    ],
+    "transfer_chain": "CN Controller -> US ServiceCo (processor)",
+    "attachments": [
+      {
+        "file_role": "data_inventory",
+        "file_name": "data_inventory.csv",
+        "file_format": "csv",
+        "storage_uri": "storage/uploads/data_inventory.csv"
+      },
+      {
+        "file_role": "entity_inventory",
+        "file_name": "entity_inventory.csv",
+        "file_format": "csv",
+        "storage_uri": "storage/uploads/entity_inventory.csv"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}

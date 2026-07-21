@@ -1,0 +1,24 @@
+{
+  "case_id": "01_minimal",
+  "description": "CPRA合规全景诊断—SaaS企业隐私告知缺失+数据共享无opt-out",
+  "input": {
+    "company_name": "DataComply Inc.",
+    "business_model": "SaaS平台，年收入超过2500万美元，50万加州消费者",
+    "data_lifecycle": "收集用户在平台上的行为数据→处理分析→存储在AWS→定期删除",
+    "notice_and_consent": "隐私告知缺失：未在收集时提供'Do Not Sell My Personal Information'链接",
+    "consumer_rights_process": "目前仅通过邮箱privacy@datacomply.com接收请求，无Web表单和电话渠道",
+    "opt_out_and_sale_sharing": "存在向第三方广告商共享用户数据以换取货币对价的行为，但未提供opt-out退出机制",
+    "vendor_management": "供应商管理未体现DPA条款，未对每个供应商进行数据合规尽职调查",
+    "attachments": [
+      {
+        "file_role": "privacy_policy",
+        "file_name": "privacy_policy_v2.pdf",
+        "file_format": "pdf",
+        "storage_uri": "storage://uploads/privacy_policy.pdf"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}

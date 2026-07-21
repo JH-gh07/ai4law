@@ -1,0 +1,23 @@
+{
+  "case_id": "01_minimal",
+  "description": "TIA传输影响评估—SCC传输工具，EU→US，政府访问风险+端到端加密补充措施",
+  "input": {
+    "transfer_tool": "scc",
+    "data_exporter_profile": "EU Exporter GmbH — 欧盟制造业企业，客户关系管理数据",
+    "data_importer_profile": "US Importer Inc. — 美国CRM服务商，受FISA 702管辖",
+    "third_country_assessment": "美国存在政府机构大规模访问风险(Schrems II)，FISA 702条款允许情报机构获取数据",
+    "supplementary_measures": "端到端加密(AES-256)、严格密钥管理(HSM)、访问透明报告、数据本地化备份",
+    "final_conclusion": "在补充措施(端到端加密+HSM密钥管理)有效实施的前提下，SCC可作为合法传输工具",
+    "attachments": [
+      {
+        "file_role": "transfer_agreement",
+        "file_name": "scc_agreement.pdf",
+        "file_format": "pdf",
+        "storage_uri": "storage://uploads/scc_agreement.pdf"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true
+  }
+}
