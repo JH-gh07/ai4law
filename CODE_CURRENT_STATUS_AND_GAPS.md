@@ -12,7 +12,7 @@
 当前系统不是“功能都没有”，也不能因为自动化测试全绿就判断为“已经可交付”。更准确的结论是：
 
 1. 11 个业务模块已经在前后端注册；后端离线测试、前端单元测试和生产构建均通过。
-2. CLI 测试框架已经存在，覆盖 10/11 个模块，并能保存输入、输出和事件轨迹；缺少文书审查适配器、Token 汇总、供应商信息、产物校验和全模块批量入口。
+2. CLI 测试框架已覆盖 11/11 个模块和 15 个可编辑案例，能以一个命令执行全模块 no-LLM smoke，并保存输入摘要、输出产物、事件、Token、供应商、fallback 和耗时；RAG/得理细分计量、引用/产物内容校验和 live 预算门禁仍需补齐。
 3. 前端已经能显示运行事件、节点耗时和部分 Token 数据，不能再把这一能力列为“完全缺失”；问题在于数据未形成持久、统一、可核账的运行清单。
 4. Markdown、HTML、DOCX、PDF 的共享渲染基础已经存在，但只有部分模块真正以同一语义文档为源，前端还存在二次规则化改写和嵌套 Markdown 被压平的问题。
 5. 引用映射已经覆盖主要报告模块，但当前点击仍可能直接新开外部页面，未知 `source_id` 仍会被错误标记为可跳转，且大量引用只有来源级信息、没有条文定位。
@@ -1169,9 +1169,9 @@ backend/common/
 
 | 层级 | 必测内容 | 是否已有 | 缺口 |
 |---|---|---|---|
-| 后端单元 | 规则、模型、规范化、服务 | 有，522 通过 | Live API 与浏览器联动不属于该层 |
+| 后端单元 | 规则、模型、规范化、服务 | 有，526 通过 | Live API 与浏览器联动不属于该层 |
 | 前端单元 | API、store、PDF、artifact、事件、引用受控交互 | 有，48 通过 | 仍需真实浏览器 E2E 与视觉回归 |
-| CLI no-LLM | 真实可编辑案例和落盘 | 10/11 | review、批量入口、统一 manifest |
+| CLI no-LLM | 真实可编辑案例和落盘 | 11/11，15 案例全通过 | 已统一最小 manifest；仍需 RAG/得理细分计量、引用/产物内容断言和更多边界案例 |
 | 外部 API contract | LLM/得理响应适配 | 零散/不足 | 得理 adapter 基本无测试 |
 | Live integration | 真实 Key、模型、额度和延迟 | 手工抽样 | 需要显式开关和预算门禁 |
 | 浏览器 E2E | 登录、填充运行、事件、报告、文件、引用 | 无 | 必须新增 |
@@ -1201,7 +1201,7 @@ uv run --frozen python backend/tests/harness/viewer.py <run_id>
 
 ```bash
 # 11 模块离线 smoke
-uv run --frozen python backend/tests/harness/runner.py --all-modules --no-llm
+uv run --frozen python -m backend.tests.harness.runner all --no-llm
 
 # 显式真实服务测试，需限制调用预算
 uv run --frozen python backend/tests/harness/runner.py assessment 01_basic --live-llm --live-delilegal
@@ -1397,6 +1397,32 @@ Run ID / Artifact ID：
 ```
 
 **未完成边界**：这是一份可持续扩展的最小账本，不等于阶段 2 已完成。当前仍需把用户/案例归属、CitationMap、RAG/得理调用、usage source、模型延迟/重试、输入 ContentBlob、任务恢复和持久事件纳入同一契约；还需提供后端读取 API，让 CLI、前端实时与历史页面读取同一份数据。任务执行器仍为内存态，服务重启后能查看账本文件但不能恢复运行状态。
+
+### 18.8 2026-07-22 11/11 CLI 与批量 no-LLM 验收切片
+
+| 任务 | 已落实行为 | 关键提交 | 可核对证据 |
+|---|---|---|---|
+| 文档审查 CLI | 新增 `review/01_minimal` 可编辑 DPA fixture；适配器使用隔离的 AppContainer、SQLite、storage、真实 ReviewService 和报告仓库，先把 fixture 复制到 run upload 目录，再运行同步主业务管线；不是另写一套简化审查逻辑 | `ade5fff` | 首次真实执行失败时，数据库任务实际已 COMPLETED，但同步接口因旧 Session 缓存误判为失败；新增红灯单测并在 `_run_pipeline()` 后 `expire_all()`，修复后该案例约 2.4 秒通过，并生成 DOCX/PDF |
+| 单命令全覆盖 | 新增 `python -m backend.tests.harness.runner all --no-llm`，按权威模块注册表枚举 11 模块及其全部 15 个案例；缺案例或任一失败均计为 FAIL 并返回非零；API 单测固定 `_env_file=None`，no-LLM 不读取本机 Key | `ade5fff` | `all modules: 15 PASS, 0 FAIL across 11 modules`；最新证据 Run 包括 `assessment/20260722_025538_977978_02_structured`、`review/20260722_025542_433996_01_minimal`、`us_14117/20260722_025544_336680_01_minimal`，其余模块同批次位于 `runs/<module>/` |
+| CLI 可观测与输入输出 | harness manifest 对齐 schema 1.0，增加脱敏 ProviderSnapshot、输入 SHA-256/字段/文件、去重输出产物、事件/LLM 调用/Token/fallback/error 汇总；普通 runner 直接打印计量，viewer `--events` 可查看持久中间事件；字符串 `uploaded_files` 和同路径 report/docx 的遗漏/冗余均由红灯测试捕获 | `ade5fff` | 相关 runtime/harness/review 聚焦 19 项通过；review viewer 能列出 2 个持久事件、0 Token、0 fallback 及 DOCX/PDF 产物 |
+
+**本切片最终门禁**
+
+```text
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/pytest -q
+结果：526 passed, 1 warning in 67.13s；退出码 0
+
+命令：npm --prefix frontend test -- --run
+结果：15 test files passed，48 tests passed；退出码 0
+
+命令：npm --prefix frontend run build
+结果：TypeScript 与 Vite 生产构建成功，342 modules transformed；退出码 0
+
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/python -m backend.tests.harness.runner all --no-llm --quiet
+结果：all modules: 15 PASS, 0 FAIL across 11 modules；退出码 0
+```
+
+**未完成边界**：CLI 已达到 11/11 离线 smoke，不等于真实外部 API 验收。得理/LLM live 仍受账号、额度和模型可用性约束；CLI 尚未把每次 RAG/得理调用、CitationMap 正确性和生成文件内容完整性全部变成断言。浏览器 E2E 也尚未完成，不能用 CLI 结果替代前端真实交互验收。
 
 ---
 
