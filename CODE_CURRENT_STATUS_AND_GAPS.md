@@ -503,7 +503,7 @@ ProviderCapabilities
 - 由请求级或 run 级依赖容器获取客户端快照。
 - 过渡期内建立完整实例注册表，保存配置后原子刷新并测试 11 个模块。
 
-**2026-07-22 部分落实**：11 个模块的长寿命服务、生成器、渲染器、分类器、审查器和 Agent 持有者已统一刷新，原先漏掉的 `eu.scc_review`、`us.eo_14117`、`assessment.renderer` 和多类内部 Agent 已纳入契约测试。但运行中任务仍可能因全局服务被重绑而中途读到新客户端；必须完成 run 级 `ProviderSnapshot` 注入才能整体关闭 P1-02。
+**2026-07-22 落实进度**：11 个模块的长寿命服务、生成器、渲染器、分类器、审查器和 Agent 持有者已统一刷新，原先漏掉的 `eu.scc_review`、`us.eo_14117`、`assessment.renderer` 和多类内部 Agent 已纳入契约测试。九类内存异步执行器已在提交瞬间复制不可变 `ProviderSnapshot`，任务线程和重试通过 run 级上下文始终使用该副本，设置页热更新只影响后续任务。快照已脱敏进入 `TaskSnapshot`，但尚未持久化到重启后仍可读取的 RunManifest；因此 P1-02 的“异步运行中不换模型”已关闭，运行账本持久化仍归 P1 RunManifest 缺口。
 
 **验收测试**
 
@@ -1169,7 +1169,7 @@ backend/common/
 
 | 层级 | 必测内容 | 是否已有 | 缺口 |
 |---|---|---|---|
-| 后端单元 | 规则、模型、规范化、服务 | 有，507 通过 | Live API 与浏览器联动不属于该层 |
+| 后端单元 | 规则、模型、规范化、服务 | 有，519 通过 | Live API 与浏览器联动不属于该层 |
 | 前端单元 | API、store、PDF、artifact、事件、引用受控交互 | 有，48 通过 | 仍需真实浏览器 E2E 与视觉回归 |
 | CLI no-LLM | 真实可编辑案例和落盘 | 10/11 | review、批量入口、统一 manifest |
 | 外部 API contract | LLM/得理响应适配 | 零散/不足 | 得理 adapter 基本无测试 |
@@ -1348,7 +1348,7 @@ Run ID / Artifact ID：
 
 | 任务 | 已落实行为 | 关键提交 | 可核对证据 |
 |---|---|---|---|
-| ENV-BLOCK-01 运行前阻断 | `app_env=production` 时，11 个模块的 22 个 LLM 任务启动入口统一读取健康快照；未启用/未配置、未探测、探测失败、超过 15 分钟或配置指纹变更时，均在创建任务前返回 `503 / LLM_PROVIDER_UNHEALTHY`；规则评估、文件上传和状态查询不被误拦；开发环境和显式 no-LLM CLI 仍可离线运行 | `5237957` | TDD 红灯证明旧路由在无健康 LLM 时仍进入 `submit_async`；绿灯后覆盖无健康快照阻断、指纹匹配放行和 22/22 入口契约，聚焦回归 83 项通过，根目录全量 506 项通过 |
+| ENV-BLOCK-01 运行前阻断 | `app_env=production` 时，11 个模块的 LLM 创建/同步生成/异步生成/重试入口统一读取健康快照；未启用/未配置、未探测、探测失败、超过 15 分钟或配置指纹变更时，均在创建任务前返回 `503 / LLM_PROVIDER_UNHEALTHY`；规则评估、文件上传和状态查询不被误拦；开发环境和显式 no-LLM CLI 仍可离线运行 | `5237957`、`c502740` | TDD 红灯先证明旧路由在无健康 LLM 时仍进入 `submit_async`，再证明 v0 统一入口和 9 个 retry 入口不在门禁集合；绿灯后 32/32 入口精确契约及任务访问控制共 25 项通过 |
 
 **当前全量验收**
 
@@ -1370,7 +1370,20 @@ Run ID / Artifact ID：
 结果：507 passed, 1 warning in 75.08s；退出码 0
 ```
 
-**证据边界**：本切片保证“配置保存后新任务的各层持有者看到新客户端”，不证明“正在运行的旧任务仍绑定旧 Provider”。后者需要将不可变 `ProviderSnapshot` 传入每次 run，并在 RunManifest 中持久化。
+**该切片当时的证据边界**：这里只证明“配置保存后新任务的各层持有者看到新客户端”；运行中旧任务隔离随后由 18.6 的不可变 `ProviderSnapshot` 关闭，持久 RunManifest 仍未完成。
+
+### 18.6 2026-07-22 异步任务 ProviderSnapshot 隔离切片
+
+| 任务 | 已落实行为 | 关键提交 | 可核对证据 |
+|---|---|---|---|
+| P1-02 旧任务配置隔离 | `ProviderSnapshot` 为 frozen dataclass；提交时复制 provider、model、URL、timeout、enabled 和私密 Key，仅将 Key 是否配置、配置 fingerprint 与非敏感字段暴露给任务快照；`ContextVar` 将冻结客户端绑定到任务线程，任何被热更新的顶层/生成器/Agent 客户端在调用时都委托给本 run 的冻结客户端；retry 复用原 runner 和原快照；九类异步模块全部显式传入提交时客户端 | `2cd86c4` | 红灯先因 snapshot/context 契约不存在而在收集期失败，再以 9/9 模块未绑定快照失败；异步回归还捕获 assessment 顶层客户端缺失与 no-LLM 测试客户端无 clone 的兼容问题。绿灯后快照/异步聚焦 36 项通过，根目录全量 519 项通过 |
+
+```text
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/pytest -q
+结果：519 passed, 1 warning in 72.71s；退出码 0
+```
+
+**安全边界**：完整 `ProviderSnapshot` 的 `api_key` 字段禁止 repr，且 `sanitized()` 不返回密钥；fingerprint 只包含 API Key 的 SHA-256 摘要。当前 `TaskSnapshot` 仍在内存中，服务重启后不能恢复；下一切片必须写入持久 RunManifest，并继续保证落盘对象永不包含明文 Key。
 
 ---
 
