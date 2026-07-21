@@ -603,6 +603,13 @@
   },
   {
     "method": "POST",
+    "path": "/api/v1/system/settings/delilegal/test",
+    "route_name": "test_delilegal",
+    "endpoint_module": "backend.api.v1.endpoints.system_settings",
+    "operation_id": "test_delilegal_api_v1_system_settings_delilegal_test_post"
+  },
+  {
+    "method": "POST",
     "path": "/api/v1/system/settings/llm/test-provider",
     "route_name": "test_runtime_provider",
     "endpoint_module": "backend.api.v1.endpoints.system_settings",
