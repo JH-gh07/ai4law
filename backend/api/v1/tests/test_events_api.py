@@ -1,5 +1,7 @@
 """Integration tests for SSE polling endpoint."""
 
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -29,7 +31,11 @@ def _register(client: TestClient, username: str, email: str) -> tuple[str, str]:
 
 
 @pytest.fixture
-def owned_task_client(tmp_path):
+def owned_task_client(tmp_path, monkeypatch):
+    from backend.api.v1.endpoints import events as events_endpoint
+
+    outputs_dir = tmp_path / "outputs"
+    monkeypatch.setattr(events_endpoint, "OUTPUTS_DIR", outputs_dir)
     app = create_app(
         Settings(
             database_url=f"sqlite:///{tmp_path / 'events_access.db'}",
@@ -49,6 +55,20 @@ def owned_task_client(tmp_path):
             )
         finally:
             session.close()
+        manifest_path = outputs_dir / "assessment" / "task-1" / "run_manifest.json"
+        manifest_path.parent.mkdir(parents=True)
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "1.0",
+                    "run_id": "task-1",
+                    "module": "assessment",
+                    "status": "COMPLETED",
+                    "observability": {"tokens": {"total_tokens": 12}},
+                }
+            ),
+            encoding="utf-8",
+        )
         yield client, owner_token, other_token
 
 
@@ -131,3 +151,27 @@ def test_polling_accepts_minus_one_as_the_initial_cursor(owned_task_client):
 
     assert response.status_code == 200
     assert [event["seq"] for event in response.json()["events"]] == [0]
+
+
+def test_manifest_returns_persisted_accounting_for_owner(owned_task_client):
+    client, owner_token, _ = owned_task_client
+
+    response = client.get(
+        "/api/v1/events/task/task-1/manifest",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["run_id"] == "task-1"
+    assert response.json()["observability"]["tokens"]["total_tokens"] == 12
+
+
+def test_manifest_is_hidden_from_other_user(owned_task_client):
+    client, _, other_token = owned_task_client
+
+    response = client.get(
+        "/api/v1/events/task/task-1/manifest",
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+
+    assert response.status_code == 404

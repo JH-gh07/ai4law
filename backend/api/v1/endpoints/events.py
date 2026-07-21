@@ -5,19 +5,23 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from backend.common.events.manager import get_ssemanager
+from backend.common.runtime.run_manifest import load_run_manifest
 from backend.common.trace.events import RunEvent
 from backend.core.dependencies import get_current_user, get_db
 from backend.schemas.auth import AuthUser
+from backend.models.task import TaskOwnershipModel
 from backend.services.task_access import require_task_access
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["events"])
+OUTPUTS_DIR = Path("outputs")
 
 
 @router.get("/task/{task_id}/stream")
@@ -73,3 +77,23 @@ async def task_events_since(
         "events": [e.model_dump() for e in events],
         "latest_seq": latest_seq,
     }
+
+
+@router.get("/task/{task_id}/manifest")
+def task_run_manifest(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
+    ownership = db.get(TaskOwnershipModel, task_id)
+    if ownership is None or ownership.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Run manifest not found")
+    manifest = load_run_manifest(
+        OUTPUTS_DIR,
+        module=ownership.module,
+        run_id=task_id,
+    )
+    if manifest is None:
+        raise HTTPException(status_code=404, detail="Run manifest not found")
+    return manifest

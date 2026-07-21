@@ -74,7 +74,7 @@ def test_create_app_matches_route_baseline(complete_app: FastAPI) -> None:
     actual = _route_snapshot(complete_app)
 
     assert actual == expected
-    assert len(actual) == 101
+    assert len(actual) == 102
 
 
 def test_routes_have_no_method_path_conflicts(complete_app: FastAPI) -> None:

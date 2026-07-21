@@ -365,6 +365,13 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/events/task/{task_id}/manifest",
+    "route_name": "task_run_manifest",
+    "endpoint_module": "backend.api.v1.endpoints.events",
+    "operation_id": "task_run_manifest_api_v1_events_task__task_id__manifest_get"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/events/task/{task_id}/stream",
     "route_name": "task_event_stream",
     "endpoint_module": "backend.api.v1.endpoints.events",

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
+
+
+_SAFE_PATH_PART = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _canonical_hash(value: Any) -> str:
@@ -173,3 +177,30 @@ def write_run_manifest(
     )
     temporary.replace(path)
     return path
+
+
+def load_run_manifest(
+    outputs_dir: Path,
+    *,
+    module: str,
+    run_id: str,
+) -> dict[str, Any] | None:
+    if not _SAFE_PATH_PART.fullmatch(module) or not _SAFE_PATH_PART.fullmatch(run_id):
+        return None
+    root = outputs_dir.resolve()
+    path = (root / module / run_id / "run_manifest.json").resolve()
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return None
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("run_id") != run_id or payload.get("module") != module:
+        return None
+    return payload
