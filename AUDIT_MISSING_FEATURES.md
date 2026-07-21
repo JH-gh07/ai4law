@@ -1,6 +1,6 @@
 # AI4Law 本地完整 `new` → 团队重构 `new` 全覆盖迁移与验收清单
 
-> 状态：已确认，实施中
+> 状态：已完成（含真实浏览器 MCP 验收）
 > 目标分支：`new`（本地检出的团队重构版，跟踪 `origin/new`）
 > 本地功能来源：`archive/local-original`（原本地 `new` 的未 rebase 原始保全快照，唯一增量真源）
 > 目标 SHA：`a0f26fe638b6832d8e24befd28dfe411c0b50b00`
@@ -26,16 +26,16 @@
 
 只有同时满足以下条件，才可称为“全覆盖完成”：
 
-- [ ] 56 个真实本地增量候选均有明确处置：迁移、重写、归档、保留目标现状或有证据地拒绝迁移。
-- [ ] 其中 34 个新增、21 个修改和 1 个删除候选全部完成语义审查，不以整文件覆盖团队重构结果。
-- [ ] 12 个注册业务模块的既有输出不减少，新增 PDF/引用能力符合统一契约。
-- [ ] 本地 citation URL 修复的实现和 33 项验证全部进入可自动发现的测试体系。
-- [ ] Test Harness 使用 `backend.domains.*` 和权威模块注册表，不再引用已删除的 `backend.modules.*`。
-- [ ] 前后端 Markdown 规范化使用同一组 Golden Cases，结果逐条一致。
-- [ ] PDF 前端预览可安装、可构建、可重试、样式完整且不会重复下载同一文件。
-- [ ] Diagnosis HTML 的标题、列表、表格、分隔线等表达不低于迁移前。
-- [ ] 全量后端测试、前端测试、前端生产构建和仓库卫生检查均通过。
-- [ ] 验收报告记录命令、日期、SHA、通过数、失败数和已知非阻断项，不能只写“已验证”。
+- [x] 56 个真实本地增量候选均有明确处置：迁移、重写、归档、保留目标现状或有证据地拒绝迁移。
+- [x] 其中 34 个新增、21 个修改和 1 个删除候选全部完成语义审查，不以整文件覆盖团队重构结果。
+- [x] 12 个注册业务模块的既有输出不减少，新增 PDF/引用能力符合统一契约。
+- [x] 本地 citation URL 修复的实现和 33 项验证全部进入可自动发现的测试体系。
+- [x] Test Harness 使用 `backend.domains.*` 和权威模块注册表，不再引用已删除的 `backend.modules.*`。
+- [x] 前后端 Markdown 规范化使用同一组 Golden Cases，结果逐条一致。
+- [x] PDF 前端预览可安装、可构建、可重试、样式完整且不会重复下载同一文件。
+- [x] Diagnosis HTML 的标题、列表、表格、分隔线等表达不低于迁移前。
+- [x] 全量后端测试、前端测试、前端生产构建和仓库卫生检查均通过。
+- [x] 验收报告记录命令、日期、SHA、通过数、失败数和已知非阻断项，不能只写“已验证”。
 
 ---
 
@@ -374,7 +374,7 @@ uv run --frozen python backend/tests/harness/runner.py diagnosis all --no-llm
 
 - [x] 前端测试直接读取后端 `normalization_test_cases.json`，14/14 逐 case 一致。
 
-Checkpoint 5：✅ `npm ci`、Vitest 34/34、TypeScript 与 Vite 生产构建均通过；当前会话未提供 Chrome DevTools MCP，真实浏览器控制台检查保留为最终人工运行项，不伪造已执行证据。
+Checkpoint 5：✅ `npm ci`、Vitest 40/40、TypeScript 与 Vite 生产构建均通过；Chrome DevTools MCP 在隔离浏览器中完成注册、Assessment 异步任务、SSE/轮询、报告与 PDF 预览检查。最终任务产生 19 个唯一事件，传输序号严格为 `0…18`；控制台无 error/warn/issue；任务列表 Lighthouse Accessibility、Best Practices、SEO、Agentic Browsing 均为 100。
 
 ### Phase 6：文档迁移与最终门禁
 
@@ -406,8 +406,8 @@ git status --short
 
 如果单次全量测试受平台问题中断，必须记录原因并按目录分组执行全部测试；不得把“命令超时”写成“测试通过”。
 
-- [x] 首轮全量捕获 v0 网关测试读取本机 LLM 配置导致的超时；完成依赖注入隔离后，第二轮后端 451/451 通过。
-- [x] 最终验收报告已记录逐项处置、拒绝理由、失败修复轨迹与浏览器人工检查边界。
+- [x] 首轮全量捕获 v0 网关测试读取本机 LLM 配置导致的超时；完成依赖注入隔离及浏览器运行时修复后，最终后端 455/455 通过。
+- [x] 最终验收报告已记录逐项处置、拒绝理由、失败修复轨迹、真实浏览器证据与扩展连接边界。
 
 ---
 
@@ -462,13 +462,14 @@ git status --short
 | G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 12/12 有可执行有效 PDF 证据；CN/EU/API/Service 141 项 + US 45 项通过 | ✅ |
 | G07 | Harness | 11 模块、15 cases 可运行 | 15/15 no-LLM 案例通过；4 项契约测试通过；原始案例 blob 15/15 一致 | ✅ |
 | G08 | Frontend install | `npm ci` 成功 | 292 packages installed，0 vulnerabilities | ✅ |
-| G09 | Frontend tests/build | Vitest 与 Vite build 成功 | Vitest 34/34；tsc + Vite build 成功 | ✅ |
-| G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 首轮 450 pass/1 fail；隔离外部 LLM 后 451/451 通过 | ✅ |
-| G11 | Repository hygiene | 通过 | 976 个仓库文件检查通过；parity 56/56 且零 pending | ✅ |
+| G09 | Frontend tests/build | Vitest 与 Vite build 成功 | Vitest 40/40；tsc + Vite build 成功 | ✅ |
+| G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 首轮 450 pass/1 fail；最终 455/455 通过 | ✅ |
+| G11 | Repository hygiene | 通过 | 980 个仓库文件检查通过；parity 56/56 且零 pending | ✅ |
 | G12 | Git scope | 无意外文件、无 secrets、`git diff --check` 通过 | `git diff --check` 通过；最终仅用户自有 `plan/` 保持 untracked | ✅ |
+| G13 | Chrome DevTools MCP | 真实任务、控制台、网络、PDF 与可访问性通过 | Assessment COMPLETED；19/19 唯一事件且 seq `0…18`；单次 PDF 请求；控制台零告警；Lighthouse 四项 100 | ✅ |
 
 ---
 
 ## 10. 当前结论
 
-本地原始 `new` 的 56 个源码候选已经全部结案并迁入团队 domains 重构底版：18 项迁移、25 项重写、5 项保留目标实现、5 项归档、3 项有证据拒绝，机器清单零 pending。12 模块 PDF/Citation/原输出矩阵、15 个 Harness 案例、前后端 Golden Cases、前端构建和后端 451 项全量测试均已通过。唯一未自动执行的是当前工具环境不具备的真实浏览器控制台检查，已在验收报告中保留为明确人工合并项。
+本地原始 `new` 的 56 个源码候选已经全部结案并迁入团队 domains 重构底版：18 项迁移、25 项重写、5 项保留目标实现、5 项归档、3 项有证据拒绝，机器清单零 pending。12 模块 PDF/Citation/原输出矩阵、15 个 Harness 案例、前后端 Golden Cases、前端 40 项测试、后端 455 项测试和真实浏览器 MCP 验收均已通过。Chrome DevTools MCP 进一步发现并修复了重复 trace、非单调事件游标、重复轮询/PDF/引用请求、表单语义和任务卡角色问题；扩展式 Browser MCP 服务端也已验证可启动，剩余边界仅为 Chrome 扩展未由用户界面建立 WebSocket 连接，不属于仓库功能缺陷。

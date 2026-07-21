@@ -19,6 +19,7 @@
 - Harness：完整保留原始 15 个案例，使用 `config/module_registry.json` 与 `backend.domains.*` 装配 11 个可直接生成报告的模块；异常会生成 error/FAIL manifest 并返回非零退出码。
 - 前端：共享 `PdfViewer` 提供鉴权 Blob 请求、可访问状态、真实重试和 object URL 清理；正文只与完全同 basename 的 PDF 配对；前后端 14 个规范化案例逐字一致。
 - v0 隔离：全量回归发现 v0 网关测试会读取本机 LLM 配置，已通过构造器注入统一客户端并在测试中显式禁用外部 LLM/法律 API，保留端到端异步任务与产物下载覆盖。
+- 浏览器运行时：修复 TraceRecorder 重复订阅、SSE/轮询重复事件、混合来源非单调序号、多个订阅者重复轮询、StrictMode 重复 PDF 请求、Citation 并发重复请求、表单字段语义和任务卡错误 ARIA 角色；所有修复均有自动测试或 DevTools 运行证据。
 
 ## 3. 可重复验收证据
 
@@ -30,9 +31,10 @@
 | Render 与服务 | 公共 render/service 32 项通过；所有 PDF 均验证 `%PDF` 且可由 `pypdf` 打开 |
 | 12 模块矩阵 | CN/EU/API/Service 141 项 + US 45 项通过；12/12 有有效 PDF |
 | Harness | 15/15 no-LLM 案例通过；Harness 契约 4 项通过；原始案例 blob 15/15 一致 |
-| Frontend | `npm ci` 安装 292 packages、0 vulnerabilities；Vitest 34/34；`tsc` + Vite build 通过 |
-| Backend 全量 | 首轮 450 通过、1 个 v0 超时；隔离修复后 451/451 通过 |
-| 仓库卫生 | 976 个仓库文件检查通过 |
+| Frontend | `npm ci` 安装 292 packages、0 vulnerabilities；Vitest 40/40；`tsc` + Vite build 通过 |
+| Backend 全量 | 首轮 450 通过、1 个 v0 超时；最终 455/455 通过 |
+| Chrome DevTools MCP | Assessment 真实异步任务 COMPLETED；19 个事件 seq `0…18` 且 event_id 全唯一；控制台无 error/warn/issue；Lighthouse 四项 100 |
+| 仓库卫生 | 980 个仓库文件检查通过 |
 | Git 格式 | `git diff --check` 通过；用户未跟踪的 `plan/remote_rebase_plan.md` 未修改、未暂存 |
 
 后端全量仅报告一个既有 `StarletteDeprecationWarning`：当前 `fastapi.testclient` 仍通过 `httpx` 兼容层导入。它不是测试失败，后续依赖升级时单独处理，不在本次功能迁移中扩大范围。
@@ -49,9 +51,11 @@
 
 五份历史设计材料的归档指针位于 `docs/archive/local-original/`。每份都记录来源提交、完整 blob SHA、字节数以及 `git show` 命令，可从 `archive/local-original` 逐字恢复；旧路径和过时行号不进入活动规范。
 
-## 6. 尚需人工运行的非自动项
+## 6. 双 MCP 真实浏览器检查
 
-当前 Codex 会话没有 Chrome DevTools/浏览器控制工具，因此没有伪造“真实浏览器控制台无错误”的结论。合并前建议人工登录工作区，分别打开一个带精确伴随 PDF 的报告和一个无 PDF 的报告，核对 tab 禁用、加载、失败重试、下载和浏览器控制台。组件测试与生产构建已经覆盖可自动化部分。
+Chrome DevTools MCP 已通过标准 MCP stdio 握手启动隔离 Chrome，并完成临时账号注册、任务空间访问、Assessment 异步执行、事件轮询、Citation、报告和浏览器原生 PDF 检查。最终任务状态为 `COMPLETED`，19 个事件严格按 `0…18` 递增且 event_id 全唯一；同一 PDF 展示只请求一次；最终有任务卡页面控制台无 error/warn/issue，Lighthouse Accessibility、Best Practices、SEO、Agentic Browsing 均为 100。
+
+扩展式 Browser MCP 也已实际启动 `browser-chrome-agent` 服务端并监听 `127.0.0.1:9009`。该路径要求已安装的 Chrome 扩展由浏览器界面主动点击连接；本次扩展未建立 WebSocket，因此没有把它伪记为已控制浏览器。服务启动能力已验证，连接缺口属于扩展用户手势边界；仓库功能验收由已完整跑通的 Chrome DevTools MCP 承担。
 
 ## 7. 本地提交序列
 
@@ -61,6 +65,8 @@
 4. `3d10cb7` — 恢复 12 模块 PDF 产物
 5. `a923811` — 恢复 domains-based Harness
 6. `9f3ee7d` — 恢复前端 PDF/Markdown 预览
-7. 本报告所在提交 — 隔离 v0 外部客户端、归档历史设计并固化最终门禁
+7. `8950b08` — 隔离 v0 外部客户端、归档历史设计并固化迁移门禁
+8. `f6e4ebf` — 修复真实浏览器 MCP 发现的运行时、请求与可访问性问题
+9. 本报告所在提交 — 写入双 MCP、全量测试与最终浏览器验收证据
 
 本次未执行远程 push、PR、merge、rebase 或历史重写。
