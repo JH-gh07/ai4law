@@ -72,3 +72,75 @@ def test_artifact_preview_accepts_relative_report_path_for_owner(tmp_path: Path,
             headers={"Authorization": f"Bearer {other_token}"},
         )
         assert other_preview.status_code == 403
+
+
+def test_artifact_preview_rejects_other_users_registered_output_path(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    app = create_app(
+        Settings(
+            database_url=f"sqlite:///{tmp_path / 'artifact_output_access.db'}",
+            storage_dir=tmp_path / "storage",
+        )
+    )
+    relative_path = Path("outputs/assessment/task-owner/outputs/report.md")
+    absolute_path = tmp_path / relative_path
+    absolute_path.parent.mkdir(parents=True, exist_ok=True)
+    absolute_path.write_text("# 仅限所有者", encoding="utf-8")
+
+    with TestClient(app) as client:
+        owner_token, owner_id = _register(client, "output-owner", "output-owner@test.local")
+        other_token, _ = _register(client, "output-other", "output-other@test.local")
+        session = app.state.container.session_factory()
+        try:
+            session.add(
+                ReportArtifactModel(
+                    id="artifact-output-owner",
+                    user_id=owner_id,
+                    owner_type="assessment",
+                    owner_id="task-owner",
+                    artifact_type="md",
+                    file_path=str(absolute_path),
+                    preview_json="{}",
+                )
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        owner_response = client.get(
+            "/api/v1/artifacts/preview",
+            params={"path": str(relative_path)},
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        assert owner_response.status_code == 200
+
+        other_response = client.get(
+            "/api/v1/artifacts/preview",
+            params={"path": str(relative_path)},
+            headers={"Authorization": f"Bearer {other_token}"},
+        )
+        assert other_response.status_code == 403
+
+
+def test_artifact_preview_rejects_unregistered_html_even_under_allowed_root(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    app = create_app(
+        Settings(
+            database_url=f"sqlite:///{tmp_path / 'artifact_html_access.db'}",
+            storage_dir=tmp_path / "storage",
+        )
+    )
+    relative_path = Path("storage/reports/orphan/report.html")
+    absolute_path = tmp_path / relative_path
+    absolute_path.parent.mkdir(parents=True, exist_ok=True)
+    absolute_path.write_text("<h1>未登记报告</h1>", encoding="utf-8")
+
+    with TestClient(app) as client:
+        token, _ = _register(client, "html-reader", "html-reader@test.local")
+        response = client.get(
+            "/api/v1/artifacts/preview",
+            params={"path": str(relative_path)},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 403

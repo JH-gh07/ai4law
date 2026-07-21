@@ -15,11 +15,6 @@ from backend.schemas.common import ArtifactPreviewResponse
 
 router = APIRouter()
 
-
-def _is_non_prod_env(container) -> bool:
-    env = str(getattr(container.settings, "app_env", "development")).strip().lower()
-    return env in {"development", "dev", "test", "local"}
-
 def _allowed_roots(container) -> list[Path]:
     cwd = Path.cwd().resolve()
     return [
@@ -61,8 +56,7 @@ def _candidate_artifact_paths(resolved: Path) -> set[str]:
     return {item for item in candidates if item}
 
 
-def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path, container) -> None:
-    normalized = str(resolved)
+def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path) -> None:
     candidate_paths = tuple(_candidate_artifact_paths(resolved))
     report_stmt = select(ReportArtifactModel.id).where(
         ReportArtifactModel.user_id == user.id,
@@ -76,13 +70,6 @@ def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path, contain
     upload_hit = db.execute(upload_stmt).scalar_one_or_none()
     if report_hit or upload_hit:
         return
-    # In non-production environments, allow preview for files under upload dir
-    # so dev presets can be opened in workspace tabs without user ownership binding.
-    if _is_non_prod_env(container) and "/storage/uploads/" in normalized.replace("\\", "/"):
-        return
-    # Keep outputs readable for now; strict ownership applies to persisted artifacts.
-    if "outputs/" in normalized or normalized.endswith(".html"):
-        return
     raise HTTPException(status_code=403, detail="You do not have access to this artifact.")
 
 @router.get("/preview", response_model=ArtifactPreviewResponse)
@@ -93,7 +80,7 @@ def preview_artifact(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved, container)
+    _assert_artifact_access(db, current_user, resolved)
     suffix = resolved.suffix.lower()
     parser = FileParser()
     file_url = f"/api/v1/artifacts/file?path={quote(str(resolved))}"
@@ -147,7 +134,7 @@ def read_artifact_file(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved, container)
+    _assert_artifact_access(db, current_user, resolved)
     return FileResponse(path=resolved, filename=resolved.name)
 
 
@@ -159,5 +146,5 @@ def download_artifact_file(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved, container)
+    _assert_artifact_access(db, current_user, resolved)
     return FileResponse(path=resolved, filename=resolved.name, media_type="application/octet-stream")
