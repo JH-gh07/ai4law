@@ -1,18 +1,48 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from backend.api.v1.endpoints.citations import router
+from backend.app import create_app
+from backend.core.settings import Settings
+from backend.services.task_access import claim_task_access
 
 
-def _client() -> TestClient:
-    app = FastAPI()
-    app.include_router(router, prefix="/api/v1/citations")
-    return TestClient(app)
+def _register(client: TestClient, username: str, email: str) -> tuple[str, str]:
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"username": username, "email": email, "password": "pass-12345678"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    return payload["access_token"], payload["user"]["id"]
+
+
+@contextmanager
+def _owned_client(tmp_path: Path, task_id: str):
+    app = create_app(
+        Settings(
+            database_url=f"sqlite:///{tmp_path / 'citation_access.db'}",
+            storage_dir=tmp_path / "storage",
+        )
+    )
+    with TestClient(app) as client:
+        owner_token, owner_id = _register(client, "citation-owner", "citation-owner@test.local")
+        other_token, _ = _register(client, "citation-other", "citation-other@test.local")
+        session = app.state.container.session_factory()
+        try:
+            claim_task_access(
+                session,
+                task_id=task_id,
+                user_id=owner_id,
+                module="assessment",
+            )
+        finally:
+            session.close()
+        yield client, owner_token, other_token
 
 
 def test_citation_report_supports_module_and_knowledge_url(tmp_path: Path, monkeypatch) -> None:
@@ -46,14 +76,26 @@ def test_citation_report_supports_module_and_knowledge_url(tmp_path: Path, monke
     (output_dir / "citation_map.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
     monkeypatch.chdir(tmp_path)
-    client = _client()
-    response = client.get(f"/api/v1/citations/reports/{task_id}?module=assessment")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["module"] == "assessment"
-    assert data["citation_count"] == 1
-    assert data["footnote_map"]["1"]["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=39"
-    assert data["footnote_map"]["1"]["can_jump"] is True
+    with _owned_client(tmp_path, task_id) as (client, owner_token, other_token):
+        unauthenticated = client.get(f"/api/v1/citations/reports/{task_id}?module=assessment")
+        assert unauthenticated.status_code == 401
+
+        forbidden = client.get(
+            f"/api/v1/citations/reports/{task_id}?module=assessment",
+            headers={"Authorization": f"Bearer {other_token}"},
+        )
+        assert forbidden.status_code == 404
+
+        response = client.get(
+            f"/api/v1/citations/reports/{task_id}?module=assessment",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["module"] == "assessment"
+        assert data["citation_count"] == 1
+        assert data["footnote_map"]["1"]["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=39"
+        assert data["footnote_map"]["1"]["can_jump"] is True
 
 
 def test_citation_report_backfills_empty_footnote_map_from_outputs(tmp_path: Path, monkeypatch) -> None:
@@ -80,10 +122,13 @@ def test_citation_report_backfills_empty_footnote_map_from_outputs(tmp_path: Pat
     (output_dir / "facts.json").write_text(json.dumps(facts, ensure_ascii=False), encoding="utf-8")
 
     monkeypatch.chdir(tmp_path)
-    client = _client()
-    response = client.get(f"/api/v1/citations/reports/{task_id}?module=assessment")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["citation_count"] == 1
-    assert data["footnote_map"]["1"]["title"] == "个人信息保护法"
-    assert data["footnote_map"]["1"]["article_no"] == "39"
+    with _owned_client(tmp_path, task_id) as (client, owner_token, _):
+        response = client.get(
+            f"/api/v1/citations/reports/{task_id}?module=assessment",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["citation_count"] == 1
+        assert data["footnote_map"]["1"]["title"] == "个人信息保护法"
+        assert data["footnote_map"]["1"]["article_no"] == "39"

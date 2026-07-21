@@ -10,7 +10,10 @@ from sqlalchemy.orm import Session
 
 from backend.common.citation.output import normalize_citation_item
 from backend.common.citation.output import synthesize_citation_map, write_citation_map_json
+from backend.core.dependencies import get_current_user, get_db
+from backend.schemas.auth import AuthUser
 from backend.schemas.citation import CitationDetailResponse, CitationMapResponse
+from backend.services.task_access import require_task_access
 
 router = APIRouter()
 
@@ -171,7 +174,13 @@ def _build_detail(item: dict, *, module: str, footnote_number: int | None = None
 
 
 @router.get("/reports/{task_id}", response_model=CitationMapResponse)
-def get_report_citations(task_id: str, module: str | None = Query(None)) -> CitationMapResponse:
+def get_report_citations(
+    task_id: str,
+    module: str | None = Query(None),
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> CitationMapResponse:
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     resolved_module, data = _find_citation_map(task_id, module)
     target_module = resolved_module or module or ""
     if data is None and target_module:
@@ -244,8 +253,13 @@ def get_report_citations(task_id: str, module: str | None = Query(None)) -> Cita
 
 
 @router.post("/batch", response_model=BatchCitationResponse)
-def get_citations_batch(body: BatchCitationRequest) -> BatchCitationResponse:
+def get_citations_batch(
+    body: BatchCitationRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> BatchCitationResponse:
     """Fetch multiple citation details in a single request."""
+    require_task_access(db, task_id=body.task_id, user_id=current_user.id)
     resolved_module, data = _find_citation_map(body.task_id, body.module)
     if data is None:
         return BatchCitationResponse(items={}, not_found=list(body.citation_ids))
@@ -282,9 +296,12 @@ def get_citation_detail(
     citation_id: str,
     task_id: Optional[str] = Query(None),
     module: str | None = Query(None),
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
 ) -> CitationDetailResponse:
     if not task_id:
         raise HTTPException(status_code=400, detail="task_id query parameter is required")
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
 
     resolved_module, data = _find_citation_map(task_id, module)
     if data is None:

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
+from backend.services.task_access import claim_task_access, require_task_access
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
@@ -15,13 +16,6 @@ from backend.domains.us.eo14117_flow_review.service import CNFlowService
 
 router = APIRouter(prefix="/cn-flow", tags=["cn-flow"])
 service = CNFlowService()
-TASK_OWNERS: dict[str, str] = {}
-
-
-def _assert_owner(task_id: str, user_id: str) -> None:
-    owner = TASK_OWNERS.get(task_id)
-    if owner and owner != user_id:
-        raise HTTPException(status_code=404, detail="Task not found")
 
 
 @router.post("/generate", response_model=CNFlowResult)
@@ -45,10 +39,11 @@ def generate_cn_flow(
 @router.post("/generate_async", response_model=CNFlowAsyncAccepted)
 def generate_cn_flow_async(
     payload: CNFlowRequest,
+    db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ) -> CNFlowAsyncAccepted:
     accepted = service.submit_async(payload)
-    TASK_OWNERS[accepted.task_id] = current_user.id
+    claim_task_access(db, task_id=accepted.task_id, user_id=current_user.id, module="cn_flow")
     return accepted
 
 
@@ -59,7 +54,7 @@ def get_cn_flow_task(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ) -> CNFlowAsyncStatus:
-    _assert_owner(task_id, current_user.id)
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     try:
         status = service.get_async_status(task_id)
         result = getattr(status, "result", None)
@@ -79,9 +74,10 @@ def get_cn_flow_task(
 @router.post("/tasks/{task_id}/retry", response_model=CNFlowAsyncStatus)
 def retry_cn_flow_task(
     task_id: str,
+    db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ) -> CNFlowAsyncStatus:
-    _assert_owner(task_id, current_user.id)
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     try:
         return service.retry_async(task_id)
     except KeyError as exc:

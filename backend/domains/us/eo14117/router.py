@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
+from backend.services.task_access import claim_task_access, require_task_access
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
@@ -17,13 +18,6 @@ from backend.domains.us.eo14117.service import US14117Service
 
 router = APIRouter(prefix="/us_14117", tags=["us_14117"])
 service = US14117Service()
-TASK_OWNERS: dict[str, str] = {}
-
-
-def _assert_owner(task_id: str, user_id: str) -> None:
-    owner = TASK_OWNERS.get(task_id)
-    if owner and owner != user_id:
-        raise HTTPException(status_code=404, detail="Task not found")
 
 
 @router.post("/generate", response_model=US14117Result)
@@ -47,10 +41,11 @@ def generate_us_14117_report(
 @router.post("/generate_async", response_model=US14117AsyncAccepted)
 def generate_us_14117_async(
     payload: US14117Request,
+    db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ) -> US14117AsyncAccepted:
     accepted = service.submit_async(payload)
-    TASK_OWNERS[accepted.task_id] = current_user.id
+    claim_task_access(db, task_id=accepted.task_id, user_id=current_user.id, module="us_14117")
     return accepted
 
 
@@ -61,7 +56,7 @@ def get_us_14117_task(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ) -> US14117AsyncStatus:
-    _assert_owner(task_id, current_user.id)
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     try:
         status = service.get_async_status(task_id)
         result = getattr(status, "result", None)
@@ -81,9 +76,10 @@ def get_us_14117_task(
 @router.post("/tasks/{task_id}/retry", response_model=US14117AsyncStatus)
 def retry_us_14117_task(
     task_id: str,
+    db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ) -> US14117AsyncStatus:
-    _assert_owner(task_id, current_user.id)
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     try:
         return service.retry_async(task_id)
     except KeyError as exc:

@@ -6,19 +6,29 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 
 from backend.common.events.manager import get_ssemanager
 from backend.common.trace.events import RunEvent
+from backend.core.dependencies import get_current_user, get_db
+from backend.schemas.auth import AuthUser
+from backend.services.task_access import require_task_access
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["events"])
 
 
 @router.get("/task/{task_id}/stream")
-async def task_event_stream(task_id: str, request: Request):
+async def task_event_stream(
+    task_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
     """SSE 实时推送任务执行事件。"""
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
 
     async def event_generator():
         queue: asyncio.Queue[RunEvent] = asyncio.Queue(maxsize=256)
@@ -48,8 +58,14 @@ async def task_event_stream(task_id: str, request: Request):
 
 
 @router.get("/task/{task_id}/events")
-async def task_events_since(task_id: str, since: int = Query(0, ge=-1)):
+async def task_events_since(
+    task_id: str,
+    since: int = Query(0, ge=-1),
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
     """轮询 fallback：拉取 seq > since 的增量事件；-1 表示尚未消费事件。"""
+    require_task_access(db, task_id=task_id, user_id=current_user.id)
     sm = get_ssemanager()
     events = sm.get_events_since(task_id, since)
     latest_seq = events[-1].seq if events else since

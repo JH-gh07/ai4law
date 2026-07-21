@@ -24,7 +24,6 @@ def _disable_external_services(monkeypatch) -> None:
         llm_client=_DisabledLLM(),
         legal_api_service=_DisabledLegalService(),
     )
-    assessment_router.TASK_OWNERS.clear()
 
 
 def _install_test_templates(monkeypatch, tmp_path: Path) -> None:
