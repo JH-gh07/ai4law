@@ -167,9 +167,10 @@ def _build_detail(item: dict, *, module: str, footnote_number: int | None = None
         anchor=normalized.get("anchor", ""),
         section_id=normalized.get("section_id", ""),
         clause_id=normalized.get("clause_id", ""),
-        open_mode=normalized.get("open_mode", "new_tab"),
+        open_mode=normalized.get("open_mode", "in_app"),
         can_jump=normalized.get("can_jump", False),
         source_url=normalized.get("source_url", ""),
+        resolution=normalized.get("resolution", {}),
     )
 
 

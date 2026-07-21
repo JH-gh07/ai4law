@@ -1,6 +1,21 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+
+class CitationResolution(BaseModel):
+    resolution_type: Literal[
+        "exact_article",
+        "source_overview",
+        "external_verified",
+        "unresolved",
+    ] = "unresolved"
+    target_id: str = ""
+    confidence: float = 0.0
+    failure_reason: str = ""
+    available_actions: list[str] = Field(default_factory=list)
 
 
 class CitationDetailResponse(BaseModel):
@@ -29,9 +44,10 @@ class CitationDetailResponse(BaseModel):
     anchor: str = ""
     section_id: str = ""
     clause_id: str = ""
-    open_mode: str = "new_tab"
+    open_mode: str = "in_app"
     can_jump: bool = False
     source_url: str = ""
+    resolution: CitationResolution = Field(default_factory=CitationResolution)
 
 
 class CitationMapResponse(BaseModel):

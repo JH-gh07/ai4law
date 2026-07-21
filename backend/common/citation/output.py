@@ -6,13 +6,14 @@ import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
-from backend.common.knowledge.paths import sources_csv_path
+from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path
 
 # ── 知识库 source_id 注册表（title → source_id 反向查找）──────────────
 
 _SOURCES_CSV_PATH = sources_csv_path()
+_REGULATION_ARTICLES_PATH = regulation_articles_jsonl_path()
 
 _KNOWN_SOURCE_IDS: set[str] = set()
 _TITLE_TO_SOURCE_ID: dict[str, str] = {}
@@ -176,6 +177,99 @@ def _normalize_article_no(article_no: str) -> str:
     return str(result) if result > 0 else value
 
 
+@lru_cache(maxsize=1)
+def _load_article_counts() -> dict[tuple[str, str], int]:
+    """Return registry match counts used to distinguish exact from ambiguous locators."""
+    counts: dict[tuple[str, str], int] = {}
+    if not _REGULATION_ARTICLES_PATH.exists():
+        return counts
+    with _REGULATION_ARTICLES_PATH.open(encoding="utf-8") as fp:
+        for line in fp:
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            source_id = str(row.get("source_id", "") or "").strip()
+            article_no = _normalize_article_no(str(row.get("article_ref", "") or ""))
+            if not source_id or not article_no:
+                continue
+            key = (source_id, article_no)
+            counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def _is_safe_external_url(value: str) -> bool:
+    parsed = urlsplit(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _resolve_citation_target(
+    *,
+    source_id: str,
+    article_no: str,
+    source_url: str,
+    external_verified: bool,
+) -> dict[str, Any]:
+    """Resolve a citation against the local registry without trusting cached hints."""
+    _load_sources_csv()
+    source_known = source_id in _KNOWN_SOURCE_IDS
+    safe_external_url = source_url if _is_safe_external_url(source_url) else ""
+
+    if source_known and article_no:
+        match_count = _load_article_counts().get((source_id, article_no), 0)
+        if match_count == 1:
+            actions = ["view_article", "view_source_overview"]
+            if safe_external_url:
+                actions.append("open_official_source")
+            return {
+                "resolution_type": "exact_article",
+                "target_id": f"{source_id}:{article_no}",
+                "confidence": 1.0,
+                "failure_reason": "",
+                "available_actions": actions,
+            }
+        failure_reason = "article_not_unique" if match_count > 1 else "article_not_found"
+        actions = ["view_source_overview", "search_within_source"]
+        if safe_external_url:
+            actions.append("open_official_source")
+        return {
+            "resolution_type": "source_overview",
+            "target_id": source_id,
+            "confidence": 0.6,
+            "failure_reason": failure_reason,
+            "available_actions": actions,
+        }
+
+    if source_known:
+        actions = ["view_source_overview", "search_within_source"]
+        if safe_external_url:
+            actions.append("open_official_source")
+        return {
+            "resolution_type": "source_overview",
+            "target_id": source_id,
+            "confidence": 0.7,
+            "failure_reason": "article_missing",
+            "available_actions": actions,
+        }
+
+    if external_verified and safe_external_url:
+        return {
+            "resolution_type": "external_verified",
+            "target_id": safe_external_url,
+            "confidence": 0.8,
+            "failure_reason": "local_source_not_mapped",
+            "available_actions": ["review_external_source", "queue_for_ingestion"],
+        }
+
+    return {
+        "resolution_type": "unresolved",
+        "target_id": "",
+        "confidence": 0.0,
+        "failure_reason": "source_not_found",
+        "available_actions": ["retry_resolution", "manual_review"],
+    }
+
+
 def build_knowledge_url(
     *,
     source_id: str,
@@ -213,22 +307,27 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     # ── Resolve source_id via title→fileId lookup ──
     resolved_source_id = _resolve_source_id(source_id, title)
 
-    # Always regenerate knowledge_url from the canonical source_id + article_no.
-    # Never trust cached values from citation_map.json — old runs may have written
-    # stale/wrong URLs (external HTML, /evidence, empty, etc.) that survive the
-    # previous conditional-regeneration logic when source_id doesn't change.
-    knowledge_url = build_knowledge_url(
-        source_id=resolved_source_id,
-        article_no=article_no,
-        anchor=anchor,
-        section_id=section_id,
-        clause_id=clause_id,
-    )
-
     # Normalize article_no to Arabic numerals for consistency with LawViewerPage
     normalized_article_no = _normalize_article_no(article_no) or article_no
+    raw_source_url = str(item.get("source_url", "") or "").strip()
+    source_url = raw_source_url if _is_safe_external_url(raw_source_url) else ""
+    resolution = _resolve_citation_target(
+        source_id=resolved_source_id,
+        article_no=normalized_article_no,
+        source_url=source_url,
+        external_verified=item.get("external_verified") is True,
+    )
+    resolution_type = str(resolution["resolution_type"])
+    if resolution_type == "exact_article":
+        knowledge_url = build_knowledge_url(
+            source_id=resolved_source_id,
+            article_no=normalized_article_no,
+        )
+    elif resolution_type == "source_overview":
+        knowledge_url = build_knowledge_url(source_id=resolved_source_id)
+    else:
+        knowledge_url = None
 
-    can_jump = bool(resolved_source_id and knowledge_url)
     normalized = dict(item)
     normalized["module"] = module
     normalized["source_id"] = resolved_source_id
@@ -239,9 +338,10 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     normalized["section_id"] = section_id
     normalized["clause_id"] = clause_id
     normalized["knowledge_url"] = knowledge_url or ""
-    normalized["open_mode"] = str(item.get("open_mode") or "new_tab")
-    normalized["can_jump"] = bool(item.get("can_jump", can_jump))
-    normalized["source_url"] = str(item.get("source_url", "") or "")
+    normalized["open_mode"] = "in_app"
+    normalized["resolution"] = resolution
+    normalized["can_jump"] = resolution_type == "exact_article"
+    normalized["source_url"] = source_url
     return normalized
 
 

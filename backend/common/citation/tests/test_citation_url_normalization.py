@@ -86,6 +86,101 @@ def test_normalize_sets_can_jump() -> None:
     assert result["can_jump"] is True
 
 
+def test_unknown_source_cannot_claim_exact_knowledge_jump() -> None:
+    item = {
+        "source_id": "delilegal-case-指导性案例265号",
+        "title": "指导性案例265号",
+        "article_no": "1",
+        "can_jump": True,
+        "knowledge_url": "/knowledge/laws/delilegal-case-指导性案例265号?article=1",
+    }
+
+    result = normalize_citation_item(item, module="test")
+
+    assert result["resolution"]["resolution_type"] == "unresolved"
+    assert result["resolution"]["failure_reason"] == "source_not_found"
+    assert result["knowledge_url"] == ""
+    assert result["can_jump"] is False
+
+
+def test_known_source_without_article_is_source_overview() -> None:
+    result = normalize_citation_item(
+        {"source_id": "CN-LAW-003", "title": "个人信息保护法"},
+        module="test",
+    )
+
+    assert result["resolution"]["resolution_type"] == "source_overview"
+    assert result["resolution"]["failure_reason"] == "article_missing"
+    assert result["resolution"]["target_id"] == "CN-LAW-003"
+    assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-003"
+    assert result["can_jump"] is False
+
+
+def test_nonexistent_article_cannot_claim_exact_jump() -> None:
+    result = normalize_citation_item(
+        {
+            "source_id": "CN-LAW-003",
+            "title": "个人信息保护法",
+            "article_no": "9999",
+            "can_jump": True,
+        },
+        module="test",
+    )
+
+    assert result["resolution"]["resolution_type"] == "source_overview"
+    assert result["resolution"]["failure_reason"] == "article_not_found"
+    assert result["can_jump"] is False
+
+
+def test_duplicate_article_cannot_claim_exact_jump() -> None:
+    result = normalize_citation_item(
+        {
+            "source_id": "CN-LAW-001",
+            "title": "网络安全法",
+            "article_no": "23",
+        },
+        module="test",
+    )
+
+    assert result["resolution"]["resolution_type"] == "source_overview"
+    assert result["resolution"]["failure_reason"] == "article_not_unique"
+    assert result["can_jump"] is False
+
+
+def test_verified_external_source_is_not_a_local_knowledge_jump() -> None:
+    result = normalize_citation_item(
+        {
+            "source_id": "deli-case-265",
+            "title": "指导性案例265号",
+            "source_url": "https://example.test/case/265",
+            "external_verified": True,
+        },
+        module="test",
+    )
+
+    assert result["resolution"]["resolution_type"] == "external_verified"
+    assert result["resolution"]["target_id"] == "https://example.test/case/265"
+    assert result["knowledge_url"] == ""
+    assert result["can_jump"] is False
+    assert "review_external_source" in result["resolution"]["available_actions"]
+
+
+def test_unsafe_external_url_is_not_returned_or_marked_verified() -> None:
+    result = normalize_citation_item(
+        {
+            "source_id": "external-record",
+            "title": "外部记录",
+            "source_url": "javascript:alert(1)",
+            "external_verified": True,
+        },
+        module="test",
+    )
+
+    assert result["source_url"] == ""
+    assert result["resolution"]["resolution_type"] == "unresolved"
+    assert result["can_jump"] is False
+
+
 def test_write_citation_map_json_goes_through_normalize() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -128,24 +223,24 @@ def test_normalize_idempotent() -> None:
 
 
 ALL_MODULES = [
-    ("assessment", "CN-LAW-003", "个人信息保护法", "六十六"),
-    ("dpia", "CN-LAW-003", "个人信息保护法", "4"),
-    ("scc", "CN-REG-005", "个人信息出境标准合同办法", "一"),
-    ("cn_flow", "CN-REG-004", "数据出境安全评估办法", "十三"),
-    ("cpra", "US-CA-001", "CCPA/CPRA", "一"),
-    ("tia", "EU-LAW-001", "GDPR", "4"),
-    ("eu_scc", "EU-LAW-001", "GDPR", "1"),
-    ("us_14117", "US-FED-001", "EO 14117", "5"),
-    ("pipia", "CN-LAW-003", "个人信息保护法", "十"),
-    ("bcr", "EU-LAW-001", "GDPR", "2"),
-    ("v0_task_gateway", "CN-LAW-003", "个人信息保护法", "4"),
-    ("review", "CN-LAW-003", "个人信息保护法", "七"),
+    ("assessment", "CN-LAW-003", "个人信息保护法", "六十六", True),
+    ("dpia", "CN-LAW-003", "个人信息保护法", "4", True),
+    ("scc", "CN-REG-005", "个人信息出境标准合同办法", "一", False),
+    ("cn_flow", "CN-REG-004", "数据出境安全评估办法", "十三", False),
+    ("cpra", "US-CA-001", "CCPA/CPRA", "一", False),
+    ("tia", "EU-LAW-001", "GDPR", "4", False),
+    ("eu_scc", "EU-LAW-001", "GDPR", "1", False),
+    ("us_14117", "US-FED-001", "EO 14117", "5", False),
+    ("pipia", "CN-LAW-003", "个人信息保护法", "十", True),
+    ("bcr", "EU-LAW-001", "GDPR", "2", False),
+    ("v0_task_gateway", "CN-LAW-003", "个人信息保护法", "4", True),
+    ("review", "CN-LAW-003", "个人信息保护法", "七", True),
 ]
 
 
-@pytest.mark.parametrize("module, source_id, title, article", ALL_MODULES)
-def test_all_modules_have_valid_url(
-    module: str, source_id: str, title: str, article: str
+@pytest.mark.parametrize("module, source_id, title, article, exact", ALL_MODULES)
+def test_all_modules_have_controlled_resolution(
+    module: str, source_id: str, title: str, article: str, exact: bool
 ) -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         output_dir = Path(tmpdir)
@@ -168,4 +263,7 @@ def test_all_modules_have_valid_url(
     footnote = written["footnote_map"]["1"]
     assert footnote["knowledge_url"]
     assert "/knowledge/laws/" in footnote["knowledge_url"]
-    assert footnote["can_jump"] is True
+    assert footnote["can_jump"] is exact
+    assert footnote["resolution"]["resolution_type"] == (
+        "exact_article" if exact else "source_overview"
+    )
