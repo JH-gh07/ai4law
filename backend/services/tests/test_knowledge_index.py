@@ -1,6 +1,61 @@
+import json
+from collections import Counter
 from pathlib import Path
 
-from backend.services.knowledge_index import read_text_preview
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
+from backend.services.knowledge_index import (
+    _normalize_article_lookup_key,
+    get_article_detail,
+    read_text_preview,
+)
+
+
+def _registry_rows() -> list[dict[str, object]]:
+    return [
+        json.loads(line)
+        for line in regulation_articles_jsonl_path().read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+
+def test_article_detail_resolves_every_unique_registry_locator() -> None:
+    rows = _registry_rows()
+    counts = Counter(
+        (
+            str(row.get("source_id", "")),
+            _normalize_article_lookup_key(str(row.get("article_ref", ""))),
+        )
+        for row in rows
+    )
+    unique_rows = [
+        row
+        for row in rows
+        if counts[
+            (
+                str(row.get("source_id", "")),
+                _normalize_article_lookup_key(str(row.get("article_ref", ""))),
+            )
+        ]
+        == 1
+    ]
+
+    assert len(unique_rows) == 1602
+    assert len({str(row.get("source_id", "")) for row in unique_rows}) == 69
+    for row in unique_rows:
+        source_id = str(row["source_id"])
+        article_no = _normalize_article_lookup_key(str(row["article_ref"]))
+        detail = get_article_detail(source_id, article_no)
+
+        assert detail is not None, (source_id, article_no)
+        assert detail["source_id"] == source_id
+        assert detail["article_no"] == article_no
+        assert detail["article_content"] == str(row["content"]).strip()
+
+
+def test_article_detail_rejects_an_ambiguous_registry_locator() -> None:
+    # The normalized registry currently contains two CN-LAW-001 article 23 rows.
+    # Returning either one would make a citation appear more precise than the data.
+    assert get_article_detail("CN-LAW-001", "23") is None
 
 
 def test_read_text_preview_strips_html_markup(tmp_path: Path) -> None:

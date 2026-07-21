@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import csv
 import html
+import json
 import re
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
+from backend.common.citation.locators import normalize_article_no
 from backend.common.knowledge.paths import (
     module_catalog_path,
     practice_cases_csv_path,
+    regulation_articles_jsonl_path,
     sources_csv_path,
     spec_asset_manifest_path,
 )
@@ -20,6 +23,7 @@ SOURCES_CSV = sources_csv_path()
 CASES_CSV = practice_cases_csv_path()
 MODULE_CATALOG = module_catalog_path()
 SPEC_ASSET_MANIFEST = spec_asset_manifest_path()
+REGULATION_ARTICLES_JSONL = regulation_articles_jsonl_path()
 
 
 def _now_iso() -> str:
@@ -64,6 +68,7 @@ def refresh_knowledge_cache() -> None:
     _load_sources_index.cache_clear()
     _load_practice_cases.cache_clear()
     _load_spec_asset_manifest.cache_clear()
+    _load_regulation_articles_by_source.cache_clear()
 
 
 
@@ -99,6 +104,27 @@ def _load_spec_asset_manifest() -> tuple[dict[str, str], ...]:
         return tuple({k: (v or "").strip() for k, v in row.items()} for row in csv.DictReader(fp))
 
 
+@lru_cache(maxsize=1)
+def _load_regulation_articles_by_source() -> dict[str, tuple[dict[str, object], ...]]:
+    """Load the canonical citation registry grouped in its deterministic file order."""
+    if not REGULATION_ARTICLES_JSONL.exists():
+        return {}
+
+    grouped: dict[str, list[dict[str, object]]] = {}
+    with REGULATION_ARTICLES_JSONL.open("r", encoding="utf-8") as fp:
+        for line in fp:
+            try:
+                row = json.loads(line)
+            except (json.JSONDecodeError, TypeError):
+                continue
+            if not isinstance(row, dict):
+                continue
+            source_id = str(row.get("source_id", "") or "").strip()
+            if source_id:
+                grouped.setdefault(source_id, []).append(row)
+    return {source_id: tuple(rows) for source_id, rows in grouped.items()}
+
+
 def read_text_preview(snapshot_path: str, *, limit: int = 600) -> str:
     raw = (snapshot_path or "").strip()
     if not raw:
@@ -118,8 +144,10 @@ def read_text_preview(snapshot_path: str, *, limit: int = 600) -> str:
 def get_article_detail(source_id: str, article_no: str) -> dict | None:
     """Retrieve a specific article from the knowledge base by source_id and article_no.
 
-    Looks up the source in sources.csv for metadata, then reads the article text
-    from the raw snapshot file. Returns the target article with context (prev/next).
+    The normalized article registry is the canonical source used by citation
+    resolution. A locator is returned only when that registry contains exactly
+    one matching row. Raw-snapshot parsing remains a compatibility path solely
+    for sources that have not entered the registry at all.
     """
     sources = list(_load_sources_index())
     source = None
@@ -129,6 +157,37 @@ def get_article_detail(source_id: str, article_no: str) -> dict | None:
             break
     if source is None:
         return None
+
+    requested_article_no = _normalize_article_lookup_key(article_no)
+    registry_rows = _load_regulation_articles_by_source().get(source_id, ())
+    if registry_rows:
+        matches = [
+            (index, row)
+            for index, row in enumerate(registry_rows)
+            if _normalize_article_lookup_key(str(row.get("article_ref", "") or ""))
+            == requested_article_no
+        ]
+        if len(matches) != 1:
+            return None
+
+        index, target = matches[0]
+        previous = registry_rows[index - 1] if index > 0 else None
+        following = registry_rows[index + 1] if index < len(registry_rows) - 1 else None
+        return {
+            "source_id": source_id,
+            "title": str(target.get("law_name", "") or source.get("title", "")).strip(),
+            "article_no": requested_article_no,
+            "article_content": str(target.get("content", "") or "").strip(),
+            "prev_article_no": _registry_article_no(previous),
+            "prev_article_content": _registry_article_content(previous),
+            "next_article_no": _registry_article_no(following),
+            "next_article_content": _registry_article_content(following),
+            "source_url": str(target.get("source_url", "") or source.get("url", "")).strip(),
+            "authority_level": (source.get("authority_level") or "medium").strip(),
+            "binding_force": (source.get("binding_force") or "recommended").strip(),
+            "jurisdiction": str(target.get("jurisdiction", "") or source.get("jurisdiction", "cn")).strip(),
+            "doc_type": str(target.get("doc_type", "") or source.get("doc_type", "law")).strip(),
+        }
 
     snapshot_path = (source.get("snapshot_path") or "").strip()
     if not snapshot_path:
@@ -148,7 +207,6 @@ def get_article_detail(source_id: str, article_no: str) -> dict | None:
     # Extract articles from the full text using structural markers
     articles = _parse_articles_from_text(full_text)
 
-    requested_article_no = _normalize_article_lookup_key(article_no)
     target = articles.get(requested_article_no)
     if not target:
         return None
@@ -176,6 +234,18 @@ def get_article_detail(source_id: str, article_no: str) -> dict | None:
     }
 
 
+def _registry_article_no(row: dict[str, object] | None) -> str | None:
+    if row is None:
+        return None
+    return _normalize_article_lookup_key(str(row.get("article_ref", "") or "")) or None
+
+
+def _registry_article_content(row: dict[str, object] | None) -> str:
+    if row is None:
+        return ""
+    return str(row.get("content", "") or "").strip()
+
+
 def _article_sort_key(num_str: str) -> int:
     """Sort article numbers numerically; Chinese numerals yield high values."""
     try:
@@ -185,22 +255,8 @@ def _article_sort_key(num_str: str) -> int:
 
 
 def _normalize_article_lookup_key(article_no: str) -> str:
-    value = (article_no or "").strip()
-    if not value:
-        return value
-    if value.isdigit():
-        return value
-    match = re.search(r"第([一二三四五六七八九十百千零\d]+)条", value)
-    if match:
-        raw_num = match.group(1)
-        try:
-            return str(_chinese_to_int(raw_num))
-        except ValueError:
-            return raw_num
-    try:
-        return str(_chinese_to_int(value))
-    except ValueError:
-        return value
+    """Compatibility wrapper for the shared canonical locator normalizer."""
+    return normalize_article_no(article_no)
 
 
 def _parse_articles_from_text(full_text: str) -> dict[str, str]:
@@ -212,17 +268,14 @@ def _parse_articles_from_text(full_text: str) -> dict[str, str]:
     """
     # Match article headers: 第X条 with optional suffix (之一/之二/之三)
     header_re = re.compile(
-        r'第([一二三四五六七八九十百千零\d]+)条(?:之一|之二|之三)?'
+        r'第([一二两三四五六七八九十百千万零〇\d]+)条'
+        r'(?:之[一二两三四五六七八九十百千万零〇\d]+)?'
     )
 
     # Find all header positions and article numbers
     headers: list[tuple[int, int, str]] = []  # (start, end, article_no)
     for m in header_re.finditer(full_text):
-        raw_num = m.group(1)
-        try:
-            num = str(_chinese_to_int(raw_num))
-        except ValueError:
-            num = raw_num
+        num = normalize_article_no(m.group(0))
         # Only record if this looks like a structural header
         # In HTML files, headers may be inside tags (e.g. <strong>第三条</strong>),
         # so we check that the char before 第 is a non-alphanumeric boundary character

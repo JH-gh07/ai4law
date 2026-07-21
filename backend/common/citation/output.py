@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urlsplit
 
+from backend.common.citation.locators import normalize_article_no
 from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path
 
 # ── 知识库 source_id 注册表（title → source_id 反向查找）──────────────
@@ -129,52 +130,8 @@ def _resolve_source_id(source_id: str, title: str) -> str:
 
 
 def _normalize_article_no(article_no: str) -> str:
-    """Convert Chinese-numeral article number (六十六) to Arabic (66).
-
-    LawViewerPage and get_article_detail expect Arabic numerals for lookup.
-    Passing Chinese numerals in the URL query string causes a mismatch —
-    the backend can convert them but keeping Arabic in the URL is the
-    canonical form and avoids any client-side parsing difference.
-    """
-    value = (article_no or "").strip()
-    if not value:
-        return ""
-    if value.isdigit():
-        return value
-    # Try "第X条" pattern first
-    match = re.search(r"第\s*([0-9]+|[零〇一二两三四五六七八九十百千万]+)\s*条", value)
-    if match:
-        raw_num = match.group(1)
-    else:
-        raw_num = value
-    if raw_num.isdigit():
-        return raw_num
-    # Try Chinese numeral conversion using the same algorithm as knowledge_index.py
-    digit_map: dict[str, int] = {
-        "零": 0, "〇": 0, "一": 1, "二": 2, "两": 2, "三": 3,
-        "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9,
-    }
-    unit_map: dict[str, int] = {"十": 10, "百": 100, "千": 1000, "万": 10000}
-    total = 0
-    section = 0
-    number = 0
-    for char in raw_num:
-        if char in digit_map:
-            number = digit_map[char]
-        elif char in unit_map:
-            unit = unit_map[char]
-            if unit == 10000:
-                section = (section + (number or 0)) * unit
-                total += section
-                section = 0
-                number = 0
-            else:
-                if number == 0:
-                    number = 1
-                section += number * unit
-                number = 0
-    result = total + section + number
-    return str(result) if result > 0 else value
+    """Compatibility wrapper for the shared canonical locator normalizer."""
+    return normalize_article_no(article_no)
 
 
 @lru_cache(maxsize=1)
