@@ -204,6 +204,15 @@ def test_provider_probe_reuses_existing_secret_when_request_is_masked(
         observed["api_key"] = client._api_key
         return {"fallback": False, "usage": {}}
 
+    monkeypatch.setattr(
+        LLMClient,
+        "discover_models",
+        lambda _client: {
+            "status": "unsupported_or_failed",
+            "models": [],
+            "error": "models endpoint unavailable",
+        },
+    )
     monkeypatch.setattr(LLMClient, "chat_with_metadata", fake_chat)
     result = build_provider_test_result(
         {
@@ -221,3 +230,129 @@ def test_provider_probe_reuses_existing_secret_when_request_is_masked(
 
     assert result["ok"] is True
     assert observed["api_key"] == "probe-secret"
+
+
+def test_provider_probe_rejects_model_missing_from_discovered_models(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        LLMClient,
+        "discover_models",
+        lambda _client: {
+            "status": "available",
+            "models": ["available-model"],
+            "error": "",
+        },
+        raising=False,
+    )
+
+    def unexpected_chat(*_args, **_kwargs):
+        raise AssertionError("minimal generation must not run for a missing model")
+
+    monkeypatch.setattr(LLMClient, "chat_with_metadata", unexpected_chat)
+    result = build_provider_test_result(
+        {
+            "id": "demo",
+            "name": "Demo",
+            "provider_type": "openai_compatible",
+            "api_key": "probe-secret",
+            "api_url": "https://example.com/v1",
+            "model": "missing-model",
+            "enabled": True,
+            "timeout": 30,
+        },
+    )
+
+    assert result["ok"] is False
+    assert result["error_code"] == "MODEL_NOT_FOUND"
+    assert result["error_category"] == "model"
+    assert result["model_discovery"] == "available"
+
+
+def test_provider_probe_classifies_insufficient_quota(monkeypatch) -> None:
+    monkeypatch.setattr(
+        LLMClient,
+        "discover_models",
+        lambda _client: {
+            "status": "unsupported_or_failed",
+            "models": [],
+            "error": "models endpoint unavailable",
+        },
+    )
+    monkeypatch.setattr(
+        LLMClient,
+        "chat_with_metadata",
+        lambda _client, **_kwargs: {
+            "fallback": True,
+            "usage": {"usage_source": "unavailable"},
+            "error": "Error code: 429 - 账户余额不足",
+            "error_type": "RateLimitError",
+        },
+    )
+
+    result = build_provider_test_result(
+        {
+            "id": "demo",
+            "name": "Demo",
+            "provider_type": "openai_compatible",
+            "api_key": "probe-secret",
+            "api_url": "https://example.com/v1",
+            "model": "demo-model",
+            "enabled": True,
+            "timeout": 30,
+        },
+    )
+
+    assert result["ok"] is False
+    assert result["error_code"] == "INSUFFICIENT_QUOTA"
+    assert result["error_category"] == "quota"
+    assert "余额" in result["error"]
+
+
+def test_provider_probe_distinguishes_actionable_failure_categories(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        LLMClient,
+        "discover_models",
+        lambda _client: {
+            "status": "unsupported_or_failed",
+            "models": [],
+            "error": "models endpoint unavailable",
+        },
+    )
+    current_error = {"message": ""}
+    monkeypatch.setattr(
+        LLMClient,
+        "chat_with_metadata",
+        lambda _client, **_kwargs: {
+            "fallback": True,
+            "usage": {"usage_source": "unavailable"},
+            "error": current_error["message"],
+            "error_type": "APIError",
+        },
+    )
+    provider = {
+        "id": "demo",
+        "name": "Demo",
+        "provider_type": "openai_compatible",
+        "api_key": "probe-secret",
+        "api_url": "https://example.com/v1",
+        "model": "demo-model",
+        "enabled": True,
+        "timeout": 30,
+    }
+    cases = {
+        "该模型已下线": ("MODEL_RETIRED", "model"),
+        "model does not exist": ("MODEL_NOT_FOUND", "model"),
+        "invalid API key": ("AUTHENTICATION_FAILED", "authentication"),
+        "rate limit exceeded": ("RATE_LIMITED", "rate_limit"),
+        "request timed out": ("TIMEOUT", "network"),
+        "connection refused": ("NETWORK_ERROR", "network"),
+        "unclassified provider rejection": ("PROVIDER_ERROR", "provider"),
+    }
+
+    for error_message, expected in cases.items():
+        current_error["message"] = error_message
+        result = build_provider_test_result(provider)
+        assert (result["error_code"], result["error_category"]) == expected

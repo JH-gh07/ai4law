@@ -36,7 +36,11 @@ export type RuntimeProviderTestResult = {
   model: string;
   latency_ms: number | null;
   usage: Record<string, number | string>;
+  error_code: string;
+  error_category: string;
   error: string;
+  model_discovery: string;
+  available_models: string[];
 };
 
 const ENDPOINT = "/api/v1/system/settings/runtime";

@@ -37,7 +37,7 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [testingProviderId, setTestingProviderId] = useState<string>("");
-  const [providerTestState, setProviderTestState] = useState<Record<string, RuntimeProviderTestResult | { ok: false; error: string }>>({});
+  const [providerTestState, setProviderTestState] = useState<Record<string, RuntimeProviderTestResult>>({});
   useEffect(() => {
     let alive = true;
     fetchRuntimeSettings()
@@ -123,7 +123,19 @@ export function SettingsPage() {
     } catch (err) {
       setProviderTestState((prev) => ({
         ...prev,
-        [provider.id]: { ok: false, error: err instanceof Error ? err.message : String(err) },
+        [provider.id]: {
+          ok: false,
+          provider_id: provider.id,
+          provider_type: provider.provider_type,
+          model: provider.model,
+          latency_ms: null,
+          usage: {},
+          error_code: "REQUEST_FAILED",
+          error_category: "network",
+          error: err instanceof Error ? err.message : String(err),
+          model_discovery: "not_run",
+          available_models: [],
+        },
       }));
     } finally {
       setTestingProviderId("");
@@ -133,8 +145,11 @@ export function SettingsPage() {
   const getProviderTestLabel = (providerId: string) => {
     const state = providerTestState[providerId];
     if (!state) return "";
-    if (!state.ok) return state.error || "测试失败";
-    return `连接成功 · ${state.latency_ms ?? "-"}ms`;
+    if (!state.ok) {
+      return `${state.error || "测试失败"}（${state.error_code || "PROVIDER_ERROR"}）`;
+    }
+    const discoveryLabel = state.model_discovery === "available" ? "模型列表已核验" : "模型列表不可用";
+    return `连接成功 · ${state.latency_ms ?? "-"}ms · ${discoveryLabel}`;
   };
 
   const activeProvider = form.llm.providers.find((item) => item.id === form.llm.active_provider_id) || null;
@@ -307,7 +322,16 @@ export function SettingsPage() {
                     </label>
                     <label className="settings-provider-field-wide">
                       <span>Model</span>
-                      <input value={provider.model} onChange={(event) => updateProvider(provider.id, { model: event.target.value })} />
+                      <input
+                        value={provider.model}
+                        list={`provider-models-${provider.id}`}
+                        onChange={(event) => updateProvider(provider.id, { model: event.target.value })}
+                      />
+                      <datalist id={`provider-models-${provider.id}`}>
+                        {(providerTestState[provider.id]?.available_models || []).map((model) => (
+                          <option key={model} value={model} />
+                        ))}
+                      </datalist>
                     </label>
                   </div>
                   <div className="settings-provider-meta">

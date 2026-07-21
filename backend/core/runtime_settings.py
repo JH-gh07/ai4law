@@ -172,6 +172,24 @@ def build_provider_test_result(
         _runtime_llm_active_provider_id = provider["id"]
 
     client = LLMClient(_ProviderSettings())
+    discovery = client.discover_models()
+    discovery_status = str(discovery.get("status") or "unsupported_or_failed")
+    available_models = [str(item) for item in discovery.get("models") or []]
+    if discovery_status == "available" and provider["model"] not in available_models:
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        return {
+            "ok": False,
+            "provider_id": provider["id"],
+            "provider_type": provider["provider_type"],
+            "model": provider["model"],
+            "latency_ms": latency_ms,
+            "usage": {},
+            "error_code": "MODEL_NOT_FOUND",
+            "error_category": "model",
+            "error": f"模型 {provider['model']} 不在 Provider 返回的可用模型列表中",
+            "model_discovery": discovery_status,
+            "available_models": available_models[:100],
+        }
     result = client.chat_with_metadata(
         system="You are a connectivity probe.",
         user="Reply with pong.",
@@ -181,6 +199,10 @@ def build_provider_test_result(
     )
     latency_ms = int((time.perf_counter() - start) * 1000)
     if result.get("fallback"):
+        error_code, error_category, error_message = _classify_provider_probe_error(
+            str(result.get("error") or ""),
+            str(result.get("error_type") or ""),
+        )
         return {
             "ok": False,
             "provider_id": provider["id"],
@@ -188,7 +210,11 @@ def build_provider_test_result(
             "model": provider["model"],
             "latency_ms": latency_ms,
             "usage": result.get("usage") or {},
-            "error": "Provider test failed",
+            "error_code": error_code,
+            "error_category": error_category,
+            "error": error_message,
+            "model_discovery": discovery_status,
+            "available_models": available_models[:100],
         }
     return {
         "ok": True,
@@ -197,8 +223,57 @@ def build_provider_test_result(
         "model": provider["model"],
         "latency_ms": latency_ms,
         "usage": result.get("usage") or {},
+        "error_code": "",
+        "error_category": "",
         "error": "",
+        "model_discovery": discovery_status,
+        "available_models": available_models[:100],
     }
+
+
+def _classify_provider_probe_error(
+    error: str,
+    error_type: str = "",
+) -> tuple[str, str, str]:
+    text = f"{error_type} {error}".strip().lower()
+    patterns = [
+        (
+            ("模型下线", "已下线", "retired", "decommissioned", "no longer available"),
+            ("MODEL_RETIRED", "model", "模型已下线或不再提供，请选择 Provider 当前支持的模型"),
+        ),
+        (
+            ("余额不足", "额度不足", "insufficient_quota", "insufficient quota", "credit balance", "quota exceeded"),
+            ("INSUFFICIENT_QUOTA", "quota", "Provider 额度或余额不足，请充值、调整额度或更换 Provider"),
+        ),
+        (
+            ("模型不存在", "model_not_found", "model not found", "does not exist"),
+            ("MODEL_NOT_FOUND", "model", "配置的模型不存在，请先执行模型发现并选择可用模型"),
+        ),
+        (
+            ("invalid api key", "incorrect api key", "unauthorized", "authentication", "鉴权失败", "密钥无效", " 401"),
+            ("AUTHENTICATION_FAILED", "authentication", "Provider 鉴权失败，请检查 API Key、App ID 和访问权限"),
+        ),
+        (
+            ("api key is not configured", "notconfigured"),
+            ("NOT_CONFIGURED", "configuration", "Provider 未配置 API Key，无法执行真实模型探测"),
+        ),
+        (
+            ("rate limit", "ratelimiterror", "too many requests", " 429"),
+            ("RATE_LIMITED", "rate_limit", "Provider 请求过于频繁，请稍后重试或调整限流配置"),
+        ),
+        (
+            ("timeout", "timed out", "超时"),
+            ("TIMEOUT", "network", "Provider 请求超时，请检查网络、Base URL 或超时设置"),
+        ),
+        (
+            ("connection", "connecterror", "dns", "ssl", "network"),
+            ("NETWORK_ERROR", "network", "无法连接 Provider，请检查 Base URL、DNS、TLS 和网络策略"),
+        ),
+    ]
+    for needles, classification in patterns:
+        if any(needle in text for needle in needles):
+            return classification
+    return "PROVIDER_ERROR", "provider", "Provider 最小生成探测失败，请检查 Provider 返回的错误日志"
 
 
 def _with_preserved_provider_secret(

@@ -142,6 +142,8 @@ class LLMClient:
                 "content": _FALLBACK_MESSAGE,
                 "usage": LLMUsage(usage_source="unavailable").as_dict(),
                 "fallback": True,
+                "error": "API key is not configured",
+                "error_type": "NotConfigured",
             }
 
         client = self._ensure_client()
@@ -155,6 +157,8 @@ class LLMClient:
                 "content": _FALLBACK_MESSAGE,
                 "usage": LLMUsage(usage_source="unavailable").as_dict(),
                 "fallback": True,
+                "error": self._client_init_error or "Provider client is unavailable",
+                "error_type": "ClientUnavailable",
             }
 
         try:
@@ -200,6 +204,8 @@ class LLMClient:
                 "content": _FALLBACK_MESSAGE,
                 "usage": LLMUsage(usage_source="unavailable").as_dict(),
                 "fallback": True,
+                "error": str(exc),
+                "error_type": type(exc).__name__,
             }
         except Exception as exc:
             logger.error("LLMClient unexpected error: %s", exc)
@@ -207,6 +213,45 @@ class LLMClient:
                 "content": _FALLBACK_MESSAGE,
                 "usage": LLMUsage(usage_source="unavailable").as_dict(),
                 "fallback": True,
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            }
+
+    def discover_models(self) -> dict[str, object]:
+        """Probe the OpenAI-compatible models endpoint without assuming support."""
+        if not self._enabled:
+            return {
+                "status": "unavailable",
+                "models": [],
+                "error": "API key is not configured",
+            }
+        client = self._ensure_client()
+        if client is None:
+            return {
+                "status": "failed",
+                "models": [],
+                "error": self._client_init_error or "Provider client is unavailable",
+            }
+        try:
+            response = client.models.list()
+            models = sorted(
+                {
+                    str(getattr(item, "id", "") or "").strip()
+                    for item in getattr(response, "data", [])
+                    if str(getattr(item, "id", "") or "").strip()
+                }
+            )
+            return {"status": "available", "models": models, "error": ""}
+        except Exception as exc:
+            logger.warning(
+                "LLMClient model discovery failed for provider_id=%s: %s",
+                self._provider_id,
+                exc,
+            )
+            return {
+                "status": "unsupported_or_failed",
+                "models": [],
+                "error": str(exc),
             }
 
     @staticmethod

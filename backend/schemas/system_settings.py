@@ -55,4 +55,8 @@ class RuntimeProviderTestResponse(BaseModel):
     model: str = ""
     latency_ms: int | None = None
     usage: dict[str, int | str] = Field(default_factory=dict)
+    error_code: str = ""
+    error_category: str = ""
     error: str = ""
+    model_discovery: str = "unsupported_or_failed"
+    available_models: list[str] = Field(default_factory=list)
