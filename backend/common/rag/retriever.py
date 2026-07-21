@@ -337,7 +337,9 @@ class RegulationRAGService:
 
     @lru_cache(maxsize=1)
     def _ensure_entries(self) -> tuple:
-        if self.settings.rag_auto_build_index and not self.vector_store.exists():
+        if not self.vector_store.has_compatible_embedding():
+            if not self.settings.rag_auto_build_index:
+                return ()
             build_regulation_index(self.settings)
         return tuple(self.vector_store.load())
 

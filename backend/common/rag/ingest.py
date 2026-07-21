@@ -81,6 +81,7 @@ def build_regulation_index(settings: Settings, source_jsonl: Path | None = None,
             "source_jsonl": str(source_path),
             "entry_count": len(entries),
             "embedding_dimension": settings.rag_embedding_dimension,
+            "embedding_version": embedder.version,
         },
     )
     return index_path
@@ -126,6 +127,8 @@ def build_multi_index_v3(settings: Settings) -> dict[str, Path]:
                 "index_name": index_name,
                 "entry_count": len(entries),
                 "schema_version": MULTI_INDEX_SCHEMA_VERSION,
+                "embedding_dimension": embedder.dimension,
+                "embedding_version": embedder.version,
             },
         )
         jsonl_path.write_text(

@@ -133,3 +133,28 @@ def test_orchestrator_rebuilds_generated_indexes_in_empty_storage(tmp_path) -> N
 
     assert bundle.legal_grounding
     assert (tmp_path / "rag" / "v3" / "legal_index_cn.jsonl").exists()
+    vector_path = tmp_path / "rag" / "v3" / "legal_index_cn.vector.json"
+    metadata = json.loads(vector_path.read_text(encoding="utf-8"))["metadata"]
+    assert metadata["embedding_version"] == "sha256-v1"
+
+
+def test_orchestrator_rejects_index_without_current_embedding_version(tmp_path) -> None:
+    settings = Settings(rag_v3_dir=tmp_path / "rag" / "v3")
+    orchestrator = RetrievalOrchestrator(settings)
+    index_path = settings.rag_v3_dir / "legal_index_cn.vector.json"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(
+        json.dumps(
+            {
+                "metadata": {
+                    "schema_version": "v3.2",
+                    "embedding_dimension": orchestrator.embedder.dimension,
+                },
+                "entries": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert orchestrator._is_index_current("legal_index_cn") is False
+import json

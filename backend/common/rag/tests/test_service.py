@@ -48,6 +48,7 @@ def test_orchestrator_result_includes_manifest() -> None:
     assert result.manifest.hit_count == 1
     assert result.manifest.query == "cross-border transfer"
     assert result.manifest.index_schema_version
+    assert result.manifest.embedding_version == "sha256-v1"
 
 
 def test_single_index_dispatch_is_distinct_from_enriched_compatibility() -> None:

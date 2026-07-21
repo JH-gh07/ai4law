@@ -458,7 +458,11 @@ class RetrievalOrchestrator:
         except json.JSONDecodeError:
             return False
         metadata = payload.get("metadata", {})
-        return metadata.get("schema_version") == MULTI_INDEX_SCHEMA_VERSION
+        return (
+            metadata.get("schema_version") == MULTI_INDEX_SCHEMA_VERSION
+            and metadata.get("embedding_version") == self.embedder.version
+            and metadata.get("embedding_dimension") == self.embedder.dimension
+        )
 
     @lru_cache(maxsize=None)
     def _load_entries(self, name: str) -> tuple[VectorIndexEntry, ...]:

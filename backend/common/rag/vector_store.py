@@ -23,6 +23,23 @@ class LocalVectorStore:
     def exists(self) -> bool:
         return self.index_path.exists()
 
+    def load_metadata(self) -> dict:
+        if not self.exists():
+            return {}
+        try:
+            data = json.loads(self.index_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+        metadata = data.get("metadata", {})
+        return dict(metadata) if isinstance(metadata, dict) else {}
+
+    def has_compatible_embedding(self) -> bool:
+        metadata = self.load_metadata()
+        return (
+            metadata.get("embedding_version") == self.embedder.version
+            and metadata.get("embedding_dimension") == self.embedder.dimension
+        )
+
     def save(self, entries: list[VectorIndexEntry], metadata: dict | None = None) -> Path:
         self.index_path.parent.mkdir(parents=True, exist_ok=True)
         self.index_path.write_text(

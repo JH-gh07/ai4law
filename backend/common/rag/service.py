@@ -14,7 +14,10 @@ from backend.common.knowledge.v2 import (
     RetrievalRequest,
     TaskStage,
 )
-from backend.common.rag.constants import MULTI_INDEX_SCHEMA_VERSION
+from backend.common.rag.constants import (
+    HASHING_EMBEDDING_VERSION,
+    MULTI_INDEX_SCHEMA_VERSION,
+)
 from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.rag.retriever import (
     RegulationDoc,
@@ -54,6 +57,7 @@ class RetrievalManifest(BaseModel):
     hit_count: int
     fallback_reason: str = ""
     index_schema_version: str = ""
+    embedding_version: str = ""
     duration_ms: int = Field(ge=0)
 
 
@@ -146,6 +150,7 @@ class LegalRetrievalService:
                 if backend == "multi_index"
                 else ""
             ),
+            embedding_version=HASHING_EMBEDDING_VERSION,
             duration_ms=duration_ms,
         )
         return LegalRetrievalResult(bundle=bundle, manifest=manifest)

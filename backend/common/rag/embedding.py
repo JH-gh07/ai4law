@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import math
 import re
 from collections import Counter
+
+from backend.common.rag.constants import HASHING_EMBEDDING_VERSION
 
 
 def normalize_text(text: str) -> str:
@@ -35,6 +38,8 @@ def tokenize_text(text: str) -> list[str]:
 class HashingEmbedder:
     """Deterministic local embedder for offline vector retrieval."""
 
+    version = HASHING_EMBEDDING_VERSION
+
     def __init__(self, dimension: int = 384) -> None:
         self.dimension = max(64, dimension)
 
@@ -46,7 +51,8 @@ class HashingEmbedder:
         counts = Counter(tokens)
         vector: dict[int, float] = {}
         for token, count in counts.items():
-            index = hash(token) % self.dimension
+            digest = hashlib.sha256(token.encode("utf-8")).digest()
+            index = int.from_bytes(digest[:8], byteorder="big") % self.dimension
             vector[index] = vector.get(index, 0.0) + float(count)
         return self._l2_normalize(vector)
 

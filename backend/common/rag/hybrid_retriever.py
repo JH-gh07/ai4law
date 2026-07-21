@@ -77,7 +77,11 @@ class EnhancedHybridRetriever:
         rewritten = _rewrite_query(query, jurisdiction, path)
 
         # Vector search
-        entries = tuple(self.vector_store.load()) if self.vector_store.exists() else ()
+        entries = (
+            tuple(self.vector_store.load())
+            if self.vector_store.has_compatible_embedding()
+            else ()
+        )
         vector_hits = self.vector_store.search(
             rewritten,
             list(entries),

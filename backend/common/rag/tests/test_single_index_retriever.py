@@ -1,3 +1,7 @@
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 from backend.common.rag.embedding import HashingEmbedder
@@ -30,6 +34,67 @@ def test_hashing_embedder_is_deterministic() -> None:
     assert embedder.similarity(left, right) > 0.99
 
 
+def test_hashing_embedder_is_stable_across_python_processes() -> None:
+    script = (
+        "import json; "
+        "from backend.common.rag.embedding import HashingEmbedder; "
+        "print(json.dumps(HashingEmbedder(128).embed('境外接收方 联系方式 单独同意'), sort_keys=True))"
+    )
+
+    def run_with_seed(seed: str) -> str:
+        env = dict(os.environ)
+        env["PYTHONHASHSEED"] = seed
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        return result.stdout.strip()
+
+    assert run_with_seed("1") == run_with_seed("987654")
+
+
+def test_index_built_in_one_process_is_queryable_in_another(tmp_path: Path) -> None:
+    source = tmp_path / "regulation_articles.jsonl"
+    index = tmp_path / "regulation_index.json"
+    _write_fixture(source)
+    build_script = (
+        "import sys; "
+        "from pathlib import Path; "
+        "from backend.common.rag.ingest import build_regulation_index; "
+        "from backend.core.settings import Settings; "
+        "build_regulation_index(Settings(rag_source_jsonl=Path(sys.argv[1]), "
+        "rag_index_path=Path(sys.argv[2]), rag_embedding_dimension=128))"
+    )
+    query_script = (
+        "import sys; "
+        "from pathlib import Path; "
+        "from backend.common.rag.embedding import HashingEmbedder; "
+        "from backend.common.rag.vector_store import LocalVectorStore; "
+        "store=LocalVectorStore(Path(sys.argv[1]), HashingEmbedder(128)); "
+        "print(store.search('境外接收方 联系方式 单独同意', store.load(), 1)[0][1].doc_id)"
+    )
+    build_env = dict(os.environ, PYTHONHASHSEED="11")
+    query_env = dict(os.environ, PYTHONHASHSEED="22")
+
+    subprocess.run(
+        [sys.executable, "-c", build_script, str(source), str(index)],
+        check=True,
+        env=build_env,
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", query_script, str(index)],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=query_env,
+    )
+
+    assert result.stdout.strip() == "pipl-39"
+
+
 def test_rag_service_builds_vector_index_and_retrieves_exact_article(tmp_path: Path) -> None:
     source = tmp_path / "regulation_articles.jsonl"
     index = tmp_path / "regulation_index_v2.json"
@@ -44,6 +109,8 @@ def test_rag_service_builds_vector_index_and_retrieves_exact_article(tmp_path: P
         rag_auto_build_index=True,
     )
     build_regulation_index(settings)
+    metadata = json.loads(index.read_text(encoding="utf-8"))["metadata"]
+    assert metadata["embedding_version"] == "sha256-v1"
     service = RegulationRAGService(settings)
 
     hits = service.retrieve(
@@ -57,6 +124,53 @@ def test_rag_service_builds_vector_index_and_retrieves_exact_article(tmp_path: P
     assert hits
     assert hits[0].id == "pipl-39"
     assert index.exists()
+
+
+def test_rag_service_rebuilds_legacy_embedding_index(tmp_path: Path) -> None:
+    source = tmp_path / "regulation_articles.jsonl"
+    index = tmp_path / "regulation_index_v2.json"
+    _write_fixture(source)
+    settings = Settings(
+        rag_source_jsonl=source,
+        rag_index_path=index,
+        rag_embedding_dimension=128,
+        rag_auto_build_index=True,
+    )
+    build_regulation_index(settings)
+    payload = json.loads(index.read_text(encoding="utf-8"))
+    payload["metadata"]["embedding_version"] = "python-hash-legacy"
+    index.write_text(json.dumps(payload), encoding="utf-8")
+
+    entries = RegulationRAGService(settings)._ensure_entries()
+    metadata = json.loads(index.read_text(encoding="utf-8"))["metadata"]
+
+    assert entries
+    assert metadata["embedding_version"] == "sha256-v1"
+
+
+def test_rag_service_does_not_load_incompatible_index_when_rebuild_disabled(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "regulation_articles.jsonl"
+    index = tmp_path / "regulation_index_v2.json"
+    _write_fixture(source)
+    build_settings = Settings(
+        rag_source_jsonl=source,
+        rag_index_path=index,
+        rag_embedding_dimension=128,
+    )
+    build_regulation_index(build_settings)
+    payload = json.loads(index.read_text(encoding="utf-8"))
+    payload["metadata"]["embedding_dimension"] = 256
+    index.write_text(json.dumps(payload), encoding="utf-8")
+    settings = Settings(
+        rag_source_jsonl=source,
+        rag_index_path=index,
+        rag_embedding_dimension=128,
+        rag_auto_build_index=False,
+    )
+
+    assert RegulationRAGService(settings)._ensure_entries() == ()
 
 
 def test_review_knowledge_base_appends_vector_citations(tmp_path: Path, monkeypatch) -> None:
