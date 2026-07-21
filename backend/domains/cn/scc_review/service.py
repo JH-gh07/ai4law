@@ -621,6 +621,7 @@ class SCCService:
             output_dir.mkdir(parents=True, exist_ok=True)
             md_output = output_dir / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.md"
             docx_output = output_dir / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.docx"
+            pdf_output = output_dir / f"{safe_company}_SCC_合规审查报告_草案_{date_stamp}.pdf"
 
             mapping = _build_scc_template_mapping(
             profile, chapters, issues, evidence_chain, date_stamp,
@@ -628,9 +629,21 @@ class SCCService:
         )
             render_markdown_template(md_output, TEMPLATE_MD, mapping)
             render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+            from backend.common.render.pdf_renderer import get_pdf_renderer
+
+            get_pdf_renderer().from_template(
+                pdf_output,
+                f"{payload.company_name} SCC 合规审查报告草案",
+                TEMPLATE_MD,
+                mapping,
+            )
 
             annotated_docx_output = self._render_annotated_docx(payload, issues, evidence_chain, date_stamp, output_dir=output_dir)
-            output_files = {"markdown": str(md_output), "docx": str(docx_output)}
+            output_files = {
+                "markdown": str(md_output),
+                "docx": str(docx_output),
+                "pdf": str(pdf_output),
+            }
             if annotated_docx_output is not None:
                 output_files["annotated_docx"] = str(annotated_docx_output)
 

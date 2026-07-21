@@ -168,6 +168,40 @@ class AssessmentReportRenderer:
             "zip": str(zip_output),
         }
         result["internal_markdown"] = str(internal_md_output)
+
+        from backend.common.render.content_adapter import ContentAdapter
+        from backend.common.render.markdown_renderer import MarkdownRenderer
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        pdf_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.pdf"
+        if TEMPLATE_MD.exists():
+            get_pdf_renderer().from_template(
+                pdf_output,
+                "数据出境风险自评估报告（草案）",
+                TEMPLATE_MD,
+                mapping,
+            )
+        else:
+            get_pdf_renderer().from_sections(
+                pdf_output,
+                "数据出境风险自评估报告（草案）",
+                [(chapter.title, chapter.content) for chapter in chapters],
+            )
+        result["pdf"] = str(pdf_output)
+
+        report_document = ContentAdapter.from_chapters(
+            title=f"{company_name} 数据出境风险自评估报告",
+            company_name=company_name,
+            chapters=[
+                {"title": chapter.title, "content": chapter.content}
+                for chapter in chapters
+            ],
+            module="assessment",
+        )
+        body_markdown = output_dir / f"{safe_company}_自评估报告正文_{date_stamp}.md"
+        MarkdownRenderer().render_to_file(report_document, body_markdown)
+        result["body_markdown"] = str(body_markdown)
+
         if docx_rendered:
             result["docx"] = str(docx_output)
         if official_md_output and OFFICIAL_MD_TEMPLATE.exists():

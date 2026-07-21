@@ -1,4 +1,10 @@
-from backend.domains.us.cpra.schema import CPRARequest
+from pathlib import Path
+from zipfile import ZipFile
+
+from pypdf import PdfReader
+
+from backend.common.citation.registry import CitationRegistry
+from backend.domains.us.cpra.schema import CPRAGapItem, CPRARequest
 from backend.domains.us.cpra.service import CPRAService
 from backend.domains.us.cpra.schema import CPRAChapter
 
@@ -72,6 +78,58 @@ def test_cpra_generate_report(monkeypatch) -> None:
     assert result.output_files["pdf"].endswith(".pdf")
     assert result.output_files["xlsx"].endswith(".xlsx")
     assert result.gap_items
+
+
+def test_cpra_real_renderer_generates_valid_pdf_in_bundle() -> None:
+    service = CPRAService()
+    payload = CPRARequest.model_validate(
+        {
+            "company_name": "真实渲染测试企业",
+            "business_model": "SaaS",
+            "data_lifecycle": "收集、使用、删除",
+            "notice_and_consent": "通过隐私政策告知",
+            "consumer_rights_process": "邮箱受理请求",
+            "opt_out_and_sale_sharing": "提供退出入口",
+            "vendor_management": "通过 DPA 管理供应商",
+            "attachments": [
+                {
+                    "file_role": "privacy_policy",
+                    "file_name": "policy.url",
+                    "file_format": "url",
+                    "storage_uri": "https://example.com/privacy",
+                }
+            ],
+        }
+    )
+    chapter = CPRAChapter(
+        chapter_no=1,
+        title="执行摘要",
+        content="当前存在一项需要整改的合规差距。",
+        risk_level="MEDIUM",
+    )
+    gap = CPRAGapItem(
+        domain="notice",
+        risk_level="MEDIUM",
+        gap="告知内容不完整",
+        legal_basis="CPRA",
+        recommendation="补充告知",
+        phase="short_term",
+    )
+
+    outputs = service._render(
+        "real-pdf-output",
+        payload,
+        [chapter],
+        [gap],
+        [],
+        CitationRegistry(),
+    )
+
+    pdf_path = Path(outputs["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(outputs["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
 
 
 def test_cpra_generate_report_uses_enhanced_attachment_facts(monkeypatch) -> None:

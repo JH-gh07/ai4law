@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from docx import Document
+from pypdf import PdfReader
 
 from backend.domains.cn.scc_review.schema import SCCRequest
 from backend.domains.cn.scc_review.service import SCCService
@@ -44,6 +45,9 @@ def test_scc_generate_report_fallback() -> None:
     assert "markdown" in result.output_files
     assert result.output_files["markdown"].endswith(".md")
     assert "_SCC_" in result.output_files["markdown"]
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
     assert len(result.chapters) == 4
     assert any("No SCC draft provided" in issue for issue in result.consistency_issues)
 

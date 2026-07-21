@@ -415,6 +415,13 @@ class ReviewService:
             # ── Stage 7: RENDERING (92‑100%) ──
             self._update_task(db, task, ReviewTaskStatus.RENDERING, 95)
             sections = self.renderer.build_sections(aggregated)
+            report_preview = {
+                "overall_rating": aggregated.overall_rating,
+                "overall_risk_score": aggregated.overall_risk_score,
+                "summary": aggregated.summary,
+                "document_type": doc_type,
+                "review_mode": review_mode,
+            }
             self.report_service.create_docx_report(
                 db,
                 user_id,
@@ -422,13 +429,19 @@ class ReviewService:
                 task_id,
                 "review_report.docx",
                 sections,
-                preview={
-                    "overall_rating": aggregated.overall_rating,
-                    "overall_risk_score": aggregated.overall_risk_score,
-                    "summary": aggregated.summary,
-                    "document_type": doc_type,
-                    "review_mode": review_mode,
-                },
+                preview=report_preview,
+            )
+            pdf_lines = [f"# {doc_type} 合同合规审查报告"]
+            for heading, paragraphs in sections:
+                pdf_lines.extend([f"## {heading}", *paragraphs])
+            self.report_service.create_pdf_report(
+                db,
+                user_id,
+                "review",
+                task_id,
+                "review_report.pdf",
+                pdf_lines,
+                preview=report_preview,
             )
 
             # ── Annotated DOCX (source doc with inline comments) ──
@@ -502,10 +515,16 @@ class ReviewService:
         report = self.report_service.get_owner_artifact(db, user_id, "review", task.id, "docx")
         if not report:
             raise HTTPException(status_code=404, detail="Review report not found")
+        pdf_report = self.report_service.get_owner_artifact(
+            db, user_id, "review", task.id, "pdf"
+        )
+        output_files = {"docx": report.file_path, "report": report.file_path}
+        if pdf_report:
+            output_files["pdf"] = pdf_report.file_path
         summary = AggregatedReview.model_validate(loads(task.summary_json, {}))
         return ReviewGenerateResponse(
             report_path=report.file_path,
-            output_files={"docx": report.file_path, "report": report.file_path},
+            output_files=output_files,
             risk_level=summary.overall_rating,
             result={
                 "risk_level": summary.overall_rating,

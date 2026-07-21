@@ -294,6 +294,16 @@ class DPIAReportRenderer:
             md_path, profile, chapters, date_stamp, need_assessment
         )
 
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        pdf_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.pdf"
+        get_pdf_renderer().from_markdown(
+            md_path.read_text(encoding="utf-8"),
+            pdf_path,
+            f"{profile.project_name} — DPIA 草案",
+        )
+        result["pdf"] = str(pdf_path)
+
         docx_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.docx"
         docx_sections = [
             ("项目概况", f"项目目标：{profile.project_goal}"),

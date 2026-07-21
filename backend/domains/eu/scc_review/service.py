@@ -341,10 +341,18 @@ class EU_SCCService:
             base = safe_filename(payload.company_name)
             md_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.md"
             docx_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.docx"
+            pdf_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.pdf"
             mapping = _build_template_mapping(payload, chapters, rule_result, date_stamp)
 
             # MD report (self-rendered)
             _render_markdown_report(md_out, payload, chapters, rule_result, date_stamp)
+            from backend.common.render.pdf_renderer import get_pdf_renderer
+
+            get_pdf_renderer().from_markdown(
+                md_out.read_text(encoding="utf-8"),
+                pdf_out,
+                f"{payload.company_name} EU SCC 审查报告",
+            )
             # DOCX (placeholder — template not yet available)
             docx_out.touch()
 
@@ -387,7 +395,7 @@ class EU_SCCService:
                 all_items=citation_registry.to_list(),
             )
 
-            result = {"markdown": str(md_out), "docx": str(docx_out), "findings_json": str(output_dir / "findings.json"), "rule_engine_result_json": str(output_dir / "rule_engine_result.json")}
+            result = {"markdown": str(md_out), "docx": str(docx_out), "pdf": str(pdf_out), "findings_json": str(output_dir / "findings.json"), "rule_engine_result_json": str(output_dir / "rule_engine_result.json")}
             result["citation_map_json"] = citation_map_json
             if annotated_path:
                 result["annotated_docx"] = annotated_path

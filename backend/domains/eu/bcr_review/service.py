@@ -577,15 +577,30 @@ class BCRService:
         safe_name = safe_filename(payload.company_name)
         md_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.md"
         docx_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.docx"
+        pdf_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.pdf"
         zip_out = output_dir / f"{safe_name}_BCR-C_输出包_草案_{date_stamp}.zip"
         mapping = _build_template_mapping(payload, rating, problems, chapters, date_stamp)
         output_dir.mkdir(parents=True, exist_ok=True)
         render_markdown_template(md_out, TEMPLATE_MD, mapping)
         render_docx_template(docx_out, TEMPLATE_PATH, mapping)
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        get_pdf_renderer().from_template(
+            pdf_out,
+            f"{payload.company_name} BCR-C 合规审查报告草案",
+            TEMPLATE_MD,
+            mapping,
+        )
         with ZipFile(zip_out, mode="w", compression=ZIP_DEFLATED) as z:
             z.write(docx_out, arcname=docx_out.name)
             z.write(md_out, arcname=md_out.name)
-        return {"markdown": str(md_out), "docx": str(docx_out), "zip": str(zip_out)}
+            z.write(pdf_out, arcname=pdf_out.name)
+        return {
+            "markdown": str(md_out),
+            "docx": str(docx_out),
+            "pdf": str(pdf_out),
+            "zip": str(zip_out),
+        }
 
     # ------------------------------------------------------------------
     # Document-driven rendering
@@ -597,6 +612,7 @@ class BCRService:
         safe_name = safe_filename(payload.company_name)
         md_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.md"
         docx_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.docx"
+        pdf_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.pdf"
         zip_out = output_dir / f"{safe_name}_BCR审查输出包_草案_{date_stamp}.zip"
 
         # Build template mapping from sections
@@ -616,10 +632,24 @@ class BCRService:
         output_dir.mkdir(parents=True, exist_ok=True)
         render_markdown_template(md_out, TEMPLATE_MD, mapping)
         render_docx_template(docx_out, TEMPLATE_PATH, mapping)
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        get_pdf_renderer().from_template(
+            pdf_out,
+            f"{payload.company_name} BCR 审查报告草案",
+            TEMPLATE_MD,
+            mapping,
+        )
         with ZipFile(zip_out, mode="w", compression=ZIP_DEFLATED) as z:
             z.write(docx_out, arcname=docx_out.name)
             z.write(md_out, arcname=md_out.name)
-        return {"markdown": str(md_out), "docx": str(docx_out), "zip": str(zip_out)}
+            z.write(pdf_out, arcname=pdf_out.name)
+        return {
+            "markdown": str(md_out),
+            "docx": str(docx_out),
+            "pdf": str(pdf_out),
+            "zip": str(zip_out),
+        }
 
     # ------------------------------------------------------------------
     # Async helpers

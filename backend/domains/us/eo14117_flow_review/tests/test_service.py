@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
+from zipfile import ZipFile
 
 from docx import Document
+from pypdf import PdfReader
 
 from backend.domains.us.eo14117_flow_review import service as cn_flow_service
 from backend.domains.us.eo14117_flow_review.schema import CNFlowRequest
@@ -67,6 +69,11 @@ def test_cn_flow_generate_report(tmp_path, monkeypatch) -> None:
     assert result.output_files["issue_list_json"].endswith(".json")
     assert result.output_files["evidence_chain_json"].endswith(".json")
     assert result.output_files["trace_manifest"].endswith(".json")
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(result.output_files["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
     assert result.risk_items
 
     manifest = json.loads(Path(result.output_files["trace_manifest"]).read_text(encoding="utf-8"))

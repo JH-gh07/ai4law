@@ -1,8 +1,11 @@
 """Test DPIA service — lower-level components + full 9-agent pipeline."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
+from zipfile import ZipFile
 
 import pytest
+from pypdf import PdfReader
 
 from backend.domains.eu.dpia.schema import DPIARequest, DPIAResult
 from backend.domains.eu.dpia.service import DPIAService
@@ -280,6 +283,11 @@ def test_full_pipeline_all_agents_run() -> None:
     assert result.state == "COMPLETED"
     assert len(result.chapters) == 7
     assert len(result.output_files) > 0
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(result.output_files["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
 
     # All agent outputs must be present
     assert result.need_assessment is not None

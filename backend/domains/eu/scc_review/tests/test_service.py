@@ -376,3 +376,10 @@ def test_output_files_generated():
     assert "markdown" in result.output_files
     assert "findings_json" in result.output_files
     assert result.report_path.endswith(".md")
+    from pathlib import Path
+
+    from pypdf import PdfReader
+
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1

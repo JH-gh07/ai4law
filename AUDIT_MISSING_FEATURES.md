@@ -282,9 +282,15 @@ Checkpoint 2：✅ Render 与 services 相关测试 32 项通过；模块注册�
 
 涉及文件：M07、M10、M11 及各自 service 测试。
 
+- [x] 文档审查通过现有 `ReportService` 持久化并返回有效 PDF，DOCX 主报告契约保持不变。
+- [x] 中国 SCC 输出新增有效 PDF，原 Markdown、DOCX、annotated DOCX 流程保持通过。
+- [x] PIPIA 输出新增有效 PDF，且 ZIP 同时包含原 Markdown、DOCX 和新增 PDF。
+
 #### Task 3.2：中国安全评估
 
 涉及文件：M08 及 renderer/service 测试；验证 PDF、body Markdown 和原 ZIP 全量内容。
+
+- [x] 有效 PDF 与结构化 `body_markdown` 均已恢复，并被原 ZIP 收录；JSON、XLSX、trace 等原产物无减少。
 
 #### Task 3.3：Diagnosis HTML 无损迁移
 
@@ -292,15 +298,22 @@ Checkpoint 2：✅ Render 与 services 相关测试 32 项通过；模块注册�
 
 必须先证明本地待迁移实现会丢列表/表格，再以结构化 Block 解析修复；禁止直接删除旧 HTML 逻辑后再观察结果。
 
+- [x] 核查发现目标版现有实现已经无损处理标题、列表、表格、分隔线与 HTML 转义；用特征测试锁定该行为，按 Ponytail 原则保留目标实现，拒绝无收益替换。
+
 #### Task 3.4：EU DPIA/BCR/SCC/TIA
 
 涉及文件：M12–M15 及四个模块测试；BCR 两条路径分别验收。
+
+- [x] DPIA、EU SCC、TIA 均新增有效 PDF；DPIA/TIA 的原 ZIP 内容只增不减。
+- [x] BCR 表单驱动与文档驱动两条渲染路径分别生成并打包有效 PDF。
 
 #### Task 3.5：US 两个 EO 14117 模块与 CPRA 的间接覆盖
 
 涉及文件：M02、M16 及三个模块测试；验证统一 helper 不改变原有 PDF 内容基本结构。
 
-Checkpoint 3：12 模块矩阵全部有可执行测试证据；原有输出键和 ZIP 条目只增不减。
+- [x] 三个模块均验证 `%PDF`、`pypdf` 可打开及 ZIP 收录；并修复 EO 14117 二次写 ZIP 导致完整包被 DOCX 覆盖的既有缺陷。
+
+Checkpoint 3：✅ 12 模块矩阵全部有可执行测试证据；相关 CN/EU/API/Service 回归 141 项通过，US 三模块回归 45 项通过；原有输出键不减少，ZIP 覆盖缺陷已修复。
 
 ### Phase 4：Harness 重构迁移
 
@@ -424,7 +437,7 @@ git status --short
 | G03 | Backend normalization | 全部共享 cases 通过 | 原始 14/14 Golden Cases 通过 | ✅ |
 | G04 | Frontend normalization | 与后端逐 case 一致 | 待执行 | ⬜ |
 | G05 | Render unit tests | PDF/MD/HTML/DOCX 全通过；未使用 registry 有证据地拒绝 | Render + services 32 项通过 | ✅ |
-| G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 待执行 | ⬜ |
+| G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 12/12 有可执行有效 PDF 证据；CN/EU/API/Service 141 项 + US 45 项通过 | ✅ |
 | G07 | Harness | 11 模块、15 cases 可运行 | 待执行 | ⬜ |
 | G08 | Frontend install | `npm ci` 成功 | 待执行 | ⬜ |
 | G09 | Frontend tests/build | Vitest 与 Vite build 成功 | 待执行 | ⬜ |

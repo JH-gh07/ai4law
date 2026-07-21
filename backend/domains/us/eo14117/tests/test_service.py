@@ -1,6 +1,9 @@
 """Test US 14117 service with all three traffic light scenarios (without LLM)."""
 
+from pathlib import Path
+from zipfile import ZipFile
 
+from pypdf import PdfReader
 from backend.core.resource_paths import report_template_path
 from backend.domains.us.eo14117.schema import US14117Request
 from backend.domains.us.eo14117.service import US14117Service
@@ -445,6 +448,11 @@ def test_output_files_generated() -> None:
     for key in expected_keys:
         assert key in result.output_files, f"Missing output key: {key}"
 
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(result.output_files["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
     assert result.report_path.endswith(".md")
 
 

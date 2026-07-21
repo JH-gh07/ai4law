@@ -157,13 +157,15 @@
       "source_path": "backend/modules/assessment/report_renderer.py",
       "source_change": "M",
       "target_path": "backend/domains/cn/security_assessment/report_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Restored valid PDF and structured body Markdown outputs while preserving official/internal Markdown, DOCX, JSON, XLSX, trace and ZIP members; domain regression passes."
     },
     {
       "source_path": "backend/modules/bcr/service.py",
       "source_change": "M",
       "target_path": "backend/domains/eu/bcr_review/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Both form-driven and document-driven BCR renderers now emit valid PDF files and include them in their existing ZIP bundles; both paths have executable tests."
     },
     {
       "source_path": "backend/modules/cpra/service.py",
@@ -176,37 +178,43 @@
       "source_path": "backend/modules/diagnosis/report_renderer.py",
       "source_change": "M",
       "target_path": "backend/domains/cn/transfer_diagnosis/report_renderer.py",
-      "disposition": "pending"
+      "disposition": "keep-target",
+      "evidence": "The target renderer already preserves headings, lists, tables, dividers and escaping and already emits PDF; a characterization test proves the structured output, so replacing it would add no capability."
     },
     {
       "source_path": "backend/modules/dpia/report_renderer.py",
       "source_change": "M",
       "target_path": "backend/domains/eu/dpia/report_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added a valid PDF from the existing canonical Markdown and included it in the full ZIP without changing DOCX, risk matrix, mitigation, JSON, XLSX, trace or citation outputs."
     },
     {
       "source_path": "backend/modules/eu_scc/service.py",
       "source_change": "M",
       "target_path": "backend/domains/eu/scc_review/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added valid PDF generation from the existing EU SCC Markdown while preserving findings, rule-engine JSON, DOCX, annotated DOCX and canonical citation URLs."
     },
     {
       "source_path": "backend/modules/pipia/service.py",
       "source_change": "M",
       "target_path": "backend/domains/cn/pipia/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added template/fallback PDF generation and verified the valid PDF is included alongside the existing Markdown and DOCX in the ZIP bundle."
     },
     {
       "source_path": "backend/modules/scc/service.py",
       "source_change": "M",
       "target_path": "backend/domains/cn/scc_review/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added valid template-backed PDF output while preserving Markdown, DOCX, annotated DOCX and the full SCC review pipeline."
     },
     {
       "source_path": "backend/modules/tia/service.py",
       "source_change": "M",
       "target_path": "backend/domains/eu/tia/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added valid template-backed PDF output to the TIA result and existing ZIP while retaining Markdown, DOCX, citation map and canonical knowledge URLs."
     },
     {
       "source_path": "backend/services/report_service.py",
@@ -219,7 +227,8 @@
       "source_path": "backend/services/review_service/service.py",
       "source_change": "M",
       "target_path": "backend/domains/cn/document_review/service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "The document review pipeline now persists PDF through the existing public ReportService API and exposes it in async results while preserving DOCX and backward compatibility for historical tasks."
     },
     {
       "source_path": "backend/tests/assessment/cases/01_minimal.json",

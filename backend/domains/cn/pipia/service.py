@@ -589,6 +589,7 @@ class PIPIAService:
         safe_company = safe_filename(company_name)
         md_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.md"
         docx_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.docx"
+        pdf_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.pdf"
         zip_output = output_dir / f"{safe_company}_PIPIA_输出包_草案_{date_stamp}.zip"
         mapping = _build_template_mapping(
             payload,
@@ -613,10 +614,31 @@ class PIPIAService:
                 f"{company_name} PIPIA 报告草案",
                 self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
             )
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        if TEMPLATE_MD.exists():
+            get_pdf_renderer().from_template(
+                pdf_output,
+                f"{company_name} PIPIA 报告草案",
+                TEMPLATE_MD,
+                mapping,
+            )
+        else:
+            get_pdf_renderer().from_sections(
+                pdf_output,
+                f"{company_name} PIPIA 报告草案",
+                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
+            )
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
-        return {"markdown": str(md_output), "docx": str(docx_output), "zip": str(zip_output)}
+            bundle.write(pdf_output, arcname=pdf_output.name)
+        return {
+            "markdown": str(md_output),
+            "docx": str(docx_output),
+            "pdf": str(pdf_output),
+            "zip": str(zip_output),
+        }
 
     @staticmethod
     def _fallback_sections(

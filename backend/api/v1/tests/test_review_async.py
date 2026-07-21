@@ -99,7 +99,14 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
         assert payload["progress"] == 100
         assert payload["error"] is None
         assert payload["result"]["output_files"]["docx"].endswith("review_report.docx")
+        assert payload["result"]["output_files"]["pdf"].endswith("review_report.pdf")
         assert Path(payload["result"]["report_path"]).exists()
+        pdf_path = Path(payload["result"]["output_files"]["pdf"])
+        assert pdf_path.read_bytes().startswith(b"%PDF")
+
+        from pypdf import PdfReader
+
+        assert len(PdfReader(pdf_path).pages) >= 1
 
 
 def test_select_llm_candidates_caps_non_other_clauses() -> None:

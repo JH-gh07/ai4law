@@ -450,14 +450,24 @@ class TIAService:
         base_name = safe_filename(f"{payload.data_exporter_profile}_{payload.transfer_tool}_TIA")
         md_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.md"
         docx_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.docx"
+        pdf_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.pdf"
         zip_output = output_dir / f"{base_name}_输出包_草案_{date_stamp}.zip"
         output_dir.mkdir(parents=True, exist_ok=True)
         mapping = _build_template_mapping(payload, chapters)
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+        from backend.common.render.pdf_renderer import get_pdf_renderer
+
+        get_pdf_renderer().from_template(
+            pdf_output,
+            f"{payload.data_exporter_profile} TIA 报告草案",
+            TEMPLATE_MD,
+            mapping,
+        )
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(docx_output, arcname=docx_output.name)
             bundle.write(md_output, arcname=md_output.name)
+            bundle.write(pdf_output, arcname=pdf_output.name)
         footnote_map = {
             str(num): item.to_dict()
             for num, item in citation_registry.get_footnote_map().items()
@@ -472,6 +482,7 @@ class TIAService:
         return {
             "markdown": str(md_output),
             "docx": str(docx_output),
+            "pdf": str(pdf_output),
             "zip": str(zip_output),
             "citation_map_json": citation_map_json,
         }

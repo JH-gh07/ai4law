@@ -1,4 +1,10 @@
-from backend.domains.eu.tia.schema import TIARequest
+from pathlib import Path
+from zipfile import ZipFile
+
+from pypdf import PdfReader
+
+from backend.common.citation.registry import CitationRegistry
+from backend.domains.eu.tia.schema import TIAChapter, TIARequest
 from backend.domains.eu.tia.service import TIAService
 
 
@@ -84,3 +90,47 @@ def test_tia_citation_bundle_produces_structured_citations() -> None:
     assert bundle.items[0].citation_id.startswith("CIT-EU-GDPR-ART46-")
     assert bundle.items[0].display_label == "GDPR Article 46"
     assert "{{CIT-EU-GDPR-ART46-" in bundle.prompt_block
+
+
+def test_tia_real_renderer_generates_pdf_in_bundle() -> None:
+    service = TIAService()
+    payload = TIARequest.model_validate(
+        {
+            "transfer_tool": "scc",
+            "data_exporter_profile": "EU Exporter A",
+            "data_importer_profile": "US Importer B",
+            "third_country_assessment": "存在政府访问风险",
+            "supplementary_measures": "端到端加密、欧盟境内密钥管理",
+            "final_conclusion": "补充措施生效后可传输",
+            "attachments": [
+                {
+                    "file_role": "transfer_agreement",
+                    "file_name": "agreement.pdf",
+                    "file_format": "pdf",
+                    "storage_uri": "storage://uploads/agreement.pdf",
+                }
+            ],
+        }
+    )
+    chapters = [
+        TIAChapter(
+            chapter_no=1,
+            title="第三国法律评估",
+            content="需要补充技术和组织措施。",
+            risk_level="HIGH",
+        )
+    ]
+
+    outputs = service._render(
+        "test-pdf-output",
+        payload,
+        chapters,
+        [],
+        CitationRegistry(),
+    )
+
+    pdf_path = Path(outputs["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(outputs["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()

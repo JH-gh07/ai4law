@@ -1,9 +1,18 @@
-from backend.domains.eu.bcr_review.schema import BCRRequest
+from pathlib import Path
+from zipfile import ZipFile
+
+from pypdf import PdfReader
+
+from backend.domains.eu.bcr_review.schema import BCRFinding, BCRRequest
 from backend.domains.eu.bcr_review.service import BCRService, _build_template_mapping
 
 
+class _DisabledLLM:
+    enabled = False
+
+
 def test_bcr_generate_report() -> None:
-    service = BCRService()
+    service = BCRService(llm_client=_DisabledLLM())
     payload = BCRRequest.model_validate(
         {
             "company_name": "示例集团",
@@ -36,6 +45,11 @@ def test_bcr_generate_report() -> None:
     assert "_BCR-C_合规审查报告_草案_" in result.report_path
     assert result.output_files["zip"].endswith(".zip")
     assert "_BCR-C_输出包_草案_" in result.output_files["zip"]
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(result.output_files["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
     assert result.rating in {"部分缺失", "高风险", "基本合规"}
     assert len(result.chapters) == 4
     detail_chapter = next((chapter for chapter in result.chapters if chapter.title == "详细审查结果"), None)
@@ -45,7 +59,7 @@ def test_bcr_generate_report() -> None:
 
 
 def test_bcr_template_mapping_uses_markdown_table_for_detailed_findings() -> None:
-    service = BCRService()
+    service = BCRService(llm_client=_DisabledLLM())
     payload = BCRRequest.model_validate(
         {
             "company_name": "示例集团",
@@ -70,3 +84,36 @@ def test_bcr_template_mapping_uses_markdown_table_for_detailed_findings() -> Non
 
     assert mapping["detailed_findings"].startswith("| 检查项 | 主题 | 风险 |")
     assert "| --- | --- | --- | --- | --- | --- |" in mapping["detailed_findings"]
+
+
+def test_bcr_document_driven_renderer_generates_pdf_in_bundle() -> None:
+    service = BCRService(llm_client=_DisabledLLM())
+    payload = BCRRequest.model_validate(
+        {"company_name": "文档审查集团", "review_items": [], "attachments": []}
+    )
+    finding = BCRFinding(
+        finding_id="BCR-TEST-01",
+        requirement_id="BCR-C-1.1",
+        title="约束力不足",
+        risk_level="HIGH",
+        finding="集团内部约束机制不完整。",
+        legal_basis=["GDPR Article 47"],
+        recommendation="补充集团内部约束条款。",
+    )
+    sections = [(f"章节 {index}", ["审查内容"]) for index in range(8)]
+
+    outputs = service._render_document_driven(
+        "document-pdf-output",
+        payload,
+        "高风险",
+        [finding],
+        [],
+        sections,
+        {"bcr_type": "BCR-C"},
+    )
+
+    pdf_path = Path(outputs["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(outputs["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()

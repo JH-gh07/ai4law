@@ -1,4 +1,7 @@
 from pathlib import Path
+from zipfile import ZipFile
+
+from pypdf import PdfReader
 
 from backend.domains.cn.pipia.schema import PIPIARequest
 from backend.domains.cn.pipia.service import PIPIAService
@@ -59,6 +62,11 @@ def test_pipia_generate_report(tmp_path: Path) -> None:
     assert "_PIPIA_报告_草案_" in result.report_path
     assert result.output_files["zip"].endswith(".zip")
     assert "_PIPIA_输出包_草案_" in result.output_files["zip"]
+    pdf_path = Path(result.output_files["pdf"])
+    assert pdf_path.read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(pdf_path).pages) >= 1
+    with ZipFile(result.output_files["zip"]) as bundle:
+        assert pdf_path.name in bundle.namelist()
     assert len(result.chapters) == 7
     assert result.route_type == "scc_filing"
     assert result.consistency_issues == []

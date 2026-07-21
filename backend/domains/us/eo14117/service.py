@@ -452,15 +452,19 @@ class US14117Service:
                 Path(trace_manifest_path).read_text(encoding="utf-8"), encoding="utf-8",
             )
 
-            bundle_files(
-                zip_output,
-                [
-                    md_output, pdf_output, xlsx_output,
-                    issue_json, evidence_json, facts_json, rule_engine_json, trace_dest,
-                ],
-            )
+            bundle_members = [
+                md_output,
+                pdf_output,
+                xlsx_output,
+                issue_json,
+                evidence_json,
+                facts_json,
+                rule_engine_json,
+                trace_dest,
+            ]
             if docx_output.exists():
-                bundle_files(zip_output, [docx_output])
+                bundle_members.append(docx_output)
+            bundle_files(zip_output, bundle_members)
 
             return {
                 "markdown": str(md_output),

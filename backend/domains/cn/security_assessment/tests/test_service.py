@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from zipfile import ZipFile
 
 import openpyxl
+from pypdf import PdfReader
 
 from backend.common.knowledge.v2 import RetrievalBundle
 
@@ -87,13 +88,19 @@ def test_assessment_security_assessment_path_generates_report(monkeypatch, tmp_p
     assert result.output_files["zip"].endswith(".zip")
     assert Path(result.output_files["markdown"]).exists()
     assert Path(result.output_files["docx"]).exists()
+    assert Path(result.output_files["pdf"]).exists()
+    assert Path(result.output_files["body_markdown"]).exists()
     assert Path(result.output_files["zip"]).exists()
     assert Path(result.output_files["trace_manifest"]).exists()
+    assert Path(result.output_files["pdf"]).read_bytes().startswith(b"%PDF")
+    assert len(PdfReader(result.output_files["pdf"]).pages) >= 1
 
     with ZipFile(result.output_files["zip"]) as bundle:
         names = set(bundle.namelist())
     assert Path(result.output_files["markdown"]).name in names
     assert Path(result.output_files["docx"]).name in names
+    assert Path(result.output_files["pdf"]).name in names
+    assert Path(result.output_files["body_markdown"]).name in names
 
     # Phase 7: intermediate artifacts
     assert result.output_files["issue_list_json"].endswith(".json")
