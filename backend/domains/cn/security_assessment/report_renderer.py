@@ -237,7 +237,9 @@ class AssessmentReportRenderer:
             result["compliance_reasoning_md"] = _write_compliance_reasoning_md(compliance_reasoning, output_dir)
 
         if citation_registry is not None:
-            result["citation_map_json"] = _write_citation_map_json(citation_registry, output_dir)
+            result["citation_map_json"] = _write_citation_map_json(
+                citation_registry, output_dir, task_id
+            )
 
         if render_warnings:
             result["render_warnings_txt"] = _write_render_warnings_txt(render_warnings, output_dir)
@@ -638,16 +640,16 @@ def _write_compliance_reasoning_md(compliance_reasoning: list[dict[str, Any]], o
     return str(path)
 
 
-def _write_citation_map_json(citation_registry: "CitationRegistry", output_dir: Path) -> str:
-    import json
+def _write_citation_map_json(
+    citation_registry: "CitationRegistry", output_dir: Path, task_id: str = ""
+) -> str:
+    from backend.common.citation.output import write_citation_map_json
 
     footnote_map = citation_registry.get_footnote_map()
-    payload = {
-        "footnote_map": {
-            str(num): item.to_dict() for num, item in footnote_map.items()
-        },
-        "all_items": citation_registry.to_list(),
-    }
-    path = output_dir / "citation_map.json"
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    return str(path)
+    return write_citation_map_json(
+        output_dir=output_dir,
+        module="assessment",
+        task_id=task_id,
+        footnote_map={str(num): item.to_dict() for num, item in footnote_map.items()},
+        all_items=citation_registry.to_list(),
+    )

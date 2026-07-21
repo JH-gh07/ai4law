@@ -13,7 +13,7 @@ from backend.common.citation.module_grounding import (
     ModuleIssue,
     build_module_citation_bundle,
 )
-from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.output import build_knowledge_url, write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import convert_citation_markers
@@ -389,24 +389,7 @@ class CPRAService:
         )
         citation_registry._items = dict(bundle.registry._items)  # noqa: SLF001
 
-        refs_by_id = {
-            item.citation_id: CPRACitationRef(
-                citation_id=item.citation_id,
-                source_id=item.source_id,
-                source_title=item.title,
-                article_no=item.article_no,
-                display_label=item.display_label,
-                snippet=item.quote_text,
-                confidence_score=item.confidence_score,
-                authority_level=item.authority_level,
-                binding_force=item.binding_force,
-                citation_type=item.citation_type,
-                source_kind=item.source_kind,
-                jurisdiction=item.jurisdiction or "US",
-                knowledge_url="",
-            )
-            for item in bundle.items
-        }
+        refs_by_id = {item.citation_id: _cpra_ref_from_item(item) for item in bundle.items}
         issue_index = {issue.issue_id: issue for issue in issues}
         for gap in gap_items:
             issue_id = gap_issue_ids.get(id(gap))
@@ -667,6 +650,26 @@ class CPRAService:
     def _snapshot_to_status(s: TaskSnapshot) -> CPRAAsyncStatus:
         result = CPRAResult.model_validate(s.result) if s.result else None
         return CPRAAsyncStatus(task_id=s.task_id, module=s.module, state=s.state, attempts=s.attempts, max_attempts=s.max_attempts, created_at=s.created_at, updated_at=s.updated_at, error=s.error, result=result)
+
+
+def _cpra_ref_from_item(item) -> CPRACitationRef:
+    return CPRACitationRef(
+        citation_id=item.citation_id,
+        source_id=item.source_id,
+        source_title=item.title,
+        article_no=item.article_no,
+        display_label=item.display_label,
+        snippet=item.quote_text,
+        confidence_score=item.confidence_score,
+        authority_level=item.authority_level,
+        binding_force=item.binding_force,
+        citation_type=item.citation_type,
+        source_kind=item.source_kind,
+        jurisdiction=item.jurisdiction or "US",
+        knowledge_url=build_knowledge_url(
+            source_id=item.source_id, article_no=item.article_no
+        ) or "",
+    )
 
 
 def _build_template_mapping(payload, chapters, gaps, date_stamp):

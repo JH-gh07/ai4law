@@ -215,17 +215,24 @@ git status --short
 
 涉及文件：`backend/common/citation/tests/test_citation_url_normalization.py`。
 
-验收条件：测试迁入后，在实现迁移前能暴露 assessment/DPIA/CPRA/TIA/EU SCC 的缺口；完成后 33 项全部通过。
+验收条件：测试迁入后，原始 33 项公共契约通过；新增 5 项 domain 链路测试在修复前全部失败、修复后全部通过。
+
+- [x] 原始 33 项测试以标准 `test_*.py` 名称进入默认 pytest 收集。
+- [x] Assessment、DPIA、CPRA、TIA、EU SCC 的真实写入/DTO 链路均有回归测试。
 
 #### Task 1.2：统一 assessment 与 DPIA 的 citation writer
 
 涉及文件：M08、M12 及对应模块测试。
 
+- [x] 两个模块不再私自序列化 `citation_map.json`，统一委托公共 writer，并保留真实 `task_id`。
+
 #### Task 1.3：补 CPRA、TIA、EU SCC 的 `knowledge_url`
+
+- [x] 三个模块的引用 DTO 均通过公共 `build_knowledge_url` 生成规范跳转地址。
 
 涉及文件：M14、M15、M16 及对应模块测试。
 
-Checkpoint 1：citation 专项和相关模块测试全部通过，且原 citation map 字段未减少。
+Checkpoint 1：✅ Citation 目录 65 项通过；五个相关 domain 测试目录 112 项通过；citation map 原字段未减少。
 
 ### Phase 2：统一渲染基础设施
 
@@ -397,7 +404,7 @@ git status --short
 | Gate | 命令/检查 | 预期 | 实际 | 状态 |
 |---|---|---|---|---|
 | G01 | 共同祖先、两个 tip 与本地增量清单 | 15/34 分叉；排除运行产物后 34 A / 21 M / 1 D，共 56 项 | 5 个单元测试通过；Git 复算 56 项通过 | ✅ |
-| G02 | Citation 专项 | 33 项及新增模块断言通过 | 待执行 | ⬜ |
+| G02 | Citation 专项 | 33 项及新增模块断言通过 | 原始 33 + domain 5 通过；Citation 全目录 65 通过；相关 domain 112 通过 | ✅ |
 | G03 | Backend normalization | 全部共享 cases 通过 | 待执行 | ⬜ |
 | G04 | Frontend normalization | 与后端逐 case 一致 | 待执行 | ⬜ |
 | G05 | Render unit tests | PDF/MD/HTML/DOCX/registry 全通过 | 待执行 | ⬜ |

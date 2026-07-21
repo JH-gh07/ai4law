@@ -11,7 +11,7 @@ from backend.common.citation.module_grounding import (
     ModuleIssue,
     build_module_citation_bundle,
 )
-from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.output import build_knowledge_url, write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import convert_citation_markers
@@ -621,5 +621,7 @@ def _tia_ref_from_item(item) -> CPRACitationRef:
         citation_type=item.citation_type,
         source_kind=item.source_kind,
         jurisdiction=item.jurisdiction or "EU",
-        knowledge_url="",
+        knowledge_url=build_knowledge_url(
+            source_id=item.source_id, article_no=item.article_no
+        ) or "",
     )
