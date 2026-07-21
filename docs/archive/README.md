@@ -7,6 +7,7 @@
 - `governance/executed-batches/`：已经完成的仓库治理契约和历史阶段记录；
 - `governance/replaced-active-docs-20260719/`：被 `docs/standards/` 替代的旧工程与治理规范；
 - `design-provenance/`：与模块设计和代码来源相关的历史设计材料；
+- `local-original/`：本地原始 `new` 快照中设计文档的固定提交、Git blob 和逐字恢复入口；
 - 其他 `legacy-*`、`evaluation/` 等目录：事实治理中确认需要追溯的历史材料。
 
 归档材料可能包含旧路径、旧模块名和已经失效的内部链接。它们只描述当时状态，使用前必须与 `docs/standards/`、当前代码和测试核对。

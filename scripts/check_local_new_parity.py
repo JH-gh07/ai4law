@@ -99,6 +99,24 @@ def validate_module_ids(
     return errors
 
 
+def validate_completion(manifest: dict[str, Any], *, root: Path = ROOT) -> list[str]:
+    """Require every source candidate to have evidence and a real target when applicable."""
+    errors: list[str] = []
+    materialized_dispositions = {"archive", "migrate", "rewrite"}
+    for item in manifest.get("items", []):
+        source_path = str(item.get("source_path", ""))
+        disposition = item.get("disposition")
+        target_path = str(item.get("target_path", ""))
+        if disposition == "pending":
+            errors.append(f"manifest item is still pending: {source_path}")
+            continue
+        if disposition in materialized_dispositions and not (root / target_path).is_file():
+            errors.append(f"materialized target missing: {source_path} -> {target_path}")
+        if not str(item.get("evidence", "")).strip():
+            errors.append(f"completion evidence missing: {source_path}")
+    return errors
+
+
 def _git(*args: str) -> str:
     return subprocess.run(
         ["git", *args], cwd=ROOT, check=True, capture_output=True, text=True
@@ -152,13 +170,7 @@ def main() -> int:
     registry = json.loads((ROOT / "config/module_registry.json").read_text(encoding="utf-8"))
     errors.extend(validate_module_ids(manifest, [item["module_id"] for item in registry]))
     if args.require_complete:
-        pending = [
-            item["source_path"]
-            for item in manifest["items"]
-            if item["disposition"] == "pending"
-        ]
-        if pending:
-            errors.append(f"{len(pending)} manifest items are still pending")
+        errors.extend(validate_completion(manifest))
 
     if errors:
         print("Local-new parity check failed:")

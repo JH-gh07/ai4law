@@ -1,5 +1,6 @@
 from scripts.check_local_new_parity import (
     scoped_delta,
+    validate_completion,
     validate_manifest,
     validate_module_ids,
 )
@@ -82,3 +83,55 @@ def test_validate_module_ids_requires_exact_registry_coverage() -> None:
         "module missing from parity manifest: us.cpra",
         "unknown module in parity manifest: eu.dpia",
     ]
+
+
+def test_validate_completion_requires_evidence_and_materialized_targets(tmp_path) -> None:
+    present = tmp_path / "present.py"
+    present.write_text("# present\n", encoding="utf-8")
+    manifest = {
+        "items": [
+            {
+                "source_path": "pending.py",
+                "target_path": "pending.py",
+                "disposition": "pending",
+            },
+            {
+                "source_path": "missing.py",
+                "target_path": "missing.py",
+                "disposition": "rewrite",
+                "evidence": "implemented",
+            },
+            {
+                "source_path": "present.py",
+                "target_path": "present.py",
+                "disposition": "migrate",
+            },
+        ]
+    }
+
+    assert validate_completion(manifest, root=tmp_path) == [
+        "manifest item is still pending: pending.py",
+        "materialized target missing: missing.py -> missing.py",
+        "completion evidence missing: present.py",
+    ]
+
+
+def test_validate_completion_accepts_evidenced_rejection_without_target(tmp_path) -> None:
+    manifest = {
+        "items": [
+            {
+                "source_path": "obsolete.py",
+                "target_path": "obsolete.py",
+                "disposition": "reject-with-evidence",
+                "evidence": "No active consumer exists.",
+            },
+            {
+                "source_path": "removed.toml",
+                "target_path": "removed.toml",
+                "disposition": "keep-target",
+                "evidence": "The target intentionally removed this file.",
+            },
+        ]
+    }
+
+    assert validate_completion(manifest, root=tmp_path) == []

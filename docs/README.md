@@ -12,10 +12,12 @@
 
 ## 活动规范与知识资产
 
-开发和验证只使用以下两份活动规范：
+开发和验证使用以下活动规范：
 
 1. [活动架构与权威源](standards/DataComplyFlow_活动架构与权威源.md)
 2. [开发规范与验证门禁](standards/DataComplyFlow_开发规范与验证门禁.md)
+3. [统一渲染与产物契约](standards/DataComplyFlow_统一渲染与产物契约.md)
+4. [引用跳转与 CitationMap 契约](standards/DataComplyFlow_引用跳转与CitationMap契约.md)
 
 治理经验只保留以下两份知识资产，后续经验在原文内增补，不再按批次新增活动文档：
 

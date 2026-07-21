@@ -25,7 +25,7 @@
 | 前端依赖 | `frontend/package.json`、`frontend/package-lock.json` | `node_modules`、`dist` 不提交 |
 | 运行配置定义 | `backend/core/settings.py`、`backend/core/runtime_settings.py` | 密钥只进入环境变量或被忽略的本地配置 |
 | 模块稳定身份 | `config/module_registry.json` | 不生成 FastAPI Router |
-| 后端业务实现 | `backend/domains/{cn,eu,us}/` | 不恢复历史 `backend/modules/` |
+| 后端业务实现 | `backend/domains/{cn,eu,us}/` | 不恢复已退役的旧模块根 |
 | LLM / RAG | `backend/common/llm/`、`backend/common/rag/service.py` | 模块不得复制公共 Client 或 Retriever |
 | 法规来源与条款语料 | `resources/legal/` | Benchmark 数据不得进入生产索引 |
 | 静态规则 | `resources/rules/` | 当前 `cn/review_rulebook.json` 被生产代码读取 |

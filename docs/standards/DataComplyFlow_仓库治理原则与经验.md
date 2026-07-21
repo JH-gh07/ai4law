@@ -84,7 +84,7 @@
 ### 7.1 结构事实
 
 - 审计分支：`codex/repository-structure-governance-20260713`；起点提交：`b3c22bd6ccfeeb1ee913dd00318abe06d0d6cca2`。
-- 活动源码与资产根已收敛为 `backend/`、`frontend/`、`benchmarks/`、`config/`、`resources/`、`scripts/` 和 `docs/`；`doc/`、`paper/`、`qa/`、`ai_engine/`、`backend/modules/`、两套旧文档规范目录和设计稿 integrations 均已退出。
+- 活动源码与资产根已收敛为 `backend/`、`frontend/`、`benchmarks/`、`config/`、`resources/`、`scripts/` 和 `docs/`；旧文档根、旧研究根、旧法域模块根、两套旧文档规范目录和设计稿 integrations 均已退出。
 - 完整应用路由基线为 104 个显式 Method + Path：`/health` 1 个、`/api/v0` 7 个、`/api/v1` 96 个；重复路由检测通过。
 - 模块注册表包含 12 个稳定身份：CN 5 个、EU 4 个、US 3 个；其中 11 个 `active`，`us.eo_14117_flow_review` 为 1 个明确记录的 `legacy-compatible` 边界。
 - 活动文档只保留 `standards/`、`handoff/`、`archive/` 三层；开发规范 2 份，治理知识资产 2 份。

@@ -60,7 +60,8 @@
       "source_path": "CODE_MODULE_ARCHITECTURE.md",
       "source_change": "A",
       "target_path": "docs/archive/local-original/CODE_MODULE_ARCHITECTURE.md",
-      "disposition": "pending"
+      "disposition": "archive",
+      "evidence": "Archived a provenance pointer pinned to source commit ab4be94, exact blob 145430be and byte count; current domains architecture remains in docs/standards."
     },
     {
       "source_path": "backend/common/citation/tests/verify_citation_url_fix.py",
@@ -353,25 +354,29 @@
       "source_path": "doc/AI4Law 下一阶段业务逻辑.md",
       "source_change": "M",
       "target_path": "docs/archive/local-original/AI4Law_下一阶段业务逻辑.md",
-      "disposition": "pending"
+      "disposition": "archive",
+      "evidence": "Archived an exact commit/blob/size recovery pointer; historical product plans remain traceable without being presented as implemented behavior."
     },
     {
       "source_path": "doc/RENDER_ARCHITECTURE_REFERENCE.md",
       "source_change": "A",
       "target_path": "docs/archive/local-original/RENDER_ARCHITECTURE_REFERENCE.md",
-      "disposition": "pending"
+      "disposition": "archive",
+      "evidence": "Archived an exact Git provenance pointer and migrated only tested render contracts into the active unified-render standard."
     },
     {
       "source_path": "doc/arch/citation-url-flow.md",
       "source_change": "A",
       "target_path": "docs/standards/DataComplyFlow_引用跳转与CitationMap契约.md",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Rewrote the citation flow against current backend/domains and API paths without stale line numbers; documents common write/read normalization and frontend fallback semantics."
     },
     {
       "source_path": "frontend/DESIGN.md",
       "source_change": "A",
       "target_path": "docs/archive/local-original/frontend_DESIGN.md",
-      "disposition": "pending"
+      "disposition": "archive",
+      "evidence": "Archived a pinned blob recovery pointer; current frontend entry points and PDF preview behavior are documented in active standards."
     },
     {
       "source_path": "frontend/package-lock.json",
@@ -419,7 +424,8 @@
       "source_path": "plan/rendering_architecture_plan.md",
       "source_change": "A",
       "target_path": "docs/archive/local-original/rendering_architecture_plan.md",
-      "disposition": "pending"
+      "disposition": "archive",
+      "evidence": "Archived a pinned commit/blob/size recovery pointer; AUDIT_MISSING_FEATURES.md and the final handoff report supersede the historical implementation plan."
     }
   ]
 }

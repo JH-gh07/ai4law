@@ -14,6 +14,7 @@
 | RAG 检索 Benchmark | `uv run --frozen python scripts/run_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/` |
 | 保存检索回归快照 | `uv run --frozen python scripts/snapshot_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/regression/` |
 | 仓库卫生检查 | `uv run --frozen python scripts/check_repository_hygiene.py` | 只读检查受治理文件 |
+| 本地 new 迁移完整性 | `uv run --frozen python scripts/check_local_new_parity.py --require-complete` | 核对固定 Git 增量、56 项处置证据和实体目标 |
 | Cloud Studio 启动 | `bash scripts/cloud_studio_start.sh` | 由 `.vscode/preview.yml` 调用 |
 
 ## 生命周期规则

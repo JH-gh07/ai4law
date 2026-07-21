@@ -1,11 +1,36 @@
 import time
+from importlib import import_module
 from io import BytesIO
 
 from fastapi.testclient import TestClient
+import pytest
 
+from backend.api.v0.task_gateway.service import V0TaskGatewayService
+from backend.common.llm.client import LLMClient
+from backend.core.settings import Settings
+from backend.integrations.delilegal import DeliLegalService
 from backend.main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def isolated_gateway(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    settings = Settings(
+        llm_provider="none",
+        llm_api_key=None,
+        siliconflow_api_key=None,
+        tencent_api_key=None,
+        delilegal_app_id=None,
+        delilegal_secret=None,
+        storage_dir=tmp_path / "storage",
+    )
+    gateway = V0TaskGatewayService(
+        llm_client=LLMClient(settings),
+        legal_api_service=DeliLegalService(settings),
+    )
+    router_module = import_module("backend.api.v0.task_gateway.router")
+    monkeypatch.setattr(router_module, "service", gateway)
 
 
 def test_v0_task_gateway_assessment_flow() -> None:

@@ -126,7 +126,7 @@
 | M01 | `backend/common/llm/postprocess.py` | Golden Cases 加载与执行 | 要改为自动测试入口，且与前端共享同一 cases 文件 |
 | M02 | `backend/common/render/artifacts.py` | 旧调用统一委托 `PdfRenderer` | 必须保留现有 XLSX、bundle 等公共能力 |
 | M03 | `backend/services/report_service.py` | PDF 从 Canvas 改为统一 Markdown 渲染 | 要保持持久化、owner、preview 和路径契约不变 |
-| M04 | `frontend/package.json` | 增加 `jit-pdf` | 必须同步 lockfile、CSS 和许可证/构建验证 |
+| M04 | `frontend/package.json` | 原分支尝试增加 `jit-pdf` | 经审查拒绝：重试失效且依赖损坏 lockfile；复用现有 Artifact API 与原生 PDF |
 | M05 | `frontend/src/lib/fallback-markdown.ts` | 前端规范化行为 | 必须由共享 Golden Cases 验证，不接受仅靠注释“对称” |
 | M06 | `frontend/src/components/workspace/WorkspaceShell.tsx` | Markdown/PDF 双视图 | 要删除冗余 Blob 请求并稳定 headers/effect 依赖 |
 | M07 | `backend/domains/cn/document_review/service.py` | 生成并持久化 PDF 产物 | 保留现有 DOCX/JSON/annotated DOCX 流程 |
@@ -149,7 +149,7 @@ X01—X03 对应原始本地增量中的直接候选，但不能整文件复制�
 | ID | 计划文件 | 作用 |
 |---|---|---|
 | X01 | `.gitignore` | 加入 `runs/`，防止 Harness 运行结果污染源码状态 |
-| X02 | `frontend/package-lock.json` | 锁定 `jit-pdf` 及其传递依赖，确保 `npm ci` 成功 |
+| X02 | `frontend/package-lock.json` | 保留远程重构版依赖图，用 `npm ci` 验证，不复制损坏的本地 rebase 锁文件 |
 | X03 | `frontend/src/styles/app/workspace.css` | 补 PDF viewer shell、loading、error、toolbar 容器和双视图 tab 样式 |
 | X04 | `frontend/src/components/common/PdfViewer.test.tsx` | 覆盖成功加载、HTTP 失败、SDK 失败、重试、卸载清理 |
 | X05 | `frontend/src/lib/fallback-markdown.test.ts` | 读取共享 Golden Cases 验证前端规范化 |
@@ -384,6 +384,9 @@ Checkpoint 5：✅ `npm ci`、Vitest 34/34、TypeScript 与 Vite 生产构建均
 
 验收：活动文档中不存在 `backend/modules/` 或 `/Users/...`；历史原文仍可追溯。
 
+- [x] 5 份历史原文均记录固定来源提交、完整 Git blob、字节数和逐字恢复命令；blob 校验 5/5 通过。
+- [x] 当前渲染/产物与 CitationMap 契约已迁入 `docs/standards/`，路径和模块身份按 domains 架构重写。
+
 #### Task 6.2：全量回归和验收报告
 
 涉及文件：X12、X16。
@@ -402,6 +405,9 @@ git status --short
 ```
 
 如果单次全量测试受平台问题中断，必须记录原因并按目录分组执行全部测试；不得把“命令超时”写成“测试通过”。
+
+- [x] 首轮全量捕获 v0 网关测试读取本机 LLM 配置导致的超时；完成依赖注入隔离后，第二轮后端 451/451 通过。
+- [x] 最终验收报告已记录逐项处置、拒绝理由、失败修复轨迹与浏览器人工检查边界。
 
 ---
 
@@ -438,7 +444,7 @@ git status --short
 | PDF 只有路径、文件无效 | 阻断 | 文件签名 + pypdf 打开检查 |
 | Citation 专项未被默认 pytest 收集 | 阻断 | 使用标准 `test_*.py` 文件名并核对 collected tests |
 | 活动文档继续指向旧目录 | 高 | 文档静态检查失败 |
-| `jit-pdf` bundle/依赖显著增加 | 中 | 保持动态加载，记录构建产物大小和许可证 |
+| 第三方 PDF viewer 增加依赖面或重试失效 | 中 | 已拒绝 `jit-pdf`，复用鉴权 Artifact API 与浏览器原生 PDF，并以组件测试锁定重试/清理 |
 | ArtifactRegistry 引入路径穿越 | 高 | task/module 输入校验和安全测试 |
 | 本地运行数据被误删 | 阻断 | 只增加 ignore，不删除现有 `runs/`、storage 或 trace |
 
@@ -457,12 +463,12 @@ git status --short
 | G07 | Harness | 11 模块、15 cases 可运行 | 15/15 no-LLM 案例通过；4 项契约测试通过；原始案例 blob 15/15 一致 | ✅ |
 | G08 | Frontend install | `npm ci` 成功 | 292 packages installed，0 vulnerabilities | ✅ |
 | G09 | Frontend tests/build | Vitest 与 Vite build 成功 | Vitest 34/34；tsc + Vite build 成功 | ✅ |
-| G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 待执行 | ⬜ |
-| G11 | Repository hygiene | 通过 | 待执行 | ⬜ |
-| G12 | Git scope | 无意外文件、无 secrets、`git diff --check` 通过 | 待执行 | ⬜ |
+| G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 首轮 450 pass/1 fail；隔离外部 LLM 后 451/451 通过 | ✅ |
+| G11 | Repository hygiene | 通过 | 976 个仓库文件检查通过；parity 56/56 且零 pending | ✅ |
+| G12 | Git scope | 无意外文件、无 secrets、`git diff --check` 通过 | `git diff --check` 通过；最终仅用户自有 `plan/` 保持 untracked | ✅ |
 
 ---
 
 ## 10. 当前结论
 
-本文件已经把“本地完整 `new` 的 15 个功能提交”转换为面向团队重构架构的迁移任务。当前只完成计划与审计口径修正，尚未修改业务代码，也尚未把任何 Gate 标记为通过。人工确认本清单后，按 Phase 0 → Phase 6 顺序实施。
+本地原始 `new` 的 56 个源码候选已经全部结案并迁入团队 domains 重构底版：18 项迁移、25 项重写、5 项保留目标实现、5 项归档、3 项有证据拒绝，机器清单零 pending。12 模块 PDF/Citation/原输出矩阵、15 个 Harness 案例、前后端 Golden Cases、前端构建和后端 451 项全量测试均已通过。唯一未自动执行的是当前工具环境不具备的真实浏览器控制台检查，已在验收报告中保留为明确人工合并项。

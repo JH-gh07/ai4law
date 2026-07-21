@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import UploadFile
 
@@ -35,6 +35,10 @@ from backend.api.v0.task_gateway.schema import (
     V0UploadedFileData,
 )
 
+if TYPE_CHECKING:
+    from backend.common.llm.client import LLMClient
+    from backend.integrations.delilegal import DeliLegalService
+
 
 @dataclass
 class _TaskRef:
@@ -45,14 +49,27 @@ class _TaskRef:
 class V0TaskGatewayService:
     """Unified task gateway for v0 API."""
 
-    def __init__(self) -> None:
-        self.assessment = AssessmentService()
-        self.pipia = PIPIAService()
-        self.bcr = BCRService()
-        self.dpia = DPIAService()
-        self.tia = TIAService()
-        self.cn_flow = CNFlowService()
-        self.cpra = CPRAService()
+    def __init__(
+        self,
+        *,
+        llm_client: LLMClient | None = None,
+        legal_api_service: DeliLegalService | None = None,
+    ) -> None:
+        if llm_client is None:
+            from backend.common.llm.client import LLMClient as _LLMClient
+            from backend.core.settings import get_settings
+
+            llm_client = _LLMClient(get_settings())
+        self.assessment = AssessmentService(
+            llm_client=llm_client,
+            legal_api_service=legal_api_service,
+        )
+        self.pipia = PIPIAService(llm_client=llm_client)
+        self.bcr = BCRService(llm_client=llm_client)
+        self.dpia = DPIAService(llm_client=llm_client)
+        self.tia = TIAService(llm_client=llm_client)
+        self.cn_flow = CNFlowService(llm_client=llm_client)
+        self.cpra = CPRAService(llm_client=llm_client)
         self._task_refs: dict[str, _TaskRef] = {}
         self._artifact_index: dict[str, Path] = {}
         self._file_index: dict[str, Path] = {}
