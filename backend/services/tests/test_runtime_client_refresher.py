@@ -34,8 +34,10 @@ def test_async_modules_bind_submission_provider_snapshot(service_class: str) -> 
     module_name, class_name = service_class.split(":", maxsplit=1)
     module = __import__(module_name, fromlist=[class_name])
     method = getattr(getattr(module, class_name), "submit_async")
+    source = inspect.getsource(method)
 
-    assert "llm_client=self.llm_client" in inspect.getsource(method)
+    assert "llm_client=self.llm_client" in source
+    assert 'input_snapshot=payload.model_dump(mode="json")' in source
 
 
 def test_runtime_refresh_rebinds_all_module_llm_consumers(tmp_path) -> None:

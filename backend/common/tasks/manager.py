@@ -5,7 +5,9 @@ from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock
+import time
 from typing import Any, Callable
 
 
@@ -25,6 +27,7 @@ class TaskSnapshot:
     error: str | None
     result: dict[str, Any] | None
     provider_snapshot: dict[str, Any] | None
+    manifest_path: str | None
 
 
 @dataclass
@@ -40,6 +43,10 @@ class _TaskRecord:
     result: dict[str, Any] | None
     runner: Callable[[], Any]
     provider_snapshot: dict[str, Any] | None
+    input_snapshot: Any
+    trace_recorder: Any | None
+    manifest_path: Path | None
+    created_monotonic: float
 
 
 class InMemoryTaskManager:
@@ -75,6 +82,10 @@ class InMemoryTaskManager:
             result=None,
             runner=wrapped_runner,
             provider_snapshot=provider_snapshot,
+            input_snapshot={},
+            trace_recorder=None,
+            manifest_path=None,
+            created_monotonic=time.monotonic(),
         )
         with self._lock:
             self._tasks[task_id] = record
@@ -87,6 +98,7 @@ class InMemoryTaskManager:
         trace_recorder: Any,  # TraceRecorder
         max_attempts: int = 2,
         llm_client: Any | None = None,
+        input_snapshot: Any = None,
     ) -> TaskSnapshot:
         """提交任务并绑定 TraceRecorder 用于事件推送。"""
         now = _utc_now_iso()
@@ -131,9 +143,14 @@ class InMemoryTaskManager:
             result=None,
             runner=wrapped_runner,
             provider_snapshot=provider_snapshot,
+            input_snapshot=input_snapshot if input_snapshot is not None else {},
+            trace_recorder=trace_recorder,
+            manifest_path=trace_recorder.trace_dir.parent / "run_manifest.json",
+            created_monotonic=time.monotonic(),
         )
         with self._lock:
             self._tasks[task_id] = record
+        self._persist_manifest(record)
 
         # 必须先发布 CREATED 再启动线程，保证历史事件顺序稳定。
         from backend.common.trace.events import RunEvent
@@ -176,6 +193,7 @@ class InMemoryTaskManager:
             record.updated_at = _utc_now_iso()
             record.error = None
             record.result = None
+        self._persist_manifest(record)
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
@@ -188,6 +206,7 @@ class InMemoryTaskManager:
                 return self._snapshot(record)
             record.state = "CANCELED"
             record.updated_at = _utc_now_iso()
+        self._persist_manifest(record)
         return self.get_or_raise(task_id)
 
     def _execute(self, task_id: str) -> None:
@@ -212,15 +231,11 @@ class InMemoryTaskManager:
                 summary=f"任务开始执行 ({self.module})",
                 detail={"module": self.module, "state": "RUNNING"},
             ))
+        self._persist_manifest(record)
 
         try:
             result = record.runner()
-            trace_recorder = None
-            try:
-                from backend.common.trace.context import current_trace
-                trace_recorder = current_trace.get()
-            except Exception:
-                trace_recorder = None
+            trace_recorder = record.trace_recorder
             if hasattr(result, "model_dump"):
                 payload = result.model_dump()  # pydantic model
             elif isinstance(result, dict):
@@ -298,7 +313,11 @@ class InMemoryTaskManager:
                     summary=f"任务执行完成 ({self.module})",
                     detail={"module": self.module, "state": "COMPLETED"},
                 ))
+            if trace_recorder is not None:
+                trace_recorder.write_manifest()
+            self._persist_manifest(current)
         except Exception as exc:
+            trace_recorder = record.trace_recorder
             try:
                 from backend.common.trace.finalization import build_failure_events
 
@@ -326,6 +345,32 @@ class InMemoryTaskManager:
                     summary=f"任务执行失败: {exc}",
                     detail={"module": self.module, "state": "FAILED", "error": str(exc)},
                 ))
+            if trace_recorder is not None:
+                trace_recorder.write_manifest()
+            self._persist_manifest(current)
+
+    @staticmethod
+    def _persist_manifest(record: _TaskRecord) -> None:
+        if record.manifest_path is None or record.trace_recorder is None:
+            return
+        from backend.common.runtime.run_manifest import write_run_manifest
+
+        write_run_manifest(
+            record.manifest_path,
+            run_id=record.task_id,
+            module=record.module,
+            status=record.state,
+            created_at=record.created_at,
+            updated_at=record.updated_at,
+            attempts=record.attempts,
+            max_attempts=record.max_attempts,
+            duration_ms=int((time.monotonic() - record.created_monotonic) * 1000),
+            provider_snapshot=record.provider_snapshot,
+            input_snapshot=record.input_snapshot,
+            result=record.result,
+            error=record.error,
+            trace_recorder=record.trace_recorder,
+        )
 
     @staticmethod
     def _bind_llm_snapshot(
@@ -370,4 +415,5 @@ class InMemoryTaskManager:
             error=record.error,
             result=record.result,
             provider_snapshot=record.provider_snapshot,
+            manifest_path=str(record.manifest_path) if record.manifest_path else None,
         )

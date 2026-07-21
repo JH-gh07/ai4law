@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+from typing import Any
+
+
+def _canonical_hash(value: Any) -> str:
+    encoded = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _input_artifacts(value: Any) -> list[dict[str, str]]:
+    artifacts: list[dict[str, str]] = []
+
+    def visit(item: Any) -> None:
+        if isinstance(item, dict):
+            artifact = {
+                key: str(item[key])
+                for key in ("file_name", "file_role", "storage_uri", "file_format")
+                if item.get(key) not in (None, "")
+            }
+            if artifact and ("file_name" in artifact or "storage_uri" in artifact):
+                artifacts.append(artifact)
+            for child in item.values():
+                visit(child)
+        elif isinstance(item, list):
+            for child in item:
+                visit(child)
+
+    visit(value)
+    return artifacts
+
+
+def summarize_input(value: Any) -> dict[str, Any]:
+    payload = value if isinstance(value, dict) else {"value": value}
+    return {
+        "sha256": _canonical_hash(payload),
+        "fields": sorted(str(key) for key in payload),
+        "artifacts": _input_artifacts(payload),
+    }
+
+
+def summarize_output(value: Any) -> dict[str, Any]:
+    payload = value if isinstance(value, dict) else {}
+    artifacts: list[dict[str, str]] = []
+    report_path = payload.get("report_path")
+    if isinstance(report_path, str) and report_path.strip():
+        artifacts.append({"role": "report", "path": report_path})
+    output_files = payload.get("output_files")
+    if isinstance(output_files, dict):
+        for role, path in output_files.items():
+            if isinstance(path, str) and path.strip():
+                artifact = {"role": str(role), "path": path}
+                if artifact not in artifacts:
+                    artifacts.append(artifact)
+    return {
+        "fields": sorted(str(key) for key in payload),
+        "artifacts": artifacts,
+    }
+
+
+def summarize_trace(trace_recorder: Any) -> dict[str, Any]:
+    tokens = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
+    llm_calls = 0
+    fallback_count = 0
+    events = list(getattr(trace_recorder, "_events", []) or [])
+    for event in events:
+        try:
+            raw = json.loads(Path(event.path).read_text(encoding="utf-8"))
+        except (OSError, ValueError, TypeError):
+            continue
+        payload = raw.get("payload") if isinstance(raw, dict) else {}
+        detail = payload.get("detail") if isinstance(payload, dict) else {}
+        if not isinstance(detail, dict) or detail.get("tool") != "llm_chat":
+            continue
+        if raw.get("name") == "tool_result":
+            llm_calls += 1
+        if detail.get("fallback") is True:
+            fallback_count += 1
+        usage = detail.get("usage")
+        if isinstance(usage, dict):
+            for key in tokens:
+                value = usage.get(key)
+                if isinstance(value, int):
+                    tokens[key] += value
+    return {
+        "event_count": len(events),
+        "trace_manifest": str(trace_recorder.trace_dir / "manifest.json"),
+        "llm_calls": llm_calls,
+        "tokens": tokens,
+        "fallback_count": fallback_count,
+    }
+
+
+def write_run_manifest(
+    path: Path,
+    *,
+    run_id: str,
+    module: str,
+    status: str,
+    created_at: str,
+    updated_at: str,
+    attempts: int,
+    max_attempts: int,
+    duration_ms: int,
+    provider_snapshot: dict[str, Any] | None,
+    input_snapshot: Any,
+    result: Any,
+    error: str | None,
+    trace_recorder: Any,
+) -> Path:
+    payload = {
+        "schema_version": "1.0",
+        "run_id": run_id,
+        "module": module,
+        "status": status,
+        "created_at": created_at,
+        "updated_at": updated_at,
+        "duration_ms": max(0, int(duration_ms)),
+        "attempts": attempts,
+        "max_attempts": max_attempts,
+        "provider_snapshot": provider_snapshot,
+        "input": summarize_input(input_snapshot),
+        "output": summarize_output(result),
+        "observability": summarize_trace(trace_recorder),
+        "error": error,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, default=str),
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    return path

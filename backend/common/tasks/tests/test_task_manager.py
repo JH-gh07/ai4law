@@ -1,4 +1,5 @@
 import time
+import json
 from dataclasses import dataclass
 from threading import Event
 
@@ -110,3 +111,63 @@ def test_task_keeps_submission_provider_snapshot_across_runtime_change() -> None
         "provider_id": "provider-a",
         "fingerprint": "fp-provider-a",
     }
+
+
+def test_traced_task_persists_a_sanitized_run_manifest(tmp_path) -> None:
+    manager = InMemoryTaskManager(module="ut")
+    recorder = TraceRecorder(tmp_path / "run" / "trace", task_id="manifest-task")
+    client = _FakeLLMClient("provider-a")
+
+    def runner() -> dict[str, object]:
+        recorder.record(
+            "tool_result",
+            {
+                "summary": "模型返回",
+                "detail": {
+                    "tool": "llm_chat",
+                    "usage": {
+                        "prompt_tokens": 11,
+                        "completion_tokens": 7,
+                        "total_tokens": 18,
+                    },
+                },
+            },
+        )
+        return {
+            "report_path": "/tmp/report.md",
+            "output_files": {"docx": "/tmp/report.docx"},
+        }
+
+    accepted = manager.submit_with_trace(
+        runner,
+        recorder,
+        llm_client=client,
+        input_snapshot={
+            "company_name": "Highly Sensitive Co",
+            "uploaded_files": [
+                {"file_name": "contract.docx", "storage_uri": "storage://contract"}
+            ],
+        },
+    )
+    wait_until_terminal(manager, accepted.task_id)
+
+    manifest_path = tmp_path / "run" / "run_manifest.json"
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    manifest = json.loads(manifest_text)
+    assert manifest["schema_version"] == "1.0"
+    assert manifest["run_id"] == "manifest-task"
+    assert manifest["status"] == "COMPLETED"
+    assert manifest["provider_snapshot"]["provider_id"] == "provider-a"
+    assert manifest["input"]["fields"] == ["company_name", "uploaded_files"]
+    assert manifest["input"]["artifacts"] == [
+        {"file_name": "contract.docx", "storage_uri": "storage://contract"}
+    ]
+    assert manifest["output"]["artifacts"] == [
+        {"role": "report", "path": "/tmp/report.md"},
+        {"role": "docx", "path": "/tmp/report.docx"},
+    ]
+    assert manifest["observability"]["event_count"] >= 1
+    assert manifest["observability"]["llm_calls"] == 1
+    assert manifest["observability"]["tokens"]["total_tokens"] == 18
+    assert manifest["duration_ms"] >= 0
+    assert "Highly Sensitive Co" not in manifest_text

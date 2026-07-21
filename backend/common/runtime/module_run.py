@@ -43,12 +43,10 @@ def prepare_run(
 
 def finalize_run(token: contextvars.Token[TraceRecorder | None] | None) -> None:
     """回滚 contextvar 并落盘 trace manifest。"""
+    trace = current_trace.get()
     if token is not None:
         current_trace.reset(token)
 
-    # manifest 由 TraceRecorder.write_manifest 负责
-    # 这里做一个 best-effort：如果可以从 contextvar 拿到当前 trace，写 manifest
-    trace = current_trace.get()
     if trace is not None:
         try:
             trace.write_manifest()

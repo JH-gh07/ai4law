@@ -412,6 +412,7 @@ class CPRAService:
             runner=lambda: self.generate_report(payload, task_id=task_id, trace=trace_recorder),
             trace_recorder=trace_recorder,
             llm_client=self.llm_client,
+            input_snapshot=payload.model_dump(mode="json"),
         )
         return self._snapshot_to_accepted(snapshot)
 

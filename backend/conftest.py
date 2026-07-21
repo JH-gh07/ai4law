@@ -14,6 +14,7 @@ def authenticated_client(tmp_path: Path) -> Iterator[TestClient]:
     settings = Settings(
         database_url=f"sqlite:///{tmp_path / 'api_test.db'}",
         storage_dir=tmp_path / "storage",
+        _env_file=None,
     )
     app = create_app(settings)
 

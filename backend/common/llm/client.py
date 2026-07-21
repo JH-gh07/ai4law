@@ -185,13 +185,12 @@ class LLMClient:
 
         if not self._enabled:
             logger.warning("LLMClient: API key not configured for provider %s, returning fallback text.", self._provider)
-            return {
-                "content": _FALLBACK_MESSAGE,
-                "usage": LLMUsage(usage_source="unavailable").as_dict(),
-                "fallback": True,
-                "error": "API key is not configured",
-                "error_type": "NotConfigured",
-            }
+            return self._fallback_metadata(
+                trace=trace,
+                channel=channel,
+                error="API key is not configured",
+                error_type="NotConfigured",
+            )
 
         client = self._ensure_client()
         if client is None:
@@ -200,13 +199,12 @@ class LLMClient:
                 self._provider_id,
                 self._client_init_error or "unknown_error",
             )
-            return {
-                "content": _FALLBACK_MESSAGE,
-                "usage": LLMUsage(usage_source="unavailable").as_dict(),
-                "fallback": True,
-                "error": self._client_init_error or "Provider client is unavailable",
-                "error_type": "ClientUnavailable",
-            }
+            return self._fallback_metadata(
+                trace=trace,
+                channel=channel,
+                error=self._client_init_error or "Provider client is unavailable",
+                error_type="ClientUnavailable",
+            )
 
         try:
             response = client.chat.completions.create(
@@ -235,6 +233,7 @@ class LLMClient:
                             "base_url": self._api_url,
                             "model": self._model,
                             "usage": usage.as_dict(),
+                            "fallback": False,
                             "content": content[:1200],
                             "raw_name": "llm_chat_response",
                         },
@@ -247,22 +246,61 @@ class LLMClient:
             }
         except APIError as exc:
             logger.error("LLMClient API error: %s", exc)
-            return {
-                "content": _FALLBACK_MESSAGE,
-                "usage": LLMUsage(usage_source="unavailable").as_dict(),
-                "fallback": True,
-                "error": str(exc),
-                "error_type": type(exc).__name__,
-            }
+            return self._fallback_metadata(
+                trace=trace,
+                channel=channel,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
         except Exception as exc:
             logger.error("LLMClient unexpected error: %s", exc)
-            return {
-                "content": _FALLBACK_MESSAGE,
-                "usage": LLMUsage(usage_source="unavailable").as_dict(),
-                "fallback": True,
-                "error": str(exc),
-                "error_type": type(exc).__name__,
-            }
+            return self._fallback_metadata(
+                trace=trace,
+                channel=channel,
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
+
+    def _fallback_metadata(
+        self,
+        *,
+        trace: Any | None,
+        channel: str,
+        error: str,
+        error_type: str,
+    ) -> dict[str, object]:
+        usage = LLMUsage(usage_source="unavailable").as_dict()
+        if trace is not None:
+            trace.record(
+                "tool_result",
+                {
+                    "summary": "模型调用降级",
+                    "level": "audit",
+                    "detail": {
+                        "tool": "llm_chat",
+                        "channel": channel,
+                        "provider": self._provider,
+                        "provider_id": self._provider_id,
+                        "provider_name": self._provider_name,
+                        "provider_type": self._provider_type,
+                        "base_url": self._api_url,
+                        "model": self._model,
+                        "usage": usage,
+                        "fallback": True,
+                        "severity": "warning",
+                        "error": error,
+                        "error_type": error_type,
+                        "raw_name": "llm_chat_fallback",
+                    },
+                },
+            )
+        return {
+            "content": _FALLBACK_MESSAGE,
+            "usage": usage,
+            "fallback": True,
+            "error": error,
+            "error_type": error_type,
+        }
 
     def discover_models(self) -> dict[str, object]:
         """Probe the OpenAI-compatible models endpoint without assuming support."""

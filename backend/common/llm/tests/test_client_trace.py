@@ -84,3 +84,24 @@ def test_live_client_delegates_to_task_scoped_frozen_client(monkeypatch) -> None
 
     assert result["content"] == "snapshot-result"
     assert calls == ["frozen"]
+
+
+def test_fallback_is_recorded_as_a_model_result_for_manifest_accounting(
+    tmp_path: Path,
+) -> None:
+    client = LLMClient(Settings(_env_file=None))
+    recorder = TraceRecorder(tmp_path / "fallback-trace", task_id="fallback-task")
+    token = current_trace.set(recorder)
+    try:
+        result = client.chat_with_metadata(system="s", user="u")
+    finally:
+        current_trace.reset(token)
+
+    event = __import__("json").loads(
+        (tmp_path / "fallback-trace" / "002_tool_result.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert result["fallback"] is True
+    assert event["payload"]["detail"]["fallback"] is True
+    assert event["payload"]["detail"]["usage"]["usage_source"] == "unavailable"
