@@ -1,6 +1,9 @@
 """Test DPIA async API endpoints with the new DPIARequest schema."""
 import time
 
+from backend.domains.eu.dpia import router as dpia_router
+from backend.domains.eu.dpia.service import DPIAService
+
 
 _VALID_PAYLOAD = {
     "project_name": "DPIA异步测试项目",
@@ -25,7 +28,11 @@ _VALID_PAYLOAD = {
 }
 
 
-def test_dpia_async_flow(authenticated_client) -> None:
+def test_dpia_async_flow(authenticated_client, monkeypatch) -> None:
+    # Unit/integration tests must not inherit developer API keys from .env.
+    # Live-provider checks use a separate explicit, budgeted test path.
+    monkeypatch.setattr(dpia_router, "service", DPIAService(llm_client=None))
+
     accepted = authenticated_client.post("/api/v1/dpia/generate_async", json=_VALID_PAYLOAD)
     assert accepted.status_code == 200
     data = accepted.json()
