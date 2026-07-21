@@ -41,27 +41,20 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
   const confidencePct = (citation.confidence_score * 100).toFixed(0);
   const thresholdPct = (citation.confidence_threshold * 100).toFixed(0);
   const confidencePassed = citation.confidence_score >= citation.confidence_threshold;
+  const resolutionType = citation.resolution?.resolution_type ?? "unresolved";
 
   return (
     <span className="citation-marker group relative inline-flex">
-      <sup
+      <button
+        type="button"
         className="citation-sup"
         onClick={(e) => {
           e.stopPropagation();
           onClickSource?.(citation);
         }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            onClickSource?.(citation);
-          }
-        }}
       >
         {label ?? `[${footnoteNumber}] 引用`}
-      </sup>
+      </button>
       <span className="citation-popover">
         <span className="citation-popover-header">
           <strong>{citation.title}</strong>
@@ -81,11 +74,17 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
           </span>
         </span>
         <span className="citation-popover-governance">
-          {citation.can_jump && (
-            <span className="citation-governance-ok">↗ 点击跳转知识库</span>
+          {resolutionType === "exact_article" && (
+            <span className="citation-governance-ok">点击查看知识库条文</span>
           )}
-          {!citation.can_jump && (
-            <span className="citation-governance-warning">无法精确跳转知识库</span>
+          {resolutionType === "source_overview" && (
+            <span className="citation-governance-warning">仅定位到法规来源</span>
+          )}
+          {resolutionType === "external_verified" && (
+            <span className="citation-governance-warning">外部来源已核验，尚未入库</span>
+          )}
+          {resolutionType === "unresolved" && (
+            <span className="citation-governance-blocked">无法解析引用来源</span>
           )}
           {citation.source_kind && (
             <span className="citation-source-kind-label">

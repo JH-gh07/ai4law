@@ -13,22 +13,6 @@ interface Props {
   moduleKey?: ModuleKey;
 }
 
-function buildFallbackKnowledgeUrl(citation: CitationDetail): string | null {
-  if (!citation.source_id) return null;
-  const params = new URLSearchParams();
-  if (citation.article_no) {
-    params.set("article", citation.article_no);
-  } else if (citation.section_id) {
-    params.set("section", citation.section_id);
-  } else if (citation.clause_id) {
-    params.set("clause", citation.clause_id);
-  } else if (citation.anchor) {
-    params.set("anchor", citation.anchor);
-  }
-  const query = params.toString();
-  return `/knowledge/laws/${encodeURIComponent(citation.source_id)}${query ? `?${query}` : ""}`;
-}
-
 function compactText(value: string): string {
   return value.replace(/\s+/g, "").replace(/[《》【】[\]（）()：:；;，,。、“”"'']/g, "").toLowerCase();
 }
@@ -143,10 +127,6 @@ function buildResolvedCitation(
   const sourceId = matched.source_id ?? "";
   if (!sourceId) return null;
   const articleNo = extractArticleNo(rawBasis);
-  const params = new URLSearchParams();
-  if (articleNo) {
-    params.set("article", articleNo);
-  }
   return {
     citation_id: `resolved:${sourceId}:${articleNo || compactText(rawBasis)}`,
     module: "knowledge",
@@ -168,12 +148,19 @@ function buildResolvedCitation(
     can_enter_external_report: true,
     external_report_allowed: true,
     confidence_threshold: 0.2,
-    knowledge_url: `/knowledge/laws/${encodeURIComponent(sourceId)}${params.toString() ? `?${params.toString()}` : ""}`,
+    knowledge_url: `/knowledge/laws/${encodeURIComponent(sourceId)}`,
     anchor: "",
     section_id: "",
     clause_id: "",
-    open_mode: "new_tab",
-    can_jump: true,
+    open_mode: "in_app",
+    can_jump: false,
+    resolution: {
+      resolution_type: "source_overview",
+      target_id: sourceId,
+      confidence: 0.7,
+      failure_reason: articleNo ? "article_requires_server_resolution" : "article_missing",
+      available_actions: ["view_source_overview", "search_within_source"],
+    },
   };
 }
 
@@ -288,7 +275,9 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
 
   useEffect(() => {
     if (basisItems.length === 0) {
-      setResolvedBasisMap({});
+      setResolvedBasisMap((current) =>
+        Object.keys(current).length > 0 ? {} : current,
+      );
       return;
     }
 
@@ -327,16 +316,6 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
   }
 
   const handleOpenCitation = (citation: CitationDetail) => {
-    // Prefer the locally-constructed URL over the backend-supplied knowledge_url.
-    // source_id + article_no are the canonical source of truth — the backend's
-    // knowledge_url can be stale from cached citation_map.json files written by
-    // older code that didn't set the field or set it to an incorrect value.
-    const localUrl = buildFallbackKnowledgeUrl(citation);
-    const targetUrl = localUrl || citation.knowledge_url;
-    if (citation.can_jump && targetUrl) {
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
     setSelectedCitation(citation);
   };
 

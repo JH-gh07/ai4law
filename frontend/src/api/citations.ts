@@ -1,5 +1,19 @@
 import { apiFetch } from "./client";
 
+export type CitationResolutionType =
+  | "exact_article"
+  | "source_overview"
+  | "external_verified"
+  | "unresolved";
+
+export interface CitationResolution {
+  resolution_type: CitationResolutionType;
+  target_id: string;
+  confidence: number;
+  failure_reason: string;
+  available_actions: string[];
+}
+
 export interface CitationDetail {
   citation_id: string;
   module: string;
@@ -27,6 +41,7 @@ export interface CitationDetail {
   clause_id: string;
   open_mode: string;
   can_jump: boolean;
+  resolution: CitationResolution;
 }
 
 export interface CitationMapResponse {

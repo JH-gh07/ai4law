@@ -18,6 +18,15 @@ const BINDING_LABELS: Record<string, string> = {
   reference: "参考",
 };
 
+const FAILURE_LABELS: Record<string, string> = {
+  article_missing: "引用未提供条号，当前只能定位到法规来源。",
+  article_not_found: "引用条号未在本地知识库中找到，当前只能定位到法规来源。",
+  article_not_unique: "该条号在本地知识库中存在重复记录，暂不能声明精确定位。",
+  article_requires_server_resolution: "该条号尚未经过服务端唯一性校验。",
+  local_source_not_mapped: "外部来源已经核验，但尚未映射到本地知识库。",
+  source_not_found: "引用来源未收入本地知识库，暂时无法定位。",
+};
+
 interface Props {
   citation: CitationDetail;
   onClose: () => void;
@@ -28,11 +37,20 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resolutionType = citation.resolution?.resolution_type ?? "unresolved";
+  const failureReason = citation.resolution?.failure_reason ?? "source_not_found";
 
   useEffect(() => {
+    setArticle(null);
+    setError(null);
+
+    if (resolutionType !== "exact_article") {
+      setLoading(false);
+      return;
+    }
     if (!citation.source_id || !citation.article_no) {
       setLoading(false);
-      setError("引用缺少知识库来源信息，无法查看原文。");
+      setError("精确引用缺少知识库来源或条号，请人工复核 CitationMap。");
       return;
     }
 
@@ -48,22 +66,24 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
       });
-  }, [citation.source_id, citation.article_no]);
+  }, [citation.source_id, citation.article_no, resolutionType]);
 
   const handleViewFullLaw = () => {
-    // Prefer locally-constructed URL — source_id + article_no are canonical.
-    // Backend knowledge_url can be stale from cached citation_map.json files.
-    const localUrl = citation.source_id
-      ? `/knowledge/laws/${encodeURIComponent(citation.source_id)}?article=${encodeURIComponent(citation.article_no)}`
-      : "";
-    const targetUrl = localUrl || citation.knowledge_url;
-    if (targetUrl) {
+    const targetUrl = citation.knowledge_url;
+    if (targetUrl.startsWith("/knowledge/laws/")) {
       navigate(targetUrl);
     }
   };
 
   return (
-    <div className="citation-drawer-backdrop" onClick={onClose}>
+    <div
+      className="citation-drawer-backdrop"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div
         className="citation-drawer-panel"
         onClick={(e) => e.stopPropagation()}
@@ -94,7 +114,7 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
           {loading ? (
             <p className="citation-drawer-status">正在载入依据原文…</p>
           ) : error ? (
-            <p className="citation-drawer-error">{error}</p>
+            <p className="citation-drawer-error" role="alert">{error}</p>
           ) : article ? (
             <article className="citation-article-view">
               {article.prev_article_no && article.prev_article_content && (
@@ -119,7 +139,22 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
                 </section>
               )}
             </article>
-          ) : null}
+          ) : resolutionType === "source_overview" ? (
+            <section className="citation-resolution-notice">
+              <h4>当前为法规来源级定位</h4>
+              <p>{FAILURE_LABELS[failureReason] ?? "当前引用不能唯一定位到具体条文。"}</p>
+            </section>
+          ) : resolutionType === "external_verified" ? (
+            <section className="citation-resolution-notice">
+              <h4>外部来源待入库</h4>
+              <p>{FAILURE_LABELS[failureReason] ?? "外部来源已核验，但尚未映射到本地对象。"}</p>
+            </section>
+          ) : (
+            <section className="citation-resolution-notice" role="alert">
+              <h4>无法解析引用</h4>
+              <p>{FAILURE_LABELS[failureReason] ?? "引用来源存在冲突或尚未完成校验。"}</p>
+            </section>
+          )}
         </div>
 
         <footer className="citation-drawer-footer">
@@ -133,12 +168,15 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
               查看官方发布版本
             </a>
           )}
-          <button
-            className="citation-drawer-view-full"
-            onClick={handleViewFullLaw}
-          >
-            在知识库中继续阅读
-          </button>
+          {(resolutionType === "exact_article" || resolutionType === "source_overview") &&
+            citation.knowledge_url.startsWith("/knowledge/laws/") ? (
+              <button
+                className="citation-drawer-view-full"
+                onClick={handleViewFullLaw}
+              >
+                {resolutionType === "exact_article" ? "在知识库中继续阅读" : "查看法规概览"}
+              </button>
+            ) : null}
         </footer>
       </div>
     </div>
