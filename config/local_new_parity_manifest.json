@@ -73,73 +73,85 @@
       "source_path": "backend/common/llm/postprocess.py",
       "source_change": "M",
       "target_path": "backend/common/llm/postprocess.py",
-      "disposition": "pending"
+      "disposition": "reject-with-evidence",
+      "evidence": "Did not add runtime JSON loaders; default pytest reads the shared cases directly and all 14 backend cases pass."
     },
     {
       "source_path": "backend/common/render/artifact_registry.py",
       "source_change": "A",
       "target_path": "backend/common/render/artifact_registry.py",
-      "disposition": "pending"
+      "disposition": "reject-with-evidence",
+      "evidence": "Original branch had no production consumers; existing result dictionaries and ReportService remain authoritative."
     },
     {
       "source_path": "backend/common/render/artifacts.py",
       "source_change": "M",
       "target_path": "backend/common/render/artifacts.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Kept the proven ReportLab implementation and made PdfRenderer a thin entry point over it, avoiding duplicated engines and circular delegation."
     },
     {
       "source_path": "backend/common/render/content_adapter.py",
       "source_change": "A",
       "target_path": "backend/common/render/content_adapter.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Markdown is parsed into headings, paragraphs, lists, tables and dividers instead of one lossy paragraph; adapter tests pass."
     },
     {
       "source_path": "backend/common/render/docx_renderer.py",
       "source_change": "A",
       "target_path": "backend/common/render/docx_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Structured DOCX renderer creates a reopenable file with headings, lists and tables."
     },
     {
       "source_path": "backend/common/render/html_renderer.py",
       "source_change": "A",
       "target_path": "backend/common/render/html_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Structured renderer preserves block types and escapes untrusted HTML; regression tests pass."
     },
     {
       "source_path": "backend/common/render/markdown_renderer.py",
       "source_change": "A",
       "target_path": "backend/common/render/markdown_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Structured renderer preserves headings, lists, tables and dividers under the backend normalization contract."
     },
     {
       "source_path": "backend/common/render/normalization_rules.json",
       "source_change": "A",
       "target_path": "backend/common/render/normalization_rules.json",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Retained as explicit behavioral documentation without falsely claiming runtime SSOT status."
     },
     {
       "source_path": "backend/common/render/normalization_test_cases.json",
       "source_change": "A",
       "target_path": "backend/common/render/normalization_test_cases.json",
-      "disposition": "pending"
+      "disposition": "migrate",
+      "evidence": "All 14 rescued golden cases run in default backend pytest and pass."
     },
     {
       "source_path": "backend/common/render/pdf_renderer.py",
       "source_change": "A",
       "target_path": "backend/common/render/pdf_renderer.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Thin ReportLab-backed entry supports Markdown, sections and templates; all outputs open with pypdf."
     },
     {
       "source_path": "backend/common/render/render_profile.py",
       "source_change": "A",
       "target_path": "backend/common/render/render_profile.py",
-      "disposition": "pending"
+      "disposition": "reject-with-evidence",
+      "evidence": "Original branch had no consumers and duplicated module identity; config/module_registry.json stays the sole module authority."
     },
     {
       "source_path": "backend/common/render/report_model.py",
       "source_change": "A",
       "target_path": "backend/common/render/report_model.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added the missing HeadingBlock and strict builder ordering so structured Markdown cannot silently collapse."
     },
     {
       "source_path": "backend/modules/assessment/report_renderer.py",
@@ -200,7 +212,8 @@
       "source_path": "backend/services/report_service.py",
       "source_change": "M",
       "target_path": "backend/services/report_service.py",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Canvas literal-line output now delegates to the common Markdown PDF renderer; service regression proves markers are rendered structurally."
     },
     {
       "source_path": "backend/services/review_service/service.py",

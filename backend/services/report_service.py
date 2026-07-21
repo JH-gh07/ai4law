@@ -1,8 +1,6 @@
 from pathlib import Path
 
 from docx import Document
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
 
 from backend.core.json_utils import dumps
@@ -10,6 +8,7 @@ from backend.core.settings import Settings
 from backend.models.report import ReportArtifactModel
 from backend.repositories.report_repository import ReportRepository
 from backend.schemas.common import ReportArtifact
+from backend.common.render.pdf_renderer import get_pdf_renderer
 
 
 class ReportService:
@@ -106,16 +105,7 @@ class ReportService:
         return path
 
     def _write_pdf(self, path: Path, lines: list[str]) -> None:
-        pdf = canvas.Canvas(str(path), pagesize=A4)
-        _width, height = A4
-        y = height - 40
-        for line in lines:
-            pdf.drawString(40, y, line[:90])
-            y -= 18
-            if y < 60:
-                pdf.showPage()
-                y = height - 40
-        pdf.save()
+        get_pdf_renderer().from_markdown("\n\n".join(lines), path, path.stem)
 
     def _persist(
         self,

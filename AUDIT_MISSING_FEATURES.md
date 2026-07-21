@@ -240,25 +240,41 @@ Checkpoint 1：✅ Citation 目录 65 项通过；五个相关 domain 测试目�
 
 涉及文件：R01、M02、M03、X06。
 
-先写引擎降级和中文/表格 PDF 测试，再迁移最小实现。后端当前只承诺 ReportLab 生产路径；未实现的 Python `jit-pdf-sdk` 不得写成“已接入”。
+后端只承诺已有 ReportLab 生产路径，不引入未实现的 Python `jit-pdf-sdk` 和虚假降级层。
+
+- [x] Markdown、sections、template 三种入口生成的文件均有 `%PDF` 签名且可由 `pypdf` 打开。
+- [x] 缺失模板明确抛出 `FileNotFoundError`，不生成伪成功产物。
+- [x] ReportService 已从 Canvas 字面量绘制切换到公共 Markdown PDF 入口。
 
 #### Task 2.2：ReportDocument 与 Markdown/HTML 渲染
 
 涉及文件：R02、R03、R04、R05、X07。
 
+- [x] 增加 `HeadingBlock`，标题、段落、列表、表格、分隔线均可独立表达。
+- [x] ContentAdapter 不再把整篇 Markdown 塞入单个 Paragraph；畸形表格保留为文本而非丢弃。
+- [x] HTML 渲染对不可信内容转义，Markdown/HTML 结构回归通过。
+
 #### Task 2.3：DOCX 渲染与模板兼容
 
 涉及文件：R06、X07。
+
+- [x] 生成的 DOCX 可由 python-docx 重新打开，标题、列表和表格结构存在。
 
 #### Task 2.4：规范化共享行为契约
 
 涉及文件：R09、R10、M01、X08。
 
+- [x] 原始 14 个 Golden Cases 进入默认后端 pytest 并全部通过。
+- [x] 规则 JSON 明确降级为行为说明，禁止继续虚称运行时 SSOT；前端对称验证留在 Phase 5。
+
 #### Task 2.5：产物注册和渲染配置去双源
 
 涉及文件：R07、R08、`config/module_registry.json`、X09、现有模块注册表测试。
 
-Checkpoint 2：所有 render 小测试通过；模块注册表仍为唯一模块身份源；无未使用且无测试的生产基础设施。
+- [x] 原始 `ArtifactRegistry` 和 `render_profile` 均无生产消费者，明确拒绝迁移。
+- [x] `config/module_registry.json` 保持唯一模块身份源，未建立第二份 12 模块配置表。
+
+Checkpoint 2：✅ Render 与 services 相关测试 32 项通过；模块注册表仍为唯一模块身份源；无未使用且无测试的生产基础设施。
 
 ### Phase 3：12 模块纵向接入
 
@@ -405,9 +421,9 @@ git status --short
 |---|---|---|---|---|
 | G01 | 共同祖先、两个 tip 与本地增量清单 | 15/34 分叉；排除运行产物后 34 A / 21 M / 1 D，共 56 项 | 5 个单元测试通过；Git 复算 56 项通过 | ✅ |
 | G02 | Citation 专项 | 33 项及新增模块断言通过 | 原始 33 + domain 5 通过；Citation 全目录 65 通过；相关 domain 112 通过 | ✅ |
-| G03 | Backend normalization | 全部共享 cases 通过 | 待执行 | ⬜ |
+| G03 | Backend normalization | 全部共享 cases 通过 | 原始 14/14 Golden Cases 通过 | ✅ |
 | G04 | Frontend normalization | 与后端逐 case 一致 | 待执行 | ⬜ |
-| G05 | Render unit tests | PDF/MD/HTML/DOCX/registry 全通过 | 待执行 | ⬜ |
+| G05 | Render unit tests | PDF/MD/HTML/DOCX 全通过；未使用 registry 有证据地拒绝 | Render + services 32 项通过 | ✅ |
 | G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 待执行 | ⬜ |
 | G07 | Harness | 11 模块、15 cases 可运行 | 待执行 | ⬜ |
 | G08 | Frontend install | `npm ci` 成功 | 待执行 | ⬜ |

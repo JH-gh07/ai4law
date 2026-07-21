@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "status": "behavioral-documentation",
+  "description": "Markdown normalization behavior shared by backend and frontend. Runtime behavior is enforced by the golden cases, not dynamically loaded from this file.",
+  "implementations": {
+    "backend": "backend/common/llm/postprocess.py::normalize_legal_markdown_structure",
+    "frontend": "frontend/src/lib/fallback-markdown.ts::normalizeFallbackMarkdown"
+  },
+  "invariants": [
+    "normalize line endings and full-width spaces",
+    "preserve existing Markdown headings, lists, and tables",
+    "split packed Chinese legal headings",
+    "place legal basis blocks on stable boundaries",
+    "collapse excessive blank lines"
+  ],
+  "test_cases": "backend/common/render/normalization_test_cases.json"
+}

@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "test_cases": [
+    {
+      "id": "packed_headings_1",
+      "input": "第一章总则一、适用范围（一）处理者要求",
+      "expected": "第一章总则\n\n## 一、适用范围\n\n### （一）处理者要求"
+    },
+    {
+      "id": "packed_headings_2",
+      "input": "数据处理（一）收集环节（二）存储环节",
+      "expected": "数据处理\n\n### （一）收集环节\n\n### （二）存储环节"
+    },
+    {
+      "id": "basis_inline_1",
+      "input": "数据处理者应履行告知义务。【依据：个保法第17条】接收方信息应明确。",
+      "expected": "数据处理者应履行告知义务。\n\n【依据：个保法第17条】接收方信息应明确。"
+    },
+    {
+      "id": "basis_standalone",
+      "input": "【依据：个保法第39条】",
+      "expected": "【依据：个保法第39条】"
+    },
+    {
+      "id": "ordered_list_1",
+      "input": "1、收集个人信息2、存储个人信息3、处理个人信息",
+      "expected": "## 1、收集个人信息\n\n## 2、存储个人信息\n\n## 3、处理个人信息"
+    },
+    {
+      "id": "ordered_list_bracket",
+      "input": "(1)告知(2)选择(3)撤回",
+      "expected": "1. 告知\n2. 选择\n3. 撤回"
+    },
+    {
+      "id": "pipe_table_norm",
+      "input": "|姓名|年龄|城市|\n张三|28|北京|\n李四|35|上海|",
+      "expected": "|姓名|年龄|城市|\n\n张三|28|北京|\n\n李四|35|上海|"
+    },
+    {
+      "id": "pipe_table_already_ok",
+      "input": "| 项目 | 状态 |\n| --- | --- |\n| A | 完成 |",
+      "expected": "| 项目 | 状态 |\n| --- | --- |\n| A | 完成 |"
+    },
+    {
+      "id": "preserve_markdown_heading",
+      "input": "## 已经格式化的标题",
+      "expected": "## 已经格式化的标题"
+    },
+    {
+      "id": "preserve_markdown_list",
+      "input": "- 列表项 1\n- 列表项 2",
+      "expected": "- 列表项 1\n- 列表项 2"
+    },
+    {
+      "id": "mixed_content_1",
+      "input": "第三章数据安全管理一、组织保障-建立数据安全委员会-明确负责人【依据：数安法第27条】",
+      "expected": "第三章数据安全管理\n\n## 一、组织保障-建立数据安全委员会-明确负责人\n\n【依据：数安法第27条】"
+    },
+    {
+      "id": "fullwidth_space_norm",
+      "input": "第一章　总则",
+      "expected": "# 第一章 总则"
+    },
+    {
+      "id": "empty_input",
+      "input": "",
+      "expected": ""
+    },
+    {
+      "id": "whitespace_only",
+      "input": "   \n  \n  ",
+      "expected": ""
+    }
+  ]
+}
