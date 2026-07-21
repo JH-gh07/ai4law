@@ -1,5 +1,5 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal";
 import { useAppStore } from "../lib/app-store";
 import type { Jurisdiction, LaunchMode } from "../lib/domain";
@@ -29,7 +29,6 @@ type TaskSpacesPageProps = {
 export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [jurisdiction, setJurisdiction] = useState<"ALL" | Jurisdiction>("ALL");
   const [quickCreateDraft, setQuickCreateDraft] = useState<{ taskTemplateId: string; value: string; error: string } | null>(null);
@@ -111,10 +110,6 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     setRenameDraft(null);
   };
 
-  const openTask = (taskId: string) => {
-    navigate(`/workspace/${taskId}`);
-  };
-
   const deleteTask = (taskId: string) => {
     const task = state.taskSpaces.find((item) => item.id === taskId);
     if (!task) return;
@@ -136,13 +131,6 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
         loading: false,
         error: error instanceof Error && error.message.trim() ? error.message : fallback
       });
-    }
-  };
-
-  const onTaskCardKeyDown = (event: KeyboardEvent<HTMLElement>, taskId: string) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openTask(taskId);
     }
   };
 
@@ -259,6 +247,8 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
         <div className="tasks-controls tasks-recent-controls">
           <input
             className="resource-search tasks-search"
+            name="taskSearch"
+            aria-label={t("tasksSearchPlaceholder")}
             placeholder={t("tasksSearchPlaceholder")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -298,45 +288,46 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
                 <article
                   key={task.id}
                   className="task-card tasks-card is-clickable"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openTask(task.id)}
-                  onKeyDown={(event) => onTaskCardKeyDown(event, task.id)}
-                  aria-label={`${t("openWorkspace")} ${task.name}`}
                 >
-                  <div className="tasks-card-head">
-                    <h3>{task.name}</h3>
-                    <span className={`tasks-status-pill ${
-                      latestRun
-                        ? latestRun.state === "running"
-                          ? "running"
-                          : latestRun.state === "success"
-                            ? "ok"
-                            : "fail"
-                        : "idle"
-                    }`}>
-                      {latestRun
-                        ? `${latestRun.state === "running"
-                          ? "RUNNING"
-                          : latestRun.state === "success"
-                            ? "OK"
-                            : latestRun.state === "unreachable"
-                              ? "UNREACHABLE"
-                              : "FAIL"} · ${latestRun.module.toUpperCase()}`
-                        : t("tasksCardNoRuns")}
-                    </span>
-                  </div>
+                  <Link
+                    className="tasks-card-open"
+                    to={`/workspace/${task.id}`}
+                    aria-label={`${t("openWorkspace")} ${task.name}`}
+                  >
+                    <div className="tasks-card-head">
+                      <h3>{task.name}</h3>
+                      <span className={`tasks-status-pill ${
+                        latestRun
+                          ? latestRun.state === "running"
+                            ? "running"
+                            : latestRun.state === "success"
+                              ? "ok"
+                              : "fail"
+                          : "idle"
+                      }`}>
+                        {latestRun
+                          ? `${latestRun.state === "running"
+                            ? "RUNNING"
+                            : latestRun.state === "success"
+                              ? "OK"
+                              : latestRun.state === "unreachable"
+                                ? "UNREACHABLE"
+                                : "FAIL"} · ${latestRun.module.toUpperCase()}`
+                          : t("tasksCardNoRuns")}
+                      </span>
+                    </div>
 
-                  <div className="tasks-meta-row">
-                    <span>{t("tasksCardJurisdiction")}: {task.jurisdiction}</span>
-                    <span>{t("tasksCardMode")}: {task.mode.toUpperCase()}</span>
-                    <span>{t("tasksCardTemplate")}: {taskTemplate ? getTaskTemplateTitle(taskTemplate, lang) : "-"}</span>
-                    <span>{t("tasksCardModule")}: {task.module.toUpperCase()}</span>
-                  </div>
+                    <div className="tasks-meta-row">
+                      <span>{t("tasksCardJurisdiction")}: {task.jurisdiction}</span>
+                      <span>{t("tasksCardMode")}: {task.mode.toUpperCase()}</span>
+                      <span>{t("tasksCardTemplate")}: {taskTemplate ? getTaskTemplateTitle(taskTemplate, lang) : "-"}</span>
+                      <span>{t("tasksCardModule")}: {task.module.toUpperCase()}</span>
+                    </div>
 
-                  <p className="tasks-updated">{t("tasksCardUpdated")}: {new Date(task.updatedAt).toLocaleString()}</p>
+                    <p className="tasks-updated">{t("tasksCardUpdated")}: {new Date(task.updatedAt).toLocaleString()}</p>
+                  </Link>
 
-                  <div className="tasks-card-actions" onClick={(event) => event.stopPropagation()}>
+                  <div className="tasks-card-actions">
                     <button
                       className="tasks-save-btn is-danger"
                       onClick={() => deleteTask(task.id)}

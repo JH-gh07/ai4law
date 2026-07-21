@@ -58,27 +58,27 @@ export function RegisterPage() {
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
             <span>{lang === "zh" ? "用户名" : "Username"}</span>
-            <input value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
+            <input name="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
           </label>
 
           <label>
             <span>{lang === "zh" ? "邮箱" : "Email"}</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </label>
 
           <label>
             <span>{lang === "zh" ? "企业名称（可选）" : "Company (optional)"}</span>
-            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+            <input name="organization" autoComplete="organization" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           </label>
 
           <label>
             <span>{lang === "zh" ? "密码" : "Password"}</span>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input name="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </label>
 
           <label>
             <span>{lang === "zh" ? "确认密码" : "Confirm password"}</span>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <input name="confirmPassword" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
           </label>
 
           {error ? <div className="auth-error">{error}</div> : null}

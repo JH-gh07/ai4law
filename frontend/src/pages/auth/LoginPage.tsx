@@ -50,17 +50,17 @@ export function LoginPage() {
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
             <span>{lang === "zh" ? "用户名或邮箱" : "Username or email"}</span>
-            <input value={identifier} onChange={(e) => setIdentifier(e.target.value)} required autoFocus />
+            <input name="username" autoComplete="username" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required autoFocus />
           </label>
 
           <label>
             <span>{lang === "zh" ? "密码" : "Password"}</span>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </label>
 
           <div className="auth-form-row">
             <label className="auth-check">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              <input name="remember" type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
               <span>{lang === "zh" ? "记住我" : "Remember me"}</span>
             </label>
             <button type="button" className="auth-text-link">

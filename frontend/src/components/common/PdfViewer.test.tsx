@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchArtifactBlob } from "../../api/artifacts";
@@ -41,6 +42,19 @@ describe("PdfViewer", () => {
 
     unmount();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:second");
+  });
+
+  it("fetches only once when React StrictMode replays the mount effect", async () => {
+    fetchPdf.mockResolvedValue(new Blob(["%PDF"], { type: "application/pdf" }));
+
+    render(
+      <StrictMode>
+        <PdfViewer artifactPath="outputs/strict.pdf" title="Strict report" />
+      </StrictMode>,
+    );
+
+    expect(await screen.findByTitle("Strict report")).toBeInTheDocument();
+    expect(fetchPdf).toHaveBeenCalledTimes(1);
   });
 
   it("shows an accessible error and retries the same path", async () => {

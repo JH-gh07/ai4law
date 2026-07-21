@@ -37,14 +37,28 @@ export interface CitationMapResponse {
 }
 
 const BASE = "/api/v1/citations";
+const citationMapRequests = new Map<string, Promise<CitationMapResponse>>();
 
 export async function fetchCitationMap(taskId: string, moduleKey?: string): Promise<CitationMapResponse> {
   const query = moduleKey ? `?module=${encodeURIComponent(moduleKey)}` : "";
-  const res = await apiFetch(`${BASE}/reports/${encodeURIComponent(taskId)}${query}`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch citation map: ${res.status}`);
-  }
-  return res.json();
+  const url = `${BASE}/reports/${encodeURIComponent(taskId)}${query}`;
+  const pending = citationMapRequests.get(url);
+  if (pending) return pending;
+
+  const request = apiFetch(url)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch citation map: ${res.status}`);
+      }
+      return res.json() as Promise<CitationMapResponse>;
+    })
+    .finally(() => {
+      if (citationMapRequests.get(url) === request) {
+        citationMapRequests.delete(url);
+      }
+    });
+  citationMapRequests.set(url, request);
+  return request;
 }
 
 export async function fetchCitationDetail(

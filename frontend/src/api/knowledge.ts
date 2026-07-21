@@ -21,6 +21,8 @@ const toStringList = (value: unknown): string[] =>
 const toStringRecordList = (value: unknown): Record<string, string>[] =>
   Array.isArray(value) ? value.map(toStringRecord) : [];
 
+const knowledgeCitationRequests = new Map<string, Promise<KnowledgeCitationData>>();
+
 const parseErrorMessage = (data: unknown): string => {
   if (!isRecord(data)) return "Request failed";
   if (typeof data.detail === "string") return data.detail;
@@ -232,16 +234,31 @@ export async function fetchKnowledgeSearch(params: {
 }
 
 export async function fetchKnowledgeCitation(query: string): Promise<KnowledgeCitationData> {
-  const data = await requestJson(`/api/v1/knowledge/citation?query=${encodeURIComponent(query)}`);
-  if (!isRecord(data)) {
-    throw new Error("Invalid citation payload");
-  }
+  const normalizedQuery = query.trim().replace(/\s+/g, " ");
+  const cached = knowledgeCitationRequests.get(normalizedQuery);
+  if (cached) return cached;
 
-  return {
-    query: typeof data.query === "string" ? data.query : query,
-    matched: isRecord(data.matched) ? toStringRecord(data.matched) : null,
-    preview: typeof data.preview === "string" ? data.preview : ""
-  };
+  const request = requestJson(`/api/v1/knowledge/citation?query=${encodeURIComponent(normalizedQuery)}`)
+    .then((data) => {
+      if (!isRecord(data)) {
+        throw new Error("Invalid citation payload");
+      }
+      return {
+        query: typeof data.query === "string" ? data.query : normalizedQuery,
+        matched: isRecord(data.matched) ? toStringRecord(data.matched) : null,
+        preview: typeof data.preview === "string" ? data.preview : ""
+      };
+    })
+    .catch((error: unknown) => {
+      throw error;
+    })
+    .finally(() => {
+      if (knowledgeCitationRequests.get(normalizedQuery) === request) {
+        knowledgeCitationRequests.delete(normalizedQuery);
+      }
+    });
+  knowledgeCitationRequests.set(normalizedQuery, request);
+  return request;
 }
 
 export interface ArticleDetail {

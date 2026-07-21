@@ -3603,7 +3603,7 @@
   padding: 0.08rem 0.38rem;
   border-radius: 999px;
   background: #edf4fc;
-  color: #5f7d9d;
+  color: #425f7d;
   font-size: 0.7rem;
   text-align: center;
 }
@@ -4049,16 +4049,21 @@
 }
 .trace-block-actions {
   display: flex;
-  gap: 2px;
+  gap: 4px;
 }
 .trace-block-copy,
 .trace-block-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
   border: none;
   background: none;
   font-size: 10px;
   color: #9ca3af;
   cursor: pointer;
-  padding: 1px 4px;
+  padding: 4px 6px;
 }
 .trace-block-copy:hover,
 .trace-block-expand:hover {

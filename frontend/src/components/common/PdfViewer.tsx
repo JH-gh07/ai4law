@@ -18,6 +18,22 @@ const loadingState: PdfViewerState = {
   error: null,
 };
 
+const pendingPdfLoads = new Map<string, Promise<Blob>>();
+
+function loadPdfBlob(artifactPath: string): Promise<Blob> {
+  const pending = pendingPdfLoads.get(artifactPath);
+  if (pending) return pending;
+
+  const request = fetchArtifactBlob(artifactPath, "file", "Failed to load PDF ({status})")
+    .finally(() => {
+      if (pendingPdfLoads.get(artifactPath) === request) {
+        pendingPdfLoads.delete(artifactPath);
+      }
+    });
+  pendingPdfLoads.set(artifactPath, request);
+  return request;
+}
+
 export function PdfViewer({ artifactPath, title, lang = "zh" }: PdfViewerProps) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<PdfViewerState>(loadingState);
@@ -27,7 +43,7 @@ export function PdfViewer({ artifactPath, title, lang = "zh" }: PdfViewerProps) 
     let objectUrl: string | null = null;
     setState(loadingState);
 
-    fetchArtifactBlob(artifactPath, "file", "Failed to load PDF ({status})")
+    loadPdfBlob(artifactPath)
       .then((blob) => {
         objectUrl = URL.createObjectURL(blob);
         if (!active) {

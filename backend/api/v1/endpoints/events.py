@@ -48,8 +48,8 @@ async def task_event_stream(task_id: str, request: Request):
 
 
 @router.get("/task/{task_id}/events")
-async def task_events_since(task_id: str, since: int = Query(0, ge=0)):
-    """轮询 fallback：拉取 seq > since 的增量事件。"""
+async def task_events_since(task_id: str, since: int = Query(0, ge=-1)):
+    """轮询 fallback：拉取 seq > since 的增量事件；-1 表示尚未消费事件。"""
     sm = get_ssemanager()
     events = sm.get_events_since(task_id, since)
     latest_seq = events[-1].seq if events else since

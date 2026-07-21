@@ -44,6 +44,21 @@ def test_subscriber_exception_does_not_block_writing():
     assert received[1].event_type == "tool_start"
 
 
+def test_subscribe_is_idempotent_for_the_same_callback():
+    received: list = []
+
+    def receive(event):
+        received.append(event)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        recorder = TraceRecorder(trace_dir=Path(tmpdir), task_id="test-task")
+        recorder.subscribe(receive)
+        recorder.subscribe(receive)
+        recorder.record("status", {"summary": "started"})
+
+    assert len(received) == 1
+
+
 def test_legacy_name_mapping():
     received: list = []
     with tempfile.TemporaryDirectory() as tmpdir:

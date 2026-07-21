@@ -164,7 +164,8 @@ class TraceRecorder:
 
     def subscribe(self, callback: Callable) -> None:
         """注册事件订阅者。callback 接收 RunEvent 实例。"""
-        self._subscribers.append(callback)
+        if callback not in self._subscribers:
+            self._subscribers.append(callback)
 
     def write_manifest(self) -> Path:
         path = self.trace_dir / "manifest.json"

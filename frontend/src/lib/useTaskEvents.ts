@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchTaskEvents, getTaskEventStreamUrl } from "../api/events";
 
 export type RunEvent = {
@@ -72,20 +72,58 @@ export function extractTokenUsage(events: RunEvent[]): TokenUsageBreakdown {
 const eventSources = new Map<string, EventSource>();
 const listeners = new Map<string, Set<(events: RunEvent[]) => void>>();
 const eventBuffers = new Map<string, RunEvent[]>();
+const pollingCleanups = new Map<string, () => void>();
+
+function eventIdentity(event: RunEvent): string {
+  return event.event_id || `${event.task_id}:${event.seq}`;
+}
+
+export function mergeRunEvents(current: RunEvent[], incoming: RunEvent[]): RunEvent[] {
+  const seen = new Set<string>();
+  const merged: RunEvent[] = [];
+
+  for (const event of [...current, ...incoming]) {
+    const identity = eventIdentity(event);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    merged.push(event);
+  }
+
+  return merged;
+}
+
+function latestKnownSeq(taskId: string): number {
+  return (eventBuffers.get(taskId) ?? []).reduce((latest, event) => Math.max(latest, event.seq), -1);
+}
+
+function stopPolling(taskId: string): void {
+  pollingCleanups.get(taskId)?.();
+  pollingCleanups.delete(taskId);
+}
+
+function ensurePolling(taskId: string): void {
+  if (pollingCleanups.has(taskId)) return;
+  pollingCleanups.set(taskId, startPolling(taskId, latestKnownSeq(taskId)));
+}
 
 function connectSSE(taskId: string): EventSource {
   const es = new EventSource(getTaskEventStreamUrl(taskId));
+
+  es.onopen = () => {
+    stopPolling(taskId);
+  };
 
   es.onmessage = (e) => {
     if (!e.data || e.data.startsWith(":")) return;
     try {
       const event: RunEvent = JSON.parse(e.data);
       const buffer = eventBuffers.get(taskId) ?? [];
-      buffer.push(event);
-      eventBuffers.set(taskId, buffer);
+      const merged = mergeRunEvents(buffer, [event]);
+      if (merged.length === buffer.length) return;
+      eventBuffers.set(taskId, merged);
       const subs = listeners.get(taskId);
       if (subs) {
-        for (const cb of subs) cb([...buffer]);
+        for (const cb of subs) cb([...merged]);
       }
     } catch {
       // ignore parse errors
@@ -107,6 +145,7 @@ function connectSSE(taskId: string): EventSource {
     // 连接到 CLOSED 状态（非 0/1）时才从 registry 中清理。
     if (es.readyState === EventSource.CLOSED) {
       eventSources.delete(taskId);
+      if ((listeners.get(taskId)?.size ?? 0) > 0) ensurePolling(taskId);
     }
   };
 
@@ -123,15 +162,14 @@ function startPolling(taskId: string, since: number): () => void {
         const data = await fetchTaskEvents<RunEvent>(taskId, latestSeq);
         if (data.events && data.events.length > 0) {
           const buffer = eventBuffers.get(taskId) ?? [];
-          for (const e of data.events) {
-            const exists = buffer.some((b) => b.seq === e.seq);
-            if (!exists) buffer.push(e);
-          }
-          eventBuffers.set(taskId, buffer);
+          const merged = mergeRunEvents(buffer, data.events);
+          eventBuffers.set(taskId, merged);
           latestSeq = data.latest_seq ?? latestSeq;
-          const subs = listeners.get(taskId);
-          if (subs) {
-            for (const cb of subs) cb([...buffer]);
+          if (merged.length !== buffer.length) {
+            const subs = listeners.get(taskId);
+            if (subs) {
+              for (const cb of subs) cb([...merged]);
+            }
           }
         }
       } catch {
@@ -152,7 +190,6 @@ function startPolling(taskId: string, since: number): () => void {
 
 export function useTaskEvents(taskId: string | null): RunEvent[] {
   const [events, setEvents] = useState<RunEvent[]>([]);
-  const pollingCleanup = useRef<(() => void) | null>(null);
 
   const setEventsAndNotify = useCallback((newEvents: RunEvent[]) => {
     setEvents(newEvents);
@@ -178,54 +215,24 @@ export function useTaskEvents(taskId: string | null): RunEvent[] {
       eventSources.set(taskId, es);
     }
 
-    // ════════════════════════════════════════════════════════════
-    // 修复：Fallback polling 条件扩展。
-    //
-    // 旧逻辑：只在 3 秒内 buffer 为空时启动轮询。
-    //         如果 SSE 先收到事件后断开，buffer 非空 → 不回退。
-    //
-    // 新逻辑：每 5 秒检查一次 SSE 的 readyState。
-    //         如果 EventSource 不存在或已 CLOSED → 启动 HTTP 轮询
-    //         作为兜底，确保后续事件不丢失。
-    // ════════════════════════════════════════════════════════════
-    const SSE_CHECK_INTERVAL_MS = 5000;
+    // SSE 三秒内未建立时启动 task 级共享轮询；连接恢复后 onopen 自动停止。
     const INITIAL_FALLBACK_DELAY_MS = 3000;
 
-    let sseCheckTimer: ReturnType<typeof setInterval> | null = null;
-
     const fallbackTimer = setTimeout(() => {
-      const buffer = eventBuffers.get(taskId);
-      if (!buffer || buffer.length === 0) {
-        // SSE 一直没收到事件 → 启动轮询
-        const bufferNow = eventBuffers.get(taskId) ?? [];
-        pollingCleanup.current = startPolling(taskId, bufferNow.length > 0 ? bufferNow[bufferNow.length - 1].seq : 0);
-      } else {
-        // SSE 收到过事件，但需要持续检查 SSE 是否断连
-        sseCheckTimer = setInterval(() => {
-          const es = eventSources.get(taskId);
-          if (!es || es.readyState === EventSource.CLOSED) {
-            // SSE 已关闭 → 启动轮询从最后一个已知 seq 开始
-            const currentBuffer = eventBuffers.get(taskId) ?? [];
-            const lastSeq = currentBuffer.length > 0 ? currentBuffer[currentBuffer.length - 1].seq : 0;
-            if (!pollingCleanup.current) {
-              pollingCleanup.current = startPolling(taskId, lastSeq);
-            }
-            if (sseCheckTimer) clearInterval(sseCheckTimer);
-            sseCheckTimer = null;
-          }
-        }, SSE_CHECK_INTERVAL_MS);
-      }
+      const es = eventSources.get(taskId);
+      if (!es || es.readyState !== EventSource.OPEN) ensurePolling(taskId);
     }, INITIAL_FALLBACK_DELAY_MS);
 
     return () => {
       clearTimeout(fallbackTimer);
-      if (sseCheckTimer) clearInterval(sseCheckTimer);
-      listeners.get(taskId)?.delete(setEventsAndNotify);
-      if (pollingCleanup.current) {
-        pollingCleanup.current();
-        pollingCleanup.current = null;
+      const taskListeners = listeners.get(taskId);
+      taskListeners?.delete(setEventsAndNotify);
+      if (!taskListeners || taskListeners.size === 0) {
+        listeners.delete(taskId);
+        stopPolling(taskId);
+        eventSources.get(taskId)?.close();
+        eventSources.delete(taskId);
       }
-      // 不删除 eventSources — EventSource 由 onerror 中 readyState===CLOSED 的检测来管理
     };
   }, [taskId, setEventsAndNotify]);
 

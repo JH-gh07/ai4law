@@ -245,6 +245,8 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
             <div className="assistant-command assistant-copilot-command assistant-copilot-command-redesign">
               <input
                 className="resource-search"
+                name="copilotMessage"
+                aria-label={lang === "zh" ? "Copilot 消息" : "Copilot message"}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder={lang === "zh" ? "输入消息..." : "Type a message..."}
@@ -266,6 +268,8 @@ export function AssistantPanel({ taskSpace, taskId, onToggleCollapse, onSwitchTa
           <div className="assistant-command assistant-copilot-command assistant-copilot-command-redesign">
             <input
               className="resource-search"
+              name="copilotMessageMirror"
+              aria-label={lang === "zh" ? "Copilot 消息镜像" : "Copilot message mirror"}
               tabIndex={-1}
               value={input}
               onChange={(event) => setInput(event.target.value)}

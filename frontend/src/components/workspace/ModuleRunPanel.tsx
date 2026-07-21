@@ -2522,6 +2522,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                   <label key={String(field.name)} className="field-wrap">
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
+                      name={String(field.name)}
                       value={String(assessmentValues[field.name])}
                       onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
                     />
@@ -2534,6 +2535,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                   <label key={String(field.name)} className="field-wrap schema-field-wide">
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <textarea
+                      name={String(field.name)}
                       className="runner-textarea schema-textarea"
                       value={String(assessmentValues[field.name])}
                       onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
@@ -2547,6 +2549,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                   <label key={String(field.name)} className="field-wrap">
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <input
+                      name={String(field.name)}
                       type="number"
                       min={field.min}
                       step={field.step}
@@ -2565,6 +2568,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                   <label key={String(field.name)} className="field-wrap">
                     <span>{localizeFieldLabel(lang, String(field.name), field.label)}</span>
                     <select
+                      name={String(field.name)}
                       value={String(assessmentValues[field.name])}
                       onChange={(event) => updateAssessmentValue(field.name, event.target.value as never)}
                     >
@@ -2579,6 +2583,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
               return (
                 <label key={String(field.name)} className="schema-checkbox-field">
                   <input
+                    name={String(field.name)}
                     type="checkbox"
                     checked={Boolean(assessmentValues[field.name])}
                     onChange={(event) => updateAssessmentValue(field.name, event.target.checked as never)}
@@ -2593,6 +2598,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <section className="schema-upload-card">
               <div className="runner-title">附件上传</div>
               <input
+                name="assessmentAttachments"
                 type="file"
                 multiple
                 onChange={(event) => setAssessmentFiles(Array.from(event.target.files ?? []))}

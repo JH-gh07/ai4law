@@ -91,6 +91,7 @@ export function WorkspacePromptModal({
             {valueLabel ? <span>{valueLabel}</span> : null}
             <input
               ref={inputRef}
+              name="workspacePromptValue"
               value={value ?? ""}
               onChange={(event) => onValueChange(event.target.value)}
               onKeyDown={onInputKeyDown}

@@ -645,6 +645,19 @@
   box-shadow: 0 6px 14px rgba(18, 51, 92, 0.12);
 }
 
+.tasks-card-open {
+  display: grid;
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+}
+
+.tasks-card-open:focus-visible {
+  outline: 2px solid #2f6eb7;
+  outline-offset: 4px;
+}
+
 .tasks-card-head {
   display: flex;
   justify-content: space-between;

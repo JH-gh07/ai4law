@@ -114,9 +114,8 @@ class InMemoryTaskManager:
         )
         with self._lock:
             self._tasks[task_id] = record
-        self._executor.submit(self._execute, task_id)
 
-        # 发布 status 事件
+        # 必须先发布 CREATED 再启动线程，保证历史事件顺序稳定。
         from backend.common.trace.events import RunEvent
         sm.publish(task_id, RunEvent(
             task_id=task_id,
@@ -125,6 +124,7 @@ class InMemoryTaskManager:
             summary=f"任务已创建 ({self.module})",
             detail={"module": self.module, "state": "CREATED"},
         ))
+        self._executor.submit(self._execute, task_id)
 
         return self.get_or_raise(task_id)
 
@@ -181,13 +181,13 @@ class InMemoryTaskManager:
             record.attempts += 1
             record.updated_at = _utc_now_iso()
 
-            # 新增：发布 RUNNING 状态事件（用大数值 seq 避免与 trace 事件冲突，同时对轮询可见）
+            # 各事件源可从 0/1 自行计数，SSEManager 统一生成传输序号。
             from backend.common.events.manager import get_ssemanager
             from backend.common.trace.events import RunEvent
             sm = get_ssemanager()
             sm.publish(task_id, RunEvent(
                 task_id=task_id,
-                seq=9001,
+                seq=0,
                 event_type="status",
                 summary=f"任务开始执行 ({self.module})",
                 detail={"module": self.module, "state": "RUNNING"},
@@ -273,7 +273,7 @@ class InMemoryTaskManager:
                 # 新增：发布 COMPLETED 状态
                 sm.publish(task_id, RunEvent(
                     task_id=task_id,
-                    seq=9002,
+                    seq=0,
                     event_type="status",
                     summary=f"任务执行完成 ({self.module})",
                     detail={"module": self.module, "state": "COMPLETED"},
@@ -301,7 +301,7 @@ class InMemoryTaskManager:
                 # 新增：发布 FAILED 状态
                 sm.publish(task_id, RunEvent(
                     task_id=task_id,
-                    seq=9999,
+                    seq=0,
                     event_type="status",
                     summary=f"任务执行失败: {exc}",
                     detail={"module": self.module, "state": "FAILED", "error": str(exc)},
