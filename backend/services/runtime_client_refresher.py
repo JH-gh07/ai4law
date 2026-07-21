@@ -6,6 +6,33 @@ from backend.common.llm.client import LLMClient
 from backend.integrations.delilegal import DeliLegalService
 
 
+def _rebind_llm_consumers(service, llm_client) -> None:
+    """Rebind the known client holders inside one long-lived module service."""
+    if hasattr(service, "llm_client"):
+        service.llm_client = llm_client
+
+    for child_name in (
+        "generator",
+        "renderer",
+        "type_classifier",
+        "clause_reviewer",
+        "reviewer",
+    ):
+        child = getattr(service, child_name, None)
+        if child is None:
+            continue
+        if hasattr(child, "llm_client"):
+            child.llm_client = llm_client
+        if hasattr(child, "llm"):
+            child.llm = llm_client
+
+    agents = getattr(service, "agents", None)
+    if isinstance(agents, dict):
+        for agent in agents.values():
+            if hasattr(agent, "llm_client"):
+                agent.llm_client = llm_client
+
+
 def refresh_runtime_clients(container) -> None:
     """Rebind runtime clients without putting domain imports in core config code."""
 
@@ -31,8 +58,10 @@ def refresh_runtime_clients(container) -> None:
     )
     from backend.domains.eu.bcr_review.router import service as bcr_service
     from backend.domains.eu.dpia.router import service as dpia_service
+    from backend.domains.eu.scc_review.router import service as scc_service
     from backend.domains.eu.tia.router import service as tia_service
     from backend.domains.us.cpra.router import service as cpra_service
+    from backend.domains.us.eo14117.router import service as eo14117_service
     from backend.domains.us.eo14117_flow_review.router import (
         service as eo14117_flow_service,
     )
@@ -41,24 +70,34 @@ def refresh_runtime_clients(container) -> None:
     rag_retriever._default_legal_service = container.legal_api_service
     rag_retriever._default_legal_service_loaded = True
 
-    assessment_service.generator.llm = container.llm_client
     assessment_service.retriever.legal_service = container.legal_api_service
-
-    pipia_service.llm_client = container.llm_client
-    bcr_service.llm_client = container.llm_client
-    dpia_service.llm_client = container.llm_client
-    tia_service.llm_client = container.llm_client
-    eo14117_flow_service.llm_client = container.llm_client
-    cpra_service.llm_client = container.llm_client
-    diagnosis_renderer.llm_client = container.llm_client
+    for service in (
+        container.diagnosis_service,
+        container.review_service,
+        diagnosis_renderer,
+        assessment_service,
+        pipia_service,
+        scc_service,
+        bcr_service,
+        dpia_service,
+        tia_service,
+        eo14117_flow_service,
+        cpra_service,
+        eo14117_service,
+    ):
+        _rebind_llm_consumers(service, container.llm_client)
 
     v0_gateway_service.assessment.generator.llm = container.llm_client
     v0_gateway_service.assessment.retriever.legal_service = (
         container.legal_api_service
     )
-    v0_gateway_service.pipia.llm_client = container.llm_client
-    v0_gateway_service.bcr.llm_client = container.llm_client
-    v0_gateway_service.dpia.llm_client = container.llm_client
-    v0_gateway_service.tia.llm_client = container.llm_client
-    v0_gateway_service.cn_flow.llm_client = container.llm_client
-    v0_gateway_service.cpra.llm_client = container.llm_client
+    for service in (
+        v0_gateway_service.assessment,
+        v0_gateway_service.pipia,
+        v0_gateway_service.bcr,
+        v0_gateway_service.dpia,
+        v0_gateway_service.tia,
+        v0_gateway_service.cn_flow,
+        v0_gateway_service.cpra,
+    ):
+        _rebind_llm_consumers(service, container.llm_client)
