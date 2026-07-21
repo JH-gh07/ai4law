@@ -8,6 +8,7 @@ from typing import Any
 from backend.common.llm.client import LLMClient
 from backend.common.llm.provider_registry import LLMProviderConfig, LLMProviderRegistry, normalize_openai_base_url
 from backend.integrations.delilegal import DeliLegalService
+from backend.services.runtime_health import record_llm_health
 
 DEFAULT_LLM_MODELS = [
     "deepseek-ai/DeepSeek-V3.2",
@@ -173,12 +174,18 @@ def build_provider_test_result(
         _runtime_llm_active_provider_id = provider["id"]
 
     client = LLMClient(_ProviderSettings())
+
+    def finish(result: dict[str, Any]) -> dict[str, Any]:
+        if settings is not None:
+            record_llm_health(settings, provider, result)
+        return result
+
     discovery = client.discover_models()
     discovery_status = str(discovery.get("status") or "unsupported_or_failed")
     available_models = [str(item) for item in discovery.get("models") or []]
     if discovery_status == "available" and provider["model"] not in available_models:
         latency_ms = int((time.perf_counter() - start) * 1000)
-        return {
+        return finish({
             "ok": False,
             "provider_id": provider["id"],
             "provider_type": provider["provider_type"],
@@ -190,7 +197,7 @@ def build_provider_test_result(
             "error": f"模型 {provider['model']} 不在 Provider 返回的可用模型列表中",
             "model_discovery": discovery_status,
             "available_models": available_models[:100],
-        }
+        })
     result = client.chat_with_metadata(
         system="You are a connectivity probe.",
         user="Reply with pong.",
@@ -204,7 +211,7 @@ def build_provider_test_result(
             str(result.get("error") or ""),
             str(result.get("error_type") or ""),
         )
-        return {
+        return finish({
             "ok": False,
             "provider_id": provider["id"],
             "provider_type": provider["provider_type"],
@@ -216,8 +223,8 @@ def build_provider_test_result(
             "error": error_message,
             "model_discovery": discovery_status,
             "available_models": available_models[:100],
-        }
-    return {
+        })
+    return finish({
         "ok": True,
         "provider_id": provider["id"],
         "provider_type": provider["provider_type"],
@@ -229,7 +236,7 @@ def build_provider_test_result(
         "error": "",
         "model_discovery": discovery_status,
         "available_models": available_models[:100],
-    }
+    })
 
 
 def build_delilegal_test_result(

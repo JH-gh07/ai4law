@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
 from backend.services.task_access import claim_task_access, require_task_access
+from backend.services.runtime_health import require_healthy_llm
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/tia", tags=["tia"])
 service = TIAService()
 
 
-@router.post("/generate", response_model=TIAResult)
+@router.post("/generate", response_model=TIAResult, dependencies=[Depends(require_healthy_llm)])
 def generate_tia(
     payload: TIARequest,
     db: Session = Depends(get_db),
@@ -31,7 +32,7 @@ def generate_tia(
     return result
 
 
-@router.post("/generate_async", response_model=TIAAsyncAccepted)
+@router.post("/generate_async", response_model=TIAAsyncAccepted, dependencies=[Depends(require_healthy_llm)])
 def generate_tia_async(
     payload: TIARequest,
     db: Session = Depends(get_db),

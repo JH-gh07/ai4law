@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
+from backend.services.runtime_health import require_healthy_llm
 from backend.schemas.review import (
     ReviewAnalyzeResponse,
     ReviewAsyncAccepted,
@@ -19,7 +20,7 @@ from backend.schemas.review import (
 router = APIRouter()
 
 
-@router.post("/generate", response_model=ReviewGenerateResponse)
+@router.post("/generate", response_model=ReviewGenerateResponse, dependencies=[Depends(require_healthy_llm)])
 def generate_review(
     payload: ReviewGenerateRequest,
     db: Session = Depends(get_db),
@@ -29,7 +30,7 @@ def generate_review(
     return container.review_service.generate_from_request(db, current_user.id, payload)
 
 
-@router.post("/generate_async", response_model=ReviewAsyncAccepted)
+@router.post("/generate_async", response_model=ReviewAsyncAccepted, dependencies=[Depends(require_healthy_llm)])
 def generate_review_async(
     payload: ReviewGenerateRequest,
     db: Session = Depends(get_db),
@@ -69,7 +70,7 @@ def upload_file(
     return container.review_service.upload_file(db, current_user.id, task_id, file)
 
 
-@router.post("/tasks/{task_id}/analyze", response_model=ReviewAnalyzeResponse)
+@router.post("/tasks/{task_id}/analyze", response_model=ReviewAnalyzeResponse, dependencies=[Depends(require_healthy_llm)])
 def analyze_task(
     task_id: str,
     db: Session = Depends(get_db),

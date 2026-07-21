@@ -12,6 +12,7 @@ from backend.common.knowledge.paths import regulation_articles_jsonl_path
 class Settings(BaseSettings):
     _runtime_llm_providers: list[dict[str, Any]] | None = PrivateAttr(default=None)
     _runtime_llm_active_provider_id: str = PrivateAttr(default="")
+    _runtime_provider_health: dict[str, dict[str, Any]] = PrivateAttr(default_factory=dict)
 
     app_env: str = "development"
     database_url: str = "sqlite:///./storage/ai4law.db"

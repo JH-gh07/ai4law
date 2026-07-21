@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
 from backend.services.task_access import claim_task_access, require_task_access
+from backend.services.runtime_health import require_healthy_llm
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/cn-flow", tags=["cn-flow"])
 service = CNFlowService()
 
 
-@router.post("/generate", response_model=CNFlowResult)
+@router.post("/generate", response_model=CNFlowResult, dependencies=[Depends(require_healthy_llm)])
 def generate_cn_flow(
     payload: CNFlowRequest,
     db: Session = Depends(get_db),
@@ -36,7 +37,7 @@ def generate_cn_flow(
     return result
 
 
-@router.post("/generate_async", response_model=CNFlowAsyncAccepted)
+@router.post("/generate_async", response_model=CNFlowAsyncAccepted, dependencies=[Depends(require_healthy_llm)])
 def generate_cn_flow_async(
     payload: CNFlowRequest,
     db: Session = Depends(get_db),

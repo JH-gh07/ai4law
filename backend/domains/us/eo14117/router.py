@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
 from backend.services.task_access import claim_task_access, require_task_access
+from backend.services.runtime_health import require_healthy_llm
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/us_14117", tags=["us_14117"])
 service = US14117Service()
 
 
-@router.post("/generate", response_model=US14117Result)
+@router.post("/generate", response_model=US14117Result, dependencies=[Depends(require_healthy_llm)])
 def generate_us_14117_report(
     payload: US14117Request,
     db: Session = Depends(get_db),
@@ -38,7 +39,7 @@ def generate_us_14117_report(
     return result
 
 
-@router.post("/generate_async", response_model=US14117AsyncAccepted)
+@router.post("/generate_async", response_model=US14117AsyncAccepted, dependencies=[Depends(require_healthy_llm)])
 def generate_us_14117_async(
     payload: US14117Request,
     db: Session = Depends(get_db),

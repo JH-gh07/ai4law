@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.services.artifact_registry import register_module_result_artifacts
+from backend.services.runtime_health import require_healthy_llm
 from backend.common.trace.tracer import trace_sync
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.domains.cn.transfer_diagnosis.report_renderer import DiagnosisReportRenderer
@@ -28,7 +29,7 @@ def evaluate(answers: DiagnosisAnswers) -> DiagnosisResult:
     return service.evaluate(answers)
 
 
-@router.post("/report", response_model=DiagnosisReportResponse)
+@router.post("/report", response_model=DiagnosisReportResponse, dependencies=[Depends(require_healthy_llm)])
 def generate_report(
     payload: DiagnosisReportRequest,
     db: Session = Depends(get_db),
