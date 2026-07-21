@@ -24,6 +24,7 @@ venv/
 !.env.example
 # Runtime and generated data
 outputs/
+runs/
 frontend/tmp/
 frontend/storage/
 frontend/.codex-archives/

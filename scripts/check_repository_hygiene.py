@@ -127,6 +127,7 @@ def active_path_violations(paths: list[str]) -> list[str]:
         if (
             "/tests/" in relative_path
             or relative_path == "scripts/check_repository_hygiene.py"
+            or relative_path == "config/local_new_parity_manifest.json"
         ):
             continue
         path = ROOT / relative_path

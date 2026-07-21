@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "common_ancestor_sha": "398e8acdd446a4ee09a67d8b6b893ed933695394",
+  "source_ref": "archive/local-original",
+  "source_sha": "ab4be948adc47afee7e33147018f2fb142584c43",
+  "target_ref": "origin/new",
+  "target_sha": "a0f26fe638b6832d8e24befd28dfe411c0b50b00",
+  "forbidden_source_refs": [
+    "archive/local-full"
+  ],
+  "excluded_runtime_paths": [
+    "storage/",
+    "runs/",
+    "**/.DS_Store",
+    "frontend/tmp.zip"
+  ],
+  "source_delta_summary": {
+    "added": 34,
+    "modified": 21,
+    "deleted": 1,
+    "total": 56
+  },
+  "module_ids": [
+    "cn.transfer_diagnosis",
+    "cn.security_assessment",
+    "cn.document_review",
+    "cn.scc_review",
+    "cn.pipia",
+    "us.eo_14117_flow_review",
+    "eu.scc_review",
+    "eu.bcr_review",
+    "eu.dpia",
+    "eu.tia",
+    "us.eo_14117",
+    "us.cpra"
+  ],
+  "items": [
+    {
+      "source_path": ".gitignore",
+      "source_change": "M",
+      "target_path": ".gitignore",
+      "disposition": "migrate",
+      "evidence": "Added runs/ to the target ignore rules without replacing remote rules."
+    },
+    {
+      "source_path": ".streamlit/config.toml",
+      "source_change": "D",
+      "target_path": ".streamlit/config.toml",
+      "disposition": "keep-target",
+      "evidence": "Target already removed the obsolete Streamlit config; active product is FastAPI plus React/Vite."
+    },
+    {
+      "source_path": ".vscode/settings.json",
+      "source_change": "M",
+      "target_path": ".vscode/settings.json",
+      "disposition": "keep-target",
+      "evidence": "Target intentionally ignores personal VS Code settings; no shared repository setting is required."
+    },
+    {
+      "source_path": "CODE_MODULE_ARCHITECTURE.md",
+      "source_change": "A",
+      "target_path": "docs/archive/local-original/CODE_MODULE_ARCHITECTURE.md",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/citation/tests/verify_citation_url_fix.py",
+      "source_change": "A",
+      "target_path": "backend/common/citation/tests/test_citation_url_normalization.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/llm/postprocess.py",
+      "source_change": "M",
+      "target_path": "backend/common/llm/postprocess.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/artifact_registry.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/artifact_registry.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/artifacts.py",
+      "source_change": "M",
+      "target_path": "backend/common/render/artifacts.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/content_adapter.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/content_adapter.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/docx_renderer.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/docx_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/html_renderer.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/html_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/markdown_renderer.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/markdown_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/normalization_rules.json",
+      "source_change": "A",
+      "target_path": "backend/common/render/normalization_rules.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/normalization_test_cases.json",
+      "source_change": "A",
+      "target_path": "backend/common/render/normalization_test_cases.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/pdf_renderer.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/pdf_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/render_profile.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/render_profile.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/common/render/report_model.py",
+      "source_change": "A",
+      "target_path": "backend/common/render/report_model.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/assessment/report_renderer.py",
+      "source_change": "M",
+      "target_path": "backend/domains/cn/security_assessment/report_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/bcr/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/eu/bcr_review/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/cpra/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/us/cpra/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/diagnosis/report_renderer.py",
+      "source_change": "M",
+      "target_path": "backend/domains/cn/transfer_diagnosis/report_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/dpia/report_renderer.py",
+      "source_change": "M",
+      "target_path": "backend/domains/eu/dpia/report_renderer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/eu_scc/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/eu/scc_review/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/pipia/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/cn/pipia/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/scc/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/cn/scc_review/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/modules/tia/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/eu/tia/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/services/report_service.py",
+      "source_change": "M",
+      "target_path": "backend/services/report_service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/services/review_service/service.py",
+      "source_change": "M",
+      "target_path": "backend/domains/cn/document_review/service.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/assessment/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/assessment/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/assessment/cases/02_structured.json",
+      "source_change": "A",
+      "target_path": "backend/tests/assessment/cases/02_structured.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/bcr/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/bcr/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/cn_flow/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/cn_flow/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/cpra/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/cpra/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/diagnosis/cases/01_scc_path.json",
+      "source_change": "A",
+      "target_path": "backend/tests/diagnosis/cases/01_scc_path.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/diagnosis/cases/02_security_assessment.json",
+      "source_change": "A",
+      "target_path": "backend/tests/diagnosis/cases/02_security_assessment.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/diagnosis/cases/03_exemption.json",
+      "source_change": "A",
+      "target_path": "backend/tests/diagnosis/cases/03_exemption.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/dpia/cases/01_health_ai.json",
+      "source_change": "A",
+      "target_path": "backend/tests/dpia/cases/01_health_ai.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/dpia/cases/02_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/dpia/cases/02_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/eu_scc/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/eu_scc/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/harness/runner.py",
+      "source_change": "A",
+      "target_path": "backend/tests/harness/runner.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/harness/viewer.py",
+      "source_change": "A",
+      "target_path": "backend/tests/harness/viewer.py",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/pipia/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/pipia/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/scc/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/scc/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/tia/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/tia/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "backend/tests/us_14117/cases/01_minimal.json",
+      "source_change": "A",
+      "target_path": "backend/tests/us_14117/cases/01_minimal.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "doc/AI4Law 下一阶段业务逻辑.md",
+      "source_change": "M",
+      "target_path": "docs/archive/local-original/AI4Law_下一阶段业务逻辑.md",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "doc/RENDER_ARCHITECTURE_REFERENCE.md",
+      "source_change": "A",
+      "target_path": "docs/archive/local-original/RENDER_ARCHITECTURE_REFERENCE.md",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "doc/arch/citation-url-flow.md",
+      "source_change": "A",
+      "target_path": "docs/standards/DataComplyFlow_引用跳转与CitationMap契约.md",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/DESIGN.md",
+      "source_change": "A",
+      "target_path": "docs/archive/local-original/frontend_DESIGN.md",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/package-lock.json",
+      "source_change": "M",
+      "target_path": "frontend/package-lock.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/package.json",
+      "source_change": "M",
+      "target_path": "frontend/package.json",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/src/components/common/PdfViewer.tsx",
+      "source_change": "A",
+      "target_path": "frontend/src/components/common/PdfViewer.tsx",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/src/components/workspace/WorkspaceShell.tsx",
+      "source_change": "M",
+      "target_path": "frontend/src/components/workspace/WorkspaceShell.tsx",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/src/lib/fallback-markdown.ts",
+      "source_change": "M",
+      "target_path": "frontend/src/lib/fallback-markdown.ts",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "frontend/src/styles/app.css",
+      "source_change": "M",
+      "target_path": "frontend/src/styles/app/workspace.css",
+      "disposition": "pending"
+    },
+    {
+      "source_path": "plan/rendering_architecture_plan.md",
+      "source_change": "A",
+      "target_path": "docs/archive/local-original/rendering_architecture_plan.md",
+      "disposition": "pending"
+    }
+  ]
+}
