@@ -347,7 +347,9 @@ uv run --frozen python backend/tests/harness/runner.py diagnosis all --no-llm
 
 涉及文件：M04、X02、X03。
 
-验收：`npm ci` 成功；`jit-pdf/styles.css` 被加载；依赖变化可由 lockfile 重现。
+验收：`npm ci` 成功；经 Ponytail 审查拒绝引入重试失效且会绑定损坏 lockfile 的 `jit-pdf`，改用现有鉴权 Artifact API 与浏览器原生 PDF；无依赖变化。
+
+- [x] 远程重构版 lockfile 可由 `npm ci` 完整重现：292 packages，0 vulnerabilities。
 
 #### Task 5.2：可恢复的 PdfViewer
 
@@ -355,17 +357,24 @@ uv run --frozen python backend/tests/harness/runner.py diagnosis all --no-llm
 
 验收：成功、失败、重试、URL 变化和卸载均有测试；同一展示动作只请求一次 PDF。
 
+- [x] 共享 PdfViewer 的成功、失败、真实重试、路径变化与卸载均有组件测试；每个 path 每次挂载只发起一个 PDF Blob 请求。
+
 #### Task 5.3：WorkspaceShell 双视图
 
 涉及文件：M06、workspace 样式/测试。
 
 验收：无 PDF 时按钮禁用；切换后显示对应同批次 PDF；不保留无消费者的 Blob object URL 状态。
 
+- [x] Text/PDF tab 使用原生 button/ARIA tab 语义；PDF 仅按完全相同 basename 配对，禁止回退到其他批次。
+- [x] WorkspaceShell 原两套 PDF Blob effect 已删除，报告区与资源区统一复用 PdfViewer。
+
 #### Task 5.4：前端共享 Golden Cases
 
 涉及文件：M05、X05、R10。
 
-Checkpoint 5：Vitest 全量与生产构建通过；浏览器控制台无 PDF 相关错误。
+- [x] 前端测试直接读取后端 `normalization_test_cases.json`，14/14 逐 case 一致。
+
+Checkpoint 5：✅ `npm ci`、Vitest 34/34、TypeScript 与 Vite 生产构建均通过；当前会话未提供 Chrome DevTools MCP，真实浏览器控制台检查保留为最终人工运行项，不伪造已执行证据。
 
 ### Phase 6：文档迁移与最终门禁
 
@@ -442,12 +451,12 @@ git status --short
 | G01 | 共同祖先、两个 tip 与本地增量清单 | 15/34 分叉；排除运行产物后 34 A / 21 M / 1 D，共 56 项 | 5 个单元测试通过；Git 复算 56 项通过 | ✅ |
 | G02 | Citation 专项 | 33 项及新增模块断言通过 | 原始 33 + domain 5 通过；Citation 全目录 65 通过；相关 domain 112 通过 | ✅ |
 | G03 | Backend normalization | 全部共享 cases 通过 | 原始 14/14 Golden Cases 通过 | ✅ |
-| G04 | Frontend normalization | 与后端逐 case 一致 | 待执行 | ⬜ |
+| G04 | Frontend normalization | 与后端逐 case 一致 | 共享 JSON Golden Cases 14/14 通过 | ✅ |
 | G05 | Render unit tests | PDF/MD/HTML/DOCX 全通过；未使用 registry 有证据地拒绝 | Render + services 32 项通过 | ✅ |
 | G06 | 12 模块输出矩阵 | 12/12，不减少旧输出 | 12/12 有可执行有效 PDF 证据；CN/EU/API/Service 141 项 + US 45 项通过 | ✅ |
 | G07 | Harness | 11 模块、15 cases 可运行 | 15/15 no-LLM 案例通过；4 项契约测试通过；原始案例 blob 15/15 一致 | ✅ |
-| G08 | Frontend install | `npm ci` 成功 | 待执行 | ⬜ |
-| G09 | Frontend tests/build | Vitest 与 Vite build 成功 | 待执行 | ⬜ |
+| G08 | Frontend install | `npm ci` 成功 | 292 packages installed，0 vulnerabilities | ✅ |
+| G09 | Frontend tests/build | Vitest 与 Vite build 成功 | Vitest 34/34；tsc + Vite build 成功 | ✅ |
 | G10 | Backend full suite | 全量通过或逐目录全覆盖通过 | 待执行 | ⬜ |
 | G11 | Repository hygiene | 通过 | 待执行 | ⬜ |
 | G12 | Git scope | 无意外文件、无 secrets、`git diff --check` 通过 | 待执行 | ⬜ |

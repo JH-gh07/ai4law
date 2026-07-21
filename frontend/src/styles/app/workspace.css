@@ -1015,6 +1015,44 @@
   cursor: not-allowed;
 }
 
+.workspace-report-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid rgba(106, 141, 191, 0.2);
+}
+
+.workspace-report-view-tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #527397;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-report-view-tab:hover:not(:disabled) {
+  color: #214f80;
+  background: rgba(237, 246, 255, 0.72);
+}
+
+.workspace-report-view-tab.active {
+  color: #174b80;
+  border-bottom-color: #2e6ca8;
+}
+
+.workspace-report-view-tab:focus-visible {
+  outline: 2px solid #2e6ca8;
+  outline-offset: 2px;
+}
+
+.workspace-report-view-tab:disabled {
+  color: #91a3b7;
+  cursor: not-allowed;
+}
+
 .workspace-report-preview-state {
   border: 1px solid rgba(106, 141, 191, 0.18);
   border-radius: 12px;
@@ -1037,6 +1075,24 @@
   color: #9a4a4a;
   background: rgba(255, 245, 245, 0.95);
   border-color: rgba(206, 118, 118, 0.2);
+}
+
+.pdf-viewer-state {
+  min-height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(106, 141, 191, 0.18);
+  border-radius: 12px;
+  background: rgba(247, 252, 255, 0.88);
+  color: #4b6d93;
+}
+
+.pdf-viewer-error {
+  color: #874343;
+  background: rgba(255, 245, 245, 0.95);
+  border-color: rgba(206, 118, 118, 0.24);
 }
 
 .workspace-report-html-frame,

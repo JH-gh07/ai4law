@@ -377,37 +377,43 @@
       "source_path": "frontend/package-lock.json",
       "source_change": "M",
       "target_path": "frontend/package-lock.json",
-      "disposition": "pending"
+      "disposition": "keep-target",
+      "evidence": "Kept the remote lockfile instead of the compromised local-rebase copy; npm ci installed 292 packages with zero vulnerabilities and reproduced the build."
     },
     {
       "source_path": "frontend/package.json",
       "source_change": "M",
       "target_path": "frontend/package.json",
-      "disposition": "pending"
+      "disposition": "keep-target",
+      "evidence": "Rejected jit-pdf because its local retry path was broken and it required the damaged lockfile; the existing authenticated artifact API plus the browser PDF viewer covers the requirement without a dependency."
     },
     {
       "source_path": "frontend/src/components/common/PdfViewer.tsx",
       "source_change": "A",
       "target_path": "frontend/src/components/common/PdfViewer.tsx",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Implemented a focused native viewer with one authenticated Blob request per path, accessible loading/error/retry states and deterministic object-URL cleanup; component tests cover retry, path change and unmount."
     },
     {
       "source_path": "frontend/src/components/workspace/WorkspaceShell.tsx",
       "source_change": "M",
       "target_path": "frontend/src/components/workspace/WorkspaceShell.tsx",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added accessible Text/PDF tabs, requires an exact same-basename PDF companion, and removed both duplicate Blob-fetch effects in favor of the shared PdfViewer."
     },
     {
       "source_path": "frontend/src/lib/fallback-markdown.ts",
       "source_change": "M",
       "target_path": "frontend/src/lib/fallback-markdown.ts",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Aligned the frontend fallback normalizer to the backend contract; all 14 shared JSON golden cases pass from the same source file."
     },
     {
       "source_path": "frontend/src/styles/app.css",
       "source_change": "M",
       "target_path": "frontend/src/styles/app/workspace.css",
-      "disposition": "pending"
+      "disposition": "rewrite",
+      "evidence": "Added only the missing report-tab and viewer states to the existing split workspace stylesheet; the damaged 254 KB legacy app.css was not copied."
     },
     {
       "source_path": "plan/rendering_architecture_plan.md",

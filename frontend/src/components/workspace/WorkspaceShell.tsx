@@ -33,6 +33,8 @@ import { TaskEventBridge } from "./TaskEventBridge";
 import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 import { normalizeFallbackMarkdown } from "../../lib/fallback-markdown";
 import { getRunLifecycleState, isRunInProgress, selectPreferredRun } from "../../lib/run-state";
+import { findPdfCompanion } from "../../lib/artifact-selection";
+import { PdfViewer } from "../common/PdfViewer";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -105,12 +107,6 @@ const getArtifactExtension = (value: string): string => {
   return dotIndex === -1 ? "" : fileName.slice(dotIndex + 1);
 };
 
-const getArtifactBaseName = (value: string): string => {
-  const fileName = toFileName(value).toLowerCase();
-  const dotIndex = fileName.lastIndexOf(".");
-  return dotIndex === -1 ? fileName : fileName.slice(0, dotIndex);
-};
-
 const readFileType = (pathOrName: string): string => {
   const ext = getArtifactExtension(pathOrName);
   return ext ? ext.toUpperCase() : "FILE";
@@ -122,12 +118,6 @@ const getResourceTabId = (resource: OpenedResource): string => {
   }
   return `resource:${resource.kind}:${resource.path}`;
 };
-
-const isHtmlArtifact = (artifact: OutputArtifact): boolean =>
-  artifact.kind.toLowerCase() === "html" || getArtifactExtension(artifact.path) === "html";
-
-const isPdfArtifact = (artifact: OutputArtifact): boolean =>
-  artifact.kind.toLowerCase() === "pdf" || getArtifactExtension(artifact.path) === "pdf";
 
 const getArtifactPriority = (artifact: OutputArtifact): number => {
   const index = PREFERRED_ARTIFACT_ORDER.indexOf(artifact.kind.toLowerCase());
@@ -368,14 +358,13 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const [artifactPreview, setArtifactPreview] = useState<ArtifactPreview | null>(null);
   const [artifactPreviewLoading, setArtifactPreviewLoading] = useState(false);
   const [artifactPreviewError, setArtifactPreviewError] = useState<string | null>(null);
-  const [artifactPdfObjectUrl, setArtifactPdfObjectUrl] = useState<string | null>(null);
   const [artifactDownloadBusy, setArtifactDownloadBusy] = useState(false);
   const [openedResource, setOpenedResource] = useState<OpenedResource | null>(null);
   const [openedResourcePreview, setOpenedResourcePreview] = useState<ArtifactPreview | null>(null);
   const [openedResourceLoading, setOpenedResourceLoading] = useState(false);
   const [openedResourceError, setOpenedResourceError] = useState<string | null>(null);
-  const [openedResourcePdfObjectUrl, setOpenedResourcePdfObjectUrl] = useState<string | null>(null);
   const [openedResourceDownloadBusy, setOpenedResourceDownloadBusy] = useState(false);
+  const [reportViewMode, setReportViewMode] = useState<"markdown" | "pdf">("markdown");
   const taskRuns = useMemo(
     () => state.moduleRuns.filter((item) => item.taskSpaceId === taskSpace.id),
     [state.moduleRuns, taskSpace.id]
@@ -409,13 +398,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     () => sortedReportArtifacts.find((artifact) => artifact.path === selectedArtifactPath) ?? null,
     [selectedArtifactPath, sortedReportArtifacts]
   );
-  const selectedHtmlPdfArtifact = useMemo(() => {
-    if (!selectedArtifact || !isHtmlArtifact(selectedArtifact)) return null;
-    const selectedBaseName = getArtifactBaseName(selectedArtifact.path);
-    const sameBatchPdf = sortedReportArtifacts.find((artifact) => isPdfArtifact(artifact) && getArtifactBaseName(artifact.path) === selectedBaseName);
-    if (sameBatchPdf) return sameBatchPdf;
-    return sortedReportArtifacts.find(isPdfArtifact) ?? null;
-  }, [selectedArtifact, sortedReportArtifacts]);
+  const selectedPdfArtifact = useMemo(
+    () => findPdfCompanion(selectedArtifact, sortedReportArtifacts),
+    [selectedArtifact, sortedReportArtifacts]
+  );
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
   const reconstructedReport = useMemo<ReconstructedReportPayload>(() => {
@@ -542,6 +528,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     setOpenedResource(null);
     setOpenedResourcePreview(null);
     setOpenedResourceError(null);
+    setReportViewMode("markdown");
   }, [taskSpace.id]);
 
   useEffect(() => {
@@ -593,50 +580,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [selectedArtifactPath]);
 
   useEffect(() => {
-    if (!artifactPreview || artifactPreview.render_mode !== "pdf") {
-      setArtifactPdfObjectUrl((current) => {
-        if (current) URL.revokeObjectURL(current);
-        return null;
-      });
-      return;
-    }
-
-    const previewPath = artifactPreview.path || selectedArtifactPath;
-    if (!previewPath) return;
-
-    let cancelled = false;
-    let createdObjectUrl: string | null = null;
-    fetchArtifactBlob(previewPath, "file", "Failed to load PDF ({status})")
-      .then((blob) => URL.createObjectURL(blob))
-      .then((nextObjectUrl) => {
-        if (cancelled) {
-          URL.revokeObjectURL(nextObjectUrl);
-          return;
-        }
-        createdObjectUrl = nextObjectUrl;
-        setArtifactPdfObjectUrl((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return nextObjectUrl;
-        });
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        setArtifactPdfObjectUrl((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return null;
-        });
-        setArtifactPreviewError(
-          error instanceof Error ? error.message : "Failed to load PDF preview"
-        );
-      });
-
-    return () => {
-      cancelled = true;
-      if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
-    };
-  }, [artifactPreview, selectedArtifactPath]);
-
-  useEffect(() => {
     if (!openedResource || openedResource.kind === "input-form") {
       setOpenedResourcePreview(null);
       setOpenedResourceError(null);
@@ -665,50 +608,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       cancelled = true;
     };
   }, [openedResource]);
-
-  useEffect(() => {
-    if (!openedResourcePreview || openedResourcePreview.render_mode !== "pdf") {
-      setOpenedResourcePdfObjectUrl((current) => {
-        if (current) URL.revokeObjectURL(current);
-        return null;
-      });
-      return;
-    }
-
-    const previewPath = openedResourcePreview.path;
-    if (!previewPath) return;
-
-    let cancelled = false;
-    let createdObjectUrl: string | null = null;
-    fetchArtifactBlob(previewPath, "file", "Failed to load PDF ({status})")
-      .then((blob) => URL.createObjectURL(blob))
-      .then((nextObjectUrl) => {
-        if (cancelled) {
-          URL.revokeObjectURL(nextObjectUrl);
-          return;
-        }
-        createdObjectUrl = nextObjectUrl;
-        setOpenedResourcePdfObjectUrl((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return nextObjectUrl;
-        });
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        setOpenedResourcePdfObjectUrl((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return null;
-        });
-        setOpenedResourceError(
-          error instanceof Error ? error.message : "Failed to load PDF preview"
-        );
-      });
-
-    return () => {
-      cancelled = true;
-      if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
-    };
-  }, [openedResourcePreview]);
 
   const downloadArtifact = async (path: string) => {
     setArtifactDownloadBusy(true);
@@ -1251,10 +1150,12 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                         sandbox="allow-same-origin"
                       />
                     </div>
-                  ) : openedResourcePreview.render_mode === "pdf" && openedResourcePdfObjectUrl ? (
-                    <div className="workspace-report-pdf-frame">
-                      <iframe title={openedResourcePreview.file_name} src={openedResourcePdfObjectUrl} />
-                    </div>
+                  ) : openedResourcePreview.render_mode === "pdf" ? (
+                    <PdfViewer
+                      artifactPath={openedResource.path}
+                      title={openedResourcePreview.file_name}
+                      lang={lang}
+                    />
                   ) : openedResourcePreview.render_mode === "text" ? (
                     renderTextArtifactPreview(openedResourcePreview)
                   ) : (
@@ -1307,97 +1208,116 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
           </article>
         </section>
         <AssessmentIntermediatesPanel outputFiles={responseInsight.outputFiles} lang={lang} />
-        {artifactPreviewLoading ? (
-          <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文档预览..." : "Loading artifact preview..."}</div>
-        ) : null}
-        {artifactPreviewError ? (
-          <div className="workspace-report-preview-state workspace-report-preview-error">{artifactPreviewError}</div>
-        ) : null}
-        {reportPreviewSections.length > 0 ? (
-          <section className="workspace-report-chapters">
-            {reportPreviewSections.map((section, index) => (
-              <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
-                <strong>{section.title}</strong>
-                <div className="workspace-report-richtext">
-                  {reconstructedReport.citationTaskId ? (
-                    <CitationMarkdownRenderer
-                      markdown={normalizeMarkdownForRender(section.content)}
-                      taskId={reconstructedReport.citationTaskId}
-                      moduleKey={taskSpace.module}
-                    />
-                  ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {normalizeMarkdownForRender(section.content)}
-                    </ReactMarkdown>
-                  )}
-                </div>
-              </article>
-            ))}
-          </section>
-        ) : (
-          <p className="resource-empty">{t("reportNoData")}</p>
-        )}
-        {artifactPreview ? (
-          <section className="workspace-report-selected">
-            <div className="workspace-report-selected-head">
-              <div>
-                <span>{lang === "zh" ? "导出文件预览" : "Export Preview"}</span>
-                <strong>{artifactPreview.file_name}</strong>
-              </div>
-              <div className="workspace-report-selected-actions">
-                {artifactPreview.render_mode === "html" ? (
-                  selectedHtmlPdfArtifact ? (
-                    <button
-                      type="button"
-                      className="workspace-report-download-icon"
-                      onClick={() => void downloadArtifact(selectedHtmlPdfArtifact.path)}
-                      aria-label={lang === "zh" ? "下载 PDF" : "Download PDF"}
-                      title={lang === "zh" ? "下载 PDF" : "Download PDF"}
-                      disabled={artifactDownloadBusy}
-                    >
-                      <DownloadIcon width="16" height="16" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="workspace-report-download-icon disabled"
-                      aria-label={lang === "zh" ? "暂无 PDF 可下载" : "No PDF available"}
-                      title={lang === "zh" ? "暂无 PDF 可下载" : "No PDF available"}
-                      disabled
-                    >
-                      <DownloadIcon width="16" height="16" />
-                    </button>
-                  )
-                ) : null}
-              </div>
-            </div>
-            {artifactPreview.render_mode === "html" ? (
-              <div className="workspace-report-html-frame">
-                <iframe
-                  title={artifactPreview.file_name}
-                  srcDoc={artifactPreview.content}
-                  sandbox="allow-same-origin"
-                />
-              </div>
-            ) : artifactPreview.render_mode === "pdf" && artifactPdfObjectUrl ? (
-              <div className="workspace-report-pdf-frame">
-                <iframe title={artifactPreview.file_name} src={artifactPdfObjectUrl} />
-              </div>
-            ) : artifactPreview.render_mode === "text" ? (
-              renderTextArtifactPreview(artifactPreview)
-            ) : artifactPreview.file_url ? (
+        <nav className="workspace-report-view-tabs" role="tablist" aria-label={lang === "zh" ? "报告视图" : "Report view"}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={reportViewMode === "markdown"}
+            aria-controls="workspace-report-view"
+            className={`workspace-report-view-tab ${reportViewMode === "markdown" ? "active" : ""}`}
+            onClick={() => setReportViewMode("markdown")}
+          >
+            {lang === "zh" ? "正文" : "Text"}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={reportViewMode === "pdf"}
+            aria-controls="workspace-report-view"
+            className={`workspace-report-view-tab ${reportViewMode === "pdf" ? "active" : ""}`}
+            onClick={() => setReportViewMode("pdf")}
+            disabled={!selectedPdfArtifact}
+          >
+            {lang === "zh" ? "PDF 预览" : "PDF"}
+          </button>
+        </nav>
+        <div id="workspace-report-view" role="tabpanel">
+          {reportViewMode === "pdf" ? (
+            selectedPdfArtifact ? (
+              <PdfViewer
+                artifactPath={selectedPdfArtifact.path}
+                title={toFileName(selectedPdfArtifact.path)}
+                lang={lang}
+              />
+            ) : (
               <div className="workspace-report-preview-state">
-                <button
-                  type="button"
-                  className="workspace-report-link-button"
-                  onClick={() => void openArtifactByBlob(artifactPreview.path)}
-                >
-                  {lang === "zh" ? "当前文件暂不支持内嵌预览，点击打开原文件" : "Inline preview is not available for this file. Open the source file."}
-                </button>
+                {lang === "zh" ? "当前报告没有同批次 PDF。" : "No matching PDF exists for this report."}
               </div>
-            ) : null}
-          </section>
-        ) : null}
+            )
+          ) : (
+            <>
+              {artifactPreviewLoading ? (
+                <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文档预览..." : "Loading artifact preview..."}</div>
+              ) : null}
+              {artifactPreviewError ? (
+                <div className="workspace-report-preview-state workspace-report-preview-error">{artifactPreviewError}</div>
+              ) : null}
+              {reportPreviewSections.length > 0 ? (
+                <section className="workspace-report-chapters">
+                  {reportPreviewSections.map((section, index) => (
+                    <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">
+                      <strong>{section.title}</strong>
+                      <div className="workspace-report-richtext">
+                        {reconstructedReport.citationTaskId ? (
+                          <CitationMarkdownRenderer
+                            markdown={normalizeMarkdownForRender(section.content)}
+                            taskId={reconstructedReport.citationTaskId}
+                            moduleKey={taskSpace.module}
+                          />
+                        ) : (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {normalizeMarkdownForRender(section.content)}
+                          </ReactMarkdown>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </section>
+              ) : (
+                <p className="resource-empty">{t("reportNoData")}</p>
+              )}
+              {artifactPreview ? (
+                <section className="workspace-report-selected">
+                  <div className="workspace-report-selected-head">
+                    <div>
+                      <span>{lang === "zh" ? "导出文件预览" : "Export Preview"}</span>
+                      <strong>{artifactPreview.file_name}</strong>
+                    </div>
+                    <div className="workspace-report-selected-actions">
+                      {artifactPreview.render_mode === "html" ? (
+                        <button
+                          type="button"
+                          className={`workspace-report-download-icon ${selectedPdfArtifact ? "" : "disabled"}`}
+                          onClick={() => selectedPdfArtifact && void downloadArtifact(selectedPdfArtifact.path)}
+                          aria-label={selectedPdfArtifact ? (lang === "zh" ? "下载 PDF" : "Download PDF") : (lang === "zh" ? "暂无 PDF 可下载" : "No PDF available")}
+                          title={selectedPdfArtifact ? (lang === "zh" ? "下载 PDF" : "Download PDF") : (lang === "zh" ? "暂无 PDF 可下载" : "No PDF available")}
+                          disabled={!selectedPdfArtifact || artifactDownloadBusy}
+                        >
+                          <DownloadIcon width="16" height="16" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  {artifactPreview.render_mode === "html" ? (
+                    <div className="workspace-report-html-frame">
+                      <iframe title={artifactPreview.file_name} srcDoc={artifactPreview.content} sandbox="allow-same-origin" />
+                    </div>
+                  ) : artifactPreview.render_mode === "pdf" && selectedArtifactPath ? (
+                    <PdfViewer artifactPath={selectedArtifactPath} title={artifactPreview.file_name} lang={lang} />
+                  ) : artifactPreview.render_mode === "text" ? (
+                    renderTextArtifactPreview(artifactPreview)
+                  ) : artifactPreview.file_url ? (
+                    <div className="workspace-report-preview-state">
+                      <button type="button" className="workspace-report-link-button" onClick={() => void openArtifactByBlob(artifactPreview.path)}>
+                        {lang === "zh" ? "当前文件暂不支持内嵌预览，点击打开原文件" : "Inline preview is not available for this file. Open the source file."}
+                      </button>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+            </>
+          )}
+        </div>
       </section>
     );
   };
