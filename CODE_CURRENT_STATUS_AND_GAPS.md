@@ -503,6 +503,8 @@ ProviderCapabilities
 - 由请求级或 run 级依赖容器获取客户端快照。
 - 过渡期内建立完整实例注册表，保存配置后原子刷新并测试 11 个模块。
 
+**2026-07-22 部分落实**：11 个模块的长寿命服务、生成器、渲染器、分类器、审查器和 Agent 持有者已统一刷新，原先漏掉的 `eu.scc_review`、`us.eo_14117`、`assessment.renderer` 和多类内部 Agent 已纳入契约测试。但运行中任务仍可能因全局服务被重绑而中途读到新客户端；必须完成 run 级 `ProviderSnapshot` 注入才能整体关闭 P1-02。
+
 **验收测试**
 
 - 运行中修改提供商后，新任务使用新配置，旧任务仍使用启动时快照。
@@ -1167,7 +1169,7 @@ backend/common/
 
 | 层级 | 必测内容 | 是否已有 | 缺口 |
 |---|---|---|---|
-| 后端单元 | 规则、模型、规范化、服务 | 有，506 通过 | Live API 与浏览器联动不属于该层 |
+| 后端单元 | 规则、模型、规范化、服务 | 有，507 通过 | Live API 与浏览器联动不属于该层 |
 | 前端单元 | API、store、PDF、artifact、事件、引用受控交互 | 有，48 通过 | 仍需真实浏览器 E2E 与视觉回归 |
 | CLI no-LLM | 真实可编辑案例和落盘 | 10/11 | review、批量入口、统一 manifest |
 | 外部 API contract | LLM/得理响应适配 | 零散/不足 | 得理 adapter 基本无测试 |
@@ -1356,6 +1358,19 @@ Run ID / Artifact ID：
 ```
 
 **证据边界**：健康快照当前为进程内安全门禁，服务重启后会默认回到“未探测”并阻断，不会错误信任旧结果。ProviderSnapshot 持久化、旧任务与新任务的配置隔离属于下一个 P1-02 切片。
+
+### 18.5 2026-07-22 运行时客户端刷新覆盖切片
+
+| 任务 | 已落实行为 | 关键提交 | 可核对证据 |
+|---|---|---|---|
+| P1-02 新任务刷新覆盖 | 保存运行时配置后，统一重绑 container、v0 网关和 11 个领域模块的 LLM/得理持有者；覆盖顶层 service 以及 generator、renderer、type classifier、clause reviewer 和 agent 字典；补齐 SCC、EO14117、assessment renderer 等原漏项 | `3a0c02c` | 红灯首先捕获 `assessment.renderer.llm_client` 仍指向旧实例；绿灯后对 11 模块顶层与内部持有者执行对象同一性断言，相关 15 项通过，根目录全量 507 项通过 |
+
+```text
+命令：.venv/bin/pytest -q
+结果：507 passed, 1 warning in 75.08s；退出码 0
+```
+
+**证据边界**：本切片保证“配置保存后新任务的各层持有者看到新客户端”，不证明“正在运行的旧任务仍绑定旧 Provider”。后者需要将不可变 `ProviderSnapshot` 传入每次 run，并在 RunManifest 中持久化。
 
 ---
 
