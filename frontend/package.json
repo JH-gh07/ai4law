@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:dev-cases:api": "vitest run tests/contract/dev-test-cases.api.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
