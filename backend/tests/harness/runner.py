@@ -26,6 +26,7 @@ from backend.common.runtime.run_manifest import (
     summarize_output,
     summarize_trace,
 )
+from backend.tests.harness.validators import validate_expected
 
 
 RUNS_DIR = REPO_ROOT / "runs"
@@ -347,35 +348,14 @@ def _harness_provider_snapshot(no_llm: bool) -> dict[str, Any]:
     return {"mode": "live", **snapshot}
 
 
-def _check(
-    actual: dict[str, Any], expected: dict[str, Any], no_llm: bool
-) -> tuple[list[str], list[str]]:
-    passed: list[str] = []
-    failed: list[str] = []
-    for field, expected_value in expected.items():
-        if field in {"risk_level", "conclusion_source"} and no_llm:
-            continue
-        if field == "result_not_empty" and expected_value is True:
-            ok = bool(actual.get("report_path") or actual.get("task_id") or actual)
-        elif field == "profile_contains" and isinstance(expected_value, dict):
-            profile = actual.get("profile") or {}
-            for key, value in expected_value.items():
-                ok = profile.get(key) == value
-                (passed if ok else failed).append(
-                    f"profile.{key} expected {value!r}, got {profile.get(key)!r}"
-                )
-            continue
-        elif field == "legal_basis_contains":
-            legal_basis = actual.get("legal_basis") or []
-            for value in expected_value:
-                ok = any(value in item for item in legal_basis)
-                (passed if ok else failed).append(f"legal_basis contains {value!r}")
-            continue
-        else:
-            ok = actual.get(field) == expected_value
-        message = f"{field} expected {expected_value!r}, got {actual.get(field)!r}"
-        (passed if ok else failed).append(message)
-    return passed, failed
+def _check(case: dict[str, Any], actual: dict[str, Any], no_llm: bool):
+    """Assert a case's declared expectations through the shared validator."""
+    return validate_expected(
+        actual,
+        case.get("expected", {}),
+        no_llm=no_llm,
+        expected_llm_only=case.get("expected_llm_only", {}),
+    )
 
 
 def execute(
@@ -412,7 +392,8 @@ def execute(
     if error is not None:
         _write_json(run_dir / "output" / "error.json", error)
 
-    passed, failed = _check(result or {}, case.get("expected", {}), no_llm)
+    assertions = _check(case, result or {}, no_llm)
+    passed, failed, skipped = assertions.passed, assertions.failed, assertions.skipped
     status = "FAIL" if error or failed else "PASS"
     manifest = {
         "schema_version": "1.0",
@@ -434,6 +415,7 @@ def execute(
         },
         "checks_passed": len(passed),
         "checks_failed": len(failed),
+        "checks_skipped": len(skipped),
         "recommended_path": (result or {}).get("recommended_path", ""),
         "risk_level": (result or {}).get("risk_level", ""),
         "error": error,
@@ -444,7 +426,8 @@ def execute(
         tokens = observability["tokens"]
         print(
             f"{module}/{case_id}: {status} "
-            f"({duration_ms:.0f} ms, {len(passed)} passed, {len(failed)} failed)"
+            f"({duration_ms:.0f} ms, {len(passed)} passed, {len(failed)} failed, "
+            f"{len(skipped)} skipped)"
         )
         print(
             f"events={observability['event_count']} "
