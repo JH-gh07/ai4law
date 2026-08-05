@@ -280,6 +280,17 @@ Workflow 必须设置 `timeout-minutes`，且同一分支新提交应通过 `con
 
 当前唯一需要仓库管理员操作的 P0 项是：Workflow 首次远端通过后，在 GitHub 分支保护中把检查名 `Validate 26 developer cases` 设置为 `new` 分支必需检查。远端运行和分支保护未完成前，不得将 PR 1B 标记为全流程闭环。
 
+最终本地回归结果：
+
+| 检查 | 结果 |
+|---|---|
+| 后端全量 `uv run pytest -q` | 563 passed，1 条既有 Starlette deprecation warning |
+| 前端全量 `npm test` | 66 passed，2 skipped；无 Contract App URL 时专用 HTTP 测试按设计跳过 |
+| 专用 HTTP 门禁 | 2/2 passed；含 26/26 正例与 422/422/400 负例 |
+| 前端生产构建 | 通过；保留既有 500 kB chunk warning |
+| 本轮 Python 静态检查 | Ruff 通过 |
+| Workflow 文件 | YAML 语法解析通过；远端 Actions 尚待首次运行 |
+
 ---
 
 ## 四、PR 2：OpenAPI 自动生成 TypeScript 类型（P1）
