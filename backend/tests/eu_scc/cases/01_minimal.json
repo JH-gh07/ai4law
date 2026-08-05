@@ -4,7 +4,7 @@
   "input": {
     "project_name": "EU SCC合规审查",
     "scc_text": "Module Two: Controller to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate technical and organisational measures. 4. Sub-processing. The data importer shall not engage another processor without prior specific or general written authorisation. 5. Data subject rights. The data importer shall assist the data exporter in fulfilling its obligations to respond to data subject requests. 6. Breach notification. The data importer shall notify the data exporter without undue delay after becoming aware of a personal data breach. 7. Deletion or return. At the choice of the data exporter, the data importer shall delete or return all personal data after the end of the provision of services. 8. Audits. The data importer shall make available to the data exporter all information necessary to demonstrate compliance.",
-    "declared_module_type": "2",
+    "declared_module_type": "Module Two",
     "exporter_role": "controller",
     "importer_role": "processor",
     "has_tia": false,
@@ -40,13 +40,5 @@
       "json"
     ]
   },
-  "known_defects": [
-    {
-      "field": "module_validation.is_correct",
-      "observed": false,
-      "expected_if_fixed": true,
-      "reason": "scc_rule_engine.validate_module_selection compares declared_module_type verbatim against the English label (\"Module Two\"). No real caller sends that: this CLI case sends \"2\" and all three frontend cases send \"C2P\", so every correctly-declared review still reports a module mismatch. The existing unit tests pass \"Module Two\" directly, which is why they stay green. Assertion withheld until the canonical input format is decided.",
-      "evidence": "backend/domains/eu/scc_review/scc_rule_engine.py:181"
-    }
-  ]
+  "expected_llm_only": {}
 }

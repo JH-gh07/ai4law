@@ -115,13 +115,21 @@ def summarize_trace(trace_recorder: Any) -> dict[str, Any]:
             continue
         payload = raw.get("payload") if isinstance(raw, dict) else {}
         detail = payload.get("detail") if isinstance(payload, dict) else {}
-        if not isinstance(detail, dict) or detail.get("tool") != "llm_chat":
+        if not isinstance(detail, dict):
+            continue
+        nested_llm = detail.get("llm")
+        if isinstance(nested_llm, dict):
+            usage = nested_llm
+        elif detail.get("tool") == "llm_chat":
+            usage = detail.get("usage")
+        else:
             continue
         if raw.get("name") == "tool_result":
             llm_calls += 1
-        if detail.get("fallback") is True:
+        if (
+            isinstance(nested_llm, dict) and nested_llm.get("fallback") is True
+        ) or detail.get("fallback") is True:
             fallback_count += 1
-        usage = detail.get("usage")
         if isinstance(usage, dict):
             for key in tokens:
                 value = usage.get(key)

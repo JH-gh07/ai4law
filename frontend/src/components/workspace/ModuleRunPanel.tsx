@@ -777,10 +777,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       .join("；");
 
     const roleMap: Record<EuSccFormValues["transfer_role"], { declared: string; exporter: string; importer: string }> = {
-      c2c: { declared: "C2C", exporter: "controller", importer: "controller" },
-      c2p: { declared: "C2P", exporter: "controller", importer: "processor" },
-      p2p: { declared: "P2P", exporter: "processor", importer: "processor" },
-      p2c: { declared: "P2C", exporter: "processor", importer: "controller" }
+      c2c: { declared: "Module One", exporter: "controller", importer: "controller" },
+      c2p: { declared: "Module Two", exporter: "controller", importer: "processor" },
+      p2p: { declared: "Module Three", exporter: "processor", importer: "processor" },
+      p2c: { declared: "Module Four", exporter: "processor", importer: "controller" }
     };
     const roles = roleMap[values.transfer_role];
     return {

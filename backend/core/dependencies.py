@@ -40,3 +40,12 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="未登录或会话已过期")
     return user
+
+
+def get_current_user_optional(
+    db: Session = Depends(get_db),
+    authorization: str | None = Header(default=None),
+) -> AuthUser | None:
+    token = _extract_bearer_token(authorization)
+    user = auth_service.get_user_by_token(db, token)
+    return user

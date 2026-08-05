@@ -149,6 +149,9 @@ class LLMClient:
 
         如果 API 未配置或调用失败，返回降级占位文本（不抛异常）。
         """
+        from backend.common.tasks.cancellation import TaskCancelled, raise_if_task_cancelled
+
+        raise_if_task_cancelled()
         scoped_client = current_llm_client.get()
         if scoped_client is not None and scoped_client is not self:
             return scoped_client.chat_with_metadata(
@@ -176,6 +179,11 @@ class LLMClient:
                         "model": self._model,
                         "temperature": temperature,
                         "max_tokens": max_tokens,
+                        "llm": {
+                            "channel": channel,
+                            "provider": self._provider,
+                            "model": self._model,
+                        },
                         "system": system[:400],
                         "user": user[:800],
                         "raw_name": "llm_chat_request",
@@ -216,6 +224,7 @@ class LLMClient:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+            raise_if_task_cancelled()
             content = response.choices[0].message.content or ""
             usage = self._extract_usage(response)
             if trace is not None:
@@ -234,6 +243,13 @@ class LLMClient:
                             "model": self._model,
                             "usage": usage.as_dict(),
                             "fallback": False,
+                            "llm": {
+                                "channel": channel,
+                                "provider": self._provider,
+                                "model": self._model,
+                                **usage.as_dict(),
+                                "fallback": False,
+                            },
                             "content": content[:1200],
                             "raw_name": "llm_chat_response",
                         },
@@ -244,6 +260,8 @@ class LLMClient:
                 "usage": usage.as_dict(),
                 "fallback": False,
             }
+        except TaskCancelled:
+            raise
         except APIError as exc:
             logger.error("LLMClient API error: %s", exc)
             return self._fallback_metadata(
@@ -287,6 +305,13 @@ class LLMClient:
                         "model": self._model,
                         "usage": usage,
                         "fallback": True,
+                        "llm": {
+                            "channel": channel,
+                            "provider": self._provider,
+                            "model": self._model,
+                            **usage,
+                            "fallback": True,
+                        },
                         "severity": "warning",
                         "error": error,
                         "error_type": error_type,

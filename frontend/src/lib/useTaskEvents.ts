@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchTaskEvents, getTaskEventStreamUrl } from "../api/events";
+import { fetchStreamToken, fetchTaskEvents, getTaskEventStreamUrl } from "../api/events";
 
 export type RunEvent = {
   event_id: string;
   task_id: string;
   seq: number;
+  correlation_id?: string | null;
   event_type:
     | "status"
     | "thought"
@@ -43,14 +44,22 @@ function addUsage(target: TokenUsage, prompt: number, completion: number, total:
 export function extractTokenUsage(events: RunEvent[]): TokenUsageBreakdown {
   return events.reduce<TokenUsageBreakdown>(
     (acc, event) => {
-      if (event.detail?.tool !== "llm_chat") return acc;
-      const usage = event.detail?.usage;
-      if (!usage || typeof usage !== "object") return acc;
-      const record = usage as Record<string, unknown>;
+      const nested = event.detail?.llm;
+      const nestedRecord = nested && typeof nested === "object"
+        ? nested as Record<string, unknown>
+        : null;
+      const legacyUsage = event.detail?.usage;
+      const record = nestedRecord ?? (
+        event.detail?.tool === "llm_chat" && legacyUsage && typeof legacyUsage === "object"
+          ? legacyUsage as Record<string, unknown>
+          : null
+      );
+      if (!record) return acc;
       const prompt = typeof record.prompt_tokens === "number" ? record.prompt_tokens : 0;
       const completion = typeof record.completion_tokens === "number" ? record.completion_tokens : 0;
       const total = typeof record.total_tokens === "number" ? record.total_tokens : prompt + completion;
-      const channel = event.detail?.channel === "copilot" ? "copilot" : "workflow";
+      const channelValue = nestedRecord?.channel ?? event.detail?.channel;
+      const channel = channelValue === "copilot" ? "copilot" : "workflow";
       return {
         total: addUsage(acc.total, prompt, completion, total),
         copilot: channel === "copilot" ? addUsage(acc.copilot, prompt, completion, total) : acc.copilot,
@@ -73,6 +82,9 @@ const eventSources = new Map<string, EventSource>();
 const listeners = new Map<string, Set<(events: RunEvent[]) => void>>();
 const eventBuffers = new Map<string, RunEvent[]>();
 const pollingCleanups = new Map<string, () => void>();
+const pendingConnections = new Set<string>();
+const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const MAX_BUFFERED_EVENTS = 500;
 
 function eventIdentity(event: RunEvent): string {
   return event.event_id || `${event.task_id}:${event.seq}`;
@@ -96,6 +108,18 @@ function latestKnownSeq(taskId: string): number {
   return (eventBuffers.get(taskId) ?? []).reduce((latest, event) => Math.max(latest, event.seq), -1);
 }
 
+function isTerminalEvent(event: RunEvent): boolean {
+  const state = typeof event.detail?.state === "string"
+    ? event.detail.state.toUpperCase()
+    : "";
+  return event.event_type === "status"
+    && ["COMPLETED", "FAILED", "CANCELED", "CANCELLED"].includes(state);
+}
+
+function hasTerminalEvent(taskId: string): boolean {
+  return (eventBuffers.get(taskId) ?? []).some(isTerminalEvent);
+}
+
 function stopPolling(taskId: string): void {
   pollingCleanups.get(taskId)?.();
   pollingCleanups.delete(taskId);
@@ -106,51 +130,86 @@ function ensurePolling(taskId: string): void {
   pollingCleanups.set(taskId, startPolling(taskId, latestKnownSeq(taskId)));
 }
 
-function connectSSE(taskId: string): EventSource {
-  const es = new EventSource(getTaskEventStreamUrl(taskId));
-
-  es.onopen = () => {
-    stopPolling(taskId);
-  };
-
-  es.onmessage = (e) => {
-    if (!e.data || e.data.startsWith(":")) return;
-    try {
-      const event: RunEvent = JSON.parse(e.data);
-      const buffer = eventBuffers.get(taskId) ?? [];
-      const merged = mergeRunEvents(buffer, [event]);
-      if (merged.length === buffer.length) return;
-      eventBuffers.set(taskId, merged);
-      const subs = listeners.get(taskId);
-      if (subs) {
-        for (const cb of subs) cb([...merged]);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  };
-
-  // ════════════════════════════════════════════════════════════
-  // 修复：不手动 close/delete EventSource。
-  // 浏览器 EventSource 有内置自动重连机制，在连接意外断开后会
-  // 自动重新连接。之前的代码在 onerror 中手动 close() + delete
-  // 会阻止这个机制。
-  //
-  // 正确的做法：记录错误状态供 fallback polling 决策使用，
-  // 但让浏览器自己管理重连生命周期。
-  // ════════════════════════════════════════════════════════════
-  es.onerror = () => {
-    // 浏览器会基于 readyState 自动重连。我们只记录错误以便
-    // fallback polling 做决策，不干预 EventSource 生命周期。
-    // 连接到 CLOSED 状态（非 0/1）时才从 registry 中清理。
-    if (es.readyState === EventSource.CLOSED) {
-      eventSources.delete(taskId);
-      if ((listeners.get(taskId)?.size ?? 0) > 0) ensurePolling(taskId);
-    }
-  };
-
-  return es;
+function stopTaskTransport(taskId: string): void {
+  const source = eventSources.get(taskId);
+  eventSources.delete(taskId);
+  source?.close();
+  stopPolling(taskId);
+  const reconnectTimer = reconnectTimers.get(taskId);
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimers.delete(taskId);
 }
+
+function publishTaskEvents(taskId: string, incoming: RunEvent[]): void {
+  const buffer = eventBuffers.get(taskId) ?? [];
+  const merged = mergeRunEvents(buffer, incoming);
+  const reachedTerminalState = incoming.some(isTerminalEvent);
+  if (merged.length !== buffer.length) {
+    const bounded = merged.slice(-MAX_BUFFERED_EVENTS);
+    eventBuffers.set(taskId, bounded);
+    const subs = listeners.get(taskId);
+    if (subs) {
+      for (const cb of subs) cb([...bounded]);
+    }
+  }
+  if (reachedTerminalState) stopTaskTransport(taskId);
+}
+
+function scheduleReconnect(taskId: string): void {
+  if (
+    reconnectTimers.has(taskId)
+    || hasTerminalEvent(taskId)
+    || (listeners.get(taskId)?.size ?? 0) === 0
+  ) return;
+  ensurePolling(taskId);
+  const timer = setTimeout(() => {
+    reconnectTimers.delete(taskId);
+    void ensureSSE(taskId);
+  }, 1000);
+  reconnectTimers.set(taskId, timer);
+}
+
+async function ensureSSE(taskId: string): Promise<void> {
+  if (
+    eventSources.has(taskId)
+    || pendingConnections.has(taskId)
+    || hasTerminalEvent(taskId)
+    || (listeners.get(taskId)?.size ?? 0) === 0
+  ) return;
+
+  pendingConnections.add(taskId);
+  try {
+    const { stream_token } = await fetchStreamToken(taskId);
+    if ((listeners.get(taskId)?.size ?? 0) === 0) return;
+
+    const es = new EventSource(
+      `${getTaskEventStreamUrl(taskId)}?token=${encodeURIComponent(stream_token)}&since=${latestKnownSeq(taskId)}`,
+    );
+    es.onopen = () => {
+      stopPolling(taskId);
+    };
+    es.onmessage = (message) => {
+      if (!message.data || message.data.startsWith(":")) return;
+      try {
+        publishTaskEvents(taskId, [JSON.parse(message.data) as RunEvent]);
+      } catch {
+        // Ignore malformed transport frames; polling remains the recovery path.
+      }
+    };
+    es.onerror = () => {
+      if (eventSources.get(taskId) !== es) return;
+      es.close();
+      eventSources.delete(taskId);
+      scheduleReconnect(taskId);
+    };
+    eventSources.set(taskId, es);
+  } catch {
+    scheduleReconnect(taskId);
+  } finally {
+    pendingConnections.delete(taskId);
+  }
+}
+
 
 function startPolling(taskId: string, since: number): () => void {
   let active = true;
@@ -158,24 +217,18 @@ function startPolling(taskId: string, since: number): () => void {
 
   const poll = async () => {
     while (active) {
+      let delayMs = 1500;
       try {
         const data = await fetchTaskEvents<RunEvent>(taskId, latestSeq);
         if (data.events && data.events.length > 0) {
-          const buffer = eventBuffers.get(taskId) ?? [];
-          const merged = mergeRunEvents(buffer, data.events);
-          eventBuffers.set(taskId, merged);
           latestSeq = data.latest_seq ?? latestSeq;
-          if (merged.length !== buffer.length) {
-            const subs = listeners.get(taskId);
-            if (subs) {
-              for (const cb of subs) cb([...merged]);
-            }
-          }
+          publishTaskEvents(taskId, data.events);
+          delayMs = data.has_more ? 0 : 1500;
         }
       } catch {
         // retry on next interval
       }
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, delayMs));
     }
   };
   void poll();
@@ -209,16 +262,13 @@ export function useTaskEvents(taskId: string | null): RunEvent[] {
       setEvents([...existing]);
     }
 
-    // Start SSE if not already connected for this taskId
-    if (!eventSources.has(taskId)) {
-      const es = connectSSE(taskId);
-      eventSources.set(taskId, es);
-    }
+    void ensureSSE(taskId);
 
-    // SSE 三秒内未建立时启动 task 级共享轮询；连接恢复后 onopen 自动停止。
+    // 3 秒后如果 SSE 还未建立 (token 请求慢 / 失败)，启动 polling fallback
     const INITIAL_FALLBACK_DELAY_MS = 3000;
 
     const fallbackTimer = setTimeout(() => {
+      if (hasTerminalEvent(taskId)) return;
       const es = eventSources.get(taskId);
       if (!es || es.readyState !== EventSource.OPEN) ensurePolling(taskId);
     }, INITIAL_FALLBACK_DELAY_MS);
@@ -229,9 +279,7 @@ export function useTaskEvents(taskId: string | null): RunEvent[] {
       taskListeners?.delete(setEventsAndNotify);
       if (!taskListeners || taskListeners.size === 0) {
         listeners.delete(taskId);
-        stopPolling(taskId);
-        eventSources.get(taskId)?.close();
-        eventSources.delete(taskId);
+        stopTaskTransport(taskId);
       }
     };
   }, [taskId, setEventsAndNotify]);

@@ -28,6 +28,7 @@ class RunEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     task_id: str = ""
     seq: int = 0
+    correlation_id: str | None = None
     event_type: EventType
     timestamp: str = Field(default_factory=_utc_now_iso)
     summary: str = ""

@@ -73,3 +73,15 @@ def test_legacy_name_mapping():
     assert received[2].event_type == "warning"
     assert received[0].detail == {"raw_name": "diagnosis"}
     assert received[1].detail == {"raw_name": "profile_extracted"}
+
+
+def test_tool_start_and_result_share_a_generated_correlation_id():
+    received: list = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        recorder = TraceRecorder(trace_dir=Path(tmpdir), task_id="t")
+        recorder.subscribe(received.append)
+        recorder.record("tool_start", {"summary": "call"})
+        recorder.record("tool_result", {"summary": "result"})
+
+    assert received[0].correlation_id
+    assert received[1].correlation_id == received[0].correlation_id

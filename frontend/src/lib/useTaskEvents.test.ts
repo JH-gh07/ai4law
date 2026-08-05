@@ -1,9 +1,10 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchTaskEvents } from "../api/events";
-import { mergeRunEvents, type RunEvent, useTaskEvents } from "./useTaskEvents";
+import { fetchStreamToken, fetchTaskEvents } from "../api/events";
+import { extractTokenUsage, mergeRunEvents, type RunEvent, useTaskEvents } from "./useTaskEvents";
 
 vi.mock("../api/events", () => ({
+  fetchStreamToken: vi.fn(),
   fetchTaskEvents: vi.fn(),
   getTaskEventStreamUrl: (taskId: string) => `/events/${taskId}`,
 }));
@@ -17,6 +18,11 @@ class FakeEventSource {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: (() => void) | null = null;
   onopen: (() => void) | null = null;
+  static instances: FakeEventSource[] = [];
+
+  constructor(readonly url: string) {
+    FakeEventSource.instances.push(this);
+  }
 
   close() {
     this.readyState = FakeEventSource.CLOSED;
@@ -27,6 +33,11 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal("EventSource", FakeEventSource);
   vi.mocked(fetchTaskEvents).mockResolvedValue({ events: [], latest_seq: 0 });
+  vi.mocked(fetchStreamToken).mockResolvedValue({
+    stream_token: "stream-token-1",
+    expires_at: "2026-08-06T00:05:00Z",
+  });
+  FakeEventSource.instances = [];
 });
 
 afterEach(() => {
@@ -63,6 +74,27 @@ describe("mergeRunEvents", () => {
   });
 });
 
+describe("extractTokenUsage", () => {
+  it("reads the canonical nested LLM usage contract", () => {
+    const llmEvent = event("llm-event", 3, "model returned");
+    llmEvent.event_type = "tool_result";
+    llmEvent.detail = {
+      llm: {
+        channel: "workflow",
+        prompt_tokens: 11,
+        completion_tokens: 7,
+        total_tokens: 18,
+      },
+    };
+
+    expect(extractTokenUsage([llmEvent]).total).toEqual({
+      prompt_tokens: 11,
+      completion_tokens: 7,
+      total_tokens: 18,
+    });
+  });
+});
+
 describe("useTaskEvents", () => {
   it("shares one fallback polling loop across multiple subscribers", async () => {
     const first = renderHook(() => useTaskEvents("shared-task"));
@@ -76,5 +108,60 @@ describe("useTaskEvents", () => {
 
     first.unmount();
     second.unmount();
+  });
+
+  it("requests a fresh stream token after an SSE connection fails", async () => {
+    vi.mocked(fetchStreamToken)
+      .mockResolvedValueOnce({ stream_token: "stream-token-1", expires_at: "2026-08-06T00:05:00Z" })
+      .mockResolvedValueOnce({ stream_token: "stream-token-2", expires_at: "2026-08-06T00:10:00Z" });
+    const hook = renderHook(() => useTaskEvents("reconnect-task"));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(FakeEventSource.instances[0]?.url).toContain("stream-token-1");
+
+    await act(async () => {
+      const first = FakeEventSource.instances[0];
+      first.readyState = FakeEventSource.CLOSED;
+      first.onerror?.();
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(fetchStreamToken).toHaveBeenCalledTimes(2);
+    expect(FakeEventSource.instances[1]?.url).toContain("stream-token-2");
+    hook.unmount();
+  });
+
+  it("does not reconnect a task that already has a terminal event", async () => {
+    const firstMount = renderHook(() => useTaskEvents("completed-task"));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const source = FakeEventSource.instances[0];
+    await act(async () => {
+      source.onmessage?.({
+        data: JSON.stringify({
+          event_id: "completed-event",
+          task_id: "completed-task",
+          seq: 9,
+          event_type: "status",
+          timestamp: "2026-08-06T00:00:09Z",
+          summary: "completed",
+          detail: { state: "COMPLETED" },
+          level: "audit",
+        }),
+      } as MessageEvent);
+    });
+    firstMount.unmount();
+
+    const secondMount = renderHook(() => useTaskEvents("completed-task"));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+
+    expect(fetchStreamToken).toHaveBeenCalledTimes(1);
+    expect(fetchTaskEvents).not.toHaveBeenCalled();
+    secondMount.unmount();
   });
 });

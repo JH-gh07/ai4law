@@ -455,8 +455,12 @@ function mergeTool(toolStart: RunEvent, toolResult: RunEvent, thought: RunEvent 
       ? detailToBlock(chooseOutputLabel(sem, toolResult.detail, status, toolResult.event_type), toolResult.detail, lang)
       : textToBlock(chooseOutputLabel(sem, null, status, toolResult.event_type), toolResult.summary),
     rawEventIds: rawEventIds(toolStart, thought, toolResult),
-    tokenInput: extractTokenCount(toolResult.detail?.usage, "prompt_tokens") ?? extractTokenCount(toolResult.detail?.usage, "input"),
-    tokenOutput: extractTokenCount(toolResult.detail?.usage, "completion_tokens") ?? extractTokenCount(toolResult.detail?.usage, "output"),
+    tokenInput: extractTokenCount(toolResult.detail?.llm, "prompt_tokens")
+      ?? extractTokenCount(toolResult.detail?.usage, "prompt_tokens")
+      ?? extractTokenCount(toolResult.detail?.usage, "input"),
+    tokenOutput: extractTokenCount(toolResult.detail?.llm, "completion_tokens")
+      ?? extractTokenCount(toolResult.detail?.usage, "completion_tokens")
+      ?? extractTokenCount(toolResult.detail?.usage, "output"),
   });
 }
 
@@ -535,6 +539,7 @@ function bareNode(event: RunEvent, lang: TraceLang): TraceNode {
 export function adaptEvents(rawEvents: RunEvent[], lang: TraceLang): TraceNode[] {
   const nodes: TraceNode[] = [];
   let pendingToolStart: RunEvent | null = null;
+  const correlatedToolStarts = new Map<string, RunEvent>();
   let pendingThought: RunEvent | null = null;
 
   for (const event of rawEvents) {
@@ -542,12 +547,22 @@ export function adaptEvents(rawEvents: RunEvent[], lang: TraceLang): TraceNode[]
 
     switch (event.event_type) {
       case "tool_start": {
+        if (event.correlation_id) {
+          correlatedToolStarts.set(event.correlation_id, event);
+          break;
+        }
         if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart, lang));
         pendingToolStart = event;
         break;
       }
       case "tool_result": {
-        if (pendingToolStart) {
+        const correlatedStart = event.correlation_id
+          ? correlatedToolStarts.get(event.correlation_id)
+          : undefined;
+        if (correlatedStart) {
+          nodes.push(mergeTool(correlatedStart, event, pendingThought, lang));
+          correlatedToolStarts.delete(event.correlation_id!);
+        } else if (pendingToolStart) {
           nodes.push(mergeTool(pendingToolStart, event, pendingThought, lang));
           pendingToolStart = null;
         } else {
@@ -606,6 +621,9 @@ export function adaptEvents(rawEvents: RunEvent[], lang: TraceLang): TraceNode[]
   }
 
   if (pendingToolStart) nodes.push(flushToolStart(pendingToolStart, lang));
+  for (const pending of correlatedToolStarts.values()) {
+    nodes.push(flushToolStart(pending, lang));
+  }
   if (pendingThought) nodes.push(standaloneNode(pendingThought, lang));
 
   return nodes;

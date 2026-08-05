@@ -17,7 +17,7 @@ def build_session_factory(engine):
 
 
 def init_db(engine) -> None:
-    from backend.models import auth, diagnosis, report, review, task, workspace  # noqa: F401
+    from backend.models import auth, diagnosis, event, report, review, task, workspace  # noqa: F401
     import backend.common.knowledge.models  # noqa: F401
     import backend.common.citation.audit  # noqa: F401
 
@@ -32,6 +32,7 @@ def _ensure_legacy_columns(engine) -> None:
         "report_artifacts": {"user_id": "TEXT DEFAULT ''"},
         "review_tasks": {"user_id": "TEXT DEFAULT ''", "request_context_json": "TEXT DEFAULT '{}'"},
         "uploaded_files": {"user_id": "TEXT DEFAULT ''"},
+        "run_events": {"correlation_id": "TEXT"},
     }
     with engine.begin() as conn:
         for table_name, columns in required.items():

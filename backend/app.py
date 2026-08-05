@@ -23,6 +23,8 @@ async def lifespan(app: FastAPI):
     import asyncio as _asyncio
     from backend.common.events.manager import get_ssemanager
 
+    get_ssemanager(container.session_factory)
+
     async def _cleanup_loop():
         while True:
             await _asyncio.sleep(600)  # 每 10 分钟执行一次

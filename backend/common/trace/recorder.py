@@ -4,7 +4,9 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 from typing import Any, Callable
+from uuid import uuid4
 
 
 def _utc_now_iso() -> str:
@@ -22,6 +24,7 @@ _NAME_TO_EVENT_TYPE: dict[str, str] = {
     "warning": "warning",
     "final": "final",
     "final_brief": "final_brief",
+    "task_canceled": "status",
     # 向后兼容 — 现有 trace.record() 调用点
     "assessment_request": "status",
     "profile_extracted": "intermediate",
@@ -123,8 +126,14 @@ class TraceRecorder:
         self._events: list[TraceEvent] = []
         self._subscribers: list[Callable] = []  # Callable[[RunEvent], None]
         self._task_id = task_id
+        self._record_lock = Lock()
+        self._pending_tool_correlations: list[str] = []
 
     def record(self, name: str, payload: dict[str, Any]) -> Path:
+        with self._record_lock:
+            return self._record_locked(name, payload)
+
+    def _record_locked(self, name: str, payload: dict[str, Any]) -> Path:
         self._seq += 1
         safe_name = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in (name or "event")).strip("_")
         filename = f"{self._seq:03d}_{safe_name}.json"
@@ -136,6 +145,20 @@ class TraceRecorder:
         if self._subscribers:
             from backend.common.trace.events import RunEvent
             event_type = _NAME_TO_EVENT_TYPE.get(name, "status")
+            detail_payload = payload.get("detail")
+            supplied_correlation = None
+            if isinstance(detail_payload, dict):
+                supplied_correlation = detail_payload.get("correlation_id")
+            supplied_correlation = payload.get("correlation_id") or supplied_correlation
+            correlation_id = str(supplied_correlation) if supplied_correlation else None
+            if name == "tool_start":
+                correlation_id = correlation_id or str(uuid4())
+                self._pending_tool_correlations.append(correlation_id)
+            elif name == "tool_result":
+                if correlation_id is None and self._pending_tool_correlations:
+                    correlation_id = self._pending_tool_correlations.pop()
+                elif correlation_id in self._pending_tool_correlations:
+                    self._pending_tool_correlations.remove(correlation_id)
             if isinstance(payload.get("detail"), dict):
                 detail = dict(payload.get("detail") or {})
             else:
@@ -148,6 +171,7 @@ class TraceRecorder:
             run_event = RunEvent(
                 task_id=self._task_id,
                 seq=self._seq,
+                correlation_id=correlation_id,
                 event_type=event_type,
                 timestamp=to_write["created_at"],
                 summary=payload.get("summary", name),

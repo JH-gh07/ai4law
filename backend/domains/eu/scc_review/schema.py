@@ -160,9 +160,9 @@ class SCCReviewRequest(BaseModel):
     """EU SCC compliance review request."""
     project_name: str = Field(min_length=2)
     scc_text: str = Field(min_length=10, description="Full SCC document text")
-    declared_module_type: str = ""  # user's claim about Module Type
-    exporter_role: str = ""  # controller / processor
-    importer_role: str = ""  # controller / processor
+    declared_module_type: SCCModuleType | Literal[""] = ""
+    exporter_role: PartyRole | Literal[""] = ""
+    importer_role: PartyRole | Literal[""] = ""
     has_tia: bool = False
     has_supplementary_measures: bool = False
     uploaded_files: list[str] = Field(default_factory=list)

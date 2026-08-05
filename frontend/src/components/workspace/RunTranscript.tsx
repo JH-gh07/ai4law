@@ -1,4 +1,5 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
+import { fetchTaskManifest, type RunManifest } from "../../api/events";
 import { useLang } from "../../lib/language";
 import { extractTokenUsage, useTaskEvents } from "../../lib/useTaskEvents";
 import { adaptEvents } from "../../lib/trace-adapter";
@@ -14,6 +15,7 @@ type Props = {
 export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
   const { lang } = useLang();
   const events = useTaskEvents(taskId);
+  const [manifest, setManifest] = useState<RunManifest | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // 语义聚合: 原始事件 -> 语义节点
@@ -34,23 +36,47 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
     .find((event) => event.event_type === "status" && typeof event.detail?.state === "string");
   const latestStateValue =
     typeof latestState?.detail?.state === "string" ? latestState.detail.state.toLowerCase() : null;
-  const hasFailureState = latestStateValue != null && /(fail|error|cancel|timeout|aborted)/i.test(latestStateValue);
+  const manifestState = manifest?.status?.toLowerCase() ?? null;
+  const effectiveState = latestStateValue ?? manifestState;
+  const hasFailureState = effectiveState != null && /(fail|error|cancel|timeout|aborted)/i.test(effectiveState);
   const hasFailureSummary = [...events]
     .reverse()
     .some((event) => /失败|异常|报错|中止|超时|failed|error/i.test(event.summary));
   const hasFinal = events.some((event) => event.event_type === "final");
   const isRunning = events.length > 0 && !hasFinal && !hasFailureState;
 
-  const runStatus = !taskId || events.length === 0
+  const runStatus = !taskId
     ? "empty" as const
     : hasFailureState || hasFailureSummary
       ? "failed" as const
-      : hasFinal
+      : hasFinal || manifestState === "completed" || manifestState === "succeeded"
         ? "completed" as const
-        : "running" as const;
+        : events.length > 0 || manifestState
+          ? "running" as const
+          : "empty" as const;
 
-  const firstTs = events[0]?.timestamp ?? nodes[0]?.timestamp;
-  const lastTs = terminalEvent?.timestamp ?? nodes[nodes.length - 1]?.timestamp;
+  const firstTs = manifest?.created_at ?? events[0]?.timestamp ?? nodes[0]?.timestamp;
+  const lastTs = manifest?.updated_at ?? terminalEvent?.timestamp ?? nodes[nodes.length - 1]?.timestamp;
+  const manifestTokens = manifest?.observability?.tokens;
+
+  useEffect(() => {
+    if (!taskId) {
+      setManifest(null);
+      return;
+    }
+    setManifest(null);
+    let canceled = false;
+    void fetchTaskManifest(taskId)
+      .then((value) => {
+        if (!canceled) setManifest(value);
+      })
+      .catch(() => {
+        if (!canceled) setManifest(null);
+      });
+    return () => {
+      canceled = true;
+    };
+  }, [taskId, latestStateValue]);
 
   useEffect(() => {
     if (!bodyRef.current) return;
@@ -71,6 +97,7 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
         taskId={taskId}
         startedAt={firstTs}
         completedAt={runStatus === "completed" || runStatus === "failed" ? lastTs : undefined}
+        durationMs={manifest?.duration_ms}
         nodeCount={nodes.length}
         eventCount={events.length}
         workflowPromptTokens={tokenUsage.workflow.prompt_tokens}
@@ -79,9 +106,9 @@ export function RunTranscript({ taskId, moduleLabel = "" }: Props) {
         copilotPromptTokens={tokenUsage.copilot.prompt_tokens}
         copilotCompletionTokens={tokenUsage.copilot.completion_tokens}
         copilotTotalTokens={tokenUsage.copilot.total_tokens}
-        totalPromptTokens={tokenUsage.total.prompt_tokens}
-        totalCompletionTokens={tokenUsage.total.completion_tokens}
-        totalTokens={tokenUsage.total.total_tokens}
+        totalPromptTokens={manifestTokens?.prompt_tokens ?? tokenUsage.total.prompt_tokens}
+        totalCompletionTokens={manifestTokens?.completion_tokens ?? tokenUsage.total.completion_tokens}
+        totalTokens={manifestTokens?.total_tokens ?? tokenUsage.total.total_tokens}
       />
 
       <div className="trace-timeline-body" ref={bodyRef}>

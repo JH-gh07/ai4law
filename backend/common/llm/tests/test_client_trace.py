@@ -1,9 +1,16 @@
 from pathlib import Path
+from threading import Event
+
+import pytest
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.context import current_llm_client
 from backend.common.trace.context import current_trace
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.tasks.cancellation import (
+    TaskCancelled,
+    current_cancel_event,
+)
 from backend.core.settings import Settings
 
 
@@ -105,3 +112,15 @@ def test_fallback_is_recorded_as_a_model_result_for_manifest_accounting(
     assert result["fallback"] is True
     assert event["payload"]["detail"]["fallback"] is True
     assert event["payload"]["detail"]["usage"]["usage_source"] == "unavailable"
+
+
+def test_llm_call_stops_at_cancellation_boundary() -> None:
+    client = LLMClient(Settings(_env_file=None))
+    canceled = Event()
+    canceled.set()
+    token = current_cancel_event.set(canceled)
+    try:
+        with pytest.raises(TaskCancelled):
+            client.chat_with_metadata(system="s", user="u")
+    finally:
+        current_cancel_event.reset(token)

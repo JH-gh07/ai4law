@@ -1,14 +1,18 @@
 """Integration tests for SSE polling endpoint."""
 
 import json
+import asyncio
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
 from backend.common.events.manager import get_ssemanager
+from backend.common.events.manager import SSEManager
 from backend.common.trace.events import RunEvent
 from backend.core.settings import Settings
+from backend.core.db import build_engine, build_session_factory, init_db
 from backend.services.task_access import claim_task_access
 
 
@@ -153,6 +157,33 @@ def test_polling_accepts_minus_one_as_the_initial_cursor(owned_task_client):
     assert [event["seq"] for event in response.json()["events"]] == [0]
 
 
+def test_polling_paginates_persistent_events(owned_task_client):
+    client, owner_token, _ = owned_task_client
+    sm = get_ssemanager()
+    for index in range(3):
+        sm.publish(
+            "task-1",
+            RunEvent(
+                task_id="task-1",
+                seq=index,
+                event_type="status",
+                summary=f"event-{index}",
+            ),
+        )
+
+    response = client.get(
+        "/api/v1/events/task/task-1/events?since=-1&limit=2",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+
+    assert response.status_code == 200
+    assert [event["summary"] for event in response.json()["events"]] == [
+        "event-0",
+        "event-1",
+    ]
+    assert response.json()["has_more"] is True
+
+
 def test_manifest_returns_persisted_accounting_for_owner(owned_task_client):
     client, owner_token, _ = owned_task_client
 
@@ -175,3 +206,56 @@ def test_manifest_is_hidden_from_other_user(owned_task_client):
     )
 
     assert response.status_code == 404
+
+
+def test_stream_token_can_be_reused_for_eventsource_reconnect(owned_task_client):
+    client, owner_token, _ = owned_task_client
+
+    response = client.post(
+        "/api/v1/events/task/task-1/token",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    token = payload["stream_token"]
+    manager = get_ssemanager()
+    first_verification = manager.verify_stream_token(token)
+    second_verification = manager.verify_stream_token(token)
+    assert first_verification is not None
+    assert first_verification[0] == "task-1"
+    assert second_verification == first_verification
+    expires_at = datetime.fromisoformat(payload["expires_at"])
+    assert (expires_at - datetime.now(timezone.utc)).total_seconds() > 240
+
+
+def test_sse_catches_up_events_written_by_another_manager(tmp_path):
+    from backend.api.v1.endpoints.events import _stream_events
+    import backend.common.events.manager as manager_module
+
+    engine = build_engine(f"sqlite:///{tmp_path / 'cross-worker.db'}")
+    init_db(engine)
+    session_factory = build_session_factory(engine)
+    stream_manager = SSEManager(session_factory=session_factory)
+    writer_manager = SSEManager(session_factory=session_factory)
+    manager_module._ssemanager = stream_manager
+
+    class ConnectedRequest:
+        async def is_disconnected(self) -> bool:
+            return False
+
+    async def receive_cross_worker_event() -> str:
+        generator = _stream_events("task-1", ConnectedRequest(), since=-1)
+        next_frame = asyncio.create_task(anext(generator))
+        await asyncio.sleep(0.05)
+        writer_manager.publish(
+            "task-1",
+            RunEvent(task_id="task-1", seq=0, event_type="status", summary="cross-worker"),
+        )
+        try:
+            return await asyncio.wait_for(next_frame, timeout=2)
+        finally:
+            await generator.aclose()
+
+    frame = asyncio.run(receive_cross_worker_event())
+    assert "cross-worker" in frame

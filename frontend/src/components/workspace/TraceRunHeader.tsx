@@ -8,6 +8,7 @@ type Props = {
   taskId: string | null;
   startedAt?: string;
   completedAt?: string;
+  durationMs?: number;
   nodeCount: number;
   eventCount: number;
   workflowPromptTokens?: number;
@@ -38,6 +39,7 @@ export function TraceRunHeader({
   taskId,
   startedAt,
   completedAt,
+  durationMs: authoritativeDurationMs,
   nodeCount,
   eventCount,
   workflowPromptTokens,
@@ -52,10 +54,11 @@ export function TraceRunHeader({
 }: Props) {
   const t = getTraceI18n(lang);
   const liveCompletedAt = completedAt ?? (status === "running" ? new Date().toISOString() : undefined);
-  const durationMs =
+  const durationMs = authoritativeDurationMs ?? (
     startedAt && liveCompletedAt
       ? Math.max(0, new Date(liveCompletedAt).getTime() - new Date(startedAt).getTime())
-      : null;
+      : null
+  );
   const durationLabel = durationMs != null ? `${Math.round(durationMs / 1000)}s` : "--";
   const workspaceLabel = moduleLabel.trim().length > 0 ? moduleLabel : t.workspace;
 

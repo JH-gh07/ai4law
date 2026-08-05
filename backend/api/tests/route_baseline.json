@@ -378,6 +378,13 @@
     "operation_id": "task_event_stream_api_v1_events_task__task_id__stream_get"
   },
   {
+    "method": "POST",
+    "path": "/api/v1/events/task/{task_id}/token",
+    "route_name": "issue_stream_token",
+    "endpoint_module": "backend.api.v1.endpoints.events",
+    "operation_id": "issue_stream_token_api_v1_events_task__task_id__token_post"
+  },
+  {
     "method": "GET",
     "path": "/api/v1/knowledge/cases/{case_id}",
     "route_name": "get_case_detail",

@@ -508,7 +508,7 @@ const euSccBasic: DevTestCase = {
   payload: {
     project_name: "电商平台云服务数据处理",
     scc_text: "MODULE TWO: Transfer controller to processor\n\nClause 1: Purpose and scope...\n\nThe data exporter is: E-Commerce GmbH, Berlin, Germany\nThe data importer is: CloudServe Inc., Delaware, USA\n\nAnnex I\nA. LIST OF PARTIES\nData exporter: E-Commerce GmbH, Friedrichstrasse 123, 10117 Berlin, Germany, Contact: dpo@ecommerce.de, Role: Controller\nData importer: CloudServe Inc., 123 Main St, Wilmington DE, USA, Contact: privacy@cloudserve.com, Role: Processor\n\nB. DESCRIPTION OF TRANSFER\nCategories of data subjects: Customers of the data exporter's online platform\nCategories of personal data: Name, email, shipping address, order history, payment information\nSensitive data transferred: No\nFrequency of transfer: Continuous\nNature of processing: Hosting, storage, and technical support\nPurpose of transfer: Cloud hosting and infrastructure services\nRetention period: Duration of service agreement plus 30 days\n\nC. COMPETENT SUPERVISORY AUTHORITY\nBerlin Data Protection Authority (Berliner Beauftragte fur Datenschutz und Informationsfreiheit)\n\nClause 9: Use of sub-processors\nThe data importer maintains a list of approved sub-processors available at https://cloudserve.com/subprocessors. The data importer shall inform the data exporter of any intended changes to sub-processors at least 30 days in advance.\n\nTechnical and organisational measures: Encryption at rest (AES-256), encryption in transit (TLS 1.3), access controls, regular security audits",
-    declared_module_type: "C2P",
+    declared_module_type: "Module Two",
     exporter_role: "controller",
     importer_role: "processor",
     has_tia: false,
@@ -544,7 +544,7 @@ const euSccHealthIndia: DevTestCase = {
   payload: {
     project_name: "罕见病研究数据分析",
     scc_text: "MODULE TWO: Transfer controller to processor\n\nData exporter: Health Research Institute, Amsterdam, Netherlands\nData importer: DataAnalytica India Pvt Ltd, Bangalore, India\n\nClause 15(a) - modified from standard text: The data importer shall, as soon as legally permissible, provide the data exporter with information about any legally binding request from a public authority. The data importer shall use reasonable discretion in determining what information to provide.\n\nAnnex I.B:\nCategories of data subjects: Patients participating in rare disease studies\nCategories of personal data: Patient health records, genetic sequencing data, treatment history\nSensitive data transferred: The parties confirm that no special categories of data are transferred\n\nClause 9: Use of sub-processors\nThe data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor.",
-    declared_module_type: "C2P",
+    declared_module_type: "Module Two",
     exporter_role: "controller",
     importer_role: "processor",
     has_tia: false,
@@ -578,7 +578,7 @@ const euSccModuleError: DevTestCase = {
   payload: {
     project_name: "客户支持工单子处理",
     scc_text: "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nData exporter: Orange Cloud BV (processor acting on behalf of Nordic Retail Group, the controller)\nData importer: Orange Cloud BV (incorrect - double role assignment)\nSub-processor: Balkan IT Support DOO, Belgrade, Serbia\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may, with the agreement of the Parties, accede to these Clauses at any time, either as a data exporter or as a data importer, by completing the Annexes and signing Annex I.A.\n\nAnnex I.A: Nordic Retail Group (controller) details marked as 'See Master Service Agreement' with no address or contact information filled in.\n\nClause 9: Data importer may engage sub-processors after notification. No requirement for specific written authorization from controller.",
-    declared_module_type: "C2P",
+    declared_module_type: "Module Two",
     exporter_role: "processor",
     importer_role: "processor",
     has_tia: false,

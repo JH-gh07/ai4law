@@ -6,6 +6,7 @@ from threading import Event
 from backend.common.events.manager import get_ssemanager
 from backend.common.llm.context import current_llm_client
 from backend.common.tasks.manager import InMemoryTaskManager
+from backend.common.tasks.cancellation import is_task_cancelled, raise_if_task_cancelled
 from backend.common.trace.recorder import TraceRecorder
 
 
@@ -70,6 +71,70 @@ def test_traced_task_events_have_one_monotonic_transport_sequence(tmp_path) -> N
         "任务开始执行 (ut)",
         "业务追踪",
     ]
+
+
+def test_cancel_publishes_terminal_event_without_late_success(tmp_path) -> None:
+    import backend.common.events.manager as events_module
+
+    events_module._ssemanager = None
+    manager = InMemoryTaskManager(module="ut")
+    recorder = TraceRecorder(tmp_path / "trace")
+    started = Event()
+    release = Event()
+    returned = Event()
+
+    def runner() -> dict[str, bool]:
+        started.set()
+        release.wait(timeout=2)
+        returned.set()
+        return {"ok": True}
+
+    accepted = manager.submit_with_trace(runner, recorder)
+    assert started.wait(timeout=2)
+
+    canceled = manager.cancel(accepted.task_id)
+    release.set()
+    assert returned.wait(timeout=2)
+    time.sleep(0.1)
+
+    events = get_ssemanager().get_events_since(accepted.task_id, since=-1)
+    canceled_events = [
+        event
+        for event in events
+        if event.event_type == "status"
+        and isinstance(event.detail, dict)
+        and event.detail.get("state") == "CANCELED"
+    ]
+    assert canceled.state == "CANCELED"
+    assert len(canceled_events) == 1
+    assert all(event.event_type not in {"final", "final_brief"} for event in events)
+
+
+def test_cooperative_cancellation_does_not_emit_failure_final(tmp_path) -> None:
+    import backend.common.events.manager as events_module
+
+    events_module._ssemanager = None
+    manager = InMemoryTaskManager(module="ut")
+    recorder = TraceRecorder(tmp_path / "trace")
+    started = Event()
+    stopped = Event()
+
+    def runner() -> dict[str, bool]:
+        started.set()
+        while not is_task_cancelled():
+            time.sleep(0.01)
+        stopped.set()
+        raise_if_task_cancelled()
+        return {"ok": True}
+
+    accepted = manager.submit_with_trace(runner, recorder)
+    assert started.wait(timeout=2)
+    manager.cancel(accepted.task_id)
+    assert stopped.wait(timeout=2)
+    time.sleep(0.1)
+
+    events = get_ssemanager().get_events_since(accepted.task_id, since=-1)
+    assert all(event.event_type not in {"final", "final_brief"} for event in events)
 
 
 @dataclass(frozen=True)

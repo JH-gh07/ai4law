@@ -800,11 +800,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   };
 
   useEffect(() => {
+    // 任何有 asyncTaskId 的 run 都应被追踪 — 无论运行中还是已完成。
+    // SSEManager 保留完成后 30 分钟的历史事件，支持回放。
     if (!latestRun?.asyncTaskId) return;
     if (activeTaskId === latestRun.asyncTaskId) return;
-    if (isRunInProgress(latestRun) || !activeTaskId) {
-      setActiveTaskId(latestRun.asyncTaskId);
-    }
+    setActiveTaskId(latestRun.asyncTaskId);
   }, [activeTaskId, latestRun]);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
-from backend.common.runtime.run_manifest import summarize_input, summarize_output
+from backend.common.runtime.run_manifest import summarize_input, summarize_output, summarize_trace
+from backend.common.trace.recorder import TraceRecorder
 
 
 def test_string_uploaded_files_are_visible_without_copying_file_content() -> None:
@@ -37,3 +38,31 @@ def test_output_summary_deduplicates_report_path_and_typed_output() -> None:
         {"role": "docx", "path": "/tmp/report.docx"},
         {"role": "pdf", "path": "/tmp/report.pdf"},
     ]
+
+
+def test_trace_summary_reads_canonical_nested_llm_usage(tmp_path) -> None:
+    recorder = TraceRecorder(tmp_path / "trace", task_id="task-1")
+    recorder.record(
+        "tool_result",
+        {
+            "summary": "model returned",
+            "detail": {
+                "llm": {
+                    "prompt_tokens": 13,
+                    "completion_tokens": 5,
+                    "total_tokens": 18,
+                    "usage_source": "provider",
+                    "fallback": False,
+                }
+            },
+        },
+    )
+
+    summary = summarize_trace(recorder)
+
+    assert summary["llm_calls"] == 1
+    assert summary["tokens"] == {
+        "prompt_tokens": 13,
+        "completion_tokens": 5,
+        "total_tokens": 18,
+    }

@@ -6,9 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from threading import Lock
+from threading import Event, Lock
 import time
 from typing import Any, Callable
+
+from backend.common.tasks.cancellation import TaskCancelled, current_cancel_event
 
 
 def _utc_now_iso() -> str:
@@ -47,6 +49,7 @@ class _TaskRecord:
     trace_recorder: Any | None
     manifest_path: Path | None
     created_monotonic: float
+    cancel_event: Event
 
 
 class InMemoryTaskManager:
@@ -86,6 +89,7 @@ class InMemoryTaskManager:
             trace_recorder=None,
             manifest_path=None,
             created_monotonic=time.monotonic(),
+            cancel_event=Event(),
         )
         with self._lock:
             self._tasks[task_id] = record
@@ -147,6 +151,7 @@ class InMemoryTaskManager:
             trace_recorder=trace_recorder,
             manifest_path=trace_recorder.trace_dir.parent / "run_manifest.json",
             created_monotonic=time.monotonic(),
+            cancel_event=Event(),
         )
         with self._lock:
             self._tasks[task_id] = record
@@ -193,11 +198,13 @@ class InMemoryTaskManager:
             record.updated_at = _utc_now_iso()
             record.error = None
             record.result = None
+            record.cancel_event.clear()
         self._persist_manifest(record)
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
     def cancel(self, task_id: str) -> TaskSnapshot:
+        trace_recorder = None
         with self._lock:
             record = self._tasks.get(task_id)
             if record is None:
@@ -206,7 +213,35 @@ class InMemoryTaskManager:
                 return self._snapshot(record)
             record.state = "CANCELED"
             record.updated_at = _utc_now_iso()
+            record.cancel_event.set()
+            trace_recorder = record.trace_recorder
         self._persist_manifest(record)
+        payload = {
+            "summary": f"任务已取消 ({self.module})",
+            "detail": {"module": self.module, "state": "CANCELED"},
+        }
+        if trace_recorder is not None:
+            try:
+                trace_recorder.record("task_canceled", payload)
+                trace_recorder.write_manifest()
+            except Exception:
+                pass
+            finally:
+                self._persist_manifest(record)
+        else:
+            from backend.common.events.manager import get_ssemanager
+            from backend.common.trace.events import RunEvent
+
+            get_ssemanager().publish(
+                task_id,
+                RunEvent(
+                    task_id=task_id,
+                    seq=0,
+                    event_type="status",
+                    summary=payload["summary"],
+                    detail=payload["detail"],
+                ),
+            )
         return self.get_or_raise(task_id)
 
     def _execute(self, task_id: str) -> None:
@@ -234,7 +269,13 @@ class InMemoryTaskManager:
         self._persist_manifest(record)
 
         try:
-            result = record.runner()
+            cancel_token = current_cancel_event.set(record.cancel_event)
+            try:
+                result = record.runner()
+            finally:
+                current_cancel_event.reset(cancel_token)
+            if record.cancel_event.is_set():
+                return
             trace_recorder = record.trace_recorder
             if hasattr(result, "model_dump"):
                 payload = result.model_dump()  # pydantic model
@@ -316,6 +357,8 @@ class InMemoryTaskManager:
             if trace_recorder is not None:
                 trace_recorder.write_manifest()
             self._persist_manifest(current)
+        except TaskCancelled:
+            return
         except Exception as exc:
             trace_recorder = record.trace_recorder
             try:
