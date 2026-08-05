@@ -4,8 +4,13 @@
   "input": {
     "company_name": "云服务科技有限公司",
     "transfer_purpose": "云服务监控与客服协同",
-    "data_categories": ["账户信息", "设备日志"],
-    "sensitive_data_flags": ["biometric"],
+    "data_categories": [
+      "账户信息",
+      "设备日志"
+    ],
+    "sensitive_data_flags": [
+      "biometric"
+    ],
     "recipient_entities": [
       {
         "entity_name": "US ServiceCo",
@@ -31,6 +36,32 @@
     ]
   },
   "expected": {
-    "result_not_empty": true
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "云服务科技有限公司",
+      "risk_level": "HIGH"
+    },
+    "min_counts": {
+      "chapters": 4,
+      "risk_items": 1,
+      "output_files": 9
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "xlsx",
+      "zip",
+      "facts_json",
+      "evidence_chain_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
   }
 }

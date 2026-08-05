@@ -69,26 +69,66 @@
         "breach_liability_dispute_resolution": "covered",
         "incident_response_and_individual_rights": "partial"
       },
-      "missing_items": ["法律环境变化应对条款"],
+      "missing_items": [
+        "法律环境变化应对条款"
+      ],
       "risk_level": "MEDIUM"
     },
     "security_capability": {
-      "management_measures": ["数据安全管理制度", "个人信息保护制度"],
-      "technical_measures": ["加密传输", "访问控制", "日志审计"],
-      "certifications": ["ISO27001"]
+      "management_measures": [
+        "数据安全管理制度",
+        "个人信息保护制度"
+      ],
+      "technical_measures": [
+        "加密传输",
+        "访问控制",
+        "日志审计"
+      ],
+      "certifications": [
+        "ISO27001"
+      ]
     },
     "system_link": {
-      "domestic_systems": ["杭州阿里云RDS数据库"],
-      "transfer_links": ["加密API同步"],
-      "overseas_systems": ["新加坡AWS Redshift"]
+      "domestic_systems": [
+        "杭州阿里云RDS数据库"
+      ],
+      "transfer_links": [
+        "加密API同步"
+      ],
+      "overseas_systems": [
+        "新加坡AWS Redshift"
+      ]
     }
   },
   "expected": {
+    "fields_equal": {
+      "state": "COMPLETED"
+    },
     "profile_contains": {
       "company_name": "跨境优品科技有限公司",
       "pii_count": 450000,
       "is_ciio": false
-    }
+    },
+    "min_counts": {
+      "chapters": 8,
+      "regulations": 20,
+      "output_files": 23
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "official_markdown"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
   },
   "manual_review_points": [
     "profile_extractor 是否正确携带了 data_inventory_items / recipient_info / legal_document_review",

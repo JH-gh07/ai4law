@@ -10,10 +10,26 @@
       "大规模处理 GDPR Art 35"
     ],
     "processing_flow_description": "收集员工体检报告、可穿戴设备健康数据、心理评估问卷结果，通过机器学习模型进行健康风险评分和个性化健康计划推荐，数据存储在欧盟境内但可能被美国母公司访问分析。",
-    "data_categories": ["姓名", "工号", "部门", "体检数据", "心率", "睡眠数据", "BMI", "心理评估结果", "用药记录"],
+    "data_categories": [
+      "姓名",
+      "工号",
+      "部门",
+      "体检数据",
+      "心率",
+      "睡眠数据",
+      "BMI",
+      "心理评估结果",
+      "用药记录"
+    ],
     "special_category_data": true,
-    "special_category_types": ["健康数据", "医疗数据"],
-    "data_subject_categories": ["员工", "外部专家"],
+    "special_category_types": [
+      "健康数据",
+      "医疗数据"
+    ],
+    "data_subject_categories": [
+      "员工",
+      "外部专家"
+    ],
     "data_subject_count": "15000",
     "retention_period": "员工在职期间及离职后5年",
     "cross_border_transfer": true,
@@ -24,10 +40,20 @@
     "data_matching": true,
     "new_technology": true,
     "vulnerable_data_subjects": true,
-    "consulted_internal_departments": ["法务部", "信息安全部", "HR部门", "工会"],
-    "external_experts": ["数据保护律师事务所"],
+    "consulted_internal_departments": [
+      "法务部",
+      "信息安全部",
+      "HR部门",
+      "工会"
+    ],
+    "external_experts": [
+      "数据保护律师事务所"
+    ],
     "data_subject_consultation_plan": "通过匿名问卷和员工代表座谈征询意见",
-    "lawful_basis": ["GDPR Art 6(1)(b) 合同履行", "GDPR Art 9(2)(h) 职业医学"],
+    "lawful_basis": [
+      "GDPR Art 6(1)(b) 合同履行",
+      "GDPR Art 9(2)(h) 职业医学"
+    ],
     "necessity_statement": "处理员工健康数据是实现职业健康管理和法定职业病防治所必需。",
     "proportionality_statement": "仅收集与职业健康评估直接相关的健康数据指标，限制处理频率。",
     "transparency_information": "将通过员工隐私通知、入职文件和HR系统公告向员工告知。",
@@ -51,13 +77,17 @@
       {
         "mitigation_id": "MIT-001",
         "description": "部署偏差检测算法，定期对模型公平性进行审计",
-        "target_risk_ids": ["RISK-001"],
+        "target_risk_ids": [
+          "RISK-001"
+        ],
         "status": "planned"
       },
       {
         "mitigation_id": "MIT-002",
         "description": "签订SCC并实施补充技术措施（加密+假名化），并向员工提供退出跨境传输的选择",
-        "target_risk_ids": ["RISK-002"],
+        "target_risk_ids": [
+          "RISK-002"
+        ],
         "status": "planned"
       }
     ],
@@ -68,13 +98,42 @@
     "uploaded_files": []
   },
   "expected": {
+    "fields_equal": {
+      "state": "COMPLETED",
+      "need_assessment.dpia_required": true
+    },
     "profile_contains": {
       "project_name": "员工健康AI评估系统",
       "special_category_data": true,
       "cross_border_transfer": true,
       "automated_decision_making": true,
       "large_scale_processing": true
-    }
+    },
+    "min_counts": {
+      "chapters": 7,
+      "regulations": 1,
+      "risk_matrix": 2,
+      "mitigation_plan": 2,
+      "need_assessment.trigger_reasons": 1,
+      "output_files": 14
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "need_assessment_json",
+      "legal_grounding_json",
+      "evidence_chain_xlsx"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
   },
   "manual_review_points": [
     "need_detector 是否正确识别 DPIA 为必需（3个触发理由）",

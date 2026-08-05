@@ -19,8 +19,14 @@
       "legal_basis": "合同履行必要"
     },
     "personal_info_scope": {
-      "pi_categories": ["账户信息", "联系方式", "日志信息"],
-      "spi_categories": ["身份认证信息"],
+      "pi_categories": [
+        "账户信息",
+        "联系方式",
+        "日志信息"
+      ],
+      "spi_categories": [
+        "身份认证信息"
+      ],
       "subject_volume": 46000
     },
     "rights_protection": {
@@ -43,6 +49,29 @@
     ]
   },
   "expected": {
-    "result_not_empty": true
+    "result_not_empty": true,
+    "fields_equal": {
+      "route_type": "scc_filing",
+      "risk_level": "LOW",
+      "filing_readiness.status": "ready"
+    },
+    "min_counts": {
+      "chapters": 7,
+      "facts": 15,
+      "evidence_chain": 3,
+      "output_files": 4
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "zip"
+    ]
   }
 }

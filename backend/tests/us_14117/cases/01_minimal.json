@@ -56,6 +56,35 @@
     "company_name": "GeoData Analytics Inc."
   },
   "expected": {
-    "result_not_empty": true
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "GeoData Analytics Inc.",
+      "overall_traffic_light": "YELLOW",
+      "traffic_light_result.is_prohibited": false,
+      "traffic_light_result.is_restricted": true
+    },
+    "min_counts": {
+      "chapters": 4,
+      "rule_hits": 24,
+      "risk_matrix": 1,
+      "output_files": 10
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "xlsx",
+      "zip",
+      "rule_engine_result_json",
+      "facts_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
   }
 }

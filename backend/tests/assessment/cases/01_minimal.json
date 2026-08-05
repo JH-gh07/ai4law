@@ -14,12 +14,43 @@
     "uploaded_files": []
   },
   "expected": {
+    "fields_equal": {
+      "state": "COMPLETED"
+    },
     "profile_contains": {
       "company_name": "云帆数据科技有限公司",
       "is_ciio": false,
       "contains_important_data": false,
       "pii_count": 1200000,
       "spi_count": 15000
+    },
+    "min_counts": {
+      "chapters": 8,
+      "regulations": 20,
+      "output_files": 23
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "official_markdown",
+      "evidence_chain_json",
+      "citation_map_json",
+      "material_checklist_xlsx"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ],
+    "list_contains": {
+      "chapters[].title": [
+        "评估"
+      ]
     }
   },
   "manual_review_points": [

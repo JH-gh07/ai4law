@@ -19,6 +19,31 @@
     ]
   },
   "expected": {
-    "result_not_empty": true
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "DataComply Inc.",
+      "risk_level": "HIGH"
+    },
+    "min_counts": {
+      "chapters": 6,
+      "gap_items": 5,
+      "output_files": 6
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "xlsx",
+      "zip",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
   }
 }
