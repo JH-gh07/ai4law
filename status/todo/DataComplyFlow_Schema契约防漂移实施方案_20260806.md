@@ -1,8 +1,8 @@
 # DataComplyFlow Schema 契约防漂移实施方案
 
-> 文档性质：待实施技术方案（TODO），不是当前实现描述
+> 文档性质：实施中技术方案（PR 1A/1B 已完成本地实现，后续阶段待实施）
 > 编制日期：2026-08-06
-> 方案版本：v2（架构评审修订版）
+> 方案版本：v2.1（PR 1A/1B 实施回填版）
 > 适用分支：`new`
 > 当前基线：26 个开发案例真实 HTTP 已修复至 26/26；本方案用于防止再次漂移
 > 关联报告：`status/DataComplyFlow_Schema契约修复与复验_20260806.md`
@@ -88,13 +88,16 @@ Contract App 不得执行：
 
 | 文件 | 动作 |
 |---|---|
-| `backend/tests/contract_app.py` | 新建测试专用 ASGI App，安装 Recording Executor 和外部访问阻断 |
-| `backend/tests/test_contract_app.py` | 验证请求可接受且 runner 从未被执行 |
-| `.github/workflows/dev-case-contract.yml` | 新建 GitHub Actions Workflow；当前仓库尚无 `.github/workflows` |
-| `frontend/src/lib/dev-test-cases.api.test.ts` | 新建真实 HTTP 集成测试 |
-| `frontend/src/lib/dev-case-api-runner.ts` | 新建鉴权、上传、提交、错误格式化辅助函数 |
+| `backend/tests/contract_support.py` | 已新增 Recording Executor、dispatcher patch manifest 和 localhost-only 网络守卫 |
+| `backend/tests/contract_app.py` | 已新增测试专用 ASGI App，安装执行隔离和外部访问阻断 |
+| `backend/tests/test_contract_support.py` | 已新增执行器、恢复逻辑和网络守卫单元测试 |
+| `backend/tests/test_contract_app.py` | 已验证真实异步请求被接受且仅记录提交、不运行 callable |
+| `.github/workflows/dev-case-contract.yml` | 已新增 GitHub Actions Workflow |
+| `frontend/tests/contract/dev-test-cases.api.test.ts` | 已新增真实 HTTP 集成测试 |
+| `frontend/tests/contract/dev-case-api-runner.ts` | 已新增鉴权、上传、提交和响应断言辅助函数 |
 | `frontend/package.json` | 新增 `test:dev-cases:api` 命令 |
-| `frontend/src/lib/dev-test-cases.test.ts` | 增加案例文件存在性与 26 数量门禁 |
+| `frontend/src/lib/dev-test-cases.test.ts` | 已增加案例数量和关键 Schema 字段门禁 |
+| `frontend/tests/contract/dev-case-fixtures.test.ts` | 已增加依赖文件存在性和 Git 跟踪门禁，避免 Node-only 依赖进入生产源码树 |
 
 ### 3.3 Contract App 执行隔离设计
 
@@ -226,42 +229,56 @@ actions/checkout
   → uv sync --frozen
   → npm ci --prefix frontend
   → 启动 uvicorn backend.tests.contract_app:app，日志写入 runner.temp
-  → 轮询 /health，最长 30 秒
+  → 轮询 /__contract__/state，最长 30 秒
   → 在同一 shell step 中安装 EXIT trap，确保终止 Uvicorn
   → npm --prefix frontend run test:dev-cases:api
-  → always 上传 backend log 和契约测试摘要
+  → always 上传 backend log
 ```
 
 Workflow 必须设置 `timeout-minutes`，且同一分支新提交应通过 `concurrency.cancel-in-progress` 取消旧运行。
 
 ### 3.7 PR 1A/1B TODO
 
-- [ ] 新建 `RecordingExecutor` 和 `RecordingTaskDispatcher`。
-- [ ] 新建测试专用 Contract App。
-- [ ] 验证异步请求被接受但 runner 执行次数为 0。
-- [ ] 验证 Contract App 拒绝非 localhost outbound HTTP。
-- [ ] 新建真实 HTTP 测试 Runner。
-- [ ] 测试启动时注册随机测试用户并复用 Bearer Token。
-- [ ] 为 Review 实现 upload-first 策略。
-- [ ] 断言案例总数严格等于 26。
-- [ ] 断言 `backendFilePaths` 指向的文件存在。
-- [ ] 在 CI/repository hygiene 检查中断言案例文件已被 Git index 跟踪。
-- [ ] 新建 GitHub Actions Workflow。
-- [ ] 保留后端日志并在失败时上传。
+- [x] 新建 `RecordingExecutor` 和 `RecordingTaskDispatcher`。
+- [x] 新建测试专用 Contract App。
+- [x] 验证异步请求被接受但 runner 执行次数为 0。
+- [x] 验证 Contract App 拒绝非 localhost outbound HTTP。
+- [x] 新建真实 HTTP 测试 Runner。
+- [x] 测试启动时注册随机测试用户并复用 Bearer Token。
+- [x] 为 Review 实现 upload-first 策略。
+- [x] 断言案例总数严格等于 26。
+- [x] 断言 `backendFilePaths` 指向的文件存在。
+- [x] 在 CI/repository hygiene 检查中断言案例文件已被 Git index 跟踪。
+- [x] 新建 GitHub Actions Workflow。
+- [x] 保留后端日志并在失败时上传。
 - [ ] 在 GitHub 分支保护中将 `dev-case-contract` 设置为必需检查。
 
 ### 3.8 PR 1A/1B 验收
 
-- [ ] 本地命令 26/26 通过。
+- [x] 本地命令 26/26 通过。
 - [ ] GitHub Actions checkout 后 26/26 通过。
-- [ ] 26 个案例运行期间没有任何完整报告后台任务。
-- [ ] 26 个案例运行期间没有任何非 localhost HTTP 请求。
-- [ ] 工作区正式 `outputs/` 和 `storage/` 不产生新文件。
-- [ ] 故意将 `country_region` 改回 `country`，CI 必须返回 422 并失败。
-- [ ] 故意删除 PIPIA `company_uscc`，CI 必须失败。
-- [ ] 故意移除 Review 文件上传，CI 必须返回 400 并失败。
-- [ ] 无任何真实 LLM/得理 API 请求。
+- [x] 26 个案例运行期间没有任何完整报告后台任务。
+- [x] 26 个案例运行期间没有任何非 localhost HTTP 请求。
+- [x] 工作区正式 `outputs/` 和 `storage/` 不产生新文件。
+- [x] 将 `country_region` 改回 `country` 的负向契约测试返回 422。
+- [x] 删除 PIPIA `company_uscc` 的负向契约测试返回 422。
+- [x] 移除 Review 文件上传的负向契约测试返回 400。
+- [x] 无任何真实 LLM/得理 API 请求。
 - [ ] PR 门禁耗时目标小于 3 分钟。
+
+### 3.9 PR 1A/1B 实施记录
+
+| 日期 | 提交 | 内容 | 本地证据 |
+|---|---|---|---|
+| 2026-08-06 | `72937ea` | Recording Executor、dispatcher patch manifest、网络守卫及单元测试 | `backend/tests/test_contract_support.py` 通过 |
+| 2026-08-06 | `1055ace` | 隔离 Contract App 及真实异步请求测试 | Contract App 测试通过，提交被记录但 callable 未执行 |
+| 2026-08-06 | `8e71f60` | 26 个案例与当前 Schema 对齐，补 Review 可信样例路径 | 前端案例测试 13/13、Review 后端测试 8/8 |
+| 2026-08-06 | `2e4a44e` | HTTP Runner、随机用户鉴权、Review upload-first | 26/26 HTTP 2xx；9 个 manager、23 次异步提交 |
+| 2026-08-06 | `8d5ec64` | `new` 分支 GitHub Actions 契约门禁 | YAML 本地解析通过，待远端首次运行 |
+| 2026-08-06 | `f9ccdfe` | 案例依赖文件存在性和 Git index 门禁 | 前端案例测试 14/14 |
+| 2026-08-06 | `6c7333c` | 将 Node-only 卫生测试移出生产源码树；增加三类负向契约与可重复运行计数 | 26/26 正例、422/422/400 负例、前端构建均通过 |
+
+当前唯一需要仓库管理员操作的 P0 项是：Workflow 首次远端通过后，在 GitHub 分支保护中把检查名 `Validate 26 developer cases` 设置为 `new` 分支必需检查。远端运行和分支保护未完成前，不得将 PR 1B 标记为全流程闭环。
 
 ---
 
@@ -552,11 +569,11 @@ npm --prefix frontend run test:dev-cases:api
 
 ## 十、最终完成定义（Definition of Done）
 
-- [ ] GitHub Actions 中存在必需检查 `dev-case-contract`。
-- [ ] 26 个案例每次 PR 都执行真实 HTTP 验证。
-- [ ] Contract App 经过真实路由但不执行任何完整后台 runner。
-- [ ] Contract App 不能调用 LLM、RAG 或得理 API。
-- [ ] Review 案例使用真实 upload-first 流程。
+- [ ] GitHub Actions 中存在必需检查 `Validate 26 developer cases`。
+- [x] 26 个案例在面向 `new` 的 PR 和 push 中执行真实 HTTP 验证。
+- [x] Contract App 经过真实路由但不执行任何完整后台 runner。
+- [x] Contract App 不能调用 LLM、RAG 或得理 API。
+- [x] Review 案例使用真实 upload-first 流程。
 - [ ] 后端 OpenAPI 能确定性生成 TypeScript 类型。
 - [ ] 26 个案例 payload 均受模块级 TypeScript 类型约束。
 - [ ] 11 个 Builder 已从 React 组件抽离。
