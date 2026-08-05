@@ -4,6 +4,8 @@ from backend.app import create_app
 from backend.core.settings import Settings
 from backend.domains.eu.dpia import router as dpia_router
 from backend.tests.contract_support import (
+    ContractExternalNetworkError,
+    LocalhostOnlyNetworkGuard,
     RecordingExecutor,
     RecordingTaskDispatcher,
     install_recording_execution,
@@ -68,3 +70,19 @@ def test_install_recording_execution_covers_all_async_services_and_restores(tmp_
 
     assert dpia_router.service.tasks._executor is original_dpia_executor
     assert app.state.container.review_service.task_dispatcher is original_review_dispatcher
+
+
+def test_localhost_network_guard_blocks_external_connect_and_restores() -> None:
+    guard = LocalhostOnlyNetworkGuard()
+    guard.install()
+
+    try:
+        guard.check_address(("203.0.113.10", 443))
+    except ContractExternalNetworkError as exc:
+        assert "203.0.113.10" in str(exc)
+    else:
+        raise AssertionError("external address was not blocked")
+    finally:
+        guard.restore()
+
+    guard.check_address(("127.0.0.1", 8000))

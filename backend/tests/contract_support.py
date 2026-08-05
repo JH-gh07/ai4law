@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from concurrent.futures import Future
 from dataclasses import dataclass
+import ipaddress
+import socket
 from threading import Lock
 from typing import Any
 
@@ -16,6 +18,62 @@ from backend.domains.eu.tia import router as tia_router
 from backend.domains.us.cpra import router as cpra_router
 from backend.domains.us.eo14117 import router as us_14117_router
 from backend.domains.us.eo14117_flow_review import router as cn_flow_router
+
+
+class ContractExternalNetworkError(RuntimeError):
+    pass
+
+
+class LocalhostOnlyNetworkGuard:
+    """Block outbound socket connections except loopback and Unix sockets."""
+
+    def __init__(self) -> None:
+        self._original_connect = None
+        self._guarded_connect = None
+
+    @property
+    def installed(self) -> bool:
+        return self._original_connect is not None
+
+    def check_address(self, address) -> None:
+        if isinstance(address, str):
+            return
+        if not isinstance(address, tuple) or not address:
+            raise ContractExternalNetworkError(
+                f"Contract test blocked unsupported network address: {address!r}"
+            )
+        host = str(address[0]).strip().lower()
+        if host == "localhost":
+            return
+        try:
+            if ipaddress.ip_address(host).is_loopback:
+                return
+        except ValueError:
+            pass
+        raise ContractExternalNetworkError(
+            f"Contract test blocked external network address: {host}"
+        )
+
+    def install(self) -> None:
+        if self.installed:
+            return
+        original_connect = socket.socket.connect
+
+        def guarded_connect(sock, address):
+            self.check_address(address)
+            return original_connect(sock, address)
+
+        self._original_connect = original_connect
+        self._guarded_connect = guarded_connect
+        socket.socket.connect = guarded_connect
+
+    def restore(self) -> None:
+        if not self.installed:
+            return
+        if socket.socket.connect is self._guarded_connect:
+            socket.socket.connect = self._original_connect
+        self._original_connect = None
+        self._guarded_connect = None
 
 
 class RecordingExecutor:
