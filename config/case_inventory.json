@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0",
+  "assertion_floor": 8,
+  "modules": {
+    "assessment": {
+      "module_id": "cn.security_assessment",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 24
+        },
+        {
+          "case_id": "02_structured",
+          "assertions": 18
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "bcr": {
+      "module_id": "eu.bcr_review",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 15
+        }
+      ],
+      "frontend_cases": 3
+    },
+    "cn_flow": {
+      "module_id": "us.eo_14117_flow_review",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 19
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "cpra": {
+      "module_id": "us.cpra",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 18
+        }
+      ],
+      "frontend_cases": 3
+    },
+    "diagnosis": {
+      "module_id": "cn.transfer_diagnosis",
+      "cli_cases": [
+        {
+          "case_id": "01_scc_path",
+          "assertions": 12
+        },
+        {
+          "case_id": "02_security_assessment",
+          "assertions": 12
+        },
+        {
+          "case_id": "03_exemption",
+          "assertions": 11
+        }
+      ],
+      "frontend_cases": 3
+    },
+    "dpia": {
+      "module_id": "eu.dpia",
+      "cli_cases": [
+        {
+          "case_id": "01_health_ai",
+          "assertions": 26
+        },
+        {
+          "case_id": "02_minimal",
+          "assertions": 24
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "eu_scc": {
+      "module_id": "eu.scc_review",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 18
+        }
+      ],
+      "frontend_cases": 3
+    },
+    "pipia": {
+      "module_id": "cn.pipia",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 16
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "review": {
+      "module_id": "cn.document_review",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 9
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "tia": {
+      "module_id": "eu.tia",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 15
+        }
+      ],
+      "frontend_cases": 2
+    },
+    "us_14117": {
+      "module_id": "us.eo_14117",
+      "cli_cases": [
+        {
+          "case_id": "01_minimal",
+          "assertions": 22
+        }
+      ],
+      "frontend_cases": 2
+    }
+  }
+}

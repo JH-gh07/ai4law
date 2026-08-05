@@ -41,6 +41,12 @@
     ]
   },
   "known_defects": [
-    "module_validation.is_correct is false for every real caller: the rule engine compares declared_module_type verbatim against the English label 'Module Two', but the CLI sends '2' and the frontend sends 'C2P'. Assertion withheld pending a decision on the canonical input format."
+    {
+      "field": "module_validation.is_correct",
+      "observed": false,
+      "expected_if_fixed": true,
+      "reason": "scc_rule_engine.validate_module_selection compares declared_module_type verbatim against the English label (\"Module Two\"). No real caller sends that: this CLI case sends \"2\" and all three frontend cases send \"C2P\", so every correctly-declared review still reports a module mismatch. The existing unit tests pass \"Module Two\" directly, which is why they stay green. Assertion withheld until the canonical input format is decided.",
+      "evidence": "backend/domains/eu/scc_review/scc_rule_engine.py:181"
+    }
   ]
 }

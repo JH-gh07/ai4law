@@ -1,5 +1,5 @@
 {
-  "case_id": "case_001_scc",
+  "case_id": "01_scc_path",
   "description": "电商用户数据出境（标准合同/认证路径）— 跨境优品, 45万一般个人信息, 非CIIO, 非重要数据, 不适用豁免",
   "input": {
     "company_name": "跨境优品",

@@ -53,6 +53,7 @@ jobs:
           src/lib/dev-test-cases.test.ts
           src/lib/dev-presets.test.ts
           tests/contract/dev-case-fixtures.test.ts
+          tests/contract/case-inventory.test.ts
 
       - name: Validate contract isolation
         run: uv run --frozen pytest -q backend/tests/test_contract_support.py backend/tests/test_contract_app.py
@@ -103,5 +104,51 @@ jobs:
         with:
           name: contract-backend-log
           path: ${{ runner.temp }}/contract-backend.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  harness:
+    name: Assert 15 CLI harness cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install backend dependencies
+        run: uv sync --frozen
+
+      - name: Verify case inventory parity
+        run: uv run --frozen python scripts/check_case_parity.py
+
+      - name: Validate assertion engine and parity gate
+        run: >-
+          uv run --frozen pytest -q
+          backend/tests/harness/test_validators.py
+          backend/tests/harness/test_case_parity.py
+          backend/tests/harness/test_harness.py
+
+      - name: Assert every harness case offline
+        run: >-
+          uv run --frozen python -m backend.tests.harness.runner all
+          --no-llm --quiet
+
+      - name: Upload harness run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-runs
+          path: runs/**/run_manifest.json
           if-no-files-found: warn
           retention-days: 7

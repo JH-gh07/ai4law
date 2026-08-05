@@ -1,5 +1,5 @@
 {
-  "case_id": "case_002_security_assessment",
+  "case_id": "02_security_assessment",
   "description": "医疗研究数据出境（安全评估路径）— 前沿生命科技研究院, 涉及重要数据(基因测序), 应立即触发安全评估",
   "input": {
     "company_name": "前沿生命科技研究院",

@@ -1,5 +1,5 @@
 {
-  "case_id": "case_003_exemption",
+  "case_id": "03_exemption",
   "description": "匿名地图数据出境（豁免路径）— 智驾未来, 完全匿名化传感器数据, 不含个人信息且不涉及重要数据",
   "input": {
     "company_name": "智驾未来",

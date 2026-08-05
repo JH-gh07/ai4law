@@ -1,5 +1,6 @@
 {
   "case_id": "01_minimal",
+  "description": "文档专项审查—最小 DPA 输入，检查跨境传输、安全事件与删除义务缺失条款",
   "input": {
     "uploaded_files": [
       "backend/tests/review/fixtures/minimal_data_processing_agreement.md"
