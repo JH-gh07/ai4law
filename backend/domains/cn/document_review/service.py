@@ -67,7 +67,6 @@ from backend.domains.cn.document_review.specialized_reviewers.data_security_agre
 from backend.schemas.review import (
     ReviewScenarioContext,
     ReviewTaskConfig,
-    ReviewMethod,
 )
 
 
@@ -722,8 +721,11 @@ class ReviewService:
         if not resolved.exists() or not resolved.is_file():
             raise HTTPException(status_code=404, detail=f"Uploaded file not found: {resolved}")
 
-        doc_root = (Path.cwd() / "doc").resolve()
-        if not self._is_under_root(resolved, doc_root):
+        preset_roots = (
+            (Path.cwd() / "doc").resolve(),
+            (Path.cwd() / "resources" / "legal" / "sources").resolve(),
+        )
+        if not any(self._is_under_root(resolved, root) for root in preset_roots):
             return None
 
         ext = resolved.suffix.lower()
@@ -732,7 +734,6 @@ class ReviewService:
 
         destination = self.file_service.settings.upload_dir / "review-dev-presets"
         destination.mkdir(parents=True, exist_ok=True)
-        sanitized_name = re.sub(r"[^A-Za-z0-9._-]+", "_", resolved.name)
         copied_path = destination / f"{resolved.stem[:40]}_{abs(hash(str(resolved))) & 0xFFFFFFFF:x}{ext}"
         if not copied_path.exists():
             copied_path.write_bytes(resolved.read_bytes())

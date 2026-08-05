@@ -151,7 +151,7 @@ const BCR_BASELINE_PRESET: ModuleDevPreset = {
     definitions_quality: "术语体系与GDPR保持一致",
     review_focus: "重点审查责任承担、补充措施和第三方受益人条款"
   },
-  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
+  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
 };
 
 const DPIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -195,7 +195,7 @@ const DPIA_BASELINE_PRESET: ModuleDevPreset = {
     review_schedule: "每季度复核",
     attachment_role: "data_flow_diagram"
   },
-  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
+  backendFilePaths: ["resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx"]
 };
 
 const TIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -225,7 +225,7 @@ const TIA_BASELINE_PRESET: ModuleDevPreset = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
+  backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 
 const DIAGNOSIS_BASELINE_PRESET: ModuleDevPreset = {

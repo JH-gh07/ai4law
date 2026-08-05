@@ -194,8 +194,8 @@ const diagEcommerce: DevTestCase = {
       q3_pii_count: 450000,
       q4_spi_count: 0,
       q5_no_personal_info: "no",
-      q6_scenario: "business_operation",
-      q7_receiver_type: "affiliated_company",
+      q6_scenario: "other",
+      q7_receiver_type: "intra_group",
       q8_purpose: "将订单数据同步至新加坡亚太数据中心，用于优化区域物流算法和精准营销",
       m1_enterprise_name: "跨境优品",
       m1_industry: "电商零售",
@@ -247,8 +247,8 @@ const diagMedical: DevTestCase = {
       q3_pii_count: 15000,
       q4_spi_count: 15000,
       q5_no_personal_info: "no",
-      q6_scenario: "scientific_research",
-      q7_receiver_type: "academic_partner",
+      q6_scenario: "other",
+      q7_receiver_type: "third_party",
       q8_purpose: "与欧盟大学合作罕见病研究，传输脱敏医疗记录（含诊断结果、用药史、基因测序数据摘要）至欧盟合作方服务器进行分析",
       m1_enterprise_name: "前沿生命科技研究院",
       m1_industry: "医疗健康",
@@ -307,8 +307,8 @@ const diagAnonymous: DevTestCase = {
       q3_pii_count: 2000,
       q4_spi_count: 0,
       q5_no_personal_info: "no",
-      q6_scenario: "technology_development",
-      q7_receiver_type: "affiliated_company",
+      q6_scenario: "other",
+      q7_receiver_type: "intra_group",
       q8_purpose: "向德国慕尼黑研发中心持续共享设备运行状态、故障日志等数据以优化算法模型，并结合企业规模、数据性质等因素判断适用的数据出境合规路径",
       m1_enterprise_name: "智造未来科技有限公司",
       m1_industry: "智能制造",
@@ -373,9 +373,22 @@ const assessCIO: DevTestCase = {
     security_capability_summary: "管理：有《数据分类分级管理规范》。技术：传输采用AES-256加密，存储采用令牌化。认证：通过网络安全等级保护（三级）测评。",
     data_inventory_summary: "每日交易结算数据、高净值客户资产配置信息（含金融账户信息）。频率：每日T+1。合法性依据：履行集团内部管理与监管报告义务",
     system_chain_summary: "境内存储：公司本地数据中心。传输链路：通过IPSec-VPN专线加密传输至香港母公司私有云。境外存储：香港数据中心",
-    legal_document_review: "与母公司签订有《集团数据共享与处理协议》，但缺少'数据出境安全评估办法'第九条要求的全部6项核心条款（接受方所在法律环境变化的处理措施、再转移约束不明确）",
-    compliance_history: "2024年曾因'客户信息保护不力'受到当地银保监局警告，已整改完毕",
-    personal_info_protection: "已通过线上协议更新获取约8万名高净值客户关于向关联集团共享资产信息用于风险管理的单独同意，但同意记录未系统化归档"
+    legal_document_review: {
+      document_name: "集团数据共享与处理协议",
+      missing_items: ["接受方所在法律环境变化的处理措施", "再转移约束"],
+      risk_level: "HIGH"
+    },
+    compliance_history: {
+      has_penalty: true,
+      penalty_time: "2024年",
+      penalty_reason: "客户信息保护不力",
+      rectification_status: "已整改完毕"
+    },
+    personal_info_protection: {
+      separate_consent_status: "obtained",
+      notice_content: "已通过线上协议更新告知向关联集团共享资产信息用于风险管理",
+      archive_evidence: "同意记录尚未系统化归档"
+    }
   }
 };
 
@@ -578,6 +591,15 @@ const euSccModuleError: DevTestCase = {
 // BCR — 3 cases
 // ═══════════════════════════════════════════════════════════════════════════
 
+const completeBcrReviewItem = (item: Record<string, string>) => ({
+  ...item,
+  finding: `${item.title}：${item.evidence}`,
+  legal_basis: "GDPR Article 47；EDPB Recommendations 1/2022",
+  recommendation: item.score === "partial"
+    ? "补充可执行流程、责任主体、时限和证据，并由法务复核。"
+    : "按GDPR第47条和EDPB要求补齐强制要素后重新审查。"
+});
+
 const bcrMediumRisk: DevTestCase = {
   name: "BCR-1: GlobalTech 中风险BCR-C",
   description: "跨国科技集团BCR-C，TIA描述笼统，投诉流程不具体，向集团外传输限制不明确(3个中风险)",
@@ -622,7 +644,7 @@ const bcrMediumRisk: DevTestCase = {
         evidence: "仅泛泛要求评估，未提及必须遵循EDPB建议01/2020的六步法进行结构化评估，也未要求记录评估结果。通知义务被弱化为'在法律允许的范围内'",
         score: "partial"
       }
-    ],
+    ].map(completeBcrReviewItem),
     scenario_context: {
       group_name: "GlobalTech Inc.",
       applicant_entity: "GlobalTech Ireland Ltd, Dublin",
@@ -676,7 +698,7 @@ const bcrHighRisk: DevTestCase = {
         evidence: "文档称BCR通过'联盟章程'对成员有约束力，但未提供该章程作为附件，也未解释其如何对成员产生法律约束力",
         score: "non_compliant"
       }
-    ],
+    ].map(completeBcrReviewItem),
     scenario_context: {
       group_name: "HealthData Alliance",
       applicant_entity: "（未指定）",
@@ -724,7 +746,7 @@ const bcrStructuralFailure: DevTestCase = {
         evidence: "文档仅3页，缺失EDPB建议表格中要求的所有核心章节：具有法律约束力的内部机制、第三方受益人权利、欧盟责任主体与赔偿条款、数据保护原则、数据主体权利、第三国法律评估、投诉处理流程、培训审计机制、更新程序等",
         score: "non_compliant"
       }
-    ],
+    ].map(completeBcrReviewItem),
     scenario_context: {
       group_name: "CloudProcessors Consortium",
       applicant_entity: "（未指定）",
@@ -907,7 +929,7 @@ const tiaBasicSCC: DevTestCase = {
     third_country_assessment: "印度目前没有获得欧盟充分性认定。印度的数据保护法律（DPDP Act 2023）提供了基本保护框架，但政府机构的数据访问权限仍然较宽。根据Schrems II判决标准，印度法律在政府访问数据的必要性和相称性方面存在一定风险。印度《信息技术法》第69条赋予政府广泛的监控权力",
     supplementary_measures: "技术措施：端到端加密（数据在传输前加密，密钥由出口方管理，进口方无法解密）；数据最小化（仅传输分析所必需的数据字段）；假名化处理。合同措施：在SCC基础上增加透明度义务（进口方须在收到政府数据请求24小时内通知出口方）；定期审计权。组织措施：进口方员工定期数据保护培训；访问控制日志；事件响应SLA",
     final_conclusion: "经评估，在实施上述技术、合同和组织补充措施后，第三国法律不会损害SCC提供的实质等同保护水平。传输可继续进行，但需每年复审目的地法律变化",
-    attachments: [{ file_role: "tia_main_report", file_name: "sample_contract.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }]
+    attachments: [{ file_role: "country_law_analysis", file_name: "TIA - Template.docx", file_format: "docx", storage_uri: "resources/legal/sources/eu/references/TIA - Template.docx" }]
   }
 };
 
@@ -944,7 +966,7 @@ const tiaChinaBCR: DevTestCase = {
     third_country_assessment: "中国法律环境评估：中国的《网络安全法》《数据安全法》《个人信息保护法》建立了全面的数据保护框架，但根据Schrems II标准，中国法律中存在若干可能影响传输保护水平的因素：（1）《网络安全法》第37条和《数据安全法》第21条赋予监管机构广泛的数据访问权限；（2）《国家情报法》第7条允许情报机构依法收集信息；（3）缺乏独立的司法审查机制来挑战政府数据请求。此外，中国尚未获得欧盟充分性认定",
     supplementary_measures: "技术措施：数据在传输前进行强加密（256-bit），密钥完全由德国出口方管理；实施了数据拆分存储策略（关键业务数据保留在德国，仅匿名化的运营指标传输至中国）；部署了安全的远程访问环境（数据不落地中国本地存储）。合同措施：在中国子公司员工合同中加入数据保护条款；与子公司签订强化的集团内部数据保护协议。组织措施：BCR框架下的年度审计（由德国母公司DPO主导）；中国子公司员工每季度数据保护培训",
     final_conclusion: "经评估，尽管中国法律环境存在风险，但通过以下因素组合，可以认为传输能提供GDPR要求的实质等同保护水平：（1）BCR-C已获批准，提供了全面的集团内部保护框架；（2）技术措施（加密+密钥分离+数据不落地）极大限制了政府实际访问数据的可能性；（3）定期审计机制确保了合规持续性。结论：有条件通过——前提是所有补充措施持续有效并每年复审",
-    attachments: [{ file_role: "tia_main_report", file_name: "sample_contract.txt", file_format: "txt", storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }]
+    attachments: [{ file_role: "country_law_analysis", file_name: "TIA - Template.docx", file_format: "docx", storage_uri: "resources/legal/sources/eu/references/TIA - Template.docx" }]
   }
 };
 
@@ -998,6 +1020,7 @@ const pipiaSCCFiling: DevTestCase = {
     route_type: "scc_filing",
     company_profile: {
       company_name: "跨境优品（深圳）电子商务有限公司",
+      company_uscc: "91440300MA1TEST003",
       industry: "电商零售",
       shareholding_structure: "境内自然人持股80%，境外VC持股20%",
       actual_controller: "张三（中国籍）",
@@ -1092,6 +1115,7 @@ const pipiaCertification: DevTestCase = {
     route_type: "certification",
     company_profile: {
       company_name: "快捷支付科技（北京）有限公司",
+      company_uscc: "91110000MA1TEST004",
       industry: "金融科技",
       is_ciio: false,
       processing_person_count: 500000,
@@ -1146,25 +1170,37 @@ const us14117Basic: DevTestCase = {
     company_name: "American Genomics Research Institute",
     project_name: "国际合作基因组研究",
     transaction_description: "与深圳华大基因研究院合作进行大规模人群基因组研究，美方向中方传输约5万份去标识化基因组测序数据（BAM/FASTQ格式），中方负责生物信息学分析和变异注释",
-    transaction_type: "cooperative_research"
+    transaction_type: "cooperative_research",
+    data_item_name: "人类全基因组测序数据",
+    data_description: "5万份去标识化基因组测序数据",
+    doj_data_category: "human_genomic_data",
+    us_person_count: 50000,
+    entity_name: "深圳华大基因研究院",
+    country_of_registration: "中国",
+    government_control: false,
+    entity_role: "research_institution",
+    onward_transfer: false,
+    onward_transfer_description: "",
+    security_measures_summary: "数据最小化、去标识化、合同控制和访问审计",
+    review_focus: "重点核查基因组数据阈值、被覆盖人员和研究合作豁免"
   },
   payload: {
     project_name: "国际合作基因组研究",
     transaction_description: "与深圳华大基因研究院合作进行大规模人群基因组研究，美方向中方传输约5万份去标识化基因组测序数据（BAM/FASTQ格式），中方负责生物信息学分析和变异注释",
     transaction_type: "cooperative_research",
     data_items: [
-      { data_category: "human_genomic_data", description: "5万份人类全基因组测序数据（BAM格式）", contains_human_genomic: true, volume: "50000", sensitivity: "high" },
-      { data_category: "human_omic_data", description: "表型数据：年龄、性别、BMI、疾病诊断", contains_human_omic: true, volume: "50000", sensitivity: "high" },
-      { data_category: "personal_identifier", description: "去标识化的受试者编号（可关联至原始样本）", contains_personal_identifier: true, volume: "50000", sensitivity: "medium" }
+      { data_item_name: "人类全基因组测序数据", data_description: "5万份人类全基因组测序数据（BAM格式）", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_genomic_data", precision_level: "pseudonymized" },
+      { data_item_name: "人类组学表型数据", data_description: "年龄、性别、BMI、疾病诊断", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_omic_data", precision_level: "pseudonymized" },
+      { data_item_name: "受试者研究编号", data_description: "去标识化但可关联至原始样本的受试者编号", is_personal_info: true, is_sensitive_personal_info: false, us_person_count: 50000, doj_data_category: "covered_personal_identifiers", precision_level: "pseudonymized" }
     ],
     recipient_entities: [
-      { entity_name: "深圳华大基因研究院", country: "中国", entity_type: "research_institution", is_covered_person: false, is_restricted_party: false },
-      { entity_name: "中国国家基因库", country: "中国", entity_type: "government_affiliated", is_covered_person: false, is_restricted_party: false }
+      { entity_name: "深圳华大基因研究院", country_of_registration: "中国", entity_role: "research_institution", is_covered_person: false },
+      { entity_name: "中国国家基因库", country_of_registration: "中国", entity_role: "government_affiliated", government_control: true, is_covered_person: false }
     ],
     security_measures: [
-      { measure_type: "data_minimization", description: "仅传输分析所必需的基因组区间，非全基因组" },
-      { measure_type: "de_identification", description: "移除直接标识符，使用研究编号替代" },
-      { measure_type: "contractual_controls", description: "研究合作协议包含数据安全条款" }
+      { measure_name: "数据最小化", category: "data_minimization", status: "implemented", description: "仅传输分析所必需的基因组区间，非全基因组" },
+      { measure_name: "去标识化", category: "de_identification", status: "implemented", description: "移除直接标识符，使用研究编号替代" },
+      { measure_name: "合同控制", category: "contractual_controls", status: "implemented", description: "研究合作协议包含数据安全条款" }
     ],
     company_name: "American Genomics Research Institute"
   }
@@ -1178,27 +1214,39 @@ const us14117RestrictedParty: DevTestCase = {
     company_name: "VisionAI Corp.",
     project_name: "AI模型训练数据共享",
     transaction_description: "与列入BIS实体清单的中国AI公司签订数据许可协议，向其提供用于计算机视觉模型训练的图像数据集（约100万张标注图片，含人脸和GPS坐标）",
-    transaction_type: "vendor_agreement"
+    transaction_type: "vendor_agreement",
+    data_item_name: "人脸图像与精确地理位置数据",
+    data_description: "100万张标注图片，包含人脸和EXIF GPS坐标",
+    doj_data_category: "biometric_identifiers",
+    us_person_count: 1000000,
+    entity_name: "受限AI科技有限公司",
+    country_of_registration: "中国",
+    government_control: false,
+    entity_role: "vendor",
+    onward_transfer: true,
+    onward_transfer_description: "可能再转移至阿联酋研发中心",
+    security_measures_summary: "基于角色的访问控制和全量访问审计",
+    review_focus: "重点核查被覆盖人员、受限交易和再转移风险"
   },
   payload: {
     project_name: "AI模型训练数据共享",
     transaction_description: "与列入BIS实体清单的中国AI公司签订数据许可协议，向其提供用于计算机视觉模型训练的图像数据集（约100万张标注图片）",
     transaction_type: "vendor_agreement",
     data_items: [
-      { data_category: "personal_identifier", description: "图像中包含可识别个人的面部信息", contains_personal_identifier: true, volume: "1000000", sensitivity: "high" },
-      { data_category: "geolocation_data", description: "图像EXIF数据包含精确GPS坐标", contains_geolocation: true, volume: "1000000", sensitivity: "medium" },
-      { data_category: "biometric_data", description: "人脸图像可用于面部识别模型训练", contains_biometric: true, volume: "1000000", sensitivity: "high" }
+      { data_item_name: "可识别人脸图像", data_description: "图像中包含可识别个人的面部信息", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "covered_personal_identifiers", precision_level: "raw" },
+      { data_item_name: "精确地理位置", data_description: "图像EXIF数据包含精确GPS坐标", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "precise_geolocation_data", precision_level: "raw" },
+      { data_item_name: "生物识别数据", data_description: "人脸图像可用于面部识别模型训练", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "biometric_identifiers", precision_level: "raw" }
     ],
     recipient_entities: [
-      { entity_name: "受限AI科技有限公司", country: "中国", entity_type: "commercial_entity", is_covered_person: false, is_restricted_party: true, restriction_reason: "列入BIS实体清单" },
-      { entity_name: "受限AI科技的美国子公司", country: "美国", entity_type: "subsidiary", is_covered_person: false, is_restricted_party: false }
+      { entity_name: "受限AI科技有限公司", country_of_registration: "中国", entity_role: "vendor", is_covered_person: true },
+      { entity_name: "受限AI科技的美国子公司", country_of_registration: "美国", entity_role: "affiliate", parent_company: "受限AI科技有限公司", is_covered_person: false }
     ],
     access_persons: [
-      { person_role: "data_scientist", nationality: "中国", access_level: "full", is_restricted_national: false, background_check: "standard" }
+      { person_name: "待指定数据科学家", nationality: "中国", country_of_residence: "中国", department: "数据科学部", position: "数据科学家", has_actual_access: true, access_type: "direct" }
     ],
     security_measures: [
-      { measure_type: "access_control", description: "基于角色的访问控制，仅授权研究人员可访问" },
-      { measure_type: "audit_logging", description: "所有数据访问操作记录审计日志" }
+      { measure_name: "基于角色的访问控制", category: "access_control", status: "implemented", description: "仅授权研究人员可访问" },
+      { measure_name: "访问审计日志", category: "audit_logging", status: "implemented", description: "所有数据访问操作记录审计日志" }
     ],
     onward_transfer: true,
     onward_transfer_description: "数据可能被中国母公司再转移至其位于阿联酋的研发中心",
@@ -1231,15 +1279,16 @@ const cnFlowBasic: DevTestCase = {
     data_categories: ["客户姓名", "收货地址", "联系电话", "商品订单号", "SKU信息"],
     sensitive_data_flags: ["无敏感信息"],
     recipient_entities: [
-      { entity_name: "深圳智能制造有限公司", country: "中国", entity_role: "vendor", is_restricted_party: false, entity_type: "manufacturer" },
-      { entity_name: "广州物流供应链有限公司", country: "中国", entity_role: "processor", is_restricted_party: false, entity_type: "logistics" }
+      { entity_name: "深圳智能制造有限公司", country_region: "中国", entity_role: "vendor", is_restricted_party: false },
+      { entity_name: "广州物流供应链有限公司", country_region: "中国", entity_role: "processor", is_restricted_party: false }
     ],
     transfer_chain: "美国总部→AWS美东区→通过加密API→中国供应商ERP系统。传输频率：每日实时",
     attachments: [
       { file_role: "data_inventory", file_name: "data_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
       { file_role: "entity_inventory", file_name: "entity_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
     ]
-  }
+  },
+  backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
 };
 
 const cnFlowRestricted: DevTestCase = {
@@ -1265,8 +1314,8 @@ const cnFlowRestricted: DevTestCase = {
     data_categories: ["芯片设计文件（GDSII格式）", "测试规范文档", "良率数据报告", "工程师联系信息"],
     sensitive_data_flags: ["出口管制技术数据", "可能涉及ECCN 3E001分类"],
     recipient_entities: [
-      { entity_name: "上海先进半导体制造有限公司", country: "中国", entity_role: "vendor", is_restricted_party: false, entity_type: "semiconductor_manufacturer" },
-      { entity_name: "北京微电子研究所", country: "中国", entity_role: "affiliate", is_restricted_party: true, entity_type: "government_affiliated", restriction_source: "Entity List" }
+      { entity_name: "上海先进半导体制造有限公司", country_region: "中国", entity_role: "vendor", is_restricted_party: false },
+      { entity_name: "北京微电子研究所", country_region: "中国", entity_role: "affiliate", is_restricted_party: true }
     ],
     transfer_chain: "美国总部安全服务器→通过加密VPN→上海公司内部服务器→（可能）再传输至北京研究所",
     internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据",
@@ -1274,7 +1323,8 @@ const cnFlowRestricted: DevTestCase = {
       { file_role: "data_inventory", file_name: "data_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
       { file_role: "entity_inventory", file_name: "entity_inventory.csv", file_format: "csv", storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
     ]
-  }
+  },
+  backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
 };
 
 
@@ -1314,6 +1364,7 @@ const reviewPrivacyPolicy: DevTestCase = {
     review_focus: "重点核查跨境传输告知的完整性、敏感信息处理的合法性基础、用户权利行使路径与联系方式的披露"
   },
   payload: {
+    uploaded_files: ["resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md"],
     company_name: "华东云链科技（测试）",
     document_type: "privacy_policy",
     receiver_name: "OceanStar Technology Pte. Ltd.",
@@ -1322,7 +1373,8 @@ const reviewPrivacyPolicy: DevTestCase = {
     review_focus: "重点核查跨境传输告知、敏感信息处理、用户权利行使路径与联系方式披露",
     pii_count: 280000,
     spi_count: 5000
-  }
+  },
+  backendFilePaths: ["resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md"]
 };
 
 const reviewSccContract: DevTestCase = {
@@ -1358,6 +1410,7 @@ const reviewSccContract: DevTestCase = {
       "重点审查个人信息出境标准合同条款完整性、双方义务、再委托限制、删除与留存规则、安全事件通知时限、监管报告表述、以及个人信息主体权利保障机制"
   },
   payload: {
+    uploaded_files: ["resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"],
     company_name: "智付通科技有限公司",
     document_type: "scc_contract",
     receiver_name: "星洲支付处理有限公司 (Starstate Payment Processing Pte. Ltd.)",

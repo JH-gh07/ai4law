@@ -175,6 +175,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [cnFlowDataInventoryFiles, setCnFlowDataInventoryFiles] = useState<File[]>([]);
   const [cnFlowEntityInventoryFiles, setCnFlowEntityInventoryFiles] = useState<File[]>([]);
   const [cnFlowSupportingFiles, setCnFlowSupportingFiles] = useState<File[]>([]);
+  const [cnFlowDevFilePaths, setCnFlowDevFilePaths] = useState<string[]>([]);
   const [us14117StepIndex, setUs14117StepIndex] = useState(0);
   const [us14117Values, setUs14117Values] = useState<Us14117FormValues>(createDefaultUs14117Values);
   const [us14117Files, setUs14117Files] = useState<File[]>([]);
@@ -274,6 +275,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setCnFlowDataInventoryFiles([]);
       setCnFlowEntityInventoryFiles([]);
       setCnFlowSupportingFiles([]);
+      setCnFlowDevFilePaths([]);
     }
     if (moduleKey === "us_14117") {
       setUs14117StepIndex(0);
@@ -335,6 +337,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     }
     if (isAssessmentModule) {
       setAssessmentDevFilePaths(
+        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
+      );
+    }
+    if (isCnFlowModule) {
+      setCnFlowDevFilePaths(
         DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
       );
     }
@@ -769,15 +776,28 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       .filter((item) => item.length > 0)
       .join("；");
 
+    const roleMap: Record<EuSccFormValues["transfer_role"], { declared: string; exporter: string; importer: string }> = {
+      c2c: { declared: "C2C", exporter: "controller", importer: "controller" },
+      c2p: { declared: "C2P", exporter: "controller", importer: "processor" },
+      p2p: { declared: "P2P", exporter: "processor", importer: "processor" },
+      p2c: { declared: "P2C", exporter: "processor", importer: "controller" }
+    };
+    const roles = roleMap[values.transfer_role];
     return {
-      company_name: values.exporter_name.trim(),
-      receiver_name: values.importer_name.trim(),
-      receiver_country: values.importer_country.trim(),
-      transfer_purpose: purposeContext,
-      pii_count: Math.max(0, values.pii_count),
-      spi_count: Math.max(0, values.spi_count),
-      has_scc_draft: values.has_scc_draft || uploadedFiles.length > 0,
-      uploaded_files: uploadedFiles
+      project_name: `${values.exporter_name.trim()} - ${values.importer_name.trim()} SCC审查`,
+      scc_text: [
+        `SCC ${roles.declared} (${values.scc_version})`,
+        `Data exporter: ${values.exporter_name.trim()} (${roles.exporter})`,
+        `Data importer: ${values.importer_name.trim()}, ${values.importer_country.trim()} (${roles.importer})`,
+        purposeContext
+      ].join("\n"),
+      declared_module_type: roles.declared,
+      exporter_role: roles.exporter,
+      importer_role: roles.importer,
+      has_tia: hasText(values.government_access_response),
+      has_supplementary_measures: hasText(values.supplementary_clause_review),
+      uploaded_files: uploadedFiles,
+      company_name: values.exporter_name.trim()
     };
   };
 
@@ -1050,13 +1070,16 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(cnFlowValues.transfer_chain), "请填写传输链路说明。");
     assertInput(hasText(cnFlowValues.primary_recipient_name), "请填写主要接收方名称。");
     assertInput(hasText(cnFlowValues.primary_recipient_country), "请填写主要接收方国家/地区。");
-    assertInput(cnFlowDataInventoryFiles.length > 0, "请上传数据清单附件（data_inventory）。");
-    assertInput(cnFlowEntityInventoryFiles.length > 0, "请上传实体清单附件（entity_inventory）。");
+    const devDataInventoryPath = DEV_ACCEL_ENABLED ? cnFlowDevFilePaths[0] : undefined;
+    const devEntityInventoryPath = DEV_ACCEL_ENABLED ? cnFlowDevFilePaths[1] : undefined;
+    const devSupportingPaths = DEV_ACCEL_ENABLED ? cnFlowDevFilePaths.slice(2) : [];
+    assertInput(cnFlowDataInventoryFiles.length > 0 || !!devDataInventoryPath, "请上传数据清单附件（data_inventory）。");
+    assertInput(cnFlowEntityInventoryFiles.length > 0 || !!devEntityInventoryPath, "请上传实体清单附件（entity_inventory）。");
 
     const [dataInventoryPaths, entityInventoryPaths, supportingPaths] = await Promise.all([
-      uploadFiles(cnFlowDataInventoryFiles),
-      uploadFiles(cnFlowEntityInventoryFiles),
-      uploadFiles(cnFlowSupportingFiles)
+      devDataInventoryPath ? Promise.resolve([devDataInventoryPath]) : uploadFiles(cnFlowDataInventoryFiles),
+      devEntityInventoryPath ? Promise.resolve([devEntityInventoryPath]) : uploadFiles(cnFlowEntityInventoryFiles),
+      devSupportingPaths.length > 0 ? Promise.resolve(devSupportingPaths) : uploadFiles(cnFlowSupportingFiles)
     ]);
 
     const attachments = [
