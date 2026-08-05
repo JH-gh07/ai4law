@@ -1,12 +1,6 @@
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import { DEV_TEST_CASES } from "./dev-test-cases";
-
-const REPOSITORY_ROOT = resolve(process.cwd(), "..");
 
 const asRecord = (value: unknown): Record<string, unknown> => {
   expect(value).toBeTypeOf("object");
@@ -71,22 +65,6 @@ describe("developer test case API contracts", () => {
     for (const testCase of DEV_TEST_CASES.review) {
       expect(testCase.payload.uploaded_files).toEqual(testCase.backendFilePaths);
       expect(testCase.backendFilePaths?.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("keeps every backend fixture present and tracked by Git", () => {
-    const fixturePaths = Object.values(DEV_TEST_CASES)
-      .flat()
-      .flatMap((testCase) => testCase.backendFilePaths ?? []);
-
-    expect(fixturePaths.length).toBeGreaterThan(0);
-    for (const relativePath of fixturePaths) {
-      expect(existsSync(resolve(REPOSITORY_ROOT, relativePath)), relativePath).toBe(true);
-      expect(() => {
-        execFileSync("git", ["-C", REPOSITORY_ROOT, "ls-files", "--error-unmatch", "--", relativePath], {
-          stdio: "ignore",
-        });
-      }, `${relativePath} must be tracked by Git`).not.toThrow();
     }
   });
 

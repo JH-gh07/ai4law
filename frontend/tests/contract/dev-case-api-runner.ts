@@ -67,6 +67,15 @@ export async function registerContractUser(baseUrl: string): Promise<string> {
   return token;
 }
 
+export async function submitRawContractPayload(options: {
+  baseUrl: string;
+  endpoint: string;
+  payload: unknown;
+  token: string;
+}): Promise<DevCaseSubmissionResult> {
+  return postJson(options.baseUrl, options.endpoint, options.payload, options.token);
+}
+
 function mimeForPath(path: string): string {
   const extension = extname(path).toLowerCase();
   if (extension === ".md") return "text/markdown";

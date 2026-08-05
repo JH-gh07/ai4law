@@ -48,7 +48,11 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Validate case fixtures
-        run: npm --prefix frontend test -- --run src/lib/dev-test-cases.test.ts src/lib/dev-presets.test.ts
+        run: >-
+          npm --prefix frontend test -- --run
+          src/lib/dev-test-cases.test.ts
+          src/lib/dev-presets.test.ts
+          tests/contract/dev-case-fixtures.test.ts
 
       - name: Validate contract isolation
         run: uv run --frozen pytest -q backend/tests/test_contract_support.py backend/tests/test_contract_app.py
