@@ -1,0 +1,103 @@
+name: Developer Case Contract
+
+on:
+  pull_request:
+    branches: [new]
+  push:
+    branches: [new]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-case-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Validate 26 developer cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: uv sync --frozen
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Validate case fixtures
+        run: npm --prefix frontend test -- --run src/lib/dev-test-cases.test.ts src/lib/dev-presets.test.ts
+
+      - name: Validate contract isolation
+        run: uv run --frozen pytest -q backend/tests/test_contract_support.py backend/tests/test_contract_app.py
+
+      - name: Build frontend
+        run: npm --prefix frontend run build
+
+      - name: Submit all developer cases through HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          contract_root="${RUNNER_TEMP}/ai4law-contract"
+          backend_log="${RUNNER_TEMP}/contract-backend.log"
+          mkdir -p "${contract_root}"
+
+          AI4LAW_CONTRACT_TMP_ROOT="${contract_root}" \
+            uv run --frozen uvicorn backend.tests.contract_app:app \
+              --host 127.0.0.1 \
+              --port 8011 \
+              >"${backend_log}" 2>&1 &
+          server_pid=$!
+
+          cleanup() {
+            kill "${server_pid}" 2>/dev/null || true
+            wait "${server_pid}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8011/__contract__/state >/dev/null; then
+              break
+            fi
+            if ! kill -0 "${server_pid}" 2>/dev/null; then
+              cat "${backend_log}"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          curl --fail --silent http://127.0.0.1:8011/__contract__/state >/dev/null
+          AI4LAW_CONTRACT_BASE_URL=http://127.0.0.1:8011 \
+            npm --prefix frontend run test:dev-cases:api
+
+      - name: Upload contract backend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-backend-log
+          path: ${{ runner.temp }}/contract-backend.log
+          if-no-files-found: warn
+          retention-days: 7
