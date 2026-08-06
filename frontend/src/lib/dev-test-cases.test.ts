@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
+import type { ModuleRequestMap } from "../api/api-contract";
 import { DEV_TEST_CASES } from "./dev-test-cases";
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -12,6 +13,18 @@ const asRecord = (value: unknown): Record<string, unknown> => {
 describe("developer test case API contracts", () => {
   it("keeps the registry at 26 independently runnable cases", () => {
     expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(26);
+  });
+
+  it("binds every case payload to its generated module request", () => {
+    expectTypeOf<(typeof DEV_TEST_CASES)["diagnosis"][number]["payload"]>().toMatchTypeOf<
+      ModuleRequestMap["diagnosis"]
+    >();
+    expectTypeOf<(typeof DEV_TEST_CASES)["pipia"][number]["payload"]>().toMatchTypeOf<
+      ModuleRequestMap["pipia"]
+    >();
+    expectTypeOf<(typeof DEV_TEST_CASES)["review"][number]["payload"]>().toMatchTypeOf<
+      ModuleRequestMap["review"]
+    >();
   });
 
   it("uses current diagnosis enum values", () => {
@@ -27,8 +40,9 @@ describe("developer test case API contracts", () => {
 
   it("uses structured assessment fields", () => {
     for (const testCase of DEV_TEST_CASES.assessment) {
+      const payload = asRecord(testCase.payload);
       for (const field of ["legal_document_review", "compliance_history", "personal_info_protection"] as const) {
-        const value = testCase.payload[field];
+        const value = payload[field];
         if (value !== undefined && value !== null) asRecord(value);
       }
     }
@@ -41,6 +55,11 @@ describe("developer test case API contracts", () => {
         expect(String(item.legal_basis ?? "").length).toBeGreaterThan(1);
         expect(String(item.recommendation ?? "").length).toBeGreaterThan(1);
       }
+      const context = asRecord(testCase.payload.scenario_context);
+      expect(String(context.company_name ?? "").length).toBeGreaterThan(1);
+      expect(String(context.eu_liable_entity ?? "").length).toBeGreaterThan(1);
+      expect(context.group_name).toBeUndefined();
+      expect(asRecord(context.auto_extracted_facts).data_flow_scope).toBeTypeOf("string");
     }
   });
 
@@ -79,13 +98,14 @@ describe("developer test case API contracts", () => {
 
   it("uses current EO 14117 nested fields", () => {
     for (const testCase of DEV_TEST_CASES.us_14117) {
+      const payload = asRecord(testCase.payload);
       for (const item of testCase.payload.data_items as Array<Record<string, unknown>>) {
         expect(String(item.data_item_name ?? "").length).toBeGreaterThan(0);
       }
       for (const entity of testCase.payload.recipient_entities as Array<Record<string, unknown>>) {
         expect(String(entity.country_of_registration ?? "").length).toBeGreaterThan(1);
       }
-      for (const person of (testCase.payload.access_persons ?? []) as Array<Record<string, unknown>>) {
+      for (const person of (payload.access_persons ?? []) as Array<Record<string, unknown>>) {
         expect(String(person.person_name ?? "").length).toBeGreaterThan(0);
       }
       for (const measure of testCase.payload.security_measures as Array<Record<string, unknown>>) {

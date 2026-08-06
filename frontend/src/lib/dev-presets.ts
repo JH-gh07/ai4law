@@ -1,3 +1,4 @@
+import type { DevCaseModule } from "../api/api-contract";
 import { getDefaultTestCase } from "./dev-test-cases";
 
 export const DEV_ACCEL_ENABLED =
@@ -30,7 +31,7 @@ export type AssessmentDevPreset = ModuleDevPreset & {
 const SHARED_CONTRACT_FIXTURE = "benchmarks/sample-inputs/sample_contract.txt";
 const SHARED_EVIDENCE_FIXTURE = "benchmarks/sample-inputs/sample_evidence.txt";
 
-function assertCase(module: string) {
+function assertCase(module: DevCaseModule) {
   const found = getDefaultTestCase(module);
   if (!found) {
     throw new Error(`Missing default test case for module: ${module}`);
