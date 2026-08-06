@@ -1,5 +1,11 @@
 import type { ModuleRequestMap } from "../../../api/api-contract";
-import type { Us14117FormValues } from "../model";
+import {
+  basenameFromPath,
+  inferCpraAttachmentFormat,
+  isValidUrl,
+  type CpraFormValues,
+  type Us14117FormValues,
+} from "../model";
 import { requireAllowedValue, requireFileExtensions, requireText } from "./common";
 
 const US_14117_TRANSACTION_TYPES = [
@@ -13,6 +19,15 @@ const US_14117_TRANSACTION_TYPES = [
   "other",
 ] as const;
 const US_14117_FILE_EXTENSIONS = ["txt", "md", "json", "csv", "pdf", "docx"] as const;
+const CPRA_FILE_EXTENSIONS = ["docx", "pdf", "xlsx", "csv"] as const;
+
+export type CpraResolvedFiles = {
+  privacyPolicy: string[];
+  rightsSop: string[];
+  dataMap: string[];
+  vendorList: string[];
+  other: string[];
+};
 
 export function buildUs14117Payload(
   values: Us14117FormValues,
@@ -55,5 +70,57 @@ export function buildUs14117Payload(
       : [],
     onward_transfer: values.onward_transfer,
     onward_transfer_description: values.onward_transfer_description.trim(),
+  };
+}
+
+export function buildCpraPayload(
+  values: CpraFormValues,
+  resolvedFiles: CpraResolvedFiles,
+): ModuleRequestMap["cpra"] {
+  requireText(values.company_name, "company_name");
+  requireText(values.business_model, "business_model");
+  requireText(values.data_lifecycle, "data_lifecycle");
+  requireText(values.notice_and_consent, "notice_and_consent");
+  requireText(values.consumer_rights_process, "consumer_rights_process");
+  requireText(values.opt_out_and_sale_sharing, "opt_out_and_sale_sharing");
+  if (values.privacy_policy_url.trim() && !isValidUrl(values.privacy_policy_url)) {
+    throw new Error("privacy_policy_url must be an http(s) URL");
+  }
+
+  const uploadedAttachments = [
+    ...resolvedFiles.privacyPolicy.map((path) => ({ path, role: "privacy_policy" as const })),
+    ...resolvedFiles.rightsSop.map((path) => ({ path, role: "rights_sop" as const })),
+    ...resolvedFiles.dataMap.map((path) => ({ path, role: "data_map" as const })),
+    ...resolvedFiles.vendorList.map((path) => ({ path, role: "vendor_list" as const })),
+    ...resolvedFiles.other.map((path) => ({ path, role: "other" as const })),
+  ].map(({ path, role }) => {
+    requireFileExtensions([path], CPRA_FILE_EXTENSIONS);
+    return {
+      file_role: role,
+      file_name: basenameFromPath(path),
+      file_format: inferCpraAttachmentFormat(path)!,
+      storage_uri: path,
+    };
+  });
+  const urlAttachments = values.privacy_policy_url.trim()
+    ? [{
+      file_role: "privacy_policy" as const,
+      file_name: "privacy_policy_url",
+      file_format: "url" as const,
+      storage_uri: values.privacy_policy_url.trim(),
+    }]
+    : [];
+  const attachments = [...urlAttachments, ...uploadedAttachments];
+  if (attachments.length === 0) throw new Error("attachments is required");
+
+  return {
+    company_name: values.company_name.trim(),
+    business_model: [values.business_model.trim(), values.dba_name ? `DBA：${values.dba_name}` : "", values.cpra_applicability_selfcheck ? `适用性：${values.cpra_applicability_selfcheck}` : "", values.review_focus ? `重点：${values.review_focus}` : ""].filter((item) => item.length > 0).join("；"),
+    data_lifecycle: [values.data_lifecycle, values.data_categories ? `数据类别：${values.data_categories}` : "", values.spi_usage_summary ? `SPI使用：${values.spi_usage_summary}` : ""].filter((item) => item.trim()).join("；"),
+    notice_and_consent: [values.notice_and_consent, values.privacy_policy_url.trim() ? `隐私政策：${values.privacy_policy_url.trim()}` : "", values.ui_dark_pattern_check ? `UI暗模式：${values.ui_dark_pattern_check}` : ""].filter((item) => item.trim()).join("；"),
+    consumer_rights_process: [values.consumer_rights_process, values.identity_verification_method ? `身份验证：${values.identity_verification_method}` : "", values.rights_sla ? `SLA：${values.rights_sla}` : ""].filter((item) => item.trim()).join("；"),
+    opt_out_and_sale_sharing: values.opt_out_and_sale_sharing.trim(),
+    vendor_management: [values.vendor_management, values.spi_usage_summary ? `SPI限制：${values.spi_usage_summary}` : ""].filter((item) => item.trim()).join("；"),
+    attachments,
   };
 }

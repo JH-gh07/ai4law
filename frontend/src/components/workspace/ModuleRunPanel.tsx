@@ -16,10 +16,14 @@ import { getTestCases } from "../../lib/dev-test-cases";
 import { fetchArtifactBlob } from "../../api/artifacts";
 import {
   buildBcrPayload as createBcrPayload,
+  buildAssessmentPayload as createAssessmentPayload,
   buildCnFlowPayload as createCnFlowPayload,
+  buildCpraPayload as createCpraPayload,
+  buildDiagnosisPayload as createDiagnosisPayload,
   buildDpiaPayload as createDpiaPayload,
   buildDocumentReviewPayload as createDocumentReviewPayload,
   buildEuSccPayload as createEuSccPayload,
+  buildPipiaPayload as createPipiaPayload,
   buildTiaPayload as createTiaPayload,
   buildUs14117Payload as createUs14117Payload,
 } from "../../features/module-runner/payload-builders";
@@ -62,7 +66,6 @@ import {
   getDocumentReviewFileKey,
   getDocumentReviewTypeLabel,
   hasText,
-  inferAttachmentFormat,
   inferCnFlowAttachmentFormat,
   inferCpraAttachmentFormat,
   inferDocxPdfFormat,
@@ -504,45 +507,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     );
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const trimOr = (value: string, fallback: string): string => {
-      const trimmed = value.trim();
-      return trimmed.length >= 2 ? trimmed : fallback;
-    };
-    const purposeContext = [
-      values.transfer_purpose.trim(),
-      values.scenario_name ? `场景：${values.scenario_name}` : "",
-      values.legal_basis ? `合法性：${values.legal_basis}` : "",
-      values.necessity_basis ? `必要性：${values.necessity_basis}` : "",
-      values.data_inventory_summary ? `数据清单：${values.data_inventory_summary}` : "",
-      values.system_chain_summary ? `链路：${values.system_chain_summary}` : "",
-      values.security_capability_summary ? `保障能力：${values.security_capability_summary}` : "",
-      values.assessment_start_date || values.assessment_end_date
-        ? `自评估周期：${values.assessment_start_date || "未填"} 至 ${values.assessment_end_date || "未填"}`
-        : "",
-      values.lead_department ? `牵头部门：${values.lead_department}` : "",
-      values.participant_departments ? `参与部门：${values.participant_departments}` : "",
-      values.third_party_support
-        ? `第三方支持：${values.third_party_name || "已参与"}；${values.third_party_scope || "范围未填"}`
-        : ""
-    ]
-      .filter((item) => item.length > 0)
-      .join("；");
-
-    return {
-      company_name: trimOr(values.company_name, "待确认企业"),
-      industry: trimOr(
-        [values.industry, values.company_nature].filter((item) => item.trim().length > 0).join(" / "),
-        "未说明行业"
-      ),
-      is_ciio: values.is_ciio,
-      contains_important_data: values.contains_important_data,
-      pii_count: Math.max(0, values.pii_count),
-      spi_count: Math.max(0, values.spi_count),
-      transfer_purpose: trimOr(purposeContext, "数据出境场景评估与风险自评估"),
-      receiver_country: trimOr(values.receiver_country, "待确认国家"),
-      force_override_path: values.force_override_path,
-      uploaded_files: uploadedFiles
-    };
+    return createAssessmentPayload(values, uploadedFiles);
   };
 
   const buildAssessmentPayload = async (): Promise<unknown> =>
@@ -574,85 +539,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     }
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const trimOr = (value: string, fallback: string): string => {
-      const trimmed = value.trim();
-      return trimmed.length >= 2 ? trimmed : fallback;
-    };
-    const attachments = uploadedFiles.map((path) => ({
-      file_role: values.attachment_role,
-      file_name: basenameFromPath(path),
-      file_format: inferAttachmentFormat(path),
-      storage_uri: path
-    }));
-
-    return {
-      route_type: values.route_type,
-      company_profile: {
-        company_name: trimOr(values.company_name, "待确认企业"),
-        company_uscc: values.company_uscc.trim().length >= 8 ? values.company_uscc.trim() : "91310000XXXXXXXXXX",
-        is_ciio: values.is_ciio,
-        processing_person_count: values.processing_person_count,
-        outbound_pi_count: values.outbound_pi_count,
-        outbound_spi_count: values.outbound_spi_count,
-        industry: trimOr(values.industry, "未说明行业")
-      },
-      transfer_context: {
-        purpose: trimOr(
-          [
-            values.purpose,
-            values.outbound_scenario_name ? `场景：${values.outbound_scenario_name}` : "",
-            values.outbound_frequency ? `频率：${values.outbound_frequency}` : "",
-            values.transfer_method ? `方式：${values.transfer_method}` : "",
-            values.business_overview ? `业务概况：${values.business_overview}` : "",
-            values.processing_activity_overview ? `处理活动：${values.processing_activity_overview}` : ""
-          ].filter((item) => item.trim().length > 0).join("；"),
-          "个人信息出境处理活动评估"
-        ),
-        recipient_name: trimOr(values.recipient_name, "待确认接收方"),
-        recipient_country_region: trimOr(values.recipient_country_region, "待确认国家/地区"),
-        legal_basis: trimOr(
-          [
-            values.legal_basis,
-            values.legality_justification ? `合法性论证：${values.legality_justification}` : "",
-            values.necessity_justification ? `必要性论证：${values.necessity_justification}` : ""
-          ].filter((item) => item.trim().length > 0).join("；"),
-          "合同履行必要"
-        )
-      },
-      personal_info_scope: {
-        pi_categories: splitCsv(values.pi_categories).length > 0 ? splitCsv(values.pi_categories) : ["账户信息"],
-        spi_categories: splitCsv(values.spi_categories),
-        subject_volume: values.subject_volume
-      },
-      rights_protection: {
-        notice_mechanism: trimOr(values.notice_mechanism, "隐私政策告知"),
-        consent_mechanism: trimOr(values.consent_mechanism, "单独同意"),
-        dsar_channel: trimOr(values.dsar_channel, "privacy@example.com"),
-        retention_policy: trimOr(
-          [
-            values.retention_policy,
-            values.domestic_storage ? `境内存储：${values.domestic_storage}` : "",
-            values.overseas_storage ? `境外存储：${values.overseas_storage}` : ""
-          ].filter((item) => item.trim().length > 0).join("；"),
-          "到期删除+最短必要"
-        )
-      },
-      emergency_plan: {
-        incident_response_sla_hours: values.incident_response_sla_hours,
-        escalation_path: trimOr(
-          [
-            values.escalation_path,
-            values.transfer_link ? `链路：${values.transfer_link}` : "",
-            values.shareholding_structure ? `股权：${values.shareholding_structure}` : "",
-            values.actual_controller ? `控制人：${values.actual_controller}` : "",
-            values.overseas_investment ? `境内外投资：${values.overseas_investment}` : "",
-            values.org_structure_privacy_team ? `组织与个保机构：${values.org_structure_privacy_team}` : ""
-          ].filter((item) => item.trim().length > 0).join("；"),
-          "DPO -> 法务 -> 管理层"
-        )
-      },
-      attachments
-    };
+    return createPipiaPayload(values, uploadedFiles);
   };
 
   const buildPipiaPayload = async (): Promise<unknown> =>
@@ -850,106 +737,30 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       uploadFiles(cpraOtherFiles)
     ]);
 
-    const uploadedAttachments = [
-      ...privacyPaths.map((path) => {
-        const format = inferCpraAttachmentFormat(path);
-        assertInput(!!format, `隐私政策附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
-        return {
-          file_role: "privacy_policy" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...rightsPaths.map((path) => {
-        const format = inferCpraAttachmentFormat(path);
-        assertInput(!!format, `权利流程附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
-        return {
-          file_role: "rights_sop" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...dataMapPaths.map((path) => {
-        const format = inferCpraAttachmentFormat(path);
-        assertInput(!!format, `数据映射附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
-        return {
-          file_role: "data_map" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...vendorPaths.map((path) => {
-        const format = inferCpraAttachmentFormat(path);
-        assertInput(!!format, `供应商附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
-        return {
-          file_role: "vendor_list" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...otherPaths.map((path) => {
-        const format = inferCpraAttachmentFormat(path);
-        assertInput(!!format, `补充附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`);
-        return {
-          file_role: "other" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      })
-    ];
-
-    const urlAttachment = hasText(cpraValues.privacy_policy_url)
-      ? (() => {
-        assertInput(isValidUrl(cpraValues.privacy_policy_url), "隐私政策URL格式不正确，请使用 http(s) 链接。");
-        return [
-          {
-            file_role: "privacy_policy" as const,
-            file_name: "privacy_policy_url",
-            file_format: "url" as const,
-            storage_uri: cpraValues.privacy_policy_url.trim()
-          }
-        ];
-      })()
-      : [];
-
-    const attachments = [...urlAttachment, ...uploadedAttachments];
-    assertInput(attachments.length > 0, "请至少提供1份CPRA附件或隐私政策URL。");
-
-    return {
-      company_name: cpraValues.company_name.trim(),
-      business_model: [
-        cpraValues.business_model.trim(),
-        cpraValues.dba_name ? `DBA：${cpraValues.dba_name}` : "",
-        cpraValues.cpra_applicability_selfcheck ? `适用性：${cpraValues.cpra_applicability_selfcheck}` : "",
-        cpraValues.review_focus ? `重点：${cpraValues.review_focus}` : ""
-      ].filter((item) => item.length > 0).join("；"),
-      data_lifecycle: [
-        cpraValues.data_lifecycle,
-        cpraValues.data_categories ? `数据类别：${cpraValues.data_categories}` : "",
-        cpraValues.spi_usage_summary ? `SPI使用：${cpraValues.spi_usage_summary}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      notice_and_consent: [
-        cpraValues.notice_and_consent,
-        hasText(cpraValues.privacy_policy_url) ? `隐私政策：${cpraValues.privacy_policy_url.trim()}` : "",
-        cpraValues.ui_dark_pattern_check ? `UI暗模式：${cpraValues.ui_dark_pattern_check}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      consumer_rights_process: [
-        cpraValues.consumer_rights_process,
-        cpraValues.identity_verification_method ? `身份验证：${cpraValues.identity_verification_method}` : "",
-        cpraValues.rights_sla ? `SLA：${cpraValues.rights_sla}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      opt_out_and_sale_sharing: cpraValues.opt_out_and_sale_sharing.trim(),
-      vendor_management: [
-        cpraValues.vendor_management,
-        cpraValues.spi_usage_summary ? `SPI限制：${cpraValues.spi_usage_summary}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      attachments
+    const validatePaths = (paths: string[], label: string) => {
+      paths.forEach((path) => {
+        assertInput(
+          !!inferCpraAttachmentFormat(path),
+          `${label}附件格式仅支持 .docx/.pdf/.xlsx/.csv：${basenameFromPath(path)}`
+        );
+      });
     };
+    validatePaths(privacyPaths, "隐私政策");
+    validatePaths(rightsPaths, "权利流程");
+    validatePaths(dataMapPaths, "数据映射");
+    validatePaths(vendorPaths, "供应商");
+    validatePaths(otherPaths, "补充");
+    if (hasText(cpraValues.privacy_policy_url)) {
+      assertInput(isValidUrl(cpraValues.privacy_policy_url), "隐私政策URL格式不正确，请使用 http(s) 链接。");
+    }
+
+    return createCpraPayload(cpraValues, {
+      privacyPolicy: privacyPaths,
+      rightsSop: rightsPaths,
+      dataMap: dataMapPaths,
+      vendorList: vendorPaths,
+      other: otherPaths,
+    });
   };
 
   const buildUs14117Payload = async (): Promise<unknown> => {
@@ -964,113 +775,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     return createUs14117Payload(us14117Values, uploadedPaths);
   };
 
-  const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown => {
-    const asText = (key: string): string => {
-      const value = values[key];
-      if (typeof value === "string") return value;
-      if (typeof value === "number") return String(value);
-      return "";
-    };
-    const asArray = (key: string): string[] => {
-      const value = values[key];
-      if (Array.isArray(value)) return value.map((item) => String(item));
-      if (typeof value === "string" && value.trim().length > 0) {
-        return value.split(/[,，\n]/).map((item) => item.trim()).filter((item) => item.length > 0);
-      }
-      return [];
-    };
-    const hasSensitivePi = asArray("m3_personal_info_types").some((item) =>
-      ["身份证", "人脸", "指纹", "声纹", "健康", "金融", "未成年人", "精准位置"].some((key) => item.includes(key))
-    );
-
-    const volume = asText("m3_data_volume_range");
-    const estimatedPiiCount =
-      volume === "1000万条以上" ? 10000000 :
-      volume === "100-1000万条" ? 2000000 :
-      volume === "10-100万条" ? 300000 :
-      volume === "10万条以下" ? 50000 : 0;
-    const estimatedSpiCount =
-      !hasSensitivePi ? 0 :
-      volume === "1000万条以上" ? 20000 :
-      volume === "100-1000万条" ? 12000 :
-      volume === "10-100万条" ? 6000 : 1000;
-
-    const personalInfoFlag = asText("m3_processes_personal_info");
-    const importantDataFlag = asText("m3_processes_important_data");
-    const noPersonalAndNoImportant = personalInfoFlag === "no" && importantDataFlag === "no";
-
-    const receiverType = asText("m4_share_to_third_party") === "yes" ? "third_party" : "intra_group";
-    const companyNameRaw = asText("company_name").trim();
-    const companyName = companyNameRaw.length >= 2 ? companyNameRaw : "未命名企业";
-
-    return {
-      company_name: companyName,
-      answers: {
-        q1_is_ciio: "unknown",
-        q2_has_important_data: importantDataFlag === "yes" ? "yes" : importantDataFlag === "no" ? "no" : "unknown",
-        q3_pii_count: personalInfoFlag === "yes" ? estimatedPiiCount : 0,
-        q4_spi_count: personalInfoFlag === "yes" ? estimatedSpiCount : 0,
-        q5_no_personal_info: noPersonalAndNoImportant ? "yes" : "no",
-        q6_scenario: "other",
-        q7_receiver_type: receiverType,
-        q8_purpose: asText("m2_core_needs_other"),
-
-        m1_enterprise_name: companyName,
-        m1_industry: asText("m1_industry"),
-        m1_business_channels: asArray("m1_business_channels"),
-        m1_service_targets: asText("m1_service_targets"),
-        m1_company_size: asText("m1_company_size"),
-
-        m2_core_needs: asArray("m2_core_needs"),
-        m2_had_compliance_issue: asText("m2_had_compliance_issue"),
-        m2_issue_description: asText("m2_issue_description"),
-        m2_deadline: asText("m2_deadline"),
-
-        m3_processes_personal_info: personalInfoFlag,
-        m3_personal_info_types: asArray("m3_personal_info_types"),
-        m3_sensitive_info_types: asArray("m3_personal_info_types").filter((item) =>
-          ["身份证", "人脸", "指纹", "声纹", "健康", "金融", "未成年人", "精准位置"].some((key) => item.includes(key))
-        ),
-        m3_processes_important_data: importantDataFlag,
-        m3_important_data_types: asArray("m3_important_data_types"),
-        m3_data_sources: asArray("m3_data_sources"),
-        m3_processing_activities: asArray("m3_processing_activities"),
-        m3_data_volume_range: volume,
-        m3_processes_enterprise_public_data: asText("m3_processes_enterprise_public_data"),
-        m3_enterprise_public_data_desc: asText("m3_enterprise_public_data_desc"),
-        m3_retention_period: asText("m3_retention_period"),
-        m3_retention_desc: asText("m3_retention_desc"),
-
-        m4_share_to_third_party: asText("m4_share_to_third_party"),
-        m4_third_party_types: asText("m4_third_party_types"),
-        m4_cross_border_transfer: asText("m4_cross_border_transfer"),
-        m4_cross_border_regions: asText("m4_cross_border_regions"),
-        m4_commercialization: asText("m4_commercialization"),
-        m4_commercialization_mode: asText("m4_commercialization_mode"),
-        m4_entrusted_processing: asText("m4_entrusted_processing"),
-        m4_entrusted_party_type: asText("m4_entrusted_party_type"),
-        m4_authorization_method: asText("m4_authorization_method"),
-
-        m5_systems: asArray("m5_systems"),
-        m5_security_measures: asArray("m5_security_measures"),
-        m5_compliance_docs: asArray("m5_compliance_docs"),
-        m5_penalty_or_complaint: asText("m5_penalty_or_complaint"),
-        m5_penalty_time: asText("m5_penalty_time"),
-        m5_penalty_reason: asText("m5_penalty_reason"),
-        m5_penalty_result: asText("m5_penalty_result"),
-
-        m1_industry_other: asText("m1_industry_other"),
-        m1_business_channels_other: asText("m1_business_channels_other"),
-        m2_core_needs_other: asText("m2_core_needs_other"),
-        m2_deadline_detail: asText("m2_deadline_detail"),
-        m3_important_data_types_other: asText("m3_important_data_types_other"),
-        m3_data_sources_other: asText("m3_data_sources_other"),
-        m5_systems_other: asText("m5_systems_other"),
-        m5_security_measures_other: asText("m5_security_measures_other"),
-        m5_compliance_docs_other: asText("m5_compliance_docs_other")
-      }
-    };
-  };
+  const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown =>
+    createDiagnosisPayload(values);
 
   const buildDiagnosisPayload = (): unknown => buildDiagnosisPayloadFrom(diagnosisValues);
 

@@ -2,32 +2,47 @@ import { describe, expect, it } from "vitest";
 
 import { getModuleDevPreset } from "../../../lib/dev-presets";
 import {
+  createDefaultAssessmentValues,
   createDefaultBcrValues,
   createDefaultCnFlowValues,
+  createDefaultCpraValues,
+  createDefaultDiagnosisValues,
   createDefaultDocumentReviewValues,
   createDefaultDpiaValues,
   createDefaultEuSccValues,
+  createDefaultPipiaValues,
   createDefaultTiaValues,
   createDefaultUs14117Values,
+  type AssessmentFormValues,
   type BcrFormValues,
   type CnFlowFormValues,
+  type CpraFormValues,
+  type DiagnosisFormValues,
   type DocumentReviewFormValues,
   type DpiaFormValues,
   type EuSccFormValues,
+  type PipiaFormValues,
   type TiaFormValues,
   type Us14117FormValues,
 } from "../model";
 import {
+  buildAssessmentPayload,
   buildBcrPayload,
   buildCnFlowPayload,
+  buildCpraPayload,
+  buildDiagnosisPayload,
   buildDocumentReviewPayload,
   buildDpiaPayload,
   buildEuSccPayload,
+  buildPipiaPayload,
   buildTiaPayload,
   buildUs14117Payload,
 } from ".";
 
-function withPreset<Values>(defaults: Values, module: "eu_scc" | "bcr" | "dpia" | "tia") {
+function withPreset<Values>(
+  defaults: Values,
+  module: "assessment" | "pipia" | "eu_scc" | "bcr" | "dpia" | "tia",
+) {
   const preset = getModuleDevPreset(module);
   return {
     paths: preset.backendFilePaths,
@@ -199,6 +214,108 @@ describe("US 14117 payload builder", () => {
 
   it("rejects an unsupported attachment extension", () => {
     expect(() => buildUs14117Payload(values, ["evidence.exe"]))
+      .toThrow(/extension/);
+  });
+});
+
+describe("diagnosis payload builder", () => {
+  it("maps questionnaire values to typed answers", () => {
+    const values = createDefaultDiagnosisValues();
+    const payload = buildDiagnosisPayload(values);
+
+    expect(payload.company_name.length).toBeGreaterThanOrEqual(2);
+    expect(payload.answers).toHaveProperty("q6_scenario", "other");
+  });
+
+  it("preserves the existing fallback for a missing company name", () => {
+    const payload = buildDiagnosisPayload({ ...createDefaultDiagnosisValues(), company_name: "" });
+    expect(payload.company_name).toBe("未命名企业");
+  });
+
+  it("rejects an unsupported yes/no questionnaire value", () => {
+    const values: DiagnosisFormValues = {
+      ...createDefaultDiagnosisValues(),
+      m3_processes_personal_info: "maybe",
+    };
+    expect(() => buildDiagnosisPayload(values)).toThrow(/m3_processes_personal_info/);
+  });
+});
+
+describe("assessment payload builder", () => {
+  const input = withPreset<AssessmentFormValues>(createDefaultAssessmentValues(), "assessment");
+
+  it("builds a request with normalized counts and uploaded files", () => {
+    const payload = buildAssessmentPayload(input.values, input.paths);
+    expect(payload.uploaded_files).toEqual(input.paths);
+    expect(payload.pii_count).toBeGreaterThanOrEqual(0);
+  });
+
+  it("rejects a missing company USCC", () => {
+    expect(() => buildAssessmentPayload({ ...input.values, company_uscc: "" }, input.paths))
+      .toThrow(/company_uscc/);
+  });
+
+  it("rejects an unsupported attachment extension", () => {
+    expect(() => buildAssessmentPayload(input.values, ["inventory.exe"]))
+      .toThrow(/extension/);
+  });
+});
+
+describe("PIPIA payload builder", () => {
+  const input = withPreset<PipiaFormValues>(createDefaultPipiaValues(), "pipia");
+
+  it("builds nested PIPIA request sections", () => {
+    const payload = buildPipiaPayload(input.values, input.paths);
+    expect(payload.company_profile.company_uscc).toBe(input.values.company_uscc);
+    expect(payload.attachments).toHaveLength(input.paths.length);
+  });
+
+  it("rejects an unsupported route type", () => {
+    const invalid = { ...input.values, route_type: "assessment" } as unknown as PipiaFormValues;
+    expect(() => buildPipiaPayload(invalid, input.paths)).toThrow(/route_type/);
+  });
+
+  it("requires an SCC contract attachment role for SCC filing", () => {
+    const invalid = { ...input.values, route_type: "scc_filing", attachment_role: "internal_policy" } as const;
+    expect(() => buildPipiaPayload(invalid, input.paths)).toThrow(/attachment_role/);
+  });
+
+  it("rejects an unsupported attachment extension", () => {
+    expect(() => buildPipiaPayload(input.values, ["evidence.exe"]))
+      .toThrow(/extension/);
+  });
+});
+
+describe("CPRA payload builder", () => {
+  const values: CpraFormValues = {
+    ...createDefaultCpraValues(),
+    company_name: "TrendyGoods Inc.",
+    business_model: "加州电商零售平台",
+    data_lifecycle: "收集订单并用于履约",
+    notice_and_consent: "收集时告知",
+    privacy_policy_url: "https://example.com/privacy",
+    consumer_rights_process: "在线受理访问和删除请求",
+    opt_out_and_sale_sharing: "提供 Do Not Sell or Share 入口",
+  };
+  const files = { privacyPolicy: [], rightsSop: [], dataMap: [], vendorList: [], other: [] };
+
+  it("builds a URL attachment without uploaded files", () => {
+    const payload = buildCpraPayload(values, files);
+    expect(payload.attachments[0]?.file_format).toBe("url");
+  });
+
+  it("rejects a missing business model", () => {
+    expect(() => buildCpraPayload({ ...values, business_model: "" }, files))
+      .toThrow(/business_model/);
+  });
+
+  it("rejects an invalid privacy policy URL", () => {
+    expect(() => buildCpraPayload({ ...values, privacy_policy_url: "example.com" }, files))
+      .toThrow(/privacy_policy_url/);
+  });
+
+  it("rejects an unsupported attachment extension", () => {
+    expect(() => buildCpraPayload({ ...values, privacy_policy_url: "" }, { ...files, privacyPolicy: ["policy.exe"] }))
       .toThrow(/extension/);
   });
 });

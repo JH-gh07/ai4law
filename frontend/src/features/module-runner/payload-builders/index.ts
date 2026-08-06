@@ -4,6 +4,13 @@ export {
   buildEuSccPayload,
   buildTiaPayload,
 } from "./eu";
-export { buildCnFlowPayload, buildDocumentReviewPayload } from "./cn";
+export {
+  buildAssessmentPayload,
+  buildCnFlowPayload,
+  buildDiagnosisPayload,
+  buildDocumentReviewPayload,
+  buildPipiaPayload,
+} from "./cn";
 export type { CnFlowResolvedFiles } from "./cn";
-export { buildUs14117Payload } from "./us";
+export { buildCpraPayload, buildUs14117Payload } from "./us";
+export type { CpraResolvedFiles } from "./us";
