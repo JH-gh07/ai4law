@@ -17,6 +17,8 @@ venv/
 **/.vite/
 **/*.tsbuildinfo
 **/coverage/
+**/playwright-report/
+**/test-results/
 
 # Local environment and credentials
 .env

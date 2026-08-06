@@ -448,6 +448,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const onSelectDocumentReviewFiles = (incomingFiles: FileList | null) => {
     const next = Array.from(incomingFiles ?? []);
     if (next.length === 0) return;
+    setDocumentReviewDevFilePaths([]);
     const hadNoUploadedFiles = documentReviewFiles.length === 0;
     setDocumentReviewFiles((prev) => {
       const merged = [...prev];

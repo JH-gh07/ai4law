@@ -12,6 +12,7 @@
     "generate:api": "bash ../scripts/generate_api_types.sh",
     "test": "vitest run",
     "test:dev-cases:api": "vitest run tests/contract/dev-test-cases.api.test.ts",
+    "test:e2e": "playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^18.3.12",
