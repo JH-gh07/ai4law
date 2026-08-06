@@ -35,4 +35,23 @@ describe("generated API request contract", () => {
       Pick<ModuleRequestMap["assessment"], "path_check_mode">
     >();
   });
+
+  it("keeps known historical drift invalid at compile time", () => {
+    type DiagnosisScenario = ModuleRequestMap["diagnosis"]["answers"]["q6_scenario"];
+    type CnRecipient = ModuleRequestMap["cn_flow"]["recipient_entities"][number];
+    type PipiaCompany = ModuleRequestMap["pipia"]["company_profile"];
+
+    const supportedScenario: DiagnosisScenario = "contract_performance";
+    // @ts-expect-error The legacy scenario is not part of the generated Pydantic enum.
+    const legacyScenario: DiagnosisScenario = "business_operation";
+    // @ts-expect-error country_region is required; the legacy country field cannot replace it.
+    const legacyRecipient: CnRecipient = { entity_name: "Legacy", country: "CN", entity_role: "vendor" };
+    // @ts-expect-error company_uscc is required by the generated PIPIA company profile.
+    const missingUscc: PipiaCompany = { company_name: "Legacy Company" };
+
+    expect(supportedScenario).toBe("contract_performance");
+    expect(legacyScenario).toBe("business_operation");
+    expect(legacyRecipient).toHaveProperty("country", "CN");
+    expect(missingUscc).toEqual({ company_name: "Legacy Company" });
+  });
 });
