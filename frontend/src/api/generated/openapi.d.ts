@@ -1760,14 +1760,14 @@ export interface components {
              * Code
              * @default 0
              */
-            code: number;
+            code?: number;
             /** Data */
             data: unknown;
             /**
              * Message
              * @default ok
              */
-            message: string;
+            message?: string;
         };
         /** AggregatedReview */
         AggregatedReview: {
@@ -1801,7 +1801,7 @@ export interface components {
              * Overall Risk Score
              * @default 0
              */
-            overall_risk_score: number;
+            overall_risk_score?: number;
             /** Priority Actions */
             priority_actions: string[];
             /**
@@ -1827,41 +1827,41 @@ export interface components {
              * Article Content
              * @default
              */
-            article_content: string;
+            article_content?: string;
             /** Article No */
             article_no: string;
             /**
              * Authority Level
              * @default medium
              */
-            authority_level: string;
+            authority_level?: string;
             /**
              * Binding Force
              * @default recommended
              */
-            binding_force: string;
+            binding_force?: string;
             /**
              * Doc Type
              * @default law
              */
-            doc_type: string;
+            doc_type?: string;
             /**
              * Jurisdiction
              * @default cn
              */
-            jurisdiction: string;
+            jurisdiction?: string;
             /**
              * Next Article Content
              * @default
              */
-            next_article_content: string;
+            next_article_content?: string;
             /** Next Article No */
             next_article_no?: string | null;
             /**
              * Prev Article Content
              * @default
              */
-            prev_article_content: string;
+            prev_article_content?: string;
             /** Prev Article No */
             prev_article_no?: string | null;
             /** Source Id */
@@ -1870,7 +1870,7 @@ export interface components {
              * Source Url
              * @default
              */
-            source_url: string;
+            source_url?: string;
             /** Title */
             title: string;
         };
@@ -1880,7 +1880,7 @@ export interface components {
              * Content
              * @default
              */
-            content: string;
+            content?: string;
             /** File Name */
             file_name: string;
             /** File Url */
@@ -1946,12 +1946,12 @@ export interface components {
              * Source Module
              * @default diagnosis
              */
-            source_module: string;
+            source_module?: string;
             /**
              * Target Module
              * @default assessment
              */
-            target_module: string;
+            target_module?: string;
             /** Transfer Purpose */
             transfer_purpose?: string | null;
         };
@@ -1964,7 +1964,7 @@ export interface components {
              * Contains Important Data
              * @default false
              */
-            contains_important_data: boolean;
+            contains_important_data?: boolean;
             /** Data Inventory Items */
             data_inventory_items?: components["schemas"]["DataInventoryItem"][];
             /** Downstream Processors */
@@ -1973,30 +1973,30 @@ export interface components {
              * Force Override Path
              * @default false
              */
-            force_override_path: boolean;
+            force_override_path?: boolean;
             /**
              * Industry
              * @default
              */
-            industry: string;
+            industry?: string;
             /**
              * Is Ciio
              * @default false
              */
-            is_ciio: boolean;
+            is_ciio?: boolean;
             legal_document_review?: components["schemas"]["LegalDocumentReview"] | null;
             /**
              * Path Check Mode
              * @default warn_only
              * @enum {string}
              */
-            path_check_mode: "generate_only" | "warn_only" | "block_on_mismatch";
+            path_check_mode?: "generate_only" | "warn_only" | "block_on_mismatch";
             personal_info_protection?: components["schemas"]["PersonalInfoProtection"] | null;
             /**
              * Pii Count
              * @default 0
              */
-            pii_count: number;
+            pii_count?: number;
             /** Receiver Country */
             receiver_country: string;
             recipient_info?: components["schemas"]["RecipientInfo"] | null;
@@ -2006,7 +2006,7 @@ export interface components {
              * Spi Count
              * @default 0
              */
-            spi_count: number;
+            spi_count?: number;
             system_link?: components["schemas"]["SystemLink"] | null;
             /** Transfer Purpose */
             transfer_purpose: string;
@@ -2045,7 +2045,7 @@ export interface components {
              * Token Type
              * @default bearer
              */
-            token_type: string;
+            token_type?: string;
             user: components["schemas"]["AuthUser"];
         };
         /** AuthUser */
@@ -2123,12 +2123,12 @@ export interface components {
              * Clause Excerpt
              * @default
              */
-            clause_excerpt: string;
+            clause_excerpt?: string;
             /**
              * Facts Uncertain
              * @default false
              */
-            facts_uncertain: boolean;
+            facts_uncertain?: boolean;
             /** Finding */
             finding: string;
             /** Finding Id */
@@ -2139,19 +2139,19 @@ export interface components {
              * Location
              * @default
              */
-            location: string;
+            location?: string;
             /**
              * Recommendation
              * @default
              */
-            recommendation: string;
+            recommendation?: string;
             /** Requirement Id */
             requirement_id: string;
             /**
              * Review Confidence
              * @default 0.85
              */
-            review_confidence: number;
+            review_confidence?: number;
             /**
              * Risk Level
              * @enum {string}
@@ -2161,7 +2161,7 @@ export interface components {
              * Risk Score
              * @default 0
              */
-            risk_score: number;
+            risk_score?: number;
             /** Suggested Revision */
             suggested_revision?: string | null;
             /** Title */
@@ -2178,7 +2178,7 @@ export interface components {
              * Evidence
              * @default
              */
-            evidence: string;
+            evidence?: string;
             /** Finding */
             finding: string;
             /** Legal Basis */
@@ -2247,18 +2247,18 @@ export interface components {
              * Enable Cross Document Check
              * @default false
              */
-            enable_cross_document_check: boolean;
+            enable_cross_document_check?: boolean;
             /**
              * Max Llm Clauses
              * @default 20
              */
-            max_llm_clauses: number;
+            max_llm_clauses?: number;
             /**
              * Review Depth
              * @default standard
              * @enum {string}
              */
-            review_depth: "quick" | "standard" | "deep";
+            review_depth?: "quick" | "standard" | "deep";
         };
         /** BCRReviewItem */
         BCRReviewItem: {
@@ -2271,7 +2271,7 @@ export interface components {
              * Evidence
              * @default
              */
-            evidence: string;
+            evidence?: string;
             /** Finding */
             finding: string;
             /** Legal Basis */
@@ -2314,32 +2314,32 @@ export interface components {
              * @default unknown
              * @enum {string}
              */
-            actual_bcr_type: "BCR-C" | "BCR-P" | "unknown";
+            actual_bcr_type?: "BCR-C" | "BCR-P" | "unknown";
             /**
              * Declared Bcr Type
              * @default unknown
              * @enum {string}
              */
-            declared_bcr_type: "BCR-C" | "BCR-P" | "unknown";
+            declared_bcr_type?: "BCR-C" | "BCR-P" | "unknown";
             /** Evidence */
             evidence?: string[];
             /**
              * Recommendation
              * @default
              */
-            recommendation: string;
+            recommendation?: string;
             /**
              * Risk Level
              * @default MEDIUM
              * @enum {string}
              */
-            risk_level: "HIGH" | "MEDIUM" | "LOW";
+            risk_level?: "HIGH" | "MEDIUM" | "LOW";
             /**
              * Type Consistency
              * @default uncertain
              * @enum {string}
              */
-            type_consistency: "consistent" | "mismatch" | "uncertain";
+            type_consistency?: "consistent" | "mismatch" | "uncertain";
         };
         /** BCRUploadedDocument */
         BCRUploadedDocument: {
@@ -2347,13 +2347,13 @@ export interface components {
              * Auto Detected Role
              * @default false
              */
-            auto_detected_role: boolean;
+            auto_detected_role?: boolean;
             /**
              * Document Role
              * @default other_attachment
              * @enum {string}
              */
-            document_role: "main_bcr_document" | "member_list" | "internal_binding_agreement" | "complaint_procedure" | "audit_training_policy" | "tia_document" | "government_access_policy" | "other_attachment";
+            document_role?: "main_bcr_document" | "member_list" | "internal_binding_agreement" | "complaint_procedure" | "audit_training_policy" | "tia_document" | "government_access_policy" | "other_attachment";
             /** File Id */
             file_id: string;
             /** File Name */
@@ -2466,7 +2466,7 @@ export interface components {
              * Company Name
              * @default 示例企业
              */
-            company_name: string;
+            company_name?: string;
             /** Data Categories */
             data_categories: string[];
             /** Recipient Entities */
@@ -2535,7 +2535,7 @@ export interface components {
              * Is Restricted Party
              * @default false
              */
-            is_restricted_party: boolean;
+            is_restricted_party?: boolean;
         };
         /** CPRAApplicabilityInfo */
         CPRAApplicabilityInfo: {
@@ -2547,7 +2547,7 @@ export interface components {
              * Operates In California
              * @default true
              */
-            operates_in_california: boolean;
+            operates_in_california?: boolean;
             /** Possible Exemptions */
             possible_exemptions?: string[];
             /** Sell Share Revenue Ratio */
@@ -2628,19 +2628,19 @@ export interface components {
              * Article No
              * @default
              */
-            article_no: string;
+            article_no?: string;
             /**
              * Authority Level
              * @default medium
              * @enum {string}
              */
-            authority_level: "high" | "medium" | "low";
+            authority_level?: "high" | "medium" | "low";
             /**
              * Binding Force
              * @default recommended
              * @enum {string}
              */
-            binding_force: "mandatory" | "recommended" | "reference";
+            binding_force?: "mandatory" | "recommended" | "reference";
             /** Citation Id */
             citation_id: string;
             /**
@@ -2648,39 +2648,39 @@ export interface components {
              * @default law_article
              * @enum {string}
              */
-            citation_type: "law_article" | "official_guide" | "template_requirement" | "standard_clause" | "case_reference" | "user_material";
+            citation_type?: "law_article" | "official_guide" | "template_requirement" | "standard_clause" | "case_reference" | "user_material";
             /**
              * Confidence Score
              * @default 0
              */
-            confidence_score: number;
+            confidence_score?: number;
             /**
              * Display Label
              * @default
              */
-            display_label: string;
+            display_label?: string;
             /**
              * Jurisdiction
              * @default US
              */
-            jurisdiction: string;
+            jurisdiction?: string;
             /**
              * Knowledge Url
              * @default
              */
-            knowledge_url: string;
+            knowledge_url?: string;
             /**
              * Snippet
              * @default
              */
-            snippet: string;
+            snippet?: string;
             /** Source Id */
             source_id: string;
             /**
              * Source Kind
              * @default law_article
              */
-            source_kind: string;
+            source_kind?: string;
             /** Source Title */
             source_title: string;
         };
@@ -2690,37 +2690,37 @@ export interface components {
              * Accept Prominent
              * @default false
              */
-            accept_prominent: boolean;
+            accept_prominent?: boolean;
             /**
              * Bundled Consent
              * @default false
              */
-            bundled_consent: boolean;
+            bundled_consent?: boolean;
             /**
              * Confusing Language
              * @default false
              */
-            confusing_language: boolean;
+            confusing_language?: boolean;
             /**
              * Has Cookie Banner
              * @default false
              */
-            has_cookie_banner: boolean;
+            has_cookie_banner?: boolean;
             /**
              * Preselected Consent
              * @default false
              */
-            preselected_consent: boolean;
+            preselected_consent?: boolean;
             /**
              * Refusal More Steps
              * @default false
              */
-            refusal_more_steps: boolean;
+            refusal_more_steps?: boolean;
             /**
              * Reject Equally Prominent
              * @default false
              */
-            reject_equally_prominent: boolean;
+            reject_equally_prominent?: boolean;
         };
         /** CPRADSRMechanism */
         CPRADSRMechanism: {
@@ -2728,49 +2728,49 @@ export interface components {
              * Has Email
              * @default false
              */
-            has_email: boolean;
+            has_email?: boolean;
             /**
              * Has Toll Free Phone
              * @default false
              */
-            has_toll_free_phone: boolean;
+            has_toll_free_phone?: boolean;
             /**
              * Has Web Form
              * @default false
              */
-            has_web_form: boolean;
+            has_web_form?: boolean;
             /**
              * Is Easy To Find
              * @default false
              */
-            is_easy_to_find: boolean;
+            is_easy_to_find?: boolean;
             /** Response Days */
             response_days?: number | null;
             /**
              * Supports Access
              * @default false
              */
-            supports_access: boolean;
+            supports_access?: boolean;
             /**
              * Supports Correct
              * @default false
              */
-            supports_correct: boolean;
+            supports_correct?: boolean;
             /**
              * Supports Delete
              * @default false
              */
-            supports_delete: boolean;
+            supports_delete?: boolean;
             /**
              * Supports Limit Spi
              * @default false
              */
-            supports_limit_spi: boolean;
+            supports_limit_spi?: boolean;
             /**
              * Supports Opt Out
              * @default false
              */
-            supports_opt_out: boolean;
+            supports_opt_out?: boolean;
         };
         /** CPRADataItem */
         CPRADataItem: {
@@ -2780,37 +2780,37 @@ export interface components {
              * Cross Context Advertising
              * @default false
              */
-            cross_context_advertising: boolean;
+            cross_context_advertising?: boolean;
             /**
              * Is Sensitive
              * @default false
              */
-            is_sensitive: boolean;
+            is_sensitive?: boolean;
             /**
              * Purpose
              * @default
              */
-            purpose: string;
+            purpose?: string;
             /**
              * Recipient Type
              * @default
              */
-            recipient_type: string;
+            recipient_type?: string;
             /**
              * Retention
              * @default
              */
-            retention: string;
+            retention?: string;
             /**
              * Sale Or Share
              * @default false
              */
-            sale_or_share: boolean;
+            sale_or_share?: boolean;
             /**
              * Source
              * @default
              */
-            source: string;
+            source?: string;
             /** Spi Type */
             spi_type?: string | null;
         };
@@ -2826,7 +2826,7 @@ export interface components {
              * Evidence Source
              * @default user_input
              */
-            evidence_source: string;
+            evidence_source?: string;
             /** Gap */
             gap: string;
             /** Legal Basis */
@@ -2855,7 +2855,7 @@ export interface components {
              * Company Name
              * @default 示例企业
              */
-            company_name: string;
+            company_name?: string;
             consent_ui?: components["schemas"]["CPRAConsentUI"] | null;
             /** Consumer Rights Process */
             consumer_rights_process: string;
@@ -2872,7 +2872,7 @@ export interface components {
              * Vendor Management
              * @default
              */
-            vendor_management: string;
+            vendor_management?: string;
             /** Vendors */
             vendors?: components["schemas"]["CPRAVendorInfo"][];
         };
@@ -2906,49 +2906,49 @@ export interface components {
              * Dpa Honors Opt Out
              * @default false
              */
-            dpa_honors_opt_out: boolean;
+            dpa_honors_opt_out?: boolean;
             /**
              * Dpa Prohibits Sale Share
              * @default false
              */
-            dpa_prohibits_sale_share: boolean;
+            dpa_prohibits_sale_share?: boolean;
             /**
              * Dpa Requires Audit
              * @default false
              */
-            dpa_requires_audit: boolean;
+            dpa_requires_audit?: boolean;
             /**
              * Dpa Requires Dsr Assist
              * @default false
              */
-            dpa_requires_dsr_assist: boolean;
+            dpa_requires_dsr_assist?: boolean;
             /**
              * Has Dpa
              * @default false
              */
-            has_dpa: boolean;
+            has_dpa?: boolean;
             /** Name */
             name: string;
             /**
              * Receives Pi
              * @default true
              */
-            receives_pi: boolean;
+            receives_pi?: boolean;
             /**
              * Receives Spi
              * @default false
              */
-            receives_spi: boolean;
+            receives_spi?: boolean;
             /**
              * Sale Or Share
              * @default false
              */
-            sale_or_share: boolean;
+            sale_or_share?: boolean;
             /**
              * Vendor Type
              * @default service_provider
              */
-            vendor_type: string;
+            vendor_type?: string;
         };
         /** ChapterContent */
         ChapterContent: {
@@ -3007,32 +3007,32 @@ export interface components {
              * Anchor
              * @default
              */
-            anchor: string;
+            anchor?: string;
             /**
              * Article No
              * @default
              */
-            article_no: string;
+            article_no?: string;
             /**
              * Authority Level
              * @default medium
              */
-            authority_level: string;
+            authority_level?: string;
             /**
              * Binding Force
              * @default recommended
              */
-            binding_force: string;
+            binding_force?: string;
             /**
              * Can Enter External Report
              * @default true
              */
-            can_enter_external_report: boolean;
+            can_enter_external_report?: boolean;
             /**
              * Can Jump
              * @default false
              */
-            can_jump: boolean;
+            can_jump?: boolean;
             /** Citation Id */
             citation_id: string;
             /** Citation Type */
@@ -3041,54 +3041,54 @@ export interface components {
              * Clause Id
              * @default
              */
-            clause_id: string;
+            clause_id?: string;
             /**
              * Confidence Score
              * @default 0
              */
-            confidence_score: number;
+            confidence_score?: number;
             /**
              * Confidence Threshold
              * @default 0.2
              */
-            confidence_threshold: number;
+            confidence_threshold?: number;
             /**
              * Display Label
              * @default
              */
-            display_label: string;
+            display_label?: string;
             /**
              * External Report Allowed
              * @default true
              */
-            external_report_allowed: boolean;
+            external_report_allowed?: boolean;
             /** Footnote Number */
             footnote_number?: number | null;
             /**
              * Jurisdiction
              * @default
              */
-            jurisdiction: string;
+            jurisdiction?: string;
             /**
              * Knowledge Url
              * @default
              */
-            knowledge_url: string;
+            knowledge_url?: string;
             /**
              * Module
              * @default
              */
-            module: string;
+            module?: string;
             /**
              * Open Mode
              * @default in_app
              */
-            open_mode: string;
+            open_mode?: string;
             /**
              * Quote Text
              * @default
              */
-            quote_text: string;
+            quote_text?: string;
             /** Related Evidence Ids */
             related_evidence_ids?: string[];
             /** Related Fact Ids */
@@ -3100,19 +3100,19 @@ export interface components {
              * Section Id
              * @default
              */
-            section_id: string;
+            section_id?: string;
             /** Source Id */
             source_id: string;
             /**
              * Source Kind
              * @default law_article
              */
-            source_kind: string;
+            source_kind?: string;
             /**
              * Source Url
              * @default
              */
-            source_url: string;
+            source_url?: string;
             /** Title */
             title: string;
         };
@@ -3128,7 +3128,7 @@ export interface components {
              * Module
              * @default
              */
-            module: string;
+            module?: string;
             /** Task Id */
             task_id: string;
         };
@@ -3140,23 +3140,23 @@ export interface components {
              * Confidence
              * @default 0
              */
-            confidence: number;
+            confidence?: number;
             /**
              * Failure Reason
              * @default
              */
-            failure_reason: string;
+            failure_reason?: string;
             /**
              * Resolution Type
              * @default unresolved
              * @enum {string}
              */
-            resolution_type: "exact_article" | "source_overview" | "external_verified" | "unresolved";
+            resolution_type?: "exact_article" | "source_overview" | "external_verified" | "unresolved";
             /**
              * Target Id
              * @default
              */
-            target_id: string;
+            target_id?: string;
         };
         /** ClausePosition */
         ClausePosition: {
@@ -3238,22 +3238,22 @@ export interface components {
              * Has Penalty
              * @default false
              */
-            has_penalty: boolean;
+            has_penalty?: boolean;
             /**
              * Penalty Reason
              * @default
              */
-            penalty_reason: string;
+            penalty_reason?: string;
             /**
              * Penalty Time
              * @default
              */
-            penalty_time: string;
+            penalty_time?: string;
             /**
              * Rectification Status
              * @default
              */
-            rectification_status: string;
+            rectification_status?: string;
         };
         /** CopilotChatRequest */
         CopilotChatRequest: {
@@ -3276,7 +3276,7 @@ export interface components {
              * Fallback
              * @default false
              */
-            fallback: boolean;
+            fallback?: boolean;
             /** Model */
             model: string;
             /** Reply */
@@ -3289,7 +3289,7 @@ export interface components {
              * Artifact Count
              * @default 0
              */
-            artifact_count: number;
+            artifact_count?: number;
             /** Blocker */
             blocker?: string | null;
             /** Current Step */
@@ -3298,19 +3298,19 @@ export interface components {
              * Evidence Count
              * @default 0
              */
-            evidence_count: number;
+            evidence_count?: number;
             /**
              * Issues Count
              * @default 0
              */
-            issues_count: number;
+            issues_count?: number;
             /** Latest Artifacts */
             latest_artifacts?: string[];
             /**
              * Runs Count
              * @default 0
              */
-            runs_count: number;
+            runs_count?: number;
             /** Top Issues */
             top_issues?: string[];
             /** Trace Highlights */
@@ -3396,7 +3396,7 @@ export interface components {
              * Risk Level
              * @default medium
              */
-            risk_level: string;
+            risk_level?: string;
             /** Title */
             title: string;
         };
@@ -3410,17 +3410,17 @@ export interface components {
              * Residual Risk Level
              * @default
              */
-            residual_risk_level: string;
+            residual_risk_level?: string;
             /**
              * Responsible Party
              * @default
              */
-            responsible_party: string;
+            responsible_party?: string;
             /**
              * Status
              * @default planned
              */
-            status: string;
+            status?: string;
             /** Target Risk Ids */
             target_risk_ids?: string[];
         };
@@ -3437,12 +3437,12 @@ export interface components {
              * Prior Consultation Possible
              * @default false
              */
-            prior_consultation_possible: boolean;
+            prior_consultation_possible?: boolean;
             /**
              * Reasoning
              * @default
              */
-            reasoning: string;
+            reasoning?: string;
             /** Trigger Reasons */
             trigger_reasons?: string[];
         };
@@ -3459,52 +3459,52 @@ export interface components {
              * Automated Decision Making
              * @default false
              */
-            automated_decision_making: boolean;
+            automated_decision_making?: boolean;
             /**
              * Cross Border Transfer
              * @default false
              */
-            cross_border_transfer: boolean;
+            cross_border_transfer?: boolean;
             /** Data Categories */
             data_categories: string[];
             /**
              * Data Matching
              * @default false
              */
-            data_matching: boolean;
+            data_matching?: boolean;
             /** Data Subject Categories */
             data_subject_categories?: string[];
             /**
              * Data Subject Count
              * @default
              */
-            data_subject_count: string;
+            data_subject_count?: string;
             /** Dpia Trigger Reasons */
             dpia_trigger_reasons?: string[];
             /**
              * Dpo Name
              * @default
              */
-            dpo_name: string;
+            dpo_name?: string;
             /**
              * Dpo Opinion
              * @default
              */
-            dpo_opinion: string;
+            dpo_opinion?: string;
             /** Extracted Notes */
             extracted_notes?: string[];
             /**
              * Large Scale Processing
              * @default false
              */
-            large_scale_processing: boolean;
+            large_scale_processing?: boolean;
             /** Lawful Basis */
             lawful_basis?: string[];
             /**
              * New Technology
              * @default false
              */
-            new_technology: boolean;
+            new_technology?: boolean;
             /** Processing Flow Description */
             processing_flow_description: string;
             /** Project Goal */
@@ -3515,7 +3515,7 @@ export interface components {
              * Retention Period
              * @default
              */
-            retention_period: string;
+            retention_period?: string;
             /** Special Category Data */
             special_category_data: boolean;
             /** Special Category Types */
@@ -3524,17 +3524,17 @@ export interface components {
              * Systematic Monitoring
              * @default false
              */
-            systematic_monitoring: boolean;
+            systematic_monitoring?: boolean;
             /**
              * Transfer Destination
              * @default
              */
-            transfer_destination: string;
+            transfer_destination?: string;
             /**
              * Vulnerable Data Subjects
              * @default false
              */
-            vulnerable_data_subjects: boolean;
+            vulnerable_data_subjects?: boolean;
         };
         /** DPIARequest */
         DPIARequest: {
@@ -3542,50 +3542,50 @@ export interface components {
              * Automated Decision Making
              * @default false
              */
-            automated_decision_making: boolean;
+            automated_decision_making?: boolean;
             /** Consulted Internal Departments */
             consulted_internal_departments?: string[];
             /**
              * Cross Border Transfer
              * @default false
              */
-            cross_border_transfer: boolean;
+            cross_border_transfer?: boolean;
             /** Data Categories */
             data_categories?: string[];
             /**
              * Data Matching
              * @default false
              */
-            data_matching: boolean;
+            data_matching?: boolean;
             /** Data Subject Categories */
             data_subject_categories?: string[];
             /**
              * Data Subject Consultation Plan
              * @default
              */
-            data_subject_consultation_plan: string;
+            data_subject_consultation_plan?: string;
             /**
              * Data Subject Count
              * @default
              */
-            data_subject_count: string;
+            data_subject_count?: string;
             /**
              * Dpia Owner
              * @default
              */
-            dpia_owner: string;
+            dpia_owner?: string;
             /** Dpia Trigger Reasons */
             dpia_trigger_reasons?: string[];
             /**
              * Dpo Name
              * @default
              */
-            dpo_name: string;
+            dpo_name?: string;
             /**
              * Dpo Opinion
              * @default
              */
-            dpo_opinion: string;
+            dpo_opinion?: string;
             /** External Experts */
             external_experts?: string[];
             /** Identified Risks */
@@ -3594,7 +3594,7 @@ export interface components {
              * Large Scale Processing
              * @default false
              */
-            large_scale_processing: boolean;
+            large_scale_processing?: boolean;
             /** Lawful Basis */
             lawful_basis?: string[];
             /** Mitigation Measures */
@@ -3603,12 +3603,12 @@ export interface components {
              * Necessity Statement
              * @default
              */
-            necessity_statement: string;
+            necessity_statement?: string;
             /**
              * New Technology
              * @default false
              */
-            new_technology: boolean;
+            new_technology?: boolean;
             /** Processing Flow Description */
             processing_flow_description: string;
             /** Project Goal */
@@ -3619,46 +3619,46 @@ export interface components {
              * Proportionality Statement
              * @default
              */
-            proportionality_statement: string;
+            proportionality_statement?: string;
             /**
              * Retention Period
              * @default
              */
-            retention_period: string;
+            retention_period?: string;
             /**
              * Review Date
              * @default
              */
-            review_date: string;
+            review_date?: string;
             /**
              * Special Category Data
              * @default false
              */
-            special_category_data: boolean;
+            special_category_data?: boolean;
             /** Special Category Types */
             special_category_types?: string[];
             /**
              * Systematic Monitoring
              * @default false
              */
-            systematic_monitoring: boolean;
+            systematic_monitoring?: boolean;
             /**
              * Transfer Destination
              * @default
              */
-            transfer_destination: string;
+            transfer_destination?: string;
             /**
              * Transparency Information
              * @default
              */
-            transparency_information: string;
+            transparency_information?: string;
             /** Uploaded Files */
             uploaded_files?: string[];
             /**
              * Vulnerable Data Subjects
              * @default false
              */
-            vulnerable_data_subjects: boolean;
+            vulnerable_data_subjects?: boolean;
         };
         /** DPIAResult */
         DPIAResult: {
@@ -3712,7 +3712,7 @@ export interface components {
              * Trace Manifest Path
              * @default
              */
-            trace_manifest_path: string;
+            trace_manifest_path?: string;
         };
         /** DPIARiskMatrixItem */
         DPIARiskMatrixItem: {
@@ -3720,7 +3720,7 @@ export interface components {
              * Affected Data Subjects
              * @default
              */
-            affected_data_subjects: string;
+            affected_data_subjects?: string;
             /** Impact */
             impact: string;
             /** Likelihood */
@@ -3735,7 +3735,7 @@ export interface components {
              * Risk Source
              * @default
              */
-            risk_source: string;
+            risk_source?: string;
         };
         /**
          * DataInventoryItem
@@ -3746,22 +3746,22 @@ export interface components {
              * Data Subject
              * @default
              */
-            data_subject: string;
+            data_subject?: string;
             /**
              * Description
              * @default
              */
-            description: string;
+            description?: string;
             /**
              * Example
              * @default
              */
-            example: string;
+            example?: string;
             /**
              * Is Important Data Candidate
              * @default false
              */
-            is_important_data_candidate: boolean;
+            is_important_data_candidate?: boolean;
             /**
              * Name
              * @description 数据项名称
@@ -3771,27 +3771,27 @@ export interface components {
              * Necessity
              * @default
              */
-            necessity: string;
+            necessity?: string;
             /**
              * Personal Info Type
              * @default
              */
-            personal_info_type: string;
+            personal_info_type?: string;
             /**
              * Remarks
              * @default
              */
-            remarks: string;
+            remarks?: string;
             /**
              * Retention Period
              * @default
              */
-            retention_period: string;
+            retention_period?: string;
             /**
              * Volume
              * @default
              */
-            volume: string;
+            volume?: string;
         };
         /** DeleteProjectHistoryResponse */
         DeleteProjectHistoryResponse: {
@@ -3799,49 +3799,49 @@ export interface components {
              * Deleted Artifacts
              * @default 0
              */
-            deleted_artifacts: number;
+            deleted_artifacts?: number;
             /**
              * Deleted Diagnosis Sessions
              * @default 0
              */
-            deleted_diagnosis_sessions: number;
+            deleted_diagnosis_sessions?: number;
             /**
              * Deleted Evidence Hits
              * @default 0
              */
-            deleted_evidence_hits: number;
+            deleted_evidence_hits?: number;
             /**
              * Deleted Issues
              * @default 0
              */
-            deleted_issues: number;
+            deleted_issues?: number;
             /**
              * Deleted Module Runs
              * @default 0
              */
-            deleted_module_runs: number;
+            deleted_module_runs?: number;
             /** Deleted Paths */
             deleted_paths?: string[];
             /**
              * Deleted Report Records
              * @default 0
              */
-            deleted_report_records: number;
+            deleted_report_records?: number;
             /**
              * Deleted Review Tasks
              * @default 0
              */
-            deleted_review_tasks: number;
+            deleted_review_tasks?: number;
             /**
              * Deleted Task Spaces
              * @default 0
              */
-            deleted_task_spaces: number;
+            deleted_task_spaces?: number;
             /**
              * Deleted Uploaded Files
              * @default 0
              */
-            deleted_uploaded_files: number;
+            deleted_uploaded_files?: number;
             /** Task Id */
             task_id: string;
         };
@@ -3851,24 +3851,24 @@ export interface components {
              * App Id
              * @default
              */
-            app_id: string;
+            app_id?: string;
             /** Base Url */
             base_url: string;
             /**
              * Enabled
              * @default false
              */
-            enabled: boolean;
+            enabled?: boolean;
             /**
              * Secret
              * @default
              */
-            secret: string;
+            secret?: string;
             /**
              * Secret Configured
              * @default false
              */
-            secret_configured: boolean;
+            secret_configured?: boolean;
         };
         /** DeliLegalTestRequest */
         DeliLegalTestRequest: {
@@ -3880,22 +3880,22 @@ export interface components {
              * Base Url
              * @default
              */
-            base_url: string;
+            base_url?: string;
             /**
              * Error
              * @default
              */
-            error: string;
+            error?: string;
             /**
              * Error Category
              * @default
              */
-            error_category: string;
+            error_category?: string;
             /**
              * Error Code
              * @default
              */
-            error_code: string;
+            error_code?: string;
             /** Latency Ms */
             latency_ms?: number | null;
             /** Ok */
@@ -3904,24 +3904,24 @@ export interface components {
              * Result Count
              * @default 0
              */
-            result_count: number;
+            result_count?: number;
         };
         /** DiagnosisAnswerSet */
         DiagnosisAnswerSet: {
             contains_important_data: components["schemas"]["TriState"];
             is_ciio: components["schemas"]["TriState"];
             /** @default NO */
-            no_personal_info: components["schemas"]["TriState"];
+            no_personal_info?: components["schemas"]["TriState"];
             /** Personal Info Count */
             personal_info_count: number;
             /** @default third_party */
-            receiver_type: components["schemas"]["ReceiverType-Output"];
+            receiver_type?: components["schemas"]["ReceiverType-Output"];
             /** Sensitive Personal Info Count */
             sensitive_personal_info_count: number;
             /** Transfer Purpose */
             transfer_purpose?: string | null;
             /** @default other */
-            transfer_scenario: components["schemas"]["TransferScenario"];
+            transfer_scenario?: components["schemas"]["TransferScenario"];
         };
         /** DiagnosisAnswers */
         DiagnosisAnswers: {
@@ -3931,51 +3931,51 @@ export interface components {
              * M1 Company Size
              * @default
              */
-            m1_company_size: string;
+            m1_company_size?: string;
             /**
              * M1 Enterprise Name
              * @default
              */
-            m1_enterprise_name: string;
+            m1_enterprise_name?: string;
             /**
              * M1 Industry
              * @default
              */
-            m1_industry: string;
+            m1_industry?: string;
             /**
              * M1 Service Targets
              * @default
              */
-            m1_service_targets: string;
+            m1_service_targets?: string;
             /** M2 Core Needs */
             m2_core_needs?: string[];
             /**
              * M2 Deadline
              * @default
              */
-            m2_deadline: string;
+            m2_deadline?: string;
             /**
              * M2 Had Compliance Issue
              * @default
              */
-            m2_had_compliance_issue: string;
+            m2_had_compliance_issue?: string;
             /**
              * M2 Issue Description
              * @default
              */
-            m2_issue_description: string;
+            m2_issue_description?: string;
             /** M3 Data Sources */
             m3_data_sources?: string[];
             /**
              * M3 Data Volume Range
              * @default
              */
-            m3_data_volume_range: string;
+            m3_data_volume_range?: string;
             /**
              * M3 Enterprise Public Data Desc
              * @default
              */
-            m3_enterprise_public_data_desc: string;
+            m3_enterprise_public_data_desc?: string;
             /** M3 Important Data Types */
             m3_important_data_types?: string[];
             /** M3 Personal Info Types */
@@ -3984,98 +3984,98 @@ export interface components {
              * M3 Processes Enterprise Public Data
              * @default
              */
-            m3_processes_enterprise_public_data: string;
+            m3_processes_enterprise_public_data?: string;
             /**
              * M3 Processes Important Data
              * @default
              */
-            m3_processes_important_data: string;
+            m3_processes_important_data?: string;
             /**
              * M3 Processes Personal Info
              * @default
              */
-            m3_processes_personal_info: string;
+            m3_processes_personal_info?: string;
             /** M3 Processing Activities */
             m3_processing_activities?: string[];
             /**
              * M3 Retention Desc
              * @default
              */
-            m3_retention_desc: string;
+            m3_retention_desc?: string;
             /**
              * M3 Retention Period
              * @default
              */
-            m3_retention_period: string;
+            m3_retention_period?: string;
             /** M3 Sensitive Info Types */
             m3_sensitive_info_types?: string[];
             /**
              * M4 Authorization Method
              * @default
              */
-            m4_authorization_method: string;
+            m4_authorization_method?: string;
             /**
              * M4 Commercialization
              * @default
              */
-            m4_commercialization: string;
+            m4_commercialization?: string;
             /**
              * M4 Commercialization Mode
              * @default
              */
-            m4_commercialization_mode: string;
+            m4_commercialization_mode?: string;
             /**
              * M4 Cross Border Regions
              * @default
              */
-            m4_cross_border_regions: string;
+            m4_cross_border_regions?: string;
             /**
              * M4 Cross Border Transfer
              * @default
              */
-            m4_cross_border_transfer: string;
+            m4_cross_border_transfer?: string;
             /**
              * M4 Entrusted Party Type
              * @default
              */
-            m4_entrusted_party_type: string;
+            m4_entrusted_party_type?: string;
             /**
              * M4 Entrusted Processing
              * @default
              */
-            m4_entrusted_processing: string;
+            m4_entrusted_processing?: string;
             /**
              * M4 Share To Third Party
              * @default
              */
-            m4_share_to_third_party: string;
+            m4_share_to_third_party?: string;
             /**
              * M4 Third Party Types
              * @default
              */
-            m4_third_party_types: string;
+            m4_third_party_types?: string;
             /** M5 Compliance Docs */
             m5_compliance_docs?: string[];
             /**
              * M5 Penalty Or Complaint
              * @default
              */
-            m5_penalty_or_complaint: string;
+            m5_penalty_or_complaint?: string;
             /**
              * M5 Penalty Reason
              * @default
              */
-            m5_penalty_reason: string;
+            m5_penalty_reason?: string;
             /**
              * M5 Penalty Result
              * @default
              */
-            m5_penalty_result: string;
+            m5_penalty_result?: string;
             /**
              * M5 Penalty Time
              * @default
              */
-            m5_penalty_time: string;
+            m5_penalty_time?: string;
             /** M5 Security Measures */
             m5_security_measures?: string[];
             /** M5 Systems */
@@ -4098,23 +4098,23 @@ export interface components {
              * @description 出境数据是否不含个人信息且不涉及重要数据（纯业务/技术数据）
              * @default no
              */
-            q5_no_personal_info: components["schemas"]["YesNoUnknown"];
+            q5_no_personal_info?: components["schemas"]["YesNoUnknown"];
             /**
              * @description 本次数据出境的主要业务场景
              * @default other
              */
-            q6_scenario: components["schemas"]["TransferScenario"];
+            q6_scenario?: components["schemas"]["TransferScenario"];
             /**
              * @description 境外数据接收方类型
              * @default third_party
              */
-            q7_receiver_type: components["schemas"]["backend__domains__cn__transfer_diagnosis__schema__ReceiverType"];
+            q7_receiver_type?: components["schemas"]["backend__domains__cn__transfer_diagnosis__schema__ReceiverType"];
             /**
              * Q8 Purpose
              * @description 出境目的简述（供LLM生成专业说明使用）
              * @default
              */
-            q8_purpose: string;
+            q8_purpose?: string;
         };
         /** DiagnosisCitation */
         DiagnosisCitation: {
@@ -4183,29 +4183,29 @@ export interface components {
              * Contract Covered
              * @default false
              */
-            contract_covered: boolean;
+            contract_covered?: boolean;
             /**
              * Country Or Region
              * @default
              */
-            country_or_region: string;
+            country_or_region?: string;
             /** Name */
             name: string;
             /**
              * Onward Transfer Constraint
              * @default
              */
-            onward_transfer_constraint: string;
+            onward_transfer_constraint?: string;
             /**
              * Processing Activity
              * @default
              */
-            processing_activity: string;
+            processing_activity?: string;
             /**
              * Role
              * @default
              */
-            role: string;
+            role?: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4222,7 +4222,7 @@ export interface components {
              * Preview
              * @default
              */
-            preview: string;
+            preview?: string;
         };
         /** KnowledgeCaseOptions */
         KnowledgeCaseOptions: {
@@ -4241,7 +4241,7 @@ export interface components {
              * Preview
              * @default
              */
-            preview: string;
+            preview?: string;
             /** Query */
             query: string;
         };
@@ -4270,26 +4270,26 @@ export interface components {
              * Doc Type
              * @default
              */
-            doc_type: string;
+            doc_type?: string;
             /** Id */
             id: string;
             /**
              * Jurisdiction
              * @default
              */
-            jurisdiction: string;
+            jurisdiction?: string;
             /** Keywords */
             keywords?: string[];
             /**
              * Path
              * @default
              */
-            path: string;
+            path?: string;
             /**
              * Source Url
              * @default
              */
-            source_url: string;
+            source_url?: string;
             /** Title */
             title: string;
         };
@@ -4305,7 +4305,7 @@ export interface components {
              * Mode
              * @default hybrid
              */
-            mode: string;
+            mode?: string;
             /** Path */
             path?: string | null;
             /** Query */
@@ -4314,7 +4314,7 @@ export interface components {
              * Top K
              * @default 8
              */
-            top_k: number;
+            top_k?: number;
         };
         /** KnowledgeSourceDetailResponse */
         KnowledgeSourceDetailResponse: {
@@ -4326,7 +4326,7 @@ export interface components {
              * Preview
              * @default
              */
-            preview: string;
+            preview?: string;
         };
         /** KnowledgeSourceOptions */
         KnowledgeSourceOptions: {
@@ -4350,70 +4350,70 @@ export interface components {
              * Cache Refreshed
              * @default false
              */
-            cache_refreshed: boolean;
+            cache_refreshed?: boolean;
             /** Cases Csv Exists */
             cases_csv_exists: boolean;
             /**
              * Cases Csv Mtime
              * @default
              */
-            cases_csv_mtime: string;
+            cases_csv_mtime?: string;
             /** Cases Csv Path */
             cases_csv_path: string;
             /**
              * Manifest Frontend Visible Files
              * @default 0
              */
-            manifest_frontend_visible_files: number;
+            manifest_frontend_visible_files?: number;
             /**
              * Manifest Migrated Files
              * @default 0
              */
-            manifest_migrated_files: number;
+            manifest_migrated_files?: number;
             /**
              * Manifest Total Files
              * @default 0
              */
-            manifest_total_files: number;
+            manifest_total_files?: number;
             /**
              * Module Catalog Exists
              * @default false
              */
-            module_catalog_exists: boolean;
+            module_catalog_exists?: boolean;
             /**
              * Module Catalog Mtime
              * @default
              */
-            module_catalog_mtime: string;
+            module_catalog_mtime?: string;
             /**
              * Module Catalog Path
              * @default
              */
-            module_catalog_path: string;
+            module_catalog_path?: string;
             /** Sources Csv Exists */
             sources_csv_exists: boolean;
             /**
              * Sources Csv Mtime
              * @default
              */
-            sources_csv_mtime: string;
+            sources_csv_mtime?: string;
             /** Sources Csv Path */
             sources_csv_path: string;
             /**
              * Spec Asset Manifest Exists
              * @default false
              */
-            spec_asset_manifest_exists: boolean;
+            spec_asset_manifest_exists?: boolean;
             /**
              * Spec Asset Manifest Mtime
              * @default
              */
-            spec_asset_manifest_mtime: string;
+            spec_asset_manifest_mtime?: string;
             /**
              * Spec Asset Manifest Path
              * @default
              */
-            spec_asset_manifest_path: string;
+            spec_asset_manifest_path?: string;
             /** Synced At */
             synced_at: string;
         };
@@ -4423,34 +4423,34 @@ export interface components {
              * Active Provider Id
              * @default
              */
-            active_provider_id: string;
+            active_provider_id?: string;
             /**
              * Api Key
              * @default
              */
-            api_key: string;
+            api_key?: string;
             /**
              * Api Url
              * @default
              */
-            api_url: string;
+            api_url?: string;
             /**
              * Enabled
              * @default false
              */
-            enabled: boolean;
+            enabled?: boolean;
             /**
              * Model
              * @default
              */
-            model: string;
+            model?: string;
             /** Model Options */
             model_options?: string[];
             /**
              * Provider
              * @default
              */
-            provider: string;
+            provider?: string;
             /** Providers */
             providers?: components["schemas"]["RuntimeProviderConfig"][];
         };
@@ -4467,7 +4467,7 @@ export interface components {
              * Document Name
              * @default
              */
-            document_name: string;
+            document_name?: string;
             /** Missing Items */
             missing_items?: string[];
             /** Raw Clause Refs */
@@ -4476,7 +4476,7 @@ export interface components {
              * Risk Level
              * @default MEDIUM
              */
-            risk_level: string;
+            risk_level?: string;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -4488,7 +4488,7 @@ export interface components {
              * Remember
              * @default true
              */
-            remember: boolean;
+            remember?: boolean;
         };
         /** MeResponse */
         MeResponse: {
@@ -4510,9 +4510,9 @@ export interface components {
              * Recommendation
              * @default
              */
-            recommendation: string;
+            recommendation?: string;
             /** @default HIGH */
-            severity: components["schemas"]["ReviewSeverity"];
+            severity?: components["schemas"]["ReviewSeverity"];
             /** Title */
             title: string;
         };
@@ -4529,13 +4529,13 @@ export interface components {
              * Responsible Party
              * @default
              */
-            responsible_party: string;
+            responsible_party?: string;
             /**
              * Status
              * @default planned
              * @enum {string}
              */
-            status: "planned" | "in_progress" | "implemented" | "verified";
+            status?: "planned" | "in_progress" | "implemented" | "verified";
             /** Target Risk Ids */
             target_risk_ids?: string[];
         };
@@ -4548,22 +4548,22 @@ export interface components {
              * Actual Module
              * @default
              */
-            actual_module: string;
+            actual_module?: string;
             /**
              * Expected Module
              * @default
              */
-            expected_module: string;
+            expected_module?: string;
             /**
              * Is Correct
              * @default true
              */
-            is_correct: boolean;
+            is_correct?: boolean;
             /**
              * Mismatch Reason
              * @default
              */
-            mismatch_reason: string;
+            mismatch_reason?: string;
         };
         /** MyReportItem */
         MyReportItem: {
@@ -4695,27 +4695,27 @@ export interface components {
              * Industry
              * @default
              */
-            industry: string;
+            industry?: string;
             /**
              * Is Ciio
              * @default false
              */
-            is_ciio: boolean;
+            is_ciio?: boolean;
             /**
              * Outbound Pi Count
              * @default 0
              */
-            outbound_pi_count: number;
+            outbound_pi_count?: number;
             /**
              * Outbound Spi Count
              * @default 0
              */
-            outbound_spi_count: number;
+            outbound_spi_count?: number;
             /**
              * Processing Person Count
              * @default 0
              */
-            processing_person_count: number;
+            processing_person_count?: number;
         };
         /** PIPIAEmergencyPlan */
         PIPIAEmergencyPlan: {
@@ -4734,7 +4734,7 @@ export interface components {
              * Reason
              * @default
              */
-            reason: string;
+            reason?: string;
             /**
              * Status
              * @enum {string}
@@ -4762,12 +4762,12 @@ export interface components {
              * Source Module
              * @default diagnosis
              */
-            source_module: string;
+            source_module?: string;
             /**
              * Target Module
              * @default pipia
              */
-            target_module: string;
+            target_module?: string;
             /** Transfer Purpose */
             transfer_purpose?: string | null;
         };
@@ -4781,7 +4781,7 @@ export interface components {
              * Subject Volume
              * @default 0
              */
-            subject_volume: number;
+            subject_volume?: number;
         };
         /** PIPIARequest */
         PIPIARequest: {
@@ -4863,22 +4863,22 @@ export interface components {
              * Archive Evidence
              * @default
              */
-            archive_evidence: string;
+            archive_evidence?: string;
             /**
              * Notice Content
              * @default
              */
-            notice_content: string;
+            notice_content?: string;
             /**
              * Rights Response
              * @default
              */
-            rights_response: string;
+            rights_response?: string;
             /**
              * Separate Consent Status
              * @default
              */
-            separate_consent_status: string;
+            separate_consent_status?: string;
         };
         /** PublishResponse */
         PublishResponse: {
@@ -4903,41 +4903,41 @@ export interface components {
              * Country Or Region
              * @default
              */
-            country_or_region: string;
+            country_or_region?: string;
             /**
              * Legal Environment Summary
              * @default
              */
-            legal_environment_summary: string;
+            legal_environment_summary?: string;
             /** Name */
             name: string;
             /**
              * Processing Method
              * @default
              */
-            processing_method: string;
+            processing_method?: string;
             /**
              * Processing Purpose
              * @default
              */
-            processing_purpose: string;
+            processing_purpose?: string;
             /**
              * Relationship
              * @default
              */
-            relationship: string;
+            relationship?: string;
             /**
              * Role
              * @default
              */
-            role: string;
+            role?: string;
             /** Security Certifications */
             security_certifications?: string[];
             /**
              * Storage Location
              * @default
              */
-            storage_location: string;
+            storage_location?: string;
         };
         /** RecoveredModuleRun */
         RecoveredModuleRun: {
@@ -4965,7 +4965,7 @@ export interface components {
              * Run Mode
              * @default async
              */
-            run_mode: string;
+            run_mode?: string;
             /**
              * Started At
              * Format: date-time
@@ -4975,7 +4975,7 @@ export interface components {
              * Success
              * @default false
              */
-            success: boolean;
+            success?: boolean;
             /** Task Space Id */
             task_space_id: string;
         };
@@ -5147,7 +5147,7 @@ export interface components {
              * Facts Uncertain
              * @default false
              */
-            facts_uncertain: boolean;
+            facts_uncertain?: boolean;
             /** File Id */
             file_id: string;
             /** Issue Id */
@@ -5163,18 +5163,18 @@ export interface components {
              * Review Confidence
              * @default 1
              */
-            review_confidence: number;
+            review_confidence?: number;
             /** @default standard */
-            review_depth: components["schemas"]["ReviewDepth"];
+            review_depth?: components["schemas"]["ReviewDepth"];
             /** @default rule */
-            review_method: components["schemas"]["ReviewMethod"];
+            review_method?: components["schemas"]["ReviewMethod"];
             /** Risk Analysis */
             risk_analysis: string;
             /**
              * Risk Score
              * @default 0
              */
-            risk_score: number;
+            risk_score?: number;
             /** Secondary Clause Types */
             secondary_clause_types?: components["schemas"]["ClauseType"][];
             severity: components["schemas"]["ReviewSeverity"];
@@ -5204,7 +5204,7 @@ export interface components {
              * Chunk Count
              * @default 0
              */
-            chunk_count: number;
+            chunk_count?: number;
             /** Doc Type */
             doc_type: string;
             /** Id */
@@ -5221,7 +5221,7 @@ export interface components {
              * Uploaded At
              * @default
              */
-            uploaded_at: string;
+            uploaded_at?: string;
         };
         /** ReviewQueueResponse */
         ReviewQueueResponse: {
@@ -5260,14 +5260,14 @@ export interface components {
              * Has Scc Draft
              * @default false
              */
-            has_scc_draft: boolean;
+            has_scc_draft?: boolean;
             /** Industry */
             industry?: string | null;
             /**
              * Pii Count
              * @default 0
              */
-            pii_count: number;
+            pii_count?: number;
             /** Publisher Entity */
             publisher_entity?: string | null;
             /** Receiver Country */
@@ -5280,7 +5280,7 @@ export interface components {
              * Spi Count
              * @default 0
              */
-            spi_count: number;
+            spi_count?: number;
             /** Transfer Purpose */
             transfer_purpose?: string | null;
             /** Uncertain Facts */
@@ -5300,26 +5300,26 @@ export interface components {
              * Enable Cross Document Check
              * @default false
              */
-            enable_cross_document_check: boolean;
+            enable_cross_document_check?: boolean;
             /** Focus Clause Types */
             focus_clause_types?: string[] | null;
             /**
              * Max Llm Clauses
              * @default 20
              */
-            max_llm_clauses: number;
+            max_llm_clauses?: number;
             /**
              * Output Language
              * @default zh
              */
-            output_language: string;
+            output_language?: string;
             /** @default standard */
-            review_depth: components["schemas"]["ReviewDepth"];
+            review_depth?: components["schemas"]["ReviewDepth"];
             /**
              * Target Jurisdiction
              * @default cn
              */
-            target_jurisdiction: string;
+            target_jurisdiction?: string;
         };
         /** ReviewTaskCreateResponse */
         ReviewTaskCreateResponse: {
@@ -5356,19 +5356,19 @@ export interface components {
              * Affected Data Subjects
              * @default
              */
-            affected_data_subjects: string;
+            affected_data_subjects?: string;
             /**
              * Impact
              * @default medium
              * @enum {string}
              */
-            impact: "low" | "medium" | "high";
+            impact?: "low" | "medium" | "high";
             /**
              * Likelihood
              * @default medium
              * @enum {string}
              */
-            likelihood: "low" | "medium" | "high";
+            likelihood?: "low" | "medium" | "high";
             /** Risk Description */
             risk_description: string;
             /** Risk Id */
@@ -5378,7 +5378,7 @@ export interface components {
              * @default other
              * @enum {string}
              */
-            risk_source: "processing_activity" | "data_type" | "technology" | "third_party" | "organizational" | "other";
+            risk_source?: "processing_activity" | "data_type" | "technology" | "third_party" | "organizational" | "other";
         };
         /** RuntimeProviderConfig */
         RuntimeProviderConfig: {
@@ -5386,41 +5386,41 @@ export interface components {
              * Api Key
              * @default
              */
-            api_key: string;
+            api_key?: string;
             /**
              * Api Key Configured
              * @default false
              */
-            api_key_configured: boolean;
+            api_key_configured?: boolean;
             /**
              * Api Url
              * @default
              */
-            api_url: string;
+            api_url?: string;
             /**
              * Enabled
              * @default true
              */
-            enabled: boolean;
+            enabled?: boolean;
             /** Id */
             id: string;
             /**
              * Model
              * @default
              */
-            model: string;
+            model?: string;
             /** Name */
             name: string;
             /**
              * Provider Type
              * @default openai_compatible
              */
-            provider_type: string;
+            provider_type?: string;
             /**
              * Timeout
              * @default 60
              */
-            timeout: number;
+            timeout?: number;
         };
         /** RuntimeProviderTestRequest */
         RuntimeProviderTestRequest: {
@@ -5434,29 +5434,29 @@ export interface components {
              * Error
              * @default
              */
-            error: string;
+            error?: string;
             /**
              * Error Category
              * @default
              */
-            error_category: string;
+            error_category?: string;
             /**
              * Error Code
              * @default
              */
-            error_code: string;
+            error_code?: string;
             /** Latency Ms */
             latency_ms?: number | null;
             /**
              * Model
              * @default
              */
-            model: string;
+            model?: string;
             /**
              * Model Discovery
              * @default unsupported_or_failed
              */
-            model_discovery: string;
+            model_discovery?: string;
             /** Ok */
             ok: boolean;
             /** Provider Id */
@@ -5465,7 +5465,7 @@ export interface components {
              * Provider Type
              * @default openai_compatible
              */
-            provider_type: string;
+            provider_type?: string;
             /** Usage */
             usage?: {
                 [key: string]: number | string;
@@ -5531,7 +5531,7 @@ export interface components {
              * Risk Level
              * @default MEDIUM
              */
-            risk_level: string;
+            risk_level?: string;
             /** Title */
             title: string;
         };
@@ -5544,46 +5544,46 @@ export interface components {
              * Clause Ref
              * @default
              */
-            clause_ref: string;
+            clause_ref?: string;
             /** Finding Id */
             finding_id: string;
             /**
              * Issue Type
              * @default other
              */
-            issue_type: ("module_mismatch" | "clause_weakened" | "clause_deleted" | "annex_incomplete" | "annex_vague" | "special_category_misclassified" | "tia_missing" | "supplementary_measures_insufficient" | "sub_processor_chain_incomplete" | "party_info_incomplete" | "governing_law_issue" | "other") | string;
+            issue_type?: ("module_mismatch" | "clause_weakened" | "clause_deleted" | "annex_incomplete" | "annex_vague" | "special_category_misclassified" | "tia_missing" | "supplementary_measures_insufficient" | "sub_processor_chain_incomplete" | "party_info_incomplete" | "governing_law_issue" | "other") | string;
             /**
              * Legal Basis
              * @default
              */
-            legal_basis: string;
+            legal_basis?: string;
             /** Location */
             location: string;
             /**
              * Original Text
              * @default
              */
-            original_text: string;
+            original_text?: string;
             /**
              * Recommendation
              * @default
              */
-            recommendation: string;
+            recommendation?: string;
             /**
              * Risk Analysis
              * @default
              */
-            risk_analysis: string;
+            risk_analysis?: string;
             /**
              * Severity
              * @default MEDIUM
              */
-            severity: ("HIGH" | "MEDIUM" | "LOW") | string;
+            severity?: ("HIGH" | "MEDIUM" | "LOW") | string;
             /**
              * Suggested Text
              * @default
              */
-            suggested_text: string;
+            suggested_text?: string;
         };
         /**
          * SCCReviewRequest
@@ -5594,7 +5594,7 @@ export interface components {
              * Company Name
              * @default 示例企业
              */
-            company_name: string;
+            company_name?: string;
             /**
              * Declared Module Type
              * @enum {string}
@@ -5604,22 +5604,22 @@ export interface components {
              * Exporter Role
              * @default
              */
-            exporter_role: ("controller" | "processor") | "";
+            exporter_role?: ("controller" | "processor") | "";
             /**
              * Has Supplementary Measures
              * @default false
              */
-            has_supplementary_measures: boolean;
+            has_supplementary_measures?: boolean;
             /**
              * Has Tia
              * @default false
              */
-            has_tia: boolean;
+            has_tia?: boolean;
             /**
              * Importer Role
              * @default
              */
-            importer_role: ("controller" | "processor") | "";
+            importer_role?: ("controller" | "processor") | "";
             /** Project Name */
             project_name: string;
             /**
@@ -5678,19 +5678,19 @@ export interface components {
              * End Date
              * @default
              */
-            end_date: string;
+            end_date?: string;
             /** Participating Departments */
             participating_departments?: string[];
             /**
              * Preliminary Conclusion
              * @default
              */
-            preliminary_conclusion: string;
+            preliminary_conclusion?: string;
             /**
              * Start Date
              * @default
              */
-            start_date: string;
+            start_date?: string;
         };
         /**
          * StructuredCitation
@@ -5701,35 +5701,35 @@ export interface components {
              * Article
              * @default
              */
-            article: string;
+            article?: string;
             /** Effective Date */
             effective_date?: string | null;
             /**
              * Relevance Score
              * @default 0
              */
-            relevance_score: number;
+            relevance_score?: number;
             /**
              * Snippet
              * @default
              */
-            snippet: string;
+            snippet?: string;
             /**
              * Source Id
              * @default
              */
-            source_id: string;
+            source_id?: string;
             /**
              * Source Title
              * @default
              */
-            source_title: string;
+            source_title?: string;
             /**
              * Source Type
              * @description statute | regulation | standard | guideline | case
              * @default statute
              */
-            source_type: string;
+            source_type?: string;
         };
         /** SuggestedRevision */
         SuggestedRevision: {
@@ -5737,17 +5737,17 @@ export interface components {
              * Original Text
              * @default
              */
-            original_text: string;
+            original_text?: string;
             /**
              * Revision Rationale
              * @default
              */
-            revision_rationale: string;
+            revision_rationale?: string;
             /**
              * Suggested Text
              * @default
              */
-            suggested_text: string;
+            suggested_text?: string;
         };
         /**
          * SystemLink
@@ -5840,33 +5840,33 @@ export interface components {
              * Effective Remedy
              * @default true
              */
-            effective_remedy: boolean;
+            effective_remedy?: boolean;
             /**
              * Gov Access Risk
              * @default false
              */
-            gov_access_risk: boolean;
+            gov_access_risk?: boolean;
             /**
              * Has Adequacy
              * @default false
              */
-            has_adequacy: boolean;
+            has_adequacy?: boolean;
             /**
              * Independent Oversight
              * @default true
              */
-            independent_oversight: boolean;
+            independent_oversight?: boolean;
             /**
              * Notes
              * @default
              */
-            notes: string;
+            notes?: string;
             /**
              * Risk Level
              * @default MEDIUM
              * @enum {string}
              */
-            risk_level: "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
+            risk_level?: "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
             /** Risk Sources */
             risk_sources?: string[];
         };
@@ -5876,23 +5876,23 @@ export interface components {
              * Assessment
              * @default
              */
-            assessment: string;
+            assessment?: string;
             /**
              * Measure Name
              * @default
              */
-            measure_name: string;
+            measure_name?: string;
             /**
              * Measure Type
              * @default contractual
              * @enum {string}
              */
-            measure_type: "contractual" | "organizational" | "technical_weak" | "technical_strong" | "technical_extreme";
+            measure_type?: "contractual" | "organizational" | "technical_weak" | "technical_strong" | "technical_extreme";
             /**
              * Sufficient For Risk
              * @default false
              */
-            sufficient_for_risk: boolean;
+            sufficient_for_risk?: boolean;
         };
         /** TIARequest */
         TIARequest: {
@@ -5944,30 +5944,30 @@ export interface components {
              * Adequacy Country
              * @default
              */
-            adequacy_country: string;
+            adequacy_country?: string;
             /**
              * Adequacy Decision Exists
              * @default false
              */
-            adequacy_decision_exists: boolean;
+            adequacy_decision_exists?: boolean;
             /** Adequacy Notes */
             adequacy_notes?: string[];
             /**
              * Need Full Tia
              * @default true
              */
-            need_full_tia: boolean;
+            need_full_tia?: boolean;
             /**
              * Reason
              * @default
              */
-            reason: string;
+            reason?: string;
             /**
              * Route
              * @default full_tia_scc
              * @enum {string}
              */
-            route: "adequacy_simplified" | "full_tia_scc" | "full_tia_bcr" | "derogation_exception" | "missing_or_invalid_tool";
+            route?: "adequacy_simplified" | "full_tia_scc" | "full_tia_bcr" | "derogation_exception" | "missing_or_invalid_tool";
         };
         /**
          * TIAStructuredInput
@@ -5982,64 +5982,64 @@ export interface components {
              * Destination Country
              * @default
              */
-            destination_country: string;
+            destination_country?: string;
             /**
              * Encryption Before Transfer
              * @default false
              */
-            encryption_before_transfer: boolean;
+            encryption_before_transfer?: boolean;
             /**
              * Exporter Country
              * @default
              */
-            exporter_country: string;
+            exporter_country?: string;
             /**
              * Has End To End Encryption
              * @default false
              */
-            has_end_to_end_encryption: boolean;
+            has_end_to_end_encryption?: boolean;
             /**
              * Has Key Separation
              * @default false
              */
-            has_key_separation: boolean;
+            has_key_separation?: boolean;
             /**
              * Has Secure Enclave
              * @default false
              */
-            has_secure_enclave: boolean;
+            has_secure_enclave?: boolean;
             /**
              * Has Special Category Data
              * @default false
              */
-            has_special_category_data: boolean;
+            has_special_category_data?: boolean;
             /**
              * Importer Country
              * @default
              */
-            importer_country: string;
+            importer_country?: string;
             /**
              * Key Managed In Eu
              * @default false
              */
-            key_managed_in_eu: boolean;
+            key_managed_in_eu?: boolean;
             /** Special Category Types */
             special_category_types?: string[];
             /**
              * Transfer Frequency
              * @default
              */
-            transfer_frequency: string;
+            transfer_frequency?: string;
             /**
              * Transfer Purpose
              * @default
              */
-            transfer_purpose: string;
+            transfer_purpose?: string;
             /**
              * Transfer Scale
              * @default
              */
-            transfer_scale: string;
+            transfer_scale?: string;
         };
         /** TokenUsage */
         TokenUsage: {
@@ -6053,7 +6053,7 @@ export interface components {
              * Usage Source
              * @default unavailable
              */
-            usage_source: string;
+            usage_source?: string;
         };
         /**
          * TransferScenario
@@ -6075,39 +6075,39 @@ export interface components {
              * Access Type
              * @default
              */
-            access_type: string;
+            access_type?: string;
             /**
              * Country Of Residence
              * @default
              */
-            country_of_residence: string;
+            country_of_residence?: string;
             /**
              * Department
              * @default
              */
-            department: string;
+            department?: string;
             /**
              * Employer
              * @default
              */
-            employer: string;
+            employer?: string;
             /**
              * Has Actual Access
              * @default true
              */
-            has_actual_access: boolean;
+            has_actual_access?: boolean;
             /**
              * Nationality
              * @default
              */
-            nationality: string;
+            nationality?: string;
             /** Person Name */
             person_name: string;
             /**
              * Position
              * @default
              */
-            position: string;
+            position?: string;
         };
         /**
          * US14117AsyncAccepted
@@ -6163,7 +6163,7 @@ export interface components {
              * Risk Level
              * @default MEDIUM
              */
-            risk_level: string;
+            risk_level?: string;
             /** Title */
             title: string;
         };
@@ -6176,54 +6176,54 @@ export interface components {
              * Business Context
              * @default
              */
-            business_context: string;
+            business_context?: string;
             /**
              * Data Description
              * @default
              */
-            data_description: string;
+            data_description?: string;
             /** Data Item Name */
             data_item_name: string;
             /**
              * Data Subject Type
              * @default
              */
-            data_subject_type: string;
+            data_subject_type?: string;
             /**
              * Doj Data Category
              * @default not_14117_data
              */
-            doj_data_category: ("human_genomic_data" | "biometric_identifiers" | "precise_geolocation_data" | "personal_health_data" | "personal_financial_data" | "covered_personal_identifiers" | "government_related_data" | "not_14117_data") | string;
+            doj_data_category?: ("human_genomic_data" | "biometric_identifiers" | "precise_geolocation_data" | "personal_health_data" | "personal_financial_data" | "covered_personal_identifiers" | "government_related_data" | "not_14117_data") | string;
             /**
              * Export Necessity
              * @default
              */
-            export_necessity: string;
+            export_necessity?: string;
             /**
              * Is Government Related
              * @default false
              */
-            is_government_related: boolean;
+            is_government_related?: boolean;
             /**
              * Is Personal Info
              * @default false
              */
-            is_personal_info: boolean;
+            is_personal_info?: boolean;
             /**
              * Is Sensitive Personal Info
              * @default false
              */
-            is_sensitive_personal_info: boolean;
+            is_sensitive_personal_info?: boolean;
             /**
              * Precision Level
              * @default
              */
-            precision_level: string;
+            precision_level?: string;
             /**
              * Us Person Count
              * @default 0
              */
-            us_person_count: number;
+            us_person_count?: number;
         };
         /**
          * US14117Entity
@@ -6238,39 +6238,39 @@ export interface components {
              * Entity Role
              * @default processor
              */
-            entity_role: string;
+            entity_role?: string;
             /**
              * Governing Law
              * @default
              */
-            governing_law: string;
+            governing_law?: string;
             /**
              * Government Control
              * @default false
              */
-            government_control: boolean;
+            government_control?: boolean;
             /**
              * Government Investment
              * @default
              */
-            government_investment: string;
+            government_investment?: string;
             /** Is Covered Person */
             is_covered_person?: boolean | null;
             /**
              * Ownership Structure
              * @default
              */
-            ownership_structure: string;
+            ownership_structure?: string;
             /**
              * Parent Company
              * @default
              */
-            parent_company: string;
+            parent_company?: string;
             /**
              * Tax Id
              * @default
              */
-            tax_id: string;
+            tax_id?: string;
         };
         /**
          * US14117Request
@@ -6285,19 +6285,19 @@ export interface components {
              * Company Name
              * @default 示例企业
              */
-            company_name: string;
+            company_name?: string;
             /** Data Items */
             data_items: components["schemas"]["US14117DataItem"][];
             /**
              * Onward Transfer
              * @default false
              */
-            onward_transfer: boolean;
+            onward_transfer?: boolean;
             /**
              * Onward Transfer Description
              * @default
              */
-            onward_transfer_description: string;
+            onward_transfer_description?: string;
             /** Override Thresholds */
             override_thresholds?: {
                 [key: string]: number;
@@ -6315,7 +6315,7 @@ export interface components {
              * @description vendor_agreement, employment_agreement, investment_agreement, data_brokerage, cooperative_research, cloud_remote_access, onward_transfer, or other
              * @default vendor_agreement
              */
-            transaction_type: string;
+            transaction_type?: string;
         };
         /**
          * US14117Result
@@ -6338,7 +6338,7 @@ export interface components {
              * Overall Traffic Light
              * @default GREEN
              */
-            overall_traffic_light: ("RED" | "YELLOW" | "GREEN") | string;
+            overall_traffic_light?: ("RED" | "YELLOW" | "GREEN") | string;
             /** Report Path */
             report_path: string;
             /** Risk Matrix */
@@ -6378,7 +6378,7 @@ export interface components {
              * Traffic Light
              * @default GREEN
              */
-            traffic_light: ("RED" | "YELLOW" | "GREEN") | string;
+            traffic_light?: ("RED" | "YELLOW" | "GREEN") | string;
             /** Transaction Type */
             transaction_type: string;
             /** Us Person Count */
@@ -6409,19 +6409,19 @@ export interface components {
              * Category
              * @default access_control
              */
-            category: ("access_control" | "encryption" | "data_minimization" | "audit_logging" | "personnel_controls" | "contractual_controls") | string;
+            category?: ("access_control" | "encryption" | "data_minimization" | "audit_logging" | "personnel_controls" | "contractual_controls") | string;
             /**
              * Description
              * @default
              */
-            description: string;
+            description?: string;
             /** Measure Name */
             measure_name: string;
             /**
              * Status
              * @default missing
              */
-            status: ("implemented" | "planned" | "missing") | string;
+            status?: ("implemented" | "planned" | "missing") | string;
         };
         /**
          * US14117TrafficLightResult
@@ -6438,26 +6438,26 @@ export interface components {
              * Can Proceed Conditionally
              * @default false
              */
-            can_proceed_conditionally: boolean;
+            can_proceed_conditionally?: boolean;
             /** Clarification Questions */
             clarification_questions?: string[];
             /**
              * Is Prohibited
              * @default false
              */
-            is_prohibited: boolean;
+            is_prohibited?: boolean;
             /**
              * Is Restricted
              * @default false
              */
-            is_restricted: boolean;
+            is_restricted?: boolean;
             /** Missing Security Measures */
             missing_security_measures?: string[];
             /**
              * Overall Light
              * @default GREEN
              */
-            overall_light: ("RED" | "YELLOW" | "GREEN") | string;
+            overall_light?: ("RED" | "YELLOW" | "GREEN") | string;
             /** Per Entity Lights */
             per_entity_lights?: {
                 [key: string]: string;
@@ -6472,12 +6472,12 @@ export interface components {
              * Summary
              * @default
              */
-            summary: string;
+            summary?: string;
             /**
              * Yellow Status
              * @default
              */
-            yellow_status: string;
+            yellow_status?: string;
         };
         /** UploadedFileResponse */
         UploadedFileResponse: {
@@ -6590,12 +6590,12 @@ export interface components {
              * Conclusion Source
              * @default rule
              */
-            conclusion_source: string;
+            conclusion_source?: string;
             /**
              * Confidence
              * @default HIGH
              */
-            confidence: string;
+            confidence?: string;
             /** Fact Provenance */
             fact_provenance?: {
                 [key: string]: string;
@@ -6604,7 +6604,7 @@ export interface components {
              * Final Explanation
              * @default
              */
-            final_explanation: string;
+            final_explanation?: string;
             /** Legal Basis */
             legal_basis: string[];
             /** Matched Rule Id */
@@ -6619,7 +6619,7 @@ export interface components {
              * Requires Human Review
              * @default false
              */
-            requires_human_review: boolean;
+            requires_human_review?: boolean;
             /** Risk Level */
             risk_level: string;
             /** Uncertainty Notes */
@@ -6640,12 +6640,12 @@ export interface components {
              * Article
              * @default
              */
-            article: string;
+            article?: string;
             /**
              * Snippet
              * @default
              */
-            snippet: string;
+            snippet?: string;
             /** Source Id */
             source_id: string;
             /** Title */

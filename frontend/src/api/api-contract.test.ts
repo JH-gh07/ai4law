@@ -31,5 +31,8 @@ describe("generated API request contract", () => {
     expectTypeOf<ModuleRequestMap["us_14117"]>().toEqualTypeOf<
       PostJsonBody<"/api/v1/us_14117/generate_async">
     >();
+    expectTypeOf<{}>().toMatchTypeOf<
+      Pick<ModuleRequestMap["assessment"], "path_check_mode">
+    >();
   });
 });
