@@ -3,6 +3,7 @@ from zipfile import ZipFile
 
 from docx import Document
 
+from backend.common.workflow.context_pack import GenerationContextPack
 from backend.domains.cn.security_assessment import report_renderer
 from backend.domains.cn.security_assessment.report_renderer import AssessmentReportRenderer
 from backend.domains.cn.security_assessment.schema import ChapterContent, CompanyProfile, RegulationHit
@@ -75,6 +76,15 @@ def test_renderer_keeps_markdown_as_external_and_avoids_duplicate_zip_names(tmp_
     monkeypatch.chdir(tmp_path)
     _install_templates(monkeypatch, tmp_path)
     renderer = AssessmentReportRenderer(llm_client=None)
+    context_pack = GenerationContextPack(
+        module_key="cn.security_assessment",
+        request_id="test-task-1",
+        facts=[],
+        diagnosis_result={"recommended_path": "security_assessment", "risk_level": "HIGH"},
+        regulations=[],
+        issues=[],
+        risk_summary={"risk_level": "HIGH"},
+    )
     outputs = renderer.render(
         task_id="task-1",
         company_name="测试公司",
@@ -88,6 +98,7 @@ def test_renderer_keeps_markdown_as_external_and_avoids_duplicate_zip_names(tmp_
         attachment_notes=[],
         facts=[],
         diagnosis_result={"recommended_path": "security_assessment", "risk_level": "HIGH"},
+        context_pack=context_pack,
     )
     assert outputs["markdown"].endswith("数据出境风险自评估报告_草案_20260603.md") or outputs["markdown"].endswith(".md")
     assert outputs["internal_markdown"].endswith("内部风险分析报告_20260603.md") or outputs["internal_markdown"].endswith(".md")
@@ -100,6 +111,15 @@ def test_renderer_exposes_external_docx_and_markdown_keys(tmp_path, monkeypatch)
     monkeypatch.chdir(tmp_path)
     _install_templates(monkeypatch, tmp_path)
     renderer = AssessmentReportRenderer(llm_client=None)
+    context_pack = GenerationContextPack(
+        module_key="cn.security_assessment",
+        request_id="test-task-2",
+        facts=[],
+        diagnosis_result={"recommended_path": "scc_or_certification", "risk_level": "HIGH"},
+        regulations=[],
+        issues=[],
+        risk_summary={"risk_level": "HIGH"},
+    )
     outputs = renderer.render(
         task_id="task-2",
         company_name="测试公司",
@@ -113,6 +133,7 @@ def test_renderer_exposes_external_docx_and_markdown_keys(tmp_path, monkeypatch)
         attachment_notes=[],
         facts=[],
         diagnosis_result={"recommended_path": "scc_or_certification", "risk_level": "HIGH"},
+        context_pack=context_pack,
     )
     assert "markdown" in outputs
     assert "docx" in outputs
