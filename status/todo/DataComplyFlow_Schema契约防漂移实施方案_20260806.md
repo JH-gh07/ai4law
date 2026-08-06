@@ -357,22 +357,33 @@ git diff --exit-code -- frontend/src/api/generated/openapi.d.ts
 
 ### 4.5 PR 2 TODO
 
-- [ ] 增加确定性 OpenAPI 导出脚本。
-- [ ] 导出时显式关闭 API Key 和外部 Provider。
-- [ ] 增加 `openapi-typescript` 开发依赖。
-- [ ] 生成并提交 `openapi.d.ts`。
-- [ ] 建立 `ModuleRequestMap`。
-- [ ] 建立 `defineDevCases(moduleKey, cases)` 类型辅助函数，不在案例内重复 module key。
-- [ ] 将 26 个案例逐模块改为强类型。
-- [ ] 将 `api/modules.ts` 的 endpoint 映射与类型映射做一致性测试。
-- [ ] CI 增加 generated diff 门禁。
+- [x] 增加确定性 OpenAPI 导出脚本。
+- [x] 导出时显式关闭 API Key 和外部 Provider。
+- [x] 增加 `openapi-typescript` 开发依赖。
+- [x] 生成并提交 `openapi.d.ts`。
+- [x] 建立 `ModuleRequestMap`。
+- [x] 建立 `defineDevCases(moduleKey, cases)` 类型辅助函数，不在案例内重复 module key。
+- [x] 将 26 个案例逐模块改为强类型。
+- [x] 将 `api/modules.ts` 的 endpoint 映射与类型映射做一致性测试。
+- [x] CI 增加 generated diff 门禁。
 
 ### 4.6 PR 2 验收
 
 - [ ] 修改 Pydantic 枚举后，不更新前端案例，`npm run build` 必须失败。
 - [ ] 新增后端必填字段后，不更新 Builder，TypeScript 必须失败。
-- [ ] OpenAPI 重复生成字节一致。
-- [ ] 不在运行时引入 OpenAPI 解析开销。
+- [x] OpenAPI 重复生成字节一致。
+- [x] 不在运行时引入 OpenAPI 解析开销；`openapi.d.ts` 只通过 `import type` 消费。
+
+### 4.7 PR 2 实施记录
+
+| 日期 | 提交 | 内容 | 本地证据 |
+|---|---|---|---|
+| 2026-08-06 | `d64aaaf` | 隔离、确定性 FastAPI OpenAPI 导出器及测试 | 2 项导出测试通过 |
+| 2026-08-06 | `53fc763` | `openapi-typescript@7.13.0`、生成脚本、CI generated diff 门禁 | 10,085 行类型文件生成；重复 SHA 一致 |
+| 2026-08-06 | `c453881` | 修复干净 Python 子进程调用导出器的工作区隔离问题 | 子进程导出测试通过，生成文件无变化 |
+| 2026-08-06 | `d79539a` | `ModuleRequestMap`、11 项 endpoint 一致性测试 | 2 项 API contract 测试通过 |
+| 2026-08-06 | `04f5777` | 保留 OpenAPI `default` 字段可选语义 | 类型测试与前端构建通过 |
+| 2026-08-06 | `887e8fd` | 26 个案例按模块强类型；修复 BCR 场景上下文静默丢字段 | 案例测试 14/14、构建通过、HTTP 26/26 |
 
 ---
 
