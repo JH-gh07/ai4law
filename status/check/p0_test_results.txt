@@ -1,0 +1,94 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0 -- /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/.venv311/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collecting ... collected 68 items
+
+backend/domains/cn/security_assessment/tests/test_async_api.py::test_assessment_async_flow PASSED [  1%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_assessment_chapter_titles_have_stable_keys PASSED [  2%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_context_block_contains_issues_diagnosis_and_material_gap PASSED [  4%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_context_block_contains_attachment_notes_when_present PASSED [  5%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_context_block_loses_issue_id_when_issue_list_is_removed PASSED [  7%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_context_block_contains_evidence_chain PASSED [  8%]
+backend/domains/cn/security_assessment/tests/test_chapter_context.py::test_final_llm_prompt_contains_context_pack_issue PASSED [ 10%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_extract_article_number_digits PASSED [ 11%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_infer_citation_type PASSED [ 13%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_infer_authority_level PASSED [ 14%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_infer_binding_force PASSED [ 16%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_build_citations_with_empty_data PASSED [ 17%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_build_citations_from_legal_grounding PASSED [ 19%]
+backend/domains/cn/security_assessment/tests/test_citation_builder.py::test_build_citations_deduplicates_by_title_and_article PASSED [ 20%]
+backend/domains/cn/security_assessment/tests/test_compliance_reasoning.py::test_compliance_reasoning_all_targets PASSED [ 22%]
+backend/domains/cn/security_assessment/tests/test_compliance_reasoning.py::test_compliance_reasoning_markdown PASSED [ 23%]
+backend/domains/cn/security_assessment/tests/test_compliance_reasoning.py::test_schema_extended_fields_parse PASSED [ 25%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_context_pack_consistency_detects_missing_fact_ref PASSED [ 26%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_context_pack_consistency_detects_missing_evidence_rule_ref PASSED [ 27%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_report_against_context_detects_missing_high_issue PASSED [ 29%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_report_against_context_detects_material_completion_conflict PASSED [ 30%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_report_against_context_detects_missing_path_warning_statement PASSED [ 32%]
+backend/domains/cn/security_assessment/tests/test_consistency_checker.py::test_report_against_context_detects_unknown_important_data_denial PASSED [ 33%]
+backend/domains/cn/security_assessment/tests/test_evidence_builder.py::test_ciio_issue_produces_evidence_with_ciio_fact_ref PASSED [ 35%]
+backend/domains/cn/security_assessment/tests/test_evidence_builder.py::test_regulatory_evidence_has_rule_refs_material_evidence_can_omit_them PASSED [ 36%]
+backend/domains/cn/security_assessment/tests/test_fact_builder.py::test_assessment_facts_include_core_fields PASSED [ 38%]
+backend/domains/cn/security_assessment/tests/test_fact_builder.py::test_assessment_facts_do_not_dump_entire_request PASSED [ 39%]
+backend/domains/cn/security_assessment/tests/test_generation_basis.py::test_generation_basis_pack_includes_issue_level_legal_grounding PASSED [ 41%]
+backend/domains/cn/security_assessment/tests/test_generation_basis.py::test_generation_basis_pack_maps_section_to_writing_strategy PASSED [ 42%]
+backend/domains/cn/security_assessment/tests/test_generation_basis.py::test_generation_basis_pack_separates_workflow_rules_from_regulations PASSED [ 44%]
+backend/domains/cn/security_assessment/tests/test_internal_external_isolation.py::test_external_expressions_do_not_leak_internal_content PASSED [ 45%]
+backend/domains/cn/security_assessment/tests/test_internal_external_isolation.py::test_all_high_severity_issues_have_conservative_tone PASSED [ 47%]
+backend/domains/cn/security_assessment/tests/test_internal_review_coverage.py::test_internal_review_payload_covers_all_high_issues PASSED [ 48%]
+backend/domains/cn/security_assessment/tests/test_internal_review_coverage.py::test_internal_review_overall_risk_is_high_with_high_issues PASSED [ 50%]
+backend/domains/cn/security_assessment/tests/test_internal_review_coverage.py::test_internal_review_overall_risk_is_low_without_issues PASSED [ 51%]
+backend/domains/cn/security_assessment/tests/test_internal_review_coverage.py::test_internal_review_markdown_fallback_without_llm PASSED [ 52%]
+backend/domains/cn/security_assessment/tests/test_issue_builder.py::test_ciio_important_data_and_missing_attachment_issues PASSED [ 54%]
+backend/domains/cn/security_assessment/tests/test_issue_builder.py::test_threshold_and_path_mismatch_issues_have_fact_refs PASSED [ 55%]
+backend/domains/cn/security_assessment/tests/test_legal_grounding.py::test_legal_grounding_binds_issue_to_direct_rule_refs PASSED [ 57%]
+backend/domains/cn/security_assessment/tests/test_legal_grounding.py::test_legal_grounding_uses_issue_facts_in_query_context PASSED [ 58%]
+backend/domains/cn/security_assessment/tests/test_legal_grounding.py::test_legal_grounding_rejects_non_l1_context_items PASSED [ 60%]
+backend/domains/cn/security_assessment/tests/test_renderer_contracts.py::test_renderer_keeps_markdown_as_external_and_avoids_duplicate_zip_names PASSED [ 61%]
+backend/domains/cn/security_assessment/tests/test_renderer_contracts.py::test_renderer_exposes_external_docx_and_markdown_keys PASSED [ 63%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_security_assessment_path_generates_report PASSED [ 64%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_does_not_reject_path PASSED [ 66%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_generates_regardless_of_path PASSED [ 67%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_zip_has_no_duplicate_names PASSED [ 69%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_retriever_query_contains_profile_fields PASSED [ 70%]
+backend/domains/cn/security_assessment/tests/test_service.py::test_assessment_fails_when_issue_builder_is_unavailable PASSED [ 72%]
+backend/domains/cn/security_assessment/tests/test_user_claim_constraint.py::test_user_claim_only_fact_with_positive_marker_triggers_flag PASSED [ 73%]
+backend/domains/cn/security_assessment/tests/test_user_claim_constraint.py::test_documented_evidence_fact_with_positive_marker_does_not_flag PASSED [ 75%]
+backend/domains/cn/security_assessment/tests/test_user_claim_constraint.py::test_user_claim_fact_without_positive_marker_does_not_flag PASSED [ 76%]
+backend/domains/cn/security_assessment/tests/test_writing_strategy_constraint.py::test_forbidden_expression_detected_in_report PASSED [ 77%]
+backend/domains/cn/security_assessment/tests/test_writing_strategy_constraint.py::test_report_without_forbidden_expressions_passes PASSED [ 79%]
+backend/domains/cn/security_assessment/tests/test_writing_strategy_constraint.py::test_internal_expression_leakage_detected PASSED [ 80%]
+backend/domains/cn/security_assessment/tests/test_writing_strategy_constraint.py::test_internal_expression_not_in_clean_report PASSED [ 82%]
+backend/domains/cn/security_assessment/tests/test_writing_strategy_constraint.py::test_global_forbidden_expressions_detected PASSED [ 83%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_generic_risk_level_not_flagged PASSED [ 85%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_generic_should_statement_not_flagged PASSED [ 86%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_specific_legal_obligation_requires_citation PASSED [ 88%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_specific_legal_obligation_with_valid_citation PASSED [ 89%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_definitive_risk_judgment_requires_citation PASSED [ 91%]
+backend/common/llm/tests/test_citation_policy_fix.py::test_fallback_chapter_prose_not_flagged PASSED [ 92%]
+backend/common/llm/tests/test_postprocess_linebreak.py::test_tls_version_not_broken PASSED [ 94%]
+backend/common/llm/tests/test_postprocess_linebreak.py::test_version_numbers_survive PASSED [ 95%]
+backend/common/llm/tests/test_postprocess_linebreak.py::test_real_numbered_lists_still_work PASSED [ 97%]
+backend/common/llm/tests/test_postprocess_linebreak.py::test_chinese_enumeration_顿号_still_works PASSED [ 98%]
+backend/common/llm/tests/test_postprocess_linebreak.py::test_pipeless_table_repair PASSED [100%]
+
+============================== 68 passed in 5.17s ==============================
+
+==========
+测试总结
+==========
+总计: 68 项测试
+通过: 68 项
+失败: 0 项
+覆盖率: 100%
+
+关键测试模块:
+- security_assessment: 57 tests (章节生成、报告渲染、合规检查)
+- citation_policy_fix: 6 tests (P0-7 引用策略修复)
+- postprocess_linebreak: 5 tests (P0-3 换行修复 + P0-4 表格修复)
+
+验收状态: ✅ 全部通过
+

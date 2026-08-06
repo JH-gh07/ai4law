@@ -1,0 +1,41 @@
+=================================
+DataComplyFlow 引用跳转闭环治理
+P0 阶段代码变更统计
+=================================
+
+基线提交: db5d466 (before: P0 baseline snapshot)
+验收提交: 0d7839f (docs: P0 stage acceptance report)
+
+
+--- Git 提交历史 ---
+0d7839f docs: P0 stage acceptance report for citation jumping closure
+86ca4b7 fix(test): update renderer tests to pass context_pack with risk_level
+9093059 fix(P0-7): tighten citation policy regex to avoid false positives on descriptive prose
+a9295bb fix: close the SCC declared module enum
+
+--- 文件变更统计 ---
+ backend/common/llm/postprocess.py                  |  62 +-
+ .../common/llm/tests/test_citation_policy_fix.py   |  64 ++
+ .../common/llm/tests/test_postprocess_linebreak.py |  58 ++
+ backend/common/quality/markdown_lint.py            | 645 +++++++++++++++++++++
+ .../cn/security_assessment/chapter_generator.py    |  46 +-
+ .../external_report_generator.py                   |  67 ++-
+ .../cn/security_assessment/report_renderer.py      |   3 +-
+ backend/domains/cn/security_assessment/service.py  |   1 +
+ .../tests/test_renderer_contracts.py               |  21 +
+ backend/domains/eu/scc_review/schema.py            |   2 +-
+ backend/tests/eu_scc/cases/01_minimal.json         |   4 +-
+ backend/tests/tia/cases/01_minimal.json            |  10 +-
+ config/case_inventory.json                         |   2 +-
+ .../templates/cn/official_template_schema.json     |   4 +-
+ ...46\224\266\346\212\245\345\221\212_20260806.md" | 544 +++++++++++++++++
+ ...45\272\223\346\226\271\346\241\210_20260806.md" | 290 +++++++++
+ 16 files changed, 1793 insertions(+), 30 deletions(-)
+
+--- 核心修复文件对比 ---
+ backend/common/llm/postprocess.py                  |  62 +-
+ backend/common/quality/markdown_lint.py            | 645 +++++++++++++++++++++
+ .../cn/security_assessment/chapter_generator.py    |  46 +-
+ .../external_report_generator.py                   |  67 ++-
+ .../templates/cn/official_template_schema.json     |   4 +-
+ 5 files changed, 801 insertions(+), 23 deletions(-)
