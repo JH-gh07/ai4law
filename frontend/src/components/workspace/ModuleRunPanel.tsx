@@ -320,6 +320,9 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     const tc = devTestCases[index];
     if (!tc?.formDefaults) return;
     const fd = tc.formDefaults as Record<string, unknown>;
+    const caseFilePaths = DEV_ACCEL_ENABLED
+      ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? [])
+      : [];
     if (isCpraModule) setCpraValues((prev) => ({ ...prev, ...fd } as CpraFormValues));
     else if (isDiagnosisModule) setDiagnosisValues((prev) => ({ ...prev, ...fd } as DiagnosisFormValues));
     else if (isAssessmentModule) setAssessmentValues((prev) => ({ ...prev, ...fd } as AssessmentFormValues));
@@ -333,9 +336,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     else if (isDocumentReviewTask) {
       setDocumentReviewValues((prev) => ({ ...prev, ...fd } as DocumentReviewFormValues));
       setDocumentReviewFiles([]);
-      setDocumentReviewDevFilePaths(
-        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
-      );
+      setDocumentReviewDevFilePaths(caseFilePaths);
       setDocumentReviewSelectedFileIndex(0);
       setDocumentReviewPreviewUrl(null);
       setDocumentReviewTextPreview("");
@@ -343,14 +344,34 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setDocumentReviewExtractStates({});
     }
     if (isAssessmentModule) {
-      setAssessmentDevFilePaths(
-        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
-      );
+      setAssessmentFiles([]);
+      setAssessmentDevFilePaths(caseFilePaths);
+    }
+    if (isPipiaModule) {
+      setPipiaFiles([]);
+      setPipiaDevFilePaths(caseFilePaths);
+    }
+    if (isEuSccTask) {
+      setEuSccFiles([]);
+      setEuSccDevFilePaths(caseFilePaths);
+    }
+    if (isBcrModule) {
+      setBcrFiles([]);
+      setBcrDevFilePaths(caseFilePaths);
+    }
+    if (isDpiaModule) {
+      setDpiaFiles([]);
+      setDpiaDevFilePaths(caseFilePaths);
+    }
+    if (isTiaModule) {
+      setTiaFiles([]);
+      setTiaDevFilePaths(caseFilePaths);
     }
     if (isCnFlowModule) {
-      setCnFlowDevFilePaths(
-        DEV_ACCEL_ENABLED ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? []) : []
-      );
+      setCnFlowDataInventoryFiles([]);
+      setCnFlowEntityInventoryFiles([]);
+      setCnFlowSupportingFiles([]);
+      setCnFlowDevFilePaths(caseFilePaths);
     }
     setShowCasePicker(false);
   };

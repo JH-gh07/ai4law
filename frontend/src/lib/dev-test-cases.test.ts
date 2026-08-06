@@ -11,6 +11,28 @@ const asRecord = (value: unknown): Record<string, unknown> => {
 };
 
 describe("developer test case API contracts", () => {
+  it("keeps form defaults as the canonical input for every case", () => {
+    const fileBackedModules = new Set([
+      "assessment",
+      "review",
+      "pipia",
+      "bcr",
+      "dpia",
+      "tia",
+      "eu_scc",
+      "cn_flow",
+    ]);
+
+    for (const [module, cases] of Object.entries(DEV_TEST_CASES)) {
+      for (const testCase of cases) {
+        expect(testCase.formDefaults, `${module}/${testCase.name}`).toBeTypeOf("object");
+        if (fileBackedModules.has(module)) {
+          expect(testCase.backendFilePaths?.length, `${module}/${testCase.name}`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
   it("keeps the registry at 26 independently runnable cases", () => {
     expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(26);
   });

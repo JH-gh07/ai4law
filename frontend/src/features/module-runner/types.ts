@@ -206,6 +206,8 @@ export type EuSccStepConfig = {
 };
 
 export type EuSccFormValues = {
+  project_name_override?: string;
+  scc_text_override?: string;
   exporter_name: string;
   importer_name: string;
   importer_country: string;
@@ -397,6 +399,10 @@ export type Us14117StepConfig = {
 };
 
 export type Us14117FormValues = {
+  data_items_override?: ModuleRequestMap["us_14117"]["data_items"];
+  recipient_entities_override?: ModuleRequestMap["us_14117"]["recipient_entities"];
+  access_persons_override?: NonNullable<ModuleRequestMap["us_14117"]["access_persons"]>;
+  security_measures_override?: NonNullable<ModuleRequestMap["us_14117"]["security_measures"]>;
   company_name: string;
   project_name: string;
   transaction_description: string;
@@ -446,3 +452,4 @@ export type CpraFormValues = {
   ui_dark_pattern_check: string;
   review_focus: string;
 };
+import type { ModuleRequestMap } from "../../api/api-contract";

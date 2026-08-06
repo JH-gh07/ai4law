@@ -61,18 +61,19 @@ export function buildEuSccPayload(
   const roles = SCC_ROLE_MAP[values.transfer_role];
 
   return {
-    project_name: `${values.exporter_name.trim()} - ${values.importer_name.trim()} SCC审查`,
-    scc_text: [
-      `SCC ${roles.declared} (${values.scc_version})`,
-      `Data exporter: ${values.exporter_name.trim()} (${roles.exporter})`,
-      `Data importer: ${values.importer_name.trim()}, ${values.importer_country.trim()} (${roles.importer})`,
-      purposeContext,
-    ].join("\n"),
+    project_name: values.project_name_override?.trim()
+      || `${values.exporter_name.trim()} - ${values.importer_name.trim()} SCC审查`,
+    scc_text: values.scc_text_override?.trim() || [
+        `SCC ${roles.declared} (${values.scc_version})`,
+        `Data exporter: ${values.exporter_name.trim()} (${roles.exporter})`,
+        `Data importer: ${values.importer_name.trim()}, ${values.importer_country.trim()} (${roles.importer})`,
+        purposeContext,
+      ].join("\n"),
     declared_module_type: roles.declared,
     exporter_role: roles.exporter,
     importer_role: roles.importer,
-    has_tia: hasText(values.government_access_response),
-    has_supplementary_measures: hasText(values.supplementary_clause_review),
+    has_tia: hasText(values.government_access_response ?? ""),
+    has_supplementary_measures: hasText(values.supplementary_clause_review ?? ""),
     uploaded_files: [...resolvedFilePaths],
     company_name: values.exporter_name.trim(),
   };
@@ -120,6 +121,14 @@ export function buildBcrPayload(
     review_items: reviewItems,
     attachments,
     uploaded_files: [...resolvedFilePaths],
+    scenario_context: {
+      company_name: values.company_name.trim(),
+      eu_liable_entity: values.applicant_entity.trim(),
+      auto_extracted_facts: {
+        group_structure_summary: values.group_structure.trim(),
+        data_flow_scope: values.data_flow_scope.trim(),
+      },
+    },
   };
 }
 

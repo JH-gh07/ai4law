@@ -52,26 +52,27 @@ export function buildUs14117Payload(
     transaction_description: values.transaction_description.trim(),
     transaction_type: values.transaction_type,
     attachments: [...resolvedFilePaths],
-    data_items: [{
+    data_items: values.data_items_override ?? [{
       data_item_name: values.data_item_name.trim(),
       data_description: values.data_description.trim(),
       doj_data_category: values.doj_data_category,
       us_person_count: Math.max(0, values.us_person_count),
     }],
-    recipient_entities: [{
+    recipient_entities: values.recipient_entities_override ?? [{
       entity_name: values.entity_name.trim(),
       country_of_registration: values.country_of_registration.trim(),
       government_control: values.government_control,
       entity_role: values.entity_role,
     }],
-    security_measures: values.security_measures_summary.trim()
+    access_persons: values.access_persons_override ?? [],
+    security_measures: values.security_measures_override ?? (values.security_measures_summary.trim()
       ? [{
         measure_name: values.security_measures_summary.trim().slice(0, 80),
         category: "access_control",
         status: "implemented",
         description: values.security_measures_summary.trim(),
       }]
-      : [],
+      : []),
     onward_transfer: values.onward_transfer,
     onward_transfer_description: values.onward_transfer_description.trim(),
   };

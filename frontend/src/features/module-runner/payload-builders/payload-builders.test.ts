@@ -64,6 +64,17 @@ describe("EU payload builders", () => {
     expect(input).toEqual(before);
   });
 
+  it("uses explicit typed overrides for raw SCC cases", () => {
+    const values = {
+      ...createDefaultEuSccValues(),
+      project_name_override: "Raw SCC case",
+      scc_text_override: "MODULE THREE: preserved source text",
+    };
+    const payload = buildEuSccPayload(values, []);
+    expect(payload.project_name).toBe("Raw SCC case");
+    expect(payload.scc_text).toBe("MODULE THREE: preserved source text");
+  });
+
   it("builds all BCR review items and typed attachments", () => {
     const input = withPreset<BcrFormValues>(createDefaultBcrValues(), "bcr");
 
@@ -200,6 +211,21 @@ describe("US 14117 payload builder", () => {
     expect(payload.recipient_entities[0]?.entity_name).toBe(values.entity_name);
     expect(payload.security_measures).toHaveLength(1);
     expect(payload.attachments).toEqual(["evidence.docx"]);
+  });
+
+  it("preserves typed nested overrides for complex cases", () => {
+    const payload = buildUs14117Payload({
+      ...values,
+      data_items_override: [
+        { data_item_name: "基因组", doj_data_category: "human_genomic_data", us_person_count: 50000 },
+        { data_item_name: "表型数据", doj_data_category: "human_omic_data", us_person_count: 50000 },
+      ],
+      recipient_entities_override: [
+        { entity_name: "研究院", country_of_registration: "中国", entity_role: "research_institution" },
+      ],
+    }, []);
+    expect(payload.data_items).toHaveLength(2);
+    expect(payload.recipient_entities[0]?.entity_role).toBe("research_institution");
   });
 
   it("rejects a missing project name", () => {

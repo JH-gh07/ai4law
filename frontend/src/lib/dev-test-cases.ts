@@ -1,8 +1,37 @@
+import {
+  buildAssessmentPayload,
+  buildBcrPayload,
+  buildCnFlowPayload,
+  buildCpraPayload,
+  buildDiagnosisPayload,
+  buildDocumentReviewPayload,
+  buildDpiaPayload,
+  buildEuSccPayload,
+  buildPipiaPayload,
+  buildTiaPayload,
+  buildUs14117Payload,
+} from "../features/module-runner/payload-builders";
+import type {
+  AssessmentFormValues,
+  BcrFormValues,
+  CnFlowFormValues,
+  CpraFormValues,
+  DiagnosisFormValues,
+  DocumentReviewFormValues,
+  DpiaFormValues,
+  EuSccFormValues,
+  PipiaFormValues,
+  TiaFormValues,
+  Us14117FormValues,
+} from "../features/module-runner/types";
+import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
+
 /**
- * 开发者模式 — 预编译测试案例 JSON payload。
+ * 开发者模式 — 由表单场景输入编译请求 payload。
  *
  * 每个案例源自 benchmarks/source-materials/ 中保留的历史测试材料。
- * 选中案例后直接 POST 到对应模块的 async endpoint，配合 SSE 事件流实时观察执行。
+ * formDefaults 和 backendFilePaths 是唯一场景输入；defineDevCases 通过纯 builder
+ * 生成可直接 POST 的 payload，配合 SSE 事件流实时观察执行。
  *
  * 用法:
  *   import { DEV_TEST_CASES, MODULES_WITH_CASES } from "./dev-test-cases";
@@ -24,12 +53,50 @@ export type DevTestCase<Module extends DevCaseModule = DevCaseModule> = {
   payload: ModuleRequestMap[Module];
 };
 
+type DevTestCaseSeed<Module extends DevCaseModule> =
+  Omit<DevTestCase<Module>, "payload"> & { payload?: never };
+
+function buildCasePayload<Module extends DevCaseModule>(
+  module: Module,
+  testCase: DevTestCaseSeed<Module>,
+): ModuleRequestMap[Module] {
+  const values = testCase.formDefaults ?? {};
+  const paths = testCase.backendFilePaths ?? [];
+  let payload: ModuleRequestMap[DevCaseModule];
+  switch (module) {
+    case "diagnosis": payload = buildDiagnosisPayload(values as DiagnosisFormValues); break;
+    case "assessment": payload = buildAssessmentPayload(values as AssessmentFormValues, paths); break;
+    case "review": payload = buildDocumentReviewPayload(values as DocumentReviewFormValues, paths); break;
+    case "pipia": payload = buildPipiaPayload(values as PipiaFormValues, paths); break;
+    case "bcr": payload = buildBcrPayload(values as BcrFormValues, paths); break;
+    case "dpia": payload = buildDpiaPayload(values as DpiaFormValues, paths); break;
+    case "tia": payload = buildTiaPayload(values as TiaFormValues, paths); break;
+    case "eu_scc": payload = buildEuSccPayload(values as EuSccFormValues, paths); break;
+    case "us_14117": payload = buildUs14117Payload(values as Us14117FormValues, paths); break;
+    case "cn_flow": payload = buildCnFlowPayload(values as CnFlowFormValues, {
+      dataInventory: paths.slice(0, 1),
+      entityInventory: paths.slice(1, 2),
+      supporting: paths.slice(2),
+    }); break;
+    case "cpra": payload = buildCpraPayload(values as CpraFormValues, {
+      privacyPolicy: paths,
+      rightsSop: [],
+      dataMap: [],
+      vendorList: [],
+      other: [],
+    }); break;
+  }
+  return payload as ModuleRequestMap[Module];
+}
+
 export function defineDevCases<Module extends DevCaseModule>(
   module: Module,
-  cases: DevTestCase<Module>[],
+  cases: DevTestCaseSeed<Module>[],
 ): DevTestCase<Module>[] {
-  void module;
-  return cases;
+  return cases.map((testCase) => ({
+    ...testCase,
+    payload: buildCasePayload(module, testCase),
+  }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -58,23 +125,6 @@ const cpraTrendyGoods = {
     ui_dark_pattern_check: "Cookie横幅\"接受所有\"按钮颜色突出，\"管理偏好\"链接字体极小且颜色与背景相近",
     review_focus: "重点检查opt-out机制、Cookie同意横幅和广告合作伙伴合同"
   },
-  payload: {
-    company_name: "TrendyGoods Inc.",
-    business_model: "线上时尚零售商，年收入约3000万美元，通过网站和移动应用向消费者直销。使用用户行为分析进行个性化推荐，并使用第三方广告服务。DBA：TrendyGoods.com",
-    data_lifecycle: "收集→分析→个性化推荐→与第三方广告网络共享。数据类别：用户浏览行为、购买历史、设备信息、联系方式",
-    notice_and_consent: "隐私政策链接在网站底部。Cookie横幅仅提供'接受'按钮，同等突出的'拒绝所有'选项缺失。UI暗模式：Cookie横幅的'接受所有'按钮颜色突出，'管理偏好'链接字体极小且颜色与背景相近",
-    consumer_rights_process: "提供在线表单和邮箱渠道，但缺少免费电话。身份验证：通过注册邮箱发送验证链接。SLA：承诺45天内响应",
-    opt_out_and_sale_sharing: "与AdNetwork Alpha和Beta共享用户浏览行为数据和购买历史用于定向广告。页面页脚链接文字为'Privacy Settings'，未使用CPPA规定的'请勿出售或分享我的个人信息'标准化文字和三角图标，链接位于页面底部小字体区域",
-    vendor_management: "与AdNetwork Alpha和Beta的合同为标准广告服务条款，未包含其必须遵守消费者opt-out指令的条款，未明确要求服务提供商/承包商遵守CPRA数据保护义务",
-    attachments: [
-      {
-        file_role: "privacy_policy" as const,
-        file_name: "privacy_policy_url",
-        file_format: "url" as const,
-        storage_uri: "https://trendygoods.com/privacy"
-      }
-    ]
-  }
 };
 
 const cpraDataFlow = {
@@ -99,23 +149,6 @@ const cpraDataFlow = {
     ui_dark_pattern_check: "不适用（无面向消费者的UI）",
     review_focus: "重点审查适用性边界和服务提供商合同合规性"
   },
-  payload: {
-    company_name: "DataFlow Analytics LLC",
-    business_model: "B2B SaaS，为中小企业提供数据看板服务。年收入约1800万美元（未达2500万门槛）。客户将业务数据上传至DataFlow平台进行分析。适用性：公司认为自己可能不受CPRA直接管辖（年收入未达标），但作为服务提供商处理客户上传的数据",
-    data_lifecycle: "客户上传数据→分析处理→生成看板→返回客户。作为服务提供商，数据由客户（控制者）决定处理目的和方式",
-    notice_and_consent: "不与消费者直接交互。作为服务提供商，依赖客户（控制者）履行通知和同意义务。无独立隐私政策面向终端消费者",
-    consumer_rights_process: "无面向消费者的DSR渠道。作为服务提供商，依赖控制者的DSR机制。内部流程：收到客户转交的DSR请求后，在15个工作日内协助执行（删除、访问等）",
-    opt_out_and_sale_sharing: "不出售或分享数据。严格按控制者（客户）的书面指示处理数据，不将数据用于自身商业目的",
-    vendor_management: "与客户签订的《数据处理协议》模板较简单，未包含CPRA §1798.100要求的全部强制性服务提供商条款（如禁止出售数据、协助DSR、允许审计等）。与AWS等云基础设施提供商签订有标准DPA",
-    attachments: [
-      {
-        file_role: "privacy_policy" as const,
-        file_name: "privacy_policy_url",
-        file_format: "url" as const,
-        storage_uri: "https://dataflow.io/dpa"
-      }
-    ]
-  }
 };
 
 const cpraFitLife = {
@@ -140,23 +173,6 @@ const cpraFitLife = {
     ui_dark_pattern_check: "注册界面\"同意并继续\"为大号绿色按钮，\"仅浏览\"为灰色小字。健康SPI单独同意默认勾选且隐藏。存在明确暗模式",
     review_focus: "重点审查SPI同意有效性、暗模式、Limit SPI权利缺失和第三方数据共享"
   },
-  payload: {
-    company_name: "FitLife AI Inc.",
-    business_model: "智能健身APP开发商，通过手机传感器和可穿戴设备收集用户的健康、生物特征和精确位置数据，提供个性化健身指导和健康风险预测，并向用户推荐保健品和保险产品。",
-    data_lifecycle: "传感器采集（心率、步数、睡眠、位置）→健康分析→个性化指导+产品推荐→与保健品/保险公司共享健康衍生数据。SPI使用：健康数据用于个性化健身（合理），但同时用于第三方营销（超出合理范围）",
-    notice_and_consent: "注册界面使用捆绑同意设计（'点击注册即表示您同意我们的隐私政策和服务条款'，无单独同意选项）。对SPI处理的同意通过不平等设计获取。UI暗模式：注册时'同意并继续'按钮为大号绿色，'仅浏览'链接为灰色小字。健康数据SPI处理的单独同意选项默认勾选且隐藏在三层菜单后",
-    consumer_rights_process: "DSR渠道隐藏在'设置→隐私→更多选项→行使您的权利→提交请求'的五层菜单中，不符合CPRA要求消费者权利行使渠道'易于找到和使用'的规定。身份验证：仅邮箱验证。SLA：未明确承诺处理时限。完全缺失'限制敏感信息使用'(Limit SPI)的权利行使入口",
-    opt_out_and_sale_sharing: "向保健品公司HealthSupps和保险公司QuickInsure共享用户健康衍生数据（如'运动活跃度评分''健康风险等级'）。未提供选择退出链接，也未在共享前获得有效的选择同意",
-    vendor_management: "与HealthSupps和QuickInsure的合同为简单的数据共享协议，完全未提及CPRA合规义务。未约定服务提供商/承包商必须遵守消费者的opt-out指令",
-    attachments: [
-      {
-        file_role: "privacy_policy" as const,
-        file_name: "privacy_policy_url",
-        file_format: "url" as const,
-        storage_uri: "https://fitlife.ai/privacy"
-      }
-    ]
-  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -194,24 +210,6 @@ const diagEcommerce = {
     m5_compliance_docs: ["隐私政策", "用户协议"],
     m5_penalty_or_complaint: "无相关记录"
   },
-  payload: {
-    company_name: "跨境优品",
-    answers: {
-      q1_is_ciio: "no" as const,
-      q2_has_important_data: "no" as const,
-      q3_pii_count: 450000,
-      q4_spi_count: 0,
-      q5_no_personal_info: "no" as const,
-      q6_scenario: "other" as const,
-      q7_receiver_type: "intra_group" as const,
-      q8_purpose: "将订单数据同步至新加坡亚太数据中心，用于优化区域物流算法和精准营销",
-      m1_enterprise_name: "跨境优品",
-      m1_industry: "电商零售",
-      m1_business_channels: ["线上平台（APP / 小程序 / 官网）", "跨境服务（面向国外用户 / 业务涉及国外）"],
-      m1_service_targets: "个人用户",
-      m1_company_size: "中型（51-200人）"
-    }
-  }
 };
 
 const diagMedical = {
@@ -247,24 +245,6 @@ const diagMedical = {
     m5_compliance_docs: ["数据安全管理制度", "应急响应预案"],
     m5_penalty_or_complaint: "无相关记录"
   },
-  payload: {
-    company_name: "前沿生命科技研究院",
-    answers: {
-      q1_is_ciio: "no" as const,
-      q2_has_important_data: "yes" as const,
-      q3_pii_count: 15000,
-      q4_spi_count: 15000,
-      q5_no_personal_info: "no" as const,
-      q6_scenario: "other" as const,
-      q7_receiver_type: "third_party" as const,
-      q8_purpose: "与欧盟大学合作罕见病研究，传输脱敏医疗记录（含诊断结果、用药史、基因测序数据摘要）至欧盟合作方服务器进行分析",
-      m1_enterprise_name: "前沿生命科技研究院",
-      m1_industry: "医疗健康",
-      m1_business_channels: ["数据合作（与其他公司共享 / 交换数据）"],
-      m1_service_targets: "个人用户",
-      m1_company_size: "中型（51-200人）"
-    }
-  }
 };
 
 const diagAnonymous = {
@@ -307,28 +287,6 @@ const diagAnonymous = {
     m5_compliance_docs: ["隐私政策", "用户协议"],
     m5_penalty_or_complaint: "无相关记录"
   },
-  payload: {
-    company_name: "智造未来科技有限公司",
-    answers: {
-      q1_is_ciio: "no" as const,
-      q2_has_important_data: "unknown" as const,
-      q3_pii_count: 2000,
-      q4_spi_count: 0,
-      q5_no_personal_info: "no" as const,
-      q6_scenario: "other" as const,
-      q7_receiver_type: "intra_group" as const,
-      q8_purpose: "向德国慕尼黑研发中心持续共享设备运行状态、故障日志等数据以优化算法模型，并结合企业规模、数据性质等因素判断适用的数据出境合规路径",
-      m1_enterprise_name: "智造未来科技有限公司",
-      m1_industry: "智能制造",
-      m1_business_channels: [
-        "线上平台（APP / 小程序 / 官网）",
-        "数据合作（与其他公司共享 / 交换数据）",
-        "跨境服务（面向国外用户 / 业务涉及国外）"
-      ],
-      m1_service_targets: "企业用户",
-      m1_company_size: "中型（51-200人）"
-    }
-  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -366,38 +324,10 @@ const assessCIO = {
     registered_address: "北京市",
     company_nature: "持牌金融机构"
   },
-  payload: {
-    company_name: "东方信托有限责任公司",
-    industry: "金融科技",
-    is_ciio: true,
-    contains_important_data: true,
-    pii_count: 80000,
-    spi_count: 80000,
-    transfer_purpose: "跨境集团财务报告与风险管理，满足集团合并报表监管要求，进行集中风险分析",
-    receiver_country: "香港",
-    force_override_path: true,
-    transfer_frequency: "continuous",
-    receiver_name: "东方金融控股集团",
-    security_capability_summary: "管理：有《数据分类分级管理规范》。技术：传输采用AES-256加密，存储采用令牌化。认证：通过网络安全等级保护（三级）测评。",
-    data_inventory_summary: "每日交易结算数据、高净值客户资产配置信息（含金融账户信息）。频率：每日T+1。合法性依据：履行集团内部管理与监管报告义务",
-    system_chain_summary: "境内存储：公司本地数据中心。传输链路：通过IPSec-VPN专线加密传输至香港母公司私有云。境外存储：香港数据中心",
-    legal_document_review: {
-      document_name: "集团数据共享与处理协议",
-      missing_items: ["接受方所在法律环境变化的处理措施", "再转移约束"],
-      risk_level: "HIGH"
-    },
-    compliance_history: {
-      has_penalty: true,
-      penalty_time: "2024年",
-      penalty_reason: "客户信息保护不力",
-      rectification_status: "已整改完毕"
-    },
-    personal_info_protection: {
-      separate_consent_status: "obtained",
-      notice_content: "已通过线上协议更新告知向关联集团共享资产信息用于风险管理",
-      archive_evidence: "同意记录尚未系统化归档"
-    }
-  }
+  backendFilePaths: [
+    "benchmarks/sample-inputs/sample_contract.txt",
+    "benchmarks/sample-inputs/sample_evidence.txt"
+  ],
 };
 
 const assessEcommerce = {
@@ -442,44 +372,6 @@ const assessEcommerce = {
       "技术措施：传输全程加密、敏感个人信息AES-256加密存储、密钥由境内总部HSM管理、RBAC+MFA访问控制、日志留存不少于6年、非生产环境仅用合成/深度脱敏数据；管理措施：签署集团内数据跨境传输协议、每年两次内部审计和一次渗透测试、建立中新两地数据泄露应急响应预案并定期演练",
     force_override_path: true
   },
-  payload: {
-    company_name: "智慧云联科技（上海）有限公司",
-    company_uscc: "91310000MA7F123456",
-    legal_representative: "张伟",
-    registered_address: "中国（上海）自由贸易试验区张江高科技园区亮秀路112号Y1座1001室",
-    company_nature: "有限责任公司（中外合资）",
-    industry: "云计算与数据服务",
-    receiver_country: "新加坡",
-    receiver_name: "Wisdom Cloud Connect Pte. Ltd.",
-    assessment_start_date: "2025-08-01",
-    assessment_end_date: "2025-09-15",
-    lead_department: "集团法律合规与公共事务部",
-    participant_departments: "信息技术部，网络安全部，亚太区业务运营部，数据中心管理部",
-    third_party_support: true,
-    third_party_name: "德勤企业风险管理咨询（上海）有限公司",
-    third_party_scope:
-      "对本数据出境活动的风险评估方法、已采取的安全措施有效性进行审阅与验证，并出具《第三方核查报告》；协助对新加坡子公司的数据保护环境进行合规性差距分析",
-    scenario_name: "亚太区客户支持与实时风险控制数据同步",
-    transfer_frequency: "continuous",
-    is_long_term: true,
-    transfer_purpose:
-      "全球统一客户服务；集中化风险分析与建模；履行与境外关联方的服务合同",
-    legal_basis:
-      "根据《个人信息保护法》第十三条第一款第二项、第一款第七项，以及《数据安全法》《网络安全法》及相关监管规定，在完成安全评估后进行数据出境",
-    necessity_basis:
-      "业务连续性与服务质量、风险防控有效性以及技术架构与成本最优共同决定需向新加坡数据中心持续实时传输相关数据",
-    is_ciio: false,
-    contains_important_data: true,
-    pii_count: 1200000,
-    spi_count: 15000,
-    force_override_path: true,
-    data_inventory_summary:
-      "客户服务支持：客户唯一标识符、姓名、联系方式、服务请求内容、沟通记录、问题解决状态；交易风险控制：Device ID、IP地址、交易时间、金额、类型、收款方信息、行为序列、风险评分标签、加密后的证件号码及验证结果；系统运维与安全：系统日志、匿名化性能监控数据、安全事件告警信息",
-    system_chain_summary:
-      "中国境内应用服务器与数据库产生日志和业务数据；在上海数据中心进行初步清洗、脱敏和格式化；通过IPSec VPN专线和TLS 1.3加密实时传输至新加坡；境外处理后风控结果与工单归档信息再回传境内",
-    security_capability_summary:
-      "传输全程加密；敏感个人信息AES-256加密存储，密钥由境内总部HSM管理；最小权限+MFA；全链路日志留存不少于6年并实时监控；非生产环境仅使用合成数据或深度脱敏数据；每年两次内部审计和一次渗透测试；中、新两地数据泄露应急响应预案并定期演练"
-  },
   backendFilePaths: [
     "resources/legal/sources/cn/references/数据出境风险自评估报告（模板）.docx",
     "resources/legal/sources/cn/references/数据出境安全评估申报指南（第三版）.docx",
@@ -511,18 +403,10 @@ const euSccBasic = {
     rights_and_complaint: "通过隐私政策和DSR渠道支持数据主体权利",
     has_scc_draft: true,
     has_tia: false,
-    has_supplementary_measures: false
-  },
-  payload: {
-    project_name: "电商平台云服务数据处理",
-    scc_text: "MODULE TWO: Transfer controller to processor\n\nClause 1: Purpose and scope...\n\nThe data exporter is: E-Commerce GmbH, Berlin, Germany\nThe data importer is: CloudServe Inc., Delaware, USA\n\nAnnex I\nA. LIST OF PARTIES\nData exporter: E-Commerce GmbH, Friedrichstrasse 123, 10117 Berlin, Germany, Contact: dpo@ecommerce.de, Role: Controller\nData importer: CloudServe Inc., 123 Main St, Wilmington DE, USA, Contact: privacy@cloudserve.com, Role: Processor\n\nB. DESCRIPTION OF TRANSFER\nCategories of data subjects: Customers of the data exporter's online platform\nCategories of personal data: Name, email, shipping address, order history, payment information\nSensitive data transferred: No\nFrequency of transfer: Continuous\nNature of processing: Hosting, storage, and technical support\nPurpose of transfer: Cloud hosting and infrastructure services\nRetention period: Duration of service agreement plus 30 days\n\nC. COMPETENT SUPERVISORY AUTHORITY\nBerlin Data Protection Authority (Berliner Beauftragte fur Datenschutz und Informationsfreiheit)\n\nClause 9: Use of sub-processors\nThe data importer maintains a list of approved sub-processors available at https://cloudserve.com/subprocessors. The data importer shall inform the data exporter of any intended changes to sub-processors at least 30 days in advance.\n\nTechnical and organisational measures: Encryption at rest (AES-256), encryption in transit (TLS 1.3), access controls, regular security audits",
-    declared_module_type: "Module Two" as const,
-    exporter_role: "controller" as const,
-    importer_role: "processor" as const,
-    has_tia: false,
     has_supplementary_measures: false,
-    company_name: "E-Commerce GmbH"
-  }
+    project_name_override: "电商平台云服务数据处理",
+    scc_text_override: "MODULE TWO: Transfer controller to processor\n\nClause 1: Purpose and scope...\n\nThe data exporter is: E-Commerce GmbH, Berlin, Germany\nThe data importer is: CloudServe Inc., Delaware, USA\n\nAnnex I\nA. LIST OF PARTIES\nData exporter: E-Commerce GmbH, Friedrichstrasse 123, 10117 Berlin, Germany, Contact: dpo@ecommerce.de, Role: Controller\nData importer: CloudServe Inc., 123 Main St, Wilmington DE, USA, Contact: privacy@cloudserve.com, Role: Processor\n\nB. DESCRIPTION OF TRANSFER\nCategories of data subjects: Customers of the data exporter's online platform\nCategories of personal data: Name, email, shipping address, order history, payment information\nSensitive data transferred: No\nFrequency of transfer: Continuous\nNature of processing: Hosting, storage, and technical support\nPurpose of transfer: Cloud hosting and infrastructure services\nRetention period: Duration of service agreement plus 30 days\n\nC. COMPETENT SUPERVISORY AUTHORITY\nBerlin Data Protection Authority (Berliner Beauftragte fur Datenschutz und Informationsfreiheit)\n\nClause 9: Use of sub-processors\nThe data importer maintains a list of approved sub-processors available at https://cloudserve.com/subprocessors. The data importer shall inform the data exporter of any intended changes to sub-processors at least 30 days in advance.\n\nTechnical and organisational measures: Encryption at rest (AES-256), encryption in transit (TLS 1.3), access controls, regular security audits"},
+  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
 };
 
 const euSccHealthIndia = {
@@ -547,18 +431,10 @@ const euSccHealthIndia = {
     supplementary_clause_review: "需要重点审查Clause 15修改的有效性、SPI分类错误、以及印度法律环境下的补充措施需求",
     has_scc_draft: true,
     has_tia: false,
-    has_supplementary_measures: false
-  },
-  payload: {
-    project_name: "罕见病研究数据分析",
-    scc_text: "MODULE TWO: Transfer controller to processor\n\nData exporter: Health Research Institute, Amsterdam, Netherlands\nData importer: DataAnalytica India Pvt Ltd, Bangalore, India\n\nClause 15(a) - modified from standard text: The data importer shall, as soon as legally permissible, provide the data exporter with information about any legally binding request from a public authority. The data importer shall use reasonable discretion in determining what information to provide.\n\nAnnex I.B:\nCategories of data subjects: Patients participating in rare disease studies\nCategories of personal data: Patient health records, genetic sequencing data, treatment history\nSensitive data transferred: The parties confirm that no special categories of data are transferred\n\nClause 9: Use of sub-processors\nThe data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor.",
-    declared_module_type: "Module Two" as const,
-    exporter_role: "controller" as const,
-    importer_role: "processor" as const,
-    has_tia: false,
     has_supplementary_measures: false,
-    company_name: "Health Research Institute"
-  }
+    project_name_override: "罕见病研究数据分析",
+    scc_text_override: "MODULE TWO: Transfer controller to processor\n\nData exporter: Health Research Institute, Amsterdam, Netherlands\nData importer: DataAnalytica India Pvt Ltd, Bangalore, India\n\nClause 15(a) - modified from standard text: The data importer shall, as soon as legally permissible, provide the data exporter with information about any legally binding request from a public authority. The data importer shall use reasonable discretion in determining what information to provide.\n\nAnnex I.B:\nCategories of data subjects: Patients participating in rare disease studies\nCategories of personal data: Patient health records, genetic sequencing data, treatment history\nSensitive data transferred: The parties confirm that no special categories of data are transferred\n\nClause 9: Use of sub-processors\nThe data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor."},
+  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
 };
 
 const euSccModuleError = {
@@ -581,37 +457,15 @@ const euSccModuleError = {
     supplementary_clause_review: "核心缺陷：模块选择根本性错误（应为Module Three而非Module Two）、加入方信息缺失、授权链不完整",
     has_scc_draft: true,
     has_tia: false,
-    has_supplementary_measures: false
-  },
-  payload: {
-    project_name: "客户支持工单子处理",
-    scc_text: "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nData exporter: Orange Cloud BV (processor acting on behalf of Nordic Retail Group, the controller)\nData importer: Orange Cloud BV (incorrect - double role assignment)\nSub-processor: Balkan IT Support DOO, Belgrade, Serbia\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may, with the agreement of the Parties, accede to these Clauses at any time, either as a data exporter or as a data importer, by completing the Annexes and signing Annex I.A.\n\nAnnex I.A: Nordic Retail Group (controller) details marked as 'See Master Service Agreement' with no address or contact information filled in.\n\nClause 9: Data importer may engage sub-processors after notification. No requirement for specific written authorization from controller.",
-    declared_module_type: "Module Two" as const,
-    exporter_role: "processor" as const,
-    importer_role: "processor" as const,
-    has_tia: false,
     has_supplementary_measures: false,
-    company_name: "Orange Cloud BV"
-  }
+    project_name_override: "客户支持工单子处理",
+    scc_text_override: "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nData exporter: Orange Cloud BV (processor acting on behalf of Nordic Retail Group, the controller)\nData importer: Orange Cloud BV (incorrect - double role assignment)\nSub-processor: Balkan IT Support DOO, Belgrade, Serbia\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may, with the agreement of the Parties, accede to these Clauses at any time, either as a data exporter or as a data importer, by completing the Annexes and signing Annex I.A.\n\nAnnex I.A: Nordic Retail Group (controller) details marked as 'See Master Service Agreement' with no address or contact information filled in.\n\nClause 9: Data importer may engage sub-processors after notification. No requirement for specific written authorization from controller."},
+  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BCR — 3 cases
 // ═══════════════════════════════════════════════════════════════════════════
-
-const completeBcrReviewItem = <Item extends {
-  code: string;
-  evidence: string;
-  score: string;
-  title: string;
-}>(item: Item) => ({
-  ...item,
-  finding: `${item.title}：${item.evidence}`,
-  legal_basis: "GDPR Article 47；EDPB Recommendations 1/2022",
-  recommendation: item.score === "partial"
-    ? "补充可执行流程、责任主体、时限和证据，并由法务复核。"
-    : "按GDPR第47条和EDPB要求补齐强制要素后重新审查。"
-});
 
 const bcrMediumRisk = {
   name: "BCR-1: GlobalTech 中风险BCR-C",
@@ -636,37 +490,7 @@ const bcrMediumRisk = {
     definitions_quality: "术语与GDPR一致",
     review_focus: "重点审查第三国法律评估(TIA)的具体性、投诉流程的可执行性、向集团外传输的限制条件"
   },
-  payload: {
-    company_name: "GlobalTech Inc.",
-    review_items: [
-      {
-        code: "3.2-C5" as const,
-        title: "向集团外传输 (Onward Transfer) — Clause 3.5",
-        evidence: "条款允许向第三方传输数据的前提是第三方承诺遵守'实质相似'的义务，但未明确要求必须确保第三方提供与GDPR'实质等同'的保护水平，也未规定必须使用SCC等经批准的传输工具",
-        score: "partial" as const
-      },
-      {
-        code: "3.2-C7" as const,
-        title: "投诉与救济 — Clause 4.7",
-        evidence: "投诉处理机制描述过于笼统，未规定具体的响应时限、调查步骤、书面回复要求，未明确告知数据主体有权向监管机构投诉或寻求司法救济",
-        score: "partial" as const
-      },
-      {
-        code: "3.2-C9" as const,
-        title: "第三国法律评估 — Chapter 6",
-        evidence: "仅泛泛要求评估，未提及必须遵循EDPB建议01/2020的六步法进行结构化评估，也未要求记录评估结果。通知义务被弱化为'在法律允许的范围内'",
-        score: "partial" as const
-      }
-    ].map(completeBcrReviewItem),
-    scenario_context: {
-      company_name: "GlobalTech Inc.",
-      eu_liable_entity: "GlobalTech Ireland Ltd, Dublin",
-      auto_extracted_facts: {
-        group_structure_summary: "跨国科技公司，业务遍及欧盟、美国、印度和新加坡，总部位于爱尔兰都柏林",
-        data_flow_scope: "内部从欧盟实体向非充分性认定国家（美国、印度）的数据传输"
-      }
-    }
-  }
+  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
 };
 
 const bcrHighRisk = {
@@ -692,37 +516,7 @@ const bcrHighRisk = {
     definitions_quality: "术语体系不完整",
     review_focus: "重点审查缺失的强制性核心要素：第三方受益人权利、欧盟责任主体、法律约束力机制"
   },
-  payload: {
-    company_name: "HealthData Alliance",
-    review_items: [
-      {
-        code: "3.2-C3" as const,
-        title: "第三方受益人权利 — 全文缺失",
-        evidence: "全文未包含任何条款赋予数据主体作为第三方受益人强制执行BCR的权利，直接违反GDPR第47(1)(b)条",
-        score: "non_compliant" as const
-      },
-      {
-        code: "3.2-C4" as const,
-        title: "欧盟责任主体与赔偿 — Chapter 8",
-        evidence: "仅泛泛提及成员根据适用法律承担责任，完全没有指定一个位于欧盟的实体作为责任主体，也未承诺该实体将为非欧盟成员的违规行为向数据主体承担赔偿责任",
-        score: "non_compliant" as const
-      },
-      {
-        code: "3.2-C1" as const,
-        title: "法律约束力机制 — 全文",
-        evidence: "文档称BCR通过'联盟章程'对成员有约束力，但未提供该章程作为附件，也未解释其如何对成员产生法律约束力",
-        score: "non_compliant" as const
-      }
-    ].map(completeBcrReviewItem),
-    scenario_context: {
-      company_name: "HealthData Alliance",
-      eu_liable_entity: "（未指定）",
-      auto_extracted_facts: {
-        group_structure_summary: "多家欧洲医疗机构组成的联盟，共享匿名医疗研究数据",
-        data_flow_scope: "成员间共享匿名的医疗研究数据，涉及多国数据传输"
-      }
-    }
-  }
+  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
 };
 
 const bcrStructuralFailure = {
@@ -748,31 +542,7 @@ const bcrStructuralFailure = {
     definitions_quality: "无定义表",
     review_focus: "结构性审查：文档类型错误（应为BCR-P非BCR-C）、缺失EDPB要求的所有核心章节、内容极度简略缺乏可执行性"
   },
-  payload: {
-    company_name: "CloudProcessors Consortium",
-    review_items: [
-      {
-        code: "3.2-C1" as const,
-        title: "模块选择与文档类型 — 全文",
-        evidence: "文档标题声称是BCR for Controllers，但内容反复提及'代表客户''根据客户指示'处理数据，明确描述了数据处理者的角色。应适用BCR-P而非BCR-C",
-        score: "non_compliant" as const
-      },
-      {
-        code: "3.2-C2" as const,
-        title: "结构完整性 — 全文",
-        evidence: "文档仅3页，缺失EDPB建议表格中要求的所有核心章节：具有法律约束力的内部机制、第三方受益人权利、欧盟责任主体与赔偿条款、数据保护原则、数据主体权利、第三国法律评估、投诉处理流程、培训审计机制、更新程序等",
-        score: "non_compliant" as const
-      }
-    ].map(completeBcrReviewItem),
-    scenario_context: {
-      company_name: "CloudProcessors Consortium",
-      eu_liable_entity: "（未指定）",
-      auto_extracted_facts: {
-        group_structure_summary: "声称是一个处理者联盟，为外部控制者提供云处理服务",
-        data_flow_scope: "代表客户处理数据，在全球范围内传输"
-      }
-    }
-  }
+  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -819,30 +589,7 @@ const dpiaAIRecruitment = {
     review_schedule: "实施6个月后全面复审",
     attachment_role: "data_flow_diagram"
   },
-  payload: {
-    project_name: "AI招聘筛选与候选人评估系统",
-    project_goal: "通过自动化分析求职者的多维度数据（简历、视频面试、测试结果），提高招聘效率，减少人工偏见，并识别最适合岗位的候选人。系统将为每位候选人生成综合评分和排名",
-    dpia_trigger_reasons: [
-      "自动化决策与画像：系统对候选人进行自动化评估和排名，可能产生具有法律效力的决定",
-      "大规模处理：预计每年处理超过10万份欧盟求职者申请",
-      "特殊类别数据风险：通过视频面试分析可能间接推断出种族、健康状况等特殊类别数据",
-      "系统监控：对求职者进行系统性评估"
-    ],
-    processing_flow_description: "数据从求职者→公司招聘网站/第三方平台→AWS欧盟服务器（存储）→AI模型（美国研发，部署在欧盟）→结果返回HR系统。AI模型分析简历、在线档案、视频面试记录（面部表情和语言分析）、在线测试结果，自动筛选并生成评分排名",
-    data_categories: ["身份信息", "联系方式", "教育背景", "工作经历", "技能证书", "视频/音频记录", "在线测试答案", "面部特征数据", "打字/点击行为数据"],
-    special_category_data: true,
-    special_category_types: ["种族（可能通过视频面试推断）", "健康状况（可能通过视频面试推断疲劳/压力）", "工会成员身份（可能通过简历推断）"],
-    data_subject_categories: ["求职者"],
-    data_subject_count: "超过10万人/年",
-    retention_period: "未成功候选人数据保留6个月，成功候选人数据转为员工档案",
-    cross_border_transfer: true,
-    transfer_destination: "美国（AI模型由美国团队开发，部分训练数据可能传至美国进行模型优化）",
-    automated_decision_making: true,
-    systematic_monitoring: true,
-    large_scale_processing: true,
-    data_matching: false,
-    new_technology: true
-  }
+  backendFilePaths: ["resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx"]
 };
 
 const dpiaSmartCity = {
@@ -885,30 +632,7 @@ const dpiaSmartCity = {
     review_schedule: "每年复审",
     attachment_role: "data_flow_diagram"
   },
-  payload: {
-    project_name: "市中心商业区人群动态智能分析系统",
-    project_goal: "通过多源数据融合分析，实时掌握公共空间人群动态，优化城市规划、提升公共安全应急响应能力，并为商家提供客流洞察以促进经济发展",
-    dpia_trigger_reasons: [
-      "大规模系统监控：在公共空间对大量个人进行持续、系统性跟踪",
-      "大规模处理：覆盖日均数十万人流量",
-      "数据匹配与关联：将匿名设备标识符与商业消费等数据进行关联分析，可能重识别个人",
-      "可能妨碍权利行使：大规模监控可能对集会自由、匿名权产生寒蝉效应"
-    ],
-    processing_flow_description: "摄像头→视频流（本地边缘服务器实时分析，生成匿名化人数/流向数据）→中心平台；Wi-Fi/信令数据→匿名设备ID→中心平台与商业数据（去标识化）关联分析",
-    data_categories: ["视频元数据（人数、运动矢量）", "匿名设备标识符（MAC地址哈希、IMSI哈希）", "时间戳", "位置坐标", "与商业POS系统关联的匿名消费记录"],
-    special_category_data: false,
-    special_category_types: [],
-    data_subject_categories: ["市民", "游客", "消费者"],
-    data_subject_count: "日均30-50万人",
-    retention_period: "原始视频流保留72小时，匿名统计数据永久保留",
-    cross_border_transfer: false,
-    transfer_destination: "",
-    automated_decision_making: false,
-    systematic_monitoring: true,
-    large_scale_processing: true,
-    data_matching: true,
-    new_technology: true
-  }
+  backendFilePaths: ["resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -941,15 +665,7 @@ const tiaBasicSCC = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  payload: {
-    transfer_tool: "scc" as const,
-    data_exporter_profile: "TechInnovate Ireland Ltd，注册于爱尔兰都柏林，为欧盟客户提供SaaS数据分析平台。作为数据控制者处理客户数据",
-    data_importer_profile: "AnalyticsPro India Pvt Ltd，位于印度班加罗尔，为TechInnovate提供数据处理和技术支持服务。角色：数据处理者",
-    third_country_assessment: "印度目前没有获得欧盟充分性认定。印度的数据保护法律（DPDP Act 2023）提供了基本保护框架，但政府机构的数据访问权限仍然较宽。根据Schrems II判决标准，印度法律在政府访问数据的必要性和相称性方面存在一定风险。印度《信息技术法》第69条赋予政府广泛的监控权力",
-    supplementary_measures: "技术措施：端到端加密（数据在传输前加密，密钥由出口方管理，进口方无法解密）；数据最小化（仅传输分析所必需的数据字段）；假名化处理。合同措施：在SCC基础上增加透明度义务（进口方须在收到政府数据请求24小时内通知出口方）；定期审计权。组织措施：进口方员工定期数据保护培训；访问控制日志；事件响应SLA",
-    final_conclusion: "经评估，在实施上述技术、合同和组织补充措施后，第三国法律不会损害SCC提供的实质等同保护水平。传输可继续进行，但需每年复审目的地法律变化",
-    attachments: [{ file_role: "country_law_analysis" as const, file_name: "TIA - Template.docx", file_format: "docx" as const, storage_uri: "resources/legal/sources/eu/references/TIA - Template.docx" }]
-  }
+  backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 
 const tiaChinaBCR = {
@@ -978,15 +694,7 @@ const tiaChinaBCR = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  payload: {
-    transfer_tool: "bcr" as const,
-    data_exporter_profile: "Precision Manufacturing Group GmbH，德国斯图加特，全球精密制造集团母公司。持有已获批的BCR-C（控制者BCR）",
-    data_importer_profile: "Precision Manufacturing (Shanghai) Co. Ltd，位于中国上海，集团全资子公司，负责亚太区生产和销售。角色：共同控制者",
-    third_country_assessment: "中国法律环境评估：中国的《网络安全法》《数据安全法》《个人信息保护法》建立了全面的数据保护框架，但根据Schrems II标准，中国法律中存在若干可能影响传输保护水平的因素：（1）《网络安全法》第37条和《数据安全法》第21条赋予监管机构广泛的数据访问权限；（2）《国家情报法》第7条允许情报机构依法收集信息；（3）缺乏独立的司法审查机制来挑战政府数据请求。此外，中国尚未获得欧盟充分性认定",
-    supplementary_measures: "技术措施：数据在传输前进行强加密（256-bit），密钥完全由德国出口方管理；实施了数据拆分存储策略（关键业务数据保留在德国，仅匿名化的运营指标传输至中国）；部署了安全的远程访问环境（数据不落地中国本地存储）。合同措施：在中国子公司员工合同中加入数据保护条款；与子公司签订强化的集团内部数据保护协议。组织措施：BCR框架下的年度审计（由德国母公司DPO主导）；中国子公司员工每季度数据保护培训",
-    final_conclusion: "经评估，尽管中国法律环境存在风险，但通过以下因素组合，可以认为传输能提供GDPR要求的实质等同保护水平：（1）BCR-C已获批准，提供了全面的集团内部保护框架；（2）技术措施（加密+密钥分离+数据不落地）极大限制了政府实际访问数据的可能性；（3）定期审计机制确保了合规持续性。结论：有条件通过——前提是所有补充措施持续有效并每年复审",
-    attachments: [{ file_role: "country_law_analysis" as const, file_name: "TIA - Template.docx", file_format: "docx" as const, storage_uri: "resources/legal/sources/eu/references/TIA - Template.docx" }]
-  }
+  backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1035,57 +743,7 @@ const pipiaSCCFiling = {
     escalation_path: "安全事件→数据安全专员→CRO（2h内）→CEO（4h内）→网信办（24h内）",
     attachment_role: "scc_contract"
   },
-  payload: {
-    route_type: "scc_filing" as const,
-    company_profile: {
-      company_name: "跨境优品（深圳）电子商务有限公司",
-      company_uscc: "91440300MA1TEST003",
-      industry: "电商零售",
-      shareholding_structure: "境内自然人持股80%，境外VC持股20%",
-      actual_controller: "张三（中国籍）",
-      overseas_investment: "已在香港设立全资子公司用于海外仓储",
-      org_structure_privacy_team: "设有数据合规部（3人），直接向CRO汇报",
-      business_overview: "面向东南亚市场的跨境电商平台，主营中国制造消费品。年GMV约5亿元人民币",
-      processing_activity_overview: "收集用户注册信息、浏览行为、订单信息、支付信息。使用数据分析进行个性化推荐",
-      is_ciio: false,
-      processing_person_count: 500000,
-      outbound_pi_count: 500000,
-      outbound_spi_count: 0
-    },
-    transfer_context: {
-      transfer_scenario_name: "订单数据同步至亚太数据中心",
-      transfer_frequency: "daily",
-      transfer_method: "API实时同步+每日批量导出",
-      domestic_storage: "阿里云深圳Region",
-      overseas_storage: "AWS新加坡Region（亚太数据中心）",
-      transfer_link: "通过阿里云→AWS专线，经香港中转至新加坡",
-      purpose: "将用户在平台上的订单数据同步至新加坡亚太数据中心，用于区域物流优化和精准营销",
-      recipient_name: "跨境优品（香港）国际有限公司",
-      recipient_country_region: "新加坡",
-      legal_basis: "履行合同所必需+用户同意",
-      legality_justification: "用户在下单时已通过弹窗方式获得单独同意，明确告知数据将传输至新加坡用于订单处理和物流优化",
-      necessity_justification: "数据传输是完成跨境订单交付和提供物流跟踪服务所必需的。区域物流算法的优化分析不涉及个人精准画像"
-    },
-    personal_info_scope: {
-      pi_categories: ["姓名", "手机号", "收货地址", "商品订单号", "购买时间", "商品金额", "支付方式（去标识化处理为支付渠道编号）"],
-      spi_categories: [],
-      subject_volume: 450000
-    },
-    rights_protection: {
-      notice_mechanism: "APP注册时弹窗告知数据出境情况；隐私政策中专设'数据跨境传输'章节。2024年度进行了隐私政策更新并征得用户重新确认",
-      consent_mechanism: "用户下单时弹窗单独同意数据跨境传输，同意记录归档保存",
-      dsar_channel: "APP内'我的→隐私中心→数据权利'提供在线表单、邮箱privacy@example.com",
-      retention_policy: "订单数据保留至交易完成后3年（根据税法要求），营销分析数据保留2年"
-    },
-    emergency_plan: {
-      incident_response_sla_hours: 24,
-      escalation_path: "安全事件→数据安全专员→CRO（2小时内）→CEO（4小时内）→网信办（24小时内）",
-      data_breach_notification_plan: "24小时内通知受影响的用户，48小时内向网信办报告"
-    },
-    attachments: [
-      { file_role: "scc_contract" as const, file_name: "sample_contract.txt", file_format: "txt" as const, storage_uri: "benchmarks/sample-inputs/sample_contract.txt" }
-    ]
-  }
+  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt","benchmarks/sample-inputs/sample_evidence.txt"]
 };
 
 const pipiaCertification = {
@@ -1130,51 +788,7 @@ const pipiaCertification = {
     escalation_path: "安全事件→安全团队（30min内）→CISO→CEO（1h内）→监管部门（按法规时限）",
     attachment_role: "certification_material"
   },
-  payload: {
-    route_type: "certification" as const,
-    company_profile: {
-      company_name: "快捷支付科技（北京）有限公司",
-      company_uscc: "91110000MA1TEST004",
-      industry: "金融科技",
-      is_ciio: false,
-      processing_person_count: 500000,
-      outbound_pi_count: 500000,
-      outbound_spi_count: 120000
-    },
-    transfer_context: {
-      transfer_scenario_name: "跨境支付清算数据处理",
-      transfer_frequency: "continuous",
-      transfer_method: "API实时传输+加密通道",
-      domestic_storage: "自建数据中心（北京）",
-      overseas_storage: "母公司美国AWS美西区",
-      transfer_link: "通过企业VPN专线从北京→美西AWS",
-      purpose: "向美国母公司提供支付交易数据用于全球风控模型训练和反欺诈分析",
-      recipient_name: "FastPay Global Inc.",
-      recipient_country_region: "美国",
-      legal_basis: "用户单独同意",
-      legality_justification: "用户开通跨境支付功能时通过人脸识别+短信验证码双因素确认后单独同意数据出境",
-      necessity_justification: "全球反欺诈模型依赖多地区交易数据，单独使用中国数据无法有效识别跨境支付欺诈模式"
-    },
-    personal_info_scope: {
-      pi_categories: ["姓名", "身份证号", "手机号", "银行卡号", "交易时间", "交易金额", "交易对手方", "设备指纹"],
-      spi_categories: ["银行卡号", "身份证号", "金融交易记录"],
-      subject_volume: 500000
-    },
-    rights_protection: {
-      notice_mechanism: "开通跨境支付功能时弹窗告知；APP'支付安全中心'持续展示数据处理说明",
-      consent_mechanism: "双因素认证后单独同意（人脸识别+短信验证码）",
-      dsar_channel: "APP内在线客服、邮箱dpo@fastpay.cn、400热线",
-      retention_policy: "交易数据保留5年（反洗钱法规要求），风控模型训练数据保留至模型迭代完成后删除"
-    },
-    emergency_plan: {
-      incident_response_sla_hours: 4,
-      escalation_path: "安全事件→安全团队（30分钟内）→CISO→CEO（1小时内）→监管部门（按法规时限）",
-      data_breach_notification_plan: "4小时内通知受影响用户和网信办"
-    },
-    attachments: [
-      { file_role: "certification_material" as const, file_name: "sample_evidence.txt", file_format: "txt" as const, storage_uri: "benchmarks/sample-inputs/sample_evidence.txt" }
-    ]
-  }
+  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt","benchmarks/sample-inputs/sample_evidence.txt"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1201,28 +815,22 @@ const us14117Basic = {
     onward_transfer: false,
     onward_transfer_description: "",
     security_measures_summary: "数据最小化、去标识化、合同控制和访问审计",
-    review_focus: "重点核查基因组数据阈值、被覆盖人员和研究合作豁免"
-  },
-  payload: {
-    project_name: "国际合作基因组研究",
-    transaction_description: "与深圳华大基因研究院合作进行大规模人群基因组研究，美方向中方传输约5万份去标识化基因组测序数据（BAM/FASTQ格式），中方负责生物信息学分析和变异注释",
-    transaction_type: "cooperative_research",
-    data_items: [
+    review_focus: "重点核查基因组数据阈值、被覆盖人员和研究合作豁免",
+    data_items_override: [
       { data_item_name: "人类全基因组测序数据", data_description: "5万份人类全基因组测序数据（BAM格式）", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_genomic_data", precision_level: "pseudonymized" },
       { data_item_name: "人类组学表型数据", data_description: "年龄、性别、BMI、疾病诊断", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_omic_data", precision_level: "pseudonymized" },
       { data_item_name: "受试者研究编号", data_description: "去标识化但可关联至原始样本的受试者编号", is_personal_info: true, is_sensitive_personal_info: false, us_person_count: 50000, doj_data_category: "covered_personal_identifiers", precision_level: "pseudonymized" }
     ],
-    recipient_entities: [
+    recipient_entities_override: [
       { entity_name: "深圳华大基因研究院", country_of_registration: "中国", entity_role: "research_institution" as const, is_covered_person: false },
       { entity_name: "中国国家基因库", country_of_registration: "中国", entity_role: "government_affiliated" as const, government_control: true, is_covered_person: false }
     ],
-    security_measures: [
+    security_measures_override: [
       { measure_name: "数据最小化", category: "data_minimization", status: "implemented", description: "仅传输分析所必需的基因组区间，非全基因组" },
       { measure_name: "去标识化", category: "de_identification", status: "implemented", description: "移除直接标识符，使用研究编号替代" },
       { measure_name: "合同控制", category: "contractual_controls", status: "implemented", description: "研究合作协议包含数据安全条款" }
-    ],
-    company_name: "American Genomics Research Institute"
-  }
+    ]
+  },
 };
 
 const us14117RestrictedParty = {
@@ -1245,32 +853,24 @@ const us14117RestrictedParty = {
     onward_transfer: true,
     onward_transfer_description: "可能再转移至阿联酋研发中心",
     security_measures_summary: "基于角色的访问控制和全量访问审计",
-    review_focus: "重点核查被覆盖人员、受限交易和再转移风险"
-  },
-  payload: {
-    project_name: "AI模型训练数据共享",
-    transaction_description: "与列入BIS实体清单的中国AI公司签订数据许可协议，向其提供用于计算机视觉模型训练的图像数据集（约100万张标注图片）",
-    transaction_type: "vendor_agreement",
-    data_items: [
+    review_focus: "重点核查被覆盖人员、受限交易和再转移风险",
+    data_items_override: [
       { data_item_name: "可识别人脸图像", data_description: "图像中包含可识别个人的面部信息", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "covered_personal_identifiers", precision_level: "raw" },
       { data_item_name: "精确地理位置", data_description: "图像EXIF数据包含精确GPS坐标", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "precise_geolocation_data", precision_level: "raw" },
       { data_item_name: "生物识别数据", data_description: "人脸图像可用于面部识别模型训练", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "biometric_identifiers", precision_level: "raw" }
     ],
-    recipient_entities: [
+    recipient_entities_override: [
       { entity_name: "受限AI科技有限公司", country_of_registration: "中国", entity_role: "vendor" as const, is_covered_person: true },
       { entity_name: "受限AI科技的美国子公司", country_of_registration: "美国", entity_role: "affiliate" as const, parent_company: "受限AI科技有限公司", is_covered_person: false }
     ],
-    access_persons: [
+    access_persons_override: [
       { person_name: "待指定数据科学家", nationality: "中国", country_of_residence: "中国", department: "数据科学部", position: "数据科学家", has_actual_access: true, access_type: "direct" }
     ],
-    security_measures: [
+    security_measures_override: [
       { measure_name: "基于角色的访问控制", category: "access_control", status: "implemented", description: "仅授权研究人员可访问" },
       { measure_name: "访问审计日志", category: "audit_logging", status: "implemented", description: "所有数据访问操作记录审计日志" }
-    ],
-    onward_transfer: true,
-    onward_transfer_description: "数据可能被中国母公司再转移至其位于阿联酋的研发中心",
-    company_name: "VisionAI Corp."
-  }
+    ]
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1290,22 +890,8 @@ const cnFlowBasic = {
     primary_recipient_name: "深圳智能制造有限公司",
     primary_recipient_country: "中国",
     primary_recipient_role: "vendor",
-    primary_recipient_restricted: false
-  },
-  payload: {
-    company_name: "GlobalShop Inc.",
-    transfer_purpose: "向中国供应商传输订单信息用于商品生产和物流配送",
-    data_categories: ["客户姓名", "收货地址", "联系电话", "商品订单号", "SKU信息"],
-    sensitive_data_flags: ["无敏感信息"],
-    recipient_entities: [
-      { entity_name: "深圳智能制造有限公司", country_region: "中国", entity_role: "vendor" as const, is_restricted_party: false },
-      { entity_name: "广州物流供应链有限公司", country_region: "中国", entity_role: "processor" as const, is_restricted_party: false }
-    ],
-    transfer_chain: "美国总部→AWS美东区→通过加密API→中国供应商ERP系统。传输频率：每日实时",
-    attachments: [
-      { file_role: "data_inventory" as const, file_name: "data_inventory.csv", file_format: "csv" as const, storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
-      { file_role: "entity_inventory" as const, file_name: "entity_inventory.csv", file_format: "csv" as const, storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
-    ]
+    primary_recipient_restricted: false,
+    additional_recipients: "广州物流供应链有限公司,中国,processor,no"
   },
   backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
 };
@@ -1326,22 +912,6 @@ const cnFlowRestricted = {
     primary_recipient_restricted: false,
     additional_recipients: "北京微电子研究所,中国,affiliate,yes",
     internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据"
-  },
-  payload: {
-    company_name: "Advanced Semiconductor Corp.",
-    transfer_purpose: "向中国合作方提供芯片设计文件用于封装测试，技术数据可能涉及出口管制分类",
-    data_categories: ["芯片设计文件（GDSII格式）", "测试规范文档", "良率数据报告", "工程师联系信息"],
-    sensitive_data_flags: ["出口管制技术数据", "可能涉及ECCN 3E001分类"],
-    recipient_entities: [
-      { entity_name: "上海先进半导体制造有限公司", country_region: "中国", entity_role: "vendor" as const, is_restricted_party: false },
-      { entity_name: "北京微电子研究所", country_region: "中国", entity_role: "affiliate" as const, is_restricted_party: true }
-    ],
-    transfer_chain: "美国总部安全服务器→通过加密VPN→上海公司内部服务器→（可能）再传输至北京研究所",
-    internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据",
-    attachments: [
-      { file_role: "data_inventory" as const, file_name: "data_inventory.csv", file_format: "csv" as const, storage_uri: "benchmarks/sample-inputs/data_inventory.csv" },
-      { file_role: "entity_inventory" as const, file_name: "entity_inventory.csv", file_format: "csv" as const, storage_uri: "benchmarks/sample-inputs/entity_inventory.csv" }
-    ]
   },
   backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
 };
@@ -1382,17 +952,6 @@ const reviewPrivacyPolicy = {
     has_scc_draft: false,
     review_focus: "重点核查跨境传输告知的完整性、敏感信息处理的合法性基础、用户权利行使路径与联系方式的披露"
   },
-  payload: {
-    uploaded_files: ["resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md"],
-    company_name: "华东云链科技（测试）",
-    document_type: "privacy_policy",
-    receiver_name: "OceanStar Technology Pte. Ltd.",
-    receiver_country: "新加坡",
-    transfer_purpose: "跨境客服工单处理和统一运维支持",
-    review_focus: "重点核查跨境传输告知、敏感信息处理、用户权利行使路径与联系方式披露",
-    pii_count: 280000,
-    spi_count: 5000
-  },
   backendFilePaths: ["resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md"]
 };
 
@@ -1427,19 +986,6 @@ const reviewSccContract = {
     has_scc_draft: true,
     review_focus:
       "重点审查个人信息出境标准合同条款完整性、双方义务、再委托限制、删除与留存规则、安全事件通知时限、监管报告表述、以及个人信息主体权利保障机制"
-  },
-  payload: {
-    uploaded_files: ["resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"],
-    company_name: "智付通科技有限公司",
-    document_type: "scc_contract",
-    receiver_name: "星洲支付处理有限公司 (Starstate Payment Processing Pte. Ltd.)",
-    receiver_country: "新加坡",
-    transfer_purpose: "跨境支付交易的风险筛查、欺诈监测、合规审计及资金结算处理",
-    review_focus:
-      "审查标准合同条款完整性、数据接收方义务、再委托限制、安全事件通知时限、删除规则与个人信息主体权利保障",
-    pii_count: 500000,
-    spi_count: 500000,
-    has_scc_draft: true
   },
   backendFilePaths: [
     "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"
@@ -1486,4 +1032,3 @@ export function getDefaultTestCase<Module extends DevCaseModule>(
   const preferredIndex = DEFAULT_CASE_INDEX[module] ?? 0;
   return cases[preferredIndex] ?? cases[0] ?? null;
 }
-import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
