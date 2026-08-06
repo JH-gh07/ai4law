@@ -75,6 +75,16 @@ describe("EU payload builders", () => {
     expect(payload.scc_text).toBe("MODULE THREE: preserved source text");
   });
 
+  it("rejects missing SCC parties and unsupported transfer roles", () => {
+    const input = withPreset<EuSccFormValues>(createDefaultEuSccValues(), "eu_scc");
+    expect(() => buildEuSccPayload({ ...input.values, exporter_name: "" }, input.paths))
+      .toThrow(/exporter_name/);
+    expect(() => buildEuSccPayload(
+      { ...input.values, transfer_role: "owner" } as unknown as EuSccFormValues,
+      input.paths,
+    )).toThrow(/transfer_role/);
+  });
+
   it("builds all BCR review items and typed attachments", () => {
     const input = withPreset<BcrFormValues>(createDefaultBcrValues(), "bcr");
 
@@ -84,6 +94,14 @@ describe("EU payload builders", () => {
     expect(payload.review_items?.every((item) => item.finding && item.legal_basis)).toBe(true);
     expect(payload.attachments?.[0]?.file_format).toMatch(/^(docx|pdf)$/);
     expect(payload.uploaded_files).toEqual(input.paths);
+  });
+
+  it("rejects missing BCR company names and unsupported attachments", () => {
+    const input = withPreset<BcrFormValues>(createDefaultBcrValues(), "bcr");
+    expect(() => buildBcrPayload({ ...input.values, company_name: "" }, input.paths))
+      .toThrow(/company_name/);
+    expect(() => buildBcrPayload(input.values, ["bcr.exe"]))
+      .toThrow(/extension/);
   });
 
   it("builds structured DPIA risks and mitigation links", () => {
@@ -99,6 +117,14 @@ describe("EU payload builders", () => {
     expect(payload.uploaded_files).toEqual(input.paths);
   });
 
+  it("rejects missing DPIA project names and unsupported attachments", () => {
+    const input = withPreset<DpiaFormValues>(createDefaultDpiaValues(), "dpia");
+    expect(() => buildDpiaPayload({ ...input.values, project_name: "" }, input.paths))
+      .toThrow(/project_name/);
+    expect(() => buildDpiaPayload(input.values, ["flow.exe"]))
+      .toThrow(/extension/);
+  });
+
   it("builds TIA assessment text and attachment metadata", () => {
     const input = withPreset<TiaFormValues>(createDefaultTiaValues(), "tia");
 
@@ -107,6 +133,18 @@ describe("EU payload builders", () => {
     expect(payload.third_country_assessment).toContain("已完成法律评估");
     expect(payload.final_conclusion).toContain("关键行动");
     expect(payload.attachments?.[0]?.file_role).toBe(input.values.attachment_role);
+  });
+
+  it("rejects missing TIA exporters, unsupported tools and attachments", () => {
+    const input = withPreset<TiaFormValues>(createDefaultTiaValues(), "tia");
+    expect(() => buildTiaPayload({ ...input.values, data_exporter_name: "" }, input.paths))
+      .toThrow(/data_exporter_name/);
+    expect(() => buildTiaPayload(
+      { ...input.values, transfer_tool: "contract" } as unknown as TiaFormValues,
+      input.paths,
+    )).toThrow(/transfer_tool/);
+    expect(() => buildTiaPayload(input.values, ["assessment.exe"]))
+      .toThrow(/extension/);
   });
 });
 

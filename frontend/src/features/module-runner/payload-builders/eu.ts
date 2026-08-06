@@ -5,6 +5,9 @@ import {
   composeBcrFinding,
   hasText,
   inferDocxPdfFormat,
+  requireAllowedValue,
+  requireFileExtensions,
+  requireText,
   splitNonEmptyLines,
   toBcrScore,
 } from "./common";
@@ -42,6 +45,14 @@ export function buildEuSccPayload(
   values: EuSccFormValues,
   resolvedFilePaths: string[],
 ): EuSccPayload {
+  requireText(values.exporter_name, "exporter_name", 2);
+  requireText(values.importer_name, "importer_name", 2);
+  requireText(values.importer_country, "importer_country", 2);
+  requireText(values.transfer_purpose, "transfer_purpose", 2);
+  requireText(values.data_categories, "data_categories", 2);
+  requireAllowedValue(values.transfer_role, "transfer_role", ["c2c", "c2p", "p2p", "p2c"]);
+  requireAllowedValue(values.scc_version, "scc_version", ["eu_2021", "other"]);
+  requireAllowedValue(values.transfer_frequency, "transfer_frequency", ["one_time", "periodic", "continuous"]);
   const purposeContext = [
     values.transfer_purpose.trim(),
     `角色关系：${values.transfer_role}`,
@@ -83,6 +94,8 @@ export function buildBcrPayload(
   values: BcrFormValues,
   resolvedFilePaths: string[],
 ): ModuleRequestMap["bcr"] {
+  requireText(values.company_name, "company_name", 2);
+  requireFileExtensions(resolvedFilePaths, ["docx", "pdf"]);
   const attachments = resolvedFilePaths.map((path) => ({
     file_name: basenameFromPath(path),
     file_format: inferDocxPdfFormat(path)!,
@@ -136,6 +149,10 @@ export function buildDpiaPayload(
   values: DpiaFormValues,
   resolvedFilePaths: string[],
 ): ModuleRequestMap["dpia"] {
+  requireText(values.project_name, "project_name", 2);
+  requireText(values.project_goal, "project_goal", 2);
+  requireText(values.processing_description, "processing_description", 2);
+  requireFileExtensions(resolvedFilePaths, ["docx", "pdf", "png", "jpg", "jpeg"]);
   const dataCategories = splitNonEmptyLines(values.data_types);
   const lawfulBasis = splitNonEmptyLines(values.lawful_basis);
   const triggerReasons = splitNonEmptyLines(values.need_reason);
@@ -234,6 +251,16 @@ export function buildTiaPayload(
   values: TiaFormValues,
   resolvedFilePaths: string[],
 ): ModuleRequestMap["tia"] {
+  requireText(values.data_exporter_name, "data_exporter_name", 2);
+  requireText(values.data_importer_name, "data_importer_name", 2);
+  requireText(values.importer_country_region, "importer_country_region", 2);
+  requireAllowedValue(values.transfer_tool, "transfer_tool", ["scc", "bcr", "derogation"]);
+  requireAllowedValue(values.transfer_frequency, "transfer_frequency", ["one_time", "periodic", "continuous"]);
+  requireAllowedValue(values.attachment_role, "attachment_role", ["transfer_agreement", "country_law_analysis", "technical_control_doc", "other"]);
+  if (resolvedFilePaths.length === 0) {
+    throw new Error("attachments are required");
+  }
+  requireFileExtensions(resolvedFilePaths, ["docx", "pdf"]);
   const attachments = resolvedFilePaths.map((path) => ({
     file_role: values.attachment_role,
     file_name: basenameFromPath(path),
