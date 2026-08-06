@@ -22,14 +22,17 @@ _ISOLATED_ENV = {
 
 def export_openapi(output: Path) -> dict[str, str | bool]:
     output = output.resolve()
-    original_cwd = Path.cwd()
-    original_env = {key: os.environ.get(key) for key in _ISOLATED_ENV}
 
     with TemporaryDirectory(prefix="ai4law-openapi-") as raw_workspace:
         workspace = Path(raw_workspace).resolve()
+        isolated_env = {
+            **_ISOLATED_ENV,
+            "AI4LAW_DATABASE_URL": f"sqlite:///{workspace / 'openapi.db'}",
+            "AI4LAW_STORAGE_DIR": str(workspace / "storage"),
+        }
+        original_env = {key: os.environ.get(key) for key in isolated_env}
         try:
-            os.environ.update(_ISOLATED_ENV)
-            os.chdir(workspace)
+            os.environ.update(isolated_env)
 
             from backend.app import create_app
             from backend.core.settings import Settings
@@ -49,7 +52,6 @@ def export_openapi(output: Path) -> dict[str, str | bool]:
             )
             schema: dict[str, Any] = create_app(settings).openapi()
         finally:
-            os.chdir(original_cwd)
             for key, value in original_env.items():
                 if value is None:
                     os.environ.pop(key, None)

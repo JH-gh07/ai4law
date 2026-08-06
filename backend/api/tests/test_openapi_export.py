@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from scripts.export_openapi import export_openapi
@@ -39,3 +41,21 @@ def test_export_openapi_is_deterministic_and_complete(tmp_path: Path, monkeypatc
         "rag_auto_build_index": False,
         "delilegal_configured": False,
     }
+
+
+def test_export_openapi_is_callable_from_a_clean_python_process(tmp_path: Path) -> None:
+    output = tmp_path / "subprocess.json"
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from pathlib import Path; "
+                "from scripts.export_openapi import export_openapi; "
+                f"export_openapi(Path({str(output)!r}))"
+            ),
+        ],
+        check=True,
+        cwd=Path(__file__).parents[3],
+    )
+    assert output.exists()
