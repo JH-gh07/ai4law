@@ -95,7 +95,18 @@ def test_live_client_delegates_to_task_scoped_frozen_client(monkeypatch) -> None
 
 def test_fallback_is_recorded_as_a_model_result_for_manifest_accounting(
     tmp_path: Path,
+    monkeypatch,
 ) -> None:
+    # Clear all LLM API keys from environment to force fallback
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("SILICONFLOW_API_KEY", raising=False)
+    monkeypatch.delenv("SICICONFLOW_API_KEY", raising=False)
+    monkeypatch.delenv("TENCENT_API_KEY", raising=False)
+    monkeypatch.delenv("AI4LAW_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("AI4LAW_SILICONFLOW_API_KEY", raising=False)
+    monkeypatch.delenv("AI4LAW_SICICONFLOW_API_KEY", raising=False)
+    monkeypatch.delenv("AI4LAW_TENCENT_API_KEY", raising=False)
+
     client = LLMClient(Settings(_env_file=None))
     recorder = TraceRecorder(tmp_path / "fallback-trace", task_id="fallback-task")
     token = current_trace.set(recorder)
