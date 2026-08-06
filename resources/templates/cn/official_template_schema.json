@@ -24,7 +24,7 @@
           "title": "数据处理者基本情况",
           "description": "企业基本信息、业务情况、数据处理角色",
           "required_inputs": ["request.company_name", "request.industry"],
-          "mapped_chapters": ["overview"]
+          "mapped_chapters": []
         },
         {
           "section_id": "2.2",
@@ -68,7 +68,7 @@
             "ISSUE-onward-transfer-unclear"
           ],
           "required_inputs": [],
-          "mapped_chapters": ["necessity_legal_basis", "recipient_capability"]
+          "mapped_chapters": ["necessity_legal_basis"]
         },
         {
           "section_id": "2.6",

@@ -16,11 +16,16 @@ _MARKDOWN_PREFIX_RE = re.compile(
     r"^\s*(?:#{1,6}\s|[*_]{2,3}[^*_\s]|[-*]\s|\d+\.\s|>\s|\|)"
 )
 _BASIS_BLOCK_RE = re.compile(r"【依据：[^】]+】")
+# P0-7: Tighten patterns to avoid flagging generic descriptive prose
+# Only match when asserting specific legal obligations or definitive judgments
 _LEGAL_RULE_RE = re.compile(
-    r"(?:应当|必须|不得|禁止|依法|法定义务|法律要求|监管要求|违反|不符合|合规义务)"
+    r"(?:依据《[^》]+》[^。；]*?(?:应当|必须|不得|禁止)|"
+    r"《[^》]+》第[一二三四五六七八九十百千万零〇两0-9]+条[^。；]*?(?:规定|要求)|"
+    r"(?:违反|不符合)《[^》]+》)"
 )
 _RISK_JUDGMENT_RE = re.compile(
-    r"(?:高风险|中风险|低风险|不合规|违规风险|剩余风险|风险等级|风险结论)"
+    r"(?:经评估，.*?(?:属于|为|系).*?(?:高|中|低)风险|"
+    r"(?:合规|不合规)结论[:：][^，。；]*(?:是|为|系))"
 )
 _PLACEHOLDER_CITATIONS = {"未检索到", "未检索到相关法规", "未检索到法规依据"}
 # Matches markdown inline formatting: **bold**, __bold__, *italic*, _italic_, `code`
@@ -53,6 +58,9 @@ def normalize_legal_markdown_structure(text: str) -> str:
     """
     if not text:
         return text
+
+    # P0-4: Repair pipe-less tables by adding leading pipes before normalization
+    text = _repair_pipeless_tables(text)
 
     normalized = (
         text.replace("\r\n", "\n")
@@ -97,6 +105,52 @@ def normalize_legal_markdown_structure(text: str) -> str:
     return output.strip()
 
 
+def _repair_pipeless_tables(text: str) -> str:
+    """Add leading pipes to consecutive pipe-containing lines that lack them.
+
+    LLMs often generate tables like:
+        项目 | 内容
+        企业名称 | 测试公司
+
+    This repairs them to:
+        | 项目 | 内容
+        | 企业名称 | 测试公司
+    """
+    lines = text.split("\n")
+    result_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        # Check if this line contains pipes but doesn't start with one
+        if "|" in stripped and not stripped.startswith("|"):
+            # Look ahead to find consecutive pipe-containing lines
+            table_block = [i]
+            j = i + 1
+            while j < len(lines):
+                next_stripped = lines[j].strip()
+                if "|" in next_stripped and not next_stripped.startswith("|"):
+                    table_block.append(j)
+                    j += 1
+                elif not next_stripped:  # Allow blank lines
+                    j += 1
+                else:
+                    break
+
+            # If we found 2+ consecutive lines, it's likely a table
+            if len(table_block) >= 2:
+                for idx in table_block:
+                    result_lines.append("| " + lines[idx].strip())
+                i = j
+                continue
+
+        result_lines.append(line)
+        i += 1
+
+    return "\n".join(result_lines)
+
+
 def _explode_packed_line(line: str) -> list[str]:
     line = re.sub(r"\s*(【依据：[^】]+】)", r"\n\1", line)
 
@@ -104,7 +158,9 @@ def _explode_packed_line(line: str) -> list[str]:
         line = re.sub(r"(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)", r"\n\1", line)
         line = re.sub(r"(?<!\n)([一二三四五六七八九十百千万零〇两0-9]+、)", r"\n\1", line)
         line = re.sub(r"(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)", r"\n\1", line)
-        line = re.sub(r"(?<!\n)(\(?\d+\)|\d+[、.])\s*(?=\S)", lambda m: f"\n{m.group(1)} ", line)
+        # P0-3: Fix regex to avoid breaking TLS 1.3, v1.2.3 etc.
+        # Only match numbered lists at line start or after whitespace, exclude \d.\d patterns
+        line = re.sub(r"(?<!\n)(?<!\d)(\(?\d+\)|\d+[、])\s*(?=\S)", lambda m: f"\n{m.group(1)} ", line)
 
     return [part.strip() for part in line.split("\n") if part.strip()]
 

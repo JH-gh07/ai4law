@@ -48,25 +48,54 @@ def _pick_chapter(chapters: list[ChapterContent], chapter_id: str) -> str:
     return ""
 
 
+def _empty_section_text(section: dict[str, Any]) -> str:
+    """Text for a section that produced no chapter content.
+
+    A section can be empty for two very different reasons, and conflating them is
+    what put "（该部分内容待补充）" into every single delivered report:
+
+    - ``structural``: the section carries no prose by design (its content is the
+      template's own table, or it is a genuinely-nothing-to-report section).
+      Emitting a "pending" placeholder here is a false defect claim.
+    - ``pending`` (default): content was expected and is genuinely missing.
+    """
+    behavior = str(section.get("empty_behavior", "pending"))
+    if behavior == "omit":
+        return ""
+    if behavior == "none_to_report":
+        return "本次评估未发现需要在本节补充说明的其他情况。"
+    return "（该部分内容待补充，需基于申报材料进一步生成）"
+
+
 def _build_section_content(
     section: dict[str, Any],
     chapters: list[ChapterContent],
     profile: CompanyProfile,
     context_pack: GenerationContextPack | None = None,
+    used_chapter_ids: set[str] | None = None,
 ) -> str:
-    """Build content for a section from mapped chapters and input data."""
+    """Build content for a section from mapped chapters and input data.
+
+    ``used_chapter_ids`` is shared across the whole report so that a chapter
+    already emitted under an earlier section is not repeated verbatim under a
+    later one (P0-5).
+    """
     parts: list[str] = []
+    seen = used_chapter_ids if used_chapter_ids is not None else set()
 
     # Collect from mapped chapters
     mapped_ids = section.get("mapped_chapters", [])
     for chapter_id in mapped_ids:
+        if chapter_id in seen:
+            continue
         content = _pick_chapter(chapters, chapter_id)
         if content:
+            seen.add(chapter_id)
             parts.append(content)
 
     # Handle subsections
     for sub in section.get("subsections", []):
-        sub_content = _build_section_content(sub, chapters, profile, context_pack)
+        sub_content = _build_section_content(sub, chapters, profile, context_pack, seen)
         if sub_content:
             parts.append(f"### {sub.get('number', '')} {sub.get('title', '')}\n\n{sub_content}")
 
@@ -90,14 +119,30 @@ def build_official_report_mapping(
     Returns a dict of template variable name → value for the official markdown template.
     """
     schema = _load_schema()
+
+    # P0-1: Risk level must come from context_pack, no hardcoded default
+    if context_pack is None:
+        raise ValueError(
+            "context_pack is required to build official report mapping. "
+            "Cannot determine risk_level without diagnosis_result."
+        )
+
     diagnosis = context_pack.diagnosis_result if context_pack else {}
+    if not diagnosis or "risk_level" not in diagnosis:
+        raise ValueError(
+            f"context_pack.diagnosis_result must contain 'risk_level'. Got: {diagnosis}"
+        )
 
     is_ciio = "是" if profile.is_ciio else "否"
     contains_important = "是" if profile.contains_important_data else "否"
     pii_str = f"{profile.pii_count:,}人" if profile.pii_count else "未提供"
     spi_str = f"{profile.spi_count:,}人" if profile.spi_count else "未提供"
 
-    overall_risk = diagnosis.get("risk_level", "MEDIUM") if diagnosis else "MEDIUM"
+    overall_risk = diagnosis.get("risk_level")
+    if not overall_risk:
+        raise ValueError(
+            f"diagnosis_result must have non-empty 'risk_level'. Got: {diagnosis}"
+        )
     if path_warning:
         overall_risk += "（路径不匹配，本报告为强制生成的参考草案）"
 
@@ -118,6 +163,10 @@ def build_official_report_mapping(
         "alignment_warning": alignment_warning or "",
     }
 
+    # P0-5: one shared set across the whole report, so a chapter emitted in an
+    # earlier section is not repeated in a later one.
+    used_chapter_ids: set[str] = set()
+
     # Build section content from mapped chapters
     for section in schema.get("sections", []):
         section_id = section["section_id"]
@@ -125,14 +174,18 @@ def build_official_report_mapping(
             # Section 二 has subsections — build each
             for sub in section["subsections"]:
                 sub_id = sub["section_id"]
-                content = _build_section_content(sub, chapters, profile, context_pack)
+                content = _build_section_content(
+                    sub, chapters, profile, context_pack, used_chapter_ids
+                )
                 if not content:
-                    content = "（该部分内容待补充，需基于申报材料进一步生成）"
+                    content = _empty_section_text(sub)
                 mapping[f"section_{sub_id.replace('.', '_')}_content"] = content
         else:
-            content = _build_section_content(section, chapters, profile, context_pack)
+            content = _build_section_content(
+                section, chapters, profile, context_pack, used_chapter_ids
+            )
             if not content:
-                content = "（该部分内容待补充，需基于申报材料进一步生成）"
+                content = _empty_section_text(section)
             mapping[f"section_{section_id}_content"] = content
 
     # Citation map — use external-only version to exclude case references

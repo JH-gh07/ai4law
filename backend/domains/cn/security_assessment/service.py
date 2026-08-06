@@ -423,6 +423,7 @@ class AssessmentService:
             case_grounding=context_pack.case_grounding if context_pack else None,
             compliance_reasoning=context_pack.compliance_reasoning if context_pack else None,
             citation_registry=context_pack.citation_registry if context_pack else None,
+            context_pack=context_pack,
         )
 
     @staticmethod

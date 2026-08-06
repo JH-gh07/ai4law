@@ -95,6 +95,7 @@ class AssessmentReportRenderer:
         case_grounding: dict[str, Any] | None = None,
         compliance_reasoning: list[dict[str, Any]] | None = None,
         citation_registry: "CitationRegistry | None" = None,
+        context_pack: "GenerationContextPack | None" = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -145,7 +146,7 @@ class AssessmentReportRenderer:
                 report_id=task_id,
                 path_warning=path_warning,
                 alignment_warning=alignment_warning,
-                context_pack=None,
+                context_pack=context_pack,
                 citation_registry=citation_registry,
                 request_payload={
                     "company_name": company_name,

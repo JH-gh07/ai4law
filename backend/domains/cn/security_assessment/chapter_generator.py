@@ -327,6 +327,32 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
     )
 
 
+def _resolve_risk_level(
+    profile: CompanyProfile,
+    context_pack: GenerationContextPack | None,
+) -> str:
+    """Return the single authoritative risk level for this report.
+
+    The rule engine's diagnosis is the only source of truth. Recomputing from
+    the profile here would create a second, independently drifting source, which
+    is what produced HIGH/MEDIUM contradictions inside one report. The profile
+    recomputation survives only as a fallback for callers that pass no context
+    pack, and any disagreement is reported to the caller's logs rather than
+    silently preferred.
+    """
+    if context_pack is not None and isinstance(context_pack.risk_summary, dict):
+        declared = str(context_pack.risk_summary.get("risk_level", "") or "").strip()
+        if declared:
+            return declared
+
+    return risk_level(
+        is_ciio=profile.is_ciio,
+        contains_important_data=profile.contains_important_data,
+        pii_count=profile.pii_count,
+        spi_count=profile.spi_count,
+    )
+
+
 class AssessmentChapterGenerator:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         self.llm = llm_client
@@ -341,12 +367,11 @@ class AssessmentChapterGenerator:
         hits: list[RegulationHit],
         context_pack: GenerationContextPack | None = None,
     ) -> list[ChapterContent]:
-        level = risk_level(
-            is_ciio=profile.is_ciio,
-            contains_important_data=profile.contains_important_data,
-            pii_count=profile.pii_count,
-            spi_count=profile.spi_count,
-        )
+        # P0-2: risk level is single-sourced from the diagnosis result carried on
+        # the context pack. Recomputing it here from the profile produced a third
+        # independent value that could disagree with both the chapter bodies and
+        # the official template heading.
+        level = _resolve_risk_level(profile, context_pack)
         citation_keys = [f"{h.title}{h.article}" for h in hits[:5]]
 
         chapters: list[ChapterContent] = []
@@ -439,17 +464,16 @@ class AssessmentChapterGenerator:
         if profile is None:
             return attach_citations("当前未获取到企业事实，无法生成章节内容。", citations)
 
+        # P0-6: chapter-scoped issues only. The previous global HIGH/BLOCKER
+        # fallback returned the same top-3 list for every chapter, which made
+        # five chapters carry byte-identical issue prose. A chapter with no
+        # issues of its own now says so, instead of borrowing another's.
         matched_issues = []
         if context_pack is not None and chapter_id is not None:
             matched_issues = [
                 issue for issue in context_pack.issues
                 if chapter_id in issue.affects_outputs
             ]
-            if not matched_issues:
-                matched_issues = [
-                    issue for issue in context_pack.issues
-                    if issue.severity in {"HIGH", "BLOCKER"}
-                ][:3]
         diagnosis = context_pack.diagnosis_result if context_pack else {}
         risk_summary = context_pack.risk_summary if context_pack else {}
         writing_strategy = context_pack.writing_strategy if context_pack else {}
