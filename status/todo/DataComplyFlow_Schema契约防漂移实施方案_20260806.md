@@ -1,10 +1,10 @@
 # DataComplyFlow Schema 契约防漂移实施方案
 
-> 文档性质：实施中技术方案（PR 1A/1B 已完成本地实现，后续阶段待实施）
+> 文档性质：实施中技术方案（仓库内 PR 1A/1B、PR 2、PR 3、PR 4 已实现；远端治理项待完成）
 > 编制日期：2026-08-06
-> 方案版本：v2.1（PR 1A/1B 实施回填版）
+> 方案版本：v3.0（Builder 与浏览器门禁实施回填版）
 > 适用分支：`new`
-> 当前基线：26 个开发案例真实 HTTP 已修复至 26/26；本方案用于防止再次漂移
+> 当前基线：26 个开发案例真实 HTTP 26/26；11 模块浏览器契约 E2E 11/11；远端首跑与分支保护待管理员确认
 > 关联报告：`status/DataComplyFlow_Schema契约修复与复验_20260806.md`
 
 ---
@@ -13,7 +13,7 @@
 
 ### 1.1 要解决的问题
 
-当前请求契约分别维护在：
+实施前，请求契约分别维护在：
 
 1. 后端 FastAPI/Pydantic Schema；
 2. `frontend/src/lib/dev-test-cases.ts` 的直接 payload；
@@ -37,7 +37,7 @@
 
 - CLI harness 15/15：它不经过 FastAPI HTTP/Pydantic 路由。
 - `npm run build`：没有 OpenAPI 类型约束时，合法 TypeScript 不代表请求符合后端 Schema。
-- HTTP 200 但异步任务最终失败：P0 契约门禁只负责输入契约，完整生成由后端业务测试和浏览器 E2E 负责。
+- HTTP 200 但异步任务最终失败：P0 契约门禁只负责输入契约；完整生成由后端业务测试和受控真实 Provider 测试负责，浏览器契约 E2E 不替代它们。
 - `--no-llm` 结果：不能证明真实 LLM、Token、RAG 或得理 API 正常。
 
 ---
@@ -49,14 +49,14 @@ PR 1A：测试专用 Contract App + Recording Executor
   ↓ 真实 HTTP 校验不触发完整后台生成
 PR 1B：26 案例 HTTP 门禁 + GitHub Actions
   ↓ 已能阻止旧 payload 合入
-PR 2：FastAPI OpenAPI → TypeScript 类型
+PR 2：FastAPI OpenAPI → TypeScript 类型（已完成）
   ↓ 字段、枚举、必填项可在编译期发现
-PR 3A：EU 四模块纯 Builder
-PR 3B：Review/CN Flow/US 14117 纯 Builder
-PR 3C：其余四模块纯 Builder
+PR 3A：EU 四模块纯 Builder（已完成）
+PR 3B：Review/CN Flow/US 14117 纯 Builder（已完成）
+PR 3C：其余四模块纯 Builder（已完成）
   ↓ 消除 formDefaults 与浏览器 payload 的独立拼装
-PR 4：浏览器 E2E 与发布门禁
-  ↓ 覆盖上传、交互、异步轮询和结果展示
+PR 4：浏览器 E2E 与定时门禁（仓库内实现完成）
+  ↓ 已覆盖上传、交互、确定性异步轮询和结果展示；发布流程强制依赖待配置
 ```
 
 不得先大规模重构 `ModuleRunPanel.tsx` 再补门禁。先完成 PR 1A/1B，保证后续每个 Builder 批次都有真实 HTTP 回归保护。
@@ -369,8 +369,8 @@ git diff --exit-code -- frontend/src/api/generated/openapi.d.ts
 
 ### 4.6 PR 2 验收
 
-- [ ] 修改 Pydantic 枚举后，不更新前端案例，`npm run build` 必须失败。
-- [ ] 新增后端必填字段后，不更新 Builder，TypeScript 必须失败。
+- [x] 修改 Pydantic 枚举并重新生成类型后，历史非法枚举的编译期哨兵会使 `npm run build` 失败。
+- [x] 新增后端必填字段并重新生成类型后，缺字段编译期哨兵或强类型 Builder 会使 TypeScript 失败。
 - [x] OpenAPI 重复生成字节一致。
 - [x] 不在运行时引入 OpenAPI 解析开销；`openapi.d.ts` 只通过 `import type` 消费。
 
@@ -384,6 +384,7 @@ git diff --exit-code -- frontend/src/api/generated/openapi.d.ts
 | 2026-08-06 | `d79539a` | `ModuleRequestMap`、11 项 endpoint 一致性测试 | 2 项 API contract 测试通过 |
 | 2026-08-06 | `04f5777` | 保留 OpenAPI `default` 字段可选语义 | 类型测试与前端构建通过 |
 | 2026-08-06 | `887e8fd` | 26 个案例按模块强类型；修复 BCR 场景上下文静默丢字段 | 案例测试 14/14、构建通过、HTTP 26/26 |
+| 2026-08-07 | `fd1f5c4` | 锁定旧枚举、旧字段名和缺少必填字段三类历史漂移 | API contract 3/3、生产构建通过 |
 
 ---
 
@@ -442,20 +443,19 @@ File[]
 
 ### 5.4 测试案例复用方式
 
-普通案例不再同时手写 `formDefaults` 和最终 payload：
+普通案例不再同时手写 `formDefaults` 和最终 payload。`defineDevCases()` 在模块加载时调用纯 Builder 生成 payload：
 
 ```ts
-const formDefaults = { /* 唯一场景输入 */ };
-
 defineDevCases("tia", [{
   name: "TIA-1",
-  formDefaults,
+  formDefaults: { /* 唯一场景输入 */ },
   backendFilePaths,
-  payload: buildTiaPayload(formDefaults, backendFilePaths),
 }]);
 ```
 
-存在特定原始合同文本的 EU SCC 案例，不在最终 payload 上做无类型深合并。应在 Builder 输入中增加显式字段，例如 `sccTextOverride`，并保持其类型可见。
+案例 seed 类型使用 `payload?: never`，从类型层禁止重新加入手写最终 payload。
+
+存在特定原始合同文本的 EU SCC 案例，不在最终 payload 上做无类型深合并。Builder 输入使用显式字段 `scc_text_override`，并保持其类型可见。
 
 ### 5.5 迁移顺序
 
@@ -477,23 +477,34 @@ npm --prefix frontend run test:dev-cases:api
 
 ### 5.6 PR 3A/3B/3C TODO
 
-- [ ] 创建纯函数 Builder 目录和公共辅助函数。
-- [ ] PR 3A：迁移 EU 四模块并补测试，独立评审和合入。
-- [ ] PR 3B：迁移 Review、CN Flow、US 14117 并补测试，独立评审和合入。
-- [ ] PR 3C：迁移剩余四模块并补测试，独立评审和合入。
-- [ ] 将 Builder 返回类型绑定到 `ModuleRequestMap`。
-- [ ] 从 `ModuleRunPanel.tsx` 删除请求对象拼装逻辑。
-- [ ] 让开发案例通过 Builder 生成 payload。
-- [ ] 对特殊 raw text 场景使用显式 typed override。
+- [x] 创建纯函数 Builder 目录和公共辅助函数。
+- [x] PR 3A：迁移 EU 四模块并补测试，独立评审和合入。
+- [x] PR 3B：迁移 Review、CN Flow、US 14117 并补测试，独立评审和合入。
+- [x] PR 3C：迁移剩余四模块并补测试，独立评审和合入。
+- [x] 将 Builder 返回类型绑定到 `ModuleRequestMap`。
+- [x] 从 `ModuleRunPanel.tsx` 删除请求对象拼装逻辑；组件只保留 UI 校验、上传和纯 Builder 调用包装。
+- [x] 让开发案例通过 Builder 生成 payload，并禁止案例 seed 手写 payload。
+- [x] 对 SCC raw text、US 14117 嵌套数组场景使用显式 typed override。
 
 ### 5.7 每个 Builder PR 的验收
 
-- [ ] 本批 Builder 都能在无 React/DOM 环境下执行。
-- [ ] 本批 Builder 均有正常、缺字段、非法枚举测试；涉及文件的 Builder 另加非法扩展名测试。
-- [ ] 26 个案例仍为 26/26 HTTP PASS。
-- [ ] 本批浏览器测试案例与直接 POST 不再生成不同请求结构。
-- [ ] `ModuleRunPanel.tsx` 不再包含本批模块的 `buildXxxPayloadFrom()` 实现。
-- [ ] 变更规模保持可审查；超出约 300-500 行实质逻辑时继续拆分。
+- [x] 全部 Builder 都能在无 React/DOM 环境下执行。
+- [x] 全部 Builder 有正常路径及契约相关的缺字段/非法枚举测试；已声明附件格式约束的模块有非法扩展名测试。
+- [x] 26 个案例仍为 26/26 HTTP PASS。
+- [x] 浏览器案例与直接 POST 由同一纯 Builder 生成请求结构。
+- [x] `ModuleRunPanel.tsx` 不再包含请求对象拼装；`buildXxxPayloadFrom()` 仅负责 UI 校验、上传和委托。
+- [x] 按 3A/3B/3C 多个提交拆分，保持可独立回滚。
+
+### 5.8 PR 3 实施记录
+
+| 日期 | 提交 | 内容 | 本地证据 |
+|---|---|---|---|
+| 2026-08-07 | `b346f9b` | 抽离 EU SCC、BCR、DPIA、TIA Builder | EU Builder 单测通过 |
+| 2026-08-07 | `a9469c8` | 抽离 Review、CN Flow、US 14117 Builder | 文件与嵌套对象测试通过 |
+| 2026-08-07 | `fec8805` | 抽离 Diagnosis、Assessment、PIPIA、CPRA Builder | 对应 Builder 测试通过 |
+| 2026-08-07 | `4e4b2b3` | 去除纯 Builder 对 UI model 的运行时依赖 | 无 React/DOM 环境执行通过 |
+| 2026-08-07 | `d4685b4` | 26 案例改由 Builder 生成，增加 typed override | HTTP 26/26 通过 |
+| 2026-08-07 | `72889f4` | 补齐 EU Builder 契约边界和负向测试 | Builder 36/36；全量前端 111 passed、2 skipped |
 
 ---
 
@@ -535,13 +546,23 @@ npm --prefix frontend run test:dev-cases:api
 
 ### 6.4 PR 4 TODO
 
-- [ ] 增加浏览器测试运行配置。
-- [ ] 建立 11 模块参数化主路径。
-- [ ] 每次运行捕获并断言本次 `task_id/run_id`。
-- [ ] 断言结果增量及结果与本次运行的关联关系。
-- [ ] 失败时保存截图、页面文本、网络错误和后端日志。
-- [ ] 将截图作为 CI artifact 上传。
+- [x] 增加浏览器测试运行配置。
+- [x] 建立 11 模块参数化主路径。
+- [x] 每次运行捕获并断言本次 `task_id/run_id`；同步 Diagnosis 以本次成功 run 断言。
+- [x] 断言新项目运行记录增量、异步结果数和本次 task_id 关联关系。
+- [x] 失败时保存截图、页面文本、网络记录、trace、video 和后端日志。
+- [x] 将 Playwright 报告与失败证据作为 CI artifact 上传。
 - [ ] 发布流程要求最近一次 11/11 浏览器验证通过。
+
+### 6.5 PR 4 实施记录与边界
+
+| 日期 | 提交 | 内容 | 本地证据 |
+|---|---|---|---|
+| 2026-08-07 | `9e3d0cb` | Playwright、11 模块参数化主路径、Review upload-first、每日 Workflow 和失败证据归档 | Chromium 11/11，52.5 秒；Review 上传与提交均 200 |
+
+浏览器门禁对注册、项目创建、案例选择、表单 Builder、文件上传、真实 FastAPI 提交和 Pydantic 校验使用真实链路。Contract App 按设计不运行后台生成器，因此异步状态查询由浏览器测试返回确定性的 `completed` 结果，用于验证前端轮询、task_id 关联和结果树增量。
+
+因此 11/11 只能证明浏览器契约链路，不证明真实 LLM、RAG、Token、得理 API 或报告内容质量。真实 Provider 仍应使用预算受控的独立验证任务。
 
 ---
 
@@ -596,9 +617,11 @@ npm --prefix frontend run test:dev-cases:api
 - [x] Contract App 经过真实路由但不执行任何完整后台 runner。
 - [x] Contract App 不能调用 LLM、RAG 或得理 API。
 - [x] Review 案例使用真实 upload-first 流程。
-- [ ] 后端 OpenAPI 能确定性生成 TypeScript 类型。
-- [ ] 26 个案例 payload 均受模块级 TypeScript 类型约束。
-- [ ] 11 个 Builder 已从 React 组件抽离。
-- [ ] 浏览器与直接案例复用同一 Builder 或显式 typed override。
-- [ ] 11 模块浏览器主路径均按本次 task/run 关联结果通过。
+- [x] 后端 OpenAPI 能确定性生成 TypeScript 类型。
+- [x] 26 个案例 payload 均受模块级 TypeScript 类型约束。
+- [x] 11 个 Builder 已从 React 组件抽离。
+- [x] 浏览器与直接案例复用同一 Builder 或显式 typed override。
+- [x] 11 模块浏览器主路径均按本次 task/run 关联结果通过（异步终态为确定性测试响应，不代表真实 Provider 完成）。
 - [ ] 任何 Schema 漂移都能在 PR 合入前由机器发现。
+
+最后一项仍未勾选：仓库内门禁已具备，但在远端 `Validate 26 developer cases` 尚未设为 `new` 分支必需检查，浏览器 Workflow 也尚未接入发布流程。阶段验收证据见 `status/check/DataComplyFlow_Schema契约防漂移阶段验收_20260807.md`。
