@@ -251,7 +251,7 @@ Workflow 必须设置 `timeout-minutes`，且同一分支新提交应通过 `con
 - [x] 在 CI/repository hygiene 检查中断言案例文件已被 Git index 跟踪。
 - [x] 新建 GitHub Actions Workflow。
 - [x] 保留后端日志并在失败时上传。
-- [ ] 在 GitHub 分支保护中将 `dev-case-contract` 设置为必需检查。
+- [x] 在 GitHub 分支保护中将 `Validate 26 developer cases` 设置为必需检查。
 
 ### 3.8 PR 1A/1B 验收
 
@@ -278,7 +278,12 @@ Workflow 必须设置 `timeout-minutes`，且同一分支新提交应通过 `con
 | 2026-08-06 | `f9ccdfe` | 案例依赖文件存在性和 Git index 门禁 | 前端案例测试 14/14 |
 | 2026-08-06 | `6c7333c` | 将 Node-only 卫生测试移出生产源码树；增加三类负向契约与可重复运行计数 | 26/26 正例、422/422/400 负例、前端构建均通过 |
 
-当前唯一需要仓库管理员操作的 P0 项是：Workflow 首次远端通过后，在 GitHub 分支保护中把检查名 `Validate 26 developer cases` 设置为 `new` 分支必需检查。远端运行和分支保护未完成前，不得将 PR 1B 标记为全流程闭环。
+2026-08-07 已将本地提交推送至 `origin/new`，并通过 GitHub API 为 `new` 配置严格必需检查 `Validate 26 developer cases`；force push 和分支删除保持禁止。远端首验已触发，但 GitHub Status 同期将 Actions 标记为 `major_outage`（critical incident, investigating），两个 run 尚未进入可判定终态：
+
+- Developer Case Contract：`https://github.com/JH-gh07/ai4law/actions/runs/31128483269`
+- Browser E2E：`https://github.com/JH-gh07/ai4law/actions/runs/31128483309`
+
+远端首验成功前，不得将 PR 1B 标记为全流程闭环。
 
 最终本地回归结果：
 
@@ -612,7 +617,7 @@ npm --prefix frontend run test:dev-cases:api
 
 ## 十、最终完成定义（Definition of Done）
 
-- [ ] GitHub Actions 中存在必需检查 `Validate 26 developer cases`。
+- [x] GitHub Actions 中存在必需检查 `Validate 26 developer cases`。
 - [x] 26 个案例在面向 `new` 的 PR 和 push 中执行真实 HTTP 验证。
 - [x] Contract App 经过真实路由但不执行任何完整后台 runner。
 - [x] Contract App 不能调用 LLM、RAG 或得理 API。
@@ -624,4 +629,4 @@ npm --prefix frontend run test:dev-cases:api
 - [x] 11 模块浏览器主路径均按本次 task/run 关联结果通过（异步终态为确定性测试响应，不代表真实 Provider 完成）。
 - [ ] 任何 Schema 漂移都能在 PR 合入前由机器发现。
 
-最后一项仍未勾选：仓库内门禁已具备，但在远端 `Validate 26 developer cases` 尚未设为 `new` 分支必需检查，浏览器 Workflow 也尚未接入发布流程。阶段验收证据见 `status/check/DataComplyFlow_Schema契约防漂移阶段验收_20260807.md`。
+最后一项仍未勾选：必需检查已配置，但远端首验受 GitHub Actions 平台事故阻塞，浏览器 Workflow 也尚未接入发布流程。阶段验收证据见 `status/check/DataComplyFlow_Schema契约防漂移阶段验收_20260807.md`。

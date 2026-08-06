@@ -3,7 +3,7 @@
 > 验收日期：2026-08-07
 > 适用分支：`new`
 > 验收范围：仓库内 PR 2、PR 3、PR 4 实现
-> 结论：仓库内防漂移链路已完成并通过本地复验；远端首跑、分支保护和发布流程强制依赖仍待完成
+> 结论：仓库内防漂移链路已完成并通过本地复验；分支保护已配置，远端首跑受 GitHub Actions 平台事故阻塞，发布流程强制依赖仍待完成
 
 ---
 
@@ -17,9 +17,9 @@
 | 26 案例真实 HTTP | 通过 | 26/26 正例；422/422/400 负例 | 不运行后台报告生成 |
 | Review upload-first | 通过 | 浏览器真实上传 200、提交 200 | 不验证最终审查内容质量 |
 | 11 模块浏览器主路径 | 通过 | Chromium 11/11，52.5 秒 | 异步终态为确定性测试响应 |
-| 远端合入治理 | 未完成 | Workflow 文件已提交 | 首跑、必需检查和发布门禁需管理员配置 |
+| 远端合入治理 | 部分完成 | `new` 已要求 `Validate 26 developer cases`，strict=true | 首跑受 Actions outage 阻塞；发布门禁待配置 |
 
-一句话结论：字段与案例不再由三套手写 payload 独立维护，已形成“OpenAPI 类型 + 单源 Builder + 真实 HTTP + 浏览器契约 E2E”四层门禁，但远端强制执行尚未闭环。
+一句话结论：字段与案例不再由三套手写 payload 独立维护，已形成“OpenAPI 类型 + 单源 Builder + 真实 HTTP + 浏览器契约 E2E”四层门禁，远端必需检查已配置，但首验与发布联动尚未闭环。
 
 ---
 
@@ -91,9 +91,10 @@ Contract App 为防止 CI 调用真实 Provider，按设计不执行后台 runne
 | 优先级 | 未完成项 | 责任边界 | 完成标准 |
 |---|---|---|---|
 | P0 | 远端首次运行 `Validate 26 developer cases` | GitHub Actions | `new` 的实际 run 26/26 通过 |
-| P0 | 将检查设为 `new` 必需检查 | 仓库管理员 | 分支保护拒绝绕过失败检查合入 |
 | P1 | 发布流程依赖最近一次 Browser E2E | 发布管理员/Workflow | 发布任务显式依赖 11/11 成功结果 |
 | P2 | 前端既有依赖漏洞 | 前端升级任务 | 在独立升级中处理 React Router；不使用 `audit fix --force` 混入本改动 |
+
+2026-08-07 远端首验已触发：Developer Case Contract run `31128483269`，Browser E2E run `31128483309`。GitHub Status 同期报告 Actions `major_outage`，critical incident 仍处于 investigating，因此当前状态不能解释为代码失败，也不能标记为远端通过。
 
 `npm audit --omit=dev` 当前报告 2 个 moderate，来自既有 React Router 6.x 依赖链；Playwright 是开发依赖，不在该生产漏洞路径中。本阶段没有执行破坏性的主版本自动升级。
 
