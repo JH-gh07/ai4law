@@ -16,9 +16,12 @@ import { getTestCases } from "../../lib/dev-test-cases";
 import { fetchArtifactBlob } from "../../api/artifacts";
 import {
   buildBcrPayload as createBcrPayload,
+  buildCnFlowPayload as createCnFlowPayload,
   buildDpiaPayload as createDpiaPayload,
+  buildDocumentReviewPayload as createDocumentReviewPayload,
   buildEuSccPayload as createEuSccPayload,
   buildTiaPayload as createTiaPayload,
+  buildUs14117Payload as createUs14117Payload,
 } from "../../features/module-runner/payload-builders";
 
 import {
@@ -28,7 +31,6 @@ import {
   CPRA_STEPS,
   DIAGNOSIS_STEPS,
   DIAGNOSIS_STEP_SHORT_TITLES,
-  DOCUMENT_TYPE_LABEL,
   DPIA_STEPS,
   EU_SCC_STEPS,
   JURISDICTIONS,
@@ -71,7 +73,6 @@ import {
   localizeFieldLabel,
   localizeOptionLabel,
   localizeStepTitle,
-  parseRecipientRows,
   seedDocumentReviewValuesForFile,
   splitCsv,
   toFileName,
@@ -672,79 +673,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请至少上传1份合同或政策文本后再执行审查。");
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const trimOr = (value: string, fallback: string): string => {
-      const trimmed = value.trim();
-      return trimmed.length >= 2 ? trimmed : fallback;
-    };
-    const reviewContext = [
-      values.document_title ? `文档：${values.document_title}` : "",
-      values.document_version ? `版本：${values.document_version}` : "",
-      values.effective_date ? `生效日期：${values.effective_date}` : "",
-      values.applicable_products ? `适用产品：${values.applicable_products}` : "",
-      values.applicable_scope ? `适用范围：${values.applicable_scope}` : "",
-      values.is_live_version ? "当前线上生效版本" : "非线上生效版本",
-      values.transfer_purpose.trim(),
-      `${DOCUMENT_TYPE_LABEL[values.document_type]}审查`,
-      values.processor_identity_disclosed ? "已披露处理者身份" : "未明确披露处理者身份",
-      values.scope_disclosed ? "已披露适用范围" : "未明确披露适用范围",
-      values.collection_purpose_disclosed ? "已披露收集与处理目的" : "未充分披露收集与处理目的",
-      values.processing_method_disclosed ? "已披露处理方式" : "未充分披露处理方式",
-      values.category_disclosed ? "已披露个人信息种类" : "未充分披露个人信息种类",
-      values.sensitive_pi_disclosed ? "已披露敏感信息处理" : "未充分披露敏感信息处理",
-      values.crossborder_rule_disclosed ? "已披露出境规则" : "未充分披露出境规则",
-      values.rights_channel_disclosed ? "已披露权利行使渠道" : "未充分披露权利行使渠道",
-      values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
-      values.review_focus.trim()
-    ]
-      .filter((item) => item.length > 0)
-      .join("；");
-
-    return {
-      company_name: trimOr(values.publisher_entity || values.company_name, "待确认企业"),
-      receiver_name: trimOr(values.receiver_name, "待确认接收方"),
-      receiver_country: trimOr(values.receiver_country, "待确认国家"),
-      transfer_purpose: trimOr(
-        reviewContext || values.transfer_purpose,
-        "文档合规审查与跨境条款核验"
-      ),
-      pii_count: Math.max(0, values.pii_count),
-      spi_count: Math.max(0, values.spi_count),
-      has_scc_draft: values.has_scc_draft || uploadedFiles.length > 0,
-      uploaded_files: uploadedFiles,
-      // NEW: Enhanced review context fields for backend pipeline
-      document_type: values.document_type || "other",
-      review_focus: values.review_focus?.trim() || "",
-      scenario_context: {
-        company_name: trimOr(values.publisher_entity || values.company_name, ""),
-        document_title: values.document_title?.trim() || "",
-        document_version: values.document_version?.trim() || "",
-        publisher_entity: trimOr(values.publisher_entity, ""),
-        receiver_name: trimOr(values.receiver_name, ""),
-        receiver_country: trimOr(values.receiver_country, ""),
-        transfer_purpose: values.transfer_purpose?.trim() || "",
-        pii_count: Math.max(0, values.pii_count),
-        spi_count: Math.max(0, values.spi_count),
-        has_scc_draft: values.has_scc_draft || false,
-        review_focus: values.review_focus?.trim() || "",
-      },
-      review_config: {
-        review_depth: "standard",
-        max_llm_clauses: 20,
-        enable_cross_document_check: false,
-      },
-    };
+    return createDocumentReviewPayload(values, uploadedFiles);
   };
 
-  const VALID_DOC_TYPES = ["privacy_policy", "scc_contract", "dpa", "other"];
-  const buildDocumentReviewPayload = async (): Promise<unknown> => {
-    const payload = await buildDocumentReviewPayloadFrom(documentReviewValues, documentReviewFiles, documentReviewDevFilePaths) as Record<string, unknown>;
-    const docType = String(payload.document_type || "");
-    if (!VALID_DOC_TYPES.includes(docType)) {
-      console.warn(`[documentReview] unexpected document_type: "${docType}", defaulting to "other"`);
-      payload.document_type = "other";
-    }
-    return payload;
-  };
+  const buildDocumentReviewPayload = async (): Promise<unknown> =>
+    buildDocumentReviewPayloadFrom(documentReviewValues, documentReviewFiles, documentReviewDevFilePaths);
 
   const buildEuSccPayloadFrom = async (
     values: EuSccFormValues,
@@ -865,63 +798,30 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       devSupportingPaths.length > 0 ? Promise.resolve(devSupportingPaths) : uploadFiles(cnFlowSupportingFiles)
     ]);
 
-    const attachments = [
-      ...dataInventoryPaths.map((path) => {
-        const format = inferCnFlowAttachmentFormat(path);
-        assertInput(!!format, `数据清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
-        return {
-          file_role: "data_inventory" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...entityInventoryPaths.map((path) => {
-        const format = inferCnFlowAttachmentFormat(path);
-        assertInput(!!format, `实体清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
-        return {
-          file_role: "entity_inventory" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      }),
-      ...supportingPaths.map((path) => {
-        const format = inferCnFlowAttachmentFormat(path);
-        assertInput(!!format, `补充材料格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`);
-        return {
-          file_role: "supporting_material" as const,
-          file_name: basenameFromPath(path),
-          file_format: format,
-          storage_uri: path
-        };
-      })
-    ];
+    dataInventoryPaths.forEach((path) => {
+      assertInput(
+        !!inferCnFlowAttachmentFormat(path),
+        `数据清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`
+      );
+    });
+    entityInventoryPaths.forEach((path) => {
+      assertInput(
+        !!inferCnFlowAttachmentFormat(path),
+        `实体清单附件格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`
+      );
+    });
+    supportingPaths.forEach((path) => {
+      assertInput(
+        !!inferCnFlowAttachmentFormat(path),
+        `补充材料格式仅支持 .xlsx/.csv/.docx/.pdf：${basenameFromPath(path)}`
+      );
+    });
 
-    const recipient_entities = [
-      {
-        entity_name: cnFlowValues.primary_recipient_name.trim(),
-        country_region: cnFlowValues.primary_recipient_country.trim(),
-        entity_role: cnFlowValues.primary_recipient_role,
-        is_restricted_party: cnFlowValues.primary_recipient_restricted
-      },
-      ...parseRecipientRows(cnFlowValues.additional_recipients)
-    ];
-
-    return {
-      company_name: cnFlowValues.company_name.trim(),
-      transfer_purpose: [
-        cnFlowValues.transfer_purpose.trim(),
-        cnFlowValues.necessity_justification ? `必要性：${cnFlowValues.necessity_justification}` : "",
-        cnFlowValues.data_volume_note ? `规模说明：${cnFlowValues.data_volume_note}` : "",
-        cnFlowValues.internal_access_note ? `内部访问风险：${cnFlowValues.internal_access_note}` : ""
-      ].filter((item) => item.length > 0).join("；"),
-      data_categories: splitCsv(cnFlowValues.data_categories),
-      sensitive_data_flags: splitCsv(cnFlowValues.sensitive_data_flags),
-      recipient_entities,
-      transfer_chain: cnFlowValues.transfer_chain.trim(),
-      attachments
-    };
+    return createCnFlowPayload(cnFlowValues, {
+      dataInventory: dataInventoryPaths,
+      entityInventory: entityInventoryPaths,
+      supporting: supportingPaths,
+    });
   };
 
   const buildCpraPayload = async (): Promise<unknown> => {
@@ -1061,35 +961,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(us14117Values.country_of_registration), "请填写接收方注册国家/地区。");
 
     const uploadedPaths = us14117Files.length > 0 ? await uploadFiles(us14117Files) : [];
-    const attachments = uploadedPaths.map((path) => ({
-      file_role: "supporting_material" as const,
-      file_name: basenameFromPath(path),
-      file_format: "docx" as const,
-      storage_uri: path
-    }));
-
-    return {
-      company_name: us14117Values.company_name.trim(),
-      project_name: us14117Values.project_name.trim(),
-      transaction_description: us14117Values.transaction_description.trim(),
-      transaction_type: us14117Values.transaction_type,
-      attachments: attachments.length > 0 ? attachments.map((a: { storage_uri: string }) => a.storage_uri) : [],
-      data_items: [{
-        data_item_name: us14117Values.data_item_name.trim(),
-        data_description: us14117Values.data_description.trim(),
-        doj_data_category: us14117Values.doj_data_category,
-        us_person_count: us14117Values.us_person_count
-      }],
-      recipient_entities: [{
-        entity_name: us14117Values.entity_name.trim(),
-        country_of_registration: us14117Values.country_of_registration.trim(),
-        government_control: us14117Values.government_control,
-        entity_role: us14117Values.entity_role
-      }],
-      security_measures: us14117Values.security_measures_summary.trim() ? [{ measure_name: us14117Values.security_measures_summary.trim().slice(0, 80), category: "access_control", status: "implemented", description: us14117Values.security_measures_summary.trim() }] : [],
-      onward_transfer: us14117Values.onward_transfer,
-      onward_transfer_description: us14117Values.onward_transfer_description.trim()
-    };
+    return createUs14117Payload(us14117Values, uploadedPaths);
   };
 
   const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown => {
