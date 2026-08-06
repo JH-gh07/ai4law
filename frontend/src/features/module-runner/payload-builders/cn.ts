@@ -1,17 +1,21 @@
 import type { ModuleRequestMap } from "../../../api/api-contract";
+import type {
+  AssessmentFormValues,
+  CnFlowFormValues,
+  DiagnosisFormValues,
+  DocumentReviewFormValues,
+  PipiaFormValues,
+} from "../types";
 import {
   basenameFromPath,
   inferAttachmentFormat,
   inferCnFlowAttachmentFormat,
   parseRecipientRows,
+  requireAllowedValue,
+  requireFileExtensions,
+  requireText,
   splitCsv,
-  type AssessmentFormValues,
-  type CnFlowFormValues,
-  type DiagnosisFormValues,
-  type DocumentReviewFormValues,
-  type PipiaFormValues,
-} from "../model";
-import { requireAllowedValue, requireFileExtensions, requireText } from "./common";
+} from "./common";
 
 const DOCUMENT_TYPES = ["privacy_policy", "scc_contract", "dpa", "other"] as const;
 const REVIEW_FILE_EXTENSIONS = ["txt", "md", "json", "csv", "pdf", "docx"] as const;

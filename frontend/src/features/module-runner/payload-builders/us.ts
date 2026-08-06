@@ -1,12 +1,16 @@
 import type { ModuleRequestMap } from "../../../api/api-contract";
+import type {
+  CpraFormValues,
+  Us14117FormValues,
+} from "../types";
 import {
   basenameFromPath,
   inferCpraAttachmentFormat,
   isValidUrl,
-  type CpraFormValues,
-  type Us14117FormValues,
-} from "../model";
-import { requireAllowedValue, requireFileExtensions, requireText } from "./common";
+  requireAllowedValue,
+  requireFileExtensions,
+  requireText,
+} from "./common";
 
 const US_14117_TRANSACTION_TYPES = [
   "vendor_agreement",
