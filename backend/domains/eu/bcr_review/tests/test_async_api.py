@@ -33,7 +33,7 @@ def test_bcr_async_flow(authenticated_client) -> None:
     assert accepted.status_code == 200
     task_id = accepted.json()["task_id"]
 
-    for _ in range(200):
+    for _ in range(600):  # 600 × 0.1s = 60s timeout for real LLM calls
         status = authenticated_client.get(f"/api/v1/bcr/tasks/{task_id}")
         assert status.status_code == 200
         payload = status.json()
@@ -42,6 +42,6 @@ def test_bcr_async_flow(authenticated_client) -> None:
             return
         if payload["state"] == "FAILED":
             raise AssertionError(payload)
-        time.sleep(0.05)
+        time.sleep(0.1)
 
     raise AssertionError("bcr async task timeout")
