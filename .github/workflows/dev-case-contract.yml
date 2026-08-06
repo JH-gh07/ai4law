@@ -47,6 +47,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
+      - name: Verify generated API types
+        run: |
+          npm --prefix frontend run generate:api
+          git diff --exit-code -- frontend/src/api/generated/openapi.d.ts
+
       - name: Validate case fixtures
         run: >-
           npm --prefix frontend test -- --run

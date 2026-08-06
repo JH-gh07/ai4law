@@ -350,7 +350,7 @@ const tiaCases = defineDevCases("tia", [
 CI 必须重新生成类型并检查工作树：
 
 ```bash
-uv run --frozen python scripts/export_openapi.py --output /tmp/openapi.json
+uv run --frozen python -m scripts.export_openapi --output /tmp/openapi.json
 npm exec --prefix frontend -- openapi-typescript /tmp/openapi.json -o frontend/src/api/generated/openapi.d.ts
 git diff --exit-code -- frontend/src/api/generated/openapi.d.ts
 ```
