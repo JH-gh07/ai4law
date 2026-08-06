@@ -14,10 +14,15 @@ import { findTaskTemplate, getTaskTemplateTitle } from "../../lib/task-templates
 import { DEV_ACCEL_ENABLED, getAssessmentDevPreset, getModuleDevPreset } from "../../lib/dev-presets";
 import { getTestCases } from "../../lib/dev-test-cases";
 import { fetchArtifactBlob } from "../../api/artifacts";
+import {
+  buildBcrPayload as createBcrPayload,
+  buildDpiaPayload as createDpiaPayload,
+  buildEuSccPayload as createEuSccPayload,
+  buildTiaPayload as createTiaPayload,
+} from "../../features/module-runner/payload-builders";
 
 import {
   ASSESSMENT_STEPS,
-  BCR_REVIEW_ITEMS,
   BCR_STEPS,
   CN_FLOW_STEPS,
   CPRA_STEPS,
@@ -36,7 +41,6 @@ import {
   buildAutoExtractResult,
   buildUserFacingResult,
   canInlinePreviewDocumentReviewExt,
-  composeBcrFinding,
   createDefaultAssessmentValues,
   createDefaultBcrValues,
   createDefaultCnFlowValues,
@@ -70,7 +74,6 @@ import {
   parseRecipientRows,
   seedDocumentReviewValuesForFile,
   splitCsv,
-  toBcrScore,
   toFileName,
   type AssessmentFormValues,
   type AsyncRunProgressState,
@@ -757,48 +760,8 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(values.rights_and_complaint), "请填写数据主体权利与投诉机制。");
     const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份SCC文本或配套附件。");
-
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const purposeContext = [
-      values.transfer_purpose.trim(),
-      `角色关系：${values.transfer_role}`,
-      `SCC版本：${values.scc_version}`,
-      `数据类别：${values.data_categories}`,
-      values.data_subject_categories ? `主体类别：${values.data_subject_categories}` : "",
-      `传输频率：${values.transfer_frequency}`,
-      values.retention_rule ? `保存规则：${values.retention_rule}` : "",
-      values.tom_summary ? `TOM：${values.tom_summary}` : "",
-      values.onward_transfer_control ? `再传输：${values.onward_transfer_control}` : "",
-      values.government_access_response ? `政府访问：${values.government_access_response}` : "",
-      values.supplementary_clause_review ? `补充条款：${values.supplementary_clause_review}` : "",
-      values.rights_and_complaint ? `权利救济：${values.rights_and_complaint}` : ""
-    ]
-      .filter((item) => item.length > 0)
-      .join("；");
-
-    const roleMap: Record<EuSccFormValues["transfer_role"], { declared: string; exporter: string; importer: string }> = {
-      c2c: { declared: "Module One", exporter: "controller", importer: "controller" },
-      c2p: { declared: "Module Two", exporter: "controller", importer: "processor" },
-      p2p: { declared: "Module Three", exporter: "processor", importer: "processor" },
-      p2c: { declared: "Module Four", exporter: "processor", importer: "controller" }
-    };
-    const roles = roleMap[values.transfer_role];
-    return {
-      project_name: `${values.exporter_name.trim()} - ${values.importer_name.trim()} SCC审查`,
-      scc_text: [
-        `SCC ${roles.declared} (${values.scc_version})`,
-        `Data exporter: ${values.exporter_name.trim()} (${roles.exporter})`,
-        `Data importer: ${values.importer_name.trim()}, ${values.importer_country.trim()} (${roles.importer})`,
-        purposeContext
-      ].join("\n"),
-      declared_module_type: roles.declared,
-      exporter_role: roles.exporter,
-      importer_role: roles.importer,
-      has_tia: hasText(values.government_access_response),
-      has_supplementary_measures: hasText(values.supplementary_clause_review),
-      uploaded_files: uploadedFiles,
-      company_name: values.exporter_name.trim()
-    };
+    return createEuSccPayload(values, uploadedFiles);
   };
 
   const buildEuSccPayload = async (): Promise<unknown> =>
@@ -819,51 +782,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份BCR主文本或配套申请材料。");
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const attachments = uploadedFiles.map((path) => {
+    uploadedFiles.forEach((path) => {
       const format = inferDocxPdfFormat(path);
       assertInput(!!format, `BCR附件仅支持 .docx 或 .pdf：${basenameFromPath(path)}`);
-      return {
-        file_name: basenameFromPath(path),
-        file_format: format,
-        storage_uri: path
-      };
     });
-
-    const evidenceTexts = [
-      `${values.binding_mechanism} ${values.lead_sa_rationale}`,
-      values.data_flow_scope,
-      values.third_party_beneficiary,
-      values.liability_compensation,
-      values.transparency_notice,
-      values.training_audit,
-      values.cooperation_with_sa,
-      values.dp_safeguards,
-      `${values.third_country_assessment} ${values.government_access_process}`,
-      `${values.update_mechanism} ${values.definitions_quality}`
-    ];
-
-    const review_items = BCR_REVIEW_ITEMS.map((item, index) => {
-      const evidence = evidenceTexts[index]?.trim() || "未提供";
-      const score = toBcrScore(evidence);
-      return {
-        code: item.code,
-        title: item.title,
-        score,
-        finding: composeBcrFinding(score, evidence.slice(0, 180)),
-        legal_basis: item.legal_basis,
-        recommendation: values.review_focus
-          ? `${item.recommendation} 本轮重点：${values.review_focus}`
-          : item.recommendation,
-        evidence
-      };
-    });
-
-    return {
-      company_name: values.company_name.trim(),
-      review_items,
-      attachments,
-      uploaded_files: uploadedFiles
-    };
+    return createBcrPayload(values, uploadedFiles);
   };
 
   const buildBcrPayload = async (): Promise<unknown> =>
@@ -890,109 +813,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       assertInput(!!format, `DPIA附件仅支持 .docx/.pdf/.png/.jpg：${basenameFromPath(path)}`);
     });
 
-    const splitLines = (input: string): string[] =>
-      input
-        .split(/[\n;；]+/)
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0);
-
-    const dataCategories = splitLines(values.data_types);
-    const lawfulBasis = splitLines(values.lawful_basis);
-    const triggerReasons = splitLines(values.need_reason);
-
-    const specialCategoryTypes = values.includes_special_data
-      ? (dataCategories.length > 0 ? dataCategories.slice(0, 5) : ["special_category_data"])
-      : [];
-
-    const riskLines = splitLines(values.risk_assessment);
-    const identifiedRisks = riskLines.map((risk, index) => ({
-      risk_id: `RISK-${String(index + 1).padStart(3, "0")}`,
-      risk_description: risk,
-      likelihood: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
-      impact: /高|重大|high/i.test(risk) ? "high" : /低|low/i.test(risk) ? "low" : "medium",
-      affected_data_subjects: values.subject_scale.trim(),
-      risk_source:
-        values.has_crossborder_transfer ? "third_party" :
-        values.novel_technology.trim() ? "technology" :
-        values.includes_special_data ? "data_type" :
-        "processing_activity"
-    }));
-
-    const mitigationLines = splitLines(values.mitigation_measures);
-    const mitigationMeasures = mitigationLines.map((measure, index) => ({
-      mitigation_id: `MIT-${String(index + 1).padStart(3, "0")}`,
-      description: measure,
-      target_risk_ids: identifiedRisks.map((risk) => risk.risk_id),
-      status: "planned",
-      responsible_party: values.signoff_owner.trim() || values.controller_name.trim() || values.dpo_role.trim()
-    }));
-
-    return {
-      project_name: values.project_name.trim(),
-      project_goal: values.project_goal.trim(),
-      dpia_trigger_reasons: triggerReasons,
-      processing_flow_description: [
-        values.processing_description,
-        values.data_types ? `数据类型：${values.data_types}` : "",
-        values.subject_scale ? `主体规模：${values.subject_scale}` : "",
-        values.frequency ? `频率：${values.frequency}` : "",
-        values.retention_period ? `保存期限：${values.retention_period}` : "",
-        values.geo_scope ? `地理范围：${values.geo_scope}` : "",
-        values.data_source ? `数据来源：${values.data_source}` : "",
-        values.relationship_context ? `关系背景：${values.relationship_context}` : "",
-        values.includes_special_data ? "包含特殊类别数据" : "",
-        values.has_crossborder_transfer ? "涉及跨境传输" : "",
-        values.vulnerable_group ? `脆弱群体：${values.vulnerable_group}` : "",
-        values.novel_technology ? `新技术：${values.novel_technology}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      data_categories: dataCategories,
-      special_category_data: values.includes_special_data,
-      special_category_types: specialCategoryTypes,
-      data_subject_categories: splitLines(values.relationship_context),
-      data_subject_count: values.subject_scale.trim(),
-      retention_period: values.retention_period.trim(),
-      cross_border_transfer: values.has_crossborder_transfer,
-      transfer_destination: values.geo_scope.trim(),
-      automated_decision_making: values.novel_technology.trim().length > 0,
-      systematic_monitoring: /持续|监控|monitor/i.test(`${values.frequency} ${values.processing_description}`),
-      large_scale_processing: /万|large|大量|规模/i.test(values.subject_scale),
-      data_matching: /匹配|关联|融合|match/i.test(`${values.processing_description} ${values.project_goal}`),
-      new_technology: values.novel_technology.trim().length > 0,
-      vulnerable_data_subjects: values.vulnerable_group.trim().length > 0,
-      consulted_internal_departments: splitLines(values.processor_management),
-      external_experts: splitLines(values.contact_channel),
-      data_subject_consultation_plan: [
-        values.notice_plan,
-        values.rights_support,
-        values.expectation_control
-      ].filter((item) => item.trim().length > 0).join("；"),
-      lawful_basis: lawfulBasis,
-      necessity_statement: [
-        values.purpose_and_necessity,
-        values.need_reason ? `触发理由：${values.need_reason}` : "",
-        values.minimization_quality ? `最小化与质量：${values.minimization_quality}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      proportionality_statement: [
-        values.function_creep_control,
-        values.processor_management,
-        values.relationship_context ? `关系背景：${values.relationship_context}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      transparency_information: [
-        values.notice_plan,
-        values.contact_channel ? `联系渠道：${values.contact_channel}` : "",
-        values.controller_name ? `控制者：${values.controller_name}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      identified_risks: identifiedRisks,
-      mitigation_measures: mitigationMeasures,
-      dpia_owner: values.signoff_owner.trim() || values.controller_name.trim(),
-      dpo_name: values.dpo_role.trim(),
-      dpo_opinion: [
-        values.dpo_advice,
-        values.residual_risk ? `剩余风险：${values.residual_risk}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      review_date: values.review_schedule.trim(),
-      uploaded_files: uploadedFiles
-    };
+    return createDpiaPayload(values, uploadedFiles);
   };
 
   const buildDpiaPayload = async (): Promise<unknown> =>
@@ -1015,49 +836,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份TIA附件。");
 
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
-    const attachments = uploadedFiles.map((path) => {
+    uploadedFiles.forEach((path) => {
       const format = inferDocxPdfFormat(path);
       assertInput(!!format, `TIA附件仅支持 .docx 或 .pdf：${basenameFromPath(path)}`);
-      return {
-        file_role: values.attachment_role,
-        file_name: basenameFromPath(path),
-        file_format: format,
-        storage_uri: path
-      };
     });
-
-    return {
-      transfer_tool: values.transfer_tool,
-      data_exporter_profile: [
-        values.data_exporter_name,
-        `传输目的：${values.transfer_purpose}`,
-        values.data_categories ? `数据类别：${values.data_categories}` : "",
-        values.data_subject_categories ? `数据主体：${values.data_subject_categories}` : "",
-        `频率：${values.transfer_frequency}`
-      ].filter((item) => item.trim().length > 0).join("；"),
-      data_importer_profile: [
-        values.data_importer_name,
-        `国家/地区：${values.importer_country_region}`,
-        values.sensitive_data_description ? `敏感数据：${values.sensitive_data_description}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      third_country_assessment: [
-        values.law_assessed ? "已完成法律评估" : "法律评估待完成",
-        values.law_findings,
-        values.pre_effectiveness ? `补充措施前判断：${values.pre_effectiveness}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      supplementary_measures: [
-        `技术措施：${values.supplementary_technical}`,
-        values.supplementary_contractual ? `合同措施：${values.supplementary_contractual}` : "",
-        values.supplementary_organizational ? `组织措施：${values.supplementary_organizational}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      final_conclusion: [
-        values.post_effectiveness,
-        `关键行动：${values.key_actions}`,
-        values.dpo_opinion ? `DPO意见：${values.dpo_opinion}` : "",
-        values.review_date ? `复审日期：${values.review_date}` : ""
-      ].filter((item) => item.trim().length > 0).join("；"),
-      attachments
-    };
+    return createTiaPayload(values, uploadedFiles);
   };
 
   const buildTiaPayload = async (): Promise<unknown> =>

@@ -780,7 +780,7 @@ export const TIA_STEPS: TiaStepConfig[] = [
   }
 ];
 
-export const BCR_REVIEW_ITEMS: Array<{ code: string; title: string; legal_basis: string; recommendation: string }> = [
+export const BCR_REVIEW_ITEMS = [
   { code: "3.2-C1", title: "Binding nature and scope", legal_basis: "GDPR Art.47 + EDPB 1/2022", recommendation: "补齐内部约束力、申请主体与范围映射。" },
   { code: "3.2-C2", title: "Material scope and data flow", legal_basis: "EDPB 1/2022 Scope", recommendation: "明确数据类别、主体类别、处理目的和传输范围。" },
   { code: "3.2-C3", title: "Third-party beneficiary rights", legal_basis: "EDPB 1.3.1", recommendation: "明确数据主体可直接主张权利与救济路径。" },
@@ -791,7 +791,7 @@ export const BCR_REVIEW_ITEMS: Array<{ code: string; title: string; legal_basis:
   { code: "3.2-C8", title: "Data protection safeguards", legal_basis: "EDPB 5.x", recommendation: "补齐原则、权利、Article 28、记录和DPIA联动。" },
   { code: "3.2-C9", title: "Third-country law and government access", legal_basis: "EDPB 5.4", recommendation: "补齐第三国法律评估与政府访问应对机制。" },
   { code: "3.2-C10", title: "Update and definitions", legal_basis: "EDPB 8.1/9.1", recommendation: "明确更新报送机制与定义表。" }
-];
+] as const;
 
 export const CN_FLOW_STEPS: CnFlowStepConfig[] = [
   {
