@@ -1,0 +1,68 @@
+{
+  "document": {
+    "schema_version": "3.0",
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-eo14117-adapter-v1",
+    "template_version": "eo14117-v0",
+    "model": "test-model",
+    "document_id": "eo14117:task-golden",
+    "report_type": "eo14117",
+    "metadata": {
+      "title": "TestCo — EO 14117 风险评估报告草案",
+      "company_name": "TestCo",
+      "report_date": "2026-08-08",
+      "report_id": "task-golden"
+    },
+    "sections": [
+      {
+        "section_id": "eo14117.chapter.1",
+        "title": "BCR 类型判断",
+        "level": 2,
+        "ordinal": "1",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "eo14117.chapter.1.block.1",
+            "type": "claim",
+            "text": "本BCR遵循GDPR第47条。",
+            "citation_refs": [
+              "CIT-EU-GDPR-ART35-P01"
+            ],
+            "fact_refs": [],
+            "issue_refs": [],
+            "verification": "verified",
+            "verification_reason": "由 legacy citation marker 迁移"
+          }
+        ]
+      },
+      {
+        "section_id": "eo14117.chapter.2",
+        "title": "整改建议",
+        "level": 2,
+        "ordinal": "2",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "eo14117.chapter.2.block.1",
+            "type": "paragraph",
+            "text": "补充数据主体权利机制说明。",
+            "fact_refs": [],
+            "issue_refs": []
+          }
+        ]
+      }
+    ],
+    "diagnostics": [],
+    "provenance": {
+      "generated_at": "2026-08-08T00:00:00Z",
+      "facts_version": null,
+      "issues_version": null,
+      "evidence_version": null
+    },
+    "input_hash": null,
+    "document_ir_hash": null
+  },
+  "footnote_map": {
+    "CIT-EU-GDPR-ART35-P01": 1
+  }
+}

@@ -56,6 +56,8 @@ class EU_SCCService:
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="eu_scc")
         self.agents = create_eu_scc_agents(llm_client)
+        from backend.core.settings import get_settings as _gs
+        self.schema_first_enabled = _gs().schema_first_scc_enabled
 
     def generate_report(
         self,
@@ -335,6 +337,28 @@ class EU_SCCService:
 
     def _render_outputs(self, rule_result):
         def _inner(*, task_id, payload, profile, regulations, chapters, path_warning, alignment_warning, issues, evidence_chain, attachment_notes, trace_manifest_path, facts, diagnosis, **kw):
+            if self.schema_first_enabled:
+                from backend.common.citation.registry import CitationRegistry as _LR
+                from backend.common.reporting import DocumentCompiler
+                from backend.domains.eu.scc_review.schema_first import build_scc_document_ir
+                _reg = _LR()
+                for ch in chapters:
+                    for cid in (ch.citations or []):
+                        pass
+                _doc, _rr = build_scc_document_ir(
+                    task_id=task_id, company_name=payload.company_name,
+                    chapters=chapters, citation_registry=_reg, model='legacy-scc',
+                )
+                _cr = DocumentCompiler().compile(_doc, _rr)
+                if _cr.status != 'success':
+                    _codes = ', '.join(i.code for i in _cr.diagnostics)
+                    raise ValueError(f'Schema-first compiler blocked SCC output: {_codes}')
+                import json as _json
+                _ir_dir = Path('outputs/eu_scc') / task_id / 'outputs'
+                _ir_dir.mkdir(parents=True, exist_ok=True)
+                (_ir_dir / 'document_ir.json').write_text(
+                    _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
+                    encoding='utf-8')
             output_dir = Path("outputs/eu_scc") / task_id / "outputs"
             output_dir.mkdir(parents=True, exist_ok=True)
             date_stamp = format_date_stamp()

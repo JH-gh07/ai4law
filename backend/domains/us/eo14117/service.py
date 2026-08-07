@@ -61,6 +61,8 @@ class US14117Service:
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="us_14117")
         self.agents = create_us14117_agents(llm_client)
+        from backend.core.settings import get_settings as _gs
+        self.schema_first_enabled = _gs().schema_first_eo14117_enabled
 
     def generate_report(
         self,
@@ -367,6 +369,25 @@ class US14117Service:
             diagnosis: US14117RuleEngineResult,
             **kwargs,
         ) -> dict[str, str]:
+            if self.schema_first_enabled:
+                from backend.common.citation.registry import CitationRegistry as _LR
+                from backend.common.reporting import DocumentCompiler
+                from backend.domains.us.eo14117.schema_first import build_eo14117_document_ir
+                _doc, _rr = build_eo14117_document_ir(
+                    task_id=task_id, company_name=payload.company_name,
+                    chapters=chapters, citation_registry=_LR(), model='legacy-eo14117',
+                )
+                _cr = DocumentCompiler().compile(_doc, _rr)
+                if _cr.status != 'success':
+                    _codes = ', '.join(i.code for i in _cr.diagnostics)
+                    raise ValueError(f'Schema-first compiler blocked EO14117 output: {_codes}')
+                import json as _json
+                from pathlib import Path as _Path
+                _ir_dir = _Path('outputs/us_14117') / task_id / 'outputs'
+                _ir_dir.mkdir(parents=True, exist_ok=True)
+                (_ir_dir / 'document_ir.json').write_text(
+                    _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
+                    encoding='utf-8')
             sections: list[tuple[str, str]] = [
                 ("输入摘要", payload.model_dump_json(indent=2)),
                 (

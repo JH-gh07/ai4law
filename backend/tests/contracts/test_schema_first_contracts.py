@@ -44,6 +44,7 @@ CID_ASSESS = "CIT-CN-EXPORT-ASSESSMENT-ART5-P01"
 CID_DPIA   = "CIT-EU-GDPR-ART35-P01"
 CID_TIA    = "CIT-EU-GDPR-ART46-P01"
 CID_PIPIA  = "CIT-CN-PIPL-ART39-P01"
+CID_SHARED = "CIT-EU-GDPR-ART35-P01"  # reused for BCR/SCC/CPRA/EO14117
 
 
 def _reg_with(cid: str, art: str = "1") -> CitationRegistry:
@@ -103,11 +104,59 @@ def _pipia_case(content: str):
     )
 
 
+def _bcr_case(content: str):
+    from backend.domains.eu.bcr_review.schema import BCRChapter
+    from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
+    return build_bcr_document_ir(
+        task_id="t", company_name="TestCo",
+        chapters=[BCRChapter(chapter_no=1, title="T", content=content, risk_level="HIGH")],
+        citation_registry=_reg_with(CID_SHARED),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",
+    )
+
+
+def _scc_case(content: str):
+    from backend.domains.eu.scc_review.schema import SCCChapter
+    from backend.domains.eu.scc_review.schema_first import build_scc_document_ir
+    return build_scc_document_ir(
+        task_id="t", company_name="TestCo",
+        chapters=[SCCChapter(chapter_no=1, title="T", content=content, risk_level="HIGH")],
+        citation_registry=_reg_with(CID_SHARED),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",
+    )
+
+
+def _cpra_case(content: str):
+    from backend.domains.us.cpra.schema import CPRAChapter
+    from backend.domains.us.cpra.schema_first import build_cpra_document_ir
+    return build_cpra_document_ir(
+        task_id="t", company_name="TestCo",
+        chapters=[CPRAChapter(chapter_no=1, title="T", content=content, risk_level="HIGH")],
+        citation_registry=_reg_with(CID_SHARED),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",
+    )
+
+
+def _eo14117_case(content: str):
+    from backend.domains.us.eo14117.schema import US14117Chapter
+    from backend.domains.us.eo14117.schema_first import build_eo14117_document_ir
+    return build_eo14117_document_ir(
+        task_id="t", company_name="TestCo",
+        chapters=[US14117Chapter(chapter_no=1, title="T", content=content)],
+        citation_registry=_reg_with(CID_SHARED),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",
+    )
+
+
 ADAPTER_CASES: list[tuple[str, Callable, str]] = [
     ("assessment", _assessment_case, CID_ASSESS),
     ("dpia",       _dpia_case,       CID_DPIA),
     ("tia",        _tia_case,        CID_TIA),
     ("pipia",      _pipia_case,      CID_PIPIA),
+    ("bcr",        _bcr_case,        CID_SHARED),
+    ("scc",        _scc_case,        CID_SHARED),
+    ("cpra",       _cpra_case,       CID_SHARED),
+    ("eo14117",    _eo14117_case,     CID_SHARED),
 ]
 
 

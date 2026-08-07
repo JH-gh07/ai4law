@@ -107,6 +107,8 @@ class BCRService:
         self.legal_retriever = BCRLegalRetriever()
         self.risk_aggregator = BCRRiskAggregator(rulebook=self.rulebook)
         self.report_renderer = BCRReportRenderer()
+        from backend.core.settings import get_settings as _gs
+        self.schema_first_enabled = _gs().schema_first_bcr_enabled
         self.tia_checker = BCRTiaChecker()
         self.onward_checker = BCROnwardTransferChecker()
         self.liability_checker = BCRLiabilityChecker()
@@ -574,6 +576,23 @@ class BCRService:
         return chapters
 
     def _render(self, task_id: str, payload, rating, problems, chapters, attachment_notes) -> dict[str, str]:
+        if self.schema_first_enabled:
+            from backend.common.citation.registry import CitationRegistry as _LR
+            from backend.common.reporting import DocumentCompiler
+            from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
+            _doc, _rr = build_bcr_document_ir(
+                task_id=task_id, company_name=payload.company_name,
+                chapters=chapters, citation_registry=_LR(), model="legacy-bcr",
+            )
+            _cr = DocumentCompiler().compile(_doc, _rr)
+            if _cr.status != "success":
+                _codes = ", ".join(i.code for i in _cr.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked BCR output: {_codes}")
+            _ir_dir = Path("outputs/bcr") / task_id / "outputs"
+            _ir_dir.mkdir(parents=True, exist_ok=True)
+            import json as _json
+            _ir_path = _ir_dir / "document_ir.json"
+            _ir_path.write_text(_json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
         output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)

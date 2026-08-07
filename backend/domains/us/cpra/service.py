@@ -72,6 +72,8 @@ class CPRAService:
         self.fact_merger = CPRAFactMerger()
         self.gap_merger = CPRAGapMerger()
         self.agents = create_cpra_agents(llm_client)
+        from backend.core.settings import get_settings as _gs
+        self.schema_first_enabled = _gs().schema_first_cpra_enabled
 
     def generate_report(
         self,
@@ -559,6 +561,23 @@ class CPRAService:
         return issues
 
     def _render(self, task_id: str, payload, chapters, gaps, attachment_notes, citation_registry: CitationRegistry) -> dict[str, str]:
+        if self.schema_first_enabled:
+            from backend.common.reporting import DocumentCompiler
+            from backend.domains.us.cpra.schema_first import build_cpra_document_ir
+            _doc, _rr = build_cpra_document_ir(
+                task_id=task_id, company_name=payload.company_name,
+                chapters=chapters, citation_registry=citation_registry, model="legacy-cpra",
+            )
+            _cr = DocumentCompiler().compile(_doc, _rr)
+            if _cr.status != "success":
+                _codes = ", ".join(i.code for i in _cr.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked CPRA output: {_codes}")
+            import json as _json
+            from pathlib import Path as _Path
+            _ir_dir = _Path("outputs/cpra") / task_id / "outputs"
+            _ir_dir.mkdir(parents=True, exist_ok=True)
+            _ir_path = _ir_dir / "document_ir.json"
+            _ir_path.write_text(_json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
             ("差距清单摘要", "\n".join(f"- [{g.risk_level}] {g.domain}: {g.gap}" for g in gaps)),
