@@ -44,6 +44,14 @@ def _clear_llm_env(monkeypatch) -> None:
         monkeypatch.delenv(key, raising=False)
 
 
+def test_schema_first_assessment_flag_is_opt_in(monkeypatch) -> None:
+    monkeypatch.delenv("AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED", raising=False)
+    assert Settings(_env_file=None).schema_first_assessment_enabled is False
+
+    monkeypatch.setenv("AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED", "true")
+    assert Settings(_env_file=None).schema_first_assessment_enabled is True
+
+
 def test_settings_accepts_siciconflow_typo_env_aliases(monkeypatch) -> None:
     _clear_llm_env(monkeypatch)
     monkeypatch.setenv("SICICONFLOW_API_KEY", "sf-test-key")

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     rag_candidate_pool_size: int = 24
     rag_rerank_candidate_count: int = 12
     rag_auto_build_index: bool = True
+    # Schema-first assessment validation is opt-in until module snapshots pass.
+    schema_first_assessment_enabled: bool = False
 
     # OpenAI-compatible LLM config. Provider order in auto mode:
     # generic LLM_* -> SiliconFlow -> legacy Tencent Hunyuan.

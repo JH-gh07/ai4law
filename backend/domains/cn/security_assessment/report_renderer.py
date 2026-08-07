@@ -34,6 +34,7 @@ from backend.domains.cn.security_assessment.schema import ChapterContent, Compan
 if TYPE_CHECKING:
     from backend.common.citation.registry import CitationRegistry
     from backend.common.llm.client import LLMClient
+    from backend.common.workflow.context_pack import GenerationContextPack
 
 TEMPLATE_PATH = report_template_path("cn", "2.2_risk_assessment_template_v0.docx")
 TEMPLATE_MD = report_template_path("cn", "2.2_risk_assessment_template_v0.md")
@@ -70,8 +71,16 @@ _MATERIAL_XLSX_HEADERS = ["材料编号", "摘要", "状态"]
 
 class AssessmentReportRenderer:
 
-    def __init__(self, llm_client: "LLMClient | None" = None) -> None:
+    def __init__(
+        self,
+        llm_client: "LLMClient | None" = None,
+        *,
+        schema_first_enabled: bool = False,
+        model_name: str = "legacy-assessment",
+    ) -> None:
         self.llm_client = llm_client
+        self.schema_first_enabled = schema_first_enabled
+        self.model_name = model_name
 
     def render(
         self,
@@ -99,6 +108,23 @@ class AssessmentReportRenderer:
     ) -> dict[str, str]:
         output_dir = Path("outputs/assessment") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
+        document_ir = None
+        if self.schema_first_enabled:
+            from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
+            from backend.common.reporting import DocumentCompiler
+            from backend.domains.cn.security_assessment.schema_first import build_assessment_document_ir
+
+            document_ir, reporting_registry = build_assessment_document_ir(
+                task_id=task_id,
+                company_name=company_name,
+                chapters=chapters,
+                citation_registry=citation_registry or LegacyCitationRegistry(),
+                model=self.model_name,
+            )
+            compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
+            if compile_result.status != "success":
+                codes = ", ".join(item.code for item in compile_result.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked assessment output: {codes}")
         render_warnings: list[str] = []
         date_stamp = format_date_stamp()
         safe_company = safe_filename(company_name)
@@ -136,7 +162,6 @@ class AssessmentReportRenderer:
 
         # Render official (3-section) external report
         official_md_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.md"
-        official_docx_output = output_dir / f"{safe_company}_数据出境风险自评估报告_草案_{date_stamp}.docx"
         official_mapping = None
         try:
             official_mapping = build_official_report_mapping(
@@ -169,6 +194,8 @@ class AssessmentReportRenderer:
             "zip": str(zip_output),
         }
         result["internal_markdown"] = str(internal_md_output)
+        if document_ir is not None:
+            result["document_ir_json"] = _write_document_ir_json(document_ir, output_dir)
 
         from backend.common.render.content_adapter import ContentAdapter
         from backend.common.render.markdown_renderer import MarkdownRenderer
@@ -655,6 +682,17 @@ def _write_generation_basis_pack_json(generation_basis_pack: dict[str, Any], out
 
     path = output_dir / "generation_basis_pack.json"
     path.write_text(json.dumps(generation_basis_pack, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(path)
+
+
+def _write_document_ir_json(document_ir, output_dir: Path) -> str:
+    import json
+
+    path = output_dir / "document_ir.json"
+    path.write_text(
+        json.dumps(document_ir.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     return str(path)
 
 

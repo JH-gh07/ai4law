@@ -8,7 +8,6 @@ from backend.common.quality.alignment import check_cn_alignment
 from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
-from backend.common.trace.thoughts import summarize_agent_output
 from backend.common.citation.audit import log_citations_created
 from backend.common.citation.registry import CitationRegistry
 from backend.common.knowledge.v2 import RetrievalRequest
@@ -47,8 +46,14 @@ if TYPE_CHECKING:
     from backend.integrations.delilegal import DeliLegalService
 
 class AssessmentService:
-    def __init__(self, llm_client: LLMClient | None = None, legal_api_service: DeliLegalService | None = None) -> None:
+    def __init__(
+        self,
+        llm_client: LLMClient | None = None,
+        legal_api_service: DeliLegalService | None = None,
+        schema_first_enabled: bool | None = None,
+    ) -> None:
         from backend.core.settings import get_settings
+        settings = get_settings()
         if llm_client is None:
             from backend.common.llm.client import LLMClient as _LLMClient
             llm_client = _LLMClient(get_settings())
@@ -62,7 +67,15 @@ class AssessmentService:
         self.retriever = AssessmentRetriever(legal_service=legal_api_service)
         self.generator = AssessmentChapterGenerator(llm_client=llm_client)
         self.checker = ConsistencyChecker()
-        self.renderer = AssessmentReportRenderer(llm_client=llm_client)
+        self.renderer = AssessmentReportRenderer(
+            llm_client=llm_client,
+            schema_first_enabled=(
+                settings.schema_first_assessment_enabled
+                if schema_first_enabled is None
+                else schema_first_enabled
+            ),
+            model_name=settings.resolved_llm_model,
+        )
         self.tasks = InMemoryTaskManager(module="assessment")
 
     def generate_report(
