@@ -22,6 +22,14 @@
 
 本次补充把方案改为执行手册：所有阶段都必须留下代码路径、命令输出、产物清单、差异记录和回退记录。没有证据的项目状态统一记为“未验收”。
 
+本次文档复核已实际执行：
+
+| 检查 | 结果 | 说明 |
+|---|---|---|
+| `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
+| `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
+| Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
+
 ---
 
 ## 1. 一句话目标
@@ -60,6 +68,8 @@
 | 新旧 CitationRegistry 适配层 | 已实现 | `backend/common/reporting/compat.py`，提交 `d4ea7bf` |
 | assessment DocumentIR 转换 | 已实现 | `backend/domains/cn/security_assessment/schema_first.py`，提交 `9d356cf` |
 | assessment 编译开关 | 已实现，默认关闭 | `AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED`，提交 `acaaff2` |
+| `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
+| `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
 | assessment 相关回归 | 93 项通过 | 2026-08-08 本地执行记录 |
 | 后端全量回归 | 601 通过、1 失败 | 失败为既有管线表格规范化契约测试，见实施记录 |
 | 其他模块新流程 | 未迁移 | 不能宣称已完成 |
@@ -261,6 +271,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 - [ ] 以 `source_id + article_no` 建立唯一键检查。
 - [ ] 修复同一法规同一条文的重复记录。
+- [x] `CN-REG-004` 删除 9 条网页噪声记录，写入 20 条正式条文。
 - [ ] 把 `sources.csv` 或注册表中的 `source_url` 回填到 CitationItem。
 - [ ] 没有正式条号的法规只允许作为法规级依据，不得标记为条文级跳转。
 - [ ] 统一中文条号到阿拉伯数字的转换规则。
@@ -279,6 +290,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 - [ ] 正文 `[N]` 只从 CitationMap 映射到 CitationPopover。
 - [ ] 唯一条文显示跳转入口。
+- [x] `【依据：法规名 第X条】` 路径在跳转前调用后端确认条文是否唯一存在。
 - [ ] `not_found`、`not_unique`、`missing` 显示具体原因和下一步。
 - [ ] `citation_map.json` 不作为普通用户文件标签展示。
 - [ ] 支持复制引用、显示条文原文和官方来源 URL。
@@ -450,8 +462,8 @@ cp resources/legal/catalog/sources.csv "$TASK_BACKUP_DIR/"
 cp resources/legal/registry/source_registry.v1.json "$TASK_BACKUP_DIR/"
 shasum -a 256 resources/legal/registry/regulation_articles.jsonl \
   resources/legal/catalog/sources.csv \
-  resources/legal/registry/source_registry.v1.json > status/check/legal_registry_before_20260808.sha256
-git diff -- resources/legal/ resources/new/ > status/check/legal_registry_before_20260808.diff
+  resources/legal/registry/source_registry.v1.json > status/check/legal_registry_before_<YYYYMMDD>.sha256
+git diff -- resources/legal/ resources/new/ > status/check/legal_registry_before_<YYYYMMDD>.diff
 ```
 
 临时备份用于本机快速恢复；`status/check/` 只保存哈希和差异，避免把整份知识库重复提交。备份不能替代 Git。数据清洗脚本必须支持 `--dry-run`，先输出变更数量，再允许写入。
@@ -479,17 +491,19 @@ invalid_article_number_count
 - `source_url` 有权威来源时必须回填；
 - 不确定的条文不能自动覆盖，进入 `manual_review` 清单。
 
-### 13.3 CN-REG-004 修复顺序
+### 13.3 CN-REG-004 已完成数据修复，仍需完整复验
 
-`CN-REG-004` 是 assessment 的核心来源，按以下顺序处理：
+`CN-REG-004` 是 assessment 的核心来源。提交 `979d714` 已删除原有 9 条网页新闻段落，改为 20 条正式法条；当前记录数为 20。入库脚本是 `scripts/reingest_cn_reg_004.py`，支持 `--dry-run`。
 
-1. 找到官方原文或已核验的 PDF；
-2. 建立法规元数据：名称、发布机关、发布日期、生效日期、官方 URL；
-3. 按正式条文拆分，禁止把网页版权、备案号、CMS 信息当条文；
-4. 每条保存 `source_id`、`article_no`、`content`、`source_url`、`content_hash`；
-5. 用 `source_id + article_no` 做唯一性检查；
-6. 用 1 条、20 条、不存在条文各做一个跳转测试；
-7. 重新生成 CitationMap，再比较 assessment 旧新结果。
+仍必须按以下步骤复验，不能只因数据文件已修改就宣布跳转问题完成：
+
+1. 执行 `python scripts/reingest_cn_reg_004.py --dry-run`，确认只影响 `CN-REG-004`；
+2. 用第 1 条、第 13 条、第 20 条和不存在的第 21 条请求 citation API；
+3. 前三条必须返回 `can_jump=true` 和 `resolution_type=exact_article`；
+4. 第 21 条必须返回不可跳转原因，不能跳到错误条文；
+5. 用一条真实 assessment/cn_flow 案例重新生成 CitationMap；
+6. 在浏览器点击 `【依据：数据出境安全评估办法 第十三条】`，确认 URL 包含 `?article=13` 且页面定位到第十三条；
+7. 保存 API JSON、浏览器截图和生成产物到 `status/check/`。
 
 ## 14. 编译门禁和问题分级
 
