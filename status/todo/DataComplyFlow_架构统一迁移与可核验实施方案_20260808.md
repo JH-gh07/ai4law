@@ -9,6 +9,19 @@
 > - `status/todo/DataComplyFlow_引用跳转机理详解_代码流程追踪_20260808.md`
 > - `status/view/DataComplyFlow_项目整体架构说明_20260807.md`
 
+## 0. 审核结论和本次补充范围
+
+原方案的方向正确，但原来主要回答了“应该怎么设计”，没有完全回答以下执行问题：
+
+1. 每个业务模块具体改哪些文件、从哪个函数进入；
+2. 新旧结果如何逐项比较，什么差异必须阻断；
+3. 知识库数据如何备份、清洗、重建和验收；
+4. 远端如何开启、观察、关闭和恢复；
+5. 失败问题如何分级，谁负责处理，什么条件下可以继续；
+6. 什么时候能说“一个模块迁移完成”，什么时候只能说“代码已写但未验收”。
+
+本次补充把方案改为执行手册：所有阶段都必须留下代码路径、命令输出、产物清单、差异记录和回退记录。没有证据的项目状态统一记为“未验收”。
+
 ---
 
 ## 1. 一句话目标
@@ -352,3 +365,331 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - 未解决问题：
 - 证据截图：
 ```
+
+## 11. 模块级执行卡
+
+下面的路径是当前仓库事实路径。迁移时必须先从这些入口开始阅读和测试，不能只修改公共层而不确认业务模块是否真的调用了它。
+
+| 模块 | 请求 Schema | 服务入口 | 输出入口 | 当前主要风险 | 迁移状态 |
+|---|---|---|---|---|---|
+| `assessment` | `backend/domains/cn/security_assessment/schema.py` | `service.py:AssessmentService.generate_report` | `report_renderer.py:AssessmentReportRenderer.render` | 引用 marker、报告模板、条文数据 | 已有 DocumentIR 开关，待远端首跑 |
+| `dpia` | `backend/domains/eu/dpia/schema.py` | `service.py:generate_report` | `chapter_generator.py`、`service.py` | 表单输入和结构化章节 | 未迁移 |
+| `pipia` | `backend/domains/cn/pipia/schema.py` | `service.py:generate_report` | `service.py` | 输入字段多、规则引用多 | 未迁移 |
+| `tia` | `backend/domains/eu/tia/schema.py` | `service.py:generate_report` | `service.py` | marker 和待核验混用 | 未迁移 |
+| `bcr` | `backend/domains/eu/bcr_review/schema.py` | `service.py:generate_report` | `bcr_report_renderer.py` | 法规引用经常没有条号 | 未迁移 |
+| `cpra` | `backend/domains/us/cpra/schema.py` | `service.py:generate_report` | `service.py` | 用户资料、RAG 证据和法规混合 | 未迁移 |
+| `cn_flow` | `backend/domains/us/eo14117_flow_review/schema.py` | `service.py:generate_report` | `service.py` | source registry 条文不完整 | 未迁移 |
+| `eu_scc` | `backend/domains/eu/scc_review/schema.py` | `service.py:generate_report` | `service.py` | 文件审查和报告生成耦合 | 未迁移 |
+| `review` | `backend/domains/cn/document_review/` | `service.py:generate_report` | `review_report_renderer.py` | 必须先上传文件再生成 | 未迁移 |
+
+每个模块迁移前，必须在模块目录下补齐以下文件：
+
+```text
+tests/fixtures/<module>_input.json
+tests/fixtures/<module>_document_ir.golden.json
+tests/test_schema_first_adapter.py
+tests/test_schema_first_renderer.py
+```
+
+如果模块没有独立的 renderer，必须先补一个只负责编排输出的 renderer；不能把 DocumentIR 转换、业务判断和文件写入继续放在同一个 `service.py` 函数中。
+
+## 12. 一个模块的完整迁移步骤
+
+每个模块严格按以下 12 步执行，不允许跳过中间步骤直接替换生产入口：
+
+| 步骤 | 操作 | 必须留下的证据 | 不通过时处理 |
+|---:|---|---|---|
+| 1 | 记录原始输入 Schema 和 API 路由 | Schema 文件、路由函数、请求样例 | 停止，不改代码 |
+| 2 | 固定 1 条最小案例和 1 条复杂案例 | `tests/fixtures/*_input.json` | 案例来源不明则不能继续 |
+| 3 | 在旧流程跑出完整产物 | MD/DOCX/PDF/ZIP/CitationMap/trace | 任一产物缺失则先修旧流程 |
+| 4 | 建立 legacy CitationRegistry 适配 | 适配器文件和字段映射测试 | 字段无法映射必须显式列为丢失字段 |
+| 5 | 把章节转换为 DocumentIR | 适配器函数和单元测试 | 不得从最终 Markdown 反向解析 |
+| 6 | 建立 Golden Snapshot | 固定 JSON fixture | 快照必须排除时间、随机 ID 等不稳定字段 |
+| 7 | 接入 Compiler Gates | 编译状态、诊断码、测试输出 | `error/fatal` 不得继续渲染 |
+| 8 | 用新 IR 生成内部结构文件 | `document_ir.json` | 文件不可读或 Schema 不通过则阻断 |
+| 9 | 对比新旧用户产物 | 差异报告和人工复核记录 | 结构或引用差异未解释则回退 |
+| 10 | 以配置开关启用 | 默认值、启用值、关闭值测试 | 没有关闭路径不能上线 |
+| 11 | 在远端跑真实案例 | 运行日志、截图、产物哈希 | 远端失败立即关闭开关 |
+| 12 | 归档验收结果 | `status/check/<module>...md` | 未归档不得标记完成 |
+
+### 12.1 新旧产物比较方法
+
+不能只比较文件是否生成。比较分三层：
+
+1. **结构层**：章节数量、标题、顺序、表格数量、告警数量；
+2. **引用层**：正文脚注集合、CitationMap 集合、`citation_id`、条文号、`can_jump`、失败原因；
+3. **展示层**：Markdown、DOCX、PDF 的标题、表格、引用位置和页数。
+
+允许变化：
+
+- 生成时间；
+- 文件名中的日期；
+- `document_ir.json` 这一新增内部文件；
+- 明确记录并经人工确认的空白或换行差异。
+
+不允许自动接受：
+
+- 正文引用数量变化；
+- CitationMap 多出或少了引用；
+- 风险等级变化；
+- 法规名称、条文号或引用原文变化；
+- 用户可见章节缺失；
+- 从可跳转变成不可跳转；
+- 未注册 marker、模板变量或内部字段泄漏。
+
+## 13. 引用和知识库数据修复流程
+
+### 13.1 先备份，后清洗
+
+任何修改 `resources/legal/`、`resources/new/` 或 `regulation_articles.jsonl` 的操作必须先执行：
+
+```bash
+TASK_BACKUP_DIR="$(mktemp -d)"
+cp resources/legal/registry/regulation_articles.jsonl "$TASK_BACKUP_DIR/"
+cp resources/legal/catalog/sources.csv "$TASK_BACKUP_DIR/"
+cp resources/legal/registry/source_registry.v1.json "$TASK_BACKUP_DIR/"
+shasum -a 256 resources/legal/registry/regulation_articles.jsonl \
+  resources/legal/catalog/sources.csv \
+  resources/legal/registry/source_registry.v1.json > status/check/legal_registry_before_20260808.sha256
+git diff -- resources/legal/ resources/new/ > status/check/legal_registry_before_20260808.diff
+```
+
+临时备份用于本机快速恢复；`status/check/` 只保存哈希和差异，避免把整份知识库重复提交。备份不能替代 Git。数据清洗脚本必须支持 `--dry-run`，先输出变更数量，再允许写入。
+
+### 13.2 唯一性检查
+
+新增脚本建议位置：`scripts/check_citation_source_integrity.py`。
+
+脚本必须输出：
+
+```text
+source_count
+article_row_count
+duplicate_source_article_count
+missing_article_ref_count
+missing_source_url_count
+invalid_article_number_count
+```
+
+判定规则：
+
+- `(source_id, article_no)` 重复数必须为 0；
+- `source_id` 不在 `resources/legal/catalog/sources.csv` 和 `source_registry.v1.json` 的记录必须为 0；
+- `article_no` 为空的记录不能标记 `exact_article`；
+- `source_url` 有权威来源时必须回填；
+- 不确定的条文不能自动覆盖，进入 `manual_review` 清单。
+
+### 13.3 CN-REG-004 修复顺序
+
+`CN-REG-004` 是 assessment 的核心来源，按以下顺序处理：
+
+1. 找到官方原文或已核验的 PDF；
+2. 建立法规元数据：名称、发布机关、发布日期、生效日期、官方 URL；
+3. 按正式条文拆分，禁止把网页版权、备案号、CMS 信息当条文；
+4. 每条保存 `source_id`、`article_no`、`content`、`source_url`、`content_hash`；
+5. 用 `source_id + article_no` 做唯一性检查；
+6. 用 1 条、20 条、不存在条文各做一个跳转测试；
+7. 重新生成 CitationMap，再比较 assessment 旧新结果。
+
+## 14. 编译门禁和问题分级
+
+### 14.1 必须阻断的问题
+
+以下问题出现时，新流程不得继续输出用户报告：
+
+- `CITATION_NOT_REGISTERED`；
+- `RENDER_MARKER_RESIDUE`；
+- `SECTION_ID_DUPLICATE`；
+- `BLOCK_ID_DUPLICATE`；
+- 用户可见章节缺失；
+- 正文脚注和 CitationMap 数量不一致；
+- 风险等级在新旧流程中不一致；
+- 输入文件未上传但模块要求文件；
+- 关键模板缺失。
+
+### 14.2 可以继续但必须记录的问题
+
+- 来源没有官方 URL，但仍有内部可验证条文；
+- 条文只有法规级定位，没有唯一条号；
+- 低置信度引用被标记为待核验；
+- PDF 页眉、页脚或空白差异；
+- 旧报告多一个内部诊断文件，但用户交付包没有暴露。
+
+### 14.3 问题记录格式
+
+```markdown
+### ISSUE-<模块>-<编号>
+
+- 严重级别：BLOCK / ERROR / WARN
+- 运行任务：
+- 输入案例：
+- 代码位置：相对路径 + 行号 + 函数/类
+- 期望结果：
+- 实际结果：
+- 是否影响用户产物：是/否
+- 是否影响引用跳转：是/否
+- 临时处理：
+- 永久修复：
+- 验证命令：
+- 关闭条件：
+```
+
+## 15. 远端部署、验证和恢复
+
+### 15.1 部署前检查
+
+```bash
+git fetch --all --prune
+git branch --show-current
+git rev-parse HEAD
+git status --short
+uv sync --frozen
+```
+
+部署前必须确认：
+
+- 当前提交号已记录；
+- 工作区没有未提交的生产代码修改；
+- `.env` 中没有把开关误设为 `true`；
+- RAG 索引、法规数据和模板版本已记录。
+
+### 15.2 首次开启
+
+只允许在测试任务或明确的远端验证窗口开启：
+
+```bash
+export AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED=true
+```
+
+执行 1 条固定案例，再执行 1 条真实案例。每条案例保存：
+
+- 请求 JSON 的脱敏副本；
+- 后端任务 ID；
+- `document_ir.json`；
+- Markdown/DOCX/PDF/ZIP；
+- `citation_map.json`；
+- API 响应；
+- 浏览器截图；
+- 开始时间、结束时间、耗时和 token 统计。
+
+### 15.3 失败恢复
+
+发现 BLOCK 问题时：
+
+```bash
+export AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED=false
+```
+
+然后重新运行同一输入，确认旧流程仍可生成。恢复报告必须记录：
+
+- 失败任务 ID；
+- 失败诊断码；
+- 关闭开关时间；
+- 旧流程恢复结果；
+- 是否需要回滚代码提交。
+
+代码回退只在开关关闭后仍无法恢复时执行，且必须使用明确提交号，不得使用破坏性 Git 命令覆盖其他人的工作。
+
+## 16. 自动化质量门禁
+
+### 16.1 每次代码提交
+
+```bash
+uv run pytest -q <受影响模块测试目录>
+uv run ruff check <受影响文件>
+git diff --check
+```
+
+### 16.2 每次模块迁移
+
+```bash
+uv run pytest -q backend/common/reporting/tests
+uv run pytest -q backend/common/citation/tests
+uv run pytest -q backend/api/v1/tests/test_citations_api.py
+uv run pytest -q <模块>/tests
+```
+
+### 16.3 合并前
+
+```bash
+uv run pytest -q
+cd frontend && npm test -- --run && npm run build
+```
+
+全量测试有失败时，必须区分：
+
+- 本次改动引入的失败：阻止合并；
+- 既有失败：记录路径、原因和单独任务，不得在汇报中写“全绿”。
+
+## 17. 依赖和目录审查
+
+每个模块完成后执行一次静态检查：
+
+```bash
+rg -n "from backend\.domains|import backend\.domains" backend/common
+rg -n "from .*\.service import|from .*\.router import" backend/common
+rg -n "utils|common2|new|final|v2|temp|misc" backend resources frontend
+```
+
+判定规则：
+
+- `backend/common` 不得导入 `backend/domains`；
+- renderer 不得直接调用具体 RAG provider；
+- API 不得读取别的模块的 trace 作为正式引用；
+- 业务差异必须在 Schema、模板或规则文件中表达；
+- 新增公共函数必须说明被几个模块复用，只有一个调用方时不得提前下沉。
+
+## 18. 验收汇报必须回答的问题
+
+每个模块的验收报告必须逐项回答：
+
+1. 输入从哪里来？Schema 是什么？
+2. 业务判断在哪个 service/agent 完成？
+3. RAG 在哪个函数调用？返回什么字段？
+4. citation_id 在哪里生成、注册、编号和落盘？
+5. 正文 `[N]` 和 CitationMap 是否一一对应？数量是多少？
+6. `can_jump=false` 的具体原因是什么？
+7. Markdown、DOCX、PDF、ZIP 是否都生成？
+8. token、time、状态事件是否正常？
+9. 哪些文件是内部产物，哪些是用户产物？
+10. 新流程失败时如何关闭开关恢复旧流程？
+11. 代码、测试、截图和日志分别在哪里？
+12. 哪些问题已修复，哪些问题仍未解决？
+
+缺少任何一项，只能标记为“部分验收”。
+
+## 19. 风险清单和处理办法
+
+| 风险 | 触发条件 | 处理办法 | 是否允许继续 |
+|---|---|---|---|
+| 新旧引用编号不同 | 同一输入出现不同脚注编号 | 查首次出现顺序和 registry 状态 | 不允许 |
+| CitationMap 多出正文没有的引用 | API 返回数量大于正文脚注数 | 禁止读取期合成，检查生成期落盘 | 不允许 |
+| 条文无法跳转 | `article_not_found/not_unique/missing` | 显示中文原因，补数据或保留法规级定位 | 允许，但必须记录 |
+| LLM 输出 Markdown | Block 文本含标题/粗体/脚注 | Compiler 阻断，修 prompt 或 adapter | 不允许 |
+| 模板缺失 | Markdown/DOCX 模板不存在 | 走明确 fallback 并写 warning | 外部交付不允许 |
+| 远端开关导致任务失败 | 新流程出现 BLOCK 或异常 | 关闭环境变量，重跑同一案例 | 关闭后可继续 |
+| 知识库清洗误删 | dry-run 与实际行数不一致 | 从备份恢复，禁止覆盖原文件 | 不允许 |
+| 公共层反向依赖业务域 | 静态扫描命中 | 移动接口或建立协议层 | 不允许 |
+
+## 20. 本方案的完成判断
+
+“方案写完”不等于“项目迁移完成”。本方案只有在以下表格全部为“通过”时才结束：
+
+| 完成项 | 通过条件 | 证据位置 |
+|---|---|---|
+| 公共结构 | 所有模块使用同一 DocumentIR Schema | Schema 文件 + 测试 |
+| 公共引用 | 所有模块使用同一 CitationRegistry 契约 | registry 测试 |
+| 结构检查 | 所有用户报告生成前执行 Compiler Gates | 运行日志 + 诊断记录 |
+| 数据正确 | 条文唯一性和 URL 检查通过 | 数据检查报告 |
+| 引用正确 | 正文、CitationMap、API、前端数量和身份一致 | 模块验收报告 |
+| 输出完整 | MD/DOCX/PDF/ZIP 均通过打开和内容检查 | 产物清单 + 截图 |
+| 过程可见 | 状态、token、耗时、错误能在中途展示 | trace + 前端截图 |
+| 失败可恢复 | 关闭开关后旧流程恢复 | 回退记录 |
+| 目录规范 | 无重复实现、无跨层依赖、无无意义命名 | 静态扫描报告 |
+| 文档真实 | 每项结论都有代码、测试、日志或截图证据 | `status/check/` |
+
+最终结论必须使用以下三种状态之一：
+
+- **已完成**：代码、测试、真实运行和产物验收全部通过；
+- **部分完成**：代码和本地测试通过，但真实运行或产物验收未完成；
+- **未完成**：存在阻断问题，不能进入下一阶段。
