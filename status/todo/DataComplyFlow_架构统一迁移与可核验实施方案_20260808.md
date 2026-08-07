@@ -236,27 +236,26 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 输出 | Markdown、DOCX、PDF 均可打开，ZIP 内无重复文件名 |
 | 回退 | 关闭开关后可以重新生成旧产物 |
 
-### 阶段 3：其他报告模块迁移
+### 阶段 3：其余报告功能迁移
 
-这里的“其他报告模块”指 assessment 之外，最终会生成 Markdown、DOCX、PDF 或审查报告的模块，共 **9 个**。之前表格漏列了 `eu_scc` 和 `us_14117`，已在本次修订中补上。
+这里按用户功能统计：除“合规路径诊断”和“安全评估路径”外，剩余需要生成报告或审查结果的用户功能共 **8 个**。`cn_flow` 不单独迁移，作为 14117 行政令合规的兼容入口与主入口一起验收。
 
 按以下顺序执行，每个模块单独提交、单独验收：
 
-| 顺序 | 模块 | 实际代码目录 | 先解决的问题 |
+| 顺序 | 用户功能 | 主实现目录 | 先解决的问题 |
 |---:|---|---|---|
-| 1 | `dpia` | `backend/domains/eu/dpia/` | 结构化输入和引用编号统一 |
-| 2 | `pipia` | `backend/domains/cn/pipia/` | 大量法规条文的稳定编号和去重 |
-| 3 | `tia` | `backend/domains/eu/tia/` | marker 解析和待核验状态统一 |
-| 4 | `bcr` | `backend/domains/eu/bcr_review/` | 无条号法规引用的能力边界 |
-| 5 | `eu_scc` | `backend/domains/eu/scc_review/` | 合同条款审查结果和引用统一 |
-| 6 | `cpra` | `backend/domains/us/cpra/` | 用户材料和法规引用区分 |
-| 7 | `cn_flow` | `backend/domains/us/eo14117_flow_review/` | source registry 条文补齐和唯一性 |
-| 8 | `us_14117` | `backend/domains/us/eo14117/` | 美国受关注国家、受限交易和规则引用统一 |
-| 9 | `review` | `backend/domains/cn/document_review/` | 上传文件、解析、报告生成的两步流程 |
+| 1 | DPIA 草案生成 | `backend/domains/eu/dpia/` | 结构化输入和引用编号统一 |
+| 2 | 认证/标准合同路径（PIPIA） | `backend/domains/cn/pipia/` | 认证和标准合同备案场景的 PIPIA 输入、条文编号和去重 |
+| 3 | TIA 草案生成 | `backend/domains/eu/tia/` | marker 解析和待核验状态统一 |
+| 4 | BCR 审核 | `backend/domains/eu/bcr_review/` | 无条号法规引用的能力边界 |
+| 5 | SCC 审查 | `backend/domains/eu/scc_review/` | 合同条款审查结果和引用统一 |
+| 6 | CPRA 合规 | `backend/domains/us/cpra/` | 用户材料和法规引用区分 |
+| 7 | 14117 行政令合规 | `backend/domains/us/eo14117/` + `eo14117_flow_review/` | 主入口和兼容入口规则、引用、输出一致 |
+| 8 | 文档专项智能审查 | `backend/domains/cn/document_review/` | 上传文件、解析、报告生成的两步流程 |
 
-### 阶段 3A：两条诊断报告路径单独处理
+### 阶段 3A：合规路径诊断单独处理
 
-产品模块 `diagnosis` 的实现包是 `backend/domains/cn/transfer_diagnosis/`，但当前保留两条不同的运行路径：
+“合规路径诊断”是一个用户功能，但后台保留两条不同的运行路径：
 
 | 路径 | API/服务入口 | 当前产物 | 需要统一的内容 |
 |---|---|---|---|
@@ -271,7 +270,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - assessment/PIPIA handoff 的字段与目标模块 Schema 一致；
 - 诊断报告中的法规依据必须说明是“规则依据”还是可跳转 Citation，不能混用。
 
-诊断模块的验收报告必须记录：输入字段、枚举值、API 状态码、前端 builder 转换结果、规则引擎结果、HTML/PDF 产物和 handoff JSON。至此，产品模块清单为 11 个：`diagnosis`、`assessment`、`review`、`pipia`、`bcr`、`dpia`、`tia`、`cn_flow`、`us_14117`、`eu_scc`、`cpra`。
+诊断模块的验收报告必须记录：输入字段、枚举值、API 状态码、前端 builder 转换结果、规则引擎结果、HTML/PDF 产物和 handoff JSON。用户功能主清单始终是 10 个；后端的 11 个 module key 和兼容入口只用于实现和测试覆盖，不用于重复统计产品功能。
 
 每个模块必须复制以下验收表，不允许只写“测试通过”：
 
@@ -401,25 +400,26 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - 证据截图：
 ```
 
-## 11. 模块级执行卡
+## 11. 用户功能与后端实现映射
 
-下面的路径是当前仓库事实路径。迁移时必须先从这些入口开始阅读和测试，不能只修改公共层而不确认业务模块是否真的调用了它。
+迁移主清单以用户界面中的功能卡片为准，共 **10 个功能**：中国 4 个、欧盟 4 个、美国 2 个。后端 module key、兼容接口和服务类属于实现细节，不能因为后台有多个 key 就把用户功能重复计数。
 
-| 模块 | 请求 Schema | 服务入口 | 输出入口 | 当前主要风险 | 迁移状态 |
+| 法域 | 用户看到的功能 | 实际作用和边界 | 前端 module key | 后端实现 | 当前迁移状态 |
 |---|---|---|---|---|---|
-| `assessment` | `backend/domains/cn/security_assessment/schema.py` | `service.py:AssessmentService.generate_report` | `report_renderer.py:AssessmentReportRenderer.render` | 引用 marker、报告模板、条文数据 | 已有 DocumentIR 开关，待远端首跑 |
-| `dpia` | `backend/domains/eu/dpia/schema.py` | `service.py:generate_report` | `chapter_generator.py`、`service.py` | 表单输入和结构化章节 | 未迁移 |
-| `pipia` | `backend/domains/cn/pipia/schema.py` | `service.py:generate_report` | `service.py` | 输入字段多、规则引用多 | 未迁移 |
-| `tia` | `backend/domains/eu/tia/schema.py` | `service.py:generate_report` | `service.py` | marker 和待核验混用 | 未迁移 |
-| `bcr` | `backend/domains/eu/bcr_review/schema.py` | `service.py:generate_report` | `bcr_report_renderer.py` | 法规引用经常没有条号 | 未迁移 |
-| `cpra` | `backend/domains/us/cpra/schema.py` | `service.py:generate_report` | `service.py` | 用户资料、RAG 证据和法规混合 | 未迁移 |
-| `cn_flow` | `backend/domains/us/eo14117_flow_review/schema.py` | `service.py:generate_report` | `service.py` | source registry 条文不完整 | 未迁移 |
-| `us_14117` | `backend/domains/us/eo14117/schema.py` | `service.py:generate_report` | `service.py` | 美国数据安全规则、RAG 证据和报告输出一致性 | 未迁移 |
-| `eu_scc` | `backend/domains/eu/scc_review/schema.py` | `service.py:generate_report` | `service.py` | 文件审查和报告生成耦合 | 未迁移 |
-| `review` | `backend/domains/cn/document_review/` | `service.py:generate_report` | `review_report_renderer.py` | 必须先上传文件再生成 | 未迁移 |
-| `diagnosis` | `backend/schemas/diagnosis.py`、`backend/domains/cn/transfer_diagnosis/schema.py` | 会话 API：`DiagnosisSessionService`；直接 API：`DiagnosisService` | `ReportService`、`DiagnosisReportRenderer` | 两条诊断 API、问卷 Schema、规则结果和 HTML/PDF 输出一致性 | 未迁移 |
+| CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | 未迁移 |
+| CN | 安全评估路径 | 收集申报要件，生成《数据出境风险自评估报告》草案 | `assessment` | `backend/domains/cn/security_assessment/` | 已有 DocumentIR 开关，待远端首跑 |
+| CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | 未迁移 |
+| CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 未迁移 |
+| EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | 未迁移 |
+| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 未迁移 |
+| EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | 未迁移 |
+| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | 未迁移 |
+| US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 未迁移 |
+| US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 未迁移 |
 
-每个模块迁移前，必须在模块目录下补齐以下文件：
+`cn_flow` 不是第三个美国用户功能。它是历史 API/兼容入口，当前执行 EO 14117 数据流评估；迁移 `us_14117` 时必须同时验证 `us_14117` 和 `cn_flow` 两个后端入口输出同一套 EO 14117 规则结果，防止兼容接口与主入口分叉。
+
+每个用户功能迁移前，必须在对应实现目录下补齐以下文件：
 
 ```text
 tests/fixtures/<module>_input.json
