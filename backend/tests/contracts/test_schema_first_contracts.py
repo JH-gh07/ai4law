@@ -43,6 +43,7 @@ from backend.common.reporting import DocumentCompiler
 CID_ASSESS = "CIT-CN-EXPORT-ASSESSMENT-ART5-P01"
 CID_DPIA   = "CIT-EU-GDPR-ART35-P01"
 CID_TIA    = "CIT-EU-GDPR-ART46-P01"
+CID_PIPIA  = "CIT-CN-PIPL-ART39-P01"
 
 
 def _reg_with(cid: str, art: str = "1") -> CitationRegistry:
@@ -90,10 +91,23 @@ def _tia_case(content: str):
     )
 
 
+def _pipia_case(content: str):
+    from backend.domains.cn.pipia.schema import PIPIAChapter
+    from backend.domains.cn.pipia.schema_first import build_pipia_document_ir
+    return build_pipia_document_ir(
+        task_id="t", company_name="TestCo",
+        chapters=[PIPIAChapter(chapter_no=1, title="T", content=content,
+                               citations=[], risk_level="HIGH")],
+        citation_registry=_reg_with(CID_PIPIA),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",
+    )
+
+
 ADAPTER_CASES: list[tuple[str, Callable, str]] = [
     ("assessment", _assessment_case, CID_ASSESS),
     ("dpia",       _dpia_case,       CID_DPIA),
     ("tia",        _tia_case,        CID_TIA),
+    ("pipia",      _pipia_case,      CID_PIPIA),
 ]
 
 

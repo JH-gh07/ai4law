@@ -51,6 +51,9 @@ PIPIA_CHAPTERS = [
 _NO_LLM = object()
 
 
+from backend.domains.cn.pipia.report_renderer import PIPIAReportRenderer
+
+
 class PIPIAService:
     def __init__(self, llm_client: LLMClient | None = _NO_LLM) -> None:
         if llm_client is _NO_LLM:
@@ -59,6 +62,12 @@ class PIPIAService:
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="pipia")
+        from backend.core.settings import get_settings as _gs
+        _s = _gs()
+        self.renderer = PIPIAReportRenderer(
+            schema_first_enabled=_s.schema_first_pipia_enabled,
+            model_name=_s.resolved_llm_model,
+        )
 
     def generate_report(
         self,
@@ -585,62 +594,15 @@ class PIPIAService:
         overall_risk_level: str,
         alignment_warning: str | None = None,
     ) -> dict[str, str]:
-        company_name = payload.company_profile.company_name
-        output_dir = Path("outputs/pipia") / task_id / "outputs"
-        date_stamp = format_date_stamp()
-        safe_company = safe_filename(company_name)
-        md_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.md"
-        docx_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.docx"
-        pdf_output = output_dir / f"{safe_company}_PIPIA_报告_草案_{date_stamp}.pdf"
-        zip_output = output_dir / f"{safe_company}_PIPIA_输出包_草案_{date_stamp}.zip"
-        mapping = _build_template_mapping(
-            payload,
-            chapters,
-            date_stamp,
+        """Delegate to PIPIAReportRenderer (signature preserved for tests)."""
+        return self.renderer.render(
+            task_id=task_id,
+            payload=payload,
+            chapters=chapters,
             overall_risk_level=overall_risk_level,
+            attachment_notes=attachment_notes,
             alignment_warning=alignment_warning,
         )
-        if TEMPLATE_MD.exists():
-            render_markdown_template(md_output, TEMPLATE_MD, mapping)
-        else:
-            render_markdown_report(
-                md_output,
-                f"{company_name} PIPIA 报告草案",
-                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
-            )
-        if TEMPLATE_PATH.exists():
-            render_docx_template(docx_output, TEMPLATE_PATH, mapping)
-        else:
-            render_docx_report(
-                docx_output,
-                f"{company_name} PIPIA 报告草案",
-                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
-            )
-        from backend.common.render.pdf_renderer import get_pdf_renderer
-
-        if TEMPLATE_MD.exists():
-            get_pdf_renderer().from_template(
-                pdf_output,
-                f"{company_name} PIPIA 报告草案",
-                TEMPLATE_MD,
-                mapping,
-            )
-        else:
-            get_pdf_renderer().from_sections(
-                pdf_output,
-                f"{company_name} PIPIA 报告草案",
-                self._fallback_sections(payload, chapters, overall_risk_level, attachment_notes),
-            )
-        with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
-            bundle.write(docx_output, arcname=docx_output.name)
-            bundle.write(md_output, arcname=md_output.name)
-            bundle.write(pdf_output, arcname=pdf_output.name)
-        return {
-            "markdown": str(md_output),
-            "docx": str(docx_output),
-            "pdf": str(pdf_output),
-            "zip": str(zip_output),
-        }
 
     @staticmethod
     def _fallback_sections(

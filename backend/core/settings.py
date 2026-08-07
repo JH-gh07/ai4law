@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     schema_first_assessment_enabled: bool = False
     schema_first_dpia_enabled: bool = False
     schema_first_tia_enabled: bool = False
+    schema_first_pipia_enabled: bool = False
+    schema_first_bcr_enabled: bool = False
+    schema_first_scc_enabled: bool = False
+    schema_first_cpra_enabled: bool = False
+    schema_first_eo14117_enabled: bool = False
 
     # OpenAI-compatible LLM config. Provider order in auto mode:
     # generic LLM_* -> SiliconFlow -> legacy Tencent Hunyuan.
