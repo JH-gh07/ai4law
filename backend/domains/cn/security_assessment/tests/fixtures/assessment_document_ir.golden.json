@@ -1,0 +1,64 @@
+{
+  "document": {
+    "schema_version": "3.0",
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-assessment-adapter-v1",
+    "template_version": "assessment-v0",
+    "model": "test-model",
+    "document_id": "assessment:task-golden",
+    "report_type": "assessment",
+    "metadata": {
+      "title": "测试公司数据出境风险自评估报告",
+      "company_name": "测试公司",
+      "report_date": "2026-08-08",
+      "report_id": "task-golden"
+    },
+    "sections": [
+      {
+        "section_id": "assessment.chapter.1",
+        "title": "出境活动概述",
+        "level": 2,
+        "ordinal": "1",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "assessment.chapter.1.block.1",
+            "type": "claim",
+            "text": "企业应当开展申报前评估。",
+            "citation_refs": ["CIT-CN-EXPORT-ASSESSMENT-ART5-P01"],
+            "fact_refs": [],
+            "issue_refs": [],
+            "verification": "verified",
+            "verification_reason": "由 legacy citation marker 迁移"
+          }
+        ]
+      },
+      {
+        "section_id": "assessment.chapter.2",
+        "title": "整改建议",
+        "level": 2,
+        "ordinal": "2",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "assessment.chapter.2.block.1",
+            "type": "paragraph",
+            "text": "补充境外接收方安全能力证明。",
+            "fact_refs": [],
+            "issue_refs": []
+          }
+        ]
+      }
+    ],
+    "diagnostics": [],
+    "provenance": {
+      "generated_at": "2026-08-08T00:00:00Z",
+      "facts_version": null,
+      "issues_version": null,
+      "evidence_version": null
+    },
+    "input_hash": null,
+    "document_ir_hash": null
+  },
+  "footnote_map": {}
+}
