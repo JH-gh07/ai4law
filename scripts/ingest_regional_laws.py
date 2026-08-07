@@ -1138,7 +1138,7 @@ def load_existing_article_keys() -> set[tuple[str, str]]:
                 continue
             try:
                 obj = json.loads(line)
-                keys.add((obj["source_id"], str(obj["article_no"])))
+                keys.add((obj["source_id"], str(obj.get("article_ref") or obj.get("article_no", ""))))
             except (json.JSONDecodeError, KeyError):
                 pass
     return keys
@@ -1240,9 +1240,9 @@ def write_articles_jsonl(
                 continue
             entry = {
                 "source_id": s.source_id,
-                "article_no": article_no,
+                "article_ref": article_no,
                 "law_name": s.law_name_for_articles,
-                "article_text": article_text[:2000],  # cap to avoid huge entries
+                "content": article_text[:2000],  # cap to avoid huge entries
                 "jurisdiction": s.jurisdiction,
             }
             if dry_run:

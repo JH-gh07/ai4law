@@ -41,8 +41,11 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
 
     # Count updated 2026-08-08: CN-REG-004 replaced 9 web-noise records with
     # 20 formal articles (commit 979d714), raising unique_rows from 1602 → 1613.
-    assert len(unique_rows) == 1613
-    assert len({str(row.get("source_id", "")) for row in unique_rows}) == 69
+    # Count updated 2026-08-08 (P2 fix): 1347 regional-law articles re-ingested with
+    # correct field names (article_ref/content), raising unique_rows 1613 → 2960
+    # and source_ids 69 → 102.
+    assert len(unique_rows) == 2960
+    assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])
         article_no = _normalize_article_lookup_key(str(row["article_ref"]))
