@@ -104,3 +104,16 @@ EOF
 
 **Item 1 状态：✅ 已交付（零排除结论）**  
 **下一步：编制 Item 2 — 可用案例清单**
+
+---
+
+## 执行记录
+
+### 2026-08-07 归档完成
+
+**Item 1 & 2 文档编制**
+- Item 1: `excluded_cases_with_correction_marker.md` (本文档) — 排除清单（0 例排除）
+- Item 2: `available_cases_inventory.md` — 可用案例清单（50 例可用）
+- 提交: `ae306df` "docs(check): add Item 1/2 documentation for seed case inventory"
+
+**结论**：经全面检索（文件名模式 + DOCX 内容全文），50 个种子案例 DOCX 文件中未发现"需修正"标记，全部 50 例进入可用库存。

@@ -260,3 +260,28 @@
 **Item 2 状态：✅ 已交付**  
 **Q2 决策所需信息：已提供（§三 + §六）**  
 **下一步：等待 Q2 用户决策**
+
+---
+
+## 执行记录
+
+### 2026-08-07 归档完成
+
+**Item 1 & 2 文档编制**
+- Item 1: `excluded_cases_with_correction_marker.md` — 排除清单（0 例排除）
+- Item 2: `available_cases_inventory.md` (本文档) — 可用案例清单（50 例可用）
+- 提交: `ae306df` "docs(check): add Item 1/2 documentation for seed case inventory"
+
+**Q3 参考文件归档核查**
+- 预期：处置 16 对同名异哈希文件
+- 实际发现：处置方案所指为 `resources/new/` 内部的 11 组重复文件（同 SHA-256），非与现有参考库的替换关系
+- 已完成归档动作（Phase 2-A，提交 `ae306df`）：
+  * A001-A003: 3 个 benchmark 参考文献 PDF → `resources/research/benchmarks/`
+  * A004: 1 个 benchmark 整理文档 → `resources/research/benchmarks/`
+  * A005: 1 个实务手册 → `resources/manuals/167_数据出境合规实务手册.pdf`
+  * A006-A007: 2 个 GB/T 国标 → `resources/standards/`
+  * A008: 1 个测试汇总表 → `benchmarks/datasets/seed-cases-v1/_source/`
+- `resources/legal/sources/cn/references/` 现有 23 个文件保持不变（无替换需求）
+- `resources/new/知识库补充/` 的 51 个新法域 PDF 为新增候选，非替换现有文件
+
+**结论**：Items 1、2 及 Q3 归档核查已完成。8 个文件已通过 `git mv` 移至规范化路径并哈希验证通过。
