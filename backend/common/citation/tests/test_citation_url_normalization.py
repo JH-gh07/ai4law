@@ -228,7 +228,7 @@ ALL_MODULES = [
     ("assessment", "CN-LAW-003", "个人信息保护法", "六十六", True),
     ("dpia", "CN-LAW-003", "个人信息保护法", "4", True),
     ("scc", "CN-REG-005", "个人信息出境标准合同办法", "一", False),
-    ("cn_flow", "CN-REG-004", "数据出境安全评估办法", "十三", False),
+    ("cn_flow", "CN-REG-004", "数据出境安全评估办法", "十三", True),  # article 13 now ingested
     ("cpra", "US-CA-001", "CCPA/CPRA", "一", False),
     ("tia", "EU-LAW-001", "GDPR", "4", False),
     ("eu_scc", "EU-LAW-001", "GDPR", "1", False),
