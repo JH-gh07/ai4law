@@ -3,7 +3,7 @@
 > 实施日期：2026-08-08
 > 适用分支：`new`
 > 依据方案：`status/todo/DataComplyFlow_Schema优先法律文档编译器架构方案_20260807.md`
-> 实施提交：`62e631e`、`0511ec8`、`870bd5c`
+> 实施提交：`62e631e`、`0511ec8`、`870bd5c`、`d4ea7bf`、`9d356cf`、`acaaff2`
 > 状态：阶段 A 局部完成，旧生成链路保持兼容
 
 ## 一、实施结论
@@ -34,6 +34,10 @@ Pydantic semantic IR
 | `backend/api/v1/tests/test_citations_api.py` | 将空 footnote_map 回填测试改为不合成、不写盘断言 | 固化 CitationMap 事实基线契约 |
 | `backend/common/reporting/compat.py` | 新增 legacy CitationItem/Registry 到 DocumentIR CitationRecord/Registry 的单向适配层 | 在不切换生产链路的前提下收敛双轨，并保留已分配脚注编号 |
 | `backend/common/reporting/tests/test_compat.py` | 覆盖字段映射和编号保留 | 防止迁移适配层改变引用身份或展示编号 |
+| `backend/domains/cn/security_assessment/schema_first.py` | 将 assessment 章节转换为 DocumentIR，并保留未知 citation ref | 先验证代表模块的语义转换，不从 Markdown 反推结构 |
+| `backend/domains/cn/security_assessment/report_renderer.py` | 增加默认关闭的 Schema-first 编译开关；开启时写入 `document_ir.json`，Compiler 非 success 即阻断 | 允许真实模块灰度验证，避免未完成迁移影响默认生产链路 |
+| `backend/core/settings.py` | 新增 `AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED` 配置，默认 `false` | 以环境配置控制灰度，不硬编码切换 |
+| `backend/domains/cn/security_assessment/tests/fixtures/assessment_document_ir.golden.json` | 固化 assessment DocumentIR Golden Snapshot | 防止模板章节、语义块和 citation ref 结构漂移 |
 | `frontend/src/components/citation/CitationMarkdownRenderer.tsx` | `【待核验】`、`【缺少依据】`、`【证据冲突】` 进入待核验样式类 | 不把待核验提示渲染成可点击的 CitationPopover |
 | `frontend/src/styles/app/product-pages-and-overrides.css` | 增加 `workspace-legal-callout-pending` 样式 | 让风险状态在用户界面可见、可区分 |
 
@@ -57,12 +61,15 @@ Pydantic semantic IR
 
 | 引用闭环 P0 定向测试 | 20 passed | marker 兼容性、API 不合成、不写盘 |
 | reporting 适配层测试 | 12 passed | DocumentIR registry 与 legacy registry 转换及编号保持 |
+| assessment Schema-first 定向测试 | 24 passed | Golden Snapshot、renderer 开关、阻断条件、service 回归 |
+| assessment/reporting/citation/API 组合回归 | 93 passed | 本轮相关后端测试全部通过 |
+| Ruff 组合扫描 | 发现 6 个既有告警 | 位于 assessment 既有文件的未使用导入/变量，与本轮变更无文件交集，未混入本轮修复 |
 
 本轮不修改管线表格规范化逻辑，避免在 Schema-first 迁移切片中引入无关的渲染行为变更。该失败项必须在阶段 A 完整验收前单独定位并补齐契约测试。
 
 ## 四、未覆盖边界
 
-1. 新 IR/Compiler 尚未接入任何生产报告生成器，当前为新增能力而非全链路切换。
+1. Schema-first 已接入 assessment renderer，但默认关闭；其他模块尚未接入。
 2. 阶段 A 的 `StructureValidationPass` 和 `DedupValidationPass` 目前校验 DocumentIR，不替代既有 `markdown_lint.py` 的 Markdown 检查。
 3. 阶段 B 的旧 `CitationRegistry` 与新 reporting registry 仍是双轨；尚未迁移既有 citation_map 输出协议。
 4. 阶段 C 的结构化 LLM 输出、JSON Schema response format、有限重试和 TemplateAssembly 尚未开始。
@@ -74,6 +81,7 @@ Pydantic semantic IR
 阶段 B 开始前必须满足：
 
 - 阶段 A 新增测试在后端/前端全量回归中保持通过；
-- 已明确并测试新旧 CitationRegistry 的单向迁移适配层；生产切换仍需代表模块 Golden Snapshot 和显式回滚开关；
+- 已明确并测试新旧 CitationRegistry 的单向迁移适配层；assessment 已具备 Golden Snapshot 和显式开关；
+- 仍需在远端/测试环境开启 `AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED=true` 完成首跑，对比旧 Markdown、DOCX、CitationMap 和压缩包产物后，才能扩大灰度；
 - 选定一个代表模块先完成 DocumentIR → Markdown 的 Golden Snapshot；
 - 不得在没有真实模块回归证据时删除 `convert_citation_markers` 或 `CitationMarkdownRenderer`。
