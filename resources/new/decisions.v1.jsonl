@@ -1,0 +1,9 @@
+{"decision_id": "D001", "type": "deduplication", "hash": "117a0267344210cc", "action": "keep_first", "kept": "合规路径诊断功能说明与路径描述（标注Reference）.docx", "removed": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：...docx", "reason": "Identical files - root copy is canonical"}
+{"decision_id": "D002", "type": "deduplication", "hash": "56f4253b4ea6bfea", "action": "keep_first", "kept": "数据分级分类指南GBT+43697-2024.pdf", "reason": "GB/T standard duplicated in reference库"}
+{"decision_id": "D003", "type": "deduplication", "hash": "4effcc8e5bd50f60", "action": "keep_first", "kept": "数据安全技术敏感个人信息处理安全要求GBT+45574-2025.pdf", "reason": "GB/T standard duplicated in reference库"}
+{"decision_id": "D004", "type": "deduplication", "hash": "7af1a6a0a6aaf609", "action": "keep_one", "note": "Two copies of PIPIA template with (1) suffix - need manual check"}
+{"decision_id": "D005", "type": "deduplication", "hash": "2c3045905ff09f85", "action": "keep_one", "note": "Two copies of assessment guide with (1) and (2) suffixes - likely accidental duplicates"}
+{"decision_id": "D006-D010", "type": "deduplication", "hash": "multiple", "action": "remove_all", "note": "5 pairs of .html/.md catalog files with identical SHA-256 - one format is redundant"}
+{"decision_id": "D011", "type": "noise_removal", "action": "exclude_from_normalization", "files": [".DS_Store"], "count": 6, "reason": "macOS metadata files"}
+{"decision_id": "D012", "type": "classification_pending", "count": 149, "status": "requires_manual_review", "reason": "Complex directory structure needs domain expert classification"}
+{"decision_id": "D013", "type": "large_file_flag", "file": "知识库补充/越南/B01_Law on Cybersecurity 2025_网络安全法_116-2025-QH15.pdf", "size_mb": 17.2, "action": "candidate_for_lfs", "note": "Exceeds 10MB threshold"}
