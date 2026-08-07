@@ -238,7 +238,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 ### 阶段 3：其他报告模块迁移
 
-这里的“其他报告模块”指 assessment 之外，最终会生成 Markdown、DOCX、PDF 或审查报告的模块，共 **8 个**。之前表格漏列了 `eu_scc`，已在本次修订中补上。
+这里的“其他报告模块”指 assessment 之外，最终会生成 Markdown、DOCX、PDF 或审查报告的模块，共 **9 个**。之前表格漏列了 `eu_scc` 和 `us_14117`，已在本次修订中补上。
 
 按以下顺序执行，每个模块单独提交、单独验收：
 
@@ -251,11 +251,12 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 5 | `eu_scc` | `backend/domains/eu/scc_review/` | 合同条款审查结果和引用统一 |
 | 6 | `cpra` | `backend/domains/us/cpra/` | 用户材料和法规引用区分 |
 | 7 | `cn_flow` | `backend/domains/us/eo14117_flow_review/` | source registry 条文补齐和唯一性 |
-| 8 | `review` | `backend/domains/cn/document_review/` | 上传文件、解析、报告生成的两步流程 |
+| 8 | `us_14117` | `backend/domains/us/eo14117/` | 美国受关注国家、受限交易和规则引用统一 |
+| 9 | `review` | `backend/domains/cn/document_review/` | 上传文件、解析、报告生成的两步流程 |
 
 ### 阶段 3A：两条诊断报告路径单独处理
 
-`diagnosis_session` 和 `transfer_diagnosis` 共享路径诊断业务域，但目前是两条不同的运行路径：
+产品模块 `diagnosis` 的实现包是 `backend/domains/cn/transfer_diagnosis/`，但当前保留两条不同的运行路径：
 
 | 路径 | API/服务入口 | 当前产物 | 需要统一的内容 |
 |---|---|---|---|
@@ -270,7 +271,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - assessment/PIPIA handoff 的字段与目标模块 Schema 一致；
 - 诊断报告中的法规依据必须说明是“规则依据”还是可跳转 Citation，不能混用。
 
-诊断模块的验收报告必须记录：输入字段、枚举值、API 状态码、前端 builder 转换结果、规则引擎结果、HTML/PDF 产物和 handoff JSON。不能因为它们不在 8 个合规报告模块里，就认为它们不需要迁移。
+诊断模块的验收报告必须记录：输入字段、枚举值、API 状态码、前端 builder 转换结果、规则引擎结果、HTML/PDF 产物和 handoff JSON。至此，产品模块清单为 11 个：`diagnosis`、`assessment`、`review`、`pipia`、`bcr`、`dpia`、`tia`、`cn_flow`、`us_14117`、`eu_scc`、`cpra`。
 
 每个模块必须复制以下验收表，不允许只写“测试通过”：
 
@@ -413,10 +414,10 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | `bcr` | `backend/domains/eu/bcr_review/schema.py` | `service.py:generate_report` | `bcr_report_renderer.py` | 法规引用经常没有条号 | 未迁移 |
 | `cpra` | `backend/domains/us/cpra/schema.py` | `service.py:generate_report` | `service.py` | 用户资料、RAG 证据和法规混合 | 未迁移 |
 | `cn_flow` | `backend/domains/us/eo14117_flow_review/schema.py` | `service.py:generate_report` | `service.py` | source registry 条文不完整 | 未迁移 |
+| `us_14117` | `backend/domains/us/eo14117/schema.py` | `service.py:generate_report` | `service.py` | 美国数据安全规则、RAG 证据和报告输出一致性 | 未迁移 |
 | `eu_scc` | `backend/domains/eu/scc_review/schema.py` | `service.py:generate_report` | `service.py` | 文件审查和报告生成耦合 | 未迁移 |
 | `review` | `backend/domains/cn/document_review/` | `service.py:generate_report` | `review_report_renderer.py` | 必须先上传文件再生成 | 未迁移 |
-| `diagnosis_session` | `backend/schemas/diagnosis.py` | `backend/services/diagnosis_session_service.py:DiagnosisSessionService` | `ReportService.create_html_report/create_pdf_report` | 会话诊断和报告产物之间的契约 | 未迁移 |
-| `transfer_diagnosis` | `backend/domains/cn/transfer_diagnosis/schema.py` | `service.py:DiagnosisService.evaluate` | `report_renderer.py:DiagnosisReportRenderer.render` | 规则结果、AI 摘要、HTML/PDF 输出一致性 | 未迁移 |
+| `diagnosis` | `backend/schemas/diagnosis.py`、`backend/domains/cn/transfer_diagnosis/schema.py` | 会话 API：`DiagnosisSessionService`；直接 API：`DiagnosisService` | `ReportService`、`DiagnosisReportRenderer` | 两条诊断 API、问卷 Schema、规则结果和 HTML/PDF 输出一致性 | 未迁移 |
 
 每个模块迁移前，必须在模块目录下补齐以下文件：
 
