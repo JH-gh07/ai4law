@@ -6,21 +6,74 @@
 
 ---
 
-## 一、知识库页面 URL 结构（已确认）
+## 一、知识库页面 URL 结构与架构（修正版）
 
-用户手动点击可到达的法规条文页面，与引用跳转的目标页面是**同一个页面**：
+> ⚠️ **初版结论有误，已修正。** 原文称"用户手动浏览的知识库页面与引用跳转目标是同一个页面"——经过代码核查，**两者是不同页面**，关系如下。
 
+### 1.1 实际知识库浏览界面：EvidenceCenterPage（`/evidence`）
+
+用户日常使用的"知识库"是 `EvidenceCenterPage`，路由为 `/evidence`（`frontend/src/pages/EvidenceCenterPage.tsx`）：
+
+- 展示所有69个法规来源的目录，支持关键词搜索、筛选器（法域/类别/用途）
+- 点击任意法律条目，**URL 永远不变**，始终停在 `/evidence`
+- 切换法律靠的是 React state，而非路由跳转：
+
+```tsx
+// EvidenceCenterPage.tsx:221
+const [selectedSourceId, setSelectedSourceId] = useState("");
+
+// 第575行 — 点击法律条目：
+<article onClick={() => setSelectedSourceId(sourceId)}>
 ```
-/knowledge/laws/:sourceId            → 法规概览页（无具体条文）
-/knowledge/laws/:sourceId?article=31 → 跳转到第31条并高亮显示
-```
 
-路由定义在 `frontend/src/App.tsx:272`：
+右侧预览面板随 state 变化刷新，没有任何 `navigate()` 调用，也不生成任何含 `sourceId` 的 URL。
+
+### 1.2 引用跳转目标：LawViewerPage（`/knowledge/laws/:sourceId`）
+
+这是一个**单独的深链接页面**，不是知识库浏览界面，路由定义在 `frontend/src/App.tsx:272`：
+
 ```tsx
 <Route path="/knowledge/laws/:sourceId" element={<LawViewerPage />} />
 ```
 
-`LawViewerPage.tsx` 读取 `?article=` 参数，调用后端 API 取条文内容，并用 `ref.scrollIntoView` 滚动定位。**这就是用户说的"知识库里能靠点击到达的那个页面"。**
+支持的 URL 格式：
+
+```
+/knowledge/laws/:sourceId            → 显示该法规的元数据概览（无条文列表）
+/knowledge/laws/:sourceId?article=31 → 定位到第31条并高亮显示
+```
+
+`LawViewerPage.tsx` 从 URL 读取 `sourceId`（`useParams`）和 `article`（`useSearchParams`），调用后端 API 取条文内容，用 `ref.scrollIntoView` 滚动定位。页面头部有"← 返回"按钮（`navigate(-1)`），是独立的单法规视图，而非目录式浏览器。
+
+### 1.3 两页面关系
+
+| | EvidenceCenterPage（`/evidence`）| LawViewerPage（`/knowledge/laws/:sourceId`）|
+|---|---|---|
+| 定位 | 知识库目录浏览器 | 单法规深链接视图 |
+| URL 是否变化 | **不变**（React state 控制） | **变化**（URL 驱动） |
+| 条文列表 | 右侧预览面板（内嵌） | 仅显示目标条文上下文各1条 |
+| 到达方式 | 导航栏点击知识库 | 引用跳转 / EvidenceCenterPage 内的条文链接 |
+| 用户熟悉度 | 日常使用 | 较少主动访问 |
+
+**EvidenceCenterPage 自身也包含指向 LawViewerPage 的链接**（`EvidenceCenterPage.tsx:754`）：
+
+```tsx
+href={`/knowledge/laws/${sourceId}?article=${articleNo}`}
+```
+
+说明两者是"目录→详情"的配合关系：`/evidence` 是入口，`/knowledge/laws/:sourceId` 是从特定条文入口打开的精准视图。
+
+### 1.4 引用跳转落地位置
+
+`CitationArticleDrawer` 里"在知识库中继续阅读"调用的是：
+
+```tsx
+navigate(`/knowledge/laws/${sourceId}?article=${articleNo}`)
+```
+
+用户点击后**离开当前工作台，进入 LawViewerPage**，而非熟悉的 `/evidence` 知识库浏览界面。从功能上看这是正确的（确实定位到了具体条文），但 UX 落点与用户预期有偏差。
+
+若希望跳转后落地在 `/evidence`（保持知识库浏览上下文），需要给 `/evidence` 加 query param 支持（如 `?source=CN-LAW-001&article=31`）并在 `EvidenceCenterPage` 里读取初始化 state，**当前代码未实现**。
 
 ---
 
