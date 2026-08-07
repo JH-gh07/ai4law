@@ -32,6 +32,8 @@ Pydantic semantic IR
 | `backend/common/citation/{registry.py,postprocess.py}` | marker 识别改为按 `{{CIT-...}}` 边界解析，支持包含连字符的合法 citation_id | 消除生成器缩写含连字符时的 99% marker 漏匹配风险 |
 | `backend/api/v1/endpoints/citations.py` | 删除读取期 trace/retrieval 合成 citation_map 及磁盘回写 | API 只能读取生成期事实，不能把检索命中伪装成正文引用 |
 | `backend/api/v1/tests/test_citations_api.py` | 将空 footnote_map 回填测试改为不合成、不写盘断言 | 固化 CitationMap 事实基线契约 |
+| `backend/common/reporting/compat.py` | 新增 legacy CitationItem/Registry 到 DocumentIR CitationRecord/Registry 的单向适配层 | 在不切换生产链路的前提下收敛双轨，并保留已分配脚注编号 |
+| `backend/common/reporting/tests/test_compat.py` | 覆盖字段映射和编号保留 | 防止迁移适配层改变引用身份或展示编号 |
 | `frontend/src/components/citation/CitationMarkdownRenderer.tsx` | `【待核验】`、`【缺少依据】`、`【证据冲突】` 进入待核验样式类 | 不把待核验提示渲染成可点击的 CitationPopover |
 | `frontend/src/styles/app/product-pages-and-overrides.css` | 增加 `workspace-legal-callout-pending` 样式 | 让风险状态在用户界面可见、可区分 |
 
@@ -54,6 +56,7 @@ Pydantic semantic IR
 | `npm run build` | 通过 | 347 modules transformed，无构建错误 |
 
 | 引用闭环 P0 定向测试 | 20 passed | marker 兼容性、API 不合成、不写盘 |
+| reporting 适配层测试 | 12 passed | DocumentIR registry 与 legacy registry 转换及编号保持 |
 
 本轮不修改管线表格规范化逻辑，避免在 Schema-first 迁移切片中引入无关的渲染行为变更。该失败项必须在阶段 A 完整验收前单独定位并补齐契约测试。
 
@@ -71,6 +74,6 @@ Pydantic semantic IR
 阶段 B 开始前必须满足：
 
 - 阶段 A 新增测试在后端/前端全量回归中保持通过；
-- 明确新旧 CitationRegistry 的迁移适配层和回滚开关；
+- 已明确并测试新旧 CitationRegistry 的单向迁移适配层；生产切换仍需代表模块 Golden Snapshot 和显式回滚开关；
 - 选定一个代表模块先完成 DocumentIR → Markdown 的 Golden Snapshot；
 - 不得在没有真实模块回归证据时删除 `convert_citation_markers` 或 `CitationMarkdownRenderer`。
