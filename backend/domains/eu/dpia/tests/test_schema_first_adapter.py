@@ -14,6 +14,7 @@ from backend.common.citation.registry import CitationRegistry
 from backend.domains.eu.dpia.report_renderer import DPIAReportRenderer
 from backend.domains.eu.dpia.schema import DPIAChapterContent, DPIAProjectProfile
 from backend.domains.eu.dpia.schema_first import build_dpia_document_ir
+from backend.common.reporting import DocumentCompiler
 
 FIXTURES = Path(__file__).parent / "fixtures"
 GOLDEN = FIXTURES / "dpia_document_ir.golden.json"
@@ -167,3 +168,68 @@ def test_renderer_blocks_unregistered_citations_when_schema_first_is_enabled(tmp
             chapters=_chapters(),
             citation_registry=CitationRegistry(),
         )
+
+
+def test_production_footnote_shape_yields_claim_block_with_refs() -> None:
+    """Regression: production content carries [N], not {{CIT-*}}.
+
+    The generator converts markers to footnotes before the renderer sees the
+    chapter, so an adapter that only recognises {{CIT-*}} would emit a
+    ParagraphBlock with no citation_refs -- or raise, because [N] is itself a
+    forbidden token in semantic block text. See status/check/ISSUE-reporting-001.
+    """
+    registry = _citation_registry()
+    assert registry.assign_footnote_number("CIT-EU-GDPR-ART35-P01") == 1
+
+    chapters = [DPIAChapterContent(
+        chapter_no=1,
+        title="DPIA 必要性判断",
+        content="该处理活动属于大规模处理特殊类别数据 [1]。",
+        citations=["GDPR Art 35"],
+        risk_level="high",
+    )]
+
+    document, reporting_registry = build_dpia_document_ir(
+        task_id="task-prod-shape",
+        project_name="员工健康评估系统",
+        chapters=chapters,
+        citation_registry=registry,
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc),
+        model="test-model",
+    )
+
+    block = document.sections[0].blocks[0]
+    assert type(block).__name__ == "ClaimBlock"
+    assert block.citation_refs == ["CIT-EU-GDPR-ART35-P01"]
+    assert "[1]" not in block.text
+    assert block.text == "该处理活动属于大规模处理特殊类别数据。"
+
+    compile_result = DocumentCompiler().compile(document, reporting_registry)
+    assert compile_result.status == "success"
+    assert not compile_result.diagnostics
+
+
+def test_both_citation_shapes_produce_identical_document_ir() -> None:
+    """Marker form and footnote form must be indistinguishable downstream."""
+    def _build(content: str):
+        registry = _citation_registry()
+        registry.assign_footnote_number("CIT-EU-GDPR-ART35-P01")
+        document, _ = build_dpia_document_ir(
+            task_id="task-shape-parity",
+            project_name="员工健康评估系统",
+            chapters=[DPIAChapterContent(
+                chapter_no=1,
+                title="DPIA 必要性判断",
+                content=content,
+                citations=["GDPR Art 35"],
+                risk_level="high",
+            )],
+            citation_registry=registry,
+            generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc),
+            model="test-model",
+        )
+        return document.model_dump(mode="json")
+
+    marker_form = _build("该处理活动属于大规模处理特殊类别数据 {{CIT-EU-GDPR-ART35-P01}}。")
+    footnote_form = _build("该处理活动属于大规模处理特殊类别数据 [1]。")
+    assert marker_form == footnote_form

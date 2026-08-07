@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 
+from backend.common.citation.markers import CIT_MARKER_RE
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
 from backend.common.reporting.schema.citations import (
@@ -61,3 +63,75 @@ def legacy_registry_to_reporting(
                     f"expected {number}, got {assigned}"
                 )
     return reporting
+
+
+# ---------------------------------------------------------------------------
+# Citation shape extraction
+#
+# Chapter content reaches a schema-first adapter in one of two shapes:
+#
+#   raw        "...特殊类别数据 {{CIT-EU-GDPR-ART35-P01}}。"
+#   converted  "...特殊类别数据 [1]。"
+#
+# The converted shape is what production emits: chapter_generator calls
+# convert_citation_markers() before the ChapterContent is ever constructed,
+# which rewrites every {{CIT-*}} marker into its global footnote number.
+#
+# An adapter that recognises only the raw shape silently loses every
+# citation_refs entry on production input, and the leftover "[1]" then trips
+# the Block text validator. Both shapes must therefore resolve to the same
+# citation identity. See status/check/ISSUE-reporting-001.
+# ---------------------------------------------------------------------------
+
+_FOOTNOTE_REF_RE = re.compile(r"\[(\d+)\]")
+_SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？、）】])")
+
+
+def extract_citation_refs(
+    text: str,
+    legacy: LegacyCitationRegistry | None = None,
+) -> tuple[str, list[str]]:
+    """Split citation identities out of block text, accepting both shapes.
+
+    Returns ``(cleaned_text, citation_refs)`` where ``cleaned_text`` has every
+    citation token removed and ``citation_refs`` holds the referenced
+    ``citation_id`` values, de-duplicated, in first-appearance order.
+
+    ``[N]`` tokens are resolved through the registry's existing footnote map.
+    A number with no registry entry is left in place rather than dropped, so a
+    genuine numbering mismatch reaches the compiler as a diagnostic instead of
+    disappearing here.
+    """
+    if not text:
+        return text, []
+
+    number_to_id: dict[int, str] = (
+        {
+            number: item.citation_id
+            for number, item in legacy.get_footnote_map().items()
+        }
+        if legacy is not None
+        else {}
+    )
+
+    ordered: dict[str, None] = {}
+
+    for match in CIT_MARKER_RE.finditer(text):
+        ordered.setdefault(match.group(1), None)
+    for match in _FOOTNOTE_REF_RE.finditer(text):
+        citation_id = number_to_id.get(int(match.group(1)))
+        if citation_id is not None:
+            ordered.setdefault(citation_id, None)
+
+    cleaned = CIT_MARKER_RE.sub("", text)
+
+    def _strip_known_footnote(match: re.Match) -> str:
+        # Unresolvable numbers survive so the compiler can flag them.
+        return "" if int(match.group(1)) in number_to_id else match.group(0)
+
+    cleaned = _FOOTNOTE_REF_RE.sub(_strip_known_footnote, cleaned)
+    # Removing a token mid-sentence leaves a gap; close it here so every caller
+    # gets normalized text rather than each re-implementing the same cleanup.
+    cleaned = _SPACE_BEFORE_PUNCTUATION_RE.sub(r"\1", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    return cleaned, list(ordered)

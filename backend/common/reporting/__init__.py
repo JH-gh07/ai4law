@@ -5,7 +5,11 @@ their current behavior until a compiler feature flag is explicitly enabled.
 """
 
 from backend.common.reporting.compiler import DocumentCompiler
-from backend.common.reporting.compat import legacy_item_to_record, legacy_registry_to_reporting
+from backend.common.reporting.compat import (
+    extract_citation_refs,
+    legacy_item_to_record,
+    legacy_registry_to_reporting,
+)
 from backend.common.reporting.schema import (
     Block,
     ClaimBlock,
@@ -26,6 +30,7 @@ __all__ = [
     "CitationRegistry",
     "DocumentCompiler",
     "DocumentIR",
+    "extract_citation_refs",
     "legacy_item_to_record",
     "legacy_registry_to_reporting",
     "ListBlock",

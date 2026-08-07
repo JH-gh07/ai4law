@@ -16,20 +16,26 @@ from backend.common.reporting import (
     DocumentIR,
     ParagraphBlock,
     SectionIR,
+    extract_citation_refs,
     legacy_registry_to_reporting,
 )
 from backend.common.reporting.schema import Provenance, ReportMetadata
 from backend.common.reporting.schema.citations import CitationRegistry
 from backend.domains.eu.dpia.schema import DPIAChapterContent
 
-_CITATION_MARKER_RE = re.compile(r"\{\{(CIT-[^{}\s]+)\}\}")
+# Marker parsing lives in backend/common/citation/markers.py (single source of
+# truth); this module must not redefine a citation-marker regex.
 _HEADING_PREFIX_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
 _SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？])")
 
 
 def _semantic_text(paragraph: str) -> str:
-    without_markers = _CITATION_MARKER_RE.sub("", paragraph)
-    without_headings = _HEADING_PREFIX_RE.sub("", without_markers)
+    """Normalize already citation-free text into semantic block text.
+
+    Citation tokens are removed upstream by ``extract_citation_refs``; this
+    only strips heading syntax and inline Markdown.
+    """
+    without_headings = _HEADING_PREFIX_RE.sub("", paragraph)
     normalized = strip_markdown_inline(without_headings).strip()
     return _SPACE_BEFORE_PUNCTUATION_RE.sub(r"\1", normalized)
 
@@ -59,8 +65,10 @@ def build_dpia_document_ir(
             if part.strip()
         ]
         for index, paragraph in enumerate(paragraphs, start=1):
-            citation_refs = list(dict.fromkeys(_CITATION_MARKER_RE.findall(paragraph)))
-            text = _semantic_text(paragraph)
+            # Accepts both citation shapes: raw {{CIT-*}} markers (pre-generator)
+            # and [N] footnotes (post-generator, the production shape).
+            citation_free, citation_refs = extract_citation_refs(paragraph, citation_registry)
+            text = _semantic_text(citation_free)
             if not text:
                 continue
             block_id = f"dpia.chapter.{chapter.chapter_no}.block.{index}"
