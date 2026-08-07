@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 
+from backend.common.citation.markers import CIT_MARKER_RE as _CIT_MARKER_RE, is_valid_citation_id
 from backend.common.citation.models import CitationItem
-
-# Citation IDs are generated from registry abbreviations, some of which contain
-# hyphens. Parse the marker boundary here and let the registry decide whether
-# the captured ID is registered.
-_CIT_MARKER_RE = re.compile(r"\{\{(CIT-[^{}\s]+)\}\}")
 
 
 @dataclass
@@ -27,6 +22,11 @@ class CitationRegistry:
     _next_num: int = 1
 
     def register(self, item: CitationItem) -> str:
+        if not is_valid_citation_id(item.citation_id):
+            raise ValueError(
+                f"Invalid citation ID format: {item.citation_id!r}. "
+                "Expected CIT-<JU>-<ABBR>-ART<n>|GEN-P<nn>"
+            )
         self._items[item.citation_id] = item
         return item.citation_id
 

@@ -4,10 +4,10 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from backend.common.citation.markers import CIT_MARKER_RE as _CIT_MARKER_RE
+
 if TYPE_CHECKING:
     from backend.common.citation.registry import CitationRegistry
-
-_CIT_MARKER_RE = re.compile(r"\{\{(CIT-[^{}\s]+)\}\}")
 _CHAPTER_LABEL_RE = re.compile(r"^第[一二三四五六七八九十百千万零〇两0-9]+章\b")
 _SECTION_LABEL_RE = re.compile(r"^[一二三四五六七八九十百千万零〇两0-9]+、")
 _SUBSECTION_LABEL_RE = re.compile(r"^（[一二三四五六七八九十百千万零〇两0-9]+）")

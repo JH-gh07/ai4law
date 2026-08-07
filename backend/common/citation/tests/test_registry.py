@@ -76,3 +76,42 @@ def test_registry_to_list() -> None:
     assert len(result) == 1
     assert result[0]["citation_id"] == "CIT-CN-PIPL-ART39-P01"
     assert result[0]["title"] == "个人信息保护法"
+
+
+# ---------------------------------------------------------------------------
+# RC-2 fix: register() must reject malformed IDs (fail-fast)
+# ---------------------------------------------------------------------------
+
+import pytest
+
+
+def test_register_rejects_id_missing_art_prefix() -> None:
+    """An ID without the ART/GEN token must raise ValueError."""
+    reg = CitationRegistry()
+    # Missing ART: "CIT-CN-PIPL-39-P01" has no ART prefix → invalid
+    bad_item = _sample_citation("CIT-CN-PIPL-39-P01", "个人信息保护法", "39")
+    with pytest.raises(ValueError, match="Invalid citation ID"):
+        reg.register(bad_item)
+
+
+def test_register_accepts_legacy_hyphen_abbr_id() -> None:
+    """Legacy IDs with hyphens in the abbr segment (old format) stay valid for
+    backward compatibility — the regex allows hyphens via backtracking."""
+    reg = CitationRegistry()
+    item = _sample_citation("CIT-CN-EXPORT-ASSESSMENT-ART5-P01", "数据出境安全评估办法", "5")
+    reg.register(item)  # must NOT raise
+    assert reg.get("CIT-CN-EXPORT-ASSESSMENT-ART5-P01") is item
+
+
+def test_register_rejects_missing_p_segment() -> None:
+    reg = CitationRegistry()
+    bad_item = _sample_citation("CIT-CN-PIPL-ART39", "个人信息保护法", "39")
+    with pytest.raises(ValueError, match="Invalid citation ID"):
+        reg.register(bad_item)
+
+
+def test_register_accepts_sanitized_abbr_with_underscore() -> None:
+    reg = CitationRegistry()
+    item = _sample_citation("CIT-CN-EXPORT_ASSESSMENT-ART5-P01", "数据出境安全评估办法", "5")
+    reg.register(item)
+    assert reg.get("CIT-CN-EXPORT_ASSESSMENT-ART5-P01") is item

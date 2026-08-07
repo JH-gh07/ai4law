@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from backend.common.citation.locators import normalize_article_no
+
 LAW_ABBREVIATIONS: dict[str, str] = {
     "PIPL": "个人信息保护法",
     "DSL": "数据安全法",
@@ -43,7 +45,15 @@ def generate_citation_id(jurisdiction: str, abbr: str, article_no: str, seq: int
     """Generate a unique citation ID.
 
     Example: generate_citation_id("CN", "PIPL", "39", 1) → "CIT-CN-PIPL-ART39-P01"
+    Example: generate_citation_id("CN", "EXPORT-ASSESSMENT", "5", 1)
+             → "CIT-CN-EXPORT_ASSESSMENT-ART5-P01"  (hyphens in abbr sanitized to _)
     """
-    token = re.sub(r"[^A-Z0-9]+", "_", (article_no or "").upper()).strip("_")
+    # Sanitize abbr: any non-alphanumeric character (including hyphens) → underscore.
+    # This prevents LAW_ABBREVIATIONS entries like "EXPORT-ASSESSMENT" from producing
+    # 5-segment IDs that break downstream ID parsing.
+    abbr_token = re.sub(r"[^A-Z0-9]+", "_", abbr.upper()).strip("_")
+    # Normalize article_no first (Chinese numerals → Arabic) before uppercasing.
+    normalized = normalize_article_no(article_no or "")
+    token = re.sub(r"[^A-Z0-9]+", "_", normalized.upper()).strip("_")
     article_part = f"ART{token}" if token else "GEN"
-    return f"CIT-{jurisdiction.upper()}-{abbr.upper()}-{article_part}-P{seq:02d}"
+    return f"CIT-{jurisdiction.upper()}-{abbr_token}-{article_part}-P{seq:02d}"
