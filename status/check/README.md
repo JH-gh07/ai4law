@@ -8,7 +8,7 @@
 |------|------|
 | `DataComplyFlow_Schema契约防漂移阶段验收_20260807.md` | OpenAPI 类型、单源 Builder、26 案例 HTTP、11 模块浏览器 E2E 的证据与边界 |
 
-对应方案：`status/todo/DataComplyFlow_Schema契约防漂移实施方案_20260806.md`。仓库内 PR 2/3/4 已实现；远端 Actions 首跑、`new` 分支必需检查和发布流程依赖尚未完成，因此方案仍留在 `todo/`。
+对应方案：`status/check/DataComplyFlow_Schema契约防漂移实施方案_20260806.md`。该方案作为仓库内实现的阶段归档，与本阶段验收报告配套保留。远端部署验收、`new` 分支必需检查和发布流程依赖仍属于后续环境治理，不在本次归档中宣称已通过。
 
 ## 引用跳转闭环治理 · P0 阶段（2026-08-06）
 
