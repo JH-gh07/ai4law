@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.common.citation.output import normalize_citation_item
-from backend.common.citation.output import synthesize_citation_map, write_citation_map_json
 from backend.core.dependencies import get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.schemas.citation import CitationDetailResponse, CitationMapResponse
@@ -64,81 +63,6 @@ def _find_citation_map(task_id: str, module: str | None = None) -> tuple[str, di
     return None, None
 
 
-def _read_recovery_payload(module: str, task_id: str) -> dict | None:
-    output_dir = Path("outputs") / module / task_id / "outputs"
-    trace_dir = Path("outputs") / module / task_id / "trace"
-    payload: dict[str, object] = {"task_id": task_id}
-
-    # 1. Scan outputs/*.json (existing)
-    for candidate in sorted(output_dir.glob("*.json")):
-        try:
-            data = json.loads(candidate.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        if not isinstance(data, dict):
-            continue
-        if isinstance(data.get("chapters"), list):
-            payload["chapters"] = data["chapters"]
-        if isinstance(data.get("regulations"), list):
-            payload["regulations"] = data["regulations"]
-        if isinstance(data.get("result"), dict):
-            payload["result"] = data["result"]
-
-    # 2. Scan trace/*.json for regulations / citations / chapters
-    if trace_dir.is_dir() and not payload.get("regulations"):
-        trace_regulations: list[dict] = []
-        trace_chapters: list[dict] = []
-        for candidate in sorted(trace_dir.glob("*.json")):
-            if candidate.name == "manifest.json":
-                continue
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                continue
-            inner = data.get("payload", {}) if isinstance(data, dict) else {}
-            detail = inner.get("detail", {}) if isinstance(inner, dict) else {}
-
-            # regulations from retrieval hits / legal grounding
-            if isinstance(inner.get("regulations"), list):
-                trace_regulations = inner["regulations"]
-            if isinstance(detail.get("hits"), list):
-                for h in detail["hits"]:
-                    if isinstance(h, dict) and h.get("source"):
-                        trace_regulations.append({
-                            "source_id": h.get("source_id", h["source"]) or h["source"],
-                            "title": h.get("title", h["source"]),
-                            "article": h.get("article", "") or h.get("citation_anchor", ""),
-                            "snippet": h.get("snippet", "") or h.get("content", "") or "",
-                        })
-            # chapters from _chapters_generated events
-            if isinstance(detail.get("chapters"), list):
-                trace_chapters = detail["chapters"]
-
-        if trace_regulations:
-            payload["regulations"] = trace_regulations
-        if trace_chapters and not payload.get("chapters"):
-            payload["chapters"] = trace_chapters
-
-    # 3. Fallback: scan intermediate trace events for gap_items (CPRA pattern)
-    if not payload.get("regulations") and trace_dir.is_dir():
-        gap_citations: list[str] = []
-        for candidate in sorted(trace_dir.glob("*intermediate*.json")):
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                continue
-            inner = data.get("payload", {}) if isinstance(data, dict) else {}
-            detail = inner.get("detail", {}) if isinstance(inner, dict) else {}
-            if detail.get("category") == "gap_items" and isinstance(detail.get("data"), list):
-                for gap in detail["data"]:
-                    if isinstance(gap, dict) and isinstance(gap.get("legal_basis"), str):
-                        gap_citations.append(gap["legal_basis"])
-        if gap_citations:
-            payload["result"] = {"citations": [{"source": c} for c in gap_citations]}
-
-    return payload if len(payload) > 1 else None
-
-
 def _build_detail(item: dict, *, module: str, footnote_number: int | None = None) -> CitationDetailResponse:
     normalized = normalize_citation_item(item, module=module)
     return CitationDetailResponse(
@@ -184,58 +108,10 @@ def get_report_citations(
     require_task_access(db, task_id=task_id, user_id=current_user.id)
     resolved_module, data = _find_citation_map(task_id, module)
     target_module = resolved_module or module or ""
-    if data is None and target_module:
-        recovery_payload = _read_recovery_payload(target_module, task_id)
-        if recovery_payload is not None:
-            footnote_map, all_items = synthesize_citation_map(
-                module=target_module,
-                task_id=task_id,
-                payload=recovery_payload,
-            )
-            output_dir = Path("outputs") / target_module / task_id / "outputs"
-            output_dir.mkdir(parents=True, exist_ok=True)
-            write_citation_map_json(
-                output_dir=output_dir,
-                module=target_module,
-                task_id=task_id,
-                footnote_map=footnote_map,
-                all_items=all_items,
-            )
-            data = {
-                "task_id": task_id,
-                "module": target_module,
-                "footnote_map": footnote_map,
-                "all_items": all_items,
-            }
-            resolved_module = target_module
-
     if data is None:
         return CitationMapResponse(task_id=task_id, module=target_module, footnote_map={}, citation_count=0)
 
     footnote_map_raw: dict = data.get("footnote_map", {})
-    all_items_raw: list[dict] = data.get("all_items", [])
-    if not footnote_map_raw and target_module:
-        recovery_payload = _read_recovery_payload(target_module, task_id)
-        merged_payload = recovery_payload or {}
-        if not merged_payload and all_items_raw:
-            merged_payload = {"result": {"citations": all_items_raw}}
-        synthesized_footnote_map, synthesized_all_items = synthesize_citation_map(
-            module=target_module,
-            task_id=task_id,
-            payload=merged_payload,
-        )
-        if synthesized_footnote_map:
-            footnote_map_raw = synthesized_footnote_map
-            all_items_raw = synthesized_all_items
-            output_dir = Path("outputs") / target_module / task_id / "outputs"
-            output_dir.mkdir(parents=True, exist_ok=True)
-            write_citation_map_json(
-                output_dir=output_dir,
-                module=target_module,
-                task_id=task_id,
-                footnote_map=synthesized_footnote_map,
-                all_items=synthesized_all_items,
-            )
 
     result: dict[str, CitationDetailResponse] = {}
     for num_str, item in footnote_map_raw.items():

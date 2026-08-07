@@ -5,7 +5,10 @@ from dataclasses import dataclass, field
 
 from backend.common.citation.models import CitationItem
 
-_CIT_MARKER_RE = re.compile(r"\{\{(CIT-[A-Z]+-[A-Z0-9]+-(?:ART[A-Z0-9_]+|GEN)-P\d+)\}\}")
+# Citation IDs are generated from registry abbreviations, some of which contain
+# hyphens. Parse the marker boundary here and let the registry decide whether
+# the captured ID is registered.
+_CIT_MARKER_RE = re.compile(r"\{\{(CIT-[^{}\s]+)\}\}")
 
 
 @dataclass

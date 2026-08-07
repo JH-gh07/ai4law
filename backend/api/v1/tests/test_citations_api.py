@@ -101,7 +101,7 @@ def test_citation_report_supports_module_and_knowledge_url(tmp_path: Path, monke
         assert data["footnote_map"]["1"]["open_mode"] == "in_app"
 
 
-def test_citation_report_backfills_empty_footnote_map_from_outputs(tmp_path: Path, monkeypatch) -> None:
+def test_citation_report_does_not_synthesize_empty_footnote_map(tmp_path: Path, monkeypatch) -> None:
     task_id = "task-cite-2"
     output_dir = tmp_path / "outputs" / "assessment" / task_id / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -132,6 +132,6 @@ def test_citation_report_backfills_empty_footnote_map_from_outputs(tmp_path: Pat
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["citation_count"] == 1
-        assert data["footnote_map"]["1"]["title"] == "个人信息保护法"
-        assert data["footnote_map"]["1"]["article_no"] == "39"
+        assert data["citation_count"] == 0
+        assert data["footnote_map"] == {}
+        assert json.loads((output_dir / "citation_map.json").read_text(encoding="utf-8"))["footnote_map"] == {}

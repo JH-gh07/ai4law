@@ -3,7 +3,7 @@
 > 实施日期：2026-08-08
 > 适用分支：`new`
 > 依据方案：`status/todo/DataComplyFlow_Schema优先法律文档编译器架构方案_20260807.md`
-> 实施提交：`62e631e`、`0511ec8`
+> 实施提交：`62e631e`、`0511ec8`、`待提交（引用闭环 P0）`
 > 状态：阶段 A 局部完成，旧生成链路保持兼容
 
 ## 一、实施结论
@@ -29,6 +29,9 @@ Pydantic semantic IR
 | `backend/common/reporting/schema/document.py` | 新增 SectionIR、DocumentIR、Provenance | 为后续 Template/Compiler/Renderer 提供唯一中间表示 |
 | `backend/common/reporting/compiler/core.py` | 新增 Input、Citation、Numbering、Dedup、Structure、Render Gates | 先建立可单测、可回滚的安全网，不直接改生产生成流程 |
 | `backend/common/llm/postprocess.py` | 未注册 `{{CIT-*}}` 改为 `【未注册引用：...】`；补窄范围法律义务识别 | 禁止未注册证据静默消失，并让明确“应当/必须”等主张进入待核验路径 |
+| `backend/common/citation/{registry.py,postprocess.py}` | marker 识别改为按 `{{CIT-...}}` 边界解析，支持包含连字符的合法 citation_id | 消除生成器缩写含连字符时的 99% marker 漏匹配风险 |
+| `backend/api/v1/endpoints/citations.py` | 删除读取期 trace/retrieval 合成 citation_map 及磁盘回写 | API 只能读取生成期事实，不能把检索命中伪装成正文引用 |
+| `backend/api/v1/tests/test_citations_api.py` | 将空 footnote_map 回填测试改为不合成、不写盘断言 | 固化 CitationMap 事实基线契约 |
 | `frontend/src/components/citation/CitationMarkdownRenderer.tsx` | `【待核验】`、`【缺少依据】`、`【证据冲突】` 进入待核验样式类 | 不把待核验提示渲染成可点击的 CitationPopover |
 | `frontend/src/styles/app/product-pages-and-overrides.css` | 增加 `workspace-legal-callout-pending` 样式 | 让风险状态在用户界面可见、可区分 |
 
@@ -49,6 +52,8 @@ Pydantic semantic IR
 | `uv run pytest -q backend/tests` | 601 passed, 1 failed | 失败为既有 `backend/common/render/tests/test_normalization_contract.py::test_backend_matches_normalization_contract[pipe_table_norm]`；与本轮新增文件无交集，列入独立渲染契约遗留项 |
 | `npm test -- --run` | 113 passed, 2 skipped | 22 个测试文件通过；测试中已有的 chunk load failed 模拟日志不影响退出码 |
 | `npm run build` | 通过 | 347 modules transformed，无构建错误 |
+
+| 引用闭环 P0 定向测试 | 20 passed | marker 兼容性、API 不合成、不写盘 |
 
 本轮不修改管线表格规范化逻辑，避免在 Schema-first 迁移切片中引入无关的渲染行为变更。该失败项必须在阶段 A 完整验收前单独定位并补齐契约测试。
 

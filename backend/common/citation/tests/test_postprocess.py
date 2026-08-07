@@ -175,6 +175,23 @@ def test_convert_citation_markers_skips_unknown_markers() -> None:
     assert "【未注册引用：CIT-CN-UNKNOWN-ART99-P01】" in result
 
 
+def test_convert_citation_markers_accepts_hyphenated_registry_abbreviation() -> None:
+    reg = CitationRegistry()
+    reg.register(CitationItem(
+        citation_id="CIT-CN-EXPORT-ASSESSMENT-ART5-P01",
+        source_id="CN-REG-001",
+        title="数据出境安全评估办法",
+        article_no="5",
+    ))
+
+    result = convert_citation_markers(
+        "依据 {{CIT-CN-EXPORT-ASSESSMENT-ART5-P01}}。",
+        reg,
+    )
+
+    assert result == "依据 [1]。"
+
+
 def test_convert_citation_markers_empty_text() -> None:
     reg = CitationRegistry()
     reg.register(
