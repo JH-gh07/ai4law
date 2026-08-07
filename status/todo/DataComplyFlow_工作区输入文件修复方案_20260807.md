@@ -1,667 +1,525 @@
-# DataComplyFlow 工作区输入文件"找不到"与"冗余"修复方案
+# DataComplyFlow 工作区输入文件修复方案
 
-> 文档性质：待实施技术方案（TODO）
+> 文档性质：经代码链路复核的实施方案（v2，待实施）
 > 编制日期：2026-08-07
-> 方案版本：v1
-> 适用分支：`new`
-> 问题来源：工作台 ResourcePanel 点击输入文件时报 403/404，且"已提交材料"列表随运行次数不断膨胀
-> 关联方案：`status/todo/DataComplyFlow_输出与资料冗余治理方案_20260806.md`（输出侧冗余治理）
+> 代码基线：`new` 分支，审计提交 `0532ff6`；其后提交截至 `899b705` 未改动本文引用的 `backend/`、`frontend/` 链路
+> 问题范围：工作区“已提交材料”中的输入文件身份、权限、预览、历史展示和生命周期
+> 关联方案：`status/todo/DataComplyFlow_输出与资料冗余治理方案_20260806.md`
 
----
+## 〇、核心结论
 
-## 一、问题诊断
+这不是一个“在上传时补一条 DB 记录”就能成熟解决的问题。当前设计把服务器文件路径同时当作：
 
-### 1.1 两个症状
+- 上传结果的公开身份；
+- 模块请求中的文件引用；
+- 前端工作区的持久化数据；
+- 预览 API 的查询参数；
+- 输入/输出类别推断依据。
 
-| 症状 | 用户感知 | 触发条件 |
-|------|---------|---------|
-| **找不到文件** | 工作台左侧"已提交材料"点击某个文件 → 加载旋转 → 报错 403 或 404 | 始终触发（100% 复现） |
-| **文件冗余** | "已提交材料"下存在大量重复或已无意义的条目；表单入口随运行次数累积 | 同 task 下多次运行后 |
+但上传端、模块运行端和预览端对这个路径的信任模型并不一致，因此产生 403/404、重启丢失、多进程不一致和工作区虚假文件条目。
 
-### 1.2 涉及的完整代码链路
+成熟终态必须改为：
 
-```
-用户上传文件 → POST /api/v0/files/upload → 写磁盘 → 返回 path
-    → 前端 ModuleRunPanel:uploadFiles() 收集 paths
-    → payload-builders/cn.ts|eu.ts|us.ts 把 paths 嵌入 request payload
-    → 前端 WorkspaceShell:onRunDone() 把整个 request 存入 zustand state (app-store)
-    → ResourcePanel:collectInputResources() 递归扫描 state 中所有 run.request
-    → ResourcePanel:inputEntries useMemo 生成左侧文件树列表
-    → 用户点击某个文件
-    → WorkspaceShell:handleOpenResource() 发起 GET /api/v1/artifacts/preview?path=xxx
-    → artifacts.py:_resolve_artifact_path() 路径解析 + 安全检查
-    → artifacts.py:_assert_artifact_access() 数据库权限验证
-    → ❌ 403/404 报错
+```text
+稳定 file_id = 公开身份
+DB owner/workspace binding = 授权事实
+storage_path = 服务器私有实现细节
+ModuleRun.inputFiles = 工作区输入文件的唯一展示来源
+run history = 可折叠审计历史，不是应删除的“重复数据”
 ```
 
----
+建议分两步交付：先在不破坏现有 10 个模块请求的前提下完成认证、权属登记和 ID 预览；再把模块契约从原始路径迁移到不透明文件引用。
 
-## 二、根因分析
+## 一、当前事实链路
 
-### 2.1 "找不到文件"的两个根因
+### 1.1 用户真实上传链路
 
-#### 根因 A：上传未写 DB → `_assert_artifact_access()` 查不到记录
-
-**代码位置：**
-- 上传：`backend/api/v0/task_gateway/service.py:80-96`（`upload_file`）
-- 验证：`backend/api/v1/endpoints/artifacts.py:59-73`（`_assert_artifact_access`）
-- DB 模型：`backend/models/review.py:28-38`（`UploadedFileModel`）
-
-**现状事实链：**
-
-```python
-# service.py:80-96 — upload_file() 做了以下操作：
-def upload_file(self, upload: UploadFile):
-    # 1. 写磁盘 ✅
-    out_path = self.upload_dir / safe_name
-    out_path.write_bytes(payload)
-    # 2. 存内存字典 ⚠️
-    with self._lock:
-        self._file_index[file_id] = out_path  # ← 进程内内存，重启即丢失
-    # 3. 返回路径给前端
-    return V0UploadedFileData(path=str(out_path))
-    # ❌ 没有写 UploadedFileModel DB 记录
+```text
+ModuleRunPanel.uploadFiles()
+  → frontend uploadTaskFile()
+  → POST /api/v0/files/upload（前端携带 Authorization，后端路由未消费）
+  → V0TaskGatewayService.upload_file()
+       ├─ 固定写入 CWD/storage/uploads
+       ├─ 只写进程内 _file_index
+       ├─ 不写所有权 DB 记录
+       └─ 返回服务器 path
+  → payload builder 把 path 写入 uploaded_files/attachments/storage_uri
+  → WorkspaceShell 把整个 request 保存为 ModuleRun
+  → app-store 同时持久到 localStorage 和 /api/v1/workspace-state
+  → ResourcePanel 递归猜测 request 中的路径
+  → GET /api/v1/artifacts/preview?path=...
+  → 文件存在/允许根检查 + DB owner 检查
 ```
 
-```python
-# artifacts.py:59-73 — _assert_artifact_access() 查 DB：
-def _assert_artifact_access(db, user, resolved):
-    upload_stmt = select(UploadedFileModel.id).where(
-        UploadedFileModel.user_id == user.id,
-        UploadedFileModel.storage_path.in_(candidate_paths),  # ← 需要 DB 里有记录
-    )
-    upload_hit = db.execute(upload_stmt).scalar_one_or_none()
-    # ❌ 因为 upload_file() 没写 DB，这里永远返回 None
-    if not upload_hit and not report_hit:
-        raise HTTPException(status_code=403, detail="You do not have access...")
+上传端没有写 `UploadedFileModel`，但预览端只接受归属于当前用户的 `UploadedFileModel` 或 `ReportArtifactModel`。对真实上传文件，这是 403 的直接条件。
+
+### 1.2 开发预置文件是另一条 403 路径
+
+开发加速模式会把 `resources/...` 和 `benchmarks/sample-inputs/...` 等仓库文件路径直接写入请求。`ResourcePanel` 会把它们识别为“已提交材料”，但 `artifacts.py` 的预览根只包含 `outputs`、`storage`、`reports` 和 `uploads`。
+
+因此，开发预置文件会在所有权 DB 查询之前就因越出允许根而 403。这些文件是测试 fixture，不是用户上传；正确做法是分类展示或不展示，不是扩大生产预览允许根到整个仓库。
+
+### 1.3 403/404 必须按路径来源分类
+
+| 路径来源 | 磁盘状态 | 权属记录 | 当前结果 | 根因 |
+|---|---|---|---|---|
+| `/api/v0/files/upload` 真实上传 | 存在且在 upload root | 无 | 403 | 上传与预览权限契约断开 |
+| 开发预置 `resources/`/`benchmarks/` | 存在但不在允许根 | 无 | 403 | fixture 被错当用户输入 |
+| 其他用户的已登记文件 | 存在 | owner 不同 | 403 | 正常的跨用户拒绝 |
+| localStorage/远端 workspace 中的旧路径 | 已清理、移动或挂载变更 | 不确定 | 404 | 工作区持久化了不稳定物理路径 |
+| 非默认 `storage_dir` 环境 | 文件写入了硬编码 CWD 路径 | 无 | 403/404 | v0 upload 未使用 `AppContainer.settings` |
+
+验收报告不能只写“点击输入文件失败”。必须同时记录 `file_id`、路径来源、HTTP 状态、后端 detail、磁盘存在性和权属记录命中情况。
+
+### 1.4 “冗余”是展示模型错位，不是 run 数据应去重
+
+`ResourcePanel` 对每个 run 平铺一条“基础信息表单（第 N 次）”。多次运行本身是有价值的审计历史，不应在 store 或展示层按内容哈希合并。真正问题是“最新输入”和“历史运行”没有分层，导致审计历史占据主工作面。
+
+文件条目则由递归扫描任意 request 字符串推测而来，存在三个逻辑缺陷：
+
+1. 文件身份不来自上传回执，而来自正则猜测；
+2. 任意带扩展名或斜杠的业务文本可被误判为文件；
+3. 输入身份又被 `!outputFiles.some(...)` 反向定义，同一资产合法具有两种角色时会从输入侧消失。
+
+### 1.5 当前上传还缺少必要资源与类型门禁
+
+v0 `upload_file()` 使用 `upload.file.read()` 一次性读取整个文件，没有字节上限、扩展名允许集、MIME/文件特征验证或失败原子性。document review 的 `FileService` 已有扩展名白名单，但同样整件读入内存且没有大小上限。
+
+因此，“预览可用”不能是本项唯一验收目标。如果为了修 403 直接将任意大小、任意类型文件登记为可用资产，会把可用性缺陷变成资源耗尽和恶意文件处理风险。
+
+## 二、对 v1 方案的审核结果
+
+| v1 设计 | 审核 | 修正 |
+|---|:---:|---|
+| 上传时补写 `UploadedFileModel` | 方向部分正确 | 先明确通用 workspace file 与 review task file 的 owner 语义，不能用空 `task_id` 冒充有效关联 |
+| DB 写入失败后 `except: pass` 仍返回上传成功 | P0 错误 | 这会制造已返回但不可预览/不可清理的幽灵文件；必须回滚文件并明确失败 |
+| DB 失败时“降级为 download-only” | 事实不成立 | preview/file/download 三个端点都执行同一权属检查，无 DB 记录同样无法下载 |
+| 返回 `out_path.resolve()` 绝对路径 | P0 错误 | 绝对路径会泄露服务器布局、破坏跨环境恢复；终态 API 不应返回任何物理路径 |
+| `user_id=""` 作为兼容默认 | P0 错误 | 上传是需要所有权的操作，必须认证；空 owner 只能拒绝，不能降级成功 |
+| 服务层临时 import DB context | P1 不合适 | 沿用 `get_db`/`get_container` 依赖注入与可测试 service，不建第二套 session 获取方式 |
+| 用自制 16-bit 哈希去重表单 | P0 错误 | 碰撞空间小；JSON replacer 会丢失嵌套字段；更重要的是历史 run 不应被合并 |
+| 在 `ResourcePanel` 硬编码模块文件字段白名单 | P1 过渡可用 | 最终应由 `ModuleRun.inputFiles` 显式传入；否则白名单会与 OpenAPI/payload builder 再建一个漂移源 |
+| 白名单声称已覆盖全部模块 | 事实错误 | TIA 是 `attachments[].storage_uri`，US 14117 是 `attachments: string[]`；BCR 同时存在 `attachments` 与 `uploaded_files` |
+| 用路径后缀作为文件真实性依据 | 不充分 | 后缀只是声明，上传端仍须验证大小、类型特征、安全和模块允许集 |
+| 估算总工时 2.5 天 | 只够做临时止血 | 完成身份化、契约迁移、历史兼容和生命周期需分阶段交付 |
+
+## 三、目标、非目标与强制不变量
+
+### 3.1 目标
+
+1. 用户上传必须认证，文件元数据和所有权持久化，服务重启/多 worker 后仍可预览。
+2. 前端、workspace state 和公开 API 使用 `file_id` 和文件元数据，不依赖服务器绝对路径。
+3. 模块运行前，后端按当前用户解析文件引用，拒绝未登记或他人文件。
+4. `ResourcePanel` 只消费显式输入资产，不递归猜测任意 request 文本。
+5. 主界面显示最新一次输入，历史 run 可折叠查看；完整审计历史不被删除或哈希合并。
+6. 文件预览、下载、绑定、删除和过期都通过同一所有权与生命周期模型。
+
+### 3.2 非目标
+
+- 不通过扩大 artifacts 允许根来开放任意仓库文件预览；
+- 不删除多次运行历史来制造“不冗余”的视觉效果；
+- 不把 SHA-256 相同当作两次业务提交相同；哈希可用于完整性和物理存储优化，不用于抹掉审计语义；
+- 不在本方案中重写输出 artifact 体系；只对齐其删除和保留边界；
+- 不在一个提交中同时强制迁移全部历史 workspace state。
+
+### 3.3 强制不变量
+
+| 编号 | 不变量 |
+|---|---|
+| I1 | 对外响应不含服务器绝对路径 |
+| I2 | 没有当前 user owner 记录的文件不可预览、下载或提交给模块 |
+| I3 | DB 记录和 blob 必须同成功或同失败，不返回幽灵文件 |
+| I4 | 文件输入身份来自显式 `inputFiles`，不来自路径正则或“不是输出” |
+| I5 | 相同文件允许同时作为输入和输出展示，角色不互相抵消 |
+| I6 | 历史 run 保持可追溯；“最新输入”是视图，不是数据删除 |
+| I7 | 开发 fixture 不获得生产用户上传文件的权限语义 |
+| I8 | 项目删除与过期清理同时对账 DB 和 blob，不制造悬空记录 |
+
+## 四、目标架构
+
+### 4.1 通用输入文件身份
+
+不建议直接把 `UploadedFileModel.task_id=""` 当作通用 workspace 资产。该模型当前由 document review 流程使用，`task_id` 是必填的 review task 关联，项目删除也按该字段清理。
+
+建议新增通用 `InputFileAssetModel`，与 review 旧模型在一个明确迁移窗口内并存，迁移结束后 document review 也改用通用服务，禁止无期双轨。
+
+| 字段 | 用途 |
+|---|---|
+| `id` | 稳定不透明 `file_id` |
+| `user_id` | 所有者，必填并建索引 |
+| `workspace_id` | 用户工作区/TaskSpace 归属 |
+| `bound_task_id` | 可选的后端运行 task ID |
+| `file_name` | 用户可见原始文件名，完成 basename 清理 |
+| `declared_content_type` / `detected_content_type` | 客户声明与服务端检测结果 |
+| `size_bytes` / `sha256` | 大小门禁、完整性、对账 |
+| `storage_key` | 内部相对存储键，不对前端暴露 |
+| `status` | `staging/ready/quarantined/deleted/error` |
+| `created_at` / `deleted_at` | 审计和生命周期 |
+
+v1 不支持跨 workspace 共享同一逻辑文件资产。相同 SHA-256 可在存储层实现受控去重，但每次上传仍保留独立的 owner/workspace/审计记录。
+
+### 4.2 身份化 API
+
+```text
+POST   /api/v1/input-files
+GET    /api/v1/input-files/{file_id}
+GET    /api/v1/input-files/{file_id}/preview
+GET    /api/v1/input-files/{file_id}/content
+GET    /api/v1/input-files/{file_id}/download
+DELETE /api/v1/input-files/{file_id}
 ```
 
-**结论：** `UploadedFileModel` 表结构已完备（`backend/models/review.py:28-38`），包含 `id`, `user_id`, `task_id`, `filename`, `content_type`, `storage_path`, `extracted_text`, `created_at`——但写入端（`upload_file`）没有使用它。验证端（`_assert_artifact_access`）在查询它。两端的 gap 就是 403 的来源。
+`POST` 使用 multipart 接收 `file`、`workspace_id`、`module_key` 和可选 `file_role`，必须消费 `get_current_user`、`get_db` 和 `get_container`。响应只返回：
 
-#### 根因 B：`_candidate_artifact_paths` 的路径匹配问题
-
-**代码位置：** `backend/api/v1/endpoints/artifacts.py:44-56`
-
-```python
-def _candidate_artifact_paths(resolved: Path) -> set[str]:
-    candidates = {str(resolved), resolved.as_posix()}      # 绝对路径 POSIX 和 native 两种
-    cwd = Path.cwd().resolve()
-    try:
-        relative = resolved.relative_to(cwd)
-    except ValueError:
-        relative = None
-    if relative is not None:
-        relative_posix = relative.as_posix()
-        candidates.update({str(relative), relative_posix, f"./{relative_posix}"})
-    return candidates
-```
-
-`upload_file` 返回的 path 是通过 `str(out_path)`（即 `out_path` 的 native 表示），而 `out_path` 由 `self.upload_dir / safe_name` 拼接。如果 `self.upload_dir` 是相对路径 `storage/uploads`（第 77 行），那么 `out_path` 解析为 CWD 下的 `storage/uploads/f_xxx.pdf`。这个路径的 `str()` 和 `.as_posix()` 表示不同（macOS 上相同，但 Linux 上不同），但都在 `candidate_paths` 中生成。**这不是 404 的根因**，但它是 `_candidate_artifact_paths` 生成多达 5 种路径变体却仍未匹配的理由——问题出在 DB 里根本没有记录，不是路径匹配问题。
-
-#### 根因 C：临时文件被清理 → 404
-
-`upload_file()` 写的磁盘路径是 `storage/uploads/f_xxx.pdf`。如果运维清理了这个目录下的过期文件，或服务重启后 `self.upload_dir` 指向不同位置，文件在磁盘上不存在时，`_resolve_artifact_path()` 直接返回 404。这是一条**次要**但现实存在的路径，因为临时上传文件的持久化策略从未明确定义。
-
-### 2.2 "冗余"的四个根因
-
-#### 根因 D：表单入口按 run 逐条累积
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:399-406`
-
-```typescript
-sortedRuns.forEach((run, index) => {
-  entries.push({
-    id: `input-form-${run.id}`,
-    name: pickUniqueName(buildFormEntryName(index, lang)),  // ← "基础信息表单（第1次）"
-    kind: "form",
-    payload: run.request,
-    createdAt: run.startedAt
-  });
-  // ...
-});
-```
-
-**问题：** 每次 `ModuleRun` 记录都是独立的——即便是同一个 Task 下、用完全相同的输入参数重新提交。`state.moduleRuns` 不做 run 级别的合并或去重（这是对的——每次运行都应该被记录），但 ResourcePanel 把它当作"需要展示的条目"逐条列出，这就是错的。
-
-公式：运行 N 次 → "已提交材料"下至少有 N 条"基础信息表单（第X次）" + N 次上传文件的并集。
-
-#### 根因 E：`collectInputResources` 全量递归扫描
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:245-295`
-
-```typescript
-function collectInputResources(value: unknown, bag: Map<...>, lang, keyHint?) {
-  if (typeof value === "string") {
-    if (looksLikeFilePath(value)) { bag.set(value, ...) }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectInputResources(item, bag, lang, keyHint));
-    return;
-  }
-  if (isRecord(value)) {
-    // 找 storage_uri / path / file_path
-    const maybePath = value.storage_uri ?? value.path ?? value.file_path;
-    // ...
-    // 然后递归这个对象的所有字段 ↓
-    Object.entries(value).forEach(([key, nested]) => {
-      collectInputResources(nested, bag, lang, key);  // ← 递归全量！
-    });
-  }
+```json
+{
+  "file_id": "file_...",
+  "file_name": "data_inventory.xlsx",
+  "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "size_bytes": 12345,
+  "sha256": "...",
+  "status": "ready",
+  "created_at": "...",
+  "reference_uri": "input-file://file_.../data_inventory.xlsx",
+  "preview_url": "/api/v1/input-files/file_.../preview",
+  "download_url": "/api/v1/input-files/file_.../download"
 }
 ```
 
-**问题：** 诊断（diagnosis）的 `answers` 对象有 60+ 个字段。`company_name` 的值 "智造未来科技有限公司" 被递归扫描（不带扩展名、不包含斜杠，不匹配 `looksLikeFilePath`——侥幸不触发）。但如果某个字段的值碰巧包含 `.json`、`.md` 等扩展名（比如 "请补充 .json 格式的数据清单"），就会被误判为文件路径。
+响应不包含 `storage_path`、`storage_key` 或绝对路径。`reference_uri` 是一个带原始扩展名的不透明兼容引用，不是可直接打开的物理路径。预览和下载按 `file_id + current_user` 查询，在查询到 owner 记录后才解析私有存储键。建议对“不存在”和“不属于当前用户”统一返回 404，避免泄露文件存在性。
 
-根本问题不是误判（目前未发生），而是**不必要的 O(n) 全量递归**——对一个大 payload 来说，99.9% 的字段都不是文件路径，但都被遍历了。
+当前 TaskSpace 只存在于用户的 `workspace_states.state_json` 中，不是独立关系表。因此 `workspace_id` 在本阶段是当前用户范围内的分组/生命周期键，不能替代 `user_id` 成为授权根。上传端应验证其格式并绑定当前用户，不应依赖 500 ms workspace-state 保存防抖完成强外键检查，否则会引入创建工作区后立即上传的竞态。
 
-#### 根因 F：`looksLikeFilePath` 正则过于宽松
+`/api/v1/artifacts/*` 继续用于输出产物，不再兼任通用输入文件 API。预览文本解析可复用其现有渲染语义，但权限和路由保持输入/输出分离。
 
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:137-146`
+### 4.3 上传一致性与安全
+
+上传服务必须执行以下顺序：
+
+```text
+认证与 workspace 归属验证
+→ 按配置的字节上限流式写临时文件
+→ 同步计算 size + SHA-256
+→ 验证扩展名、MIME/文件特征和模块允许类型
+→ 必要时标记 quarantined
+→ 在同一 DB transaction 中写 staging 记录
+→ 临时文件原子 rename 到最终 storage_key
+→ DB commit 为 ready
+→ 返回不透明回执
+```
+
+任一步失败都必须清理临时/最终 blob 并回滚 DB，不得吞异常。超限返回 413，不支持类型返回 415 或当前 API 统一错误码。文件大小上限和模块类型允许集必须为配置/契约且有边界测试，不在方案中凭空指定一个数字。
+
+### 4.4 模块请求的迁移
+
+不能只修预览，却继续允许客户端给模块传入任意服务器路径。迁移分两阶段：
+
+**兼容阶段**
+
+- 前端改用已认证 v1 upload，同时获得 `file_id` 和 `input-file://<file_id>/<filename>` 不透明兼容引用；
+- 旧模块字段短期继续接受 string，但新前端只发送 `input-file://` URI；所有 v1 模块路由在调用 service 前按 `file_id + current_user` 解析为受控内部路径；
+- 历史原始路径仅在 DB 已有同 owner 登记时兼容，不能因为它位于 upload root 就被信任；
+- 删除 v0 `_resolve_attachment_paths()` “查不到 ID 就当文件路径”的 fallback；
+- v0 upload 或废弃，或改为要求认证并委托同一 InputFileService 的兼容壳，不再保留进程内真源。
+
+**终态阶段**
+
+- 定义统一 `InputFileRef`：`file_id/file_name/file_role/file_format`；
+- 前端 payload builder 使用 OpenAPI 生成类型生成文件引用；
+- 各模块 router 通过共享 resolver 按 `current_user` 将引用解析为内部路径，service 不相信客户端路径；
+- 文件字符串/对象形态的模块差异在 schema/adapter 边界收敛，不在 `ResourcePanel` 重新维护；
+- 一个发布窗口后关闭原始路径写入，对仍使用路径的请求返回明确契约错误。
+
+CPRA 中的 HTTP(S) 隐私政策 URL 不是上传文件，保持为独立 `external_url` 输入，不创建本地 `InputFileAsset`。
+
+### 4.5 前端显式输入资产
+
+在 `ModuleRun` 中新增：
 
 ```typescript
-const hasFileExtension = (value: string): boolean =>
-  /\.(docx?|pdf|md|html|txt|csv|xlsx?|png|jpg|jpeg|json)$/i.test(value);
+type InputFileReference = {
+  fileId: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  role?: string;
+  source: "upload" | "dev_fixture";
+  previewUrl?: string;
+  downloadUrl?: string;
+};
 
-const looksLikeFilePath = (value: string): boolean => {
-  if (!trimmed) return false;
-  if (hasFileExtension(trimmed)) return true;           // 任何带这些扩展名的都算
-  if (/^(storage\/|outputs\/|uploads\/|\/|[a-zA-Z]:\\)/.test(trimmed)) return true;
-  if (/[\\/]/.test(trimmed) && !/\s\/\s/.test(trimmed)) return true;
-  return false;
+type ModuleRun = {
+  // existing fields...
+  inputFiles: InputFileReference[];
 };
 ```
 
-**问题：**
-1. `hasFileExtension` 只用正则后缀匹配——"这是一份 .pdf 报告" 会被误判为文件路径
-2. "任何包含 `/` 或 `\` 的字符串" 过于宽泛——`"Q: yes/no, 路径: 未确认"` 不会被触发（因为 `\s\/\s` 排除），但 `"uploads/缺省路径"` 会被匹配
-3. 没有做"这个路径是否真的存在于 `uploaded_files` 数组中"的二次确认
-
-#### 根因 G：输入文件用输出文件做"排除过滤器" → 类别混淆
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:410-411`
+`ModuleRunPanel` 不再只返回 `string[]`，而是构建一个运行准备结果：
 
 ```typescript
-Array.from(bag.values())
-  .filter((item) => !outputFiles.some((file) => file.path === item.path))
-  // ↑ 逻辑是"不在 output 里 → 就是 input"
-```
-
-这是**逆向定义**——输入文件的身份不来自"这是什么"，而来自"这不是什么"。如果某条路径同时出现在 input 和 output 中（例如中间文件），在 input 侧会被过滤掉，用户看不到它。
-
----
-
-## 三、修复方案
-
-### 3.1 修复策略概述
-
-| 修复项 | 优先级 | 类型 | 影响范围 |
-|--------|--------|------|---------|
-| P0-A: upload 写 DB | P0 | 后端补齐 | `service.py` + 依赖注入 |
-| P1-B: ResourcePanel 表单去重 | P1 | 前端重构 | `ResourcePanel.tsx` |
-| P1-C: collectInputResources 白名单 | P1 | 前端重构 | `ResourcePanel.tsx` |
-| P2-D: looksLikeFilePath 收紧 | P2 | 前端加固 | `ResourcePanel.tsx` |
-| P2-E: 输入正向定义 | P2 | 前端重构 | `ResourcePanel.tsx` |
-| P3-F: 前端按 run 折叠/归档 | P3 | 前端 UX | `ResourcePanel.tsx` |
-
-### 3.2 P0-A：上传时写入 `UploadedFileModel` DB 记录
-
-**这是"找不到文件"的唯一根治方案。完成此修复后，所有输入文件点击可正常预览。**
-
-#### 3.2.1 需要改什么
-
-**文件：** `backend/api/v0/task_gateway/service.py`
-
-`V0TaskGatewayService` 当前构造函数不持有数据库 session。需要两种方式之一：
-
-**方案 A（推荐——最小改动）：** 在 `upload_file` 方法签名中接受 `user_id` 参数，调用方（router）传入。在 `upload_file` 内部使用独立的 DB session 写入。
-
-```python
-# service.py 改动点
-
-def __init__(self, ..., db_session_factory=None):
-    # 新增：接受 session factory 用于 upload_file 写入 DB
-    self._db_session_factory = db_session_factory or _default_session_factory
-
-def upload_file(self, upload: UploadFile, user_id: str = "") -> V0UploadedFileData:
-    original_name = Path(upload.filename or "uploaded.bin").name
-    file_id = f"f_{uuid.uuid4().hex[:16]}"
-    safe_name = f"{file_id}_{original_name}"
-    out_path = self.upload_dir / safe_name
-    payload = upload.file.read()
-    out_path.write_bytes(payload)
-    with self._lock:
-        self._file_index[file_id] = out_path
-
-    # ===== 新增：写入 UploadedFileModel DB =====
-    storage_path_str = str(out_path.resolve())  # 统一为绝对路径
-    try:
-        from backend.models.review import UploadedFileModel
-        from backend.core.dependencies import get_db_context
-        with get_db_context() as db:
-            db.add(UploadedFileModel(
-                user_id=user_id,
-                task_id="",  # upload 时不绑定 task，create_task 时回填
-                filename=original_name,
-                content_type=upload.content_type or "application/octet-stream",
-                storage_path=storage_path_str,
-                created_at=datetime.now(timezone.utc),
-            ))
-            db.commit()
-    except Exception:
-        # 写 DB 失败不应阻断上传——文件已在磁盘，预览降级为 download 模式
-        pass
-    # =============================================
-
-    return V0UploadedFileData(
-        file_id=file_id,
-        file_name=original_name,
-        mime=upload.content_type or "application/octet-stream",
-        size=len(payload),
-        path=storage_path_str,   # ← 返回绝对路径，与 DB 中 storage_path 一致
-        uploaded_at=datetime.now(timezone.utc),
-    )
-```
-
-**文件：** `backend/api/v0/task_gateway/router.py`
-
-```python
-# router.py 改动点
-
-@router.post("/files/upload", response_model=APIEnvelope)
-def upload_file(
-    file: UploadFile = File(...),
-    current_user: AuthUser = Depends(get_current_user),  # ← 新增：获取用户
-) -> APIEnvelope:
-    uploaded = service.upload_file(file, user_id=current_user.id)
-    return APIEnvelope(data=uploaded.dict())
-```
-
-#### 3.2.2 改动影响分析
-
-- **前向兼容：** `user_id=""` 时写 DB 仍然执行，只是 `user_id` 字段为空字符串，`_assert_artifact_access()` 中 `user_id == user.id` 匹配不到（老数据不自动修复，但新上传的文件可以）
-- **性能影响：** 每次上传多一次 INSERT，可忽略（上传本身涉及磁盘 IO，远大于 DB 写入）
-- **回滚安全性：** 上传成功但 DB 写入失败 → 文件在磁盘上存在但无法通过 artifacts API 预览 → 降级为 download-only 体验（比当前完全不可用的状态好）
-- **需要同时修复的配套：** `V0UploadedFileData.path` 字段当前是 `str(out_path)`（可能是相对路径），改为 `str(out_path.resolve())` 确保与 DB 中 `storage_path` 使用相同的路径表示
-
-#### 3.2.3 测试覆盖
-
-```python
-# backend/api/v1/tests/test_artifacts_access.py 
-# 新增：上传 → 预览 的端到端测试
-
-def test_upload_then_preview_input_file(client, auth_headers, test_file):
-    """上传文件后，通过 artifacts preview API 可以正常预览"""
-    # 1. 上传
-    resp = client.post("/api/v0/files/upload", files={"file": test_file}, headers=auth_headers)
-    assert resp.status_code == 200
-    path = resp.json()["data"]["path"]
-    
-    # 2. 预览
-    resp = client.get(f"/api/v1/artifacts/preview?path={quote(path)}", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["render_mode"] in ("text", "download")
-```
-
-### 3.3 P1-B：ResourcePanel 表单入口按内容指纹去重
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:387-426`
-
-#### 修改目标
-
-将"每次 run 加一条 form entry"改为"相同内容的 form 只显示一次"。
-
-#### 具体改动
-
-```typescript
-// 新增：计算表单内容指纹
-const hashFormInput = (request: unknown): string => {
-  try {
-    // 对 request 做确定性序列化后取 SHA-256 前 16 位
-    const normalized = JSON.stringify(request, Object.keys(request as object).sort());
-    return normalized.length.toString(36) + "-" + 
-           Array.from(normalized).reduce((h, c) => (h * 31 + c.charCodeAt(0)) & 0xffff, 0).toString(36);
-  } catch {
-    return `form-${Date.now()}`;
-  }
-};
-
-// 修改后的 inputEntries useMemo
-const inputEntries = useMemo<InputEntry[]>(() => {
-  const sortedRuns = [...relatedRuns].sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
-  const entries: InputEntry[] = [];
-  const usedNames = new Map<string, number>();
-  const seenPaths = new Set<string>();
-  const seenFormHashes = new Map<string, number>();  // ← 新增：表单指纹 → 出现次数
-
-  const pickUniqueName = (baseName: string): string => {
-    const count = (usedNames.get(baseName) ?? 0) + 1;
-    usedNames.set(baseName, count);
-    return count === 1 ? baseName : `${baseName} (${count})`;
-  };
-
-  sortedRuns.forEach((run, _index) => {
-    // ===== 修改：表单入口按指纹去重 =====
-    const formHash = hashFormInput(run.request);
-    const seenCount = seenFormHashes.get(formHash) ?? 0;
-    seenFormHashes.set(formHash, seenCount + 1);
-    
-    if (seenCount === 0) {
-      // 第一次出现：显示
-      entries.push({
-        id: `input-form-${formHash}`,
-        name: pickUniqueName(buildFormEntryName(entries.filter(e => e.kind === "form").length, lang)),
-        kind: "form",
-        payload: run.request,
-        createdAt: run.startedAt
-      });
-    }
-    // 如果 seenCount > 0：跳过（相同内容的表单已有一条）
-    // ==========================================
-
-    const bag = new Map<string, InputResourceCandidate>();
-    collectInputResources(run.request, bag, lang);
-    Array.from(bag.values())
-      .filter((item) => !outputFiles.some((file) => file.path === item.path))
-      .forEach((item) => {
-        if (seenPaths.has(item.path)) return;
-        seenPaths.add(item.path);
-        entries.push({
-          id: `input-file-${item.path}`,
-          name: pickUniqueName(buildDisplayNameFromPath(item.path, item.labelHint, lang)),
-          kind: "file",
-          sourcePath: item.path,
-          createdAt: run.startedAt
-        });
-      });
-  });
-
-  return entries;
-}, [lang, outputFiles, relatedRuns]);
-```
-
-#### 设计选择说明
-
-- **为什么不直接去重所有 run？** run 的去重是正确的需求——每次都记录。问题在 ResourcePanel 的"展示侧"。不去改 store，改展示侧。
-- **为什么用 hash 而非值比较？** 同一 task 下多次用相同参数提交是常见场景（调试、重试），hash 比较可避免 JSON.stringify 的 60+ 字段逐项对比。
-- **去重后历史记录还在吗？** 在数据库和 state 中都在。只是在左侧面板不再重复展示。用户仍然可以通过"时间线" tab 看到每次运行。这是"展示精简"而非"数据删除"。
-
-### 3.4 P1-C：`collectInputResources` 改为白名单字段扫描
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:245-295`
-
-#### 修改目标
-
-不再递归遍历整个 `request` JSON，而是只扫描已知的文件字段。
-
-#### 具体改动
-
-```typescript
-// 定义每个模块已知的文件路径字段
-const MODULE_FILE_FIELDS: Record<string, string[]> = {
-  assessment: ["uploaded_files"],
-  pipia: ["attachments"],           // attachments[].storage_uri
-  review: ["uploaded_files"],
-  cn_flow: ["attachments", "data_inventory", "entity_inventory"],  // attachments[].storage_uri
-  eu_scc: ["uploaded_files"],
-  bcr: ["uploaded_files"],
-  dpia: ["uploaded_files"],
-  tia: ["uploaded_files"],
-  us_14117: ["attachments"],        // attachments[{path}]
-  cpra: ["attachments"],            // attachments[{storage_uri, file_path}]
-};
-
-function extractPathsFromField(value: unknown): string[] {
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) {
-    // 数组元素可能是纯路径字符串或对象（含 storage_uri/path/file_path）
-    return value.flatMap((item) => {
-      if (typeof item === "string") return [item];
-      if (isRecord(item)) {
-        const p = item.storage_uri ?? item.path ?? item.file_path;
-        return typeof p === "string" ? [p] : [];
-      }
-      return [];
-    });
-  }
-  return [];
-}
-
-function collectInputResources(
-  module: string,         // ← 新增：模块标识
-  request: unknown,
-  bag: Map<string, InputResourceCandidate>,
-  lang: "zh" | "en",
-) {
-  if (!isRecord(request)) return;
-  
-  const fields = MODULE_FILE_FIELDS[module] ?? [];
-  for (const field of fields) {
-    const value = request[field];
-    if (value === undefined || value === null) continue;
-    for (const path of extractPathsFromField(value)) {
-      if (!looksLikeFilePath(path)) continue;
-      const existing = bag.get(path);
-      bag.set(path, {
-        path,
-        labelHint: existing?.labelHint ?? inferLabelHint(path, field, lang),
-      });
-    }
-  }
-}
-```
-
-调用处修改（`ResourcePanel.tsx:408-409`）：
-```typescript
-// 之前：
-collectInputResources(run.request, bag, lang);
-
-// 之后：
-collectInputResources(run.module, run.request, bag, lang);
-```
-
-#### 为什么不用递归全量扫描
-
-递归方案的初衷是"无论后端 payload 结构怎么变，前端都能自动发现文件路径"。但实际：
-1. Payload 结构由 `payload-builders/*.ts` 严格控制，字段名可预知
-2. 递归 60+ 字段的纯文本值没有意义（它们永远不会是文件路径）
-3. 白名单语义更清晰：前端显式声明"这个模块有哪些文件字段"，新增模块时同步添加 → 这本身是健康的契约意识
-
-### 3.5 P2-D：收紧 `looksLikeFilePath` 判断
-
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:137-146`
-
-#### 修改目标
-
-在 P1-C（白名单化）之后，`looksLikeFilePath` 不再需要处理"从任意文本中猜测文件路径"的场景，可以收紧为"文件扩展名 + 合理路径前缀"的组合判断。
-
-```typescript
-const hasFileExtension = (value: string): boolean =>
-  /\.(docx?|pdf|md|html|txt|csv|xlsx?|png|jpg|jpeg|json)$/i.test(value);
-
-const looksLikeFilePath = (value: string): boolean => {
-  const trimmed = value.trim();
-  if (!trimmed) return false;
-  // 规则1: 以已知存储前缀开头（storage/ | outputs/ | uploads/）
-  if (/^(storage\/|outputs\/|uploads\/|\/)/.test(trimmed)) return true;
-  // 规则2: 有合法文件扩展名
-  if (hasFileExtension(trimmed)) return true;
-  // 规则3: 不再匹配"任意包含斜杠的字符串"
-  return false;
+type PreparedRun = {
+  request: ModuleRequest;
+  inputFiles: InputFileReference[];
 };
 ```
 
-### 3.6 P2-E：输入文件正向定义
+`WorkspaceShell.onRunDone()` 把 `request` 与 `inputFiles` 一起存入 run。`ResourcePanel` 只读 `run.inputFiles`，删除对 request 的递归扫描、`looksLikeFilePath` 猜测和输出反向过滤。
 
-**代码位置：** `frontend/src/components/workspace/ResourcePanel.tsx:410-411`
+为了兼容历史 workspace state，可保留一个单独的 `legacyInputFileAdapter(run)`，仅对已知模块字段做窄提取并标记 `legacyPathOnly=true`。该 adapter 不进入新 run，不与 OpenAPI 契约并行无期维护。
 
-#### 问题
+### 4.6 工作区信息架构
 
-当前用 `!outputFiles.some(...)` 来判断"这是输入文件"——逻辑反转，且如果路径同时出现在两侧则输入侧隐藏。
+建议左侧输入区改为：
 
-#### 修改
-
-在完成 P1-C（白名单扫描）后，`collectInputResources` 已经天然只扫描输入侧的已知字段。不再需要 `outputFiles` 做反向过滤。
-
-```typescript
-// 之前：
-Array.from(bag.values())
-  .filter((item) => !outputFiles.some((file) => file.path === item.path))
-
-// 之后：直接使用，不做反向过滤
-Array.from(bag.values())
+```text
+已提交材料
+├─ 当前输入（最新一次 run，默认展开）
+│  ├─ 表单快照
+│  └─ 输入文件
+└─ 历史提交（N 次，默认折叠）
+   ├─ 第 2 次：表单 + 文件
+   └─ 第 3 次：表单 + 文件
 ```
 
-### 3.7 P3-F（远期）：左侧面板按 run 折叠/归档
+同样内容运行 3 次仍是 3 条历史，但主界面只展开最新一次。文件条目以 `file_id` 识别，名称冲突只影响显示后缀，不影响身份。
 
-当同 task 下有多次历史运行时，可在输入文件列表展示"最新一次运行的文件（展开）+ N 次历史运行（折叠）"的交互模式。这属于 UX 优化，不阻塞功能。建议在 P1-B 上线后根据用户反馈决定是否实现。
+开发 fixture 仅在 `DEV_ACCEL_ENABLED` 下显示为“测试预置材料”，`source="dev_fixture"`。默认不通过生产 input-files API 预览；如确有浏览需求，只能增加受开发开关和静态 allowlist 约束的专用端点，不扩大通用文件权限。
 
----
+### 4.7 生命周期与删除
 
-## 四、实施计划
+- 用户删除 TaskSpace 时，应按 `workspace_id + user_id` 清理输入文件 DB 记录和 blob，并与输出治理方案的项目删除对账。
+- 上传成功但未绑定任何 run 的文件为 orphan，在配置的宽限期后由单一清理器删除。
+- `quarantined/error` 文件使用独立短保留期，不进入模块运行。
+- 清理默认 dry-run，先对账 DB/blob/workspace refs；不使用直接递归删除 upload root 的策略。
+- 运行中或仍被有效 workspace/run 引用的文件不进行 TTL 清理。
 
-### 4.1 阶段划分
+## 五、分阶段实施
 
-| 阶段 | 内容 | 预估工时 | 前置依赖 |
-|------|------|---------|---------|
-| **Phase 1（P0-A）** | upload_file 写 DB | 0.5d | 无 |
-| **Phase 2（P1-B + P1-C）** | 表单去重 + 白名单扫描 | 1d | Phase 1 |
-| **Phase 3（P2-D + P2-E）** | 正则收紧 + 正向定义 | 0.5d | Phase 2 |
-| **Phase 4（测试 + 验证）** | 端到端测试 + 手动验证 | 0.5d | Phase 1-3 |
+### Phase 0：失败分类与回归锁定（0.5-1 天）
 
-**总计：2.5 个工作日**
+**工作**
 
-### 4.2 执行顺序
+1. 分别复现真实上传 403、开发 fixture 403、跨用户拒绝和旧路径 404；
+2. 为每类失败保存 request/response、DB 命中和文件存在性证据；
+3. 先写后端上传→预览失败测试与前端 ResourcePanel 现状测试；
+4. 记录非默认 `storage_dir`、服务重启和两用户场景。
 
-```
-Day 1 上午: Phase 1 → 后端 upload_file 写 DB + router 传 user_id
-Day 1 下午: Phase 1 验证 → 上传文件后用 artifacts API 验证 200
-Day 2 上午: Phase 2 → ResourcePanel 表单去重 + collectInputResources 白名单化
-Day 2 下午: Phase 3 → looksLikeFilePath 收紧 + 输出过滤移除
-Day 3 上午: Phase 4 → 全链路测试 + 修复文档更新
-```
+**Gate 0**：每个问题都有可失败的自动化证明，不再用“403/404 总称”代替根因。
 
-### 4.3 验收标准
+### Phase 1：安全、持久的上传与 ID 预览（4-6 天）
 
-| 编号 | 标准 | 验证方式 |
-|------|------|---------|
-| A1 | 上传文件后，在 ResourcePanel 点击 → 不报 403/404 → 正常显示预览 | 手动：创建 task → 上传 → 跑一遍 → 回工作台点击输入文件 |
-| A2 | 输入文件预览支持：纯文本（markdown/txt/json/csv）渲染、PDF 内嵌、不支持格式的 download 降级 | 手动：上传不同类型的文件验证 |
-| B1 | 同 task 下用相同参数提交 3 次 → 左侧"已提交材料"只显示 1 条表单入口 | 单元测试 + 手动 |
-| B2 | 同 task 下用不同参数提交 3 次 → 左侧显示 3 条不同的表单入口 | 单元测试 + 手动 |
-| C1 | diagnosis 模块的 60+ answers 字段不再被递归扫描 | 代码审查：`collectInputResources` 不再接受 request 全文，只接受 module + 白名单字段 |
-| D1 | 纯文本字段中含 `.pdf` 等字样不被误判为文件路径 | 单元测试 |
-| E1 | 同时出现在 input 和 output 中的文件路径在 input 面板中可见 | 手动验证 |
+**工作**
 
----
+- 实现通用 InputFileAsset 数据模型和 service；
+- 实现已认证 `/api/v1/input-files` 上传、元数据、预览、文件和下载端点；
+- 使用 `Settings.upload_dir`，流式限量写入，完成 DB/blob 失败回滚；
+- 前端上传切到 v1 端点，使用 `input-file://` 兼容引用满足现有字符串型模块字段；
+- 将 owner-aware `input-file://` resolver 接入所有当前文件型模块的 sync/async 提交边界，保证新上传不仅能预览，也能完成任务运行；
+- v0 upload 改为已认证兼容壳或对前端停用。
 
-## 五、风险评估
+**Gate 1**：上传→新 App/service instance→预览/下载仍为 200；以新上传文件执行全部文件型模块的代表案例成功；他人文件不可探测；DB/blob 故障不产生单边孤儿；响应无服务器绝对路径。
 
-| 风险 | 等级 | 缓解措施 |
-|------|------|---------|
-| upload_file 写 DB 失败导致上传被阻断 | 低 | try/except 包裹 DB 写入，失败时降级为 download-only（不阻断上传） |
-| hashFormInput 对复杂嵌套对象产生碰撞 | 低 | 使用完整 JSON.stringify + 累积 hash，碰撞概率可忽略 |
-| 白名单遗漏了某个模块的文件字段 | 中 | `MODULE_FILE_FIELDS` 的初始值基于现有 6 个 payload builder 全部扫描得出（见下方附录），新增模块时在代码审查中强制检查 |
-| 相对路径 vs 绝对路径不一致导致 DB 查不到 | 中 | `upload_file` 改为返回 `str(out_path.resolve())`（绝对路径），DB 中 `storage_path` 存相同值。同时在 `_candidate_artifact_paths` 中已有 `resolve()` 归一化逻辑 |
-| ResourcePanel 重构后老数据不兼容 | 低 | 不修改 state schema，只修改展示逻辑。老 run 的 request 中 `uploaded_files` 字段依然存在且白名单支持 |
+### Phase 2：显式 `inputFiles` 与工作区历史分层（2-3 天）
 
----
+**工作**
 
-## 六、改动人天汇总
+- 扩展 `ModuleRun`、app-store 标准化与 workspace-state 兼容；
+- 将上传回执传入 `PreparedRun.inputFiles`；
+- `ResourcePanel` 改为“当前输入 + 历史提交”，删除新 run 的 request 递归猜测；
+- 加入有退役边界的 legacy adapter；
+- 开发 fixture 与用户上传展示分类。
 
-| 文件 | 改动行数 | 类型 |
-|------|---------|------|
-| `backend/api/v0/task_gateway/service.py` | ~25 行新增 | 后端 |
-| `backend/api/v0/task_gateway/router.py` | ~3 行修改 | 后端 |
-| `backend/api/v1/tests/test_artifacts_access.py` | ~20 行新增 | 测试 |
-| `frontend/src/components/workspace/ResourcePanel.tsx` | ~60 行修改 / ~40 行删除 | 前端 |
-| **总计** | **~148 行** | — |
+**Gate 2**：相同表单运行 3 次的审计历史仍为 3 条，主界面只展开最新一条；业务文本中的 `.pdf`/斜杠不产生文件节点；输入/输出角色可并存。
 
----
+### Phase 3：模块契约去路径化（3-5 天）
 
-## 附录
+**工作**
 
-### A. 全部模块的 `uploaded_files` / `attachments` 字段速查
+- 定义 OpenAPI `InputFileRef`，更新相关模块 Schema 和前端生成类型；
+- 为各模块 router/adapter 接入 owner-aware resolver；
+- 统一处理 `uploaded_files`、`attachments[].storage_uri` 和 `attachments: string[]` 的历史差异；
+- 删除任意文件系统路径 fallback，保留一个发布窗口的已登记路径兼容；
+- 更新 26 个开发案例、15 个 CLI 案例、OpenAPI 门禁和 Review upload-first 契约。
 
-基于对 6 个 payload builder 源码的完整扫描：
+**Gate 3**：客户端无法通过传入 upload root 外路径或他人 `file_id` 让模块读取文件；新 OpenAPI 类型无漂移；旧路径使用被计数并具有关闭日期。
 
-| 模块 | 文件字段 | 路径存储方式 | Payload Builder |
-|------|---------|-------------|-----------------|
-| diagnosis | 无文件字段 | — | `cn.ts:buildDiagnosisPayload` |
-| assessment | `uploaded_files: string[]` | 纯路径数组 | `cn.ts:buildAssessmentPayload:168` |
-| pipia | `attachments: [{storage_uri, file_role, file_name, file_format}]` | 对象数组 | `cn.ts:buildPipiaPayload:225-230` |
-| review | `uploaded_files: string[]` | 纯路径数组 | `cn.ts:buildDocumentReviewPayload:248` |
-| cn_flow | `attachments: [{storage_uri, file_role, file_name, file_format}]` | 对象数组 | `cn.ts:buildCnFlowPayload:294-301` |
-| eu_scc | `uploaded_files: string[]` | 纯路径数组 | `eu.ts:buildEuSccPayload:88` |
-| bcr | `uploaded_files: string[]` | 纯路径数组 | `eu.ts:buildBcrPayload:136` |
-| dpia | `uploaded_files: string[]` | 纯路径数组 | `eu.ts:buildDpiaPayload:246` |
-| tia | `uploaded_files: string[]` | 纯路径数组 | `eu.ts:buildTiaPayload:?` |
-| us_14117 | `attachments: string[]` | 纯路径数组 | `us.ts:buildUs14117Payload:54` |
-| cpra | `attachments: [{storage_uri, file_role, ...}]` | 对象数组 | `us.ts:buildCpraPayload:96-106` |
+### Phase 4：生命周期、迁移与回归（2-3 天）
 
-### B. 完整文件位置速查
+**工作**
 
-```
-后端：
-  backend/api/v0/task_gateway/service.py:80-96         ← upload_file 写磁盘
-  backend/api/v0/task_gateway/service.py:246-248       ← _build_assessment_payload resolve uploaded_files
-  backend/api/v0/task_gateway/service.py:340-345       ← CPRA _resolve_attachment_paths
-  backend/api/v0/task_gateway/router.py:15-17          ← POST /files/upload 路由
-  backend/api/v1/endpoints/artifacts.py:28-41           ← _resolve_artifact_path
-  backend/api/v1/endpoints/artifacts.py:44-73           ← _candidate_artifact_paths + _assert_artifact_access
-  backend/api/v1/endpoints/artifacts.py:76-151          ← preview / file / download handlers
-  backend/models/review.py:28-38                        ← UploadedFileModel (DB)
-  backend/api/v1/tests/test_artifacts_access.py         ← 现有 artifacts test
+- 项目删除链接入 InputFileAsset；
+- 增加 orphan/quarantine 默认 dry-run 清理器和 DB/blob/workspace 对账报告；
+- 对历史 workspace state 执行非破坏兼容，不批量猜测 owner；
+- document review 上传迁入通用 service，退役并行上传实现；
+- 运行后端、前端、Schema、HTTP、E2E 和仓库卫生门禁。
 
-前端：
-  frontend/src/components/workspace/ResourcePanel.tsx:137-146  ← looksLikeFilePath
-  frontend/src/components/workspace/ResourcePanel.tsx:245-295  ← collectInputResources
-  frontend/src/components/workspace/ResourcePanel.tsx:387-426  ← inputEntries useMemo
-  frontend/src/components/workspace/ResourcePanel.tsx:537-580  ← 文件树渲染 + onClick
-  frontend/src/components/workspace/WorkspaceShell.tsx:846-871 ← handleOpenResource
-  frontend/src/components/workspace/WorkspaceShell.tsx:582-610 ← useEffect → fetchArtifactPreview
-  frontend/src/components/workspace/ModuleRunPanel.tsx:502-509 ← uploadFiles
-  frontend/src/api/artifacts.ts:13-20                          ← fetchArtifactPreview
-  frontend/src/api/modules.ts:294-333                          ← uploadTaskFile
-  frontend/src/features/module-runner/payload-builders/cn.ts   ← CN payload builders
-  frontend/src/features/module-runner/payload-builders/eu.ts   ← EU payload builders
-  frontend/src/features/module-runner/payload-builders/us.ts   ← US payload builders
-```
+**Gate 4**：删除项目后该 workspace 输入不再可预览，DB/blob 都无悬空；清理 dry-run 结果稳定；输出产物删除与本方案无冲突。
 
-### C. `_assert_artifact_access` 完整逻辑
+## 六、测试与验收矩阵
 
-```python
-# artifacts.py:59-73
-def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path) -> None:
-    # 生成 5 种路径变体（绝对路径 native、绝对路径 POSIX、相对路径、相对路径 POSIX、./相对路径）
-    candidate_paths = tuple(_candidate_artifact_paths(resolved))
-    
-    # 查询1: ReportArtifactModel（后端生成的报告产物）
-    report_stmt = select(ReportArtifactModel.id).where(
-        ReportArtifactModel.user_id == user.id,
-        ReportArtifactModel.file_path.in_(candidate_paths),
-    )
-    
-    # 查询2: UploadedFileModel（用户上传的文件）← 这个表存在但从未被写入
-    upload_stmt = select(UploadedFileModel.id).where(
-        UploadedFileModel.user_id == user.id,
-        UploadedFileModel.storage_path.in_(candidate_paths),
-    )
-    
-    report_hit = db.execute(report_stmt).scalar_one_or_none()
-    upload_hit = db.execute(upload_stmt).scalar_one_or_none()
-    
-    if report_hit or upload_hit:
-        return  # ✅ 有权限
-    raise HTTPException(status_code=403, detail="You do not have access to this artifact.")
+### 6.1 后端强制测试
+
+| 场景 | 预期 |
+|---|---|
+| 未认证上传 | 401/403，不写 blob/DB |
+| 合法用户上传并预览 | upload 2xx，通过 `file_id` 预览 200 |
+| 用户 B 访问用户 A 文件 | 不可探测，建议统一 404 |
+| 服务重启/新 service instance | 不依赖 `_file_index`，预览仍 200 |
+| 非默认 `storage_dir` | 写入与预览均使用 Settings 路径 |
+| DB commit 失败 | API 失败，最终 blob 不存在 |
+| 磁盘写入/rename 失败 | API 失败，无 ready DB 记录 |
+| 大小边界 | 上限内成功，超限 413，不整件读入内存 |
+| 后缀/MIME 冲突或不支持类型 | 拒绝或 quarantine，不进模块 |
+| 任意路径/路径穿越/符号链接 | 不可读取 upload root 外文件 |
+| 项目删除 | owner/workspace DB 记录和 blob 同步清理 |
+
+### 6.2 前端强制测试
+
+- `ResourcePanel` 单元/组件测试：当前输入、历史折叠、文件 ID、同名文件、输入/输出同路径角色并存；
+- 请求文本含 `.pdf`、`a/b`、URL 时不生成文件节点；
+- 相同请求提交 3 次：当前视图 1 条，历史记录 3 条；
+- localStorage 和远端 workspace-state 水化后 `inputFiles` 保留；
+- 历史 path-only run 由 legacy adapter 显示为不可验证/不可预览时有明确状态，不无限转圈；
+- `dev_fixture` 不调用生产 input-files 预览 API。
+
+### 6.3 端到端场景
+
+```text
+注册用户
+→ 创建 TaskSpace
+→ 上传文件
+→ 提交模块运行
+→ 点击当前输入并预览
+→ 刷新页面/重启后端
+→ 再次预览
+→ 使用另一用户验证隔离
+→ 删除项目
+→ 验证记录/blob/工作区全部收敛
 ```
 
-### D. 根因追溯表
+同时保持：26 个开发案例 HTTP 契约、11 个浏览器主路径、15 个 CLI 强断言案例、Review upload-first 场景和前端全量测试不回归。
 
-| 症状 | 直接原因 | 代码位置 | 根本原因 |
-|------|---------|---------|---------|
-| 点击输入文件 → 403 | `upload_hit` 为 None | `artifacts.py:71` | `service.py:80-96` 没写 DB |
-| 点击输入文件 → 404 | 文件磁盘不存在 | `artifacts.py:32` | 临时文件无持久化策略 |
-| 表单入口重复 N 条 | forEach run 不加去重 | `ResourcePanel.tsx:399` | 展示侧把 run 数量 = 条目数量 |
-| 文件列表遍历整个 payload | 全文递归 | `ResourcePanel.tsx:293` | 设计选择了"自发现"而非"契约声明" |
-| 文件路径无类别归属 | `!outputFiles.some()` | `ResourcePanel.tsx:411` | 输入身份靠反向排除而非正向声明 |
+## 七、门禁与完成证据
+
+| Gate | 必须证据 | 失败处理 |
+|---|---|---|
+| G0 诊断 | 4 类 403/404/拒绝路径的自动测试和网络/DB 证据 | 不准以单一根因动工 |
+| G1 上传与权限 | 认证、所有权、重启、配置路径、原子性和大小/类型测试 | 不切前端上传 |
+| G2 工作区语义 | 显式 inputFiles、当前/历史分层、fixture 分类和不猜测文件证据 | 保留旧展示，不删历史 |
+| G3 契约去路径 | OpenAPI、owner resolver、任意路径负例、旧契约使用计数 | 不关闭兼容窗口 |
+| G4 生命周期 | 项目删除、orphan dry-run、DB/blob/workspace 对账 | 禁止实际清理 |
+| G5 全量回归 | 后端、前端、26 HTTP、11 E2E、15 CLI、构建与 `git diff --check` | 不合入 |
+
+每个阶段验收文档需记录命令、退出码、提交、测试数、失败详情、截图/网络证据和未覆盖边界。不得用“手动点开正常”代替跨用户、重启、删除和失败原子性测试。
+
+## 八、变更范围
+
+### 8.1 预计新增/修改
+
+| 边界 | 主要文件 | 作用 |
+|---|---|---|
+| 输入资产模型 | `backend/models/input_file.py`、`backend/core/db.py` | 通用 file identity/owner/workspace/lifecycle |
+| 输入资产服务 | `backend/services/input_file_service.py` | 上传、解析、权限、对账和删除 |
+| API/Schema | `backend/api/v1/endpoints/input_files.py`、`backend/schemas/input_file.py`、`backend/api/v1/router.py` | 已认证 ID 端点 |
+| v0 兼容 | `backend/api/v0/task_gateway/router.py`、`service.py` | 委托通用服务，删除内存真源/任意路径 fallback |
+| 模块契约 | 相关 domain schema/router 和共享 resolver | `InputFileRef` 与 owner-aware 解析 |
+| 前端 API/类型 | `frontend/src/api/modules.ts`、`api/generated/openapi.d.ts`、`lib/domain.ts` | 上传回执和 `ModuleRun.inputFiles` |
+| 运行准备 | `ModuleRunPanel.tsx`、payload builders | `PreparedRun` 和文件引用 |
+| 工作区 | `ResourcePanel.tsx`、`WorkspaceShell.tsx`、`app-store.tsx` | 显式输入、历史分层、兼容水化 |
+| 删除/清理 | `backend/api/v1/endpoints/me.py`、新 dry-run 对账脚本 | 输入生命周期 |
+| 测试 | 后端 input-file/API 测试、ResourcePanel 组件测试、Playwright | 功能、安全、历史与回归 |
+
+### 8.2 有意不改
+
+- 输出 artifact 分级、ZIP 和 trace 存储形态；
+- 法律 RAG 与用户材料索引策略；
+- 模块业务规则和报告内容；
+- 历史数据的破坏性批量迁移。
+
+## 九、风险与缓解
+
+| 风险 | 等级 | 缓解 |
+|---|:---:|---|
+| 上传 API 切换破坏 10 模块 | 高 | 兼容阶段保留已登记 path resolver，然后逐模块迁移 |
+| 并行两套 upload 实现长期漂移 | 高 | 兼容壳必须委托同一 service，设置退役日期和使用计数 |
+| 历史 workspace 只有路径没有 owner | 高 | 不自动授权；标记 legacy/unavailable，只对能证明 owner 的记录回填 |
+| 旧请求仍可传任意路径 | 高 | 兼容期也必须 DB owner + allowed root 双校验，删除直接 path fallback |
+| 上传过程中 DB/blob 单边成功 | 高 | staging 状态、原子 rename、transaction rollback 和对账器 |
+| 大文件读入内存导致资源耗尽 | 高 | 流式读写、字节上限和 413 测试 |
+| 后缀伪造或恶意文档 | 高 | 扩展名 + MIME/特征检查 + quarantine + 安全解析 |
+| 通过 403/404 探测他人文件 | 中 | 未找到与非 owner 统一对外 404 |
+| SHA 相同被误当业务重复 | 中 | 哈希只用于完整性/存储优化，不合并 run 引用 |
+| 开发 fixture 扩大仓库预览面 | 高 | fixture 分类，默认不可点击；专用 dev allowlist 与生产隔离 |
+| 项目删除误删共享文件 | 中 | v1 不支持跨 workspace 共享；未来引入引用计数后再放开 |
+
+## 十、排期与决策
+
+### 10.1 条件化估算
+
+| 范围 | 参考工期 | 交付结果 |
+|---|---:|---|
+| P0 可用性与权限止血 | 4-6 工程日 | 认证上传、DB owner、ID 预览、`input-file://` resolver、真实上传不再 403 |
+| 前端显式输入与历史分层 | 2-3 工程日 | `inputFiles`、ResourcePanel 视图和 legacy adapter |
+| 10 模块契约去路径化 | 3-5 工程日 | OpenAPI `InputFileRef`、owner resolver、兼容退役 |
+| 生命周期与全量验收 | 2-3 工程日 | 删除/对账、E2E、证据文档 |
+| **完整终态** | **11-17 工程日** | 不含恶意文件扫描基础设施或对象存储改造 |
+
+以上以 1 名熟悉前后端契约的工程师为口径。如与其他 Schema 或 workspace state 迁移并行，应按冲突面重新估算，不应继续承诺 2.5 天完成终态。
+
+### 10.2 待决策项
+
+| 编号 | 决策 | 默认建议 | 最晚时点 |
+|---|---|---|---|
+| D1 | P0 如何兼容旧 builder 的字符串型文件字段 | 返回 `input-file://` 不透明 URI，不返回相对或绝对物理路径 | Phase 1 |
+| D2 | v0 upload 是废弃还是兼容 | 前端立即切 v1；v0 委托同一 service 一个发布窗口后退役 | Phase 1 |
+| D3 | 历史 path-only run 是否自动回填 owner | 仅能通过 DB 证明 owner 时回填，其余保持 unavailable | Phase 2 |
+| D4 | 开发 fixture 是否支持点击预览 | 默认否；有需求再建 dev-only allowlist 端点 | Phase 2 |
+| D5 | 非 owner 响应保持 403 还是统一 404 | 新 input-files API 统一 404；旧 artifacts API 另行兼容决策 | Phase 1 |
+
+## 十一、完成定义
+
+只有以下条件同时成立，才能将本项标记为完成：
+
+```text
+真实上传、开发 fixture、跨用户和旧路径失败已分类
+且上传已认证、限量、可持久且 DB/blob 一致
+且公开输入文件 API 以 file_id 授权，不暴露绝对路径
+且模块不能读取未登记、他人或 upload root 外文件
+且 ResourcePanel 只使用显式 inputFiles，不猜测 request
+且当前输入与历史审计已分层，没有哈希合并历史
+且开发 fixture 与用户上传权限语义分离
+且项目删除/orphan 清理通过 DB/blob/workspace 对账
+且 26 HTTP、11 E2E、15 CLI、前后端全量与安全负例通过
+且历史路径兼容有使用计数、截止日期和退役证据
+```
+
+## 附录 A：主要代码证据
+
+| 事实 | 证据 |
+|---|---|
+| v0 upload 固定写 `storage/uploads`、只写 `_file_index`、返回 path | `backend/api/v0/task_gateway/service.py:73-95` |
+| v0 upload 路由没有认证/DB/container 依赖 | `backend/api/v0/task_gateway/router.py:15-18` |
+| 前端携带 auth 调用 v0 upload 并要求 path | `frontend/src/api/modules.ts:294-332` |
+| 上传回执被降为 `string[]` path | `frontend/src/components/workspace/ModuleRunPanel.tsx:502-509` |
+| artifacts 先检查存在/允许根，再查所有权 DB | `backend/api/v1/endpoints/artifacts.py:28-73` |
+| ResourcePanel 递归扫描任意 request | `frontend/src/components/workspace/ResourcePanel.tsx:245-295` |
+| ResourcePanel 每 run 平铺表单并用输出反向过滤输入 | `frontend/src/components/workspace/ResourcePanel.tsx:387-426` |
+| ModuleRun 只存 request，无显式 input files | `frontend/src/lib/domain.ts:44-58` |
+| 工作区同时保存 localStorage 和远端 workspace state | `frontend/src/lib/app-store.tsx:451-475`、`frontend/src/lib/app-store.tsx:737-750` |
+| 开发案例直接使用 `resources/`/`benchmarks/` 后端路径 | `frontend/src/lib/dev-test-cases.ts:375`、`frontend/src/lib/dev-test-cases.ts:493`、`frontend/src/lib/dev-test-cases.ts:896` |
+| review upload 已有认证、DB 与 task 归属实现 | `backend/domains/cn/document_review/router.py:62-70`、`backend/domains/cn/document_review/service.py:168-189` |
+| 现有 FileService 有扩展名白名单，但仍整件读入且无大小上限 | `backend/services/file_service.py:11-28` |
+| `UploadedFileModel.task_id` 当前必填 | `backend/models/review.py:28-38` |
+| TaskSpace 当前保存为用户级 workspace JSON，非独立关系表 | `backend/models/workspace.py:9-17`、`backend/api/v1/endpoints/workspace_state.py:77-93` |
+| 项目删除当前按 task/user 对账 uploaded file 与 blob | `backend/api/v1/endpoints/me.py:353-402` |
+| v0 ID 查不到时直接把字符串当路径 | `backend/api/v0/task_gateway/service.py:417-442` |
+
+## 附录 B：阅读者应能直接回答的问题
+
+1. 为什么补写 DB 不是完整终态？
+2. 真实上传文件和开发预置文件为什么都可能返回 403？
+3. 为什么不能向前端返回绝对路径？
+4. 为什么不应按表单内容哈希删除重复 run？
+5. P0 止血与终态 `InputFileRef` 迁移的边界是什么？
+6. 历史 path-only workspace 无法证明 owner 时怎么处理？
+7. 项目删除时如何保证 DB、blob 和 workspace 不互相悬空？
