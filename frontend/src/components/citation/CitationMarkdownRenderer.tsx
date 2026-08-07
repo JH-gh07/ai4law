@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { fetchCitationMap, type CitationDetail } from "../../api/citations";
-import { fetchKnowledgeCitation } from "../../api/knowledge";
+import { fetchArticleDetail, fetchKnowledgeCitation } from "../../api/knowledge";
 import type { ModuleKey } from "../../lib/domain";
 import { CitationArticleDrawer } from "./CitationArticleDrawer";
 import { CitationPopover } from "./CitationPopover";
@@ -123,14 +123,42 @@ function findCitationFromMap(rawBasis: string, citationMap: Record<string, Citat
   return candidates[0] ?? null;
 }
 
-function buildResolvedCitation(
+async function buildResolvedCitation(
   rawBasis: string,
   matched: Record<string, string>,
   preview: string,
-): CitationDetail | null {
+): Promise<CitationDetail | null> {
   const sourceId = matched.source_id ?? "";
   if (!sourceId) return null;
   const articleNo = extractArticleNo(rawBasis);
+
+  // Try to verify exact article existence via backend registry.
+  // fetchArticleDetail returns successfully only when the registry contains
+  // exactly one matching row — the same uniqueness check used by output.py.
+  let canJump = false;
+  let resolutionType: string = "source_overview";
+  let targetId = sourceId;
+  let resolutionConfidence = 0.7;
+  let failureReason = articleNo ? "article_requires_server_resolution" : "article_missing";
+  let knowledgeUrl = `/knowledge/laws/${encodeURIComponent(sourceId)}`;
+  let availableActions = ["view_source_overview", "search_within_source"];
+
+  if (articleNo) {
+    try {
+      await fetchArticleDetail(sourceId, articleNo);
+      // Exactly one match confirmed
+      canJump = true;
+      resolutionType = "exact_article";
+      targetId = `${sourceId}:${articleNo}`;
+      resolutionConfidence = 1.0;
+      failureReason = "";
+      knowledgeUrl = `/knowledge/laws/${encodeURIComponent(sourceId)}?article=${encodeURIComponent(articleNo)}`;
+      availableActions = ["view_article", "view_source_overview"];
+    } catch {
+      // Article not found or ambiguous — fall back to source_overview defaults
+    }
+  }
+
   return {
     citation_id: `resolved:${sourceId}:${articleNo || compactText(rawBasis)}`,
     module: "knowledge",
@@ -152,18 +180,18 @@ function buildResolvedCitation(
     can_enter_external_report: true,
     external_report_allowed: true,
     confidence_threshold: 0.2,
-    knowledge_url: `/knowledge/laws/${encodeURIComponent(sourceId)}`,
+    knowledge_url: knowledgeUrl,
     anchor: "",
     section_id: "",
     clause_id: "",
     open_mode: "in_app",
-    can_jump: false,
+    can_jump: canJump,
     resolution: {
-      resolution_type: "source_overview",
-      target_id: sourceId,
-      confidence: 0.7,
-      failure_reason: articleNo ? "article_requires_server_resolution" : "article_missing",
-      available_actions: ["view_source_overview", "search_within_source"],
+      resolution_type: resolutionType,
+      target_id: targetId,
+      confidence: resolutionConfidence,
+      failure_reason: failureReason,
+      available_actions: availableActions,
     },
   };
 }
@@ -298,7 +326,7 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
           }
           try {
             const resolved = await fetchKnowledgeCitation(item);
-            next[item] = resolved.matched ? buildResolvedCitation(item, resolved.matched, resolved.preview) : null;
+            next[item] = resolved.matched ? await buildResolvedCitation(item, resolved.matched, resolved.preview) : null;
           } catch {
             next[item] = null;
           }
