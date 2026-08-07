@@ -1,0 +1,105 @@
+{
+  "source": "CN-REG-004 §13.3 Step-5 verification",
+  "articles_verified": [
+    {
+      "article_no": "5",
+      "citation_id": "CIT-CN-REG004-ART5-P01",
+      "content_snippet": "第五条 数据处理者在申报数据出境安全评估前，应当开展数据出境风险自评估，重点评估以下事项：\n（一）数据出境和境外接收方处"
+    },
+    {
+      "article_no": "13",
+      "citation_id": "CIT-CN-REG004-ART13-P01",
+      "content_snippet": "第十三条 数据处理者对评估结果有异议的，可以在收到评估结果15个工作日内向国家网信部门申请复评，复评结果为最终结论。"
+    },
+    {
+      "article_no": "19",
+      "citation_id": "CIT-CN-REG004-ART19-P01",
+      "content_snippet": "第十九条 本办法所称重要数据，是指一旦遭到篡改、破坏、泄露或者非法获取、非法利用等，可能危害国家安全、经济运行、社会稳定"
+    }
+  ],
+  "footnote_map": {
+    "1": {
+      "citation_id": "CIT-CN-REG004-ART5-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "5",
+      "quote_text": "",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.0,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true
+    },
+    "2": {
+      "citation_id": "CIT-CN-REG004-ART13-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "13",
+      "quote_text": "",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.0,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true
+    },
+    "3": {
+      "citation_id": "CIT-CN-REG004-ART19-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "19",
+      "quote_text": "",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.0,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true
+    }
+  },
+  "entry_count": 3,
+  "processed_text": "申报材料须说明 [1] 所规定的情形。对评估结果异议 [2] 有明确程序。过渡期安排参见 [3]。"
+}
