@@ -43,6 +43,27 @@
 | `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
 | `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
 | Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
+| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **641 passed, 0 failed** | 修复 2 个既有失败后全绿，见下方失败诊断 |
+
+### 既有失败诊断与修复记录（2026-08-08）
+
+**ISSUE-COMMON-001（已修复 commit `c97a465`）**
+
+- 严重级别：ERROR（合约回归）
+- 测试：`test_normalization_contract[pipe_table_norm]`
+- 代码位置：`backend/common/llm/postprocess.py:143` `_repair_pipeless_tables`
+- 根因：`_repair_pipeless_tables` 在检测到 `≥2` 条无前置 `|` 的连续行时直接添加 `|` 前缀，但未判断这些行是否紧随已有 `|` 表头——导致 `|姓名|年龄|城市|\n张三|28|北京|` 中的 body 行也被错误加前缀，违反合约。
+- 修复：在 `len(table_block) >= 2` 分支里检查 `lines[first_in_block - 1].strip().startswith("|")`，若是则跳过修复。
+- 验证命令：`uv run pytest -q backend/common/render/tests/test_normalization_contract.py`
+
+**ISSUE-COMMON-002（已修复 commit `c97a465`）**
+
+- 严重级别：WARN（断言过期，非逻辑错误）
+- 测试：`test_article_detail_resolves_every_unique_registry_locator`
+- 代码位置：`backend/services/tests/test_knowledge_index.py:42`
+- 根因：CN-REG-004 在 commit `979d714` 中将 9 条网页噪声记录替换为 20 条正式条文，unique\_rows 从 1602 增至 1613，测试的硬编码数字未同步。
+- 修复：更新断言 `1602 → 1613`，加注释说明来源。
+- 验证命令：`uv run pytest -q backend/services/tests/test_knowledge_index.py`
 
 ---
 
@@ -84,8 +105,8 @@
 | assessment 编译开关 | 已实现，默认关闭 | `AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED`，提交 `acaaff2` |
 | `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
 | `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
-| assessment 相关回归 | 93 项通过 | 2026-08-08 本地执行记录 |
-| 后端全量回归 | 601 通过、1 失败 | 失败为既有管线表格规范化契约测试，见实施记录 |
+| assessment 相关回归 | 61 项通过 | 2026-08-08 本地执行记录（见下方注） |
+| 后端全量回归 | **641 通过、0 失败** | 本次会话已修复2个既有失败，见下方失败诊断 |
 | 其他模块新流程 | 未迁移 | 不能宣称已完成 |
 
 ## 4. 目标目录和职责
@@ -200,7 +221,7 @@ Block 内禁止出现标题语法、粗体语法、脚注编号和 `{{CIT-*}}` m
 - [x] 新旧 CitationRegistry 适配层。
 - [x] 未注册 citation 显式提示。
 - [x] Citation API 禁止读取期合成和回写。
-- [ ] 将 `markdown_lint.py` 接入统一验收命令，但保持其现有 advisory 语义。
+- [x] 将 `markdown_lint.py`（`backend/common/quality/markdown_lint.py`）接入统一验收命令 `scripts/check_report_lint.py`，保持 advisory 语义（提交 `304bc3f`）。
 
 验收证据：
 
@@ -376,8 +397,8 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | 部分完成 | 现有测试和问题记录 | 本地基线文件清单 |
-| 1 | 公共能力 | 基本完成 | reporting/citation 测试 | markdown_lint 统一入口 |
+| 0 | 基线冻结 | **完成** | `status/check/本地基线_20260808.md`，641/641 通过 | — |
+| 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | 本地代码完成 | Golden Snapshot、93 项回归 | 本地真实输入首跑 |
 | 3 | 其他模块 | 未开始 | 无 | 按模块迁移 |
 | 4 | 知识库治理 | 部分完成 | 现状分析文档 | URL、条文唯一性、条号清理 |
