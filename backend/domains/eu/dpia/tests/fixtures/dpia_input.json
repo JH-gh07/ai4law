@@ -1,0 +1,29 @@
+"""Minimal DPIA fixture — used by schema_first adapter tests.
+
+One chapter, one registered EU-LAW-001 citation (GDPR Art 35 paragraph excerpt).
+"""
+{
+  "task_id": "dpia-fixture-minimal",
+  "project_name": "员工健康评估系统",
+  "chapters": [
+    {
+      "chapter_no": 1,
+      "title": "DPIA 必要性与处理活动概述",
+      "content": "本项目采用人工智能算法对员工健康数据进行评估和分类，属于大规模处理特殊类别数据，根据 GDPR 第35条须开展数据保护影响评估 {{CIT-EU-GDPR-ART35-P01}}。处理活动包括收集体检报告和可穿戴设备健康数据，形成健康风险评分。",
+      "citations": ["GDPR Art. 35"],
+      "risk_level": "high"
+    }
+  ],
+  "citation_registry_entries": [
+    {
+      "citation_id": "CIT-EU-GDPR-ART35-P01",
+      "source_id": "EU-LAW-001",
+      "citation_type": "law_article",
+      "title": "General Data Protection Regulation (GDPR)",
+      "article_no": "段落3",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "external_report_allowed": true
+    }
+  ]
+}

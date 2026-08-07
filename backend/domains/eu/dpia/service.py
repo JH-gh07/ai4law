@@ -65,18 +65,31 @@ _NO_LLM = object()
 class DPIAService:
     """Full DPIA draft generation service using WorkflowPipeline + 9 agents."""
 
-    def __init__(self, llm_client: "LLMClient | None" = _NO_LLM) -> None:
+    def __init__(
+        self,
+        llm_client: "LLMClient | None" = _NO_LLM,
+        *,
+        schema_first_enabled: bool | None = None,
+    ) -> None:
+        from backend.core.settings import get_settings
+        settings = get_settings()
         if llm_client is _NO_LLM:
-            from backend.core.settings import get_settings
             from backend.common.llm.client import LLMClient as _LLMClient
-            llm_client = _LLMClient(get_settings())
+            llm_client = _LLMClient(settings)
         self.llm_client = llm_client
         self.extractor = DPIAProfileExtractor()
         self.need_detector = DPIANeedDetector()
         self.retriever = DPIARetriever()
         self.generator = DPIAChapterGenerator(llm_client=llm_client)
         self.checker = DPIAConsistencyChecker()
-        self.renderer = DPIAReportRenderer()
+        self.renderer = DPIAReportRenderer(
+            schema_first_enabled=(
+                settings.schema_first_dpia_enabled
+                if schema_first_enabled is None
+                else schema_first_enabled
+            ),
+            model_name=settings.resolved_llm_model,
+        )
         self.tasks = InMemoryTaskManager(module="dpia")
         self._agents: dict[str, DPIAAgentBase] | None = None
 

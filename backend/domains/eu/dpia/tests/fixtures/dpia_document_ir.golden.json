@@ -1,0 +1,66 @@
+{
+  "document": {
+    "schema_version": "3.0",
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-dpia-adapter-v1",
+    "template_version": "dpia-v0",
+    "model": "test-model",
+    "document_id": "dpia:task-golden",
+    "report_type": "dpia",
+    "metadata": {
+      "title": "员工健康评估系统 — DPIA 草案",
+      "company_name": "员工健康评估系统",
+      "report_date": "2026-08-08",
+      "report_id": "task-golden"
+    },
+    "sections": [
+      {
+        "section_id": "dpia.chapter.1",
+        "title": "DPIA 必要性判断",
+        "level": 2,
+        "ordinal": "1",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "dpia.chapter.1.block.1",
+            "type": "claim",
+            "text": "该处理活动属于大规模处理特殊类别数据。",
+            "citation_refs": [
+              "CIT-EU-GDPR-ART35-P01"
+            ],
+            "fact_refs": [],
+            "issue_refs": [],
+            "verification": "verified",
+            "verification_reason": "由 legacy citation marker 迁移"
+          }
+        ]
+      },
+      {
+        "section_id": "dpia.chapter.2",
+        "title": "缓解措施",
+        "level": 2,
+        "ordinal": "2",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "dpia.chapter.2.block.1",
+            "type": "paragraph",
+            "text": "需补充算法公平性审计报告。",
+            "fact_refs": [],
+            "issue_refs": []
+          }
+        ]
+      }
+    ],
+    "diagnostics": [],
+    "provenance": {
+      "generated_at": "2026-08-08T00:00:00Z",
+      "facts_version": null,
+      "issues_version": null,
+      "evidence_version": null
+    },
+    "input_hash": null,
+    "document_ir_hash": null
+  },
+  "footnote_map": {}
+}

@@ -261,8 +261,27 @@ def _write_citation_map_json(
     )
 
 
+def _write_document_ir_json(document_ir, output_dir: Path) -> str:
+    """Persist the typed DocumentIR as an internal (non-user-facing) artifact."""
+    path = output_dir / "document_ir.json"
+    path.write_text(
+        json.dumps(document_ir.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return str(path)
+
+
 class DPIAReportRenderer:
     """Render DPIA outputs: draft MD, risk matrix, mitigation plan, and full ZIP bundle."""
+
+    def __init__(
+        self,
+        *,
+        schema_first_enabled: bool = False,
+        model_name: str = "legacy-dpia",
+    ) -> None:
+        self.schema_first_enabled = schema_first_enabled
+        self.model_name = model_name
 
     def render(
         self,
@@ -284,9 +303,30 @@ class DPIAReportRenderer:
     ) -> dict[str, str]:
         output_dir = Path("outputs/dpia") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        document_ir = None
+        if self.schema_first_enabled:
+            from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
+            from backend.common.reporting import DocumentCompiler
+            from backend.domains.eu.dpia.schema_first import build_dpia_document_ir
+
+            document_ir, reporting_registry = build_dpia_document_ir(
+                task_id=task_id,
+                project_name=profile.project_name,
+                chapters=chapters,
+                citation_registry=citation_registry or LegacyCitationRegistry(),
+                model=self.model_name,
+            )
+            compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
+            if compile_result.status != "success":
+                codes = ", ".join(item.code for item in compile_result.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked DPIA output: {codes}")
+
         date_stamp = format_date_stamp()
         safe_name = safe_filename(profile.project_name)
         result: dict[str, str] = {}
+        if document_ir is not None:
+            result["document_ir_json"] = _write_document_ir_json(document_ir, output_dir)
 
         # 1. Markdown and DOCX drafts
         md_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.md"
