@@ -105,4 +105,18 @@ describe("CitationMarkdownRenderer", () => {
     expect(await screen.findByTestId("citation-drawer")).toHaveTextContent("个人信息保护法");
     expect(openSpy).not.toHaveBeenCalled();
   });
+
+  it("renders missing-evidence notices as warnings, never as citation controls", async () => {
+    render(
+      <CitationMarkdownRenderer
+        markdown="企业应当完成评估。 【待核验：缺少法规依据】"
+        taskId="task-1"
+        moduleKey="assessment"
+      />,
+    );
+
+    const notice = await screen.findByText("企业应当完成评估。 【待核验：缺少法规依据】");
+    expect(notice.closest("p")).toHaveClass("workspace-legal-callout-pending");
+    expect(screen.queryByRole("button", { name: "打开引用" })).not.toBeInTheDocument();
+  });
 });

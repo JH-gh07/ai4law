@@ -1904,6 +1904,12 @@
   border-left: 5px solid rgba(56, 101, 178, 0.74);
 }
 
+.workspace-legal-callout-pending {
+  background: #fff9e8;
+  border-left: 5px solid #b7791f;
+  color: #6b4f1d;
+}
+
 .citation-basis-prefix {
   display: inline-flex;
   align-items: center;

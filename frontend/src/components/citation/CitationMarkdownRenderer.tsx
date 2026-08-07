@@ -101,6 +101,10 @@ function isHighlightParagraph(text: string): "conclusion" | "risk" | "action" | 
   return null;
 }
 
+function isVerificationNotice(text: string): boolean {
+  return /【(?:待核验|缺少依据|证据冲突)[^】]*】/.test(text);
+}
+
 function findCitationFromMap(rawBasis: string, citationMap: Record<string, CitationDetail>): CitationDetail | null {
   const articleNo = extractArticleNo(rawBasis);
   const titleCandidate = rawBasis.replace(/第\s*([0-9]+|[零〇一二两三四五六七八九十百千万]+)\s*条/g, "").trim();
@@ -331,10 +335,13 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
                 return <p>{children}</p>;
               }
               const highlight = isHighlightParagraph(text);
+              const verificationNotice = isVerificationNotice(text);
               const className = isBasisOnlyParagraph(text)
                 ? "workspace-legal-basis-block"
                 : highlight
                   ? `workspace-legal-callout workspace-legal-callout-${highlight}`
+                  : verificationNotice
+                    ? "workspace-legal-callout workspace-legal-callout-pending"
                   : undefined;
               return <p className={className}>{renderInlineCitationText(text, citationMap, resolvedBasisMap, handleOpenCitation)}</p>;
             },

@@ -21,7 +21,8 @@ _BASIS_BLOCK_RE = re.compile(r"【依据：[^】]+】")
 _LEGAL_RULE_RE = re.compile(
     r"(?:依据《[^》]+》[^。；]*?(?:应当|必须|不得|禁止)|"
     r"《[^》]+》第[一二三四五六七八九十百千万零〇两0-9]+条[^。；]*?(?:规定|要求)|"
-    r"(?:违反|不符合)《[^》]+》)"
+    r"(?:违反|不符合)《[^》]+》|"
+    r"(?:应当|必须|不得|禁止)[^。；]{0,40}(?:评估|合规|义务|保护|处理|出境|个人信息|数据))"
 )
 _RISK_JUDGMENT_RE = re.compile(
     r"(?:经评估，.*?(?:属于|为|系).*?(?:高|中|低)风险|"
@@ -343,6 +344,8 @@ def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
         num = registry.assign_footnote_number(cid)
         if num is not None:
             return f"[{num}]"
-        return ""
+        # Keep unresolved identity visible for diagnostics instead of silently
+        # deleting evidence from the delivered text.
+        return f"【未注册引用：{cid}】"
 
     return normalize_legal_markdown_structure(_CIT_MARKER_RE.sub(_replace_marker, text))
