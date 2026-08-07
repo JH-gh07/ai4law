@@ -139,12 +139,18 @@ def _repair_pipeless_tables(text: str) -> str:
                 else:
                     break
 
-            # If we found 2+ consecutive lines, it's likely a table
+            # If we found 2+ consecutive lines, it's likely a table.
+            # Exception: if the line immediately before this block already starts
+            # with "|" (i.e. a proper table header is in place), do NOT add pipes
+            # — the normalizer will handle those rows as regular content blocks.
             if len(table_block) >= 2:
-                for idx in table_block:
-                    result_lines.append("| " + lines[idx].strip())
-                i = j
-                continue
+                first_in_block = table_block[0]
+                preceding = lines[first_in_block - 1].strip() if first_in_block > 0 else ""
+                if not preceding.startswith("|"):
+                    for idx in table_block:
+                        result_lines.append("| " + lines[idx].strip())
+                    i = j
+                    continue
 
         result_lines.append(line)
         i += 1

@@ -39,7 +39,9 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
         == 1
     ]
 
-    assert len(unique_rows) == 1602
+    # Count updated 2026-08-08: CN-REG-004 replaced 9 web-noise records with
+    # 20 formal articles (commit 979d714), raising unique_rows from 1602 → 1613.
+    assert len(unique_rows) == 1613
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 69
     for row in unique_rows:
         source_id = str(row["source_id"])
