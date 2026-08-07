@@ -1,0 +1,12 @@
+[
+  {
+    "mitigation_id": "MIT-001",
+    "description": "实施算法公平性审计",
+    "target_risk_ids": [
+      "RISK-001"
+    ],
+    "status": "planned",
+    "responsible_party": "数据科学团队",
+    "residual_risk_level": "medium"
+  }
+]

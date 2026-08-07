@@ -1,0 +1,11 @@
+[
+  {
+    "risk_id": "RISK-001",
+    "risk_description": "AI健康评分偏差导致歧视性评估",
+    "likelihood": "medium",
+    "impact": "high",
+    "risk_level": "high",
+    "affected_data_subjects": "员工",
+    "risk_source": "technology"
+  }
+]

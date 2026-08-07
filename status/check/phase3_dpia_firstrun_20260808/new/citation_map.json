@@ -1,0 +1,52 @@
+{
+  "task_id": "phase3-dpia-new",
+  "module": "dpia",
+  "footnote_map": {},
+  "all_items": [
+    {
+      "citation_id": "CIT-EU-GDPR-ART35-P01",
+      "source_id": "EU-LAW-001",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "GDPR (EU) 2016/679",
+      "article_no": "段落3",
+      "quote_text": "",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.0,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "dpia",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/EU-LAW-001?article=%E6%AE%B5%E8%90%BD3",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "EU-LAW-001:段落3",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview"
+        ]
+      },
+      "can_jump": true,
+      "source_url": ""
+    }
+  ]
+}

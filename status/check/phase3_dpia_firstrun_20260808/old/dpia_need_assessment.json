@@ -1,0 +1,9 @@
+{
+  "dpia_required": true,
+  "trigger_reasons": [
+    "特殊类别数据",
+    "自动化决策"
+  ],
+  "prior_consultation_possible": false,
+  "reasoning": "满足 GDPR Art 35(3) 触发条件。"
+}
