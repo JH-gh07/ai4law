@@ -1,0 +1,67 @@
+{
+  "phase": "Phase 0 - Baseline Freeze",
+  "date": "2026-08-07",
+  "timestamp": "2026-08-07T09:58:00+0800",
+  "git": {
+    "branch": "new",
+    "commit": "92f47d1866e43478607b7bc65f9e7f55b029d900"
+  },
+  "test_results": {
+    "1_case_parity": {
+      "status": "PASS",
+      "modules": 11,
+      "cli_cases": 15,
+      "cli_assertions": 262,
+      "developer_cases": 28
+    },
+    "2_cli_harness_no_llm": {
+      "status": "PASS",
+      "total_cases": 15,
+      "passed": 15,
+      "failed": 0,
+      "modules_covered": 11
+    },
+    "3_backend_pytest": {
+      "status": "FAIL",
+      "total": 592,
+      "passed": 586,
+      "failed": 6,
+      "failed_tests": [
+        "backend/common/citation/tests/test_postprocess.py::test_policy_never_emits_missing_retrieval_as_a_citation",
+        "backend/common/citation/tests/test_postprocess.py::test_policy_removes_legacy_placeholder_citation",
+        "backend/common/citation/tests/test_postprocess.py::test_policy_does_not_trust_unregistered_numeric_footnotes",
+        "backend/common/citation/tests/test_postprocess.py::test_policy_rejects_an_unprovided_citation_and_marks_claim_pending",
+        "backend/common/citation/tests/test_postprocess.py::test_summary_helper_does_not_assign_global_retrieval_hits_as_proof",
+        "backend/common/render/tests/test_normalization_contract.py::test_backend_matches_normalization_contract[pipe_table_norm]"
+      ],
+      "failure_classification": "PRE_EXISTING",
+      "failure_domains": ["citation_postprocess", "markdown_normalization"]
+    },
+    "4_frontend_vitest": {
+      "status": "PASS_WITH_WARNINGS",
+      "test_files": 22,
+      "passed": 22,
+      "skipped": 1,
+      "tests_total": 114,
+      "tests_passed": 112,
+      "tests_skipped": 2,
+      "warnings": ["chunk load failed errors in LazyRouteErrorBoundary.test.tsx (does not fail tests)"]
+    }
+  },
+  "gate_0_assessment": {
+    "baseline_reproducible": true,
+    "existing_failures_classified": true,
+    "classification": {
+      "pre_existing_failures": 6,
+      "new_failures_from_resources_new": 0
+    },
+    "verdict": "PASS",
+    "notes": [
+      "6 pytest failures are in citation postprocess and markdown normalization",
+      "These failures existed before resources/new/ materials were added",
+      "CLI harness 15/15 pass confirms structural integrity",
+      "Frontend 112/114 pass confirms UI layer health"
+    ]
+  },
+  "next_phase": "Phase 1 - Resource Intake and Security Isolation"
+}

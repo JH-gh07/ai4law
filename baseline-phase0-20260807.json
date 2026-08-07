@@ -1,0 +1,34 @@
+{
+  "phase": "Phase 0 - Baseline Freeze",
+  "date": "2026-08-07",
+  "git": {
+    "branch": "new",
+    "commit": "92f47d1866e43478607b7bc65f9e7f55b029d900",
+    "commit_date": "2026-08-07 09:45:04 +0800",
+    "commit_message": "docs: mature v1 upgrade and intake plan"
+  },
+  "software_versions": {
+    "backend": "0.1.0",
+    "frontend": "0.1.0"
+  },
+  "resource_inventory": {
+    "resources_new_total_files": 219,
+    "resources_new_size_mb": 99
+  },
+  "module_registry": {
+    "path": "config/module_registry.json",
+    "active_modules": 10,
+    "legacy_compatible": 1,
+    "total": 11
+  },
+  "existing_gates": {
+    "http_contract_cases": 26,
+    "browser_e2e_paths": 11,
+    "cli_cases": 15,
+    "cli_assertions": 259
+  },
+  "gate_status": {
+    "G0_baseline_reproducible": "in_progress",
+    "next_action": "Run full test suite"
+  }
+}
