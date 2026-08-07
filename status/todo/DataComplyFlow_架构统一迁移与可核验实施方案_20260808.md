@@ -241,8 +241,8 @@ Block 内禁止出现标题语法、粗体语法、脚注编号和 `{{CIT-*}}` m
 - [x] `AI4LAW_SCHEMA_FIRST_ASSESSMENT_ENABLED` 开关，默认 `false`。
 - [x] 开启时执行 Compiler Gates。
 - [x] 开启时生成 `document_ir.json`。
-- [ ] 在本地用真实 assessment 输入首跑。
-- [ ] 对比旧版和新版 Markdown、DOCX、PDF、CitationMap、ZIP 文件。
+- [x] 在本地用真实 assessment 输入首跑（fixture 1章，2026-08-08）。
+- [x] 对比旧版和新版 Markdown、DOCX、PDF、CitationMap、ZIP 文件（见 `status/check/phase2_assessment_firstrun_20260808/验收报告.md`）。
 
 本地首跑步骤：
 
@@ -399,7 +399,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 |---|---|---|---|---|
 | 0 | 基线冻结 | **完成** | `status/check/本地基线_20260808.md`，641/641 通过 | — |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
-| 2 | assessment | 本地代码完成 | Golden Snapshot、93 项回归 | 本地真实输入首跑 |
+| 2 | assessment | **完成** | Golden Snapshot、61 项回归 + 本地首跑验收报告（`status/check/phase2_assessment_firstrun_20260808/`） | — |
 | 3 | 其他模块 | 未开始 | 无 | 按模块迁移 |
 | 4 | 知识库治理 | 部分完成 | 现状分析文档 | URL、条文唯一性、条号清理 |
 | 5 | 前端闭环 | 部分完成 | 待核验状态测试 | 全部跳转状态和截图 |

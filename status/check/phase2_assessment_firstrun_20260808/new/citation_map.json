@@ -1,0 +1,52 @@
+{
+  "task_id": "phase2-firstrun-new",
+  "module": "assessment",
+  "footnote_map": {},
+  "all_items": [
+    {
+      "citation_id": "CIT-CN-PIPL-ART39-P1",
+      "source_id": "CN-LAW-003",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "个人信息保护法",
+      "article_no": "39",
+      "quote_text": "",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.0,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-LAW-003?article=39",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "CN-LAW-003:39",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview"
+        ]
+      },
+      "can_jump": true,
+      "source_url": ""
+    }
+  ]
+}
