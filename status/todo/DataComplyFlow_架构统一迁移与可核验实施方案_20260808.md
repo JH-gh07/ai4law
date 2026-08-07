@@ -3,6 +3,7 @@
 > 文档日期：2026-08-08
 > 适用分支：`new`
 > 文档状态：执行方案
+> **继承关系：本文件继承并继续落实 `status/todo/DataComplyFlow_Schema优先法律文档编译器架构方案_20260807.md`。前者提出 Schema-first 文档编译器目标架构；本文件负责把该架构拆成可执行任务、本地验收、旧流程下线和最终完成判断。**
 > 依据文档：
 > - `status/todo/DataComplyFlow_Schema优先法律文档编译器架构方案_20260807.md`
 > - `status/todo/DataComplyFlow_引用跳转闭环治理方案_20260806.md`
