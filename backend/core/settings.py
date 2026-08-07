@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # Schema-first validation is opt-in per module until module snapshots pass.
     schema_first_assessment_enabled: bool = False
     schema_first_dpia_enabled: bool = False
+    schema_first_tia_enabled: bool = False
 
     # OpenAI-compatible LLM config. Provider order in auto mode:
     # generic LLM_* -> SiliconFlow -> legacy Tencent Hunyuan.

@@ -50,6 +50,9 @@ TIA_CHAPTERS = [
 ]
 
 
+from backend.domains.eu.tia.report_renderer import TIAReportRenderer
+
+
 class TIAService:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         if llm_client is None:
@@ -65,6 +68,12 @@ class TIAService:
         self.measure_sufficiency = TIAMeasureSufficiency()
         self.attachment_evidence = TIAAttachmentEvidence(parser=self.parser)
         self.agents = create_tia_agents(llm_client)
+        from backend.core.settings import get_settings as _gs
+        _settings = _gs()
+        self.renderer = TIAReportRenderer(
+            schema_first_enabled=_settings.schema_first_tia_enabled,
+            model_name=_settings.resolved_llm_model,
+        )
 
     def generate_report(
         self,
@@ -447,47 +456,18 @@ class TIAService:
         attachment_notes: list[str],
         citation_registry: CitationRegistry,
     ) -> dict[str, str]:
-        output_dir = Path("outputs/tia") / task_id / "outputs"
-        date_stamp = format_date_stamp()
-        base_name = safe_filename(f"{payload.data_exporter_profile}_{payload.transfer_tool}_TIA")
-        md_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.md"
-        docx_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.docx"
-        pdf_output = output_dir / f"{base_name}_报告_草案_{date_stamp}.pdf"
-        zip_output = output_dir / f"{base_name}_输出包_草案_{date_stamp}.zip"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        mapping = _build_template_mapping(payload, chapters)
-        render_markdown_template(md_output, TEMPLATE_MD, mapping)
-        render_docx_template(docx_output, TEMPLATE_PATH, mapping)
-        from backend.common.render.pdf_renderer import get_pdf_renderer
+        """Delegate to TIAReportRenderer.
 
-        get_pdf_renderer().from_template(
-            pdf_output,
-            f"{payload.data_exporter_profile} TIA 报告草案",
-            TEMPLATE_MD,
-            mapping,
-        )
-        with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
-            bundle.write(docx_output, arcname=docx_output.name)
-            bundle.write(md_output, arcname=md_output.name)
-            bundle.write(pdf_output, arcname=pdf_output.name)
-        footnote_map = {
-            str(num): item.to_dict()
-            for num, item in citation_registry.get_footnote_map().items()
-        }
-        citation_map_json = write_citation_map_json(
-            output_dir=output_dir,
-            module="tia",
+        The method signature is preserved so that existing tests that monkeypatch
+        or call ``service._render`` directly continue to work unchanged.
+        """
+        return self.renderer.render(
             task_id=task_id,
-            footnote_map=footnote_map,
-            all_items=citation_registry.to_list(),
+            payload=payload,
+            chapters=chapters,
+            attachment_notes=attachment_notes,
+            citation_registry=citation_registry,
         )
-        return {
-            "markdown": str(md_output),
-            "docx": str(docx_output),
-            "pdf": str(pdf_output),
-            "zip": str(zip_output),
-            "citation_map_json": citation_map_json,
-        }
 
     def _build_tia_citation_bundle(
         self,

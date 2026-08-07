@@ -1,0 +1,68 @@
+{
+  "document": {
+    "schema_version": "3.0",
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-tia-adapter-v1",
+    "template_version": "tia-v0",
+    "model": "test-model",
+    "document_id": "tia:task-golden",
+    "report_type": "tia",
+    "metadata": {
+      "title": "欧洲子公司 — 传输影响评估报告草案",
+      "company_name": "欧洲子公司",
+      "report_date": "2026-08-08",
+      "report_id": "task-golden"
+    },
+    "sections": [
+      {
+        "section_id": "tia.chapter.1",
+        "title": "传输工具适用性判断",
+        "level": 2,
+        "ordinal": "1",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "tia.chapter.1.block.1",
+            "type": "claim",
+            "text": "本次传输依赖标准合同条款。",
+            "citation_refs": [
+              "CIT-EU-GDPR-ART46-P01"
+            ],
+            "fact_refs": [],
+            "issue_refs": [],
+            "verification": "verified",
+            "verification_reason": "由 legacy citation marker 迁移"
+          }
+        ]
+      },
+      {
+        "section_id": "tia.chapter.2",
+        "title": "补充措施建议",
+        "level": 2,
+        "ordinal": "2",
+        "reuse_policy": "single_use",
+        "blocks": [
+          {
+            "block_id": "tia.chapter.2.block.1",
+            "type": "paragraph",
+            "text": "需实施端到端加密。",
+            "fact_refs": [],
+            "issue_refs": []
+          }
+        ]
+      }
+    ],
+    "diagnostics": [],
+    "provenance": {
+      "generated_at": "2026-08-08T00:00:00Z",
+      "facts_version": null,
+      "issues_version": null,
+      "evidence_version": null
+    },
+    "input_hash": null,
+    "document_ir_hash": null
+  },
+  "footnote_map": {
+    "CIT-EU-GDPR-ART46-P01": 1
+  }
+}
