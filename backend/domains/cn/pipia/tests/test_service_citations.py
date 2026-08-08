@@ -4,6 +4,8 @@ import json
 import re
 from pathlib import Path
 
+from pypdf import PdfReader
+
 from backend.common.rag.retriever import RegulationDoc
 from backend.domains.cn.pipia.schema import PIPIARequest
 from backend.domains.cn.pipia.service import PIPIAService
@@ -23,6 +25,15 @@ class _FirstCitationLLM:
             line for line in kwargs["user"].splitlines() if line.startswith("{{CIT-")
         )
         marker = marker_line.split(" = ", 1)[0]
+        if self.calls == 6:
+            return f"""\
+第6章：应在备案前完成整改。{marker}
+
+| 序号 | 已识别风险项 | 具体整改措施 | 责任部门 | 计划完成时间 |
+| --- | --- | --- | --- | --- |
+| 1 | 告知不充分：隐私政策未明确列明境外接收方SeaCommerce Pte. Ltd.的名称与联系方式。 | 修订并发布新版隐私政策，明确告知境外接收方的完整名称、所在地、联系方式及处理目的。 | 法务合规部、产品部 | 业务上线前 |
+| 2 | 同意管理缺陷：缺乏覆盖全部50万目标用户的批量同意记录证明。 | 系统后台生成并归档覆盖本次出境全部用户的同意记录日志，确保可验证、可审计。 | 技术部、数据合规部 | 合同签署前 |
+"""
         return f"第{self.calls}章：向境外提供个人信息前应履行告知义务并取得单独同意。{marker}"
 
 
@@ -157,6 +168,7 @@ def test_service_keeps_only_explicit_pipia_citations_in_all_output_layers(
 
     assert len(citation_map["all_items"]) == 2
     assert all("隐私政策未明确披露新加坡接收方" in prompt for prompt in llm.prompts)
+    assert len(PdfReader(result.output_files["pdf"]).pages) >= 1
     assert markdown_numbers == {"1"}
     assert map_numbers == markdown_numbers
     assert len(map_citation_ids) == 1
