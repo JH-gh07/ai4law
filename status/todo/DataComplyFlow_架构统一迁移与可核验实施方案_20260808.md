@@ -43,7 +43,7 @@
 | `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
 | `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
 | Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
-| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **约 798 collected, 796 passed, 2 flaky** | 较基线（743/741）新增 55 项：Phase 3 生产形态集成测试 40 项、Phase 3A 诊断双路径 7 项、Phase 5 引用 API 8 项；2 flaky 为预存问题（cpra_async_flow 超时 + bcr provider 快照偶发） |
+| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **815 collected, 814 passed, 1 flaky** | 较基线（743/741）新增 72 项（Phase 3 生产形态集成测试 40 项 + 前端/API + 引用治理相关）；1 flaky 为预存问题（cpra_async_flow LLM 智能体 JSON 解析超时） |
 
 ### 既有失败诊断与修复记录（2026-08-08）
 
@@ -124,7 +124,7 @@
 | `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
 | `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
 | assessment 相关回归 | 61 项通过 | 2026-08-08 本地执行记录（见下方注） |
-| 后端全量回归 | 约 798 collected, 796 passed, 2 flaky | 较基线新增 55 项（Phase 3/3A/5），2 flaky 为预存问题 |
+| 后端全量回归 | **815 collected, 814 passed, 1 flaky** | cpra_async_flow LLM 智能体 JSON 解析超时为预存问题 |
 | 知识库 | `regulation_articles.jsonl` 3030 行，0 重复归一化键 | CN-REG-004 替换（20 条）+ 处罚条款去重（36 条重命名）+ 区域法规入库 |
 | 其他模块新流程 | 代码适配和单测已有，真实服务首跑未完成 | 只能称”适配已完成、功能未验收”，不能宣称迁移完成 |
 
@@ -416,7 +416,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | **完成** | 工作区已清洁（clean tree）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；全量回归约 798/796 passed（+55 较首次基线） | 前端 npm test 待跑；远端冻结待用户决策 |
+| 0 | 基线冻结 | **完成** | 全量回归 815/814 passed（21m33s）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；tree clean | 前端 npm test 待跑；远端冻结待用户决策 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
 | 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/19 CLI cases/365 leaf checks） | live/browser 端到端验证待用户启用远端后执行 |
