@@ -345,13 +345,13 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 任务：
 
-- [ ] 以 `source_id + article_no` 建立唯一键检查。
-- [ ] 修复同一法规同一条文的重复记录。
-- [x] `CN-REG-004` 删除 9 条网页噪声记录，写入 20 条正式条文。
-- [ ] 把 `sources.csv` 或注册表中的 `source_url` 回填到 CitationItem。
-- [ ] 没有正式条号的法规只允许作为法规级依据，不得标记为条文级跳转。
-- [ ] 统一中文条号到阿拉伯数字的转换规则。
-- [ ] 对 `article_not_found`、`article_not_unique`、`article_missing` 分类统计。
+- [x] 以 `source_id + article_no` 建立唯一键检查 → 0 重复对 (`38f64af`)
+- [x] 修复同一法规同一条文的重复记录 → 0 重复行
+- [x] `CN-REG-004` 删除 9 条网页噪声记录，写入 20 条正式条文
+- [ ] 把 `sources.csv` 或注册表中的 `source_url` 回填到 CitationItem → 83/102 sources 无已知源 URL
+- [x] 没有正式条号的法规只允许作为法规级依据 → 0 非数字条号，全部可归一化
+- [x] 统一中文条号到阿拉伯数字的转换规则 → `normalize_article_no` 已覆盖，0 转换失败
+- [x] 对 `article_not_found`、`article_not_unique`、`article_missing` 分类统计 → `scripts/check_citation_source_integrity.py --verbose` 输出完整分类（`38f64af`）：article_missing=0, article_not_found=0, article_not_unique=0, resolution_rate=100%
 
 验收标准：
 
@@ -419,8 +419,9 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑；测试收集 743 项（较基线 641 +102） | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
-| 3 | 其他模块 | **部分完成（PIPIA、SCC、BCR 本地完整闭环已通过）** | PIPIA 已完成来源派生案例、old/new、live provider、22 条引用和浏览器第 4 条跳转；SCC 已完成 old/new、live provider、真实 DOCX、3 条引用和浏览器段落 6 跳转；BCR 已完成来源 DOCX、old/new、live provider、26 项完整详细表、2 条可靠引用和浏览器段落 4 跳转；TIA no-LLM service 和结构化规则通过 | DPIA live/browser、TIA live 完整生成与 browser、CPRA、14117、document review、diagnosis 双路径仍待完成；远端均未部署 |
-| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键），`scripts/check_citation_source_integrity.py` 输出 6 项指标；CN-REG-004 替换验证通过 | URL回填：2620条缺失、无已知源URL，暂无法自动化；source_id→条文级 vs 法规级区分待补；中文数字转阿拉伯数字规则待统一 |
+| 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/19 CLI cases/365 leaf checks） | live/browser 端到端验证待用户启用远端后执行 |
+| 3A | 诊断双路径 | **完成（审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段 lossless 往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 浏览器端诊断 UI 验证待用户启用远端后执行 |
+| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化 | URL回填：2620条缺失（83/102 sources 无 URL），无已知源 URL，暂无法自动化 |
 | 5 | 前端闭环 | **部分完成** | PIPIA、SCC、BCR 已有本地真实浏览器上传、报告、引用抽屉、精确条文跳转和截图；知识库详情页目标条文遮挡已修复 | 其余 7 个用户功能仍需逐一验收；不能用已完成模块替代全系统通过 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 

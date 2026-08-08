@@ -56,5 +56,6 @@
     "max_counts": {
       "missing_facts": 0
     }
-  }
+  },
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx"
 }
