@@ -41,4 +41,16 @@ describe("CitationPopover", () => {
 
     expect(onClickSource).toHaveBeenCalledWith(citation);
   });
+
+  it("does not invent a low-confidence reason when policy blocks external use", () => {
+    render(
+      <CitationPopover
+        footnoteNumber={1}
+        citation={{ ...citation, external_report_allowed: false }}
+      />,
+    );
+
+    expect(screen.getByText("⚠️ 仅供内部审查")).toBeInTheDocument();
+    expect(screen.queryByText(/仅供内部审查（置信度不足）/)).not.toBeInTheDocument();
+  });
 });

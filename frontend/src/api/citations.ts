@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import { getAuthHeaders } from "./auth";
 
 export type CitationResolutionType =
   | "exact_article"
@@ -66,7 +67,7 @@ export async function fetchCitationMap(taskId: string, moduleKey?: string): Prom
   const pending = citationMapRequests.get(url);
   if (pending) return pending;
 
-  const request = apiFetch(url)
+  const request = apiFetch(url, { headers: { ...getAuthHeaders() } })
     .then((res) => {
       if (!res.ok) {
         throw new Error(`Failed to fetch citation map: ${res.status}`);
@@ -92,7 +93,7 @@ export async function fetchCitationDetail(
     searchParams.set("module", moduleKey);
   }
   const url = `${BASE}/${encodeURIComponent(citationId)}?${searchParams.toString()}`;
-  const res = await apiFetch(url);
+  const res = await apiFetch(url, { headers: { ...getAuthHeaders() } });
   if (!res.ok) {
     throw new Error(`Failed to fetch citation detail: ${res.status}`);
   }

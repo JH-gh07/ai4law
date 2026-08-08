@@ -6,6 +6,7 @@ import {
   type ArticleDetail,
 } from "../api/knowledge";
 import { useLang } from "../lib/language";
+import { formatLegalLocator } from "../lib/legal-locator";
 
 const AUTHORITY_LABELS: Record<string, string> = {
   high: "高权威",
@@ -238,7 +239,7 @@ export function LawViewerPage() {
             <article className="law-viewer-articles">
               {article.prev_article_no && article.prev_article_content && (
                 <section className="law-viewer-article law-viewer-article-context">
-                  <h3>{t("第", "Article ")}{article.prev_article_no}{t("条", "")}</h3>
+                  <h3>{formatLegalLocator(article.prev_article_no, lang)}</h3>
                   <p>{article.prev_article_content}</p>
                 </section>
               )}
@@ -248,7 +249,7 @@ export function LawViewerPage() {
                 className="law-viewer-article law-viewer-article-target"
               >
                 <h3>
-                  {t("第", "Article ")}{article.article_no}{t("条", "")}
+                  {formatLegalLocator(article.article_no, lang)}
                   <span className="law-viewer-article-highlight-badge">
                     {t("当前查看条文", "Current Article")}
                   </span>
@@ -258,7 +259,7 @@ export function LawViewerPage() {
 
               {article.next_article_no && article.next_article_content && (
                 <section className="law-viewer-article law-viewer-article-context">
-                  <h3>{t("第", "Article ")}{article.next_article_no}{t("条", "")}</h3>
+                  <h3>{formatLegalLocator(article.next_article_no, lang)}</h3>
                   <p>{article.next_article_content}</p>
                 </section>
               )}

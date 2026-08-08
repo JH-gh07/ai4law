@@ -5,6 +5,7 @@ import {
   fetchArticleDetail,
   type ArticleDetail,
 } from "../../api/knowledge";
+import { formatLegalLocator } from "../../lib/legal-locator";
 
 const AUTHORITY_LABELS: Record<string, string> = {
   high: "高权威",
@@ -97,7 +98,7 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
           </h3>
           {citation.article_no && (
             <span className="citation-drawer-article-label">
-              第{citation.article_no}条
+              {formatLegalLocator(citation.article_no)}
             </span>
           )}
           <div className="citation-drawer-meta">
@@ -120,21 +121,21 @@ export function CitationArticleDrawer({ citation, onClose }: Props) {
               {article.prev_article_no && article.prev_article_content && (
                 <section className="citation-article-context">
                   <small>上文</small>
-                  <h5>第{article.prev_article_no}条</h5>
+                  <h5>{formatLegalLocator(article.prev_article_no)}</h5>
                   <p>{article.prev_article_content}</p>
                 </section>
               )}
 
               <section className="citation-article-target">
                 <small>当前引用位置</small>
-                <h4>第{article.article_no}条</h4>
+                <h4>{formatLegalLocator(article.article_no)}</h4>
                 <p>{article.article_content}</p>
               </section>
 
               {article.next_article_no && article.next_article_content && (
                 <section className="citation-article-context">
                   <small>下文</small>
-                  <h5>第{article.next_article_no}条</h5>
+                  <h5>{formatLegalLocator(article.next_article_no)}</h5>
                   <p>{article.next_article_content}</p>
                 </section>
               )}

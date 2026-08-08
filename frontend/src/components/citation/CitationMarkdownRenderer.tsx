@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { fetchCitationMap, type CitationDetail, type CitationResolutionType } from "../../api/citations";
 import { fetchArticleDetail, fetchKnowledgeCitation } from "../../api/knowledge";
 import type { ModuleKey } from "../../lib/domain";
+import { formatLegalLocator } from "../../lib/legal-locator";
 import { CitationArticleDrawer } from "./CitationArticleDrawer";
 import { CitationPopover } from "./CitationPopover";
 
@@ -85,7 +86,7 @@ function extractBasisItems(block: string): string[] {
 }
 
 function shortenCitationLabel(citation: CitationDetail): string {
-  const article = citation.article_no ? `第${citation.article_no}条` : "";
+  const article = formatLegalLocator(citation.article_no);
   return `${citation.title}${article ? ` ${article}` : ""}`;
 }
 

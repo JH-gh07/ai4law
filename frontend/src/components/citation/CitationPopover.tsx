@@ -1,4 +1,5 @@
 import type { CitationDetail } from "../../api/citations";
+import { formatLegalLocator } from "../../lib/legal-locator";
 
 const TYPE_LABELS: Record<string, string> = {
   law_article: "法律条文",
@@ -59,7 +60,7 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
         <span className="citation-popover-header">
           <strong>{citation.title}</strong>
           {citation.article_no && (
-            <span className="citation-article">第{citation.article_no}条</span>
+            <span className="citation-article">{formatLegalLocator(citation.article_no)}</span>
           )}
         </span>
         {snippet && (
@@ -95,7 +96,7 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
             <span className="citation-governance-ok">✅ 可对外引用</span>
           )}
           {citation.can_enter_external_report && !citation.external_report_allowed && (
-            <span className="citation-governance-warning">⚠️ 仅供内部审查（置信度不足）</span>
+            <span className="citation-governance-warning">⚠️ 仅供内部审查</span>
           )}
           {!citation.can_enter_external_report && (
             <span className="citation-governance-blocked">🔴 禁止进入对外文书</span>

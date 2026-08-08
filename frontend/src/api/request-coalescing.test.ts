@@ -7,6 +7,10 @@ vi.mock("./client", () => ({
   apiFetch: vi.fn(),
 }));
 
+vi.mock("./auth", () => ({
+  getAuthHeaders: vi.fn(() => ({ Authorization: "Bearer test-token" })),
+}));
+
 const mockedApiFetch = vi.mocked(apiFetch);
 
 describe("read request coalescing", () => {
@@ -25,6 +29,10 @@ describe("read request coalescing", () => {
 
     await Promise.all([first, second]);
     expect(mockedApiFetch).toHaveBeenCalledTimes(1);
+    expect(mockedApiFetch).toHaveBeenCalledWith(
+      "/api/v1/citations/reports/coalesce-task?module=assessment",
+      { headers: { Authorization: "Bearer test-token" } },
+    );
   });
 
   it("shares one in-flight knowledge citation request for the same normalized query", async () => {
