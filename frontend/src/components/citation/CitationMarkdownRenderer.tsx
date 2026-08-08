@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { fetchCitationMap, type CitationDetail } from "../../api/citations";
+import { fetchCitationMap, type CitationDetail, type CitationResolutionType } from "../../api/citations";
 import { fetchArticleDetail, fetchKnowledgeCitation } from "../../api/knowledge";
 import type { ModuleKey } from "../../lib/domain";
 import { CitationArticleDrawer } from "./CitationArticleDrawer";
@@ -136,7 +136,7 @@ async function buildResolvedCitation(
   // fetchArticleDetail returns successfully only when the registry contains
   // exactly one matching row — the same uniqueness check used by output.py.
   let canJump = false;
-  let resolutionType: string = "source_overview";
+  let resolutionType: CitationResolutionType = "source_overview";
   let targetId = sourceId;
   let resolutionConfidence = 0.7;
   let failureReason = articleNo ? "article_requires_server_resolution" : "article_missing";
