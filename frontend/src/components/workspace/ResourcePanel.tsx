@@ -93,7 +93,7 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
                 ▸
               </span>
               <span className="ide-tree-icon">
-                <FolderInputIcon width="14" height="14" />
+                <FolderOutputIcon width="14" height="14" />
               </span>
               <span className="ide-tree-label">{node.name}</span>
             </button>
@@ -169,20 +169,20 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
                 inputEntries.length > 0 ? (
                   <ul className="ide-tree-list ide-tree-children">
                     {inputEntries.map((entry) => (
-                        <li key={entry.id}>
-                          <div
-                            className="ide-tree-row ide-tree-row-file"
-                            style={{ ["--tree-depth" as string]: 1 }}
-                            title={lang === "zh" ? "已记录输入文件；安全预览接口尚未统一，当前仅展示" : "Input recorded; preview is display-only until access control is unified"}
-                          >
-                            <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
-                            <span className="ide-tree-icon">
-                              <FileNodeIcon width="14" height="14" />
-                            </span>
-                            <span className="ide-tree-label">{entry.name}</span>
-                          </div>
-                        </li>
-                      ))}
+                      <li key={entry.id}>
+                        <div
+                          className="ide-tree-row ide-tree-row-file"
+                          style={{ ["--tree-depth" as string]: 1 }}
+                          title={lang === "zh" ? "已记录输入文件；安全预览接口尚未统一，当前仅展示" : "Input recorded; preview is display-only until access control is unified"}
+                        >
+                          <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
+                          <span className="ide-tree-icon">
+                            <FileNodeIcon width="14" height="14" />
+                          </span>
+                          <span className="ide-tree-label">{entry.name}</span>
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                 ) : (
                   <p className="ide-folder-empty">{copy.inputEmpty}</p>
