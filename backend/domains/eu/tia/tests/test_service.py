@@ -85,6 +85,48 @@ def test_tia_generate_report() -> None:
     assert result.transfer_tool == "scc"
 
 
+def test_dpo_revision_issues_are_exposed_to_callers(monkeypatch) -> None:
+    service = TIAService(llm_client=_DisabledLLM())
+    service._render = _fast_render
+    service.agents = {
+        "rag_planning": _StaticAgent({"queries": []}),
+        "attachment_review": _StaticAgent({
+            "conflicts": [],
+            "missing_evidence": [],
+            "overall_evidence_quality": "adequate",
+        }),
+        "dpo_review": _StaticAgent({
+            "review_result": "needs_revision",
+            "critical_issues": ["Supplementary measures lack supporting evidence."],
+            "non_reliance_warning_needed": False,
+            "dpo_position": "Revision required before release.",
+            "mandatory_conditions": [],
+        }),
+    }
+    monkeypatch.setattr(
+        "backend.domains.eu.tia.service.retrieve_legal_documents",
+        lambda *args, **kwargs: type("Hits", (), {"documents": [_Reg()]})(),
+    )
+    payload = TIARequest.model_validate({
+        "transfer_tool": "scc",
+        "data_exporter_profile": "EU Exporter A",
+        "data_importer_profile": "US Importer B",
+        "third_country_assessment": "Government access risk assessed.",
+        "supplementary_measures": "Encryption planned.",
+        "final_conclusion": "SCC remains conditional on evidence.",
+        "attachments": [{
+            "file_role": "country_law_analysis",
+            "file_name": "country-law.pdf",
+            "file_format": "pdf",
+            "storage_uri": "storage://uploads/country-law.pdf",
+        }],
+    })
+
+    result = service.generate_report(payload, task_id="dpo-revision")
+
+    assert "[DPO复核] Supplementary measures lack supporting evidence." in result.consistency_issues
+
+
 def test_tia_citation_bundle_produces_structured_citations() -> None:
     service = TIAService()
     payload = TIARequest.model_validate(

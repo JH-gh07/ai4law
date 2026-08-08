@@ -256,13 +256,16 @@ class TIAService:
                     )
                 )
 
+            issues = self._check_consistency(payload, level, route, country_risk_result,
+                                              data_sens, measure_assessments, attachment_evidences)
+
             dpo_review = self.agents["dpo_review"].run(
                 route=route.route if route else "unknown",
                 country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
                 sensitivity=data_sens.get("sensitivity", "unknown"),
                 measure_overall=measure_overall if (payload.structured_input and measure_overall) else "unknown",
                 effective_risk=effective_risk if payload.structured_input else level,
-                issues=[],
+                issues=issues,
                 chapter_summaries=[{
                     "no": ch.chapter_no, "title": ch.title, "content": ch.content[:300],
                 } for ch in chapters],
@@ -284,8 +287,11 @@ class TIAService:
                     "\n".join(f"- {c}" for c in dpo_review["mandatory_conditions"])
                 )
 
-            issues = self._check_consistency(payload, level, route, country_risk_result,
-                                              data_sens, measure_assessments, attachment_evidences)
+            for critical_issue in dpo_review.get("critical_issues", []):
+                if isinstance(critical_issue, str) and critical_issue.strip():
+                    dpo_issue = f"[DPO复核] {critical_issue.strip()}"
+                    if dpo_issue not in issues:
+                        issues.append(dpo_issue)
 
             outputs = self._render(run_task_id, payload, chapters, attachment_notes, citation_registry)
 
@@ -299,8 +305,10 @@ class TIAService:
                     "detail": {
                         "conclusion": "TIA 传输影响评估已完成",
                         "files": list(outputs.values()) if isinstance(outputs, dict) else [],
-                        "risks": [],
-                        "next_steps": ["复核 TIA 评估结论", "确认补充措施的充分性"],
+                        "risks": issues,
+                        "next_steps": (["修复 DPO 复核问题", "重新审阅 TIA 结论"]
+                                       if dpo_review.get("review_result") in ("needs_revision", "rejected")
+                                       else ["复核 TIA 评估结论", "确认补充措施的充分性"]),
                     },
                 })
 
