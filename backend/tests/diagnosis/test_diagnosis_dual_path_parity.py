@@ -14,12 +14,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from backend.domains.cn.transfer_diagnosis.schema import (
     DiagnosisAnswers as ModuleAnswers,
-    TransferScenario,
-    ReceiverType,
     YesNoUnknown,
 )
 from backend.schemas.diagnosis import (
