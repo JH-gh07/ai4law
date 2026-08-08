@@ -1,8 +1,20 @@
 import time
 
+from backend.domains.us.cpra import router as cpra_router
+from backend.domains.us.cpra.service import CPRAService
 
 
-def test_cpra_async_flow(authenticated_client) -> None:
+class _DisabledLLM:
+    enabled = False
+
+
+def _install_test_service(monkeypatch) -> None:
+    """Keep the default async contract test independent of developer API keys."""
+    monkeypatch.setattr(cpra_router, "service", CPRAService(llm_client=_DisabledLLM()))
+
+
+def test_cpra_async_flow(authenticated_client, monkeypatch) -> None:
+    _install_test_service(monkeypatch)
     accepted = authenticated_client.post(
         "/api/v1/cpra/generate_async",
         json={

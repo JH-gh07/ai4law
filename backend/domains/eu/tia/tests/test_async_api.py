@@ -1,8 +1,20 @@
 import time
 
+from backend.domains.eu.tia import router as tia_router
+from backend.domains.eu.tia.service import TIAService
 
 
-def test_tia_async_flow(authenticated_client) -> None:
+class _DisabledLLM:
+    enabled = False
+
+
+def _install_test_service(monkeypatch) -> None:
+    """Keep the default async contract test independent of developer API keys."""
+    monkeypatch.setattr(tia_router, "service", TIAService(llm_client=_DisabledLLM()))
+
+
+def test_tia_async_flow(authenticated_client, monkeypatch) -> None:
+    _install_test_service(monkeypatch)
     accepted = authenticated_client.post(
         "/api/v1/tia/generate_async",
         json={
