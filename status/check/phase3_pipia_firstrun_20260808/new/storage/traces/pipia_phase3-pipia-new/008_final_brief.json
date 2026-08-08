@@ -1,0 +1,24 @@
+{
+  "name": "final_brief",
+  "seq": 8,
+  "created_at": "2026-08-08T03:48:54.226954+00:00",
+  "payload": {
+    "summary": "PIPIA 评估完成",
+    "detail": {
+      "conclusion": "PIPIA 个人信息保护影响评估已完成",
+      "files": [
+        "outputs/pipia/phase3-pipia-new/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.md",
+        "outputs/pipia/phase3-pipia-new/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+        "outputs/pipia/phase3-pipia-new/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.pdf",
+        "outputs/pipia/phase3-pipia-new/outputs/数安科技有限公司_PIPIA_输出包_草案_20260808.zip",
+        "outputs/pipia/phase3-pipia-new/outputs/document_ir.json",
+        "outputs/pipia/phase3-pipia-new/outputs/citation_map.json"
+      ],
+      "risks": [],
+      "next_steps": [
+        "复核评估报告",
+        "准备备案材料"
+      ]
+    }
+  }
+}

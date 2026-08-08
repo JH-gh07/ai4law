@@ -1,0 +1,66 @@
+{
+  "mode": "new",
+  "schema_first_enabled": true,
+  "case_path": "backend/tests/pipia/cases/01_minimal.json",
+  "case_sha256": "09f5f37d1d31bc22b5931fb7f4929b1d8247e86d65249cd4cf204b48f4ae7ff1",
+  "attachment": {
+    "path": "status/check/phase3_pipia_firstrun_20260808/scc_contract.txt",
+    "sha256": "21bc18df19ab29925e63ab5ac5dd3f9d89f6c94ecbe26ee532d981ebe15205e4",
+    "parsed": true
+  },
+  "execution": {
+    "service": "backend.domains.cn.pipia.service.PIPIAService.generate_report",
+    "task_id": "phase3-pipia-new",
+    "duration_ms": 306,
+    "llm_calls": 0,
+    "tokens": 0
+  },
+  "result": {
+    "risk_level": "LOW",
+    "route_type": "scc_filing",
+    "chapters": 7,
+    "issues": 0,
+    "material_gaps": [],
+    "attachment_notes": [
+      "scc_draft.txt: 脱敏标准合同附件：仅用于本地 PIPIA 文件解析验收。"
+    ]
+  },
+  "artifacts": {
+    "markdown": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.md",
+      "size": 1201,
+      "sha256": "5af76fe9cd7e6159177535a16ecd6b8301fd0227e54f651a614a2b35dce457ef"
+    },
+    "docx": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+      "size": 37207,
+      "sha256": "fb8119bc51ebdc8eac35c0b0cacbc8cab305662b04d8307f47e9023985cc2535"
+    },
+    "pdf": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.pdf",
+      "size": 3692,
+      "sha256": "8ad23027a4aa2ec359c307f62f9b457bd97d8a7473f00639b3866f62cfc4d9a3"
+    },
+    "zip": {
+      "path": "数安科技有限公司_PIPIA_输出包_草案_20260808.zip",
+      "size": 39134,
+      "sha256": "97f761c5b2782e6443a04360f99758b9ea25f35fe6e6222f4a47b4b0a265e723"
+    },
+    "document_ir_json": {
+      "path": "document_ir.json",
+      "size": 3927,
+      "sha256": "07b679f88ee0e89c3a7bd2a3259e7e83a2124637dc44492354e035c8f5b7bf95"
+    },
+    "citation_map_json": {
+      "path": "citation_map.json",
+      "size": 401585,
+      "sha256": "40e886765353f0ce6aaaac4ead586d5c884456738d0af43334f7024a48d2fa93"
+    }
+  },
+  "zip_members": [
+    "数安科技有限公司_PIPIA_报告_草案_20260808.md",
+    "数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+    "数安科技有限公司_PIPIA_报告_草案_20260808.pdf",
+    "document_ir.json"
+  ]
+}

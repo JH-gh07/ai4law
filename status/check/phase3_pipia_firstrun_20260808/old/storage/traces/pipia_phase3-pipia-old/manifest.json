@@ -1,0 +1,54 @@
+{
+  "created_at": "2026-08-08T03:48:53.911241+00:00",
+  "event_count": 8,
+  "events": [
+    {
+      "seq": 1,
+      "name": "status",
+      "path": "storage/traces/pipia_phase3-pipia-old/001_status.json",
+      "created_at": "2026-08-08T03:48:51.855100+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "thought",
+      "path": "storage/traces/pipia_phase3-pipia-old/002_thought.json",
+      "created_at": "2026-08-08T03:48:51.856264+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "tool_start",
+      "path": "storage/traces/pipia_phase3-pipia-old/003_tool_start.json",
+      "created_at": "2026-08-08T03:48:53.509212+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "thought",
+      "path": "storage/traces/pipia_phase3-pipia-old/004_thought.json",
+      "created_at": "2026-08-08T03:48:53.509702+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "tool_result",
+      "path": "storage/traces/pipia_phase3-pipia-old/005_tool_result.json",
+      "created_at": "2026-08-08T03:48:53.510144+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "intermediate",
+      "path": "storage/traces/pipia_phase3-pipia-old/006_intermediate.json",
+      "created_at": "2026-08-08T03:48:53.510517+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "final",
+      "path": "storage/traces/pipia_phase3-pipia-old/007_final.json",
+      "created_at": "2026-08-08T03:48:53.909533+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "final_brief",
+      "path": "storage/traces/pipia_phase3-pipia-old/008_final_brief.json",
+      "created_at": "2026-08-08T03:48:53.910679+00:00"
+    }
+  ]
+}

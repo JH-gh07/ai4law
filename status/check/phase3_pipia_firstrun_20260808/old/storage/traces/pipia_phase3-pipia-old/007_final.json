@@ -1,0 +1,17 @@
+{
+  "name": "final",
+  "seq": 7,
+  "created_at": "2026-08-08T03:48:53.909533+00:00",
+  "payload": {
+    "summary": "PIPIA 评估完成",
+    "detail": {
+      "output_files": {
+        "markdown": "outputs/pipia/phase3-pipia-old/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.md",
+        "docx": "outputs/pipia/phase3-pipia-old/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+        "pdf": "outputs/pipia/phase3-pipia-old/outputs/数安科技有限公司_PIPIA_报告_草案_20260808.pdf",
+        "zip": "outputs/pipia/phase3-pipia-old/outputs/数安科技有限公司_PIPIA_输出包_草案_20260808.zip",
+        "citation_map_json": "outputs/pipia/phase3-pipia-old/outputs/citation_map.json"
+      }
+    }
+  }
+}

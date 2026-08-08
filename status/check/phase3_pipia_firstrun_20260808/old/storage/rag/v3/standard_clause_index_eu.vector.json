@@ -1,0 +1,248 @@
+{
+  "metadata": {
+    "index_name": "standard_clause_index_eu",
+    "entry_count": 3,
+    "schema_version": "v3.2",
+    "embedding_dimension": 384,
+    "embedding_version": "sha256-v1"
+  },
+  "entries": [
+    {
+      "doc_id": "STD-EU-SCC-ONWARD",
+      "payload": {
+        "chunk_id": "STD-EU-SCC-ONWARD",
+        "source_id": "STD-EU-SCC-ONWARD",
+        "title": "EU SCC onward transfer safeguard",
+        "content": "Onward transfers must remain subject to equivalent safeguards and documented restrictions.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "eu_scc",
+        "jurisdiction": "eu",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "EU-LAW-001",
+          "EU-GUIDE-002"
+        ],
+        "citation_anchor": "EU SCC onward transfer safeguard",
+        "scenario_tags": [
+          "scc_contract",
+          "tia"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "scc",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "onward_transfer_controls",
+          "equivalent_safeguards",
+          "documented_restrictions"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-EU-SCC-ONWARD",
+          "clause_title": "EU SCC onward transfer safeguard",
+          "clause_type": "ONWARD_TRANSFER",
+          "protected_obligations": [
+            "onward_transfer_controls",
+            "equivalent_safeguards",
+            "documented_restrictions"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "EU SCC onward transfer safeguard Onward transfers must remain subject to equivalent safeguards and documented restrictions. EU SCC onward transfer safeguard EU-LAW-001 EU-GUIDE-002 scc_contract tia onward_transfer_controls equivalent_safeguards documented_restrictions",
+      "embedding": {
+        "105": 0.30151134457776363,
+        "6": 0.30151134457776363,
+        "78": 0.45226701686664544,
+        "109": 0.30151134457776363,
+        "303": 0.30151134457776363,
+        "113": 0.15075567228888181,
+        "55": 0.30151134457776363,
+        "257": 0.15075567228888181,
+        "79": 0.15075567228888181,
+        "15": 0.15075567228888181,
+        "281": 0.15075567228888181,
+        "29": 0.15075567228888181,
+        "347": 0.15075567228888181,
+        "106": 0.15075567228888181,
+        "121": 0.15075567228888181,
+        "328": 0.15075567228888181,
+        "354": 0.15075567228888181,
+        "132": 0.15075567228888181,
+        "240": 0.15075567228888181,
+        "183": 0.15075567228888181,
+        "165": 0.15075567228888181
+      }
+    },
+    {
+      "doc_id": "STD-EU-BCR-RIGHTS",
+      "payload": {
+        "chunk_id": "STD-EU-BCR-RIGHTS",
+        "source_id": "STD-EU-BCR-RIGHTS",
+        "title": "BCR enforceable rights and complaint handling",
+        "content": "Binding Corporate Rules must expressly confer enforceable rights on data subjects and define effective complaint handling and liability allocation.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "eu_bcr",
+        "jurisdiction": "eu",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "EU-LAW-001"
+        ],
+        "citation_anchor": "BCR enforceable rights and complaint handling",
+        "scenario_tags": [
+          "bcr"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "bcr",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "enforceable_rights",
+          "complaint_handling",
+          "liability_allocation"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-EU-BCR-RIGHTS",
+          "clause_title": "BCR enforceable rights and complaint handling",
+          "clause_type": "RIGHTS_REQUEST",
+          "protected_obligations": [
+            "enforceable_rights",
+            "complaint_handling",
+            "liability_allocation"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "BCR enforceable rights and complaint handling Binding Corporate Rules must expressly confer enforceable rights on data subjects and define effective complaint handling and liability allocation. BCR enforceable rights and complaint handling EU-LAW-001 bcr enforceable_rights complaint_handling liability_allocation",
+      "embedding": {
+        "284": 0.3396831102433787,
+        "207": 0.3396831102433787,
+        "13": 0.3396831102433787,
+        "347": 0.45291081365783825,
+        "360": 0.3396831102433787,
+        "94": 0.3396831102433787,
+        "343": 0.11322770341445956,
+        "114": 0.11322770341445956,
+        "120": 0.11322770341445956,
+        "55": 0.11322770341445956,
+        "335": 0.11322770341445956,
+        "301": 0.11322770341445956,
+        "305": 0.11322770341445956,
+        "7": 0.11322770341445956,
+        "346": 0.11322770341445956,
+        "26": 0.11322770341445956,
+        "371": 0.11322770341445956,
+        "264": 0.11322770341445956,
+        "265": 0.11322770341445956,
+        "328": 0.11322770341445956,
+        "175": 0.11322770341445956,
+        "288": 0.11322770341445956,
+        "68": 0.11322770341445956
+      }
+    },
+    {
+      "doc_id": "STD-EU-TIA-MEASURES",
+      "payload": {
+        "chunk_id": "STD-EU-TIA-MEASURES",
+        "source_id": "STD-EU-TIA-MEASURES",
+        "title": "TIA supplementary measures must be effective",
+        "content": "Supplementary measures must be effective in practice and technical measures cannot be replaced by purely contractual language where the transfer context requires stronger safeguards.",
+        "layer": "L1_regulatory_evidence",
+        "template_type": "none",
+        "source_kind": "standard_clause",
+        "module": "eu_tia",
+        "jurisdiction": "eu",
+        "doc_type": "standard_clause",
+        "authority_level": "high",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "legal_grounding",
+          "external_report",
+          "internal_review"
+        ],
+        "can_be_cited": true,
+        "can_enter_external_report": true,
+        "reference_ids": [
+          "EU-GUIDE-002"
+        ],
+        "citation_anchor": "TIA supplementary measures must be effective",
+        "scenario_tags": [
+          "tia"
+        ],
+        "chunk_strategy": "standard_clause",
+        "article_no": "",
+        "path": "tia",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [
+          "effective_supplementary_measures",
+          "technical_controls",
+          "reassessment_cycle"
+        ],
+        "structured_payload": {
+          "clause_no": "STD-EU-TIA-MEASURES",
+          "clause_title": "TIA supplementary measures must be effective",
+          "clause_type": "SUPPLEMENTARY_MEASURES",
+          "protected_obligations": [
+            "effective_supplementary_measures",
+            "technical_controls",
+            "reassessment_cycle"
+          ],
+          "modification_sensitivity": "high"
+        }
+      },
+      "search_text": "TIA supplementary measures must be effective Supplementary measures must be effective in practice and technical measures cannot be replaced by purely contractual language where the transfer context requires stronger safeguards. TIA supplementary measures must be effective EU-GUIDE-002 tia effective_supplementary_measures technical_controls reassessment_cycle",
+      "embedding": {
+        "240": 0.3144854510165755,
+        "61": 0.3144854510165755,
+        "141": 0.4193139346887673,
+        "55": 0.3144854510165755,
+        "1": 0.4193139346887673,
+        "371": 0.3144854510165755,
+        "285": 0.10482848367219183,
+        "286": 0.10482848367219183,
+        "347": 0.10482848367219183,
+        "197": 0.10482848367219183,
+        "151": 0.10482848367219183,
+        "66": 0.10482848367219183,
+        "205": 0.10482848367219183,
+        "254": 0.10482848367219183,
+        "52": 0.10482848367219183,
+        "139": 0.10482848367219183,
+        "145": 0.10482848367219183,
+        "282": 0.20965696734438366,
+        "109": 0.10482848367219183,
+        "42": 0.10482848367219183,
+        "381": 0.10482848367219183,
+        "306": 0.10482848367219183,
+        "29": 0.10482848367219183,
+        "354": 0.10482848367219183,
+        "180": 0.10482848367219183,
+        "125": 0.10482848367219183
+      }
+    }
+  ]
+}

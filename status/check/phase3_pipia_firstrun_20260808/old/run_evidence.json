@@ -1,0 +1,60 @@
+{
+  "mode": "old",
+  "schema_first_enabled": false,
+  "case_path": "backend/tests/pipia/cases/01_minimal.json",
+  "case_sha256": "09f5f37d1d31bc22b5931fb7f4929b1d8247e86d65249cd4cf204b48f4ae7ff1",
+  "attachment": {
+    "path": "status/check/phase3_pipia_firstrun_20260808/scc_contract.txt",
+    "sha256": "21bc18df19ab29925e63ab5ac5dd3f9d89f6c94ecbe26ee532d981ebe15205e4",
+    "parsed": true
+  },
+  "execution": {
+    "service": "backend.domains.cn.pipia.service.PIPIAService.generate_report",
+    "task_id": "phase3-pipia-old",
+    "duration_ms": 2058,
+    "llm_calls": 0,
+    "tokens": 0
+  },
+  "result": {
+    "risk_level": "LOW",
+    "route_type": "scc_filing",
+    "chapters": 7,
+    "issues": 0,
+    "material_gaps": [],
+    "attachment_notes": [
+      "scc_draft.txt: 脱敏标准合同附件：仅用于本地 PIPIA 文件解析验收。"
+    ]
+  },
+  "artifacts": {
+    "markdown": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.md",
+      "size": 1201,
+      "sha256": "5af76fe9cd7e6159177535a16ecd6b8301fd0227e54f651a614a2b35dce457ef"
+    },
+    "docx": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+      "size": 37207,
+      "sha256": "7df35100b118ac3c4e133c31d6dba51e0f17a70389c88dddccaa8ea87670158c"
+    },
+    "pdf": {
+      "path": "数安科技有限公司_PIPIA_报告_草案_20260808.pdf",
+      "size": 3692,
+      "sha256": "4d0f9e0f41adb862dc51cf7fc9721f064ffd4929365256bdfb9a8a9e42b603bb"
+    },
+    "zip": {
+      "path": "数安科技有限公司_PIPIA_输出包_草案_20260808.zip",
+      "size": 38183,
+      "sha256": "636bc27c0c984296976ad75337bf5d561ecf3e7056c50c6dd200bcad87dc3d00"
+    },
+    "citation_map_json": {
+      "path": "citation_map.json",
+      "size": 401585,
+      "sha256": "b14cba9025623d83303893061aacbc382b45a6129e4bd31e2c373d97c2c3385d"
+    }
+  },
+  "zip_members": [
+    "数安科技有限公司_PIPIA_报告_草案_20260808.md",
+    "数安科技有限公司_PIPIA_报告_草案_20260808.docx",
+    "数安科技有限公司_PIPIA_报告_草案_20260808.pdf"
+  ]
+}

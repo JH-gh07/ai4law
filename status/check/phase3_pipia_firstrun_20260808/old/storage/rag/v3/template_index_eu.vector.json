@@ -1,0 +1,241 @@
+{
+  "metadata": {
+    "index_name": "template_index_eu",
+    "entry_count": 4,
+    "schema_version": "v3.2",
+    "embedding_dimension": 384,
+    "embedding_version": "sha256-v1"
+  },
+  "entries": [
+    {
+      "doc_id": "TPL-EU-DPIA-1",
+      "payload": {
+        "chunk_id": "TPL-EU-DPIA-1",
+        "source_id": "EU-TEMPLATE-DPIA-OFFICIAL",
+        "title": "Describe processing and high-risk context",
+        "content": "Describe the processing, scope, context and why it is likely to result in high risk.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "eu_dpia",
+        "jurisdiction": "eu",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "1",
+        "scenario_tags": [
+          "dpia",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "dpia",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "1",
+          "number": "1"
+        }
+      },
+      "search_text": "Describe processing and high-risk context Describe the processing, scope, context and why it is likely to result in high risk. 1  dpia official_template",
+      "embedding": {
+        "30": 0.3592106040535498,
+        "288": 0.3592106040535498,
+        "347": 0.3592106040535498,
+        "297": 0.1796053020267749,
+        "42": 0.3592106040535498,
+        "282": 0.1796053020267749,
+        "142": 0.1796053020267749,
+        "253": 0.1796053020267749,
+        "17": 0.1796053020267749,
+        "133": 0.1796053020267749,
+        "306": 0.1796053020267749,
+        "15": 0.1796053020267749,
+        "140": 0.1796053020267749,
+        "285": 0.1796053020267749,
+        "144": 0.1796053020267749,
+        "238": 0.1796053020267749,
+        "97": 0.1796053020267749,
+        "319": 0.1796053020267749,
+        "247": 0.1796053020267749
+      }
+    },
+    {
+      "doc_id": "TPL-EU-DPIA-2",
+      "payload": {
+        "chunk_id": "TPL-EU-DPIA-2",
+        "source_id": "EU-TEMPLATE-DPIA-OFFICIAL",
+        "title": "Assess necessity, proportionality and mitigations",
+        "content": "Assess necessity, proportionality, risks to rights and freedoms, and mitigation measures.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "eu_dpia",
+        "jurisdiction": "eu",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "2",
+        "scenario_tags": [
+          "dpia",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "dpia",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "2",
+          "number": "2"
+        }
+      },
+      "search_text": "Assess necessity, proportionality and mitigations Assess necessity, proportionality, risks to rights and freedoms, and mitigation measures. 2  dpia official_template",
+      "embedding": {
+        "254": 0.3592106040535498,
+        "277": 0.3592106040535498,
+        "50": 0.3592106040535498,
+        "347": 0.5388159060803247,
+        "133": 0.1796053020267749,
+        "201": 0.1796053020267749,
+        "15": 0.1796053020267749,
+        "13": 0.1796053020267749,
+        "225": 0.1796053020267749,
+        "185": 0.1796053020267749,
+        "141": 0.1796053020267749,
+        "238": 0.1796053020267749,
+        "319": 0.1796053020267749,
+        "247": 0.1796053020267749
+      }
+    },
+    {
+      "doc_id": "TPL-EU-TIA-1",
+      "payload": {
+        "chunk_id": "TPL-EU-TIA-1",
+        "source_id": "EU-TEMPLATE-TIA-OFFICIAL",
+        "title": "Map transfer and transfer tool",
+        "content": "Document the transfer, actors, destination country, transfer tool and onward transfers.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "eu_tia",
+        "jurisdiction": "eu",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "1",
+        "scenario_tags": [
+          "tia",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "tia",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "1",
+          "number": "1"
+        }
+      },
+      "search_text": "Map transfer and transfer tool Document the transfer, actors, destination country, transfer tool and onward transfers. 1  tia official_template",
+      "embedding": {
+        "319": 0.1690308509457033,
+        "109": 0.6761234037828132,
+        "347": 0.3380617018914066,
+        "119": 0.3380617018914066,
+        "76": 0.1690308509457033,
+        "282": 0.1690308509457033,
+        "12": 0.1690308509457033,
+        "307": 0.1690308509457033,
+        "280": 0.1690308509457033,
+        "78": 0.1690308509457033,
+        "113": 0.1690308509457033,
+        "97": 0.1690308509457033,
+        "240": 0.1690308509457033,
+        "247": 0.1690308509457033
+      }
+    },
+    {
+      "doc_id": "TPL-EU-TIA-2",
+      "payload": {
+        "chunk_id": "TPL-EU-TIA-2",
+        "source_id": "EU-TEMPLATE-TIA-OFFICIAL",
+        "title": "Assess country laws and supplementary measures",
+        "content": "Assess third-country laws and practices, then define supplementary measures and review cycle.",
+        "layer": "L4_template",
+        "template_type": "official_template",
+        "source_kind": "template_slot",
+        "module": "eu_tia",
+        "jurisdiction": "eu",
+        "doc_type": "official_template",
+        "authority_level": "medium",
+        "binding_force": "mandatory",
+        "allowed_usage": [
+          "structure_control",
+          "external_report"
+        ],
+        "can_be_cited": false,
+        "can_enter_external_report": false,
+        "reference_ids": [],
+        "citation_anchor": "2",
+        "scenario_tags": [
+          "tia",
+          "official_template"
+        ],
+        "chunk_strategy": "template_slot",
+        "article_no": "",
+        "path": "tia",
+        "source_url": "",
+        "snapshot_path": "",
+        "keywords": [],
+        "structured_payload": {
+          "section_id": "2",
+          "number": "2"
+        }
+      },
+      "search_text": "Assess country laws and supplementary measures Assess third-country laws and practices, then define supplementary measures and review cycle. 2  tia official_template",
+      "embedding": {
+        "254": 0.3380617018914066,
+        "280": 0.1690308509457033,
+        "144": 0.3380617018914066,
+        "347": 0.50709255283711,
+        "61": 0.3380617018914066,
+        "141": 0.3380617018914066,
+        "266": 0.1690308509457033,
+        "59": 0.1690308509457033,
+        "117": 0.1690308509457033,
+        "26": 0.1690308509457033,
+        "366": 0.1690308509457033,
+        "125": 0.1690308509457033,
+        "238": 0.1690308509457033,
+        "240": 0.1690308509457033,
+        "247": 0.1690308509457033
+      }
+    }
+  ]
+}
