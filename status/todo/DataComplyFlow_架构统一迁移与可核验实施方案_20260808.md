@@ -443,7 +443,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 |---|---|---|---|---|---|
 | CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | 未迁移，尚无双路径一致性验收 |
 | CN | 安全评估路径 | 收集申报要件，生成《数据出境风险自评估报告》草案 | `assessment` | `backend/domains/cn/security_assessment/` | 代码和 fixture 适配已完成；完整生产形态首跑待补 |
-| CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | 适配器和单测已有；真实 service 首跑未验收 |
+| CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | old/new no-LLM service 首跑、DocumentIR、Compiler 和本地附件解析通过；正文引用和浏览器跳转未验收 |
 | CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 适配器和单测已有；上传→解析→报告两步 service 首跑未验收 |
 | EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | 适配器和单测已有；真实 service 首跑未验收 |
 | EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 适配器和单测已有；真实 service 首跑未验收 |
