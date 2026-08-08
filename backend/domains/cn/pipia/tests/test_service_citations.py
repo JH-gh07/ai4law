@@ -14,9 +14,11 @@ class _FirstCitationLLM:
 
     def __init__(self) -> None:
         self.calls = 0
+        self.prompts: list[str] = []
 
     def chat(self, **kwargs) -> str:
         self.calls += 1
+        self.prompts.append(kwargs["user"])
         marker_line = next(
             line for line in kwargs["user"].splitlines() if line.startswith("{{CIT-")
         )
@@ -125,11 +127,15 @@ def test_service_keeps_only_explicit_pipia_citations_in_all_output_layers(
     monkeypatch, tmp_path: Path
 ) -> None:
     attachment = tmp_path / "case_evidence.txt"
-    attachment.write_text("测试案例事实摘要，不是已经签署的标准合同。", encoding="utf-8")
+    attachment.write_text(
+        "附件事实：隐私政策未明确披露新加坡接收方。",
+        encoding="utf-8",
+    )
     _patch_rag(monkeypatch)
     monkeypatch.chdir(tmp_path)
 
-    service = PIPIAService(llm_client=_FirstCitationLLM())
+    llm = _FirstCitationLLM()
+    service = PIPIAService(llm_client=llm)
     service.renderer.schema_first_enabled = True
     result = service.generate_report(_payload(attachment), task_id="pipia-citation-sync")
 
@@ -150,6 +156,7 @@ def test_service_keeps_only_explicit_pipia_citations_in_all_output_layers(
     }
 
     assert len(citation_map["all_items"]) == 2
+    assert all("隐私政策未明确披露新加坡接收方" in prompt for prompt in llm.prompts)
     assert markdown_numbers == {"1"}
     assert map_numbers == markdown_numbers
     assert len(map_citation_ids) == 1

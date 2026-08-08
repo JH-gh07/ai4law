@@ -20,9 +20,7 @@ from backend.common.render.report import (
     render_markdown_template,
     safe_filename,
 )
-from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.citation.output import write_citation_map_json
-from backend.common.risk.scoring import risk_level
 from backend.core.resource_paths import report_template_path
 from backend.domains.cn.pipia.schema import PIPIAChapter, PIPIARequest
 
