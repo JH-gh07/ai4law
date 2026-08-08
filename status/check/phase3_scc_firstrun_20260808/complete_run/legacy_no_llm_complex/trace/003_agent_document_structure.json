@@ -1,0 +1,59 @@
+{
+  "name": "agent_document_structure",
+  "seq": 3,
+  "created_at": "2026-08-08T05:43:27.606769+00:00",
+  "payload": {
+    "patches": [
+      {
+        "field_path": "clauses",
+        "problem": "Only 3 clauses extracted",
+        "action": "re_scan"
+      },
+      {
+        "field_path": "annex_ia.exporter",
+        "old_value": "",
+        "new_value": "via email. If the data exporter does not object in writing within fifteen (15) business days of receipt of the notification, the data importer may engage the new sub-processor.",
+        "source_quote": "exporter via email. If the data exporter does not object in writing within fifteen (15) business day",
+        "confidence": 0.85
+      },
+      {
+        "field_path": "annex_ia.importer",
+        "old_value": "",
+        "new_value": "shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days of receipt of the notif",
+        "source_quote": "importer shall submit any planned changes to its list of sub-processors to the data exporter via ema",
+        "confidence": 0.85
+      },
+      {
+        "field_path": "annex_iii.sub_processors",
+        "old_value": "",
+        "new_value": "aws",
+        "source_quote": "the new sub-processor.\n(注：此条款符合SCC范本，但未在附件中明确列出子处理者或授权机制细节)\n**Clause 14: Local laws and practices affecting compliance with the Clauses**\n...(a) & (b) 标准文本...\n(c) ",
+        "confidence": 0.82,
+        "note": "Cloud provider detected — verify if listed in Annex III"
+      },
+      {
+        "field_path": "annex_iii.sub_processors",
+        "old_value": "",
+        "new_value": "aws",
+        "source_quote": "ing request from a public authority, including judicial authorities, under the laws of the country of destination for the disclosure of personal data transferred p",
+        "confidence": 0.82,
+        "note": "Cloud provider detected — verify if listed in Annex III"
+      },
+      {
+        "field_path": "annex_iii.sub_processors",
+        "old_value": "",
+        "new_value": "aws",
+        "source_quote": " to personal data transferred pursuant to these Clauses in accordance with the laws of the country of destination.\nThe data importer shall also provide the data ex",
+        "confidence": 0.82,
+        "note": "Cloud provider detected — verify if listed in Annex III"
+      }
+    ],
+    "uncertainties": [],
+    "patch_count": 6,
+    "regions_found": [
+      "ANNEX I.B",
+      "ANNEX III"
+    ],
+    "completeness": "needs_review"
+  }
+}

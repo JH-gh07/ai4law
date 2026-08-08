@@ -1,0 +1,138 @@
+{
+  "name": "agent_remediation",
+  "seq": 27,
+  "created_at": "2026-08-08T06:24:56.282652+00:00",
+  "payload": {
+    "patched_findings": [
+      {
+        "finding_id": "EU-SCC-CLAUSE-15-DEVIATION",
+        "location": "Clause 15(a) notification",
+        "clause_ref": "15(a)",
+        "original_text": "as soon as legally permissible",
+        "issue_type": "clause_weakened",
+        "severity": "HIGH",
+        "risk_analysis": "Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'",
+        "legal_basis": "EU 2021/914, Recital 3 (invariability of Clauses); GDPR Article 46",
+        "recommendation": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the standard clause are desired, add them as a separate annex that does not conflict with the SCC.",
+        "suggested_text": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the standard clause are desired, add them as a separate annex that does not conflict with the SCC.",
+        "action_priority": "P0"
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "location": "Annex I.A",
+        "clause_ref": "Annex I.A",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "MEDIUM",
+        "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+        "recommendation": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not by reference to external agreements).",
+        "suggested_text": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not by reference to external agreements).",
+        "action_priority": "P1"
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-IB-MISCLASSIFIED-SPECIAL",
+        "location": "Annex I.B",
+        "clause_ref": "Annex I.B",
+        "original_text": "does not constitute special categories of data",
+        "issue_type": "special_category_misclassified",
+        "severity": "HIGH",
+        "risk_analysis": "Transfer description contains health/medical data terms but special category data is NOT declared. Under GDPR Article 9, health data requires explicit consent or another exemption, and SCCs alone may not be sufficient.",
+        "legal_basis": "GDPR Article 9; EU 2021/914; EDPB Recommendations 01/2020",
+        "recommendation": "Mark health/medical/biometric/genetic data as special categories under GDPR Article 9. In Annex I.B, explicitly state the Article 9(2) exemption relied upon and any additional safeguards.",
+        "suggested_text": "Mark health/medical/biometric/genetic data as special categories under GDPR Article 9. In Annex I.B, explicitly state the Article 9(2) exemption relied upon and any additional safeguards.",
+        "action_priority": "P0"
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+        "location": "Annex II",
+        "clause_ref": "Annex II",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "HIGH",
+        "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+        "recommendation": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not by reference to external agreements).",
+        "suggested_text": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not by reference to external agreements).",
+        "action_priority": "P1"
+      },
+      {
+        "finding_id": "EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION_PROVISION",
+        "location": "Clause 15",
+        "clause_ref": "15",
+        "original_text": "",
+        "issue_type": "clause_weakened",
+        "severity": "HIGH",
+        "risk_analysis": "Semantic weakening (information_provision): Information provision made discretionary",
+        "legal_basis": "EU 2021/914 Recital 3; SCC Clause 15; GDPR Article 46",
+        "recommendation": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the standard clause are desired, add them as a separate annex that does not conflict with the SCC.",
+        "suggested_text": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the standard clause are desired, add them as a separate annex that does not conflict with the SCC.",
+        "action_priority": "P0"
+      },
+      {
+        "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "location": "Annex II / TIA",
+        "clause_ref": "",
+        "original_text": "",
+        "issue_type": "supplementary_measures_insufficient",
+        "severity": "HIGH",
+        "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+        "recommendation": "Add: (Technical) End-to-end encryption with EU-held keys (BYOK/HYOK), zero-access architecture. (Contractual) Government access notification obligation, commitment to challenge unlawful requests, transparency reporting. (Organizational) Independent annual audit, comprehensive access logging, separat",
+        "suggested_text": "Add: (Technical) End-to-end encryption with EU-held keys (BYOK/HYOK), zero-access architecture. (Contractual) Government access notification obligation, commitment to challenge unlawful requests, transparency reporting. (Organizational) Independent annual audit, comprehensive access logging, separat",
+        "action_priority": "P0"
+      }
+    ],
+    "action_plan": [
+      {
+        "priority": "P0",
+        "finding_id": "EU-SCC-CLAUSE-15-DEVIATION",
+        "task": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the stan",
+        "fix_type": "RESTORE_CLAUSE",
+        "insert_location": "Clause 15(a)",
+        "owner": "Legal / DPO"
+      },
+      {
+        "priority": "P1",
+        "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "task": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not",
+        "fix_type": "COMPLETE_ANNEX",
+        "insert_location": "Annex Annex I.A",
+        "owner": "Privacy Counsel / Compliance"
+      },
+      {
+        "priority": "P0",
+        "finding_id": "EU-SCC-ANNEX-IB-MISCLASSIFIED-SPECIAL",
+        "task": "Mark health/medical/biometric/genetic data as special categories under GDPR Article 9. In Annex I.B, explicitly state th",
+        "fix_type": "CORRECT_CLASSIFICATION",
+        "insert_location": "Annex I.B",
+        "owner": "Legal / DPO"
+      },
+      {
+        "priority": "P1",
+        "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+        "task": "Complete all required fields in this annex. Ensure party names, addresses, contacts, and roles are entered directly (not",
+        "fix_type": "COMPLETE_ANNEX",
+        "insert_location": "Annex Annex II",
+        "owner": "Privacy Counsel / Compliance"
+      },
+      {
+        "priority": "P0",
+        "finding_id": "EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION_PROVISION",
+        "task": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the stan",
+        "fix_type": "RESTORE_CLAUSE",
+        "insert_location": "Clause 15",
+        "owner": "Legal / DPO"
+      },
+      {
+        "priority": "P0",
+        "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "task": "Add: (Technical) End-to-end encryption with EU-held keys (BYOK/HYOK), zero-access architecture. (Contractual) Government",
+        "fix_type": "ADD_MEASURES",
+        "insert_location": "Annex II",
+        "owner": "Legal / DPO"
+      }
+    ],
+    "p0_count": 4
+  }
+}

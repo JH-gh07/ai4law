@@ -1,0 +1,46 @@
+{
+  "name": "final_brief",
+  "seq": 30,
+  "created_at": "2026-08-08T06:24:56.295029+00:00",
+  "payload": {
+    "summary": "eu_scc 执行完成",
+    "detail": {
+      "conclusion": "eu_scc 工作流已执行完成，并生成可交付结果。",
+      "files": [
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.md",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.docx",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.pdf",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/findings.json",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/rule_engine_result.json",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/citation_map.json",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/document_ir.json",
+        "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC批注修订版_20260808.docx"
+      ],
+      "risks": [
+        {
+          "severity": "HIGH",
+          "count": 1
+        },
+        {
+          "severity": "HIGH",
+          "count": 5
+        },
+        {
+          "severity": "MEDIUM",
+          "count": 1
+        }
+      ],
+      "next_steps": [
+        "复核生成文件与风险摘要，确认是否需要人工补充。",
+        "检查结果中的一致性提示与待核验事项。"
+      ],
+      "stats": {
+        "output_files_count": 8,
+        "chapter_count": 4
+      },
+      "notices": [
+        "Contains HIGH risk items — recommend legal review before filing."
+      ]
+    }
+  }
+}

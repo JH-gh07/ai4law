@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0",
+  "run_id": "3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+  "module": "eu_scc",
+  "status": "COMPLETED",
+  "created_at": "2026-08-08T06:24:55.105680+00:00",
+  "updated_at": "2026-08-08T06:24:56.299066+00:00",
+  "duration_ms": 1197,
+  "attempts": 1,
+  "max_attempts": 2,
+  "provider_snapshot": {
+    "provider_id": "none",
+    "provider_name": "none",
+    "provider_type": "openai_compatible",
+    "api_url": "https://api.openai.com/v1",
+    "model": "deepseek-ai/DeepSeek-V3.2",
+    "enabled": false,
+    "timeout": 60,
+    "api_key_configured": false,
+    "fingerprint": "57c3fc5bcf34910b9b4ebeed0907b39357bd64d4e7aa9fe81da4b9e44f5af01c",
+    "captured_at": "2026-08-08T06:24:55.105765+00:00"
+  },
+  "input": {
+    "sha256": "6ffa1605c43a3126745346bfa944363b62df9b6a27db390774d178aa20c10f86",
+    "fields": [
+      "company_name",
+      "declared_module_type",
+      "exporter_role",
+      "has_supplementary_measures",
+      "has_tia",
+      "importer_role",
+      "project_name",
+      "scc_text",
+      "uploaded_files"
+    ],
+    "artifacts": [
+      {
+        "file_name": "f_c3768f072b284d6a_case_02_india_health_scc_input.docx",
+        "storage_uri": "storage/uploads/f_c3768f072b284d6a_case_02_india_health_scc_input.docx"
+      }
+    ]
+  },
+  "output": {
+    "fields": [
+      "attachment_notes",
+      "chapters",
+      "company_name",
+      "consistency_issues",
+      "findings",
+      "module_validation",
+      "output_files",
+      "overall_rating",
+      "report_path"
+    ],
+    "artifacts": [
+      {
+        "role": "markdown",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.md"
+      },
+      {
+        "role": "docx",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.docx"
+      },
+      {
+        "role": "pdf",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.pdf"
+      },
+      {
+        "role": "findings_json",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/findings.json"
+      },
+      {
+        "role": "rule_engine_result_json",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/rule_engine_result.json"
+      },
+      {
+        "role": "citation_map_json",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/citation_map.json"
+      },
+      {
+        "role": "document_ir_json",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/document_ir.json"
+      },
+      {
+        "role": "annotated_docx",
+        "path": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC批注修订版_20260808.docx"
+      }
+    ]
+  },
+  "observability": {
+    "event_count": 30,
+    "trace_manifest": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/trace/manifest.json",
+    "llm_calls": 0,
+    "tokens": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "fallback_count": 0
+  },
+  "error": null
+}

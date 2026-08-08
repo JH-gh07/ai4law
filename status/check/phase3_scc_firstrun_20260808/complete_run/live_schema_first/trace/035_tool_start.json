@@ -1,0 +1,28 @@
+{
+  "name": "tool_start",
+  "seq": 35,
+  "created_at": "2026-08-08T05:58:53.603883+00:00",
+  "payload": {
+    "summary": "请求模型生成",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "temperature": 0.1,
+      "max_tokens": 500,
+      "llm": {
+        "channel": "workflow",
+        "provider": "siliconflow",
+        "model": "deepseek-ai/DeepSeek-V3.2"
+      },
+      "system": "You are an EU data protection lawyer specializing in Standard Contractual Clauses (EU 2021/914) and cross-border data transfers under GDPR Articles 44-49. Output ONLY valid JSON. Never include explanatory text outside the JSON structure.",
+      "user": "Generate specific, actionable remediation text for these SCC findings:\n- [clause_weakened] Clause 15(a) notification: Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'\n- [special_category_misclassified] Annex I.B: Transfer description contains health/medical data terms but special category data is NOT declared. U\n- [tia_missing] Clause 14: Third country transfer identified to: India. No Transfer Impact Assessment (TIA) has been provided. \n\nReturn JSON: { \"enhanced\": [ {\"finding_id\": \"...\", \"suggested_text\": \"...\"} ] }",
+      "raw_name": "llm_chat_request"
+    }
+  }
+}

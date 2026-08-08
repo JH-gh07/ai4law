@@ -1,0 +1,174 @@
+{
+  "created_at": "2026-08-08T05:43:28.021093+00:00",
+  "event_count": 28,
+  "events": [
+    {
+      "seq": 1,
+      "name": "intermediate",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/001_intermediate.json",
+      "created_at": "2026-08-08T05:43:27.629322+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "parsed_document_raw",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/002_parsed_document_raw.json",
+      "created_at": "2026-08-08T05:43:27.630778+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "agent_document_structure",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/003_agent_document_structure.json",
+      "created_at": "2026-08-08T05:43:27.633245+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/004_thought.json",
+      "created_at": "2026-08-08T05:43:27.633965+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "transfer_chain_raw",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/005_transfer_chain_raw.json",
+      "created_at": "2026-08-08T05:43:27.634912+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "agent_transfer_chain",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/006_agent_transfer_chain.json",
+      "created_at": "2026-08-08T05:43:27.637702+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/007_thought.json",
+      "created_at": "2026-08-08T05:43:27.638604+00:00"
+    },
+    {
+      "seq": 8,
+      "name": "rule_engine_result_raw",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/008_rule_engine_result_raw.json",
+      "created_at": "2026-08-08T05:43:27.650633+00:00"
+    },
+    {
+      "seq": 9,
+      "name": "agent_clause_semantic",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/009_agent_clause_semantic.json",
+      "created_at": "2026-08-08T05:43:27.659411+00:00"
+    },
+    {
+      "seq": 10,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/010_thought.json",
+      "created_at": "2026-08-08T05:43:27.660224+00:00"
+    },
+    {
+      "seq": 11,
+      "name": "agent_tia_effectiveness",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/011_agent_tia_effectiveness.json",
+      "created_at": "2026-08-08T05:43:27.661739+00:00"
+    },
+    {
+      "seq": 12,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/012_thought.json",
+      "created_at": "2026-08-08T05:43:27.662373+00:00"
+    },
+    {
+      "seq": 13,
+      "name": "eu_scc_request",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/013_eu_scc_request.json",
+      "created_at": "2026-08-08T05:43:27.662819+00:00"
+    },
+    {
+      "seq": 14,
+      "name": "profile_extracted",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/014_profile_extracted.json",
+      "created_at": "2026-08-08T05:43:27.663417+00:00"
+    },
+    {
+      "seq": 15,
+      "name": "diagnosis",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/015_diagnosis.json",
+      "created_at": "2026-08-08T05:43:27.664004+00:00"
+    },
+    {
+      "seq": 16,
+      "name": "path_validation",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/016_path_validation.json",
+      "created_at": "2026-08-08T05:43:27.665135+00:00"
+    },
+    {
+      "seq": 17,
+      "name": "facts_built",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/017_facts_built.json",
+      "created_at": "2026-08-08T05:43:27.665757+00:00"
+    },
+    {
+      "seq": 18,
+      "name": "retrieval_hits",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/018_retrieval_hits.json",
+      "created_at": "2026-08-08T05:43:27.770391+00:00"
+    },
+    {
+      "seq": 19,
+      "name": "issues_built",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/019_issues_built.json",
+      "created_at": "2026-08-08T05:43:27.793971+00:00"
+    },
+    {
+      "seq": 20,
+      "name": "evidence_built",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/020_evidence_built.json",
+      "created_at": "2026-08-08T05:43:27.795270+00:00"
+    },
+    {
+      "seq": 21,
+      "name": "context_pack_built",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/021_context_pack_built.json",
+      "created_at": "2026-08-08T05:43:27.800696+00:00"
+    },
+    {
+      "seq": 22,
+      "name": "chapters_generated",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/022_chapters_generated.json",
+      "created_at": "2026-08-08T05:43:27.829920+00:00"
+    },
+    {
+      "seq": 23,
+      "name": "consistency_issues",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/023_consistency_issues.json",
+      "created_at": "2026-08-08T05:43:27.830343+00:00"
+    },
+    {
+      "seq": 24,
+      "name": "alignment_issues",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/024_alignment_issues.json",
+      "created_at": "2026-08-08T05:43:27.830654+00:00"
+    },
+    {
+      "seq": 25,
+      "name": "agent_evidence_review",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/025_agent_evidence_review.json",
+      "created_at": "2026-08-08T05:43:28.018102+00:00"
+    },
+    {
+      "seq": 26,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/026_thought.json",
+      "created_at": "2026-08-08T05:43:28.019310+00:00"
+    },
+    {
+      "seq": 27,
+      "name": "agent_remediation",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/027_agent_remediation.json",
+      "created_at": "2026-08-08T05:43:28.019812+00:00"
+    },
+    {
+      "seq": 28,
+      "name": "thought",
+      "path": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_612919_02_india_health_uploaded/trace/028_thought.json",
+      "created_at": "2026-08-08T05:43:28.020619+00:00"
+    }
+  ]
+}

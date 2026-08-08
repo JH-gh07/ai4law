@@ -1,0 +1,23 @@
+{
+  "name": "final",
+  "seq": 29,
+  "created_at": "2026-08-08T06:24:56.292026+00:00",
+  "payload": {
+    "summary": "eu_scc 执行完成",
+    "detail": {
+      "module": "eu_scc",
+      "output_files": {
+        "markdown": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.md",
+        "docx": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.docx",
+        "pdf": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC审查报告_20260808.pdf",
+        "findings_json": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/findings.json",
+        "rule_engine_result_json": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/rule_engine_result.json",
+        "citation_map_json": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/citation_map.json",
+        "document_ir_json": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/document_ir.json",
+        "annotated_docx": "outputs/eu_scc/3e99f605-7e7a-47e2-a791-83b11d6c9f97/outputs/EU_Health_GmbH_EU_SCC批注修订版_20260808.docx"
+      },
+      "output_file_count": 8,
+      "consistency_issue_count": 1
+    }
+  }
+}

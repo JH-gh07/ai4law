@@ -1,0 +1,40 @@
+{
+  "name": "retrieval_hits",
+  "seq": 18,
+  "created_at": "2026-08-08T06:24:55.911066+00:00",
+  "payload": {
+    "hit_count": 3,
+    "hits": [
+      {
+        "source_id": "EU-SUP-026",
+        "title": "Commission Implementing Decision (EU) 2021/914",
+        "article": "段落27",
+        "snippet": "(22) Where possible, the data importer should notify the data exporter and the data subject if it receives a legally binding request from a public (including judicial) authority under the law of the country of destination for disclosure of personal data transferred pursuant to the standard contractual clauses. Similarly, it should notify them if it becomes aware of any direct access by public authorities to such personal data, in accordance with the law of the third country of destination. If, despite its best efforts, the data importer is not in a position to notify the data exporter and/or the data subject of specific disclosure requests, it should provide the data exporter with as much relevant information as possible on the requests. In addition, the data importer should provide the data exporter with aggregate information at regular intervals. The data importer should also be required to document any request for disclosure received and the response provided, and make that information available to the data exporter or the competent supervisory authority, or both, upon request. If, following a review of the legality of such a request under the laws of the country of destination, the data importer concludes that there are reasonable grounds to consider that the request is unlawful under the laws of the third country of destination, it should challenge it, including, where appropriate, by exhausting available possibilities of appeal. In any event, if the data importer is no longer able to comply with the standard contractual clauses, it should inform the data exporter accordingly, including where this is the consequence of a request for disclosure.",
+        "display_label": "Commission Implementing Decision (EU) 2021/914 Recital (22) / Clause 15",
+        "source_kind": "law_article",
+        "authority_level": "medium",
+        "binding_force": "mandatory"
+      },
+      {
+        "source_id": "EU-SUP-026",
+        "title": "Commission Implementing Decision (EU) 2021/914",
+        "article": "段落26",
+        "snippet": "(21) The data importer should notify the data exporter if, after agreeing to the standard contractual clauses, it has reason to believe that it is not able to comply with the standard contractual clauses. If the data exporter receives such notification or otherwise becomes aware that the data importer is no longer able to comply with the standard contractual clauses, it should identify appropriate measures to address the situation, if necessary in consultation with the competent supervisory authority. Such measures may include supplementary measures adopted by the data exporter and/or data importer, such as technical or organisational measures to ensure security and confidentiality. The data exporter should be required to suspend the transfer if it considers that no appropriate safeguards can be ensured, or if so instructed by the competent supervisory authority.",
+        "display_label": "Commission Implementing Decision (EU) 2021/914 Recital (21) / Clause 14",
+        "source_kind": "law_article",
+        "authority_level": "medium",
+        "binding_force": "mandatory"
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落6",
+        "snippet": "Step 3: Assess whether the Article 46 GD PR transfer tool you are relying on is effective in light of all circumstances of the transfer 28. The selected Article 46 GDPR transfer tool must be effective in ensuring that the level of protection guaranteed by the GDPR is not undermined by the transfer in practice.38 29. In particular, the protection afforded to the transferred personal data in the third country must be essentially equivalent to that guaranteed in the EEA by the GDPR, read in light of the Charter of Fundamental Rights of the EU .39 This is not t he case if the data importer is prevented from complying with its obligations under the chosen Article 46 GDPR transfer tool due to the third country’s legislation and practices applicable to the transfer, including during the transit of data from the exporter to the importer’s country.40 30. You must first assess, where appropriate in collaboration with the importer, if there is anything in the law and/or practices in force41 in the third country that may impinge on the effectiveness of the appropriate safeguards of the Article 46 GDPR transfer tool you are relying on, in the context of your specific transfer. This implies determining whether your transfer falls within the scope of legislation and/or practices which may impinge on the effectiveness of your Articl e 46 GDPR transfer tool. The assessment required must be based first and foremost on legislation publicly available. 31. This assessment must contain elements concerning access to data by public authorities of the third country of your importer such as: - Elements on whether public authorities of the third country of your importer may seek to access the data with or without the data importer’s knowledge, in light of legislation, practice and reported precedents; - Elements on whether public authorities of the third country of your importer may be able to access the data through the data importer or through the telecommunication providers or communication channels in light of legislation, legal powers, technical, financial, and human resources at their disposal and of reported precedents. Identifying laws and practices relevant in light of all circumstances of the transfer",
+        "display_label": "EDPB Recommendations 01/2020 Step 3",
+        "source_kind": "official_guide",
+        "authority_level": "medium",
+        "binding_force": "recommended"
+      }
+    ]
+  }
+}

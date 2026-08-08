@@ -1,0 +1,62 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v0/files/upload",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/eu_scc/generate_async",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eu_scc/tasks/3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eu_scc/tasks/3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/eu_scc/tasks/3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/reports/3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002/articles/%E6%AE%B5%E8%90%BD6",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002/articles/%E6%AE%B5%E8%90%BD6",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002/articles/%E6%AE%B5%E8%90%BD6",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002/articles/%E6%AE%B5%E8%90%BD6",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-GUIDE-002",
+    "status": 200
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "name": "agent_transfer_chain",
+  "seq": 6,
+  "created_at": "2026-08-08T05:56:22.150974+00:00",
+  "payload": {
+    "patched_chain": {
+      "exporter_name": "",
+      "exporter_role": "controller",
+      "importer_name": "",
+      "importer_role": "processor",
+      "sub_processors": [],
+      "onward_transfer_locations": [
+        "India"
+      ],
+      "storage_locations": [
+        "India"
+      ],
+      "access_locations": [
+        "India"
+      ]
+    },
+    "chain_graph": {
+      "nodes": [
+        {
+          "id": "Amazon Web Services",
+          "role": "cloud_provider",
+          "type": "infrastructure",
+          "source": "text_scan",
+          "country": "United States"
+        }
+      ],
+      "edges": []
+    },
+    "risk_hints": [
+      {
+        "type": "onward_transfer_to_non_adequate_country",
+        "country": "United States",
+        "provider": "Amazon Web Services",
+        "basis": "Cloud provider storage/processing",
+        "confidence": 0.91
+      }
+    ],
+    "nodes_found": 1,
+    "edges_found": 0
+  }
+}

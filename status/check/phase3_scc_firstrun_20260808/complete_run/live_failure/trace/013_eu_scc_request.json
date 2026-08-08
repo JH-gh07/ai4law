@@ -1,0 +1,18 @@
+{
+  "name": "eu_scc_request",
+  "seq": 13,
+  "created_at": "2026-08-08T05:44:24.483720+00:00",
+  "payload": {
+    "project_name": "印度健康数据SCC合规审查",
+    "scc_text": "测试案例二：C2P模块 - 高风险第三国且条款被不当修改\n场景：德国柏林的“健康研究所有限公司”（Gesundheitsforschung GmbH，数据输出方，控制者）委托印度班加罗尔的“数据洞察解决方案公司”（Data Insights Solutions Pvt. Ltd.，数据输入方，处理者）进行医疗研究数据的统计分析。传输的数据包含匿名的患者健康数据（但根据GDPR仍属特殊类别数据）。双方签署了SCC Module Two (C2P)。\n植入的风险点：\n高风险第三国法律环境：印度尚未获得欧盟充分性认定，且其《信息技术法》及修订案赋予政府广泛的数据访问权，与EDPB建议中关注的法律特征相符。\nSCC关键条款被修改：双方在附件中修改了Clause 15关于政府访问请求的通知义务，将通知时限从“尽可能及时”改为“在法律允许的范围内尽快”，并删除了提供聚合信息的要求。\n数据敏感性描述不足：Annex I.B中将“患者健康数据”描述为“非敏感”，与GDPR定义冲突。\n子处理者授权机制不明确：Clause 9关于子处理者的约定中，未明确数据输出方对子处理者名单的具体书面授权方式。\n提交审查的SCC文档全文（关键问题部分节选）：\nPlain Text\n**Clause 9: Use of sub-processors**\n...\n(g) The data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days of receipt of the notification, the data importer may engage the new sub-processor.\n(注：此条款符合SCC范本，但未在附件中明确列出子处理者或授权机制细节)\n**Clause 14: Local laws and practices affecting compliance with the Clauses**\n...(a) & (b) 标准文本...\n(c) The data importer agrees to document the assessment made under paragraph (b) as well as any suitable safeguards identified and provide it to the data exporter **only upon a specific, justified request**. (注：此处修改了范本中“on request”的表述，增加了限制条件)\n**Clause 15: Obligations of the data importer in case of access by public authorities**\n(a) The data importer agrees to notify the data exporter and, where possible, the data subject (if necessary with the help of the data exporter) **as soon as legally permissible** if it:\n(i) receives a legally binding request from a public authority, including judicial authorities, under the laws of the country of destination for the disclosure of personal data transferred pursuant to these Clauses; or\n(ii) becomes aware of any direct access by public authorities to personal data transferred pursuant to these Clauses in accordance with the laws of the country of destination.\nThe data importer shall also provide the data exporter, **at its discretion**, with relevant information about the request. (注：此处严重削弱了通知义务)\n(b) ... (c) ... (d) The data importer agrees to preserve the information required to be provided pursuant to paragraph (a) for the duration of the contract and make it available to the competent supervisory authority on request.\n(e) Paragraphs (a) to (c) are without prejudice to the obligation of the data importer pursuant to Clause 14(e) and Clause 16 to inform the data exporter promptly where it is unable to comply with these Clauses.\n**ANNEX I**\nB. DESCRIPTION OF TRANSFER\n...\nCategories of personal data transferred:\nPatient unique study identifier (pseudonymised), age group, gender, diagnostic codes, treatment codes, laboratory test results (anonymised).\nSensitive data transferred (if applicable) and applied restrictions or safeguards:\n**Not applicable. The data is anonymised for research purposes and does not constitute special categories of data.** (注：错误描述！根据GDPR，用于研究的健康数据即使匿名化，在特定上下文中仍可能被视为特殊类别数据处理，需要额外保护)\n...",
+    "declared_module_type": "Module Two",
+    "exporter_role": "controller",
+    "importer_role": "processor",
+    "has_tia": false,
+    "has_supplementary_measures": false,
+    "uploaded_files": [
+      "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx"
+    ],
+    "company_name": "Gesundheitsforschung GmbH"
+  }
+}

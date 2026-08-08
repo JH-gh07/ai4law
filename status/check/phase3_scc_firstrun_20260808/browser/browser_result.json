@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "task_id": "3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+  "fixture": "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx",
+  "upload_status": 200,
+  "submit_status": 200,
+  "final_url": "http://127.0.0.1:5198/knowledge/laws/EU-GUIDE-002?article=%E6%AE%B5%E8%90%BD6",
+  "citation_drawer_exact_article": true
+}

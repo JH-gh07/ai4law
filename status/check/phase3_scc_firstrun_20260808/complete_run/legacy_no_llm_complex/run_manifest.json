@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20260808_134327_581674_02_india_health_uploaded",
+  "module": "eu_scc",
+  "module_id": "eu.scc_review",
+  "case_id": "02_india_health_uploaded",
+  "status": "PASS",
+  "duration_ms": 416.55504298978485,
+  "attempts": 1,
+  "max_attempts": 1,
+  "input_hash": "515659fef90f",
+  "provider_snapshot": {
+    "mode": "no_llm",
+    "provider_id": "disabled",
+    "model": "",
+    "api_key_configured": false
+  },
+  "input": {
+    "sha256": "bc8cc9f635b4a9cd959e70d9b8339fd9c98e6def7066776e73c4008bb443a941",
+    "fields": [
+      "company_name",
+      "declared_module_type",
+      "exporter_role",
+      "has_supplementary_measures",
+      "has_tia",
+      "importer_role",
+      "project_name",
+      "scc_text",
+      "uploaded_files"
+    ],
+    "artifacts": [
+      {
+        "file_name": "case_02_india_health_scc_input.docx",
+        "storage_uri": "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx"
+      }
+    ]
+  },
+  "output": {
+    "fields": [
+      "attachment_notes",
+      "chapters",
+      "chapters_count",
+      "company_name",
+      "consistency_issues",
+      "findings",
+      "module_validation",
+      "output_files",
+      "overall_rating",
+      "report_path"
+    ],
+    "artifacts": [
+      {
+        "role": "markdown",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/Gesundheitsforschung_GmbH_EU_SCC审查报告_20260808.md"
+      },
+      {
+        "role": "docx",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/Gesundheitsforschung_GmbH_EU_SCC审查报告_20260808.docx"
+      },
+      {
+        "role": "pdf",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/Gesundheitsforschung_GmbH_EU_SCC审查报告_20260808.pdf"
+      },
+      {
+        "role": "findings_json",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/findings.json"
+      },
+      {
+        "role": "rule_engine_result_json",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/rule_engine_result.json"
+      },
+      {
+        "role": "citation_map_json",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/citation_map.json"
+      },
+      {
+        "role": "annotated_docx",
+        "path": "outputs/eu_scc/39e83ab1-b2e1-4f55-9342-7d0963e6634a/outputs/Gesundheitsforschung_GmbH_EU_SCC批注修订版_20260808.docx"
+      }
+    ]
+  },
+  "observability": {
+    "event_count": 28,
+    "trace_manifest": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/eu_scc/20260808_134327_581674_02_india_health_uploaded/trace/manifest.json",
+    "llm_calls": 0,
+    "tokens": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "fallback_count": 0,
+    "error_count": 0
+  },
+  "checks_passed": 27,
+  "checks_failed": 0,
+  "checks_skipped": 0,
+  "recommended_path": "",
+  "risk_level": "",
+  "error": null
+}

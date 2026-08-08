@@ -1,0 +1,247 @@
+{
+  "name": "issues_built",
+  "seq": 19,
+  "created_at": "2026-08-08T05:44:24.907270+00:00",
+  "payload": {
+    "issues": [
+      {
+        "issue_id": "EU-SCC-ISSUE-CLAUSE-DEVIATIONS",
+        "title": "标准条款被修改: 1处偏离",
+        "description": "EU 2021/914 标准条款中发现 1 处修改，可能削弱对数据主体的保护。",
+        "category": "contract",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-review-deviations-found"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002",
+          "EU 2021/914 Recital 3"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "逐项复核偏离条款。涉及不可冲突条款的修改应恢复为标准文本。",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-ISSUE-THIRD-COUNTRY",
+        "title": "第三国传输风险: India",
+        "description": "数据涉及向非充分性认定第三国的传输。TIA=缺失，Schrems II 补充措施=不足。",
+        "category": "cross_border",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-review-has-third-country-transfer"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002",
+          "Schrems II C-311/18",
+          "EDPB 01/2020"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "完成 TIA；针对第三国法律环境实施 Schrems II 补充措施。",
+        "affects_outputs": [
+          "overall_rating",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-CLAUSE-15-DEVIATION",
+        "title": "[HIGH] Clause 15(a) notification: Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'",
+        "description": "Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "restore 'promptly notify'",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-IB-MISCLASSIFIED-SPECIAL",
+        "title": "[HIGH] Annex I.B: Transfer description contains health/medical data terms but special category data is NOT declared. U",
+        "description": "Transfer description contains health/medical data terms but special category data is NOT declared. Under GDPR Article 9, health data requires explicit consent or another exemption, and SCCs alone may not be sufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "(1) Verify whether the data includes special categories; (2) If yes, declare them explicitly in Annex I.B; (3) Assess whether supplementary measures are needed for special category data transfers.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "title": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "description": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MISSING",
+        "title": "[HIGH] Clause 14: Third country transfer identified to: India. No Transfer Impact Assessment (TIA) has been provided. ",
+        "description": "Third country transfer identified to: India. No Transfer Impact Assessment (TIA) has been provided. Under GDPR and Schrems II (C-311/18), a documented TIA is required before transferring personal data to a third country without an adequacy decision.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Complete a TIA for transfers to India. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+        "title": "[HIGH] Annex II: Third country transfer to non-adequate jurisdiction 'India' requires Schrems II supplementary measur",
+        "description": "Third country transfer to non-adequate jurisdiction 'India' requires Schrems II supplementary measures. Technical: NOT FOUND. Contractual: NOT FOUND. Organizational: NOT FOUND.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION_PROVISION",
+        "title": "[HIGH] Clause 15: Semantic weakening (information_provision): Information provision made discretionary",
+        "description": "Semantic weakening (information_provision): Information provision made discretionary",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Restore the standard EU 2021/914 text for this provision.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "title": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "description": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-GUIDE-002"
+        ],
+        "evidence_refs": [],
+        "recommended_action": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ]
+  }
+}
