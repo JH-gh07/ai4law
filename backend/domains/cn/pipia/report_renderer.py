@@ -67,12 +67,6 @@ def _fallback_sections(
     if attachment_notes:
         sections.append(("附件摘要", "\n".join(f"- {note}" for note in attachment_notes)))
     return sections
-    path = output_dir / "document_ir.json"
-    path.write_text(
-        json.dumps(document_ir.model_dump(mode="json"), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    return str(path)
 
 
 class PIPIAReportRenderer:
