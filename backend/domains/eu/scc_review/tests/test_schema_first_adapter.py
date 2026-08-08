@@ -6,8 +6,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
-
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
 from backend.common.reporting import DocumentCompiler
@@ -71,3 +69,28 @@ def test_both_citation_shapes_produce_identical_ir() -> None:
         )
         return doc.model_dump(mode="json")
     assert build("{{CIT-EU-GDPR-ART35-P01}} 法规依据。") == build("法规依据 [1]。")
+
+
+def test_findings_section_allows_repeated_field_labels() -> None:
+    content = (
+        "### 1. Clause 15\n\n风险等级: HIGH\n\n"
+        "### 2. Annex II\n\n风险等级: HIGH"
+    )
+    doc, registry = build_scc_document_ir(
+        task_id="findings",
+        company_name="C",
+        chapters=[
+            SCCChapter(
+                chapter_no=3,
+                title="条款级审查发现",
+                content=content,
+                risk_level="HIGH",
+            )
+        ],
+        citation_registry=_reg(),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc),
+        model="m",
+    )
+
+    assert doc.sections[0].reuse_policy == "reference"
+    assert DocumentCompiler().compile(doc, registry).status == "success"

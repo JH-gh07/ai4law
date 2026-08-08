@@ -21,6 +21,9 @@ from backend.domains.eu.scc_review.schema import SCCChapter
 
 _HEADING_PREFIX_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
 _SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？])")
+_SECTION_REUSE_POLICY = {
+    "条款级审查发现": "reference",
+}
 
 
 def _semantic_text(paragraph: str) -> str:
@@ -79,6 +82,7 @@ def build_scc_document_ir(
             title=chapter.title,
             level=2,
             ordinal=str(chapter.chapter_no),
+            reuse_policy=_SECTION_REUSE_POLICY.get(chapter.title, "single_use"),
             blocks=blocks,
         ))
 
