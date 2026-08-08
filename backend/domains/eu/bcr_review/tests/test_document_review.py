@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from backend.domains.eu.bcr_review.bcr_checklist_checker import BCRChecklistChecker
-from backend.domains.eu.bcr_review.bcr_document_parser import BCRDocumentParser, BCRStructuredDocument
+from backend.domains.eu.bcr_review.bcr_document_parser import BCRStructuredDocument
 from backend.domains.eu.bcr_review.bcr_risk_aggregator import BCRRiskAggregator
 from backend.domains.eu.bcr_review.bcr_rulebook_loader import BCRRulebookLoader
 from backend.domains.eu.bcr_review.bcr_type_classifier import BCRTypeClassifier
@@ -225,3 +225,15 @@ def test_regression_case_3_bcr_mismatch():
     tc = res["type_class"]
     print(f"  Type: {tc.actual_bcr_type} consistency={tc.type_consistency} risk={tc.risk_level}")
     assert tc.type_consistency == "mismatch" or tc.actual_bcr_type == "BCR-P", f"Got {tc.type_consistency}, {tc.actual_bcr_type}"
+
+
+def test_detected_type_without_user_declaration_is_uncertain_not_mismatch():
+    classifier = BCRTypeClassifier(rulebook_loader=BCRRulebookLoader())
+
+    result = classifier.classify(_TEST_CASE_1, declared_type=None)
+
+    assert result.actual_bcr_type == "BCR-C"
+    assert result.declared_bcr_type == "unknown"
+    assert result.type_consistency == "uncertain"
+    assert result.risk_level == "MEDIUM"
+    assert result.recommendation == ""

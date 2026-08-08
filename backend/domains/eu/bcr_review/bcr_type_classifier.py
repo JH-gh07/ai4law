@@ -44,19 +44,21 @@ class BCRTypeClassifier:
             actual = "unknown"
 
         declared = declared_type or "unknown"
-        if declared == actual:
-            consistency = "consistent"
-            risk = "LOW"
-        elif actual == "unknown":
+        if declared == "unknown" or actual == "unknown":
             consistency = "uncertain"
             risk = "MEDIUM"
+        elif declared == actual:
+            consistency = "consistent"
+            risk = "LOW"
         else:
             consistency = "mismatch"
             risk = "HIGH"
 
         evidence: list[str] = []
-        if c_hits: evidence.append(f"BCR-C 信号: {c_hits[:3]}")
-        if p_hits: evidence.append(f"BCR-P 信号: {p_hits[:3]}")
+        if c_hits:
+            evidence.append(f"BCR-C 信号: {c_hits[:3]}")
+        if p_hits:
+            evidence.append(f"BCR-P 信号: {p_hits[:3]}")
 
         recommendation = ""
         if consistency == "mismatch":
