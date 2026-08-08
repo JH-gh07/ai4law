@@ -419,9 +419,9 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑；测试收集 743 项（较基线 641 +102） | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
-| 3 | 其他模块 | **部分完成（PIPIA、SCC 本地完整闭环已通过）** | PIPIA 已完成来源派生案例、old/new、live provider、MD/DOCX/PDF/ZIP、22 条引用和浏览器第 4 条跳转；SCC 已完成 old/new、live provider、真实 DOCX、3 条引用和浏览器段落 6 跳转；TIA no-LLM service 和结构化规则通过 | DPIA live/browser、TIA live 完整生成与 browser、BCR、CPRA、14117、document review、diagnosis 双路径仍待完成；远端均未部署 |
+| 3 | 其他模块 | **部分完成（PIPIA、SCC、BCR 本地完整闭环已通过）** | PIPIA 已完成来源派生案例、old/new、live provider、22 条引用和浏览器第 4 条跳转；SCC 已完成 old/new、live provider、真实 DOCX、3 条引用和浏览器段落 6 跳转；BCR 已完成来源 DOCX、old/new、live provider、26 项完整详细表、2 条可靠引用和浏览器段落 4 跳转；TIA no-LLM service 和结构化规则通过 | DPIA live/browser、TIA live 完整生成与 browser、CPRA、14117、document review、diagnosis 双路径仍待完成；远端均未部署 |
 | 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键），`scripts/check_citation_source_integrity.py` 输出 6 项指标；CN-REG-004 替换验证通过 | URL回填：2620条缺失、无已知源URL，暂无法自动化；source_id→条文级 vs 法规级区分待补；中文数字转阿拉伯数字规则待统一 |
-| 5 | 前端闭环 | **部分完成** | PIPIA、SCC 已有本地真实浏览器上传、报告、引用抽屉、精确条文跳转和截图；知识库详情页目标条文遮挡已修复 | 其余 8 个用户功能仍需逐一验收；不能用 PIPIA/SCC 结果替代全系统通过 |
+| 5 | 前端闭环 | **部分完成** | PIPIA、SCC、BCR 已有本地真实浏览器上传、报告、引用抽屉、精确条文跳转和截图；知识库详情页目标条文遮挡已修复 | 其余 7 个用户功能仍需逐一验收；不能用已完成模块替代全系统通过 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
 ## 9. 最终完成定义
@@ -471,6 +471,22 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - 未解决问题：成功 live 产物早于截断 marker 修复；provider 约 392 秒；远端未部署
 - 验收报告：`status/check/phase3_pipia_firstrun_20260808/验收报告.md`
 
+### 2026-08-08 BCR 本地完整首跑记录
+
+- 代码提交：`882edf9`、`871773c`、`80202b9`、`555dfdd`、`c62e776`、`8003620`、`7fe262a`、`135a158`
+- 输入案例：`backend/tests/bcr/cases/02_healthdata_source_draft.json`
+- 原始来源：思诚提供的“BCR审核”测试案例及预期输出 DOCX；来源 SHA-256 为 `01859b1d4c7b8056ecfde9d6b0dfb783e2e3e6588df5e34f5c5eb92d4e11ae0f`
+- 旧流程：32/32，通过；26 项发现、2 项强制缺失、高风险；正文脚注为 0
+- 当前 Schema-first：32/32，通过；详细表 26/26；DocumentIR 4 sections、1 ClaimBlock、2 个 citation ID、`diagnostics=[]`
+- 正文脚注：`[1]` GDPR Article 47(1)、`[2]` EDPB Recommendations 01/2020 Step 3
+- CitationMap：2 个已用脚注，与 DocumentIR citation ID 集合相等，2/2 可跳转
+- live provider：10 次请求、6,093 token、约 627 秒；8 条模型整改文本进入报告，最后一次整改请求超时并回退模板
+- 得理 API：本模块未调用；法规依据来自本地 RAG
+- 浏览器：真实上传、`uploaded_documents` 文档路径、报告 26/2/高风险、引用抽屉和知识库段落 4 跳转通过，控制台错误为 0
+- 回退验证：旧表单 renderer 和旧文档 renderer 均保留；Schema-first 开关关闭可运行
+- 未解决问题：provider 超时；本地法规库仍使用“段落”定位；其他法律依据尚无可验证跳转；远端未部署
+- 验收报告：`status/check/phase3_bcr_complete_20260808/验收报告.md`
+
 ## 11. 用户功能与后端实现映射
 
 迁移主清单以用户界面中的功能卡片为准，共 **10 个功能**：中国 4 个、欧盟 4 个、美国 2 个。后端 module key、兼容接口和服务类属于实现细节，不能因为后台有多个 key 就把用户功能重复计数。
@@ -482,7 +498,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | **本地完整闭环通过**：来源派生案例、old/new、live provider、DocumentIR、22 条正文引用、CitationMap、浏览器上传/引用/第 4 条跳转均有证据；ZIP 尚未包含 CitationMap，provider 仍慢，远端未部署 |
 | CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 适配器和单测已有；上传→解析→报告两步 service 首跑未验收 |
 | EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | **本地完整闭环通过**：真实 DOCX 进入核心审查，old/new、live provider、3 条正文引用、CitationMap、浏览器上传/引用/段落 6 跳转均有证据；远端未部署 |
-| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 表单驱动和文档上传路径均已接通 DocumentIR；正文引用、真实复杂文档和浏览器跳转未验收 |
+| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | **本地完整闭环通过**：来源 DOCX、old/new、live provider、26 项完整详细表、2 条正文引用、DocumentIR、浏览器上传/引用/段落 4 跳转均有证据；provider 最后一次请求超时回退，远端未部署 |
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | fixture 新旧产物已对比；service/token-time 和浏览器验收未完成 |
 | EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | old/new no-LLM MD/DOCX/PDF/ZIP 与 DocumentIR 通过；live 已完成 RAG、附件审查和 1,655 token 记录，但章节生成未完整结束；浏览器跳转未验收 |
 | US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |

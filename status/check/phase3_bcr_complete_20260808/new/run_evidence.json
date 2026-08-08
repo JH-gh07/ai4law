@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20260808_224730_709306_02_healthdata_source_draft",
+  "module": "bcr",
+  "module_id": "eu.bcr_review",
+  "case_id": "02_healthdata_source_draft",
+  "status": "PASS",
+  "duration_ms": 3693.3883499877993,
+  "attempts": 1,
+  "max_attempts": 1,
+  "input_hash": "f92717ff6bc9",
+  "provider_snapshot": {
+    "mode": "no_llm",
+    "provider_id": "disabled",
+    "model": "",
+    "api_key_configured": false
+  },
+  "input": {
+    "sha256": "6e10e63b3433d22fb745b542ea475ec738d875a285c093fb900cbf4d5ca57d2e",
+    "fields": [
+      "attachments",
+      "company_name",
+      "review_config",
+      "review_items",
+      "scenario_context",
+      "uploaded_documents",
+      "uploaded_files"
+    ],
+    "artifacts": [
+      {
+        "file_name": "case_02_healthdata_bcr_c_draft.docx"
+      }
+    ]
+  },
+  "output": {
+    "fields": [
+      "attachment_notes",
+      "bcr_type_classification",
+      "chapters",
+      "chapters_count",
+      "company_name",
+      "consistency_issues",
+      "findings",
+      "missing_requirements",
+      "output_files",
+      "problems",
+      "rating",
+      "report_path",
+      "review_metadata"
+    ],
+    "artifacts": [
+      {
+        "role": "markdown",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/HealthData_Alliance_BCR审查报告_草案_20260808.md"
+      },
+      {
+        "role": "docx",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/HealthData_Alliance_BCR审查报告_草案_20260808.docx"
+      },
+      {
+        "role": "pdf",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/HealthData_Alliance_BCR审查报告_草案_20260808.pdf"
+      },
+      {
+        "role": "zip",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/HealthData_Alliance_BCR审查输出包_草案_20260808.zip"
+      },
+      {
+        "role": "citation_map_json",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/citation_map.json"
+      },
+      {
+        "role": "document_ir_json",
+        "path": "outputs/bcr/a333feb142dc4e2aacf2f03aebfa6126/outputs/document_ir.json"
+      }
+    ]
+  },
+  "observability": {
+    "event_count": 31,
+    "trace_manifest": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/bcr/20260808_224730_709306_02_healthdata_source_draft/trace/manifest.json",
+    "llm_calls": 0,
+    "tokens": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "fallback_count": 0,
+    "error_count": 0
+  },
+  "checks_passed": 32,
+  "checks_failed": 0,
+  "checks_skipped": 0,
+  "recommended_path": "",
+  "risk_level": "",
+  "error": null
+}

@@ -1,0 +1,55 @@
+{
+  "run_id": "20260808_222759_067147_02_healthdata_source_draft",
+  "output_task_id": "76ec1c876096419bb4598fd9ef91facf",
+  "status": "PASS",
+  "duration_ms": 627327.2559109901,
+  "assertions": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0
+  },
+  "provider": {
+    "name": "siliconflow",
+    "model": "deepseek-ai/DeepSeek-V3.2",
+    "llm_calls": 10,
+    "prompt_tokens": 3499,
+    "completion_tokens": 2594,
+    "total_tokens": 6093,
+    "fallback_count": 1,
+    "error_count": 0
+  },
+  "remediation": {
+    "requests": 9,
+    "provider_successes": 8,
+    "template_fallbacks": 1,
+    "markdown_changed_from_no_llm": true,
+    "no_llm_markdown_sha256": "5ef8f27f54090733da0986151c7d6cd190f99ebb202159b55618f988e44975e5",
+    "live_markdown_sha256": "bf331a643b89a6370e1bf234c62c5c7f5ae9e470dcc158f11a4155bf0452d67d"
+  },
+  "citations": {
+    "all_items": 2,
+    "footnotes": 2,
+    "citation_ids": [
+      "CIT-EU-EU_LAW_001-ART4-P01",
+      "CIT-EU-EU_GUIDE_002-ART5-P01"
+    ],
+    "jumpable": 2,
+    "document_ir_citation_set_matches": true
+  },
+  "document_ir": {
+    "sections": 4,
+    "claim_blocks": 1,
+    "diagnostics": []
+  },
+  "artifacts": {
+    "markdown_sha256": "bf331a643b89a6370e1bf234c62c5c7f5ae9e470dcc158f11a4155bf0452d67d",
+    "docx_sha256": "f217bf3f2e94c5f1481c765c81dfee0ab118691f58094bf75f5e80f58e2f5498",
+    "pdf_sha256": "676e0004dc1eb99c17b93a5cd19de375426d64132118d6313ef44f599cabb118",
+    "zip_sha256": "2c6fc611746926277dfe7c1aba87a926bcde6d1817c08d1f85b8109b07ee7165",
+    "citation_map_sha256": "9d6414f8a3ffea9ce65a44818e001f4246b1cb7f663ab90b970536613d93208e",
+    "document_ir_sha256": "7bff5ccedbd9476c279cbe87a2d79a4184654d14e18f3b5d1233096a055f5b00",
+    "pdf_pages": 5,
+    "zip_integrity": "PASS"
+  },
+  "audit_note": "该 live 产物保留真实 provider 运行原貌。随后提交 8003620 修复法规定位号 Markdown 拆行并增加整改来源统计，提交 135a158 将详细表从 10 项扩为全部 26 项；为避免重复消耗 provider，本 live 目录未被事后改写。"
+}

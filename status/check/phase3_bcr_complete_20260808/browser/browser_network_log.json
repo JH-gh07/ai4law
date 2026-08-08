@@ -1,0 +1,72 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v0/files/upload",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bcr/generate_async",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bcr/tasks/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/reports/40228bba4c9445f3992b71f309bce62d",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001/articles/%E6%AE%B5%E8%90%BD4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001/articles/%E6%AE%B5%E8%90%BD4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001/articles/%E6%AE%B5%E8%90%BD4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001/articles/%E6%AE%B5%E8%90%BD4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/EU-LAW-001",
+    "status": 200
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "task_id": "40228bba4c9445f3992b71f309bce62d",
+  "fixture": "backend/tests/bcr/fixtures/case_02_healthdata_bcr_c_draft.docx",
+  "upload_status": 200,
+  "submit_status": 200,
+  "final_url": "http://127.0.0.1:5196/knowledge/laws/EU-LAW-001?article=%E6%AE%B5%E8%90%BD4",
+  "document_review_request_verified": true,
+  "citation_drawer_exact_article": true
+}
