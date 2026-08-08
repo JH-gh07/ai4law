@@ -28,6 +28,4 @@ export type TreeNode = {
   children: TreeNode[];
 };
 
-export type ResourceOpenTarget =
-  | { kind: "output"; artifact: OutputArtifact }
-  | { kind: "input-file"; entry: InputEntry };
+export type ResourceOpenTarget = { kind: "output"; artifact: OutputArtifact };

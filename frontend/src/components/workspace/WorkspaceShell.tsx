@@ -69,10 +69,7 @@ type ReconstructedReportPayload = {
   citationTaskId: string | null;
 };
 
-type OpenedResource =
-  | { kind: "output"; name: string; path: string; fileType: string }
-  | { kind: "input-file"; name: string; path: string; fileType: string }
-  | { kind: "input-form"; name: string; payload: unknown };
+type OpenedResource = { kind: "output"; name: string; path: string; fileType: string };
 
 type ResourcePreviewTab = {
   id: string;
@@ -113,9 +110,6 @@ const readFileType = (pathOrName: string): string => {
 };
 
 const getResourceTabId = (resource: OpenedResource): string => {
-  if (resource.kind === "input-form") {
-    return `resource:input-form:${resource.name}`;
-  }
   return `resource:${resource.kind}:${resource.path}`;
 };
 
@@ -580,7 +574,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [selectedArtifactPath]);
 
   useEffect(() => {
-    if (!openedResource || openedResource.kind === "input-form") {
+    if (!openedResource) {
       setOpenedResourcePreview(null);
       setOpenedResourceError(null);
       return;
@@ -844,31 +838,14 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   }, [dispatch, latestRun]);
 
   const handleOpenResource = (target: ResourceOpenTarget) => {
-    let resource: OpenedResource;
-    if (target.kind === "output") {
-      const path = target.artifact.path;
-      setSelectedArtifactPath(path);
-      resource = {
-        kind: "output",
-        name: toFileName(path),
-        path,
-        fileType: readFileType(path)
-      };
-    } else if (target.kind === "input-file") {
-      const path = target.entry.sourcePath;
-      resource = {
-        kind: "input-file",
-        name: target.entry.name || toFileName(path),
-        path,
-        fileType: readFileType(path)
-      };
-    } else {
-      resource = {
-        kind: "input-form",
-        name: target.entry.name,
-        payload: target.entry.payload
-      };
-    }
+    const path = target.artifact.path;
+    setSelectedArtifactPath(path);
+    const resource: OpenedResource = {
+      kind: "output",
+      name: toFileName(path),
+      path,
+      fileType: readFileType(path)
+    };
     const tabId = getResourceTabId(resource);
     setResourceTabs((prev) => {
       const existingIndex = prev.findIndex((item) => item.id === tabId);
@@ -1107,34 +1084,20 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                 <strong>{openedResource.name}</strong>
               </div>
               <div className="workspace-resource-viewer-actions">
-                {openedResource.kind !== "input-form" ? (
-                  <>
-                    <em>{openedResource.fileType}</em>
-                    <button
-                      type="button"
-                      className="workspace-report-download-icon"
-                      onClick={() => void downloadOpenedResource(openedResource.path)}
-                      aria-label={lang === "zh" ? "下载文件" : "Download file"}
-                      title={lang === "zh" ? "下载文件" : "Download file"}
-                      disabled={openedResourceDownloadBusy}
-                    >
-                      <DownloadIcon width="16" height="16" />
-                    </button>
-                  </>
-                ) : (
-                  <em>JSON</em>
-                )}
+                <em>{openedResource.fileType}</em>
+                <button
+                  type="button"
+                  className="workspace-report-download-icon"
+                  onClick={() => void downloadOpenedResource(openedResource.path)}
+                  aria-label={lang === "zh" ? "下载文件" : "Download file"}
+                  title={lang === "zh" ? "下载文件" : "Download file"}
+                  disabled={openedResourceDownloadBusy}
+                >
+                  <DownloadIcon width="16" height="16" />
+                </button>
               </div>
             </div>
-            {openedResource.kind === "input-form" ? (
-              <article className="workspace-report-chapter workspace-report-preview-block">
-                <strong>{lang === "zh" ? "表单提交详情" : "Form Submission Detail"}</strong>
-                <pre className="workspace-resource-json">
-                  {JSON.stringify(openedResource.payload ?? {}, null, 2)}
-                </pre>
-              </article>
-            ) : (
-              <>
+            <>
                 {openedResourceLoading ? (
                   <div className="workspace-report-preview-state">{lang === "zh" ? "正在加载文件预览..." : "Loading file preview..."}</div>
                 ) : null}
@@ -1173,7 +1136,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
                   )
                 ) : null}
               </>
-            )}
           </section>
         </section>
       );
