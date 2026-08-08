@@ -1,22 +1,14 @@
 from __future__ import annotations
 
+import re
 import uuid
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.quality.alignment import check_cn_alignment
 from backend.common.rag.service import retrieve_legal_documents
-from backend.common.render.report import (
-    format_date_stamp,
-    render_docx_report,
-    render_docx_template,
-    render_markdown_report,
-    render_markdown_template,
-    safe_filename,
-)
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.risk.scoring import risk_level
 from backend.common.runtime.module_run import finalize_run, prepare_run
@@ -33,6 +25,7 @@ from backend.domains.cn.pipia.schema import (
     PIPIARequest,
     PIPIAResult,
 )
+from backend.domains.cn.pipia.report_renderer import PIPIAReportRenderer
 
 
 TEMPLATE_PATH = report_template_path("cn", "2.3_pipia_template_v0.docx")
@@ -50,9 +43,6 @@ PIPIA_CHAPTERS = [
 
 
 _NO_LLM = object()
-
-
-from backend.domains.cn.pipia.report_renderer import PIPIAReportRenderer
 
 
 class PIPIAService:
@@ -140,12 +130,13 @@ class PIPIAService:
                     )
                 else:
                     content = f"（{title}：LLM未配置，此处为占位内容）"
+                chapter_citations = _used_citation_labels(content, citation_registry)
                 chapters.append(
                     PIPIAChapter(
                         chapter_no=idx,
                         title=title,
                         content=content,
-                        citations=citations,
+                        citations=chapter_citations,
                         risk_level=level,
                     )
                 )
@@ -661,12 +652,6 @@ def _build_template_mapping(
         return ""
 
     scope = payload.personal_info_scope
-    citations: list[str] = []
-    for chapter in chapters:
-        if chapter.citations:
-            citations = chapter.citations
-            break
-
     necessity = summarize_for_slot(pick("处理者与出境活动基础信息"), max_sentences=2, max_chars=260)
     risk_list = summarize_for_slot(pick("个人信息主体权益影响评估"), max_sentences=2, max_chars=260)
     controls = summarize_for_slot(pick("技术与组织措施有效性评估"), max_sentences=2, max_chars=260)
@@ -685,17 +670,27 @@ def _build_template_mapping(
         "processing_method": "跨境传输并由境外接收方处理。",
         "processing_scope": f"涉及{scope.subject_volume:,}人，含敏感信息{len(scope.spi_categories)}类",
         "legal_basis": payload.transfer_context.legal_basis,
-        "necessity_analysis": attach_citations(necessity, citations, registry=citation_registry),
+        "necessity_analysis": attach_citations(necessity, None, registry=citation_registry),
         "pi_categories": "、".join(scope.pi_categories),
         "spi_categories": "、".join(scope.spi_categories) or "无",
         "subject_volume": f"{scope.subject_volume:,}人",
-        "risk_list": attach_citations(risk_list, citations, registry=citation_registry),
+        "risk_list": attach_citations(risk_list, None, registry=citation_registry),
         "risk_level": overall_risk_level,
-        "current_controls": attach_citations(controls, citations, registry=citation_registry),
-        "additional_controls": attach_citations(remediation, citations, registry=citation_registry),
-        "improvement_plan": attach_citations(remediation, citations, registry=citation_registry),
-        "final_conclusion": attach_citations(conclusion, citations, registry=citation_registry),
+        "current_controls": attach_citations(controls, None, registry=citation_registry),
+        "additional_controls": attach_citations(remediation, None, registry=citation_registry),
+        "improvement_plan": attach_citations(remediation, None, registry=citation_registry),
+        "final_conclusion": attach_citations(conclusion, None, registry=citation_registry),
     }
+
+
+def _used_citation_labels(content: str, registry: CitationRegistry) -> list[str]:
+    """Return only citations whose assigned footnote actually appears in one chapter."""
+    used_numbers = {int(number) for number in re.findall(r"\[(\d+)\]", content)}
+    return [
+        item.display_label
+        for number, item in registry.get_footnote_map().items()
+        if number in used_numbers
+    ]
 
 
 def _find_risk_conflicts(chapters: list[PIPIAChapter], overall_risk_level: str) -> list[str]:

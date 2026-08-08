@@ -230,11 +230,22 @@ def strip_markdown_inline(text: str) -> str:
     if not text:
         return text
 
+    citation_markers: list[str] = []
+
+    def _protect_citation_marker(match: re.Match) -> str:
+        citation_markers.append(match.group(0))
+        return f"\ufff0{len(citation_markers) - 1}\ufff1"
+
+    protected = _CIT_MARKER_RE.sub(_protect_citation_marker, text)
+
     def _strip(m: re.Match) -> str:
         inner = m.group(2) or m.group(3) or ""
         return inner
 
-    return _MD_INLINE_RE.sub(_strip, text)
+    stripped = _MD_INLINE_RE.sub(_strip, protected)
+    for index, marker in enumerate(citation_markers):
+        stripped = stripped.replace(f"\ufff0{index}\ufff1", marker)
+    return stripped
 
 
 def ensure_paragraph_citations(

@@ -37,6 +37,28 @@ def test_pipeline_converts_marker_and_runs_claim_gate_once() -> None:
     assert result.violations == []
 
 
+def test_pipeline_preserves_underscores_inside_registered_marker() -> None:
+    registry = CitationRegistry()
+    citation_id = "CIT-CN-CN_LAW_003-ART39-P01"
+    registry.register(
+        CitationItem(
+            citation_id=citation_id,
+            source_id="CN-LAW-003",
+            title="个人信息保护法",
+            article_no="39",
+        )
+    )
+
+    result = apply_citation_pipeline(
+        f"企业应当取得单独同意。{{{{{citation_id}}}}}",
+        registry=registry,
+        allowed_citations=["个人信息保护法第39条"],
+    )
+
+    assert result.text == "企业应当取得单独同意。[1]"
+    assert registry.get_footnote_map()[1].citation_id == citation_id
+
+
 def test_pipeline_resolves_legacy_basis_text_to_the_same_registry_number() -> None:
     result = apply_citation_pipeline(
         "企业应当完成评估。【依据：个人信息保护法 第39条】",
