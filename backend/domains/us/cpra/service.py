@@ -16,7 +16,7 @@ from backend.common.citation.module_grounding import (
 from backend.common.citation.output import build_knowledge_url, write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import convert_citation_markers
+from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
 from backend.common.render.report import (
@@ -522,7 +522,11 @@ class CPRAService:
                     citation_marker_section=marker_block,
                     use_citation_markers=True,
                 )
-                content = convert_citation_markers(content, citation_registry)
+                content = apply_citation_pipeline(
+                    content,
+                    registry=citation_registry,
+                    allowed_citations=[item.display_label for item in citations],
+                ).text
             else:
                 content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(

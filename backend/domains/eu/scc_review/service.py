@@ -14,7 +14,7 @@ from backend.common.citation.module_grounding import (
 from backend.common.citation.output import build_knowledge_url, write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import convert_citation_markers
+from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import format_date_stamp, render_docx_template, render_markdown_template, safe_filename
@@ -310,7 +310,11 @@ class EU_SCCService:
                         citation_marker_section=citation_bundle.prompt_block,
                         use_citation_markers=True,
                     )
-                    content = convert_citation_markers(content, citation_registry)
+                    content = apply_citation_pipeline(
+                        content,
+                        registry=citation_registry,
+                        allowed_citations=[ref.display_label for ref in citation_refs],
+                    ).text
                 else:
                     content = _render_placeholder(title, chapter_id, rule_result)
                 chapters.append(
