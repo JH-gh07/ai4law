@@ -27,6 +27,7 @@ from backend.domains.eu.dpia.schema import DPIAChapterContent
 # truth); this module must not redefine a citation-marker regex.
 _HEADING_PREFIX_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
 _SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？])")
+_FOOTNOTE_RESIDUE_RE = re.compile(r"\[\d+\]")
 
 
 def _semantic_text(paragraph: str) -> str:
@@ -68,6 +69,13 @@ def build_dpia_document_ir(
             # Accepts both citation shapes: raw {{CIT-*}} markers (pre-generator)
             # and [N] footnotes (post-generator, the production shape).
             citation_free, citation_refs = extract_citation_refs(paragraph, citation_registry)
+            # Surface any [N] residue the registry could not resolve (see
+            # assessment/schema_first.py for rationale — prevents ParagraphBlock
+            # validation from eating CITATION_NOT_REGISTERED before the compiler).
+            residue = _FOOTNOTE_RESIDUE_RE.findall(citation_free)
+            if residue:
+                citation_refs = list(dict.fromkeys(citation_refs + residue))
+                citation_free = _FOOTNOTE_RESIDUE_RE.sub("", citation_free)
             text = _semantic_text(citation_free)
             if not text:
                 continue
