@@ -159,7 +159,7 @@
 | 得理条件触发 | 仅在本地置信度不足 / HIGH-BLOCKER issue / 用户要求最新法规时才调用，非默认并行检索 | 当前触发逻辑分散在各模块：安全评估对 HIGH/BLOCKER 额外搜索；文书审查对部分条款搜索；通用 RAG 在本地无结果时触发——**不是统一策略** |
 | LLM Key 安全 | Key 不应回显、不进日志、不进运行产物，以脱敏指纹保存 | 设置 API 返回时隐藏 Key；`runtime_settings.json` 曾明文保存，需**严格文件权限**管理；ProviderSnapshot 对 Key 做 SHA-256 摘要，禁止 repr |
 | Provider 健康检查与阻断 | 生产环境下如无健康 LLM，任务启动前应明确阻断，返回可理解的错误信息 | 生产门禁已实现（ENV-BLOCK-01），15 分钟内的有效探测结果 + Provider 指纹一致性校验；开发环境和 `--no-llm` 不受影响 |
-| "小李 AI" Provider | 文档暗示可连接小李 AI，应有对应的 provider 配置入口和模型探测 | 代码中**无"小李 AI"具名提供商**；仅支持通用 OpenAI-compatible provider；需要在有 Base URL、模型名和鉴权方式后才能接入 |
+| "得李 api" Provider | 文档暗示可连接，应有对应的 provider 配置入口和模型探测 | 代码中**无"得李 api"具名提供商**；仅支持通用 OpenAI-compatible provider；需要在有 Base URL、模型名和鉴权方式后才能接入 |
 
 ---
 
