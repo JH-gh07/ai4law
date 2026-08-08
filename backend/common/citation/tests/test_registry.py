@@ -1,5 +1,6 @@
 from backend.common.citation.models import CitationItem
-from backend.common.citation.registry import CitationRegistry
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
+from backend.common.rag.retriever import RegulationDoc
 
 
 def _sample_citation(citation_id: str, title: str, article_no: str) -> CitationItem:
@@ -76,6 +77,42 @@ def test_registry_to_list() -> None:
     assert len(result) == 1
     assert result[0]["citation_id"] == "CIT-CN-PIPL-ART39-P01"
     assert result[0]["title"] == "个人信息保护法"
+
+
+def test_registry_from_documents_builds_stable_citable_items() -> None:
+    registry = registry_from_documents(
+        [
+            RegulationDoc(
+                id="CN-LAW-003",
+                title="个人信息保护法",
+                article="第三十九条",
+                content="向境外提供个人信息应当履行法定义务。",
+                jurisdiction="cn",
+                source_url="https://example.test/pipl",
+            )
+        ],
+        jurisdiction="CN",
+    )
+
+    items = list(registry)
+    assert len(items) == 1
+    assert items[0].citation_id == "CIT-CN-CN_LAW_003-ART39-P01"
+    assert items[0].article_no == "39"
+    assert items[0].display_label == "个人信息保护法 第39条"
+    assert items[0].source_url == "https://example.test/pipl"
+
+
+def test_registry_from_documents_deduplicates_same_source_and_article() -> None:
+    document = RegulationDoc(
+        id="CN-LAW-003",
+        title="个人信息保护法",
+        article="39",
+        content="条文内容",
+    )
+
+    registry = registry_from_documents([document, document], jurisdiction="CN")
+
+    assert len(registry) == 1
 
 
 # ---------------------------------------------------------------------------

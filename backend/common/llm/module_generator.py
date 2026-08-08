@@ -4,8 +4,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from backend.common.citation.registry import CitationRegistry
     from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import ensure_paragraph_citations, strip_markdown_inline
+from backend.common.llm.postprocess import apply_citation_pipeline, ensure_paragraph_citations, strip_markdown_inline
 
 # ── 各模块系统 Prompt ───────────────────────────────────────────────
 
@@ -306,6 +307,7 @@ def generate_chapter(
     citations: list[str] | None = None,
     citation_marker_section: str = "",
     use_citation_markers: bool = False,
+    citation_registry: "CitationRegistry | None" = None,
 ) -> str:
     """用LLM生成一个章节的内容。
 
@@ -352,4 +354,10 @@ def generate_chapter(
     # 剥离 LLM 输出的 markdown 内联格式（**粗体**, `代码` 等）
     # DOCX 渲染器不处理 markdown → 保留会变成字面 ** 和 _
     cleaned = strip_markdown_inline(raw)
+    if citation_registry is not None:
+        return apply_citation_pipeline(
+            cleaned,
+            registry=citation_registry,
+            allowed_citations=citations,
+        ).text
     return ensure_paragraph_citations(cleaned, citations)

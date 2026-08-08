@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any, Iterable
 
+from backend.common.citation.id_generator import generate_citation_id
+from backend.common.citation.locators import normalize_article_no
 from backend.common.citation.markers import CIT_MARKER_RE as _CIT_MARKER_RE, is_valid_citation_id
 from backend.common.citation.models import CitationItem
 
@@ -188,3 +191,50 @@ class CitationRegistry:
 
     def to_list(self) -> list[dict]:
         return [item.to_dict() for item in self._items.values()]
+
+
+def _document_value(document: Any, name: str, default: str = "") -> str:
+    if isinstance(document, dict):
+        return str(document.get(name, default) or default).strip()
+    return str(getattr(document, name, default) or default).strip()
+
+
+def registry_from_documents(
+    documents: Iterable[Any],
+    *,
+    jurisdiction: str,
+) -> CitationRegistry:
+    """Build the canonical per-report registry from retrieved legal documents."""
+    registry = CitationRegistry()
+    seen: set[tuple[str, str]] = set()
+    for document in documents:
+        source_id = _document_value(document, "source_id") or _document_value(document, "id")
+        title = _document_value(document, "title")
+        article_no = normalize_article_no(_document_value(document, "article"))
+        if not source_id or not title:
+            continue
+        key = (source_id, article_no)
+        if key in seen:
+            continue
+        seen.add(key)
+        citation_id = generate_citation_id(
+            jurisdiction=jurisdiction,
+            abbr=source_id,
+            article_no=article_no,
+            seq=1,
+        )
+        article_label = f" 第{article_no}条" if article_no else ""
+        registry.register(
+            CitationItem(
+                citation_id=citation_id,
+                source_id=source_id,
+                jurisdiction=_document_value(document, "jurisdiction") or jurisdiction.lower(),
+                display_label=f"{title}{article_label}",
+                title=title,
+                article_no=article_no,
+                quote_text=_document_value(document, "content")[:500],
+                source_url=_document_value(document, "source_url"),
+                citation_granularity="article" if article_no else "source",
+            )
+        )
+    return registry

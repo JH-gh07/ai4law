@@ -21,11 +21,13 @@ from backend.common.render.report import (
     safe_filename,
 )
 from backend.common.render.summary import attach_citations, summarize_for_slot
+from backend.common.citation.output import write_citation_map_json
 from backend.common.risk.scoring import risk_level
 from backend.core.resource_paths import report_template_path
 from backend.domains.cn.pipia.schema import PIPIAChapter, PIPIARequest
 
 if TYPE_CHECKING:
+    from backend.common.citation.registry import CitationRegistry
     from backend.common.workflow import EvidenceItem, FactItem, IssueItem
 
 TEMPLATE_PATH = report_template_path("cn", "2.3_pipia_template_v0.docx")
@@ -98,13 +100,17 @@ class PIPIAReportRenderer:
         facts: "list[FactItem] | None" = None,
         filing_readiness: "object | None" = None,
         consistency_issues: list[str] | None = None,
+        citation_registry: "CitationRegistry | None" = None,
     ) -> dict[str, str]:
         output_dir = Path("outputs/pipia") / task_id / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
+        if citation_registry is None:
+            from backend.common.citation.registry import CitationRegistry
+
+            citation_registry = CitationRegistry()
 
         document_ir = None
         if self.schema_first_enabled:
-            from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
             from backend.common.reporting import DocumentCompiler
             from backend.domains.cn.pipia.schema_first import build_pipia_document_ir
 
@@ -112,7 +118,7 @@ class PIPIAReportRenderer:
                 task_id=task_id,
                 company_name=payload.company_profile.company_name,
                 chapters=chapters,
-                citation_registry=LegacyCitationRegistry(),
+                citation_registry=citation_registry,
                 model=self.model_name,
             )
             compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
@@ -130,7 +136,12 @@ class PIPIAReportRenderer:
         zip_output = output_dir / f"{safe_company}_PIPIA_输出包_草案_{date_stamp}.zip"
 
         mapping = _build_template_mapping(
-            payload, chapters, date_stamp, overall_risk_level, alignment_warning
+            payload,
+            chapters,
+            date_stamp,
+            overall_risk_level,
+            alignment_warning,
+            citation_registry,
         )
 
         if TEMPLATE_MD.exists():
@@ -174,6 +185,17 @@ class PIPIAReportRenderer:
 
         if document_ir is not None:
             result["document_ir_json"] = _write_document_ir_json(document_ir, output_dir)
+
+        result["citation_map_json"] = write_citation_map_json(
+            output_dir=output_dir,
+            module="pipia",
+            task_id=task_id,
+            footnote_map={
+                str(number): item.to_dict()
+                for number, item in citation_registry.get_footnote_map().items()
+            },
+            all_items=citation_registry.to_list(),
+        )
 
         with ZipFile(zip_output, mode="w", compression=ZIP_DEFLATED) as bundle:
             bundle.write(md_output, arcname=md_output.name)

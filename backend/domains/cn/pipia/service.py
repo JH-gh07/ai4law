@@ -6,6 +6,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.quality.alignment import check_cn_alignment
 from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
@@ -96,7 +97,8 @@ class PIPIAService:
                 jurisdiction="cn",
                 path="scc" if payload.route_type == "scc_filing" else "all",
             ).documents
-            citations = [f"{item.title}{item.article}" for item in regs]
+            citation_registry = registry_from_documents(regs, jurisdiction="CN")
+            citations = [item.display_label for item in citation_registry]
             reg_snippet = "\n".join(
                 f"- {item.title}{item.article}：{(item.content or '')[:120]}"
                 for item in regs
@@ -126,7 +128,16 @@ class PIPIAService:
             chapters: list[PIPIAChapter] = []
             for idx, title in enumerate(PIPIA_CHAPTERS, start=1):
                 if self.llm_client and self.llm_client.enabled:
-                    content = generate_chapter(self.llm_client, "pipia", title, context_block, citations=citations)
+                    content = generate_chapter(
+                        self.llm_client,
+                        "pipia",
+                        title,
+                        context_block,
+                        citations=citations,
+                        citation_marker_section=citation_registry.build_marker_list(),
+                        use_citation_markers=True,
+                        citation_registry=citation_registry,
+                    )
                 else:
                     content = f"（{title}：LLM未配置，此处为占位内容）"
                 chapters.append(
@@ -164,6 +175,7 @@ class PIPIAService:
                 attachment_notes,
                 overall_risk_level=level,
                 alignment_warning="；".join(alignment_issues) if alignment_issues else None,
+                citation_registry=citation_registry,
             )
             if trace:
                 trace.record("final", {"summary": "PIPIA 评估完成", "detail": {"output_files": outputs}})
@@ -593,6 +605,7 @@ class PIPIAService:
         attachment_notes: list[str],
         overall_risk_level: str,
         alignment_warning: str | None = None,
+        citation_registry: CitationRegistry | None = None,
     ) -> dict[str, str]:
         """Delegate to PIPIAReportRenderer (signature preserved for tests)."""
         return self.renderer.render(
@@ -602,6 +615,7 @@ class PIPIAService:
             overall_risk_level=overall_risk_level,
             attachment_notes=attachment_notes,
             alignment_warning=alignment_warning,
+            citation_registry=citation_registry,
         )
 
     @staticmethod
@@ -638,6 +652,7 @@ def _build_template_mapping(
     date_stamp: str,
     overall_risk_level: str,
     alignment_warning: str | None = None,
+    citation_registry: CitationRegistry | None = None,
 ) -> dict[str, str]:
     def pick(title: str) -> str:
         for chapter in chapters:
@@ -670,16 +685,16 @@ def _build_template_mapping(
         "processing_method": "跨境传输并由境外接收方处理。",
         "processing_scope": f"涉及{scope.subject_volume:,}人，含敏感信息{len(scope.spi_categories)}类",
         "legal_basis": payload.transfer_context.legal_basis,
-        "necessity_analysis": attach_citations(necessity, citations),
+        "necessity_analysis": attach_citations(necessity, citations, registry=citation_registry),
         "pi_categories": "、".join(scope.pi_categories),
         "spi_categories": "、".join(scope.spi_categories) or "无",
         "subject_volume": f"{scope.subject_volume:,}人",
-        "risk_list": attach_citations(risk_list, citations),
+        "risk_list": attach_citations(risk_list, citations, registry=citation_registry),
         "risk_level": overall_risk_level,
-        "current_controls": attach_citations(controls, citations),
-        "additional_controls": attach_citations(remediation, citations),
-        "improvement_plan": attach_citations(remediation, citations),
-        "final_conclusion": attach_citations(conclusion, citations),
+        "current_controls": attach_citations(controls, citations, registry=citation_registry),
+        "additional_controls": attach_citations(remediation, citations, registry=citation_registry),
+        "improvement_plan": attach_citations(remediation, citations, registry=citation_registry),
+        "final_conclusion": attach_citations(conclusion, citations, registry=citation_registry),
     }
 
 

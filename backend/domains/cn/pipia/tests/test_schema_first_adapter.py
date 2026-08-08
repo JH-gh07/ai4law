@@ -53,13 +53,7 @@ def _chapters() -> list[PIPIAChapter]:
 
 
 def _chapters_plain() -> list[PIPIAChapter]:
-    """Plain-text chapters for renderer tests.
-
-    PIPIA's service pipeline calls generate_chapter without a CitationRegistry
-    and never calls convert_citation_markers, so production chapter content
-    carries no {{CIT-*}} or [N] tokens. The renderer gate must pass on this
-    plain-text shape.
-    """
+    """Plain-text chapters remain valid when no citation is used."""
     return [
         PIPIAChapter(chapter_no=1, title="出境活动基础信息",
                      content="本次出境活动依据个人信息保护法相关规定开展。",
@@ -155,6 +149,7 @@ def test_renderer_writes_document_ir_when_flag_enabled(tmp_path, monkeypatch) ->
     outputs = renderer.render(
         task_id="task-sf", payload=_payload(), chapters=_chapters_plain(),
         overall_risk_level="HIGH", attachment_notes=[],
+        citation_registry=CitationRegistry(),
     )
     data = json.loads(Path(outputs["document_ir_json"]).read_text(encoding="utf-8"))
     assert data["document_id"] == "pipia:task-sf"
@@ -174,6 +169,25 @@ def test_renderer_omits_document_ir_when_flag_disabled(tmp_path, monkeypatch) ->
     assert "document_ir_json" not in outputs
     with ZipFile(outputs["zip"]) as z:
         assert "document_ir.json" not in z.namelist()
+
+
+def test_renderer_writes_citation_map_from_the_same_registry(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    registry = _registry()
+    renderer = PIPIAReportRenderer(schema_first_enabled=True, model_name="test-model")
+
+    outputs = renderer.render(
+        task_id="task-citations",
+        payload=_payload(),
+        chapters=_chapters(),
+        overall_risk_level="HIGH",
+        attachment_notes=[],
+        citation_registry=registry,
+    )
+
+    citation_map = json.loads(Path(outputs["citation_map_json"]).read_text(encoding="utf-8"))
+    assert citation_map["footnote_map"]["1"]["citation_id"] == CID
+    assert citation_map["footnote_map"]["1"]["article_no"] == "39"
 
 
 def test_renderer_blocks_unregistered_citations_when_flag_enabled(tmp_path, monkeypatch) -> None:
