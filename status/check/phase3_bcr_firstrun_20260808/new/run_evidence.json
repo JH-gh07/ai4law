@@ -1,0 +1,55 @@
+{
+  "mode": "new",
+  "schema_first_enabled": true,
+  "execution": {
+    "service": "backend.domains.eu.bcr_review.service.BCRService.generate_report",
+    "task_id": "phase3-bcr-new",
+    "llm_calls": 0,
+    "tokens": 0,
+    "note": "rerun after document_ir output fix"
+  },
+  "result": {
+    "company_name": "跨国科技集团",
+    "rating": "部分缺失",
+    "chapters": 4,
+    "problems": 1
+  },
+  "artifacts": {
+    "跨国科技集团_BCR-C_输出包_草案_20260808": {
+      "path": "跨国科技集团_BCR-C_输出包_草案_20260808.zip",
+      "size": 40507,
+      "sha256": "bd1a103b938fb3ec3f8412620a18c3d5bf855e8253da60b0a375ba1d1be0fab6"
+    },
+    "跨国科技集团_BCR-C_合规审查报告_草案_20260808": {
+      "path": "跨国科技集团_BCR-C_合规审查报告_草案_20260808.pdf",
+      "size": 3762,
+      "sha256": "b2deb69006ee7d1e9f4a4ce21fb078090dcdc4c4e70fcab04cf11fc6ad77db79"
+    },
+    "document_ir": {
+      "path": "document_ir.json",
+      "size": 2504,
+      "sha256": "5eda580ac1bf03969e6ae798e9e4725a4cf6cc5c26405056ce2d07d5aaccd072"
+    },
+    "citation_map": {
+      "path": "citation_map.json",
+      "size": 7711,
+      "sha256": "6feafbb22f16b94cd3e1a2aca762bee831607a15e7942a18328e0bfe67556f53"
+    }
+  },
+  "zip_members": [
+    "跨国科技集团_BCR-C_合规审查报告_草案_20260808.docx",
+    "跨国科技集团_BCR-C_合规审查报告_草案_20260808.md",
+    "跨国科技集团_BCR-C_合规审查报告_草案_20260808.pdf",
+    "citation_map.json",
+    "document_ir.json"
+  ],
+  "citation_map": {
+    "footnotes": 0,
+    "all_items": 4
+  },
+  "document_ir": {
+    "sections": 4,
+    "blocks": 4,
+    "diagnostics": []
+  }
+}

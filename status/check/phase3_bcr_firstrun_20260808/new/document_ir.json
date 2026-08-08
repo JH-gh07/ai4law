@@ -1,0 +1,90 @@
+{
+  "schema_version": "3.0",
+  "compiler_version": "0.1.0",
+  "prompt_version": "legacy-bcr-adapter-v1",
+  "template_version": "bcr-v0",
+  "model": "legacy-bcr",
+  "document_id": "bcr:phase3-bcr-new",
+  "report_type": "bcr",
+  "metadata": {
+    "title": "跨国科技集团 — BCR 合规审查报告草案",
+    "company_name": "跨国科技集团",
+    "report_date": "2026-08-08",
+    "report_id": "phase3-bcr-new"
+  },
+  "sections": [
+    {
+      "section_id": "bcr.chapter.1",
+      "title": "报告摘要",
+      "level": 2,
+      "ordinal": "1",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "bcr.chapter.1.block.1",
+          "type": "paragraph",
+          "text": "（报告摘要：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "bcr.chapter.2",
+      "title": "合规评级",
+      "level": 2,
+      "ordinal": "2",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "bcr.chapter.2.block.1",
+          "type": "paragraph",
+          "text": "综合评级：部分缺失",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "bcr.chapter.3",
+      "title": "详细审查结果",
+      "level": 2,
+      "ordinal": "3",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "bcr.chapter.3.block.1",
+          "type": "paragraph",
+          "text": "| 检查项 | 主题 | 风险 | 现状 | 整改建议 | 法律依据 |\n| --- | --- | --- | --- | --- | --- |\n| 3.2-C1 | 结构完整性 | MEDIUM | 章节覆盖不完整 | 补齐约束力与权利章节 | GDPR 第47条 |",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "bcr.chapter.4",
+      "title": "风险优先级与整改建议",
+      "level": 2,
+      "ordinal": "4",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "bcr.chapter.4.block.1",
+          "type": "paragraph",
+          "text": "（风险优先级与整改建议：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "provenance": {
+    "generated_at": "2026-08-08T04:00:16.332267Z",
+    "facts_version": null,
+    "issues_version": null,
+    "evidence_version": null
+  },
+  "input_hash": null,
+  "document_ir_hash": null
+}

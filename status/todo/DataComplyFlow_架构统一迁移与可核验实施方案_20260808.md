@@ -446,7 +446,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | old/new no-LLM service 首跑、DocumentIR、Compiler 和本地附件解析通过；正文引用和浏览器跳转未验收 |
 | CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 适配器和单测已有；上传→解析→报告两步 service 首跑未验收 |
 | EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | 适配器和单测已有；真实 service 首跑未验收 |
-| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 适配器和单测已有；真实 service 首跑未验收 |
+| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 表单驱动 old/new 首跑和 DocumentIR 输出修复通过；文档上传路径、正文引用和浏览器跳转未验收 |
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | fixture 新旧产物已对比；service/token-time 和浏览器验收未完成 |
 | EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | no-LLM service、结构化规则、本地 PDF 和固定 LLM 引用同步测试通过；live provider、业务附件和浏览器跳转仍未验收 |
 | US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
