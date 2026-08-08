@@ -85,7 +85,14 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
             <span className="citation-governance-warning">外部来源已核验，尚未入库</span>
           )}
           {resolutionType === "unresolved" && (
-            <span className="citation-governance-blocked">无法解析引用来源</span>
+            <span className="citation-governance-blocked">
+              无法解析引用来源
+              {citation.resolution?.failure_reason && (
+                <span className="citation-governance-reason">
+                  {" "}（{citation.resolution.failure_reason}）
+                </span>
+              )}
+            </span>
           )}
           {citation.source_kind && (
             <span className="citation-source-kind-label">
