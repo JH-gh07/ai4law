@@ -21,8 +21,6 @@ from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp,
     render_docx_report,
-    render_docx_template,
-    render_markdown_template,
     safe_filename,
 )
 from backend.common.render.docx_comments import DocxComment, render_commented_docx
@@ -119,9 +117,6 @@ class EU_SCCService:
         if trace:
             thought = summarize_agent_output("EU SCC 传输链分析", chain_patch)
             trace.record("thought", {"summary": thought})
-        # Merge risk hints into rule engine input
-        risk_hints = chain_patch.get("risk_hints", [])
-
         # Run rule engine
         rule_result = run_eu_scc_rule_engine(
             doc, chain, payload.declared_module_type,
@@ -294,18 +289,20 @@ class EU_SCCService:
     @staticmethod
     def _retrieve_regulations(payload: SCCReviewRequest) -> list[dict]:
         query = (
-            f"GDPR Article 46 standard contractual clauses EU 2021/914 "
-            f"EDPB recommendations Schrems II transfer impact assessment "
+            f"Commission Implementing Decision EU 2021/914 GDPR Article 46 "
+            f"Clause 14 local laws practices Clause 15 legally binding request "
+            f"public authority notify data exporter EDPB Recommendations 01/2020 "
+            f"transfer tool effectiveness supplementary measures "
             f"{payload.declared_module_type} {payload.exporter_role} {payload.importer_role}"
         )
         docs = retrieve_legal_documents(
             query,
             module="eu_scc",
-            top_k=5,
+            top_k=12,
             jurisdiction="eu",
             path="scc",
         ).documents
-        return [{"source_id": d.id, "title": d.title, "article": d.article, "snippet": d.content} for d in docs]
+        return _select_relevant_eu_scc_regulations(docs)
 
     def _extract_notes(self, payload: SCCReviewRequest) -> list[dict[str, str]]:
         notes: list[dict[str, str]] = []
@@ -372,7 +369,16 @@ class EU_SCCService:
                     ]
                 else:
                     content = _render_placeholder(title, chapter_id, rule_result)
-                    used_refs = []
+                    used_refs = _fallback_citation_refs(chapter_id, citation_bundle)
+                    if used_refs:
+                        markers = " ".join(
+                            f"{{{{{ref.citation_id}}}}}" for ref in used_refs
+                        )
+                        content = apply_citation_pipeline(
+                            f"{content.rstrip()} {markers}",
+                            registry=citation_registry,
+                            allowed_citations=[ref.display_label for ref in used_refs],
+                        ).text
                 chapters.append(
                     SCCChapter(
                         chapter_no=idx,
@@ -429,10 +435,6 @@ class EU_SCCService:
             md_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.md"
             docx_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.docx"
             pdf_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.pdf"
-            mapping = _build_template_mapping(
-                payload, chapters, rule_result, date_stamp, citation_registry
-            )
-
             # MD report (self-rendered)
             _render_markdown_report(md_out, payload, chapters, rule_result, date_stamp)
             from backend.common.render.pdf_renderer import get_pdf_renderer
@@ -585,8 +587,10 @@ def _render_placeholder(title, chapter_id, rule_result):
         )
     elif chapter_id == "clause_findings":
         lines = ["## 条款级审查发现\n"]
-        for f in rule_result.all_findings:
-            lines.append(f"### [{f.severity}] {f.location}")
+        for finding_number, f in enumerate(rule_result.all_findings, start=1):
+            lines.append(
+                f"### {finding_number}. [{f.severity}] {f.location}"
+            )
             lines.append(f"- 问题类型: {f.issue_type}")
             lines.append(f"- 风险分析: {f.risk_analysis}")
             lines.append(f"- 法规依据: {f.legal_basis}")
@@ -619,7 +623,8 @@ def _build_template_mapping(
 ):
     def pick(no):
         for c in chapters:
-            if c.chapter_no == no: return c.content
+            if c.chapter_no == no:
+                return c.content
         return ""
 
     citations = []
@@ -746,7 +751,102 @@ def _normalize_eu_scc_regulation(item: dict) -> dict:
         "source_kind": "official_guide" if "EDPB" in upper else "law_article",
         "authority_level": "medium" if "EDPB" in upper else "high",
         "binding_force": "recommended" if "EDPB" in upper else "mandatory",
+        "display_label": str(item.get("display_label", "") or ""),
     }
+
+
+def _select_relevant_eu_scc_regulations(documents) -> list[dict]:
+    """Keep only SCC authorities that support the report's actual claims.
+
+    The local EU corpus also contains file headers and unrelated GDPR excerpts.
+    They are useful for search diagnostics but must not become report citations.
+    The selected locator remains the corpus paragraph number so citation jumps
+    resolve to a unique registered chunk; ``display_label`` carries the legal
+    recital/step name shown to users.
+    """
+    selected: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for document in documents:
+        source_id = str(document.id or "")
+        article = str(document.article or "")
+        content = str(document.content or "").strip()
+        title = str(document.title or "")
+        display_label = ""
+        authority_level = "high"
+        binding_force = "mandatory"
+        source_kind = "law_article"
+
+        if source_id == "EU-SUP-021" and "Article 46(1)" in content:
+            title = "Commission Implementing Decision (EU) 2021/914"
+            display_label = f"{title} Recital (2) / GDPR Article 46(1)"
+        elif source_id == "EU-SUP-026":
+            recital_match = re.match(r"\((19|21|22)\)", content)
+            if not recital_match:
+                continue
+            recital = recital_match.group(1)
+            clause_context = "Clause 15" if recital == "22" else "Clause 14"
+            title = "Commission Implementing Decision (EU) 2021/914"
+            display_label = f"{title} Recital ({recital}) / {clause_context}"
+            authority_level = "medium"
+        elif (
+            source_id == "EU-GUIDE-002"
+            and "Step 3:" in content
+            and re.search(r"Article\s+46\s+GD\s*PR", content, re.IGNORECASE)
+        ):
+            title = "EDPB Recommendations 01/2020"
+            display_label = f"{title} Step 3"
+            authority_level = "medium"
+            binding_force = "recommended"
+            source_kind = "official_guide"
+        else:
+            continue
+
+        key = (source_id, article)
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(
+            {
+                "source_id": source_id,
+                "title": title,
+                "article": article,
+                "snippet": content,
+                "display_label": display_label,
+                "source_kind": source_kind,
+                "authority_level": authority_level,
+                "binding_force": binding_force,
+            }
+        )
+    return selected
+
+
+def _fallback_citation_refs(
+    chapter_id: str,
+    bundle: CitationBundle,
+) -> list[CPRACitationRef]:
+    items = list(bundle.items)
+    if chapter_id == "overall_rating":
+        selected = [
+            item
+            for item in items
+            if item.source_id == "EU-GUIDE-002"
+        ][:1]
+    elif chapter_id == "clause_findings":
+        selected = [
+            item
+            for item in items
+            if "Clause 15" in item.display_label
+        ][:1]
+    elif chapter_id == "legal_basis_and_recommendations":
+        selected = [
+            item
+            for item in items
+            if item.source_id == "EU-SUP-021"
+            or "Clause 14" in item.display_label
+        ][:2]
+    else:
+        selected = []
+    return [_eu_scc_ref_from_item(item) for item in selected]
 
 
 def _eu_scc_regulations_by_issue(issues: list[ModuleIssue], regulations: list[dict]) -> dict[str, list[dict]]:

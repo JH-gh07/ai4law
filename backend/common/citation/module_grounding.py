@@ -148,6 +148,9 @@ def _extract_article_number(article: str, jurisdiction: str) -> str:
     text = str(article or "").strip()
     if not text:
         return ""
+    paragraph_match = re.search(r"段落\s*(\d+)", text)
+    if paragraph_match:
+        return f"段落{paragraph_match.group(1)}"
     if jurisdiction.upper() == "US":
         match = re.search(r"§\s*([0-9]+(?:\.[0-9]+)*)", text)
         if match:

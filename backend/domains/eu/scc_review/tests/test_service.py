@@ -1,5 +1,6 @@
 """Test EU SCC compliance review — three core test scenarios."""
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from zipfile import ZipFile
@@ -107,6 +108,17 @@ def test_uploaded_scc_document_drives_core_review(tmp_path, monkeypatch) -> None
     assert "Clause 15" in finding_text
     assert result.attachment_notes
     assert "annotated_docx" in result.output_files
+
+    citation_map = json.loads(
+        Path(result.output_files["citation_map_json"]).read_text(encoding="utf-8")
+    )
+    cited_items = list(citation_map["footnote_map"].values())
+    cited_labels = [item["display_label"] for item in cited_items]
+    assert cited_items
+    assert any("2021/914" in label for label in cited_labels)
+    assert any("EDPB Recommendations 01/2020" in label for label in cited_labels)
+    assert all("段落" not in label for label in cited_labels)
+    assert all(item["can_jump"] is True for item in cited_items)
 
 
 def test_source_case_packet_preserves_contract_sections_and_destination() -> None:
