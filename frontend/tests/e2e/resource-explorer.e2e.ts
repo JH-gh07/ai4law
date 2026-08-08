@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("resource explorer shows real inputs and user deliverables only", async ({ page }, testInfo) => {
+test("resource explorer shows configured input files and user deliverables only", async ({ page }, testInfo) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
@@ -69,8 +69,10 @@ test("resource explorer shows real inputs and user deliverables only", async ({ 
 
   const inputRoot = page.locator(".ide-tree-row-root").filter({ hasText: "已提交材料" });
   const outputRoot = page.locator(".ide-tree-row-root").filter({ hasText: "生成结果" });
-  await expect(inputRoot.locator("small")).not.toHaveText("0");
+  await expect(inputRoot.locator("small")).toHaveText("2");
   await expect(outputRoot.locator("small")).toHaveText("2");
+  await expect(page.getByText("数据出境风险自评估报告（模板）.docx", { exact: true })).toBeVisible();
+  await expect(page.getByText("数据出境安全评估申报指南（第三版）.docx", { exact: true })).toBeVisible();
   await expect(page.getByText(/基础信息表单/)).toHaveCount(0);
   await expect(page.getByText(/citation_map|facts\.json/i)).toHaveCount(0);
 

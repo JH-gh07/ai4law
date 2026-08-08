@@ -6,7 +6,7 @@ import {
   USER_FACING_OUTPUT_EXTENSIONS,
 } from "./config";
 import type { OutputTreeEntry, ResourceLanguage } from "./contracts";
-import { getFileExtension, prettifyStem, toFileName } from "./file-path";
+import { getFileExtension, normalizeResourcePath, prettifyStem, toFileName } from "./file-path";
 
 const parseTime = (value: string | undefined): number | null => {
   if (!value) return null;
@@ -17,12 +17,13 @@ const parseTime = (value: string | undefined): number | null => {
 export function filterUserFacingArtifacts(artifacts: OutputArtifact[]): OutputArtifact[] {
   const seenPaths = new Set<string>();
   return artifacts.filter((artifact) => {
-    if (seenPaths.has(artifact.path)) return false;
+    const identity = normalizeResourcePath(artifact.path);
+    if (seenPaths.has(identity)) return false;
     const fileName = toFileName(artifact.path).toLowerCase();
     if (INTERNAL_ARTIFACT_PATTERNS.some((pattern) => fileName.includes(pattern))) return false;
     if (!USER_FACING_ARTIFACT_KINDS.has(artifact.kind.toLowerCase())) return false;
     if (!USER_FACING_OUTPUT_EXTENSIONS.has(getFileExtension(fileName))) return false;
-    seenPaths.add(artifact.path);
+    seenPaths.add(identity);
     return true;
   });
 }

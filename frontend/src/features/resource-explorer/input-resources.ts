@@ -1,7 +1,7 @@
 import type { ModuleRun, OutputArtifact } from "../../lib/domain";
 import { INPUT_CONTAINER_KEYS, INPUT_ROLE_LABELS, USER_INPUT_EXTENSIONS } from "./config";
 import type { InputEntry, InputFileCandidate, ResourceLanguage } from "./contracts";
-import { getFileExtension, prettifyStem, toFileName } from "./file-path";
+import { getFileExtension, normalizeResourcePath, prettifyStem, toFileName } from "./file-path";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -14,8 +14,15 @@ const isSupportedUserFile = (value: string): boolean => {
 };
 
 const inferLabelKey = (path: string, hint?: string): string | undefined => {
-  const source = `${path} ${hint ?? ""}`.toLowerCase();
-  return Object.keys(INPUT_ROLE_LABELS).find((key) => source.includes(key));
+  const normalizedHint = hint?.trim().toLowerCase();
+  const exactHint = Object.keys(INPUT_ROLE_LABELS).find((key) => key === normalizedHint);
+  if (exactHint) return exactHint;
+
+  const normalizedPath = path.replace(/\\/g, "/").toLowerCase();
+  return Object.keys(INPUT_ROLE_LABELS).find((key) => {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|[\\/_.-])${escapedKey}(?:[\\/_.-]|$)`).test(normalizedPath);
+  });
 };
 
 export function collectUserInputFiles(payload: unknown): InputFileCandidate[] {
@@ -24,8 +31,9 @@ export function collectUserInputFiles(payload: unknown): InputFileCandidate[] {
   const append = (rawPath: string, hint?: string) => {
     const path = rawPath.trim();
     if (!isSupportedUserFile(path)) return;
-    const existing = candidates.get(path);
-    candidates.set(path, {
+    const identity = normalizeResourcePath(path);
+    const existing = candidates.get(identity);
+    candidates.set(identity, {
       path,
       labelKey: existing?.labelKey ?? inferLabelKey(path, hint),
     });
@@ -67,7 +75,7 @@ export function collectUserInputFiles(payload: unknown): InputFileCandidate[] {
     }
     if (!isRecord(value)) return;
     Object.entries(value).forEach(([key, nested]) => {
-      if (INPUT_CONTAINER_KEYS.has(key) || key.endsWith("_files")) {
+      if (INPUT_CONTAINER_KEYS.has(key)) {
         scanFileContainer(nested, key);
       } else if (isRecord(nested) || Array.isArray(nested)) {
         scanPayload(nested);
@@ -98,7 +106,7 @@ export function buildInputEntries(
   const entries: InputEntry[] = [];
   const seenPaths = new Set<string>();
   const usedNames = new Map<string, number>();
-  const outputPaths = new Set(outputArtifacts.map((artifact) => artifact.path));
+  const outputPaths = new Set(outputArtifacts.map((artifact) => normalizeResourcePath(artifact.path)));
 
   const pickUniqueName = (baseName: string): string => {
     const count = (usedNames.get(baseName) ?? 0) + 1;
@@ -110,8 +118,9 @@ export function buildInputEntries(
     .sort((left, right) => right.startedAt.localeCompare(left.startedAt))
     .forEach((run) => {
       collectUserInputFiles(run.request).forEach((candidate) => {
-        if (seenPaths.has(candidate.path) || outputPaths.has(candidate.path)) return;
-        seenPaths.add(candidate.path);
+        const identity = normalizeResourcePath(candidate.path);
+        if (seenPaths.has(identity) || outputPaths.has(identity)) return;
+        seenPaths.add(identity);
         entries.push({
           id: `input-file-${candidate.path}`,
           name: pickUniqueName(resolveInputDisplayName(candidate, lang)),

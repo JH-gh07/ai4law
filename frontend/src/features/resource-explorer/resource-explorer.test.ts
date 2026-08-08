@@ -44,6 +44,8 @@ describe("resource explorer input files", () => {
       ],
       source_registry: "resources/legal/source_registry.json",
       generated_context: "outputs/facts.json",
+      output_files: { markdown: "outputs/report.md" },
+      debug_files: ["outputs/debug.json"],
       description: "report.pdf",
       source_url: "https://example.com/law.pdf",
     });
@@ -57,6 +59,15 @@ describe("resource explorer input files", () => {
     ]);
   });
 
+  it("does not infer short role names from unrelated filename substrings", () => {
+    expect(collectUserInputFiles({
+      uploaded_files: ["uploads/negotiation.pdf", "uploads/tia.pdf"],
+    })).toEqual([
+      { path: "uploads/negotiation.pdf" },
+      { path: "uploads/tia.pdf", labelKey: "tia" },
+    ]);
+  });
+
   it("builds only real file entries, deduplicates paths, and excludes generated outputs", () => {
     const runs = [
       makeRun({
@@ -66,11 +77,11 @@ describe("resource explorer input files", () => {
       }),
       makeRun({
         id: "older",
-        request: { uploaded_files: ["uploads/a.docx", "uploads/b.pdf"] },
+        request: { uploaded_files: ["uploads\\a.docx", "uploads/b.pdf"] },
       }),
     ];
 
-    const entries = buildInputEntries(runs, [makeArtifact("outputs/report.pdf", "pdf")], "zh");
+    const entries = buildInputEntries(runs, [makeArtifact("/workspace/outputs/report.pdf", "pdf")], "zh");
 
     expect(entries.map((entry) => ({ name: entry.name, sourcePath: entry.sourcePath }))).toEqual([
       { name: "a.docx", sourcePath: "uploads/a.docx" },
@@ -94,7 +105,7 @@ describe("resource explorer output artifacts", () => {
       makeArtifact("outputs/issue_list.xlsx", "issue_list_xlsx"),
       makeArtifact("outputs/debug.log", "trace"),
       makeArtifact("outputs/secret.xlsx", "compiler_snapshot"),
-      makeArtifact("outputs/report.docx", "docx"),
+      makeArtifact("/workspace/outputs/report.docx", "docx"),
     ];
 
     expect(filterUserFacingArtifacts(artifacts).map((item) => item.path)).toEqual([
