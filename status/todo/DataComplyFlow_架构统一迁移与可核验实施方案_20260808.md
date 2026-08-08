@@ -442,10 +442,10 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 0 | 基线冻结 | **完成** | 全量回归 **823/823 passed（0 flaky）**（7m01s）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；tree clean；前端 npm test **26/27 files, 127/129 tests**；前端 build 通过；TypeScript 编译无错误 | — |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
-| 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/19 CLI cases/365 leaf checks） | live/browser 端到端验证待用户启用远端后执行 |
-| 3A | 诊断双路径 | **完成（审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段 lossless 往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 浏览器端诊断 UI 验证待用户启用远端后执行 |
+| 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/20 CLI cases/397 leaf checks） | 仍需在本地完成尚未验收功能的真实 service、live provider 和浏览器端到端；不能等到远端才发现问题 |
+| 3A | 诊断双路径 | **完成（代码审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段无损往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 仍缺本地浏览器表单、两条 API 实际提交、HTML/PDF 和 handoff JSON 产物验收 |
 | 4 | 知识库治理 | **完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化；URL 回填分析结论：19 个正式法规来源 100% URL 覆盖，83 个内部参考材料无公开 URL（符合预期，无需进一步操作） | — |
-| 5 | 前端闭环 | **代码级完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转；前端 build 通过（commit `8063e09`）；npm test 26/27 files（127/129 tests）通过 | 浏览器端 11 模块逐一验收待用户启用远端后执行 |
+| 5 | 前端闭环 | **代码级完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转；前端 build 通过（commit `8063e09`）；npm test 26/27 files（127/129 tests）通过 | PIPIA、SCC、BCR 已有本地浏览器证据；其余 7 个用户功能仍须在本地逐一验收，远端继续禁止执行 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
 ## 9. 最终完成定义
@@ -517,7 +517,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 法域 | 用户看到的功能 | 实际作用和边界 | 前端 module key | 后端实现 | 当前迁移状态 |
 |---|---|---|---|---|---|
-| CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | 未迁移，尚无双路径一致性验收 |
+| CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | **代码层双路径审计通过**：7 项测试覆盖字段、结论和 handoff 一致性；本地浏览器、两条 API 实际提交及 HTML/PDF 尚未验收 |
 | CN | 安全评估路径 | 收集申报要件，生成《数据出境风险自评估报告》草案 | `assessment` | `backend/domains/cn/security_assessment/` | **本地生产形态验收通过**：8 章、正文脚注、DocumentIR、CitationMap 和 68 项回归一致；远端未部署 |
 | CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | **本地完整闭环通过**：来源派生案例、old/new、live provider、DocumentIR、22 条正文引用、CitationMap、浏览器上传/引用/第 4 条跳转均有证据；ZIP 尚未包含 CitationMap，provider 仍慢，远端未部署 |
 | CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 适配器和单测已有；上传→解析→报告两步 service 首跑未验收 |
