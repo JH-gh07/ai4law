@@ -421,3 +421,77 @@ Benchmark 资产不是“只有 demo”：`qa/rag_baseline_v1.json`、`qa/rag_ev
 - 规则：`backend/domains/cn/transfer_diagnosis/decision_tree.json`、各模块 `rule_engine.py`/`gap_rules.py`/rulebook
 - 测试与评测：`backend/**/test_*.py`、`qa/`、`doc/knowledge/_evaluation/`
 - 部署与配置：`pyproject.toml`、`.env.example`、`backend/core/settings.py`、`backend/core/runtime_settings.py`、`backend/core/db.py`
+
+---
+
+## 23. 2026-08-07 补充：测试输入治理与预设通道补全
+
+> 审计日期：2026-08-07  
+> 涉及提交：`e0fcff3`  
+> 相关方案：`status/check/侧边文件栏改造方案_20260807.md`
+
+### 23.1 测试输入 fixture 目录新建
+
+`backend/tests/fixtures/{cn,eu,us}/` 共 7 个文件，按法域组织，替代原 `benchmarks/sample-inputs/` 中的旧占位：
+
+```
+backend/tests/fixtures/
+├── cn/
+│   ├── data_security_agreement.docx     # document_review（21段数据安全协议）
+│   ├── cn_flow_data_inventory.csv       # cn_flow
+│   └── cn_flow_entity_inventory.csv     # cn_flow
+├── eu/
+│   ├── scc_2021_en.md                   # eu_scc（SCC 2021 标准条款原文）
+│   └── bcr_c_globaltech.docx            # bcr（含 3 处嵌入缺陷的 BCR 主文档）
+└── us/
+    ├── us14117_data_inventory.csv       # us_14117
+    └── us14117_entity_inventory.csv     # us_14117
+```
+
+### 23.2 旧占位文件清理
+
+`benchmarks/sample-inputs/` 删除 4 个文件（`sample_contract.txt`、`sample_evidence.txt`、`data_inventory.csv`、`entity_inventory.csv`）及 3 个空子目录（`cn/`、`eu/`、`us/`）。`README.md` 已更新为迁移说明和 fixture 目录结构。
+
+### 23.3 10 模块预设通道全量可用
+
+此前审计（2026-08-05）发现 us_14117 和 cpra 缺失"一键运行"预设通道。现已补全：
+
+| 模块 | 通道状态 | `ModuleRunPanel.tsx` 改动 |
+|------|---------|--------------------------|
+| us_14117 | 新增 state `us14117DevFilePaths` + `selectDevCase` 分支 + `buildUs14117PayloadFrom(values,files,paths)` 重构 + 模块切换初始化 + 一键运行按钮 | +82 行 |
+| cpra | 新增 `runCpraDevPreset()` + 一键运行按钮（URL 字段满足文件断言，无需 preset file channel） | +12 行 |
+| assessment/pipia/eu_scc/bcr/dpia/tia/document_review/diagnosis | 已有通道，`backendFilePaths` 已修正（测试说明文档 → 真实测试输入或模板） | 常量重组 |
+
+### 23.4 dev-presets.ts 常量重组
+
+引入两套常量前缀以区分职责：
+
+```
+FIX_*  → backend/tests/fixtures/（模拟输入，有真实数据）
+TPL_*  → resources/legal/（模板/参考文档，AI 输出结构参照）
+```
+
+移除了旧的 `PIPIA_SCC`、`PIPIA_FILING_GUIDE`、`SCC_INPUT`、`BCR_INPUT`、`DPIA_INPUT`、`TIA_INPUT` 常量（命名不区分测试输入与模板）。
+
+### 23.5 dev-test-cases.ts 文件路径全量修正
+
+23 个案例的 `backendFilePaths` 全部修正：
+- 6 处 → `resources/legal/`（模板保留，4 个模块有 payload builder 硬断言）
+- 8 处 → `backend/tests/fixtures/`（新 fixture）
+- 3 处移除（CPRA，URL 满足断言）
+- 3 处未变（dpia/tia 模板）
+- 3 处无字段（diagnosis）
+
+### 23.6 demoPayloads.ts 引用更新
+
+3 处 `storage_uri` 从 `benchmarks/sample-inputs/` 更新为 `backend/tests/fixtures/` 或 `resources/legal/`。
+
+### 23.7 验核
+
+| 检查项 | 结果 |
+|-------|------|
+| `tsc --noEmit` | ✅ 零错误 |
+| `vitest run dev-presets.test.ts` | ✅ 4/4 passed |
+| `vitest run dev-case-fixtures.test.ts` | ✅ 1/1 passed（含 Git 追踪检查） |
+| `vitest run case-inventory.test.ts` | ✅ 5/5 passed |
+| 中文弯引号修复 | ✅ `dev-presets.ts` 已替换为 ASCII 引号 |

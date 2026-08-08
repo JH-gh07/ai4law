@@ -368,4 +368,50 @@ CLI 执行 `python -m backend.tests.harness.runner all --no-llm`：15 个后端 
 | h. 模板匹配 | 已按最新 PRD 对照 | 功能入口基本匹配；引用、复核、WORM、模板完整度未匹配 |
 | i. 思诚文档更新 | 已清点 | 8 个顶层文件、约87 MiB；最新 PRD 2026-08-04；均未跟踪/正式入库 |
 
-最终认定：当前版本是“后端 harness 可运行、部分模块可演示”的开发基线，尚不适合作为稳定的全功能比赛演示，更不适合作为“已通过思诚 PRD 验收的可交付系统”。下一轮应优先修复案例/Schema 漂移和 7 个 UI 入口，再修复引用闭环、真实 Provider 健康、执行流统计和测试强 oracle，最后进行模板逐字对齐与新增知识库正式入库。
+最终认定：当前版本是”后端 harness 可运行、部分模块可演示”的开发基线，尚不适合作为稳定的全功能比赛演示，更不适合作为”已通过思诚 PRD 验收的可交付系统”。下一轮应优先修复案例/Schema 漂移和 7 个 UI 入口，再修复引用闭环、真实 Provider 健康、执行流统计和测试强 oracle，最后进行模板逐字对齐与新增知识库正式入库。
+
+---
+
+## 14. 2026-08-06 ~ 2026-08-07 补充：测试输入治理与预设通道补全
+
+> 涉及提交：`e0fcff3`  
+> 方案文档：`status/check/侧边文件栏改造方案_20260807.md`
+
+### 14.1 本次修复的 P0 项关联
+
+| 原 P0 问题 | 本次修复内容 | 修复后状态 |
+|---|---|---|
+| UI 7/11 失败：us_14117 “Invalid or missing required input” | 新增完整 preset 通道（state + selectDevCase + payload builder 重构 + 初始化 + 一键运行按钮），`backendFilePaths` 指向 2 个 CSV fixture | 代码完成，**待浏览器回归验证** |
+| UI 7/11 失败：cpra 无预设通道 | 新增 `runCpraDevPreset()` + 一键运行按钮，URL 字段满足文件断言 | 代码完成，**待浏览器回归验证** |
+| 前端案例直投 17/26 失败（Schema 漂移） | `dev-test-cases.ts` 23 个 `backendFilePaths` 全部修正（混入的测试说明文档 → 真实 fixture 或模板） | 文件层面已修正，Schema 字段漂移（枚举值等）未动 |
+| 一键体验触发 BCR/DPIA/TIA 前端必填校验异常 | `dev-presets.ts` 中三模块的 `backendFilePaths` 从测试说明文档/错误路径修正为真实模板文件（BCR→`bcr_c_globaltech.docx`，DPIA→`ICO_DPIA_Temple.docx`，TIA→`TIA - Template.docx`），不再含法规操作指南 | 文件路径已修正，**待浏览器回归验证**是否消除校验异常 |
+| EU SCC 一键体验失败 | `backendFilePaths` 从测试说明文档修正为 `scc_2021_en.md`（SCC 2021 完整条款原文） | 文件路径已修正，**待浏览器回归验证** |
+| review 一键体验失败 | `backendFilePaths` 从测试说明文档修正为 `data_security_agreement.docx`（21 段数据安全协议，含真实条款文本） | 文件路径已修正，**待浏览器回归验证** |
+
+### 14.2 未修复的根因
+
+以上修复针对的是”测试输入文件路径错误”这一层问题（测试说明文档混入 backendFilePaths、占位文件指向空壳或不存在路径）。以下根因**不在本次范围**：
+
+- **Schema 字段漂移**：`dev-test-cases.ts` 的 `formDefaults`（如 `q6_scenario` 枚举值）与当前后端 Schema 不一致，导致直投 API 仍会 422
+- **Payload builder 断言**：assessment/pipia/dpia/tia 四模块的 `resolvedFilePaths.length === 0 → throw` 硬断言未动（模板有合法用途，删除需单独评估）
+- **后端断链**：SCC `uuid` 未导入、CN Flow `_build_context_pack()` 参数不兼容等后端代码问题未动
+
+### 14.3 文件层面变更摘要
+
+| 变更 | 操作 |
+|------|------|
+| `backend/tests/fixtures/{cn,eu,us}/` | 新建 7 个 fixture 文件，已 `git add` |
+| `benchmarks/sample-inputs/` | 删除 4 个旧占位 + 3 个空目录，更新 README |
+| `frontend/src/lib/dev-presets.ts` | 常量重组（FIX_*/TPL_*），扩展 `DevPresetModule` 类型，新增 us14117/cpra preset |
+| `frontend/src/lib/dev-test-cases.ts` | 23 个 `backendFilePaths` 修正 |
+| `frontend/src/components/workspace/ModuleRunPanel.tsx` | +94 行：us_14117 preset 通道全链路 + cpra 一键运行 |
+| `frontend/src/lib/demoPayloads.ts` | 3 处 `storage_uri` 更新 |
+
+### 14.4 自动化验证
+
+| 检查项 | 结果 |
+|-------|------|
+| TypeScript 编译 | 零错误 |
+| `dev-presets.test.ts` (4 tests) | 全部通过 |
+| `dev-case-fixtures.test.ts` (1 test) | 通过（含 Git 追踪） |
+| `case-inventory.test.ts` (5 tests) | 全部通过 |
