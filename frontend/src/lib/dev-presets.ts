@@ -31,7 +31,7 @@ export type AssessmentDevPreset = ModuleDevPreset & {
 };
 
 /** 测试输入 fixture（跨前后端共享，在 backend/tests/fixtures/ 下按法域存放） */
-const FIX_CN_DSA = "backend/tests/fixtures/cn/data_security_agreement.docx";
+export const FIX_CN_DSA = "backend/tests/fixtures/cn/data_security_agreement.docx";
 const FIX_EU_SCC = "backend/tests/fixtures/eu/scc_2021_en.md";
 const FIX_EU_BCR = "backend/tests/fixtures/eu/bcr_c_globaltech.docx";
 
