@@ -26,6 +26,7 @@ from backend.domains.cn.pipia.schema import (
     PIPIAResult,
 )
 from backend.domains.cn.pipia.report_renderer import PIPIAReportRenderer
+from backend.domains.cn.pipia.legal_context import build_pipia_legal_prompt_context
 
 
 TEMPLATE_PATH = report_template_path("cn", "2.3_pipia_template_v0.docx")
@@ -91,11 +92,9 @@ class PIPIAService:
                 path="scc" if payload.route_type == "scc_filing" else "all",
             ).documents
             citation_registry = registry_from_documents(regs, jurisdiction="CN")
-            citations = [item.display_label for item in citation_registry]
-            reg_snippet = "\n".join(
-                f"- {item.title}{item.article}：{(item.content or '')[:120]}"
-                for item in regs
-            ) or "（暂无检索到相关法条）"
+            legal_prompt = build_pipia_legal_prompt_context(citation_registry)
+            citations = legal_prompt.citation_labels
+            reg_snippet = legal_prompt.regulation_snippet
             attachment_notes, attachment_context = self._extract_attachment_evidence(payload)
 
             context_block = (
@@ -130,7 +129,7 @@ class PIPIAService:
                         title,
                         context_block,
                         citations=citations,
-                        citation_marker_section=citation_registry.build_marker_list(),
+                        citation_marker_section=legal_prompt.marker_section,
                         use_citation_markers=True,
                         citation_registry=citation_registry,
                     )
