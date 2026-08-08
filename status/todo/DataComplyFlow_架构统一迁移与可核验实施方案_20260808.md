@@ -442,7 +442,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 0 | 基线冻结 | **完成** | 全量回归 **823/823 passed（0 flaky）**（7m01s）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；tree clean；前端 npm test **26/27 files, 127/129 tests**；前端 build 通过；TypeScript 编译无错误 | — |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
-| 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/20 CLI cases/397 leaf checks） | 仍需在本地完成尚未验收功能的真实 service、live provider 和浏览器端到端；不能等到远端才发现问题 |
+| 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/20 CLI cases/397 leaf checks） | 生产形态测试已完成；各用户功能的 live provider、浏览器和真实产物仍按第 11 节逐项验收，不能等到远端才发现问题 |
 | 3A | 诊断双路径 | **完成（代码审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段无损往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 仍缺本地浏览器表单、两条 API 实际提交、HTML/PDF 和 handoff JSON 产物验收 |
 | 4 | 知识库治理 | **完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化；URL 回填分析结论：19 个正式法规来源 100% URL 覆盖，83 个内部参考材料无公开 URL（符合预期，无需进一步操作） | — |
 | 5 | 前端闭环 | **代码级完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转；前端 build 通过（commit `8063e09`）；npm test 26/27 files（127/129 tests）通过 | PIPIA、SCC、BCR 已有本地浏览器证据；其余 7 个用户功能仍须在本地逐一验收，远端继续禁止执行 |
@@ -524,7 +524,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | **本地完整闭环通过**：真实 DOCX 进入核心审查，old/new、live provider、3 条正文引用、CitationMap、浏览器上传/引用/段落 6 跳转均有证据；远端未部署 |
 | EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | **本地完整闭环通过**：来源 DOCX、old/new、live provider、26 项完整详细表、2 条正文引用、DocumentIR、浏览器上传/引用/段落 4 跳转均有证据；provider 最后一次请求超时回退，远端未部署 |
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | fixture 新旧产物已对比；service/token-time 和浏览器验收未完成 |
-| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | old/new no-LLM MD/DOCX/PDF/ZIP 与 DocumentIR 通过；live 已完成 RAG、附件审查和 1,655 token 记录，但章节生成未完整结束；浏览器跳转未验收 |
+| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | **执行链路部分通过**：old/new no-LLM MD/DOCX/PDF/ZIP 与 DocumentIR 通过；CLI live 9 calls、12,084 token、16/16 checks；浏览器 292s、28 events、15 nodes、报告/PDF/引用抽屉/知识库跳转通过；异步产物侧栏已修复（`aecf75f`） | 仍未通过：Schema-first live 开关未启用；法规 `article_no=段落1` 语义定位错误；DPO `needs_revision` 需用修复后 live 浏览器重跑验证 |
 | US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
 | US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 适配器和单测已有；真实 service 首跑未验收 |
 
