@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import re
 import uuid
 from pathlib import Path
@@ -205,8 +206,16 @@ class BCRService:
 
         # Agent 3: Actor role — identify EU liable entity beyond regex
         if main_doc:
-            entities = [{"name": scenario.company_name or "unknown", "context": combined_text[:200]}]
-            agent_roles = self.agents["actor_role"].run(text=combined_text, entities=entities)
+            scenario_context = {
+                "company_name": scenario.company_name or payload.company_name,
+                "eu_liable_entity": scenario.eu_liable_entity or "",
+                "headquarters_country": scenario.headquarters_country or "",
+            }
+            agent_roles = self.agents["actor_role"].run(
+                text=combined_text,
+                scenario_context=scenario_context,
+                bcr_type=bcr_type,
+            )
             if trace:
                 thought = summarize_agent_output("BCR 角色识别", agent_roles)
                 trace.record("thought", {"summary": thought})
@@ -392,7 +401,7 @@ class BCRService:
                           "finding": f.finding, "requirement_id": f.requirement_id}
                          for f in deduped]
         agent_risk = self.agents["approval_risk"].run(
-            findings=finding_dicts, rating=rating, score=score,
+            findings=finding_dicts, current_rating=rating,
             type_consistency=type_class.type_consistency, bcr_type=bcr_type,
         )
         if trace:
@@ -730,6 +739,28 @@ class BCRService:
         citation_registry: CitationRegistry | None = None,
     ) -> dict[str, str]:
         citation_registry = citation_registry or CitationRegistry()
+        document_ir_path: Path | None = None
+        if self.schema_first_enabled:
+            from backend.common.reporting import DocumentCompiler
+            from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
+
+            document_ir, reporting_registry = build_bcr_document_ir(
+                task_id=task_id,
+                company_name=payload.company_name,
+                chapters=chapters,
+                citation_registry=citation_registry,
+                model="legacy-bcr-document-driven",
+            )
+            compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
+            if compile_result.status != "success":
+                codes = ", ".join(item.code for item in compile_result.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked BCR output: {codes}")
+            document_ir_path = Path("outputs/bcr") / task_id / "outputs" / "document_ir.json"
+            document_ir_path.parent.mkdir(parents=True, exist_ok=True)
+            document_ir_path.write_text(
+                json.dumps(document_ir.model_dump(mode="json"), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
         output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
@@ -778,13 +809,18 @@ class BCRService:
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
             z.write(citation_map_json, arcname=Path(citation_map_json).name)
-        return {
+            if document_ir_path is not None:
+                z.write(document_ir_path, arcname=document_ir_path.name)
+        result = {
             "markdown": str(md_out),
             "docx": str(docx_out),
             "pdf": str(pdf_out),
             "zip": str(zip_out),
             "citation_map_json": citation_map_json,
         }
+        if document_ir_path is not None:
+            result["document_ir_json"] = str(document_ir_path)
+        return result
 
     # ------------------------------------------------------------------
     # Async helpers

@@ -244,3 +244,36 @@ def test_bcr_schema_first_service_exposes_document_ir(tmp_path, monkeypatch) -> 
 
     assert "document_ir_json" in result.output_files
     assert Path(result.output_files["document_ir_json"]).exists()
+
+
+def test_bcr_document_upload_path_exposes_document_ir(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "bcr.txt"
+    source.write_text(
+        "Binding corporate rules are legally binding for all group entities.\n"
+        "Complaints and onward transfers are covered by internal procedures.",
+        encoding="utf-8",
+    )
+    service = BCRService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = True
+    payload = BCRRequest.model_validate(
+        {
+            "company_name": "文档驱动 BCR 集团",
+            "review_items": [],
+            "attachments": [],
+            "uploaded_documents": [
+                {
+                    "file_id": "bcr-upload-1",
+                    "file_name": "bcr.txt",
+                    "file_type": "txt",
+                    "file_path": str(source),
+                    "document_role": "main_bcr_document",
+                }
+            ],
+        }
+    )
+
+    result = service.generate_report(payload, task_id="document-driven-schema-first")
+
+    assert "document_ir_json" in result.output_files
+    assert Path(result.output_files["document_ir_json"]).exists()
