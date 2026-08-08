@@ -1,0 +1,30 @@
+{
+  "citation_map_json": {
+    "sha256_16": "76bedceb83869791",
+    "size": 2700
+  },
+  "docx": {
+    "sha256_16": "712e6e9d780d6cf7",
+    "size": 36911
+  },
+  "markdown": {
+    "sha256_16": "81d6d680f30fc7a8",
+    "size": 493
+  },
+  "pdf": {
+    "sha256_16": "eb3dfbefc3c8fead",
+    "size": 3141
+  },
+  "zip": {
+    "zip_member_hashes": {
+      "欧洲子公司_scc_TIA_报告_草案_20260808.docx": "712e6e9d780d6cf7",
+      "欧洲子公司_scc_TIA_报告_草案_20260808.md": "81d6d680f30fc7a8",
+      "欧洲子公司_scc_TIA_报告_草案_20260808.pdf": "eb3dfbefc3c8fead"
+    },
+    "zip_names": [
+      "欧洲子公司_scc_TIA_报告_草案_20260808.docx",
+      "欧洲子公司_scc_TIA_报告_草案_20260808.md",
+      "欧洲子公司_scc_TIA_报告_草案_20260808.pdf"
+    ]
+  }
+}
