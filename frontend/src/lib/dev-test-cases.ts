@@ -101,6 +101,11 @@ export function defineDevCases<Module extends DevCaseModule>(
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CPRA — 3 cases
+//   来源测试文档:
+//     benchmarks/source-materials/us/legacy-docx/“CPRA合规”测试案例及预期输出.docx
+//     resources/new/…/美国/任务2：“CPRA合规”路径描述及测试案例/“CPRA合规”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例1_测试结果.docx
+//     backend/tests/cpra/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const cpraTrendyGoods = {
@@ -125,6 +130,7 @@ const cpraTrendyGoods = {
     ui_dark_pattern_check: "Cookie横幅\"接受所有\"按钮颜色突出，\"管理偏好\"链接字体极小且颜色与背景相近",
     review_focus: "重点检查opt-out机制、Cookie同意横幅和广告合作伙伴合同"
   },
+
 };
 
 const cpraDataFlow = {
@@ -149,6 +155,7 @@ const cpraDataFlow = {
     ui_dark_pattern_check: "不适用（无面向消费者的UI）",
     review_focus: "重点审查适用性边界和服务提供商合同合规性"
   },
+
 };
 
 const cpraFitLife = {
@@ -173,10 +180,17 @@ const cpraFitLife = {
     ui_dark_pattern_check: "注册界面\"同意并继续\"为大号绿色按钮，\"仅浏览\"为灰色小字。健康SPI单独同意默认勾选且隐藏。存在明确暗模式",
     review_focus: "重点审查SPI同意有效性、暗模式、Limit SPI权利缺失和第三方数据共享"
   },
+
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Diagnosis — 3 cases
+//   来源测试文档:
+//     benchmarks/source-materials/cn/legacy-docx/“合规路径诊断”测试案例及预期输出.docx
+//     benchmarks/source-materials/shared/测试案例系统输入内容与提示词(3).docx (L2-L31)
+//     resources/new/…/中国/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例1_测试结果.docx
+//     backend/tests/diagnosis/cases/01_scc_path.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const diagEcommerce = {
@@ -291,6 +305,12 @@ const diagAnonymous = {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Assessment — 2 cases
+//   来源测试文档:
+//     benchmarks/source-materials/cn/legacy-docx/“安全评估路径”测试案例及预期输出.docx
+//     benchmarks/source-materials/shared/测试案例系统输入内容与提示词(3).docx (L33-L50)
+//     resources/new/…/中国/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例1_测试结果.docx
+//     backend/tests/assessment/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const assessCIO = {
@@ -325,8 +345,7 @@ const assessCIO = {
     company_nature: "持牌金融机构"
   },
   backendFilePaths: [
-    "benchmarks/sample-inputs/sample_contract.txt",
-    "benchmarks/sample-inputs/sample_evidence.txt"
+    "resources/legal/sources/cn/references/数据出境风险自评估报告（模板）.docx",
   ],
 };
 
@@ -374,13 +393,16 @@ const assessEcommerce = {
   },
   backendFilePaths: [
     "resources/legal/sources/cn/references/数据出境风险自评估报告（模板）.docx",
-    "resources/legal/sources/cn/references/数据出境安全评估申报指南（第三版）.docx",
-    "resources/legal/sources/cn/references/个人信息出境标准合同备案指南（第二版）.docx"
   ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EU SCC — 3 cases (from EU data export path)
+//   来源测试文档:
+//     benchmarks/source-materials/eu/legacy-docx/“SCC审查”测试案例及预期输出.docx（含3个case：C2C缺失补充措施、C2P Clause15修改、Module选择错误）
+//     resources/new/…/欧盟/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例1_测试结果.docx
+//     backend/tests/eu_scc/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const euSccBasic = {
@@ -406,7 +428,7 @@ const euSccBasic = {
     has_supplementary_measures: false,
     project_name_override: "电商平台云服务数据处理",
     scc_text_override: "MODULE TWO: Transfer controller to processor\n\nClause 1: Purpose and scope...\n\nThe data exporter is: E-Commerce GmbH, Berlin, Germany\nThe data importer is: CloudServe Inc., Delaware, USA\n\nAnnex I\nA. LIST OF PARTIES\nData exporter: E-Commerce GmbH, Friedrichstrasse 123, 10117 Berlin, Germany, Contact: dpo@ecommerce.de, Role: Controller\nData importer: CloudServe Inc., 123 Main St, Wilmington DE, USA, Contact: privacy@cloudserve.com, Role: Processor\n\nB. DESCRIPTION OF TRANSFER\nCategories of data subjects: Customers of the data exporter's online platform\nCategories of personal data: Name, email, shipping address, order history, payment information\nSensitive data transferred: No\nFrequency of transfer: Continuous\nNature of processing: Hosting, storage, and technical support\nPurpose of transfer: Cloud hosting and infrastructure services\nRetention period: Duration of service agreement plus 30 days\n\nC. COMPETENT SUPERVISORY AUTHORITY\nBerlin Data Protection Authority (Berliner Beauftragte fur Datenschutz und Informationsfreiheit)\n\nClause 9: Use of sub-processors\nThe data importer maintains a list of approved sub-processors available at https://cloudserve.com/subprocessors. The data importer shall inform the data exporter of any intended changes to sub-processors at least 30 days in advance.\n\nTechnical and organisational measures: Encryption at rest (AES-256), encryption in transit (TLS 1.3), access controls, regular security audits"},
-  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
+  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
 };
 
 const euSccHealthIndia = {
@@ -434,7 +456,7 @@ const euSccHealthIndia = {
     has_supplementary_measures: false,
     project_name_override: "罕见病研究数据分析",
     scc_text_override: "MODULE TWO: Transfer controller to processor\n\nData exporter: Health Research Institute, Amsterdam, Netherlands\nData importer: DataAnalytica India Pvt Ltd, Bangalore, India\n\nClause 15(a) - modified from standard text: The data importer shall, as soon as legally permissible, provide the data exporter with information about any legally binding request from a public authority. The data importer shall use reasonable discretion in determining what information to provide.\n\nAnnex I.B:\nCategories of data subjects: Patients participating in rare disease studies\nCategories of personal data: Patient health records, genetic sequencing data, treatment history\nSensitive data transferred: The parties confirm that no special categories of data are transferred\n\nClause 9: Use of sub-processors\nThe data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor."},
-  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
+  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
 };
 
 const euSccModuleError = {
@@ -460,11 +482,15 @@ const euSccModuleError = {
     has_supplementary_measures: false,
     project_name_override: "客户支持工单子处理",
     scc_text_override: "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nData exporter: Orange Cloud BV (processor acting on behalf of Nordic Retail Group, the controller)\nData importer: Orange Cloud BV (incorrect - double role assignment)\nSub-processor: Balkan IT Support DOO, Belgrade, Serbia\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may, with the agreement of the Parties, accede to these Clauses at any time, either as a data exporter or as a data importer, by completing the Annexes and signing Annex I.A.\n\nAnnex I.A: Nordic Retail Group (controller) details marked as 'See Master Service Agreement' with no address or contact information filled in.\n\nClause 9: Data importer may engage sub-processors after notification. No requirement for specific written authorization from controller."},
-  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt"]
+  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BCR — 3 cases
+//   来源测试文档:
+//     benchmarks/source-materials/eu/legacy-docx/“BCR审核”测试案例及预期输出.docx
+//     resources/new/…/欧盟/任务2：“BCR审核”路径描述及测试案例/“BCR审核”测试案例及预期输出.docx
+//     backend/tests/bcr/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const bcrMediumRisk = {
@@ -490,7 +516,7 @@ const bcrMediumRisk = {
     definitions_quality: "术语与GDPR一致",
     review_focus: "重点审查第三国法律评估(TIA)的具体性、投诉流程的可执行性、向集团外传输的限制条件"
   },
-  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
+  backendFilePaths: ["backend/tests/fixtures/eu/bcr_c_globaltech.docx"]
 };
 
 const bcrHighRisk = {
@@ -516,7 +542,7 @@ const bcrHighRisk = {
     definitions_quality: "术语体系不完整",
     review_focus: "重点审查缺失的强制性核心要素：第三方受益人权利、欧盟责任主体、法律约束力机制"
   },
-  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
+  backendFilePaths: ["backend/tests/fixtures/eu/bcr_c_globaltech.docx"]
 };
 
 const bcrStructuralFailure = {
@@ -542,11 +568,15 @@ const bcrStructuralFailure = {
     definitions_quality: "无定义表",
     review_focus: "结构性审查：文档类型错误（应为BCR-P非BCR-C）、缺失EDPB要求的所有核心章节、内容极度简略缺乏可执行性"
   },
-  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
+  backendFilePaths: ["backend/tests/fixtures/eu/bcr_c_globaltech.docx"]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DPIA — 2 cases
+//   来源测试文档:
+//     benchmarks/source-materials/eu/legacy-docx/“DPIA草案生成”测试案例及预期输出.docx
+//     resources/new/…/欧盟/任务3：“DPIA草案生成”路径描述及测试案例/“DPIA草案生成”测试案例及预期输出.docx
+//     backend/tests/dpia/cases/01_health_ai.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const dpiaAIRecruitment = {
@@ -637,6 +667,11 @@ const dpiaSmartCity = {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIA — 2 cases (from docx extraction)
+//   来源测试文档:
+//     benchmarks/source-materials/eu/legacy-docx/“TIA草案生成”测试案例及预期输出.docx
+//     resources/new/…/欧盟/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例1_测试结果.docx
+//     backend/tests/tia/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const tiaBasicSCC = {
@@ -699,6 +734,11 @@ const tiaChinaBCR = {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PIPIA — 2 cases (from docx extraction)
+//   来源测试文档:
+//     benchmarks/source-materials/cn/legacy-docx/“认证_标准合同路径”测试案例及预期输出.docx
+//     resources/new/…/中国/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例1_测试结果.docx
+//     backend/tests/pipia/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const pipiaSCCFiling = {
@@ -743,7 +783,9 @@ const pipiaSCCFiling = {
     escalation_path: "安全事件→数据安全专员→CRO（2h内）→CEO（4h内）→网信办（24h内）",
     attachment_role: "scc_contract"
   },
-  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt","benchmarks/sample-inputs/sample_evidence.txt"]
+  backendFilePaths: [
+    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx",
+  ]
 };
 
 const pipiaCertification = {
@@ -788,11 +830,18 @@ const pipiaCertification = {
     escalation_path: "安全事件→安全团队（30min内）→CISO→CEO（1h内）→监管部门（按法规时限）",
     attachment_role: "certification_material"
   },
-  backendFilePaths: ["benchmarks/sample-inputs/sample_contract.txt","benchmarks/sample-inputs/sample_evidence.txt"]
+  backendFilePaths: [
+    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx",
+  ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // US 14117 — 2 cases (from docx extraction)
+//   来源测试文档:
+//     benchmarks/source-materials/us/legacy-docx/“14117行政令合规”测试案例及预期输出.docx
+//     resources/new/…/美国/任务1：“14117行政令合规”路径描述及测试案例/“14117行政令合规”测试案例及预期输出.docx
+//     resources/new/…/种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例1_测试结果.docx
+//     backend/tests/us_14117/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const us14117Basic = {
@@ -831,6 +880,10 @@ const us14117Basic = {
       { measure_name: "合同控制", category: "contractual_controls", status: "implemented", description: "研究合作协议包含数据安全条款" }
     ]
   },
+  backendFilePaths: [
+    "backend/tests/fixtures/us/us14117_data_inventory.csv",
+    "backend/tests/fixtures/us/us14117_entity_inventory.csv",
+  ],
 };
 
 const us14117RestrictedParty = {
@@ -871,10 +924,18 @@ const us14117RestrictedParty = {
       { measure_name: "访问审计日志", category: "audit_logging", status: "implemented", description: "所有数据访问操作记录审计日志" }
     ]
   },
+  backendFilePaths: [
+    "backend/tests/fixtures/us/us14117_data_inventory.csv",
+    "backend/tests/fixtures/us/us14117_entity_inventory.csv",
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CN Flow (中国对华流动评估) — 2 cases
+//   来源测试文档:
+//     resources/templates/us/4.1_cn_flow_compliance_template_v0.docx（预置输入模板）
+//     backend/tests/cn_flow/cases/01_minimal.json
+//   注：benchmarks/source-materials 中无独立 CN Flow 测试案例，场景来自 EO 14117 行政令相关材料
 // ═══════════════════════════════════════════════════════════════════════════
 
 const cnFlowBasic = {
@@ -893,7 +954,10 @@ const cnFlowBasic = {
     primary_recipient_restricted: false,
     additional_recipients: "广州物流供应链有限公司,中国,processor,no"
   },
-  backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
+  backendFilePaths: [
+    "backend/tests/fixtures/cn/cn_flow_data_inventory.csv",
+    "backend/tests/fixtures/cn/cn_flow_entity_inventory.csv",
+  ]
 };
 
 const cnFlowRestricted = {
@@ -913,12 +977,19 @@ const cnFlowRestricted = {
     additional_recipients: "北京微电子研究所,中国,affiliate,yes",
     internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据"
   },
-  backendFilePaths: ["benchmarks/sample-inputs/data_inventory.csv", "benchmarks/sample-inputs/entity_inventory.csv"]
+  backendFilePaths: [
+    "backend/tests/fixtures/cn/cn_flow_data_inventory.csv",
+    "backend/tests/fixtures/cn/cn_flow_entity_inventory.csv",
+  ]
 };
 
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Document Review — 2 cases
+//   来源测试文档:
+//     benchmarks/source-materials/cn/legacy-docx/“文档专项智能审查”功能说明与路径描述.docx
+//     resources/new/…/中国/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/“文档专项智能审查”测试案例及预期输出.docx
+//     backend/tests/review/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const reviewPrivacyPolicy = {
@@ -952,7 +1023,9 @@ const reviewPrivacyPolicy = {
     has_scc_draft: false,
     review_focus: "重点核查跨境传输告知的完整性、敏感信息处理的合法性基础、用户权利行使路径与联系方式的披露"
   },
-  backendFilePaths: ["resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md"]
+  backendFilePaths: [
+    "backend/tests/fixtures/cn/data_security_agreement.docx",
+  ]
 };
 
 const reviewSccContract = {
@@ -988,7 +1061,7 @@ const reviewSccContract = {
       "重点审查个人信息出境标准合同条款完整性、双方义务、再委托限制、删除与留存规则、安全事件通知时限、监管报告表述、以及个人信息主体权利保障机制"
   },
   backendFilePaths: [
-    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"
+    "backend/tests/fixtures/cn/data_security_agreement.docx",
   ]
 };
 

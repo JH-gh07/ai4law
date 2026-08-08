@@ -186,6 +186,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [us14117StepIndex, setUs14117StepIndex] = useState(0);
   const [us14117Values, setUs14117Values] = useState<Us14117FormValues>(createDefaultUs14117Values);
   const [us14117Files, setUs14117Files] = useState<File[]>([]);
+  const [us14117DevFilePaths, setUs14117DevFilePaths] = useState<string[]>([]);
   const [cpraStepIndex, setCpraStepIndex] = useState(0);
   const [cpraValues, setCpraValues] = useState<CpraFormValues>(createDefaultCpraValues);
   const [cpraPrivacyPolicyFiles, setCpraPrivacyPolicyFiles] = useState<File[]>([]);
@@ -288,6 +289,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setUs14117StepIndex(0);
       setUs14117Values(createDefaultUs14117Values());
       setUs14117Files([]);
+      setUs14117DevFilePaths(DEV_ACCEL_ENABLED ? getModuleDevPreset("us_14117").backendFilePaths : []);
     }
     if (moduleKey === "cpra") {
       setCpraStepIndex(0);
@@ -372,6 +374,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setCnFlowEntityInventoryFiles([]);
       setCnFlowSupportingFiles([]);
       setCnFlowDevFilePaths(caseFilePaths);
+    }
+    if (isUs14117Module) {
+      setUs14117Files([]);
+      setUs14117DevFilePaths(caseFilePaths);
     }
     setShowCasePicker(false);
   };
@@ -785,17 +791,31 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     });
   };
 
-  const buildUs14117Payload = async (): Promise<unknown> => {
-    assertInput(hasText(us14117Values.company_name), "请填写企业名称。");
-    assertInput(hasText(us14117Values.project_name), "请填写项目名称。");
-    assertInput(hasText(us14117Values.transaction_description), "请填写交易描述。");
-    assertInput(hasText(us14117Values.data_item_name), "请填写数据项名称。");
-    assertInput(hasText(us14117Values.entity_name), "请填写接收方实体名称。");
-    assertInput(hasText(us14117Values.country_of_registration), "请填写接收方注册国家/地区。");
+  const buildUs14117PayloadFrom = async (
+    values: Us14117FormValues,
+    files: File[],
+    devPresetPaths: string[]
+  ): Promise<unknown> => {
+    assertInput(hasText(values.company_name), "请填写企业名称。");
+    assertInput(hasText(values.project_name), "请填写项目名称。");
+    assertInput(hasText(values.transaction_description), "请填写交易描述。");
+    assertInput(hasText(values.data_item_name), "请填写数据项名称。");
+    assertInput(hasText(values.entity_name), "请填写接收方实体名称。");
+    assertInput(hasText(values.country_of_registration), "请填写接收方注册国家/地区。");
 
-    const uploadedPaths = us14117Files.length > 0 ? await uploadFiles(us14117Files) : [];
-    return createUs14117Payload(us14117Values, uploadedPaths);
+    const presetFilePaths = DEV_ACCEL_ENABLED
+      ? devPresetPaths.filter((item) => item.trim().length > 0)
+      : [];
+    const uploadedPaths = presetFilePaths.length > 0
+      ? presetFilePaths
+      : files.length > 0
+        ? await uploadFiles(files)
+        : [];
+    return createUs14117Payload(values, uploadedPaths);
   };
+
+  const buildUs14117Payload = async (): Promise<unknown> =>
+    buildUs14117PayloadFrom(us14117Values, us14117Files, us14117DevFilePaths);
 
   const buildDiagnosisPayloadFrom = (values: DiagnosisFormValues): unknown =>
     createDiagnosisPayload(values);
@@ -1023,6 +1043,28 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     setDocumentReviewFiles([]);
     setDocumentReviewDevFilePaths(preset.backendFilePaths);
     const payload = await buildDocumentReviewPayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runUs14117DevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isUs14117Module || loading) return;
+    const preset = getModuleDevPreset("us_14117");
+    const nextValues: Us14117FormValues = { ...us14117Values, ...(preset.formDefaults as Partial<Us14117FormValues>) };
+    setUs14117Values(nextValues);
+    setUs14117Files([]);
+    setUs14117DevFilePaths(preset.backendFilePaths);
+    setUs14117StepIndex(US14117_STEPS.length - 1);
+    const payload = await buildUs14117PayloadFrom(nextValues, [], preset.backendFilePaths);
+    await runWithPayload(payload);
+  };
+
+  const runCpraDevPreset = async () => {
+    if (!DEV_ACCEL_ENABLED || !isCpraModule || loading) return;
+    const preset = getModuleDevPreset("cpra");
+    const nextValues: CpraFormValues = { ...cpraValues, ...(preset.formDefaults as Partial<CpraFormValues>) };
+    setCpraValues(nextValues);
+    setCpraStepIndex(CPRA_STEPS.length - 1);
+    const payload = await buildCpraPayload();
     await runWithPayload(payload);
   };
 
@@ -2861,6 +2903,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.max(0, prev - 1))} disabled={us14117StepIndex === 0}>上一步</button>
             <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.min(US14117_STEPS.length - 1, prev + 1))} disabled={us14117StepIndex === US14117_STEPS.length - 1}>下一步</button>
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>{loading ? t("runningNow") : "运行 EO 14117 评估"}</button>
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runUs14117DevPreset}
+                disabled={loading}
+                title="开发期一键注入预设数据并运行真实14117评估流程"
+              >
+                一键运行
+              </button>
+            ) : null}
             {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>) : null}
           </div>
         </section>
@@ -3042,6 +3095,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成CPRA合规全景报告"}
             </button>
+            {DEV_ACCEL_ENABLED ? (
+              <button
+                className="pill-btn"
+                type="button"
+                onClick={runCpraDevPreset}
+                disabled={loading}
+                title="开发期一键注入预设数据并运行真实CPRA评估流程"
+              >
+                一键运行
+              </button>
+            ) : null}
           </div>
         </section>
       ) : (

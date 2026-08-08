@@ -81,7 +81,7 @@ const demoPipia = () => ({
       file_role: "scc_contract",
       file_name: "regen_sample_scc.txt",
       file_format: "txt",
-      storage_uri: "benchmarks/sample-inputs/sample_contract.txt"
+      storage_uri: "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx"
     }
   ]
 });
@@ -241,13 +241,13 @@ const demoCnFlow = () => ({
       file_role: "data_inventory",
       file_name: "data_inventory.csv",
       file_format: "csv",
-      storage_uri: "benchmarks/sample-inputs/data_inventory.csv"
+      storage_uri: "backend/tests/fixtures/cn/cn_flow_data_inventory.csv"
     },
     {
       file_role: "entity_inventory",
       file_name: "entity_inventory.csv",
       file_format: "csv",
-      storage_uri: "benchmarks/sample-inputs/entity_inventory.csv"
+      storage_uri: "backend/tests/fixtures/cn/cn_flow_entity_inventory.csv"
     }
   ]
 });

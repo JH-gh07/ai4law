@@ -12,7 +12,9 @@ export type DevPresetModule =
   | "eu_scc"
   | "bcr"
   | "diagnosis"
-  | "document_review";
+  | "document_review"
+  | "us_14117"
+  | "cpra";
 
 export type ModuleDevPreset = {
   id: string;
@@ -28,13 +30,15 @@ export type AssessmentDevPreset = ModuleDevPreset & {
   expectedPath: "security_assessment" | "scc_or_certification" | "exemption";
 };
 
-/** 各模块默认预填的真实测试文档路径 */
-const PIPIA_SCC = "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx";
-const PIPIA_FILING_GUIDE = "resources/legal/sources/cn/references/个人信息出境标准合同备案指南（第二版）.docx";
-const SCC_INPUT = "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx";
-const BCR_INPUT = "resources/templates/eu/3.2_bcr_review_template_v0.docx";
-const DPIA_INPUT = "resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx";
-const TIA_INPUT = "resources/legal/sources/eu/references/TIA - Template.docx";
+/** 测试输入 fixture（跨前后端共享，在 backend/tests/fixtures/ 下按法域存放） */
+const FIX_CN_DSA = "backend/tests/fixtures/cn/data_security_agreement.docx";
+const FIX_EU_SCC = "backend/tests/fixtures/eu/scc_2021_en.md";
+const FIX_EU_BCR = "backend/tests/fixtures/eu/bcr_c_globaltech.docx";
+
+/** 模板/参考文档（resources/ 目录下，有实际条款文本，非空壳） */
+const TPL_PIPIA_SCC = "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx";
+const TPL_DPIA_ICO = "resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx";
+const TPL_TIA_CNIL = "resources/legal/sources/eu/references/TIA - Template.docx";
 
 function assertCase(module: DevCaseModule) {
   const found = getDefaultTestCase(module);
@@ -47,6 +51,8 @@ function assertCase(module: DevCaseModule) {
 const DEFAULT_DIAGNOSIS_CASE = assertCase("diagnosis");
 const DEFAULT_ASSESSMENT_CASE = assertCase("assessment");
 const DEFAULT_REVIEW_CASE = assertCase("review");
+const DEFAULT_US14117_CASE = assertCase("us_14117");
+const DEFAULT_CPRA_CASE = assertCase("cpra");
 
 const ASSESSMENT_SECURITY_ASSESSMENT_PRESET: AssessmentDevPreset = {
   id: "assessment_cn_security_path",
@@ -102,7 +108,7 @@ const PIPIA_BASELINE_PRESET: ModuleDevPreset = {
     org_structure_privacy_team: "设DPO与专项隐私治理小组",
     attachment_role: "scc_contract"
   },
-  backendFilePaths: [PIPIA_SCC, PIPIA_FILING_GUIDE]
+  backendFilePaths: [TPL_PIPIA_SCC]
 };
 
 const EU_SCC_BASELINE_PRESET: ModuleDevPreset = {
@@ -130,7 +136,7 @@ const EU_SCC_BASELINE_PRESET: ModuleDevPreset = {
     spi_count: 5000,
     has_scc_draft: true
   },
-  backendFilePaths: [SCC_INPUT]
+  backendFilePaths: [FIX_EU_SCC]
 };
 
 const BCR_BASELINE_PRESET: ModuleDevPreset = {
@@ -157,7 +163,7 @@ const BCR_BASELINE_PRESET: ModuleDevPreset = {
     definitions_quality: "术语体系与GDPR保持一致",
     review_focus: "重点审查责任承担、补充措施和第三方受益人条款"
   },
-  backendFilePaths: [BCR_INPUT]
+  backendFilePaths: [FIX_EU_BCR]
 };
 
 const DPIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -201,7 +207,7 @@ const DPIA_BASELINE_PRESET: ModuleDevPreset = {
     review_schedule: "每季度复核",
     attachment_role: "data_flow_diagram"
   },
-  backendFilePaths: [DPIA_INPUT]
+  backendFilePaths: [TPL_DPIA_ICO]
 };
 
 const TIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -231,7 +237,7 @@ const TIA_BASELINE_PRESET: ModuleDevPreset = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  backendFilePaths: [TIA_INPUT]
+  backendFilePaths: [TPL_TIA_CNIL]
 };
 
 const DIAGNOSIS_BASELINE_PRESET: ModuleDevPreset = {
@@ -252,6 +258,27 @@ const DOCUMENT_REVIEW_BASELINE_PRESET: ModuleDevPreset = {
   backendFilePaths: [...(DEFAULT_REVIEW_CASE.backendFilePaths ?? [])]
 };
 
+const US14117_BASELINE_PRESET: ModuleDevPreset = {
+  id: "us14117_baseline",
+  module: "us_14117",
+  title: "一键运行14117行政令合规",
+  scenarioDescription: DEFAULT_US14117_CASE.description,
+  formDefaults: { ...(DEFAULT_US14117_CASE.formDefaults ?? {}) },
+  backendFilePaths: [
+    "backend/tests/fixtures/us/us14117_data_inventory.csv",
+    "backend/tests/fixtures/us/us14117_entity_inventory.csv",
+  ],
+};
+
+const CPRA_BASELINE_PRESET: ModuleDevPreset = {
+  id: "cpra_baseline",
+  module: "cpra",
+  title: "一键运行CPRA合规评估",
+  scenarioDescription: DEFAULT_CPRA_CASE.description,
+  formDefaults: { ...(DEFAULT_CPRA_CASE.formDefaults ?? {}) },
+  backendFilePaths: [],
+};
+
 const PRESET_MAP = new Map<string, ModuleDevPreset>([
   [ASSESSMENT_SECURITY_ASSESSMENT_PRESET.id, ASSESSMENT_SECURITY_ASSESSMENT_PRESET],
   [PIPIA_BASELINE_PRESET.id, PIPIA_BASELINE_PRESET],
@@ -261,6 +288,8 @@ const PRESET_MAP = new Map<string, ModuleDevPreset>([
   [TIA_BASELINE_PRESET.id, TIA_BASELINE_PRESET],
   [DIAGNOSIS_BASELINE_PRESET.id, DIAGNOSIS_BASELINE_PRESET],
   [DOCUMENT_REVIEW_BASELINE_PRESET.id, DOCUMENT_REVIEW_BASELINE_PRESET],
+  [US14117_BASELINE_PRESET.id, US14117_BASELINE_PRESET],
+  [CPRA_BASELINE_PRESET.id, CPRA_BASELINE_PRESET],
 ]);
 
 const DEFAULT_PRESET_IDS: Record<DevPresetModule, string> = {
@@ -272,6 +301,8 @@ const DEFAULT_PRESET_IDS: Record<DevPresetModule, string> = {
   tia: TIA_BASELINE_PRESET.id,
   diagnosis: DIAGNOSIS_BASELINE_PRESET.id,
   document_review: DOCUMENT_REVIEW_BASELINE_PRESET.id,
+  us_14117: US14117_BASELINE_PRESET.id,
+  cpra: CPRA_BASELINE_PRESET.id,
 };
 
 export function getModuleDevPreset(module: DevPresetModule, id?: string): ModuleDevPreset {
