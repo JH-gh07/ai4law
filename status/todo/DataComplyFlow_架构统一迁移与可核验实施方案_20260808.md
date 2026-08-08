@@ -418,7 +418,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 |---|---|---|---|---|
 | 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑；测试收集 743 项（较基线 641 +102） | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
-| 2 | assessment | **部分完成** | Golden Snapshot、61 项回归 + 本地 fixture 产物（`status/check/phase2_assessment_firstrun_20260808/`） | 需用生产形态完整跑过 `chapter_generator`，补正文脚注、CitationMap、API lookup 和 token/time 证据 |
+| 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
 | 3 | 其他模块 | **部分完成（适配器+单测）** | 9 个 `schema_first.py` 适配器及对应单测存在；DPIA 有 fixture 新旧产物对比；TIA 有 no-LLM service、结构化规则、本地 PDF 和固定 LLM 引用同步测试通过 | assessment 生产形态复跑、DPIA service/token/time、TIA live provider/业务附件、其余 6 个模块真实 service 首跑、新旧产物对比、回退记录均待补 |
 | 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键），`scripts/check_citation_source_integrity.py` 输出 6 项指标；CN-REG-004 替换验证通过 | URL回填：2620条缺失、无已知源URL，暂无法自动化；source_id→条文级 vs 法规级区分待补；中文数字转阿拉伯数字规则待统一 |
 | 5 | 前端闭环 | 部分完成 | 待核验状态测试 | 全部跳转状态和截图 |
