@@ -18,7 +18,13 @@ from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
-from backend.common.render.report import format_date_stamp, render_docx_template, render_markdown_template, safe_filename
+from backend.common.render.report import (
+    format_date_stamp,
+    render_docx_report,
+    render_docx_template,
+    render_markdown_template,
+    safe_filename,
+)
 from backend.common.render.docx_comments import DocxComment, render_commented_docx
 from backend.common.render.summary import attach_citations, summarize_for_slot
 from backend.common.runtime.module_run import finalize_run, prepare_run
@@ -352,6 +358,7 @@ class EU_SCCService:
         def _inner(*, task_id, payload, profile, regulations, chapters, path_warning, alignment_warning, issues, evidence_chain, attachment_notes, trace_manifest_path, facts, diagnosis, **kw):
             citation_bundle = self._build_eu_scc_citation_bundle(kw.get("context_pack"), regulations)
             citation_registry = CitationRegistry()
+            document_ir_path: Path | None = None
             citation_registry._items = dict(citation_bundle.registry._items)  # noqa: SLF001
             for chapter in chapters:
                 for citation_id in chapter.citations:
@@ -370,7 +377,8 @@ class EU_SCCService:
                 import json as _json
                 _ir_dir = Path('outputs/eu_scc') / task_id / 'outputs'
                 _ir_dir.mkdir(parents=True, exist_ok=True)
-                (_ir_dir / 'document_ir.json').write_text(
+                document_ir_path = _ir_dir / 'document_ir.json'
+                document_ir_path.write_text(
                     _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
                     encoding='utf-8')
             output_dir = Path("outputs/eu_scc") / task_id / "outputs"
@@ -393,8 +401,11 @@ class EU_SCCService:
                 pdf_out,
                 f"{payload.company_name} EU SCC 审查报告",
             )
-            # DOCX (placeholder — template not yet available)
-            docx_out.touch()
+            render_docx_report(
+                docx_out,
+                f"{payload.company_name} EU SCC 审查报告",
+                [(chapter.title, chapter.content) for chapter in chapters],
+            )
 
             # Annotated DOCX (findings as comments)
             annotated_path = None
@@ -431,6 +442,8 @@ class EU_SCCService:
 
             result = {"markdown": str(md_out), "docx": str(docx_out), "pdf": str(pdf_out), "findings_json": str(output_dir / "findings.json"), "rule_engine_result_json": str(output_dir / "rule_engine_result.json")}
             result["citation_map_json"] = citation_map_json
+            if document_ir_path is not None:
+                result["document_ir_json"] = str(document_ir_path)
             if annotated_path:
                 result["annotated_docx"] = annotated_path
             return result

@@ -1,6 +1,8 @@
 """Test EU SCC compliance review — three core test scenarios."""
 
+from pathlib import Path
 from types import SimpleNamespace
+from zipfile import ZipFile
 
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
@@ -50,6 +52,29 @@ def test_scc_template_summary_uses_shared_citation_registry() -> None:
     )
 
     assert mapping["executive_summary"].endswith("[1]")
+
+
+def test_scc_schema_first_service_exposes_document_ir(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    service = EU_SCCService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = True
+    payload = _make_request(
+        _SCC_C2P_INDIA_HEALTH,
+        declared_module="Module Two",
+        exporter_role="controller",
+        importer_role="processor",
+        has_tia=False,
+        has_supplementary=False,
+    )
+
+    result = service.generate_report(payload, task_id="schema-first-scc")
+
+    assert "document_ir_json" in result.output_files
+    assert Path(result.output_files["document_ir_json"]).exists()
+    docx_path = Path(result.output_files["docx"])
+    assert docx_path.stat().st_size > 0
+    with ZipFile(docx_path) as bundle:
+        assert "word/document.xml" in bundle.namelist()
 
 
 # ═══════════════════════════════════════════════════════════════════════
