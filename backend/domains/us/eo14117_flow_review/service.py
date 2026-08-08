@@ -4,6 +4,8 @@ import json
 import uuid
 from pathlib import Path
 
+from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
@@ -177,6 +179,7 @@ class CNFlowService:
             risk_summary={"risk_level": diagnosis.risk_level},
             attachment_notes=attachment_notes,
             output_requirements={"chapter_keys": list(CN_FLOW_CHAPTER_KEYS.values())},
+            citation_registry=registry_from_documents(regulations, jurisdiction="US"),
         )
 
     def _generate_chapters_from_pack(
@@ -185,13 +188,23 @@ class CNFlowService:
         regulations: list[dict],
         context_pack: GenerationContextPack,
     ) -> list[CNFlowChapter]:
-        citations = [f"{item.get('title', '')}{item.get('article', '')}" for item in regulations]
+        citation_registry: CitationRegistry = context_pack.citation_registry
+        citations = [item.display_label for item in citation_registry]
         chapters: list[CNFlowChapter] = []
         for idx, title in enumerate(CN_FLOW_CHAPTERS, start=1):
             chapter_id = CN_FLOW_CHAPTER_KEYS[title]
             context_block = self._build_context_block_from_pack(payload, context_pack, chapter_id)
             if self.llm_client and self.llm_client.enabled:
-                content = generate_chapter(self.llm_client, "cn_flow", title, context_block, citations=citations)
+                content = generate_chapter(
+                    self.llm_client,
+                    "cn_flow",
+                    title,
+                    context_block,
+                    citations=citations,
+                    citation_marker_section=citation_registry.build_marker_list(),
+                    use_citation_markers=True,
+                    citation_registry=citation_registry,
+                )
             else:
                 content = f"（{title}：LLM未配置，此处为占位内容）"
             chapters.append(
@@ -365,6 +378,7 @@ class CNFlowService:
         diagnosis: "_CNFlowDiagnosis",
         context_pack: GenerationContextPack,
     ) -> dict[str, str]:
+        citation_registry: CitationRegistry = context_pack.citation_registry
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
             ("风险清单摘要", "\n".join(f"- {item.risk_id}: {item.title}" for item in diagnosis.risk_items)),
@@ -386,7 +400,12 @@ class CNFlowService:
         xlsx_output = output_dir / f"{base}_14117_风险清单_草案_{date_stamp}.xlsx"
         zip_output = output_dir / f"{base}_14117_输出包_草案_{date_stamp}.zip"
 
-        mapping = _build_template_mapping(payload, chapters, diagnosis.risk_items)
+        mapping = _build_template_mapping(
+            payload,
+            chapters,
+            diagnosis.risk_items,
+            citation_registry=citation_registry,
+        )
         render_markdown_template(md_output, TEMPLATE_MD, mapping)
         render_docx_template(docx_output, TEMPLATE_PATH, mapping)
         render_pdf_report(pdf_output, "对华数据流动合规报告（草案）", sections)
@@ -418,6 +437,16 @@ class CNFlowService:
             zip_output,
             [docx_output, md_output, pdf_output, xlsx_output, issue_json, evidence_json, facts_json, trace_manifest],
         )
+        citation_map_json = write_citation_map_json(
+            output_dir=output_dir,
+            module="cn_flow",
+            task_id=task_id,
+            footnote_map={
+                str(number): item.to_dict()
+                for number, item in citation_registry.get_footnote_map().items()
+            },
+            all_items=citation_registry.to_list(),
+        )
         return {
             "markdown": str(md_output),
             "docx": str(docx_output),
@@ -428,6 +457,7 @@ class CNFlowService:
             "evidence_chain_json": str(evidence_json),
             "facts_json": str(facts_json),
             "trace_manifest": str(trace_manifest),
+            "citation_map_json": citation_map_json,
         }
 
     @staticmethod
@@ -491,6 +521,7 @@ def _build_template_mapping(
     payload: CNFlowRequest,
     chapters: list[CNFlowChapter],
     risk_items: list[CNFlowRiskItem],
+    citation_registry: CitationRegistry | None = None,
 ) -> dict[str, str]:
     def pick(no: int) -> str:
         for chapter in chapters:
@@ -531,7 +562,11 @@ def _build_template_mapping(
             matrix,
         ]
     )
-    rating_block = attach_citations(rating_block, citations)
+    rating_block = attach_citations(
+        rating_block,
+        citations,
+        registry=citation_registry,
+    )
 
     entity_screening = "\n".join(
         f"- {entity.entity_name} | {entity.country_region} | {entity.entity_role} | 受限主体={entity.is_restricted_party}"
@@ -542,16 +577,19 @@ def _build_template_mapping(
         "business_overview": attach_citations(
             summarize_for_slot(pick(1), max_sentences=3, max_chars=360),
             citations,
+            registry=citation_registry,
         ),
         "data_inventory_analysis": attach_citations(
             summarize_for_slot(pick(2), max_sentences=3, max_chars=360),
             citations,
+            registry=citation_registry,
         ),
         "entity_screening": entity_screening or "未提供实体清单。",
         "risk_rating": rating_block,
         "mitigation_and_actions": attach_citations(
             summarize_for_slot(pick(4), max_sentences=3, max_chars=360),
             citations,
+            registry=citation_registry,
         ),
     }
 
