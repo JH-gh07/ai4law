@@ -8,7 +8,7 @@
 
 ## 一、验收结论
 
-侧边文件栏的核心改造已经在本地完成：输入区只显示明确输入字段中的文件路径，不再显示表单 JSON；输出区只显示报告和明确允许的交付文件，内部编译产物默认隐藏；原来集中在 `ResourcePanel.tsx` 的输入扫描、输出过滤、命名和树构建已拆到独立功能目录，并经过单元测试、全量前端测试、生产构建和真实 Chromium 验证。
+侧边文件栏的核心改造已经在本地完成：输入区只显示明确输入字段中的文件路径，不再显示表单 JSON；输出区只单独列出报告和明确允许的交付文件，内部编译产物不再逐项展示；原来集中在 `ResourcePanel.tsx` 的输入扫描、输出过滤、命名和树构建已拆到独立功能目录，并经过单元测试、全量前端测试、生产构建和 Chromium 验证。
 
 这里的“输入文件”只表示它确实来自 `attachments`、`uploaded_files` 或 `*_files` 等请求字段，不等于文件内容已经通过业务真实性验收。原方案附录 B 已确认部分开发预置仍是申报指南、测试说明或空模板；这些文件的内容替换属于“测试案例/输入资料治理”，本报告不把它包装成已完成。
 
@@ -19,9 +19,9 @@
 | 职责拆分 | 通过 | 展示组件不再承载输入扫描、过滤、命名和树构建 |
 | 输入字段识别准确性 | 通过 | 只从文件字段提取，不再把表单、说明文字、URL、法规索引当文件 |
 | 预置文件内容真实性 | 未完成 | 部分模块仍使用指南、测试说明或空模板，见原方案附录 B |
-| 输出去冗余 | 通过 | citation map、document IR、facts、issue/evidence list 等不展示 |
+| 输出去冗余 | 通过 | citation map、document IR、facts、issue/evidence list 等不在侧栏逐项展示 |
 | 旧流程清理 | 通过 | `input-form` 类型、创建、点击和预览分支均已删除 |
-| 自动化测试 | 通过 | 前端 121 通过、2 跳过；专项测试 8/8 通过 |
+| 自动化测试 | 通过 | 前端 122 通过、2 跳过；专项测试 9/9 通过 |
 | 生产构建 | 通过 | `tsc -b && vite build` 成功 |
 | 浏览器验证 | 通过 | Chromium E2E 1/1 通过，控制台无错误 |
 | 远程部署 | 未执行 | 遵守“本地完成后等待同意”的要求 |
@@ -58,7 +58,7 @@ contracts / config
 - `input-resources.ts:21`：统一入口 `collectUserInputFiles()`。
 - `input-resources.ts:63-76`：只识别 `attachments`、`uploaded_files` 和明确的 `*_files` 字段。
 - `input-resources.ts:9-14`：排除 HTTP URL，仅接受配置允许的用户文件扩展名。
-- `input-resources.ts:93-125`：跨运行去重，并排除已经属于输出产物的路径。
+- `input-resources.ts:93-125`：经过斜杠、`./` 和路径段规范化后跨运行去重，并排除已经属于输出产物的路径。
 - `ResourcePanel.tsx:168-186`：输入文件只展示，不调用尚未统一授权的预览接口。
 
 这解决了旧实现“递归扫描任意字符串，只要像路径就当成输入文件”的误识别问题。
@@ -71,7 +71,7 @@ contracts / config
 - `output-artifacts.ts:30-52`：统一中英文显示名。
 - `output-artifacts.ts:54-97`：按运行批次组织输出，并处理同名文件。
 
-采用“白名单默认拒绝”而不是只维护黑名单，原因是以后新增内部 XLSX/MD 时不会自动泄露到用户界面。
+采用“白名单默认拒绝”而不是只维护黑名单，原因是以后新增内部 XLSX/MD 时不会自动出现在侧边栏。ZIP 是面向用户的完整审计交付包，仍允许展示；部分内部 JSON 可能按后端既有设计包含在 ZIP 中，本轮只治理侧栏条目，不修改 ZIP 内容。
 
 ### 3.3 展示组件与旧流程
 
@@ -92,13 +92,15 @@ npm test -- --run \
   src/components/workspace/ResourcePanel.test.tsx
 ```
 
-结果：2 个测试文件、8 项测试全部通过。
+结果：2 个测试文件、9 项测试全部通过。
 
 覆盖内容：
 
 - DOC/DOCX/PDF/PNG/XLSX/CSV/MD/JSON 等真实输入；
 - 说明文字 `report.pdf`、外部 URL、source registry 不误识别；
-- 输入路径和输出路径去重；
+- 输入路径和输出路径在反斜杠、`./`、绝对/相对已知根目录等表示下去重；
+- `output_files`、`debug_files` 不会被误判为输入；
+- `negotiation.pdf` 不会因为包含短字符串 `tia` 被误命名；
 - 表单 JSON 不再出现；
 - 未知产物类型默认隐藏；
 - citation map、document IR、facts、issue list 等内部产物隐藏；
@@ -112,7 +114,7 @@ npm test -- --run \
 npm test
 ```
 
-结果：24 个测试文件通过、1 个文件按既有配置跳过；121 项通过、2 项跳过。测试日志中的 `chunk load failed` 是错误边界测试主动制造的异常，不是本轮运行故障。
+结果：24 个测试文件通过、1 个文件按既有配置跳过；122 项通过、2 项跳过。测试日志中的 `chunk load failed` 是错误边界测试主动制造的异常，不是本轮运行故障。
 
 ### 4.3 生产构建
 
@@ -122,15 +124,15 @@ npm run build
 
 结果：TypeScript 项目构建和 Vite 生产打包均通过，共转换 352 个模块。
 
-### 4.4 Chromium 端到端测试
+### 4.4 Chromium 前端端到端测试
 
 ```bash
 npx playwright test tests/e2e/resource-explorer.e2e.ts --project=chromium
 ```
 
-结果：1/1 通过。真实浏览器中观察到：
+结果：1/1 通过。该测试使用真实 Chromium、真实前端页面和本地契约服务，但任务完成响应及产物路径由测试路由构造；它验证前端展示、过滤、目录展开和控制台状态，不证明真实业务 Agent 已生成这些产物。浏览器中观察到：
 
-- “已提交材料”计数为 2，只显示真实预置文档；
+- “已提交材料”计数为 2，精确显示当前 assessment 预置的报告模板和申报指南；其中申报指南的业务输入适格性仍待治理；
 - “生成结果”计数为 2，只显示 Markdown 与 Word 报告；
 - `citation_map.json`、`facts.json` 不在 DOM 中；
 - 输出目录可以展开；
@@ -148,6 +150,8 @@ npx playwright test tests/e2e/resource-explorer.e2e.ts --project=chromium
 | `425f533` | `ResourcePanel` 接入新模型并删除旧表单预览流程 |
 | `51ddf8f` | 修复已有引用联合类型错误，使完整构建可继续 |
 | `81591bb` | 开发预置从 `sample_*.txt` 改为仓库内实际存在的文档；内容是否为合格业务输入仍需按附录 B 继续治理 |
+| `8a4bd23` | 增加本地 Chromium 专项验收和截图 |
+| `a54a15a` | 根据独立复核修正路径去重、输入字段误判和短角色名误判 |
 
 ## 六、尚未完成但没有伪装完成的事项
 
@@ -158,6 +162,7 @@ npx playwright test tests/e2e/resource-explorer.e2e.ts --project=chromium
 | 产物与运行记录精确绑定 | 当前 `OutputArtifact` 没有 `runId`，只能按时间归入批次 | 后端/前端契约增加 `runId`，历史数据才用时间兜底 |
 | 后端 outputs/internals 物理分离 | 涉及所有模块输出路径和下载接口，不宜与前端重构混改 | 单独迁移并保留兼容读取期 |
 | 自动折叠体验 | 不影响真实性和核心功能 | 在资源数量及窗口宽度规则明确后单独实现 |
+| 真实后端业务 E2E | 当前专项浏览器测试使用本地契约服务构造完成响应 | 待预置内容治理完成后，用真实后端生成文件并复验 |
 | 远程环境验证 | 用户要求本地完成后等待同意 | 获得明确同意后再部署和复验 |
 
 ## 七、最终判断
