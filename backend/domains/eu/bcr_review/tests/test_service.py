@@ -25,6 +25,26 @@ class _CitationLLM:
         return f"集团规则应当具备法律约束力。{marker}"
 
 
+class _RemediationLLM:
+    enabled = True
+
+    def __init__(self) -> None:
+        self.remediation_calls = 0
+
+    def chat(self, **kwargs) -> str:
+        if "Generate a specific remediation clause" in kwargs["user"]:
+            self.remediation_calls += 1
+            return json.dumps(
+                {
+                    "fix_type": "INSERT_CLAUSE",
+                    "insert_location": "Liability and Enforcement",
+                    "suggested_text": "MODEL-VERIFIED: designate the EU liable entity and grant enforceable rights.",
+                    "rationale": "Makes the mandatory BCR-C obligation executable.",
+                }
+            )
+        return "{}"
+
+
 def test_bcr_generate_report() -> None:
     service = BCRService(llm_client=_DisabledLLM())
     payload = BCRRequest.model_validate(
@@ -376,3 +396,46 @@ def test_bcr_document_review_binds_only_supported_citations(
     }
     map_citation_ids = {item["citation_id"] for item in footnotes.values()}
     assert ir_citation_ids == map_citation_ids
+
+
+def test_bcr_document_review_renders_model_remediation_in_final_report(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    source = (
+        Path(__file__).resolve().parents[5]
+        / "backend/tests/bcr/fixtures/case_02_healthdata_bcr_c_draft.docx"
+    )
+    monkeypatch.chdir(tmp_path)
+    llm = _RemediationLLM()
+    service = BCRService(llm_client=llm)
+    service.schema_first_enabled = False
+    payload = BCRRequest.model_validate(
+        {
+            "company_name": "HealthData Alliance",
+            "uploaded_documents": [
+                {
+                    "file_id": "bcr-healthdata-02",
+                    "file_name": source.name,
+                    "file_type": "docx",
+                    "file_path": str(source),
+                    "document_role": "main_bcr_document",
+                }
+            ],
+            "scenario_context": {
+                "declared_bcr_type": "BCR-C",
+                "processes_on_behalf_of_clients": False,
+            },
+        }
+    )
+
+    result = service.generate_report(payload, task_id="bcr-model-remediation-output")
+
+    assert llm.remediation_calls > 0
+    assert any(
+        finding.suggested_revision
+        and "MODEL-VERIFIED" in finding.suggested_revision
+        for finding in result.findings
+    )
+    markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
+    assert "MODEL-VERIFIED" in markdown

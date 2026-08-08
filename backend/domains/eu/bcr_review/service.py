@@ -93,6 +93,21 @@ def _build_finding_detail_table(findings: list[BCRFinding]) -> str:
     )
 
 
+def _build_remediation_roadmap(
+    sections: list[tuple[str, list[str]]],
+    findings: list[BCRFinding],
+) -> str:
+    lines = list(sections[7][1][:6]) if len(sections) > 7 else ["按风险优先级制定整改路线。"]
+    generated = [finding for finding in findings if finding.suggested_revision]
+    if generated:
+        lines.extend(["", "### 可直接采用的建议条款"])
+        lines.extend(
+            f"- **{finding.requirement_id} {finding.title}**：{finding.suggested_revision}"
+            for finding in generated
+        )
+    return "\n".join(lines)
+
+
 class BCRService:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         if llm_client is None:
@@ -414,7 +429,7 @@ class BCRService:
             rating = "高风险"
 
         # Agent 10: Remediation — generate actionable fix suggestions for HIGH findings
-        remediation_suggestions: list[dict] = []
+        remediation_count = 0
         for f in deduped:
             if getattr(f, "risk_level", "LOW") in ("HIGH",):
                 req_text = next((ch.content for ch in main_doc.chapters
@@ -432,12 +447,14 @@ class BCRService:
                     thought = summarize_agent_output("BCR 整改建议", agent_rem)
                     trace.record("thought", {"summary": thought})
                 if agent_rem.get("suggested_text"):
-                    remediation_suggestions.append(agent_rem)
+                    f.suggested_revision = str(agent_rem["suggested_text"]).strip()
+                    remediation_count += 1
 
         metadata = {
             "completed_at": datetime.datetime.now().isoformat(),
             "review_mode": "llm" if (self.llm_client and self.llm_client.enabled) else "rule_only",
             "bcr_type": bcr_type, "total_findings": len(deduped), "total_missing": len(missing),
+            "llm_remediation_count": remediation_count,
         }
 
         sections = self.report_renderer.build_sections(type_class, deduped, missing, rating, score, metadata)
@@ -450,7 +467,10 @@ class BCRService:
             chapter_pairs.append((title, "\n".join(lines[:20])))
         chapter_pairs.append(("详细审查结果", detailed_findings_table))
         if len(sections) > 7:
-            chapter_pairs.append(("风险优先级与整改建议", "\n".join(sections[7][1][:20])))
+            chapter_pairs.append((
+                "风险优先级与整改建议",
+                _build_remediation_roadmap(sections, deduped),
+            ))
         elif len(sections) > 2:
             title, lines = sections[2]
             chapter_pairs.append((title, "\n".join(lines[:20])))
@@ -786,7 +806,7 @@ class BCRService:
             "high_risk_items": "；".join(f.title for f in findings if f.risk_level == "HIGH") or "无",
             "medium_risk_items": "；".join(f.title for f in findings if f.risk_level == "MEDIUM") or "无",
             "low_risk_items": "；".join(f.title for f in findings if f.risk_level == "LOW") or "无",
-            "remediation_roadmap": "\n".join(sections[7][1][:6]) if len(sections) > 7 else "按风险优先级制定整改路线。",
+            "remediation_roadmap": _build_remediation_roadmap(sections, findings),
         }
 
         output_dir.mkdir(parents=True, exist_ok=True)
