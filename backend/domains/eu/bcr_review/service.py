@@ -13,7 +13,6 @@ from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.citation.output import write_citation_map_json
 from backend.common.citation.registry import CitationRegistry, registry_from_documents
-from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
@@ -259,8 +258,8 @@ class BCRService:
         onward_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["onward", "transfer"]))
         if onward_text:
             agent_ot = self.agents["onward_transfer"].run(
-                clause_text=onward_text, has_scc=False, has_adequacy=False,
-                has_derogation=False, bcr_type=bcr_type,
+                clause_text=onward_text,
+                bcr_type=bcr_type,
             )
             if trace:
                 thought = summarize_agent_output("BCR 后续传输风险", agent_ot)
@@ -387,8 +386,12 @@ class BCRService:
                 deduped.append(f)
 
         citation_registry = registry_from_documents(
-            retrieved_legal_documents, jurisdiction="EU"
+            self.legal_retriever.retrieve_report_grounding(
+                {finding.requirement_id for finding in deduped}
+            ),
+            jurisdiction="EU",
         )
+        _normalize_bcr_citation_labels(citation_registry)
         _annotate_finding_footnotes(deduped, citation_registry)
 
         # Stage 6: AGGREGATING + RENDERING
@@ -567,15 +570,18 @@ class BCRService:
     def _resolve_rating(items: list) -> str:
         nc = sum(1 for i in items if i.score == "non_compliant")
         partial = sum(1 for i in items if i.score == "partial")
-        if nc >= 2: return "高风险"
-        if nc >= 1 or partial >= 1: return "部分缺失"
+        if nc >= 2:
+            return "高风险"
+        if nc >= 1 or partial >= 1:
+            return "部分缺失"
         return "基本合规"
 
     def _check_consistency(self, payload: BCRRequest) -> list[str]:
         issues: list[str] = []
         codes = {item.code for item in payload.review_items}
         missing = sorted(BCR_REQUIRED_CODES - codes)
-        if missing: issues.append(f"Missing review items: {', '.join(missing)}")
+        if missing:
+            issues.append(f"Missing review items: {', '.join(missing)}")
         if not payload.attachments and not payload.uploaded_files:
             issues.append("No BCR document attachments provided.")
         if self._resolve_rating(payload.review_items) == "高风险":
@@ -841,7 +847,8 @@ def _build_template_mapping(payload, rating, problems, chapters, date_stamp):
         return "；".join(f"{i.code}-{i.title}" for i in items) if items else "无"
     def ch_text(no):
         for c in chapters:
-            if c.chapter_no == no: return c.content
+            if c.chapter_no == no:
+                return c.content
         return ""
     high = [p for p in problems if p.risk_level == "HIGH"]
     med = [p for p in problems if p.risk_level == "MEDIUM"]
@@ -863,15 +870,42 @@ def _footnote_numbers(text: str) -> list[int]:
 
 
 def _annotate_finding_footnotes(findings: list[BCRFinding], registry: CitationRegistry) -> None:
-    """Add a verified footnote only when a finding's source maps uniquely."""
+    """Bind findings only to the canonical source that supports the requirement."""
+    gdpr_article_47 = next(
+        (item for item in registry if item.source_id == "EU-LAW-001"),
+        None,
+    )
+    edpb_tia_step = next(
+        (item for item in registry if item.source_id == "EU-GUIDE-002"),
+        None,
+    )
+    article_47_requirements = {"BCR-C-1.1", "BCR-C-1.2", "BCR-C-1.3"}
     for finding in findings:
-        rendered: list[str] = []
-        for legal_basis in finding.legal_basis:
-            resolved = apply_citation_pipeline(
-                f"【依据：{legal_basis}】",
-                registry=registry,
-            ).text
-            rendered.append(
-                f"{legal_basis} {resolved}" if re.fullmatch(r"(?:\[\d+\])+", resolved) else legal_basis
-            )
-        finding.legal_basis = rendered
+        item = None
+        if finding.requirement_id in article_47_requirements:
+            item = gdpr_article_47
+        elif finding.requirement_id == "BCR-C-1.9":
+            item = edpb_tia_step
+        if item is None:
+            continue
+        number = registry.assign_footnote_number(item.citation_id)
+        if number is None:
+            continue
+        if finding.legal_basis:
+            finding.legal_basis[0] = f"{finding.legal_basis[0]} [{number}]"
+        else:
+            finding.legal_basis = [f"{item.display_label} [{number}]"]
+
+
+def _normalize_bcr_citation_labels(registry: CitationRegistry) -> None:
+    """Separate a human legal label from the current paragraph-based locator."""
+    for item in registry:
+        if item.source_id == "EU-LAW-001" and item.article_no == "段落4":
+            item.display_label = "GDPR Article 47(1)"
+            item.authority_level = "high"
+            item.binding_force = "mandatory"
+        elif item.source_id == "EU-GUIDE-002" and item.article_no == "段落5":
+            item.display_label = "EDPB Recommendations 01/2020 Step 3"
+            item.citation_type = "official_guide"
+            item.source_kind = "official_guide"
+            item.authority_level = "high"

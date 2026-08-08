@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -277,3 +278,101 @@ def test_bcr_document_upload_path_exposes_document_ir(tmp_path, monkeypatch) -> 
 
     assert "document_ir_json" in result.output_files
     assert Path(result.output_files["document_ir_json"]).exists()
+
+
+def test_bcr_document_review_accepts_current_onward_transfer_agent_contract(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    source = (
+        Path(__file__).resolve().parents[5]
+        / "backend/tests/bcr/fixtures/case_02_healthdata_bcr_c_draft.docx"
+    )
+    monkeypatch.chdir(tmp_path)
+    service = BCRService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = False
+    payload = BCRRequest.model_validate(
+        {
+            "company_name": "HealthData Alliance",
+            "uploaded_documents": [
+                {
+                    "file_id": "bcr-healthdata-02",
+                    "file_name": source.name,
+                    "file_type": "docx",
+                    "file_path": str(source),
+                    "document_role": "main_bcr_document",
+                }
+            ],
+            "scenario_context": {
+                "company_name": "HealthData Alliance",
+                "declared_bcr_type": "BCR-C",
+                "processes_on_behalf_of_clients": False,
+            },
+        }
+    )
+
+    result = service.generate_report(payload, task_id="bcr-onward-agent-contract")
+
+    assert result.rating == "高风险"
+    assert result.bcr_type_classification is not None
+    assert result.bcr_type_classification.actual_bcr_type == "BCR-C"
+
+
+def test_bcr_document_review_binds_only_supported_citations(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    source = (
+        Path(__file__).resolve().parents[5]
+        / "backend/tests/bcr/fixtures/case_02_healthdata_bcr_c_draft.docx"
+    )
+    monkeypatch.chdir(tmp_path)
+    service = BCRService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = True
+    payload = BCRRequest.model_validate(
+        {
+            "company_name": "HealthData Alliance",
+            "uploaded_documents": [
+                {
+                    "file_id": "bcr-healthdata-02",
+                    "file_name": source.name,
+                    "file_type": "docx",
+                    "file_path": str(source),
+                    "document_role": "main_bcr_document",
+                }
+            ],
+            "scenario_context": {
+                "declared_bcr_type": "BCR-C",
+                "processes_on_behalf_of_clients": False,
+            },
+        }
+    )
+
+    result = service.generate_report(payload, task_id="bcr-supported-citations")
+
+    citation_map = json.loads(
+        Path(result.output_files["citation_map_json"]).read_text(encoding="utf-8")
+    )
+    footnotes = citation_map["footnote_map"]
+    labels = [item["display_label"] for item in footnotes.values()]
+    assert len(footnotes) == 2
+    assert any("GDPR Article 47(1)" in label for label in labels)
+    assert any("EDPB Recommendations 01/2020 Step 3" in label for label in labels)
+    assert all("第段落" not in label for label in labels)
+    assert {item["authority_level"] for item in footnotes.values()} == {"high"}
+    assert any(
+        item["citation_type"] == "official_guide" for item in footnotes.values()
+    )
+
+    document_ir = json.loads(
+        Path(result.output_files["document_ir_json"]).read_text(encoding="utf-8")
+    )
+    ir_citation_ids = {
+        citation_id
+        for section in document_ir["sections"]
+        for block in section["blocks"]
+        if block["type"] == "claim"
+        for citation_id in block["citation_refs"]
+    }
+    map_citation_ids = {item["citation_id"] for item in footnotes.values()}
+    assert ir_citation_ids == map_citation_ids

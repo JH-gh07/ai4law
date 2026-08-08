@@ -31,9 +31,12 @@ class BCRRiskAggregator:
                                        if req["requirement_id"] == m)]) * 10
 
         overall_score = min(avg_score + missing_penalty, 100.0)
+        high_risk_count = sum(1 for finding in findings if finding.risk_level == "HIGH")
 
         # Determine rating
         if type_classification.risk_level == "HIGH" and type_classification.type_consistency == "mismatch":
+            rating = "高风险"
+        elif high_risk_count >= 2:
             rating = "高风险"
         elif overall_score >= 60:
             rating = "高风险"
