@@ -60,5 +60,6 @@
     "regulations 是否检索到安全评估办法相关条文",
     "chapters 是否生成了8个章节",
     "renderer 是否产出了 report.md"
-  ]
+  ],
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx"
 }

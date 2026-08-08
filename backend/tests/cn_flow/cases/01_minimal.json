@@ -63,5 +63,6 @@
       "json",
       "zip"
     ]
-  }
+  },
+  "source_doc_path": "resources/templates/us/4.1_cn_flow_compliance_template_v0.docx"
 }

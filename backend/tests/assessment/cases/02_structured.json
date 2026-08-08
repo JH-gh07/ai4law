@@ -140,5 +140,6 @@
     "evidence_builder 是否构建了证据链",
     "chapters 是否生成了8章",
     "consistency_checker 是否检查了报告一致性"
-  ]
+  ],
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx"
 }

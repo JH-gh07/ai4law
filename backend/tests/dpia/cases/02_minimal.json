@@ -114,5 +114,6 @@
     "Agent necessity 审查 AI推荐的必要性",
     "Agent risk_assessment 评估信息茧房风险",
     "mitigation 是否映射了多样性推荐措施"
-  ]
+  ],
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：“DPIA草案生成”路径描述及测试案例/“DPIA草案生成”测试案例及预期输出.docx"
 }
