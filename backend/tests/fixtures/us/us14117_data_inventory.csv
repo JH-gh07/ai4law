@@ -1,0 +1,7 @@
+data_item,category,volume,purpose,destination
+Whole Genome Sequencing Raw Data (WGS),human_genomic_data,10000,joint_research_disease_marker_analysis,China (Shanghai)
+Biobank Sample IDs,human_genomic_data,10000,sample_tracking_and_correlation,China (Shanghai)
+Cloud CRM Contact Records,personal_data,500000,regional_customer_support_and_crm_operations,China (Beijing)
+Cloud CRM Email Content,personal_data,500000,email_processing_and_analytics,China (Beijing)
+Research Collaboration Contact Info,personal_data,25,joint_academic_publication_coordination,United Kingdom
+Academic Publication Metadata,non_personal_data,80,co_author_metadata_exchange,United Kingdom

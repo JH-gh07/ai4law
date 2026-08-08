@@ -1,0 +1,5 @@
+entity_name,role,jurisdiction,risk_note
+Example Exporter Ltd.,exporter,CN,synthetic fixture
+Example Processor Ltd.,recipient,Example Region,synthetic fixture
+SeaCommerce Pte. Ltd.,subsidiary,Singapore,Wholly owned subsidiary; PDPA compliant
+CloudServe Inc.,processor,United States,SaaS provider; Privacy Shield certified
