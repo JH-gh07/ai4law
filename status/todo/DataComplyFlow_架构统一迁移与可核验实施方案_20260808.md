@@ -43,7 +43,7 @@
 | `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
 | `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
 | Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
-| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **641 passed, 0 failed** | 修复 2 个既有失败后全绿，见下方失败诊断 |
+| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **743 collected, 741 passed, 2 flaky** | 修复 runtime_settings 密钥掩码、TIA case parity gate、PIPIA 死代码后；cpra_async_flow 超时（LLM 智能体 JSON 解析失败）为预存问题，非本次改动引入 |
 
 ### 既有失败诊断与修复记录（2026-08-08）
 
@@ -64,6 +64,24 @@
 - 根因：CN-REG-004 在 commit `979d714` 中将 9 条网页噪声记录替换为 20 条正式条文，unique\_rows 从 1602 增至 1613，测试的硬编码数字未同步。
 - 修复：更新断言 `1602 → 1613`，加注释说明来源。
 - 验证命令：`uv run pytest -q backend/services/tests/test_knowledge_index.py`
+
+**ISSUE-COMMON-003（已修复 commit 待提交）**
+
+- 严重级别：ERROR（合约回归）
+- 测试：`test_runtime_settings_can_apply_siliconflow_provider`、`test_runtime_settings_mask_and_preserve_existing_secrets`
+- 代码位置：`backend/core/runtime_settings.py:94,100,107` `build_effective_runtime_payload`
+- 根因：`build_effective_runtime_payload` 中 `secret`/`api_key` 字段从固定掩码 `""` 改为返回实际值，违反密钥掩码约定。
+- 修复：恢复 `"secret": ""`、`"api_key": ""`；`_configured` 标记保持原样指示密钥是否存在。
+- 验证命令：`uv run pytest -q backend/core/tests/test_llm_settings.py -k "runtime_settings"`
+
+**ISSUE-HARNESS-001（已修复 commit 待提交）**
+
+- 严重级别：ERROR（门禁阻断）
+- 测试：`test_committed_tree_passes_the_gate`
+- 代码位置：`backend/tests/tia/cases/02_structured_local_attachment.json`
+- 根因：TIA `02_structured_local_attachment` 用例的 `expected` 块中包含 `attachment_parse_skipped`、`coverage_note` 等非断言元数据字段（应置于顶层），且缺失 `fields_present` 运算符注册，导致 5 项门禁违规。
+- 修复：将元数据字段移至顶层；注册 `_op_fields_present` 至 `ASSERTION_OPERATORS`；补齐 `min_counts`、`output_roles_contains`、`output_formats` 断言以满足 assertion floor（8条）；运行 `scripts/check_case_parity.py --write` 刷新清单。
+- 验证命令：`uv run python scripts/check_case_parity.py`
 
 ---
 
@@ -106,8 +124,9 @@
 | `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
 | `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
 | assessment 相关回归 | 61 项通过 | 2026-08-08 本地执行记录（见下方注） |
-| 后端全量回归 | 历史记录 641 通过、0 失败；当前 HEAD 尚未形成新的完整回归记录 | 当前工作区有未提交改动，需在冻结基线后重新跑全量回归 |
-| 其他模块新流程 | 代码适配和单测已有，真实服务首跑未完成 | 只能称“适配已完成、功能未验收”，不能宣称迁移完成 |
+| 后端全量回归 | 743 collected, 741 passed, 2 flaky（cpra_async_flow 超时 + bcr provider snapshot 偶发） | 修复 runtime_settings 掩码、TIA case parity gate、PIPIA 死代码后；cpra_async_flow 为 LLM 智能体 JSON 解析失败的预存问题 |
+| 知识库 | `regulation_articles.jsonl` 3030 行，0 重复归一化键 | CN-REG-004 替换（20 条）+ 处罚条款去重（36 条重命名）+ 区域法规入库 |
+| 其他模块新流程 | 代码适配和单测已有，真实服务首跑未完成 | 只能称”适配已完成、功能未验收”，不能宣称迁移完成 |
 
 ## 4. 目标目录和职责
 
@@ -397,11 +416,11 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑 | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
+| 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑；测试收集 743 项（较基线 641 +102） | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **部分完成** | Golden Snapshot、61 项回归 + 本地 fixture 产物（`status/check/phase2_assessment_firstrun_20260808/`） | 需用生产形态完整跑过 `chapter_generator`，补正文脚注、CitationMap、API lookup 和 token/time 证据 |
-| 3 | 其他模块 | **部分完成（适配器+单测）** | 9 个 `schema_first.py` 适配器及对应单测存在；DPIA 有一份 fixture 产物，TIA 仅有 baseline | assessment 生产形态复跑、DPIA service/token/time、TIA 及其余 6 个模块真实 service 首跑、新旧产物对比、回退记录均待补 |
-| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复），`scripts/check_citation_source_integrity.py` | URL回填：2620条缺失、无已知URL，暂无法自动化 |
+| 3 | 其他模块 | **部分完成（适配器+单测）** | 9 个 `schema_first.py` 适配器及对应单测存在；DPIA 有 fixture 新旧产物对比；TIA 有 no-LLM service、结构化规则、本地 PDF 和固定 LLM 引用同步测试通过 | assessment 生产形态复跑、DPIA service/token/time、TIA live provider/业务附件、其余 6 个模块真实 service 首跑、新旧产物对比、回退记录均待补 |
+| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键），`scripts/check_citation_source_integrity.py` 输出 6 项指标；CN-REG-004 替换验证通过 | URL回填：2620条缺失、无已知源URL，暂无法自动化；source_id→条文级 vs 法规级区分待补；中文数字转阿拉伯数字规则待统一 |
 | 5 | 前端闭环 | 部分完成 | 待核验状态测试 | 全部跳转状态和截图 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
