@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations, strip_markdown_inline
+from backend.common.llm.postprocess import apply_citation_pipeline, ensure_paragraph_citations, strip_markdown_inline
 from backend.common.render.summary import attach_citations
 from backend.common.risk.scoring import risk_level
 from backend.common.workflow import GenerationContextPack
@@ -437,16 +437,22 @@ class AssessmentChapterGenerator:
                 return self._build_fallback_chapter(
                     title=title,
                     citations=citations,
+                    citation_registry=citation_registry,
                     profile=profile,
                     context_pack=context_pack,
                     chapter_id=chapter_id,
                 )
             if citation_registry is not None:
-                return convert_citation_markers(raw, citation_registry)
+                return apply_citation_pipeline(
+                    raw,
+                    registry=citation_registry,
+                    allowed_citations=citations,
+                ).text
             return ensure_paragraph_citations(raw, citations)
         return self._build_fallback_chapter(
             title=title,
             citations=citations,
+            citation_registry=citation_registry,
             profile=profile,
             context_pack=context_pack,
             chapter_id=chapter_id,
@@ -460,9 +466,14 @@ class AssessmentChapterGenerator:
         profile: CompanyProfile | None,
         context_pack: GenerationContextPack | None,
         chapter_id: str | None,
+        citation_registry: object = None,
     ) -> str:
         if profile is None:
-            return attach_citations("当前未获取到企业事实，无法生成章节内容。", citations)
+            return attach_citations(
+                "当前未获取到企业事实，无法生成章节内容。",
+                citations,
+                registry=citation_registry,
+            )
 
         # P0-6: chapter-scoped issues only. The previous global HIGH/BLOCKER
         # fallback returned the same top-3 list for every chapter, which made
@@ -546,4 +557,4 @@ class AssessmentChapterGenerator:
         }
 
         body = "\n\n".join(paragraphs.get(title, ["当前章节缺少专门模板，需结合事实进一步补充。"]))
-        return attach_citations(body, citations)
+        return attach_citations(body, citations, registry=citation_registry)

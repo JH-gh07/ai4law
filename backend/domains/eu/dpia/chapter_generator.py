@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import convert_citation_markers, ensure_paragraph_citations
+from backend.common.llm.postprocess import apply_citation_pipeline, ensure_paragraph_citations
 from backend.common.workflow import GenerationContextPack
 from backend.domains.eu.dpia.generation_basis import DPIA_CHAPTER_ID_TO_TITLE
 from backend.domains.eu.dpia.schema import DPIAChapterContent
@@ -349,6 +349,10 @@ class DPIAChapterGenerator:
                 max_tokens=1000,
             )
             if citation_registry is not None:
-                return convert_citation_markers(raw, citation_registry)
+                return apply_citation_pipeline(
+                    raw,
+                    registry=citation_registry,
+                    allowed_citations=citations,
+                ).text
             return ensure_paragraph_citations(raw, citations)
         return f"（{title}：LLM未配置，此处为占位内容）"

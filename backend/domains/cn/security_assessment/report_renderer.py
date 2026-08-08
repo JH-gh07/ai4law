@@ -365,13 +365,17 @@ def _build_template_mapping(
     legal_risk = legal_basis or risk_summary
     security_risk = security_measures or "需结合技术与管理措施持续评估。"
     process_risk = risk_summary or "流程风险可控，但需完善内控。"
-    governance_measures = attach_citations(governance_measures, citations)
-    technical_measures = attach_citations(technical_measures, citations)
-    business_flow_summary = attach_citations(business_flow_summary, citations)
-    legal_risk = attach_citations(legal_risk, citations)
-    security_risk = attach_citations(security_risk, citations)
-    process_risk = attach_citations(process_risk, citations)
-    conclusion = attach_citations(conclusion or "综合评估结论需结合监管要求进一步确认。", citations)
+    governance_measures = attach_citations(governance_measures, citations, registry=citation_registry)
+    technical_measures = attach_citations(technical_measures, citations, registry=citation_registry)
+    business_flow_summary = attach_citations(business_flow_summary, citations, registry=citation_registry)
+    legal_risk = attach_citations(legal_risk, citations, registry=citation_registry)
+    security_risk = attach_citations(security_risk, citations, registry=citation_registry)
+    process_risk = attach_citations(process_risk, citations, registry=citation_registry)
+    conclusion = attach_citations(
+        conclusion or "综合评估结论需结合监管要求进一步确认。",
+        citations,
+        registry=citation_registry,
+    )
 
     return {
         "company_name": profile.company_name,
@@ -393,7 +397,11 @@ def _build_template_mapping(
         "technical_measures": technical_measures,
         "contractual_measures": "拟通过合同与附加条款约束接收方处理范围与责任。",
         "overall_conclusion": conclusion,
-        "remediation_items": attach_citations("详见风险识别与整改建议章节。", citations),
+        "remediation_items": attach_citations(
+            "详见风险识别与整改建议章节。",
+            citations,
+            registry=citation_registry,
+        ),
         "attachments": "- 无",
         "citation_map": citation_registry.build_citation_map_section() if citation_registry else "",
     }

@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from backend.common.llm.postprocess import apply_citation_policy
+
+if TYPE_CHECKING:
+    from backend.common.citation.registry import CitationRegistry
 
 
 _HEADING_PATTERNS = (
@@ -72,8 +76,29 @@ def dedup_if_same(primary: str, secondary: str, fallback: str) -> tuple[str, str
     return primary, secondary
 
 
-def attach_citations(text: str, citations: list[str] | None, max_items: int = 3) -> str:
-    """Apply the citation gate without assigning global retrieval hits as proof."""
+def attach_citations(
+    text: str,
+    citations: list[str] | None,
+    max_items: int = 3,
+    *,
+    registry: "CitationRegistry | None" = None,
+) -> str:
+    """Apply the citation gate, using the shared registry when available.
+
+    Calls without a registry remain a compatibility path for legacy callers;
+    production report paths must pass the report's registry.
+    """
     if not text or text == "未提供":
         return text
+    if registry is not None:
+        from backend.common.llm.postprocess import apply_citation_pipeline
+
+        basis = "；".join(str(item).strip() for item in (citations or []) if str(item).strip())
+        marked = f"{text.rstrip()}【依据：{basis}】" if basis and "【依据：" not in text else text
+        return apply_citation_pipeline(
+            marked,
+            registry=registry,
+            allowed_citations=citations,
+            max_items=max_items,
+        ).text
     return apply_citation_policy(text, citations, max_items=max_items).text

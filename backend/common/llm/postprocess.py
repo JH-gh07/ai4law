@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from backend.common.citation.locators import normalize_article_no
 from backend.common.citation.markers import CIT_MARKER_RE as _CIT_MARKER_RE
 
 if TYPE_CHECKING:
@@ -44,6 +45,16 @@ class CitationPolicyViolation:
 
 @dataclass(frozen=True)
 class CitationPolicyResult:
+    text: str
+    violations: list[CitationPolicyViolation]
+
+
+class CitationPipelineError(ValueError):
+    """Raised when citation syntax is processed without a citation registry."""
+
+
+@dataclass(frozen=True)
+class CitationPipelineResult:
     text: str
     violations: list[CitationPolicyViolation]
 
@@ -256,6 +267,7 @@ def apply_citation_policy(
     allowed_citations: list[str] | None,
     *,
     max_items: int = 3,
+    verified_footnotes: set[int] | None = None,
 ) -> CitationPolicyResult:
     """Validate explicit citations and mark unsupported high-stakes claims.
 
@@ -315,7 +327,12 @@ def apply_citation_policy(
             selected = "；".join(valid_citations[:max_items])
             paragraph_without_basis = f"{paragraph_without_basis} 【依据：{selected}】"
 
-        has_verified_marker = bool(valid_citations)
+        numeric_footnotes = {
+            int(number) for number in re.findall(r"\[(\d+)\]", paragraph)
+        }
+        has_verified_marker = bool(valid_citations) or bool(
+            numeric_footnotes & (verified_footnotes or set())
+        )
         if claim_type != "NONE" and not has_verified_marker:
             if "【待核验：缺少法规依据】" not in paragraph_without_basis:
                 paragraph_without_basis = (
@@ -334,6 +351,82 @@ def apply_citation_policy(
     return CitationPolicyResult(text=normalized, violations=violations)
 
 
+_BASIS_ARTICLE_RE = re.compile(
+    r"第\s*([零〇一二两三四五六七八九十百千万\d]+)\s*条"
+)
+
+
+def _basis_key(value: str) -> str:
+    return re.sub(r"[\s《》【】\[\]（）()：:；;，,。、“”\"']", "", value or "").lower()
+
+
+def _resolve_basis_to_number(raw_basis: str, registry: "CitationRegistry") -> int | None:
+    article_match = _BASIS_ARTICLE_RE.search(raw_basis)
+    requested_article = normalize_article_no(article_match.group(0)) if article_match else ""
+    basis_title = _basis_key(_BASIS_ARTICLE_RE.sub("", raw_basis))
+    candidates: list[str] = []
+    for item in registry:
+        title_key = _basis_key(item.title or item.display_label)
+        if not title_key or not (title_key in basis_title or basis_title in title_key):
+            continue
+        item_article = normalize_article_no(str(item.article_no or ""))
+        if requested_article and item_article != requested_article:
+            continue
+        candidates.append(item.citation_id)
+    if len(candidates) != 1:
+        return None
+    return registry.assign_footnote_number(candidates[0])
+
+
+def _convert_basis_blocks_to_footnotes(text: str, registry: "CitationRegistry") -> str:
+    def replace(block_match: re.Match) -> str:
+        inner = block_match.group(0)[len("【依据："):-1]
+        numbers = [
+            number
+            for raw in re.split(r"[；;]+", inner)
+            if (number := _resolve_basis_to_number(raw.strip(), registry)) is not None
+        ]
+        return "".join(f"[{number}]" for number in numbers) or "【待核验：引用无法映射】"
+
+    return _BASIS_BLOCK_RE.sub(replace, text)
+
+
+def apply_citation_pipeline(
+    text: str,
+    *,
+    registry: "CitationRegistry | None",
+    allowed_citations: list[str] | None = None,
+    max_items: int = 3,
+) -> CitationPipelineResult:
+    """Run the only supported legacy-text citation pipeline.
+
+    Both LLM markers and the deprecated ``【依据：...】`` form are resolved
+    against the same registry before claim validation. The deprecated form is
+    an input compatibility format only; it never reaches a final report.
+    """
+    if not text:
+        return CitationPipelineResult(text=text, violations=[])
+    has_citation_syntax = bool(_CIT_MARKER_RE.search(text) or _BASIS_BLOCK_RE.search(text))
+    if has_citation_syntax and registry is None:
+        raise CitationPipelineError("CitationRegistry is required for citation syntax")
+
+    converted = text
+    if registry is not None:
+        converted = _replace_registered_markers(converted, registry)
+        converted = _convert_basis_blocks_to_footnotes(converted, registry)
+        verified_footnotes = set(registry.get_footnote_map())
+    else:
+        verified_footnotes = set()
+
+    policy = apply_citation_policy(
+        converted,
+        allowed_citations,
+        max_items=max_items,
+        verified_footnotes=verified_footnotes,
+    )
+    return CitationPipelineResult(text=policy.text, violations=policy.violations)
+
+
 def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
     """Convert {{CIT-xxx}} markers to [1], [2] footnotes in text.
 
@@ -342,9 +435,12 @@ def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
     """
     if not text:
         return text
-    # Strip markdown inline formatting before structural postprocessing
-    text = strip_markdown_inline(text)
+    return normalize_legal_markdown_structure(_replace_registered_markers(text, registry))
 
+
+def _replace_registered_markers(text: str, registry: "CitationRegistry") -> str:
+    """Replace citation markers without changing surrounding paragraphs."""
+    text = strip_markdown_inline(text)
     def _replace_marker(match: re.Match) -> str:
         cid = match.group(1)
         num = registry.assign_footnote_number(cid)
@@ -354,4 +450,4 @@ def convert_citation_markers(text: str, registry: "CitationRegistry") -> str:
         # deleting evidence from the delivered text.
         return f"【未注册引用：{cid}】"
 
-    return normalize_legal_markdown_structure(_CIT_MARKER_RE.sub(_replace_marker, text))
+    return _CIT_MARKER_RE.sub(_replace_marker, text)

@@ -88,6 +88,26 @@ def test_summary_helper_does_not_assign_global_retrieval_hits_as_proof() -> None
     assert "【待核验：缺少法规依据】" in result
 
 
+def test_summary_helper_uses_registry_when_provided() -> None:
+    registry = CitationRegistry()
+    registry.register(
+        CitationItem(
+            citation_id="CIT-CN-PIPL-ART55-P01",
+            source_id="CN-LAW-003",
+            title="个人信息保护法",
+            article_no="55",
+        )
+    )
+
+    result = attach_citations(
+        "企业应当完成影响评估。",
+        ["个人信息保护法第55条"],
+        registry=registry,
+    )
+
+    assert result == "企业应当完成影响评估。[1]"
+
+
 def test_convert_citation_markers_replaces_single_marker() -> None:
     reg = CitationRegistry()
     reg.register(
