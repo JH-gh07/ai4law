@@ -75,6 +75,7 @@ class EU_SCCService:
     ) -> SCCReviewResult:
         run_task_id = task_id or str(uuid.uuid4())
         trace, token = prepare_run(module="eu_scc", task_id=run_task_id, trace=trace)
+        payload = self._use_uploaded_scc_document(payload, trace)
 
         # Parse SCC document
         doc = parse_scc_document(
@@ -225,6 +226,46 @@ class EU_SCCService:
                 for item in run_result.context_pack.attachment_notes
             ],
         )
+
+    def _use_uploaded_scc_document(
+        self,
+        payload: SCCReviewRequest,
+        trace: TraceRecorder,
+    ) -> SCCReviewRequest:
+        source_docx = _pick_source_docx(payload.uploaded_files)
+        if not source_docx:
+            return payload
+
+        try:
+            uploaded_text = self.parser.parse_text(source_docx).strip()
+        except (FileNotFoundError, ValueError) as exc:
+            trace.record(
+                "warning",
+                {
+                    "summary": "上传的 SCC 主文档无法解析，继续使用表单文本",
+                    "detail": {"source_path": str(source_docx), "error": str(exc)},
+                },
+            )
+            return payload
+
+        if len(uploaded_text) < 100:
+            trace.record(
+                "warning",
+                {
+                    "summary": "上传的 SCC 主文档内容过短，继续使用表单文本",
+                    "detail": {"source_path": str(source_docx), "text_length": len(uploaded_text)},
+                },
+            )
+            return payload
+
+        trace.record(
+            "intermediate",
+            {
+                "summary": "已使用上传 SCC 文档作为核心审查文本",
+                "detail": {"source_path": str(source_docx), "text_length": len(uploaded_text)},
+            },
+        )
+        return payload.model_copy(update={"scc_text": uploaded_text})
 
     def _build_pipeline(self, rule_result: SCCRuleEngineResult) -> WorkflowPipeline:
         return WorkflowPipeline(
@@ -413,7 +454,7 @@ class EU_SCCService:
             if source_docx:
                 comments = [
                     DocxComment(
-                        label=f.get("issue_type", "EU SCC Review"),
+                        label=f.issue_type or "EU SCC Review",
                         location=f.location,
                         quote=f.original_text,
                         risk_level=f.severity,

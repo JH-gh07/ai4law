@@ -77,6 +77,38 @@ def test_scc_schema_first_service_exposes_document_ir(tmp_path, monkeypatch) -> 
         assert "word/document.xml" in bundle.namelist()
 
 
+def test_uploaded_scc_document_drives_core_review(tmp_path, monkeypatch) -> None:
+    from docx import Document
+
+    source_docx = tmp_path / "india_health_scc.docx"
+    document = Document()
+    for block in _SCC_C2P_INDIA_HEALTH.strip().split("\n\n"):
+        document.add_paragraph(block)
+    document.save(source_docx)
+
+    monkeypatch.chdir(tmp_path)
+    service = EU_SCCService(llm_client=_DisabledLLM())
+    payload = _make_request(
+        "Module Two placeholder without the uploaded contract clauses.",
+        declared_module="Module Two",
+        exporter_role="controller",
+        importer_role="processor",
+        has_tia=False,
+        has_supplementary=False,
+    )
+    payload.uploaded_files = [str(source_docx)]
+
+    result = service.generate_report(payload, task_id="uploaded-scc-document")
+
+    finding_text = "\n".join(
+        f"{finding.location} {finding.risk_analysis}" for finding in result.findings
+    )
+    assert "India" in finding_text
+    assert "Clause 15" in finding_text
+    assert result.attachment_notes
+    assert "annotated_docx" in result.output_files
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Test data: EU 2021/914 style SCC document snippets
 # ═══════════════════════════════════════════════════════════════════════
