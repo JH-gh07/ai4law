@@ -22,31 +22,6 @@ from backend.domains.eu.scc_review.schema import (
     SCCTransferChain,
 )
 
-# ═══════════════════════════════════════════════════════════════════════
-# Clause titles from EU 2021/914 — used for section splitting
-# ═══════════════════════════════════════════════════════════════════════
-
-_SCC_CLAUSE_TITLES: dict[int, list[str]] = {
-    1: ["purpose and scope", "purpose", "Purpose and scope", "Clause 1"],
-    2: ["effect and invariability", "effect", "Effect and invariability", "Clause 2"],
-    3: ["third-party beneficiaries", "third party", "Third-party beneficiaries", "Clause 3"],
-    4: ["interpretation", "Interpretation", "Clause 4"],
-    5: ["hierarchy", "Hierarchy", "Clause 5"],
-    6: ["description of the transfer", "description of transfer", "Description of the transfer(s)", "Clause 6"],
-    7: ["docking clause", "Docking Clause", "docking", "Clause 7"],
-    8: ["data protection safeguards", "data protection", "safeguards", "Clause 8"],
-    9: ["use of sub-processors", "sub-processors", "sub processors", "use of subprocessors", "Clause 9"],
-    10: ["data subject rights", "data subject", "Clause 10"],
-    11: ["redress", "Redress", "Clause 11"],
-    12: ["liability", "Liability", "Clause 12"],
-    13: ["supervision", "Supervision", "Clause 13"],
-    14: ["local laws and practices", "local laws", "Clause 14"],
-    15: ["access by public authorities", "public authorities", "government access", "Clause 15"],
-    16: ["non-compliance", "non compliance", "Clause 16"],
-    17: ["governing law", "governing", "Governing law", "Clause 17"],
-    18: ["choice of forum and jurisdiction", "choice of forum", "jurisdiction", "Clause 18"],
-}
-
 _ANNEX_PATTERNS: dict[str, list[str]] = {
     "annex_ia": [
         "ANNEX I", "Annex I", "annex i", "Annex IA", "ANNEX IA",
@@ -56,7 +31,8 @@ _ANNEX_PATTERNS: dict[str, list[str]] = {
     "annex_ib": [
         "Annex I\\.B", "ANNEX I\\.B", "Annex I-B", "ANNEX I-B",
         "Annex IB", "DESCRIPTION OF TRANSFER",
-        "B\\.\\s*DESCRIPTION OF", "DESCRIPTION OF THE TRANSFER",
+        "B\\.\\s*DESCRIPTION OF(?: THE)? TRANSFER",
+        "DESCRIPTION OF(?: THE)? TRANSFER",
     ],
     "annex_ii": [
         "ANNEX II", "Annex II", "annex ii",
@@ -105,11 +81,17 @@ def _split_sections(text: str) -> dict[str, str]:
     """Split SCC document into clause and annex sections."""
     sections: dict[str, str] = {"preamble": "", "clauses": "", "annexes": ""}
 
-    # Find annex boundaries
+    # Annex names are also commonly mentioned in scenario descriptions and
+    # clause prose.  Only accept line-level headings here; an inline
+    # ``Annex I.B`` reference must not cut the contract in half.
     annex_starts: list[tuple[int, str]] = []
     for annex_key, patterns in _ANNEX_PATTERNS.items():
         for pat in patterns:
-            m = re.search(pat, text, re.IGNORECASE)
+            heading_pattern = (
+                rf"^[ \t]*(?:\*{{1,2}})?[ \t]*(?:{pat})"
+                rf"[ \t]*(?:\*{{1,2}})?[ \t]*$"
+            )
+            m = re.search(heading_pattern, text, re.IGNORECASE | re.MULTILINE)
             if m:
                 annex_starts.append((m.start(), annex_key))
                 break
@@ -133,27 +115,25 @@ def _extract_clauses(clause_text: str) -> list[SCCClause]:
     """Extract individual clauses from the clauses section."""
     clauses: list[SCCClause] = []
 
-    # Try to split by numbered clauses
+    # Clause names and numbers are frequently cited inside other clauses.  A
+    # legal section boundary must therefore be a line-level ``Clause N``
+    # heading, optionally wrapped in Markdown emphasis.  Matching loose words
+    # such as ``purpose`` or ``data subject`` caused inline references to cut a
+    # real clause into fragments.
+    heading_re = re.compile(
+        r"^[ \t]*(?:\*{1,2})?[ \t]*Clause[ \t]+(\d{1,2})\b[^\n]*$",
+        re.IGNORECASE | re.MULTILINE,
+    )
     clause_splits: list[tuple[int, str, str]] = []
-    for clause_no in range(1, 19):
-        patterns = _SCC_CLAUSE_TITLES.get(clause_no, [f"Clause {clause_no}", f"clause {clause_no}"])
-        for pat in patterns:
-            m = re.search(rf"({re.escape(pat)})\b", clause_text, re.IGNORECASE)
-            if m:
-                start = max(0, m.start() - 20)
-                clause_splits.append((start, f"Clause {clause_no}", f"Clause {clause_no}"))
-                break
-
-    clause_splits.sort()
-
-    if not clause_splits:
-        # Fallback: look for "Clause N" or "clause n" patterns
-        for m in re.finditer(r"[Cc]lause\s+(\d+)", clause_text):
-            clause_no = int(m.group(1))
-            if 1 <= clause_no <= 18:
-                clause_splits.append((m.start(), f"Clause {clause_no}", f"Clause {clause_no}"))
-
-        clause_splits.sort()
+    seen_clause_numbers: set[int] = set()
+    for match in heading_re.finditer(clause_text):
+        clause_no = int(match.group(1))
+        if not 1 <= clause_no <= 18 or clause_no in seen_clause_numbers:
+            continue
+        seen_clause_numbers.add(clause_no)
+        clause_splits.append(
+            (match.start(), f"Clause {clause_no}", match.group(0).strip())
+        )
 
     if clause_splits:
         for i, (pos, title, _) in enumerate(clause_splits):
@@ -311,11 +291,30 @@ def _build_transfer_chain(
             locations.append(sp["location"])
 
     # Scan doc for country mentions
-    country_pattern = re.findall(
-        r"\b(United\s*States|USA?|India|Serbia|China|UK|United\s*Kingdom|Japan|South\s*Korea|Singapore|Brazil|Australia)\b",
-        doc.raw_text, re.IGNORECASE
+    english_country_mentions = re.findall(
+        r"\b(United\s*States|USA?|India|Serbia|China|UK|United\s*Kingdom|"
+        r"Japan|South\s*Korea|Singapore|Brazil|Australia)\b",
+        doc.raw_text,
+        re.IGNORECASE,
     )
-    locations.extend([c.strip() for c in country_pattern])
+    locations.extend([country.strip() for country in english_country_mentions])
+    chinese_country_names = {
+        "美国": "United States",
+        "印度": "India",
+        "塞尔维亚": "Serbia",
+        "中国": "China",
+        "英国": "United Kingdom",
+        "日本": "Japan",
+        "韩国": "South Korea",
+        "新加坡": "Singapore",
+        "巴西": "Brazil",
+        "澳大利亚": "Australia",
+    }
+    locations.extend(
+        canonical
+        for localized, canonical in chinese_country_names.items()
+        if localized in doc.raw_text
+    )
 
     return SCCTransferChain(
         exporter_name=exporter_name,
@@ -343,14 +342,31 @@ def parse_scc_document(
 
     Uses regex + heuristics. Falls back gracefully when sections are not found.
     """
+    # A test/review packet may contain scenario notes before the submitted SCC.
+    # Parse legal sections from the contract portion while preserving the full
+    # packet as raw_text so country and transfer-context extraction still works.
+    contract_text = text
+    review_markers = (
+        "提交审查的SCC文档全文（关键问题部分节选）：",
+        "提交审查的SCC文档全文（关键部分节选）：",
+    )
+    marker_positions = [
+        (text.rfind(marker), marker)
+        for marker in review_markers
+        if text.rfind(marker) >= 0
+    ]
+    if marker_positions:
+        marker_pos, marker = max(marker_positions, key=lambda item: item[0])
+        contract_text = text[marker_pos + len(marker):].lstrip()
+
     # Module type
     module_type = _find_module_type(text) or declared_module
 
     # Section splitting
-    sections = _split_sections(text)
+    sections = _split_sections(contract_text)
 
     # Clause extraction
-    clauses = _extract_clauses(sections.get("clauses", text))
+    clauses = _extract_clauses(sections.get("clauses", contract_text))
 
     # Annex extraction
     annex_ia = _extract_annex_ia(sections.get("annex_ia", ""))

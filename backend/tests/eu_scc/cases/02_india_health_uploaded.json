@@ -1,0 +1,71 @@
+{
+  "case_id": "02_india_health_uploaded",
+  "description": "EU SCC审查—印度健康数据C2P，上传文档内Clause 15被削弱",
+  "input": {
+    "project_name": "印度健康数据SCC合规审查",
+    "scc_text": "Uploaded SCC document is the authoritative source for this review.",
+    "declared_module_type": "Module Two",
+    "exporter_role": "controller",
+    "importer_role": "processor",
+    "has_tia": false,
+    "has_supplementary_measures": false,
+    "uploaded_files": [
+      "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx"
+    ],
+    "company_name": "Gesundheitsforschung GmbH"
+  },
+  "expected": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "Gesundheitsforschung GmbH",
+      "overall_rating": "HIGH",
+      "module_validation.actual_module": "Module Two",
+      "module_validation.expected_module": "Module Two",
+      "module_validation.is_correct": true
+    },
+    "min_counts": {
+      "chapters": 4,
+      "findings": 5,
+      "attachment_notes": 1,
+      "output_files": 7
+    },
+    "list_contains": {
+      "findings[].issue_type": [
+        "clause_weakened",
+        "special_category_misclassified",
+        "tia_missing"
+      ],
+      "findings[].location": [
+        "Clause 15",
+        "Annex I.B"
+      ],
+      "findings[].risk_analysis": [
+        "India"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "findings_json",
+      "rule_engine_result_json",
+      "citation_map_json",
+      "annotated_docx"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "json"
+    ]
+  },
+  "expected_llm_only": {},
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx",
+  "fixture_provenance": {
+    "source_case": "测试案例二：C2P模块 - 高风险第三国且条款被不当修改",
+    "extraction": "原样抽取案例二的场景、风险说明和第2个SCC表格节选，未人工改写",
+    "source_sha256": "33258f76485ae50d4211f785ac97ce4c4e7545e902ef63390a94f11fe9ba110c",
+    "fixture_sha256": "db5a1faf81fa7849fdf21fbbc5b271b5c4cab2fb48449d539fd85467d3ff1d34"
+  },
+  "coverage_note": "本案例要求SCC核心审查以上传DOCX为准，覆盖Clause 15削弱、健康数据误分类、印度第三国TIA缺失和批注版DOCX生成。"
+}

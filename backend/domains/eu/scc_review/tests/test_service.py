@@ -7,7 +7,7 @@ from zipfile import ZipFile
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
 from backend.domains.eu.scc_review.schema import SCCChapter
-from backend.domains.eu.scc_review.schema import SCCReviewRequest, SCCReviewResult
+from backend.domains.eu.scc_review.schema import SCCReviewRequest
 from backend.domains.eu.scc_review.service import EU_SCCService, _build_template_mapping
 
 
@@ -107,6 +107,43 @@ def test_uploaded_scc_document_drives_core_review(tmp_path, monkeypatch) -> None
     assert "Clause 15" in finding_text
     assert result.attachment_notes
     assert "annotated_docx" in result.output_files
+
+
+def test_source_case_packet_preserves_contract_sections_and_destination() -> None:
+    from backend.common.storage.file_parser import FileParser
+    from backend.domains.eu.scc_review.scc_parser import (
+        _build_transfer_chain,
+        parse_scc_document,
+    )
+    from backend.domains.eu.scc_review.scc_rule_engine import review_annexes
+
+    repo_root = Path(__file__).resolve().parents[5]
+    source_docx = (
+        repo_root
+        / "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx"
+    )
+    text = FileParser().parse_text(source_docx)
+
+    document = parse_scc_document(
+        text,
+        declared_module="Module Two",
+        exporter_role="controller",
+        importer_role="processor",
+    )
+    transfer_chain = _build_transfer_chain(
+        "controller", "processor", document
+    )
+
+    clauses = {clause.clause_no: clause.content for clause in document.clauses}
+    assert {9, 14, 15}.issubset(clauses)
+    assert "as soon as legally permissible" in clauses[15]
+    assert "Patient unique study identifier" in document.annex_i_b.data_categories
+    assert any("India" in location for location in transfer_chain.storage_locations)
+    annex_findings = review_annexes(document, "Module Two").findings
+    assert any(
+        finding.issue_type == "special_category_misclassified"
+        for finding in annex_findings
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -344,7 +381,6 @@ def test_case2_c2p_india_clause15_weakened():
     assert result.overall_rating == "HIGH"
 
     # Must detect Clause 15 deviations
-    clause_devs = result.clause_comparison if hasattr(result, 'clause_comparison') else None
     # Check from findings
     clause_findings = [f for f in result.findings if "clause_weakened" in f.issue_type or "Clause 15" in f.location]
     assert len(clause_findings) > 0

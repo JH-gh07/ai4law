@@ -84,6 +84,10 @@
         {
           "case_id": "01_minimal",
           "assertions": 18
+        },
+        {
+          "case_id": "02_india_health_uploaded",
+          "assertions": 27
         }
       ],
       "frontend_cases": 3

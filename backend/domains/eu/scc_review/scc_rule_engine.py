@@ -11,13 +11,8 @@ Five review components:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
 
 from backend.domains.eu.scc_review.schema import (
-    SCCAnnexIA,
-    SCCAnnexIB,
-    SCCAnnexII,
-    SCCAnnexIII,
     SCCClause,
     SCCDocument,
     SCCFinding,
@@ -334,13 +329,27 @@ def review_annexes(doc: SCCDocument, declared_module: str) -> AnnexReview:
     ib_text = _normalize(ib.data_categories + " " + ib.processing_purpose + " " + " ".join(ib.special_category_data))
     has_health_terms = any(t in ib_text for t in health_terms)
     has_special_declared = len(ib.special_category_data) > 0
+    explicit_special_category_denial = re.search(
+        r"(?:not\s+applicable[^.]{0,160})?"
+        r"(?:does\s+not|do\s+not|is\s+not|are\s+not)\s+"
+        r"(?:constitute|include|contain|qualify\s+as)?[^.]{0,80}"
+        r"special\s+categor(?:y|ies)(?:\s+of\s+data)?",
+        doc.raw_text,
+        re.IGNORECASE,
+    )
 
-    if has_health_terms and not has_special_declared:
+    if has_health_terms and (
+        not has_special_declared or explicit_special_category_denial is not None
+    ):
         findings.append(SCCFinding(
             finding_id="EU-SCC-ANNEX-IB-MISCLASSIFIED-SPECIAL",
             location="Annex I.B",
             clause_ref="Annex I.B",
-            original_text=ib.data_categories[:200],
+            original_text=(
+                explicit_special_category_denial.group(0)[:200]
+                if explicit_special_category_denial
+                else ib.data_categories[:200]
+            ),
             issue_type="special_category_misclassified",
             severity="HIGH",
             risk_analysis="Transfer description contains health/medical data terms but special category data is NOT declared. Under GDPR Article 9, health data requires explicit consent or another exemption, and SCCs alone may not be sufficient.",
@@ -475,7 +484,23 @@ def review_tia_and_measures(
         ))
 
     # === US-specific findings ===
-    us_locations = [l for l in all_locations if any(kw in _normalize(l) for kw in ("united states", "usa", "us", "amazon", "aws", "google cloud", "azure", "microsoft"))]
+    us_locations = [
+        location
+        for location in all_locations
+        if any(
+            keyword in _normalize(location)
+            for keyword in (
+                "united states",
+                "usa",
+                "us",
+                "amazon",
+                "aws",
+                "google cloud",
+                "azure",
+                "microsoft",
+            )
+        )
+    ]
     if us_locations and not (schrems_tech and schrems_contractual):
         findings.append(SCCFinding(
             finding_id="EU-SCC-US-CLOUD-ACT-RISK",
