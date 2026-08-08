@@ -94,6 +94,14 @@ describe("EU payload builders", () => {
     expect(payload.review_items?.every((item) => item.finding && item.legal_basis)).toBe(true);
     expect(payload.attachments?.[0]?.file_format).toMatch(/^(docx|pdf)$/);
     expect(payload.uploaded_files).toEqual(input.paths);
+    expect(payload.uploaded_documents).toEqual(input.paths.map((filePath, index) => ({
+      file_id: `bcr-upload-${index + 1}`,
+      file_name: filePath.split("/").pop(),
+      file_type: filePath.split(".").pop()?.toLowerCase(),
+      file_path: filePath,
+      document_role: index === 0 ? "main_bcr_document" : "other_attachment",
+      auto_detected_role: false,
+    })));
   });
 
   it("rejects missing BCR company names and unsupported attachments", () => {

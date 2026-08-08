@@ -101,6 +101,14 @@ export function buildBcrPayload(
     file_format: inferDocxPdfFormat(path)!,
     storage_uri: path,
   }));
+  const uploadedDocuments = resolvedFilePaths.map((path, index) => ({
+    file_id: `bcr-upload-${index + 1}`,
+    file_name: basenameFromPath(path),
+    file_type: inferDocxPdfFormat(path)!,
+    file_path: path,
+    document_role: index === 0 ? "main_bcr_document" as const : "other_attachment" as const,
+    auto_detected_role: false,
+  }));
   const evidenceTexts = [
     `${values.binding_mechanism} ${values.lead_sa_rationale}`,
     values.data_flow_scope,
@@ -134,6 +142,7 @@ export function buildBcrPayload(
     review_items: reviewItems,
     attachments,
     uploaded_files: [...resolvedFilePaths],
+    uploaded_documents: uploadedDocuments,
     scenario_context: {
       company_name: values.company_name.trim(),
       eu_liable_entity: values.applicant_entity.trim(),
