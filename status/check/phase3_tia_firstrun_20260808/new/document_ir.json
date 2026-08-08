@@ -1,0 +1,129 @@
+{
+  "schema_version": "3.0",
+  "compiler_version": "0.1.0",
+  "prompt_version": "legacy-tia-adapter-v1",
+  "template_version": "tia-v0",
+  "model": "deepseek-ai/DeepSeek-V3.2",
+  "document_id": "tia:phase3-tia-no-llm",
+  "report_type": "tia",
+  "metadata": {
+    "title": "EU Exporter GmbH — 欧盟制造业企业，客户关系管理数据 — 传输影响评估报告草案",
+    "company_name": "EU Exporter GmbH — 欧盟制造业企业，客户关系管理数据",
+    "report_date": "2026-08-08",
+    "report_id": "phase3-tia-no-llm"
+  },
+  "sections": [
+    {
+      "section_id": "tia.chapter.1",
+      "title": "跨境传输场景与角色识别",
+      "level": 2,
+      "ordinal": "1",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.1.block.1",
+          "type": "paragraph",
+          "text": "（跨境传输场景与角色识别：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "tia.chapter.1.block.2",
+          "type": "paragraph",
+          "text": "DPO意见: No objection.",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "tia.chapter.2",
+      "title": "传输工具适用性判断",
+      "level": 2,
+      "ordinal": "2",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.2.block.1",
+          "type": "paragraph",
+          "text": "（传输工具适用性判断：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "tia.chapter.3",
+      "title": "第三国法律与实践评估",
+      "level": 2,
+      "ordinal": "3",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.3.block.1",
+          "type": "paragraph",
+          "text": "（第三国法律与实践评估：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "tia.chapter.4",
+      "title": "补充措施可执行性评估",
+      "level": 2,
+      "ordinal": "4",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.4.block.1",
+          "type": "paragraph",
+          "text": "（补充措施可执行性评估：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "tia.chapter.5",
+      "title": "剩余风险与合规结论",
+      "level": 2,
+      "ordinal": "5",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.5.block.1",
+          "type": "paragraph",
+          "text": "（剩余风险与合规结论：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "tia.chapter.6",
+      "title": "持续复审与行动计划",
+      "level": 2,
+      "ordinal": "6",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "tia.chapter.6.block.1",
+          "type": "paragraph",
+          "text": "（持续复审与行动计划：LLM未配置，此处为占位内容）",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "provenance": {
+    "generated_at": "2026-08-08T02:43:14.150386Z",
+    "facts_version": null,
+    "issues_version": null,
+    "evidence_version": null
+  },
+  "input_hash": null,
+  "document_ir_hash": null
+}

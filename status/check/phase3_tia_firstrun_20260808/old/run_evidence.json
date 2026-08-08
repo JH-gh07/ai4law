@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "mode": "old",
+  "schema_first_enabled": false,
+  "compiler_gate": "not_enabled",
+  "execution": {
+    "service": "backend.domains.eu.tia.service.TIAService.generate_report",
+    "task_id": "phase3-tia-no-llm",
+    "llm_mode": "disabled",
+    "network_llm_calls": 0,
+    "started_at": "2026-08-08T02:43:09.137957+00:00",
+    "finished_at": "2026-08-08T02:43:10.910344+00:00",
+    "duration_ms": 1772,
+    "git_commit": "c775e5bfe4356f411a15b39735ce82071268f999"
+  },
+  "fixture": {
+    "path": "backend/tests/tia/cases/01_minimal.json",
+    "sha256": "87f4a138f905a936dafc1926a0c068481ab18f5fe19c6fc8a40b8c87c6c8acb1",
+    "case_id": "01_minimal",
+    "description": "TIA传输影响评估—SCC传输工具，EU→US，政府访问风险+端到端加密补充措施",
+    "attachment_uri": "storage://uploads/scc_agreement.pdf",
+    "attachment_is_real_file": false,
+    "attachment_note": "The storage:// URI is a fictional fixture placeholder; no attachment-content validation is claimed."
+  },
+  "result": {
+    "risk_level": "LOW",
+    "transfer_tool": "scc",
+    "chapter_count": 6,
+    "consistency_issues": [
+      "No country_law_analysis attachment provided."
+    ],
+    "attachment_notes": [
+      "scc_agreement.pdf: [parse skipped] File not found: storage://uploads/scc_agreement.pdf"
+    ],
+    "output_roles": [
+      "citation_map_json",
+      "docx",
+      "markdown",
+      "pdf",
+      "zip"
+    ]
+  },
+  "artifacts": {
+    "markdown": {
+      "path": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.md",
+      "size": 729,
+      "sha256": "d75e9eb034a404c26d2447d8283760c3817da8b607d9ef61211351ba48d1cce9"
+    },
+    "docx": {
+      "path": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.docx",
+      "size": 37016,
+      "sha256": "f1b7b2e1a935b7aa6768107b1cd2774064eb753c4e953948181ca91d8be959a7"
+    },
+    "pdf": {
+      "path": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.pdf",
+      "size": 3535,
+      "sha256": "a14ae226b6f5c32ba8fc91149f47499e3ba2588c8f8a740906926b869eb45952"
+    },
+    "zip": {
+      "path": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_输出包_草案_20260808.zip",
+      "size": 38018,
+      "sha256": "eec20c5e3aa0a572774d0996513f4f77887f4e9159eeb126a14b391ce98e406d"
+    },
+    "citation_map_json": {
+      "path": "citation_map.json",
+      "size": 4281,
+      "sha256": "108914096d7ca02090d921a6e354d532ae0242c774436ff47db92b8dd5a5aaf0"
+    }
+  },
+  "zip_members": [
+    {
+      "name": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.docx",
+      "size": 37016,
+      "sha256": "f1b7b2e1a935b7aa6768107b1cd2774064eb753c4e953948181ca91d8be959a7"
+    },
+    {
+      "name": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.md",
+      "size": 729,
+      "sha256": "d75e9eb034a404c26d2447d8283760c3817da8b607d9ef61211351ba48d1cce9"
+    },
+    {
+      "name": "EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.pdf",
+      "size": 3535,
+      "sha256": "a14ae226b6f5c32ba8fc91149f47499e3ba2588c8f8a740906926b869eb45952"
+    }
+  ],
+  "citation_map": {
+    "footnote_count": 0,
+    "all_items_count": 2,
+    "citation_ids": [
+      "CIT-EU-GDPR-ART1-P01",
+      "CIT-EU-EDPB-ART6-P01"
+    ]
+  },
+  "document_ir": {
+    "present": false
+  },
+  "observability": {
+    "event_count": 7,
+    "trace_manifest": "trace/manifest.json",
+    "llm_calls": 0,
+    "tokens": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    },
+    "fallback_count": 0
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "tool_result",
+  "seq": 4,
+  "created_at": "2026-08-08T02:38:27.166193+00:00",
+  "payload": {
+    "summary": "模型响应返回",
+    "detail": {
+      "tool": "llm_chat",
+      "channel": "workflow",
+      "provider": "siliconflow",
+      "provider_id": "siliconflow",
+      "provider_name": "siliconflow",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "usage": {
+        "usage_source": "provider",
+        "prompt_tokens": 321,
+        "completion_tokens": 428,
+        "total_tokens": 749
+      },
+      "fallback": false,
+      "llm": {
+        "channel": "workflow",
+        "provider": "siliconflow",
+        "model": "deepseek-ai/DeepSeek-V3.2",
+        "usage_source": "provider",
+        "prompt_tokens": 321,
+        "completion_tokens": 428,
+        "total_tokens": 749,
+        "fallback": false
+      },
+      "content": "```json\n{\n    \"queries\": [\n        {\n            \"purpose\": \"transfer_tool_legal_basis\",\n            \"query\": \"Standard Contractual Clauses 2021/914 modules implementation requirements GDPR Article 46\"\n        },\n        {\n            \"purpose\": \"destination_law_risk\",\n            \"query\": \"government surveillance access personal data third country legal framework proportionality necessity\"\n        },\n        {\n            \"purpose\": \"supplementary_measures\",\n            \"query\": \"EDPB Recommendations 01/2020 supplementary measures technical organizational contractual encryption pseudonymization\"\n        },\n        {\n            \"purpose\": \"data_categories_sensitivity\",\n            \"query\": \"data minimization purpose limitation data categories sensitivity assessment transfer impact\"\n        },\n        {\n            \"purpose\": \"transfer_route_documentation\",\n            \"query\": \"sub-processor onward transfer chain documentation SCC Article 28 processor\"\n        },\n        {\n            \"purpose\": \"remedy_oversight\",\n            \"query\": \"effective legal remedies judicial redress independent oversight data protection authority\"\n        }\n    ],\n    \"priority_order\": [\"transfer_tool_",
+      "raw_name": "llm_chat_response"
+    }
+  }
+}

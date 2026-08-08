@@ -1,0 +1,24 @@
+{
+  "name": "final_brief",
+  "seq": 7,
+  "created_at": "2026-08-08T02:43:14.319341+00:00",
+  "payload": {
+    "summary": "TIA 传输影响评估完成",
+    "detail": {
+      "conclusion": "TIA 传输影响评估已完成",
+      "files": [
+        "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.md",
+        "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.docx",
+        "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.pdf",
+        "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_输出包_草案_20260808.zip",
+        "outputs/tia/phase3-tia-no-llm/outputs/document_ir.json",
+        "outputs/tia/phase3-tia-no-llm/outputs/citation_map.json"
+      ],
+      "risks": [],
+      "next_steps": [
+        "复核 TIA 评估结论",
+        "确认补充措施的充分性"
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "created_at": "2026-08-08T02:43:10.910357+00:00",
+  "event_count": 7,
+  "events": [
+    {
+      "seq": 1,
+      "name": "status",
+      "path": "trace/001_status.json",
+      "created_at": "2026-08-08T02:43:09.141480+00:00"
+    },
+    {
+      "seq": 2,
+      "name": "thought",
+      "path": "trace/002_thought.json",
+      "created_at": "2026-08-08T02:43:09.142100+00:00"
+    },
+    {
+      "seq": 3,
+      "name": "thought",
+      "path": "trace/003_thought.json",
+      "created_at": "2026-08-08T02:43:09.142632+00:00"
+    },
+    {
+      "seq": 4,
+      "name": "thought",
+      "path": "trace/004_thought.json",
+      "created_at": "2026-08-08T02:43:10.721062+00:00"
+    },
+    {
+      "seq": 5,
+      "name": "thought",
+      "path": "trace/005_thought.json",
+      "created_at": "2026-08-08T02:43:10.723623+00:00"
+    },
+    {
+      "seq": 6,
+      "name": "final",
+      "path": "trace/006_final.json",
+      "created_at": "2026-08-08T02:43:10.909033+00:00"
+    },
+    {
+      "seq": 7,
+      "name": "final_brief",
+      "path": "trace/007_final_brief.json",
+      "created_at": "2026-08-08T02:43:10.909592+00:00"
+    }
+  ]
+}

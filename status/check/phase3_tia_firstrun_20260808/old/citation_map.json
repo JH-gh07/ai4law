@@ -1,0 +1,123 @@
+{
+  "task_id": "phase3-tia-no-llm",
+  "module": "tia",
+  "footnote_map": {},
+  "all_items": [
+    {
+      "citation_id": "CIT-EU-GDPR-ART1-P01",
+      "source_id": "EU-LAW-001",
+      "jurisdiction": "EU",
+      "display_label": "GDPR 段落1",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "GDPR (EU) 2016/679",
+      "article_no": "1",
+      "quote_text": "# GDPR (EU) 2016/679 - Real Excerpts for RAG",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "TIA-001-transfer-tool",
+        "TIA-002-country-risk",
+        "TIA-003-supplementary-measures",
+        "TIA-004-residual-risk"
+      ],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.52,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "citation_granularity": "article",
+      "source_url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "publish_date": "2016-04-27",
+      "effective_date": "2018-05-25",
+      "source_status": "effective",
+      "is_recent": false,
+      "amendment_note": "",
+      "module": "tia",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/EU-LAW-001",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "EU-LAW-001",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source",
+          "open_official_source"
+        ]
+      },
+      "can_jump": false
+    },
+    {
+      "citation_id": "CIT-EU-EDPB-ART6-P01",
+      "source_id": "EU-GUIDE-002",
+      "jurisdiction": "EU",
+      "display_label": "EDPB Recommendations 01/2020 段落6",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "EDPB Recommendations 01/2020",
+      "article_no": "6",
+      "quote_text": "Step 3: Assess whether the Article 46 GD PR transfer tool you are relying on is effective in light of all circumstances of the transfer 28. The selected Article 46 GDPR transfer tool must be effective in ensuring that the level of protection guaranteed by the GDPR is not undermined by the transfer in practice.38 29. In particular, the protection afforded to the transferred personal data in the third country must be essentially equivalent to that guaranteed in the EEA by the GDPR, read in light o",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "TIA-001-transfer-tool",
+        "TIA-002-country-risk",
+        "TIA-003-supplementary-measures",
+        "TIA-004-residual-risk"
+      ],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.51,
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "source_kind": "official_guide",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.3,
+      "external_report_allowed": false,
+      "citation_granularity": "article",
+      "source_url": "https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+      "publish_date": "2021-06-18",
+      "effective_date": "2021-06-18",
+      "source_status": "effective",
+      "is_recent": false,
+      "amendment_note": "",
+      "module": "tia",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/EU-GUIDE-002",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "EU-GUIDE-002",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source",
+          "open_official_source"
+        ]
+      },
+      "can_jump": false
+    }
+  ]
+}

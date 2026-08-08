@@ -1,0 +1,18 @@
+{
+  "name": "final",
+  "seq": 6,
+  "created_at": "2026-08-08T02:43:14.319017+00:00",
+  "payload": {
+    "summary": "TIA 传输影响评估完成",
+    "detail": {
+      "output_files": {
+        "markdown": "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.md",
+        "docx": "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.docx",
+        "pdf": "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_报告_草案_20260808.pdf",
+        "zip": "outputs/tia/phase3-tia-no-llm/outputs/EU_Exporter_GmbH_—_欧盟制造业企业，客户关系管理数据_scc_TIA_输出包_草案_20260808.zip",
+        "document_ir_json": "outputs/tia/phase3-tia-no-llm/outputs/document_ir.json",
+        "citation_map_json": "outputs/tia/phase3-tia-no-llm/outputs/citation_map.json"
+      }
+    }
+  }
+}

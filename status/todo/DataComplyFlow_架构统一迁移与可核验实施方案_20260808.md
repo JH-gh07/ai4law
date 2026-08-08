@@ -106,8 +106,8 @@
 | `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
 | `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
 | assessment 相关回归 | 61 项通过 | 2026-08-08 本地执行记录（见下方注） |
-| 后端全量回归 | **641 通过、0 失败** | 本次会话已修复2个既有失败，见下方失败诊断 |
-| 其他模块新流程 | 未迁移 | 不能宣称已完成 |
+| 后端全量回归 | 历史记录 641 通过、0 失败；当前 HEAD 尚未形成新的完整回归记录 | 当前工作区有未提交改动，需在冻结基线后重新跑全量回归 |
+| 其他模块新流程 | 代码适配和单测已有，真实服务首跑未完成 | 只能称“适配已完成、功能未验收”，不能宣称迁移完成 |
 
 ## 4. 目标目录和职责
 
@@ -397,10 +397,10 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | **完成** | `status/check/本地基线_20260808.md`，641/641 通过 | — |
+| 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑 | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
-| 2 | assessment | **完成** | Golden Snapshot、61 项回归 + 本地首跑验收报告（`status/check/phase2_assessment_firstrun_20260808/`） | — |
-| 3 | 其他模块 | **完成（代码+测试）** | 8个模块均已迁移（DPIA/TIA/PIPIA/BCR/SCC/CPRA/EO14117/document_review），723 passed | 各模块本地真实产物首跑待补（目前为 fixture 首跑） |
+| 2 | assessment | **部分完成** | Golden Snapshot、61 项回归 + 本地 fixture 产物（`status/check/phase2_assessment_firstrun_20260808/`） | 需用生产形态完整跑过 `chapter_generator`，补正文脚注、CitationMap、API lookup 和 token/time 证据 |
+| 3 | 其他模块 | **部分完成（适配器+单测）** | 9 个 `schema_first.py` 适配器及对应单测存在；DPIA 有一份 fixture 产物，TIA 仅有 baseline | assessment 生产形态复跑、DPIA service/token/time、TIA 及其余 6 个模块真实 service 首跑、新旧产物对比、回退记录均待补 |
 | 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复），`scripts/check_citation_source_integrity.py` | URL回填：2620条缺失、无已知URL，暂无法自动化 |
 | 5 | 前端闭环 | 部分完成 | 待核验状态测试 | 全部跳转状态和截图 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
@@ -441,16 +441,16 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 法域 | 用户看到的功能 | 实际作用和边界 | 前端 module key | 后端实现 | 当前迁移状态 |
 |---|---|---|---|---|---|
-| CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | 未迁移 |
-| CN | 安全评估路径 | 收集申报要件，生成《数据出境风险自评估报告》草案 | `assessment` | `backend/domains/cn/security_assessment/` | 已有 DocumentIR 开关，待远端首跑 |
-| CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | 未迁移 |
-| CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 未迁移 |
-| EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | 未迁移 |
-| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 未迁移 |
-| EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | 未迁移 |
-| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | 未迁移 |
-| US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 未迁移 |
-| US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 未迁移 |
+| CN | 合规路径诊断 | 根据问卷判断走安全评估、标准合同备案或认证；输出诊断结论，不替用户完成合同备案 | `diagnosis` | `transfer_diagnosis` 规则引擎；会话 API 和直接 API | 未迁移，尚无双路径一致性验收 |
+| CN | 安全评估路径 | 收集申报要件，生成《数据出境风险自评估报告》草案 | `assessment` | `backend/domains/cn/security_assessment/` | 代码和 fixture 适配已完成；完整生产形态首跑待补 |
+| CN | 认证/标准合同路径 | 为认证或标准合同备案场景生成 PIPIA 草案；不等同于自动生成完整标准合同 | `pipia` | `backend/domains/cn/pipia/` | 适配器和单测已有；真实 service 首跑未验收 |
+| CN | 文档专项智能审查 | 审查用户上传的隐私政策、合同、DPA 等文件并给出条款建议 | `review` | `backend/domains/cn/document_review/` | 适配器和单测已有；上传→解析→报告两步 service 首跑未验收 |
+| EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | 适配器和单测已有；真实 service 首跑未验收 |
+| EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | 适配器和单测已有；真实 service 首跑未验收 |
+| EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | fixture 新旧产物已对比；service/token-time 和浏览器验收未完成 |
+| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | 适配器、单测和 baseline 已有；真实 service 首跑本次卡在 RAG/生成阶段 |
+| US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
+| US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 适配器和单测已有；真实 service 首跑未验收 |
 
 `cn_flow` 不是第三个美国用户功能。它是历史 API/兼容入口，当前执行 EO 14117 数据流评估；迁移 `us_14117` 时必须同时验证 `us_14117` 和 `cn_flow` 两个后端入口输出同一套 EO 14117 规则结果，防止兼容接口与主入口分叉。
 
