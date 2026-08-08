@@ -437,5 +437,8 @@ def test_bcr_document_review_renders_model_remediation_in_final_report(
         and "MODEL-VERIFIED" in finding.suggested_revision
         for finding in result.findings
     )
+    assert result.review_metadata["remediation_suggestion_count"] > 0
+    assert result.review_metadata["llm_remediation_count"] > 0
+    assert result.review_metadata["template_remediation_count"] == 0
     markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
     assert "MODEL-VERIFIED" in markdown

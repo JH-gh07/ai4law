@@ -179,7 +179,11 @@ def _explode_packed_line(line: str) -> list[str]:
         line = re.sub(r"(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)", r"\n\1", line)
         # P0-3: Fix regex to avoid breaking TLS 1.3, v1.2.3 etc.
         # Only match numbered lists at line start or after whitespace, exclude \d.\d patterns
-        line = re.sub(r"(?<!\n)(?<!\d)(\(?\d+\)|\d+[、])\s*(?=\S)", lambda m: f"\n{m.group(1)} ", line)
+        line = re.sub(
+            r"(?<!\n)(?<![\d(])(\(?\d+\)|\d+[、])\s*(?=\S)",
+            lambda m: f"\n{m.group(1)} ",
+            line,
+        )
 
     return [part.strip() for part in line.split("\n") if part.strip()]
 

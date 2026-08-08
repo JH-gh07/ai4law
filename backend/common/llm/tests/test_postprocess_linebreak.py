@@ -24,6 +24,14 @@ def test_version_numbers_survive():
         assert expected_fragment in result, f"Expected '{expected_fragment}' intact in: {result}"
 
 
+def test_legal_paragraph_locators_are_not_treated_as_numbered_lists():
+    input_md = "责任实体应承担GDPR第47(1)(b)及47(2)(f)条规定的责任。"
+    result = normalize_legal_markdown_structure(input_md)
+    assert "47(1)(b)" in result
+    assert "47(2)(f)" in result
+    assert "47(\n" not in result
+
+
 def test_real_numbered_lists_still_work():
     """Legitimate numbered lists should still be split."""
     input_md = "安全措施包括：1. 数据加密 2. 访问控制 3. 审计日志"

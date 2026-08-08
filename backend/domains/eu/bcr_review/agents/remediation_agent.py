@@ -101,6 +101,7 @@ class BCRRemediationAgent(BCRAgentBase):
             "insert_location": template["insert_location"],
             "suggested_text": template["suggested_text"],
             "rationale": template["rationale"],
+            "generation_source": "template",
         }
 
         # LLM enhancement to tailor the suggested_text to the specific finding
@@ -115,6 +116,7 @@ class BCRRemediationAgent(BCRAgentBase):
                     result["rationale"] = llm_result["rationale"]
                 if llm_result.get("fix_type"):
                     result["fix_type"] = llm_result["fix_type"]
+                result["generation_source"] = "llm"
 
         return result
 

@@ -429,7 +429,9 @@ class BCRService:
             rating = "高风险"
 
         # Agent 10: Remediation — generate actionable fix suggestions for HIGH findings
-        remediation_count = 0
+        remediation_suggestion_count = 0
+        llm_remediation_count = 0
+        template_remediation_count = 0
         for f in deduped:
             if getattr(f, "risk_level", "LOW") in ("HIGH",):
                 req_text = next((ch.content for ch in main_doc.chapters
@@ -448,13 +450,19 @@ class BCRService:
                     trace.record("thought", {"summary": thought})
                 if agent_rem.get("suggested_text"):
                     f.suggested_revision = str(agent_rem["suggested_text"]).strip()
-                    remediation_count += 1
+                    remediation_suggestion_count += 1
+                    if agent_rem.get("generation_source") == "llm":
+                        llm_remediation_count += 1
+                    else:
+                        template_remediation_count += 1
 
         metadata = {
             "completed_at": datetime.datetime.now().isoformat(),
             "review_mode": "llm" if (self.llm_client and self.llm_client.enabled) else "rule_only",
             "bcr_type": bcr_type, "total_findings": len(deduped), "total_missing": len(missing),
-            "llm_remediation_count": remediation_count,
+            "remediation_suggestion_count": remediation_suggestion_count,
+            "llm_remediation_count": llm_remediation_count,
+            "template_remediation_count": template_remediation_count,
         }
 
         sections = self.report_renderer.build_sections(type_class, deduped, missing, rating, score, metadata)
