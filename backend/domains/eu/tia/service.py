@@ -236,6 +236,7 @@ class TIAService:
                         citations=[ref.display_label for ref in citation_refs],
                         citation_marker_section=citation_bundle.prompt_block,
                         use_citation_markers=True,
+                        citation_registry=citation_registry,
                     )
                     content = apply_citation_pipeline(
                         content,

@@ -63,6 +63,9 @@ jobs:
       - name: Validate contract isolation
         run: uv run --frozen pytest -q backend/tests/test_contract_support.py backend/tests/test_contract_app.py
 
+      - name: Enforce citation single-source pipeline
+        run: uv run --frozen python scripts/check_citation_single_source.py
+
       - name: Build frontend
         run: npm --prefix frontend run build
 

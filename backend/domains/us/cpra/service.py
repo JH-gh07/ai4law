@@ -521,6 +521,7 @@ class CPRAService:
                     citations=[item.display_label for item in citations],
                     citation_marker_section=marker_block,
                     use_citation_markers=True,
+                    citation_registry=citation_registry,
                 )
                 content = apply_citation_pipeline(
                     content,

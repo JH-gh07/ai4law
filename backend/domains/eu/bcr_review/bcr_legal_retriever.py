@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from backend.common.citation.locators import normalize_article_no
 from backend.common.rag.service import retrieve_legal_documents
 
 if TYPE_CHECKING:
@@ -27,11 +28,26 @@ class BCRLegalRetriever:
         except Exception:
             return []
 
-        return [
-            {"source": f"{item.title}{item.article}", "section": item.article,
-             "snippet": (item.content or "")[:200]}
-            for item in hits
-        ]
+        references: list[dict] = []
+        for item in hits:
+            article_no = normalize_article_no(item.article)
+            article_label = f" 第{article_no}条" if article_no else ""
+            references.append(
+                {
+                    # Keep the original public keys for clause reviewers, while
+                    # retaining the full record needed by the report registry.
+                    "source": f"{item.title}{article_label}",
+                    "section": item.article,
+                    "snippet": (item.content or "")[:200],
+                    "source_id": item.id,
+                    "title": item.title,
+                    "article": item.article,
+                    "content": item.content,
+                    "jurisdiction": item.jurisdiction or "eu",
+                    "source_url": item.source_url,
+                }
+            )
+        return references
 
     @staticmethod
     def _build_query(requirement_id: str, bcr_type: str, clause_text: str) -> str:

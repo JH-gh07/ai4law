@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from backend.common.llm.client import LLMClient
-from backend.common.llm.postprocess import apply_citation_pipeline, ensure_paragraph_citations, strip_markdown_inline
+from backend.common.llm.postprocess import apply_citation_pipeline, strip_markdown_inline
+from backend.common.citation.registry import registry_from_documents
 from backend.common.render.summary import attach_citations
 from backend.common.risk.scoring import risk_level
 from backend.common.workflow import GenerationContextPack
@@ -385,6 +386,19 @@ class AssessmentChapterGenerator:
                 else _build_context_block(profile, hits, level)
             )
             citation_registry = context_pack.citation_registry if context_pack else None
+            if citation_registry is None:
+                citation_registry = registry_from_documents(
+                    [
+                        {
+                            "source_id": hit.source_id,
+                            "title": hit.title,
+                            "article": hit.article,
+                            "snippet": hit.snippet,
+                        }
+                        for hit in hits
+                    ],
+                    jurisdiction="CN",
+                )
             content = self._generate_chapter(
                 chapter_title,
                 chapter_instruction,
@@ -442,13 +456,11 @@ class AssessmentChapterGenerator:
                     context_pack=context_pack,
                     chapter_id=chapter_id,
                 )
-            if citation_registry is not None:
-                return apply_citation_pipeline(
-                    raw,
-                    registry=citation_registry,
-                    allowed_citations=citations,
-                ).text
-            return ensure_paragraph_citations(raw, citations)
+            return apply_citation_pipeline(
+                raw,
+                registry=citation_registry,
+                allowed_citations=citations,
+            ).text
         return self._build_fallback_chapter(
             title=title,
             citations=citations,

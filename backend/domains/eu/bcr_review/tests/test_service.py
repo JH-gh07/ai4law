@@ -3,12 +3,25 @@ from zipfile import ZipFile
 
 from pypdf import PdfReader
 
+from backend.common.citation.registry import registry_from_documents
+from backend.common.rag.retriever import RegulationDoc
 from backend.domains.eu.bcr_review.schema import BCRFinding, BCRRequest
 from backend.domains.eu.bcr_review.service import BCRService, _build_template_mapping
 
 
 class _DisabledLLM:
     enabled = False
+
+
+class _CitationLLM:
+    enabled = True
+
+    def chat(self, **kwargs) -> str:
+        marker_line = next(
+            line for line in kwargs["user"].splitlines() if line.startswith("{{CIT-")
+        )
+        marker = marker_line.split(" = ", 1)[0]
+        return f"集团规则应当具备法律约束力。{marker}"
 
 
 def test_bcr_generate_report() -> None:
@@ -79,7 +92,9 @@ def test_bcr_template_mapping_uses_markdown_table_for_detailed_findings() -> Non
     )
 
     problems = service._extract_problems(payload)
-    chapters = service._generate_chapters(payload, "部分缺失", problems, [], "（暂无）")
+    chapters = service._generate_chapters(
+        payload, "部分缺失", problems, registry_from_documents([], jurisdiction="EU"), "（暂无）"
+    )
     mapping = _build_template_mapping(payload, "部分缺失", problems, chapters, "20260605")
 
     assert mapping["detailed_findings"].startswith("| 检查项 | 主题 | 风险 |")
@@ -101,6 +116,19 @@ def test_bcr_document_driven_renderer_generates_pdf_in_bundle() -> None:
         recommendation="补充集团内部约束条款。",
     )
     sections = [(f"章节 {index}", ["审查内容"]) for index in range(8)]
+    registry = registry_from_documents(
+        [
+            RegulationDoc(
+                id="gdpr",
+                title="General Data Protection Regulation",
+                article="47",
+                content="Binding corporate rules shall be legally binding.",
+                jurisdiction="eu",
+            )
+        ],
+        jurisdiction="EU",
+    )
+    registry.assign_footnote_number(next(iter(registry)).citation_id)
 
     outputs = service._render_document_driven(
         "document-pdf-output",
@@ -110,6 +138,7 @@ def test_bcr_document_driven_renderer_generates_pdf_in_bundle() -> None:
         [],
         sections,
         {"bcr_type": "BCR-C"},
+        registry,
     )
 
     pdf_path = Path(outputs["pdf"])
@@ -117,3 +146,73 @@ def test_bcr_document_driven_renderer_generates_pdf_in_bundle() -> None:
     assert len(PdfReader(pdf_path).pages) >= 1
     with ZipFile(outputs["zip"]) as bundle:
         assert pdf_path.name in bundle.namelist()
+        assert "citation_map.json" in bundle.namelist()
+    assert Path(outputs["citation_map_json"]).exists()
+
+
+def test_bcr_chapter_generation_uses_shared_citation_registry() -> None:
+    service = BCRService(llm_client=_CitationLLM())
+    payload = BCRRequest.model_validate(
+        {"company_name": "引用测试集团", "review_items": [], "attachments": []}
+    )
+    registry = registry_from_documents(
+        [
+            RegulationDoc(
+                id="gdpr",
+                title="General Data Protection Regulation",
+                article="47",
+                content="Binding corporate rules shall be legally binding.",
+                jurisdiction="eu",
+            )
+        ],
+        jurisdiction="EU",
+    )
+
+    chapters = service._generate_chapters(
+        payload,
+        "基本合规",
+        [],
+        registry,
+        "General Data Protection Regulation 第47条",
+    )
+
+    generated = next(chapter for chapter in chapters if chapter.title == "报告摘要")
+    assert generated.content.endswith("[1]")
+    assert generated.citations == ["CIT-EU-GDPR-ART47-P01"]
+
+
+def test_bcr_render_writes_shared_citation_map(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    service = BCRService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = False
+    payload = BCRRequest.model_validate(
+        {"company_name": "引用测试集团", "review_items": [], "attachments": []}
+    )
+    registry = registry_from_documents(
+        [
+            RegulationDoc(
+                id="gdpr",
+                title="General Data Protection Regulation",
+                article="47",
+                content="Binding corporate rules shall be legally binding.",
+                jurisdiction="eu",
+            )
+        ],
+        jurisdiction="EU",
+    )
+    citation_id = next(iter(registry)).citation_id
+    registry.assign_footnote_number(citation_id)
+
+    outputs = service._render(
+        "citation-map-task",
+        payload,
+        "基本合规",
+        [],
+        [],
+        [],
+        registry,
+    )
+
+    citation_map = Path(outputs["citation_map_json"])
+    assert citation_map.name == "citation_map.json"
+    assert '"CIT-EU-GDPR-ART47-P01"' in citation_map.read_text(encoding="utf-8")

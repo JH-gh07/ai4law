@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import datetime
+import re
 import uuid
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
+from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
+from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.report import (
     format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
@@ -332,11 +336,13 @@ class BCRService:
                 ))
 
         # Stage 5: CLAUSE_REVIEWING
+        retrieved_legal_documents: list[dict] = []
         requirements = self.rulebook.get_all_requirements(bcr_type)
         for ch in main_doc.chapters:
             for req in requirements:
                 if any(kw.lower() in ch.content.lower() for kw in req.get("check_keywords", [])[:3]):
                     refs = self.legal_retriever.retrieve(req["requirement_id"], bcr_type, ch.content)
+                    retrieved_legal_documents.extend(refs)
                     findings.extend(self.clause_reviewer.review_clause(
                         ch.content, req, bcr_type, refs,
                     ))
@@ -370,6 +376,11 @@ class BCRService:
             if f.title not in seen_titles:
                 seen_titles.add(f.title)
                 deduped.append(f)
+
+        citation_registry = registry_from_documents(
+            retrieved_legal_documents, jurisdiction="EU"
+        )
+        _annotate_finding_footnotes(deduped, citation_registry)
 
         # Stage 6: AGGREGATING + RENDERING
         agg = self.risk_aggregator.aggregate(deduped, missing, type_class)
@@ -446,7 +457,16 @@ class BCRService:
         if trace:
             trace.record("tool_start", {"summary": "报告章节生成", "detail": {"agent": "chapter_generation"}})
 
-        outputs = self._render_document_driven(task_id, payload, rating, deduped, chapters, sections, metadata)
+        outputs = self._render_document_driven(
+            task_id,
+            payload,
+            rating,
+            deduped,
+            chapters,
+            sections,
+            metadata,
+            citation_registry,
+        )
 
         if trace:
             trace.record("final", {
@@ -492,10 +512,20 @@ class BCRService:
             jurisdiction="eu",
             path="all",
         ).documents
-        citations = [f"{item.title}{item.article}" for item in regs]
         reg_snippet = "\n".join(f"- {item.title}{item.article}：{(item.content or '')[:120]}" for item in regs) or "（暂无检索到相关法条）"
-        chapters = self._generate_chapters(payload, rating, problems, citations, reg_snippet)
-        outputs = self._render(task_id, payload, rating, problems, chapters, attachment_notes)
+        citation_registry = registry_from_documents(regs, jurisdiction="EU")
+        chapters = self._generate_chapters(
+            payload, rating, problems, citation_registry, reg_snippet
+        )
+        outputs = self._render(
+            task_id,
+            payload,
+            rating,
+            problems,
+            chapters,
+            attachment_notes,
+            citation_registry,
+        )
         return BCRResult(
             report_path=outputs["docx"], output_files=outputs,
             company_name=payload.company_name, rating=rating,
@@ -554,8 +584,17 @@ class BCRService:
                 notes.append(f"{Path(path).name}: [parse skipped] {exc}")
         return notes
 
-    def _generate_chapters(self, payload, rating, problems, citations, reg_snippet) -> list[BCRChapter]:
+    def _generate_chapters(
+        self,
+        payload,
+        rating,
+        problems,
+        citation_registry: CitationRegistry,
+        reg_snippet,
+    ) -> list[BCRChapter]:
         detail = _build_problem_detail_table(problems)
+        citations = [item.display_label for item in citation_registry]
+        citation_marker_section = citation_registry.build_marker_list()
         ctx = (
             f"【审查信息】\n- 公司名称：{payload.company_name}\n"
             f"- 审查项总数：{len(payload.review_items)}\n- 问题数：{len(problems)}\n"
@@ -569,20 +608,51 @@ class BCRService:
             elif title == "详细审查结果":
                 content = detail
             elif self.llm_client and self.llm_client.enabled:
-                content = generate_chapter(self.llm_client, "bcr", title, ctx, citations=citations)
+                content = generate_chapter(
+                    self.llm_client,
+                    "bcr",
+                    title,
+                    ctx,
+                    citations=citations,
+                    citation_marker_section=citation_marker_section,
+                    use_citation_markers=True,
+                    citation_registry=citation_registry,
+                )
             else:
                 content = f"（{title}：LLM未配置，此处为占位内容）"
-            chapters.append(BCRChapter(chapter_no=idx, title=title, content=content, citations=citations, risk_level=rating))
+            footnote_map = citation_registry.get_footnote_map()
+            cited_ids = [
+                footnote_map[number].citation_id
+                for number in _footnote_numbers(content)
+                if number in footnote_map
+            ]
+            chapters.append(
+                BCRChapter(
+                    chapter_no=idx,
+                    title=title,
+                    content=content,
+                    citations=cited_ids,
+                    risk_level=rating,
+                )
+            )
         return chapters
 
-    def _render(self, task_id: str, payload, rating, problems, chapters, attachment_notes) -> dict[str, str]:
+    def _render(
+        self,
+        task_id: str,
+        payload,
+        rating,
+        problems,
+        chapters,
+        attachment_notes,
+        citation_registry: CitationRegistry,
+    ) -> dict[str, str]:
         if self.schema_first_enabled:
-            from backend.common.citation.registry import CitationRegistry as _LR
             from backend.common.reporting import DocumentCompiler
             from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
             _doc, _rr = build_bcr_document_ir(
                 task_id=task_id, company_name=payload.company_name,
-                chapters=chapters, citation_registry=_LR(), model="legacy-bcr",
+                chapters=chapters, citation_registry=citation_registry, model="legacy-bcr",
             )
             _cr = DocumentCompiler().compile(_doc, _rr)
             if _cr.status != "success":
@@ -612,22 +682,45 @@ class BCRService:
             TEMPLATE_MD,
             mapping,
         )
+        citation_map_json = write_citation_map_json(
+            output_dir=output_dir,
+            module="eu_bcr",
+            task_id=task_id,
+            footnote_map={
+                str(number): item.to_dict()
+                for number, item in citation_registry.get_footnote_map().items()
+            },
+            all_items=citation_registry.to_list(),
+        )
         with ZipFile(zip_out, mode="w", compression=ZIP_DEFLATED) as z:
             z.write(docx_out, arcname=docx_out.name)
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
+            z.write(citation_map_json, arcname=Path(citation_map_json).name)
         return {
             "markdown": str(md_out),
             "docx": str(docx_out),
             "pdf": str(pdf_out),
             "zip": str(zip_out),
+            "citation_map_json": citation_map_json,
         }
 
     # ------------------------------------------------------------------
     # Document-driven rendering
     # ------------------------------------------------------------------
 
-    def _render_document_driven(self, task_id: str, payload, rating, findings, chapters, sections, metadata) -> dict[str, str]:
+    def _render_document_driven(
+        self,
+        task_id: str,
+        payload,
+        rating,
+        findings,
+        chapters,
+        sections,
+        metadata,
+        citation_registry: CitationRegistry | None = None,
+    ) -> dict[str, str]:
+        citation_registry = citation_registry or CitationRegistry()
         output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
@@ -661,15 +754,27 @@ class BCRService:
             TEMPLATE_MD,
             mapping,
         )
+        citation_map_json = write_citation_map_json(
+            output_dir=output_dir,
+            module="eu_bcr",
+            task_id=task_id,
+            footnote_map={
+                str(number): item.to_dict()
+                for number, item in citation_registry.get_footnote_map().items()
+            },
+            all_items=citation_registry.to_list(),
+        )
         with ZipFile(zip_out, mode="w", compression=ZIP_DEFLATED) as z:
             z.write(docx_out, arcname=docx_out.name)
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
+            z.write(citation_map_json, arcname=Path(citation_map_json).name)
         return {
             "markdown": str(md_out),
             "docx": str(docx_out),
             "pdf": str(pdf_out),
             "zip": str(zip_out),
+            "citation_map_json": citation_map_json,
         }
 
     # ------------------------------------------------------------------
@@ -705,3 +810,23 @@ def _build_template_mapping(payload, rating, problems, chapters, date_stamp):
         "low_risk_items": join_items(low),
         "remediation_roadmap": ch_text(4) or "按风险优先级制定整改路线。",
     }
+
+
+def _footnote_numbers(text: str) -> list[int]:
+    """Return unique footnote numbers in first-appearance order."""
+    return list(dict.fromkeys(int(value) for value in re.findall(r"\[(\d+)\]", text)))
+
+
+def _annotate_finding_footnotes(findings: list[BCRFinding], registry: CitationRegistry) -> None:
+    """Add a verified footnote only when a finding's source maps uniquely."""
+    for finding in findings:
+        rendered: list[str] = []
+        for legal_basis in finding.legal_basis:
+            resolved = apply_citation_pipeline(
+                f"【依据：{legal_basis}】",
+                registry=registry,
+            ).text
+            rendered.append(
+                f"{legal_basis} {resolved}" if re.fullmatch(r"(?:\[\d+\])+", resolved) else legal_basis
+            )
+        finding.legal_basis = rendered

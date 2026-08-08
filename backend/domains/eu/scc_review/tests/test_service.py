@@ -1,11 +1,55 @@
 """Test EU SCC compliance review — three core test scenarios."""
 
+from types import SimpleNamespace
+
+from backend.common.citation.models import CitationItem
+from backend.common.citation.registry import CitationRegistry
+from backend.domains.eu.scc_review.schema import SCCChapter
 from backend.domains.eu.scc_review.schema import SCCReviewRequest, SCCReviewResult
-from backend.domains.eu.scc_review.service import EU_SCCService
+from backend.domains.eu.scc_review.service import EU_SCCService, _build_template_mapping
 
 
 class _DisabledLLM:
     enabled = False
+
+
+def test_scc_template_summary_uses_shared_citation_registry() -> None:
+    registry = CitationRegistry()
+    registry.register(
+        CitationItem(
+            citation_id="CIT-EU-GDPR-ART46-P01",
+            source_id="gdpr",
+            jurisdiction="eu",
+            display_label="GDPR 第46条",
+            title="GDPR",
+            article_no="46",
+        )
+    )
+    chapter = SCCChapter(
+        chapter_no=2,
+        title="总体合规评级",
+        content="跨境传输应当采取适当保障。",
+        citations=["CIT-EU-GDPR-ART46-P01"],
+        risk_level="LOW",
+    )
+    payload = SimpleNamespace(company_name="引用测试公司")
+    rule_result = SimpleNamespace(
+        overall_rating="LOW",
+        module_validation=SimpleNamespace(actual_module="Module One", is_correct=True),
+        all_findings=[],
+        clause_comparison=SimpleNamespace(deviations_found=0),
+        tia_review=SimpleNamespace(has_third_country_transfer=True, tia_present=True),
+    )
+
+    mapping = _build_template_mapping(
+        payload,
+        [chapter],
+        rule_result,
+        "20260808",
+        registry,
+    )
+
+    assert mapping["executive_summary"].endswith("[1]")
 
 
 # ═══════════════════════════════════════════════════════════════════════

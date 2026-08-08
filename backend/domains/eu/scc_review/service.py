@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from pathlib import Path
 
@@ -309,21 +310,29 @@ class EU_SCCService:
                         citations=[ref.display_label for ref in citation_refs],
                         citation_marker_section=citation_bundle.prompt_block,
                         use_citation_markers=True,
+                        citation_registry=citation_registry,
                     )
                     content = apply_citation_pipeline(
                         content,
                         registry=citation_registry,
                         allowed_citations=[ref.display_label for ref in citation_refs],
                     ).text
+                    footnote_map = citation_registry.get_footnote_map()
+                    used_refs = [
+                        _eu_scc_ref_from_item(footnote_map[number])
+                        for number in _footnote_numbers(content)
+                        if number in footnote_map
+                    ]
                 else:
                     content = _render_placeholder(title, chapter_id, rule_result)
+                    used_refs = []
                 chapters.append(
                     SCCChapter(
                         chapter_no=idx,
                         title=title,
                         content=content,
-                        citations=[ref.citation_id for ref in citation_refs],
-                        citation_refs=citation_refs,
+                        citations=[ref.citation_id for ref in used_refs],
+                        citation_refs=used_refs,
                         risk_level=rule_result.overall_rating,
                     )
                 )
@@ -341,17 +350,18 @@ class EU_SCCService:
 
     def _render_outputs(self, rule_result):
         def _inner(*, task_id, payload, profile, regulations, chapters, path_warning, alignment_warning, issues, evidence_chain, attachment_notes, trace_manifest_path, facts, diagnosis, **kw):
+            citation_bundle = self._build_eu_scc_citation_bundle(kw.get("context_pack"), regulations)
+            citation_registry = CitationRegistry()
+            citation_registry._items = dict(citation_bundle.registry._items)  # noqa: SLF001
+            for chapter in chapters:
+                for citation_id in chapter.citations:
+                    citation_registry.assign_footnote_number(citation_id)
             if self.schema_first_enabled:
-                from backend.common.citation.registry import CitationRegistry as _LR
                 from backend.common.reporting import DocumentCompiler
                 from backend.domains.eu.scc_review.schema_first import build_scc_document_ir
-                _reg = _LR()
-                for ch in chapters:
-                    for cid in (ch.citations or []):
-                        pass
                 _doc, _rr = build_scc_document_ir(
                     task_id=task_id, company_name=payload.company_name,
-                    chapters=chapters, citation_registry=_reg, model='legacy-scc',
+                    chapters=chapters, citation_registry=citation_registry, model='legacy-scc',
                 )
                 _cr = DocumentCompiler().compile(_doc, _rr)
                 if _cr.status != 'success':
@@ -370,7 +380,9 @@ class EU_SCCService:
             md_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.md"
             docx_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.docx"
             pdf_out = output_dir / f"{base}_EU_SCC审查报告_{date_stamp}.pdf"
-            mapping = _build_template_mapping(payload, chapters, rule_result, date_stamp)
+            mapping = _build_template_mapping(
+                payload, chapters, rule_result, date_stamp, citation_registry
+            )
 
             # MD report (self-rendered)
             _render_markdown_report(md_out, payload, chapters, rule_result, date_stamp)
@@ -409,12 +421,6 @@ class EU_SCCService:
             (output_dir / "rule_engine_result.json").write_text(rule_result.model_dump_json(indent=2), encoding="utf-8")
             (output_dir / "issues.json").write_text(json.dumps([i.model_dump() for i in issues], ensure_ascii=False, indent=2), encoding="utf-8")
             (output_dir / "evidence.json").write_text(json.dumps([e.model_dump() for e in evidence_chain], ensure_ascii=False, indent=2), encoding="utf-8")
-            citation_registry = CitationRegistry()
-            citation_bundle = self._build_eu_scc_citation_bundle(kw.get("context_pack"), regulations)
-            citation_registry._items = dict(citation_bundle.registry._items)  # noqa: SLF001
-            for chapter in chapters:
-                for citation_id in chapter.citations:
-                    citation_registry.assign_footnote_number(citation_id)
             citation_map_json = write_citation_map_json(
                 output_dir=output_dir,
                 module="eu_scc",
@@ -550,7 +556,13 @@ def _render_placeholder(title, chapter_id, rule_result):
     return f"（{title}：内容待生成）"
 
 
-def _build_template_mapping(payload, chapters, rule_result, date_stamp):
+def _build_template_mapping(
+    payload,
+    chapters,
+    rule_result,
+    date_stamp,
+    citation_registry: CitationRegistry,
+):
     def pick(no):
         for c in chapters:
             if c.chapter_no == no: return c.content
@@ -559,6 +571,12 @@ def _build_template_mapping(payload, chapters, rule_result, date_stamp):
     citations = []
     for c in chapters:
         labels = _chapter_reference_labels(c)
+        if not labels:
+            labels = [
+                item.display_label
+                for citation_id in c.citations
+                if (item := citation_registry.get(citation_id)) is not None
+            ]
         if labels:
             citations = labels
             break
@@ -579,10 +597,23 @@ def _build_template_mapping(payload, chapters, rule_result, date_stamp):
         "clause_deviations": str(rule_result.clause_comparison.deviations_found),
         "third_country": "Yes" if rule_result.tia_review.has_third_country_transfer else "No",
         "tia_present": "Yes" if rule_result.tia_review.tia_present else "No",
-        "executive_summary": attach_citations(summarize_for_slot(pick(2), max_sentences=3, max_chars=300), citations),
+        "executive_summary": attach_citations(
+            summarize_for_slot(pick(2), max_sentences=3, max_chars=300),
+            citations,
+            registry=citation_registry,
+        ),
         "findings_table": f"{table_header}\n{findings_table}" if findings_table else "No findings.",
-        "revision_recommendations": attach_citations(summarize_for_slot(pick(4), max_sentences=3, max_chars=300), citations),
+        "revision_recommendations": attach_citations(
+            summarize_for_slot(pick(4), max_sentences=3, max_chars=300),
+            citations,
+            registry=citation_registry,
+        ),
     }
+
+
+def _footnote_numbers(text: str) -> list[int]:
+    """Return unique footnote numbers in first-appearance order."""
+    return list(dict.fromkeys(int(value) for value in re.findall(r"\[(\d+)\]", text)))
 
 
 def _render_markdown_report(output_path, payload, chapters, rule_result, date_stamp):
