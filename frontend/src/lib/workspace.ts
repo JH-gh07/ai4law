@@ -20,6 +20,54 @@ export interface CitationSummary {
   snippet: string;
 }
 
+export type ReportMetrics = {
+  issueCount?: number;
+  evidenceCount?: number;
+};
+
+const collectFootnoteIds = (value: unknown, target: Set<string>): void => {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(/\[(\d+)\]/g)) {
+      target.add(match[1]);
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectFootnoteIds(item, target));
+    return;
+  }
+  if (isRecord(value)) {
+    Object.values(value).forEach((item) => collectFootnoteIds(item, target));
+  }
+};
+
+export function extractReportMetrics(response: unknown): ReportMetrics {
+  if (!isRecord(response)) {
+    return { issueCount: undefined, evidenceCount: undefined };
+  }
+
+  const resultRecord = isRecord(response.result) ? response.result : undefined;
+  const records = resultRecord ? [response, resultRecord] : [response];
+  const issueKeys = ["findings", "problems", "issues", "consistency_issues"];
+  let issueCount: number | undefined;
+  for (const record of records) {
+    const collection = issueKeys
+      .map((key) => record[key])
+      .find((value) => Array.isArray(value));
+    if (Array.isArray(collection)) {
+      issueCount = collection.length;
+      break;
+    }
+  }
+
+  const footnoteIds = new Set<string>();
+  collectFootnoteIds(response, footnoteIds);
+  return {
+    issueCount,
+    evidenceCount: footnoteIds.size > 0 ? footnoteIds.size : undefined,
+  };
+}
+
 export function extractInsight(response: unknown): ResponseInsight {
   if (!isRecord(response)) {
     return { outputFiles: {}, consistencyIssues: [], citations: [] };
@@ -64,7 +112,10 @@ export function extractInsight(response: unknown): ResponseInsight {
   return {
     reportPath: readString(response.report_path),
     outputFiles,
-    riskLevel: readString(response.risk_level) ?? readString(resultRecord.risk_level),
+    riskLevel: readString(response.risk_level)
+      ?? readString(response.rating)
+      ?? readString(resultRecord.risk_level)
+      ?? readString(resultRecord.rating),
     recommendedPath: readString(response.recommended_path),
     consistencyIssues,
     citations,

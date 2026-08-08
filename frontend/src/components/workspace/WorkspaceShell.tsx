@@ -20,7 +20,13 @@ import {
   getTaskTemplateTitle
 } from "../../lib/task-templates";
 import { deriveWorkflowSteps } from "../../lib/workflow";
-import { extractArtifacts, extractConsistencyIssues, extractEvidenceHits, extractInsight } from "../../lib/workspace";
+import {
+  extractArtifacts,
+  extractConsistencyIssues,
+  extractEvidenceHits,
+  extractInsight,
+  extractReportMetrics,
+} from "../../lib/workspace";
 import { AssessmentIntermediatesPanel } from "./AssessmentIntermediatesPanel";
 import { AssistantPanel } from "./AssistantPanel";
 import { ResourcePanel, type ResourceOpenTarget } from "./ResourcePanel";
@@ -397,6 +403,10 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     [selectedArtifact, sortedReportArtifacts]
   );
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
+  const responseReportMetrics = useMemo(
+    () => extractReportMetrics(latestRun?.response),
+    [latestRun?.response],
+  );
   const responseChapters = useMemo(() => readResponseChapters(latestRun?.response), [latestRun?.response]);
   const reconstructedReport = useMemo<ReconstructedReportPayload>(() => {
     if (responseChapters.length > 0) {
@@ -1154,11 +1164,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         <section className="workspace-report-kpi-row">
           <article>
             <span>{t("reportIssueCount")}</span>
-            <strong>{taskIssues.length}</strong>
+            <strong>{responseReportMetrics.issueCount ?? taskIssues.length}</strong>
           </article>
           <article>
             <span>{t("reportEvidenceCount")}</span>
-            <strong>{taskEvidence.length}</strong>
+            <strong>{responseReportMetrics.evidenceCount ?? taskEvidence.length}</strong>
           </article>
           <article>
             <span>{t("reportDownloadHint")}</span>
