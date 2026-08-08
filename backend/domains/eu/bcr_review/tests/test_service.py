@@ -336,6 +336,9 @@ def test_bcr_document_review_accepts_current_onward_transfer_agent_contract(
     assert result.rating == "高风险"
     assert result.bcr_type_classification is not None
     assert result.bcr_type_classification.actual_bcr_type == "BCR-C"
+    markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
+    detailed_section = markdown.split("## 详细审查结果", 1)[1].split("## 高风险项目", 1)[0]
+    assert detailed_section.count("\n| BCR-") == len(result.findings)
 
 
 def test_bcr_document_review_binds_only_supported_citations(

@@ -466,7 +466,7 @@ class BCRService:
         }
 
         sections = self.report_renderer.build_sections(type_class, deduped, missing, rating, score, metadata)
-        detailed_findings_table = _build_finding_detail_table(deduped[:10])
+        detailed_findings_table = _build_finding_detail_table(deduped)
 
         # Generate chapters for backward compat, but keep the detailed findings
         # chapter aligned with the same markdown table exported into the template.
@@ -810,7 +810,7 @@ class BCRService:
             "review_date": date_stamp,
             "overall_rating": rating,
             "key_findings": "；".join(f.title for f in findings[:5]) or "未发现高风险问题",
-            "detailed_findings": _build_finding_detail_table(findings[:10]),
+            "detailed_findings": _build_finding_detail_table(findings),
             "high_risk_items": "；".join(f.title for f in findings if f.risk_level == "HIGH") or "无",
             "medium_risk_items": "；".join(f.title for f in findings if f.risk_level == "MEDIUM") or "无",
             "low_risk_items": "；".join(f.title for f in findings if f.risk_level == "LOW") or "无",
