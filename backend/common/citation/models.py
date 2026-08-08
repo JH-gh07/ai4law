@@ -14,6 +14,7 @@ CitationType = Literal[
 
 AuthorityLevel = Literal["high", "medium", "low"]
 BindingForce = Literal["mandatory", "recommended", "reference"]
+CitationGranularity = Literal["article", "source"]
 
 
 @dataclass
@@ -45,6 +46,13 @@ class CitationItem:
     can_enter_external_report: bool = True
     confidence_threshold: float = 0.20
     external_report_allowed: bool = True
+    citation_granularity: CitationGranularity = "article"
+    source_url: str = ""
+    publish_date: str = ""
+    effective_date: str = ""
+    source_status: str = ""
+    is_recent: bool = False
+    amendment_note: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -70,4 +78,11 @@ class CitationItem:
             "can_enter_external_report": self.can_enter_external_report,
             "confidence_threshold": self.confidence_threshold,
             "external_report_allowed": self.external_report_allowed,
+            "citation_granularity": self.citation_granularity,
+            "source_url": self.source_url,
+            "publish_date": self.publish_date,
+            "effective_date": self.effective_date,
+            "source_status": self.source_status,
+            "is_recent": self.is_recent,
+            "amendment_note": self.amendment_note,
         }

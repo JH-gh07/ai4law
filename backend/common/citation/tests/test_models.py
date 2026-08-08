@@ -50,3 +50,5 @@ def test_citation_item_to_dict() -> None:
     assert d["title"] == "个人信息保护法"
     assert d["related_issue_ids"] == ["ISSUE-1"]
     assert d["confidence_score"] == 0.85
+    assert d["citation_granularity"] == "article"
+    assert d["source_url"] == ""

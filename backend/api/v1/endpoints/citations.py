@@ -94,6 +94,12 @@ def _build_detail(item: dict, *, module: str, footnote_number: int | None = None
         open_mode=normalized.get("open_mode", "in_app"),
         can_jump=normalized.get("can_jump", False),
         source_url=normalized.get("source_url", ""),
+        citation_granularity=normalized.get("citation_granularity", "article"),
+        publish_date=normalized.get("publish_date", ""),
+        effective_date=normalized.get("effective_date", ""),
+        source_status=normalized.get("source_status", ""),
+        is_recent=normalized.get("is_recent", False),
+        amendment_note=normalized.get("amendment_note", ""),
         resolution=normalized.get("resolution", {}),
     )
 

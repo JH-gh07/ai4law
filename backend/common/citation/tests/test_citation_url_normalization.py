@@ -112,7 +112,7 @@ def test_known_source_without_article_is_source_overview() -> None:
     )
 
     assert result["resolution"]["resolution_type"] == "source_overview"
-    assert result["resolution"]["failure_reason"] == "article_missing"
+    assert result["resolution"]["failure_reason"] == "source_level_by_design"
     assert result["resolution"]["target_id"] == "CN-LAW-003"
     assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-003"
     assert result["can_jump"] is False

@@ -31,6 +31,12 @@ export interface CitationDetail {
   footnote_number: number | null;
   source_kind: string;
   source_url?: string;
+  citation_granularity?: "article" | "source";
+  publish_date?: string;
+  effective_date?: string;
+  source_status?: string;
+  is_recent?: boolean;
+  amendment_note?: string;
   allowed_usage: string[];
   can_enter_external_report: boolean;
   external_report_allowed: boolean;

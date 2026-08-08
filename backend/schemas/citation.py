@@ -47,6 +47,12 @@ class CitationDetailResponse(BaseModel):
     open_mode: str = "in_app"
     can_jump: bool = False
     source_url: str = ""
+    citation_granularity: Literal["article", "source"] = "article"
+    publish_date: str = ""
+    effective_date: str = ""
+    source_status: str = ""
+    is_recent: bool = False
+    amendment_note: str = ""
     resolution: CitationResolution = Field(default_factory=CitationResolution)
 
 

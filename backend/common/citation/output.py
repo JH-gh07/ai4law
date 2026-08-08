@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ _REGULATION_ARTICLES_PATH = regulation_articles_jsonl_path()
 _KNOWN_SOURCE_IDS: set[str] = set()
 _TITLE_TO_SOURCE_ID: dict[str, str] = {}
 _TITLE_WORDS_TO_SOURCE_IDS: dict[str, list[tuple[str, float]]] = {}
+_SOURCE_METADATA_BY_ID: dict[str, dict[str, str]] = {}
 _SOURCES_CSV_LOADED = False
 
 
@@ -39,7 +41,7 @@ def _word_overlap(a: str, b: str) -> float:
 
 def _load_sources_csv() -> None:
     """Load sources.csv and build title → source_id lookup tables (called once)."""
-    global _KNOWN_SOURCE_IDS, _TITLE_TO_SOURCE_ID, _TITLE_WORDS_TO_SOURCE_IDS, _SOURCES_CSV_LOADED
+    global _KNOWN_SOURCE_IDS, _TITLE_TO_SOURCE_ID, _TITLE_WORDS_TO_SOURCE_IDS, _SOURCE_METADATA_BY_ID, _SOURCES_CSV_LOADED
     if _SOURCES_CSV_LOADED:
         return
     if not _SOURCES_CSV_PATH.exists():
@@ -51,9 +53,18 @@ def _load_sources_csv() -> None:
         for row in reader:
             sid = (row.get("source_id") or row.get("id") or "").strip()
             title = (row.get("title") or "").strip()
-            if not sid or not title:
+            if not sid:
                 continue
             _KNOWN_SOURCE_IDS.add(sid)
+            _SOURCE_METADATA_BY_ID[sid] = {
+                "title": title,
+                "url": (row.get("url") or "").strip(),
+                "publish_date": (row.get("publish_date") or "").strip(),
+                "effective_date": (row.get("effective_date") or "").strip(),
+                "status": (row.get("status") or "").strip(),
+            }
+            if not title:
+                continue
             norm_title = _normalize_title_key(title)
             if norm_title and norm_title not in _TITLE_TO_SOURCE_ID:
                 _TITLE_TO_SOURCE_ID[norm_title] = sid
@@ -135,11 +146,12 @@ def _normalize_article_no(article_no: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def _load_article_counts() -> dict[tuple[str, str], int]:
-    """Return registry match counts used to distinguish exact from ambiguous locators."""
+def _load_article_index() -> tuple[dict[tuple[str, str], int], dict[tuple[str, str], str]]:
+    """Return locator match counts and safe article-level official URLs."""
     counts: dict[tuple[str, str], int] = {}
+    source_urls: dict[tuple[str, str], str] = {}
     if not _REGULATION_ARTICLES_PATH.exists():
-        return counts
+        return counts, source_urls
     with _REGULATION_ARTICLES_PATH.open(encoding="utf-8") as fp:
         for line in fp:
             try:
@@ -152,12 +164,38 @@ def _load_article_counts() -> dict[tuple[str, str], int]:
                 continue
             key = (source_id, article_no)
             counts[key] = counts.get(key, 0) + 1
-    return counts
+            source_url = str(row.get("source_url", "") or "").strip()
+            if key not in source_urls and _is_safe_external_url(source_url):
+                source_urls[key] = source_url
+    return counts, source_urls
+
+
+def _load_article_counts() -> dict[tuple[str, str], int]:
+    return _load_article_index()[0]
+
+
+def _load_article_source_urls() -> dict[tuple[str, str], str]:
+    return _load_article_index()[1]
 
 
 def _is_safe_external_url(value: str) -> bool:
     parsed = urlsplit(value)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _is_recent_effective_date(value: str, *, as_of: date | None = None) -> bool:
+    try:
+        effective = date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return False
+    today = as_of or date.today()
+    age_days = (today - effective).days
+    return 0 <= age_days <= 366
+
+
+def _extract_amendment_note(title: str) -> str:
+    match = re.search(r"(\d{4}年?(?:修正|修订))", title or "")
+    return match.group(1).replace("年", "") if match else ""
 
 
 def _resolve_citation_target(
@@ -166,11 +204,24 @@ def _resolve_citation_target(
     article_no: str,
     source_url: str,
     external_verified: bool,
+    citation_granularity: str,
 ) -> dict[str, Any]:
     """Resolve a citation against the local registry without trusting cached hints."""
     _load_sources_csv()
     source_known = source_id in _KNOWN_SOURCE_IDS
     safe_external_url = source_url if _is_safe_external_url(source_url) else ""
+
+    if source_known and citation_granularity == "source":
+        actions = ["view_source_overview", "search_within_source"]
+        if safe_external_url:
+            actions.append("open_official_source")
+        return {
+            "resolution_type": "source_overview",
+            "target_id": source_id,
+            "confidence": 0.7,
+            "failure_reason": "source_level_by_design",
+            "available_actions": actions,
+        }
 
     if source_known and article_no:
         match_count = _load_article_counts().get((source_id, article_no), 0)
@@ -267,12 +318,32 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     # Normalize article_no to Arabic numerals for consistency with LawViewerPage
     normalized_article_no = _normalize_article_no(article_no) or article_no
     raw_source_url = str(item.get("source_url", "") or "").strip()
-    source_url = raw_source_url if _is_safe_external_url(raw_source_url) else ""
+    source_metadata = _SOURCE_METADATA_BY_ID.get(resolved_source_id, {})
+    article_source_url = _load_article_source_urls().get(
+        (resolved_source_id, normalized_article_no),
+        "",
+    )
+    catalog_source_url = str(source_metadata.get("url", "") or "").strip()
+    source_url = next(
+        (
+            candidate
+            for candidate in (raw_source_url, article_source_url, catalog_source_url)
+            if _is_safe_external_url(candidate)
+        ),
+        "",
+    )
+    raw_granularity = str(item.get("citation_granularity", "") or "").strip()
+    citation_granularity = (
+        "source"
+        if not normalized_article_no
+        else (raw_granularity if raw_granularity in {"article", "source"} else "article")
+    )
     resolution = _resolve_citation_target(
         source_id=resolved_source_id,
         article_no=normalized_article_no,
         source_url=source_url,
         external_verified=item.get("external_verified") is True,
+        citation_granularity=citation_granularity,
     )
     resolution_type = str(resolution["resolution_type"])
     if resolution_type == "exact_article":
@@ -299,6 +370,20 @@ def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, A
     normalized["resolution"] = resolution
     normalized["can_jump"] = resolution_type == "exact_article"
     normalized["source_url"] = source_url
+    normalized["citation_granularity"] = citation_granularity
+    normalized["publish_date"] = str(
+        item.get("publish_date") or source_metadata.get("publish_date") or ""
+    ).strip()
+    normalized["effective_date"] = str(
+        item.get("effective_date") or source_metadata.get("effective_date") or ""
+    ).strip()
+    normalized["source_status"] = str(
+        item.get("source_status") or source_metadata.get("status") or ""
+    ).strip()
+    normalized["is_recent"] = _is_recent_effective_date(normalized["effective_date"])
+    normalized["amendment_note"] = str(
+        item.get("amendment_note") or _extract_amendment_note(title or source_metadata.get("title", ""))
+    ).strip()
     return normalized
 
 
