@@ -219,3 +219,11 @@ export function extractEvidenceHits(taskSpaceId: string, module: ModuleKey, resp
 
   return hits;
 }
+
+export function extractRunResponseState(taskSpaceId: string, module: ModuleKey, response: unknown) {
+  return {
+    artifacts: extractArtifacts(taskSpaceId, module, response),
+    evidenceHits: extractEvidenceHits(taskSpaceId, module, response),
+    issues: extractConsistencyIssues(taskSpaceId, module, response),
+  };
+}

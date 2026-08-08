@@ -21,11 +21,9 @@ import {
 } from "../../lib/task-templates";
 import { deriveWorkflowSteps } from "../../lib/workflow";
 import {
-  extractArtifacts,
-  extractConsistencyIssues,
-  extractEvidenceHits,
   extractInsight,
   extractReportMetrics,
+  extractRunResponseState,
 } from "../../lib/workspace";
 import { AssessmentIntermediatesPanel } from "./AssessmentIntermediatesPanel";
 import { AssistantPanel } from "./AssistantPanel";
@@ -768,9 +766,6 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     dispatch({ type: "touch_task_space", payload: { id: taskSpace.id, updatedAt: now } });
 
     if (output.response) {
-      dispatch({ type: "append_artifacts", payload: extractArtifacts(taskSpace.id, output.module, output.response) });
-      dispatch({ type: "append_evidence", payload: extractEvidenceHits(taskSpace.id, output.module, output.response) });
-      dispatch({ type: "append_issues", payload: extractConsistencyIssues(taskSpace.id, output.module, output.response) });
       if (output.asyncTaskId) {
         setOpenTabs((prev) => (prev.includes("timeline") ? prev : [...prev, "timeline"]));
         setActiveTab("timeline");
@@ -804,6 +799,30 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   };
 
   useEffect(() => {
+    if (!latestRun?.response) return;
+    const derived = extractRunResponseState(taskSpace.id, latestRun.module, latestRun.response);
+    const artifactPaths = new Set(taskArtifacts.map((item) => item.path));
+    const evidenceKeys = new Set(taskEvidence.map((item) => `${item.source}::${item.title}::${item.snippet}`));
+    const issueKeys = new Set(taskIssues.map((item) => `${item.severity}::${item.message}`));
+    const missingArtifacts = derived.artifacts.filter((item) => !artifactPaths.has(item.path));
+    const missingEvidence = derived.evidenceHits.filter(
+      (item) => !evidenceKeys.has(`${item.source}::${item.title}::${item.snippet}`),
+    );
+    const missingIssues = derived.issues.filter(
+      (item) => !issueKeys.has(`${item.severity}::${item.message}`),
+    );
+    if (missingArtifacts.length > 0) {
+      dispatch({ type: "append_artifacts", payload: missingArtifacts });
+    }
+    if (missingEvidence.length > 0) {
+      dispatch({ type: "append_evidence", payload: missingEvidence });
+    }
+    if (missingIssues.length > 0) {
+      dispatch({ type: "append_issues", payload: missingIssues });
+    }
+  }, [dispatch, latestRun, taskArtifacts, taskEvidence, taskIssues, taskSpace.id]);
+
+  useEffect(() => {
     // 任何有 asyncTaskId 的 run 都应被追踪 — 无论运行中还是已完成。
     // SSEManager 保留完成后 30 分钟的历史事件，支持回放。
     if (!latestRun?.asyncTaskId) return;
@@ -827,13 +846,14 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         const status = await fetchModuleTaskStatus(moduleDefinition, latestRun.asyncTaskId!);
         if (cancelled) return;
         if (status.state === "completed" || status.state === "succeeded" || status.state === "failed" || status.state === "cancelled" || status.state === "canceled") {
+          const response = status.result ?? latestRun.response;
           dispatch({
             type: "append_run",
             payload: {
               ...latestRun,
               finishedAt: new Date().toISOString(),
               success: status.state === "completed" || status.state === "succeeded",
-              response: status.result ?? latestRun.response,
+              response,
               error: status.error ?? latestRun.error,
               asyncState: status.state,
             },
@@ -845,7 +865,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     };
 
     void syncStatus();
-  }, [dispatch, latestRun]);
+  }, [dispatch, latestRun, taskSpace.id]);
 
   const handleOpenResource = (target: ResourceOpenTarget) => {
     const path = target.artifact.path;

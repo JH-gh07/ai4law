@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractInsight, extractReportMetrics } from "./workspace";
+import { extractInsight, extractReportMetrics, extractRunResponseState } from "./workspace";
 
 describe("workspace report metrics", () => {
   it("uses BCR findings, bound footnotes, and rating for the report summary", () => {
@@ -25,5 +25,37 @@ describe("workspace report metrics", () => {
       issueCount: undefined,
       evidenceCount: undefined,
     });
+  });
+});
+
+describe("workspace run response state", () => {
+  it("derives async completion artifacts, evidence, and issues from one response", () => {
+    const response = {
+      report_path: "outputs/tia/report.md",
+      output_files: {
+        markdown: "outputs/tia/report.md",
+        pdf: "outputs/tia/report.pdf",
+        zip: "outputs/tia/report.zip",
+      },
+      chapters: [
+        {
+          title: "传输工具适用性判断",
+          citations: ["GDPR Article 46"],
+        },
+      ],
+      consistency_issues: ["high: supplementary measures require revision"],
+    };
+
+    const derived = extractRunResponseState("task-tia", "tia", response);
+
+    expect(derived.artifacts.map((item) => item.path)).toEqual([
+      "outputs/tia/report.md",
+      "outputs/tia/report.pdf",
+      "outputs/tia/report.zip",
+    ]);
+    expect(derived.evidenceHits).toHaveLength(1);
+    expect(derived.evidenceHits[0]?.title).toBe("GDPR Article 46");
+    expect(derived.issues).toHaveLength(1);
+    expect(derived.issues[0]?.severity).toBe("high");
   });
 });
