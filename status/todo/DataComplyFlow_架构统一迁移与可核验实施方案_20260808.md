@@ -43,7 +43,12 @@
 | `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
 | `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
 | Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
-| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **815 collected, 814 passed, 1 flaky** | 较基线（743/741）新增 72 项（Phase 3 生产形态集成测试 40 项 + 前端/API + 引用治理相关）；1 flaky 为预存问题（cpra_async_flow LLM 智能体 JSON 解析超时） |
+| `uv run pytest -q --tb=no`（2026-08-08 初始） | **815 collected, 814 passed, 1 flaky** | 较基线（743/741）新增 72 项（Phase 3 生产形态集成测试 40 项 + 前端/API + 引用治理相关）；1 flaky 为预存问题（cpra_async_flow LLM 智能体 JSON 解析超时） |
+| `uv run pytest -q --tb=no`（2026-08-09 修复后） | **823 collected, 823 passed, 0 flaky**（7m01s） | flaky 测试已修复（commit `1e1dbf8`：TIA/CPRA async 合约测试不再依赖真实 LLM API key）；前端 npm test（26/27 files, 127/129 tests）；前端 build 通过；TypeScript 编译无错误；ruff 本次会话文件全部 clean |
+| `uv run python scripts/check_case_parity.py` | 通过 | 11 modules, 20 CLI cases, 397 leaf checks, 28 developer cases |
+| `uv run python scripts/check_citation_source_integrity.py` | 通过 | 102 sources, 3030 rows, 0 duplicates, 100% resolution rate, 所有阻断检查通过 |
+| `cd frontend && npm test -- --run` | 26/27 files, 127/129 tests | 1 file + 2 tests skipped（浏览器依赖）；无失败 |
+| `cd frontend && npm run build` | 通过 | tsc -b + vite build 成功（commit `8063e09` 修复 FIX_CN_DSA 未使用导出） |
 
 ### 既有失败诊断与修复记录（2026-08-08）
 
@@ -82,6 +87,24 @@
 - 根因：TIA `02_structured_local_attachment` 用例的 `expected` 块中包含 `attachment_parse_skipped`、`coverage_note` 等非断言元数据字段（应置于顶层），且缺失 `fields_present` 运算符注册，导致 5 项门禁违规。
 - 修复：将元数据字段移至顶层；注册 `_op_fields_present` 至 `ASSERTION_OPERATORS`；补齐 `min_counts`、`output_roles_contains`、`output_formats` 断言以满足 assertion floor（8条）；运行 `scripts/check_case_parity.py --write` 刷新清单。
 - 验证命令：`uv run python scripts/check_case_parity.py`
+
+**ISSUE-ASYNC-001（已修复 commit `1e1dbf8`）**
+
+- 严重级别：WARN（flaky，非逻辑错误）
+- 测试：`test_tia_async_flow`、`test_cpra_async_flow`
+- 代码位置：`backend/domains/eu/tia/tests/test_async_api.py`、`backend/domains/us/cpra/tests/test_async_api.py`
+- 根因：异步合约测试依赖真实 LLM API key，无 key 时 JSON 解析超时导致 flaky。
+- 修复：注入 `_DisabledLLM`（`enabled=False`）实例，通过 `monkeypatch.setattr(router, "service", ...)` 替换 service，使合约测试不依赖 LLM。
+- 验证命令：`uv run pytest -q backend/domains/eu/tia/tests/test_async_api.py backend/domains/us/cpra/tests/test_async_api.py`
+
+**ISSUE-FRONTEND-001（已修复 commit `8063e09`）**
+
+- 严重级别：ERROR（构建阻断）
+- 测试：`cd frontend && npm run build` → `tsc -b` 失败
+- 代码位置：`frontend/src/lib/dev-presets.ts:34`
+- 根因：`FIX_CN_DSA` 声明但未读取，`noUnusedLocals: true` 导致 TypeScript 编译失败。
+- 修复：添加 `export` 关键字，使变量可被外部消费。
+- 验证命令：`cd frontend && npm run build`
 
 ---
 
@@ -348,7 +371,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 - [x] 以 `source_id + article_no` 建立唯一键检查 → 0 重复对 (`38f64af`)
 - [x] 修复同一法规同一条文的重复记录 → 0 重复行
 - [x] `CN-REG-004` 删除 9 条网页噪声记录，写入 20 条正式条文
-- [ ] 把 `sources.csv` 或注册表中的 `source_url` 回填到 CitationItem → 83/102 sources 无已知源 URL
+- [ ] 把 `sources.csv` 或注册表中的 `source_url` 回填到 CitationItem → **83/102 sources 无已知源 URL。分析结论：19 个正式法律/法规来源（CN-LAW/CN-REG/CN-GUIDE/EU-LAW/US-FED/US-CA）已有 100% URL 覆盖；83 个无 URL 来源均为内部参考/模板材料（CN-SUP/CN-TPL/EU-SUP/EU-TPL 前缀），无公开官方 URL。此项实质完成，无需进一步行动。**
 - [x] 没有正式条号的法规只允许作为法规级依据 → 0 非数字条号，全部可归一化
 - [x] 统一中文条号到阿拉伯数字的转换规则 → `normalize_article_no` 已覆盖，0 转换失败
 - [x] 对 `article_not_found`、`article_not_unique`、`article_missing` 分类统计 → `scripts/check_citation_source_integrity.py --verbose` 输出完整分类（`38f64af`）：article_missing=0, article_not_found=0, article_not_unique=0, resolution_rate=100%
@@ -416,13 +439,13 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | **完成** | 全量回归 815/814 passed（21m33s）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；tree clean | 前端 npm test 待跑；远端冻结待用户决策 |
+| 0 | 基线冻结 | **完成** | 全量回归 **823/823 passed（0 flaky）**（7m01s）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；tree clean；前端 npm test **26/27 files, 127/129 tests**；前端 build 通过；TypeScript 编译无错误 | — |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
 | 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/19 CLI cases/365 leaf checks） | live/browser 端到端验证待用户启用远端后执行 |
 | 3A | 诊断双路径 | **完成（审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段 lossless 往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 浏览器端诊断 UI 验证待用户启用远端后执行 |
-| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化 | URL回填：2620条缺失（83/102 sources 无 URL），无已知源 URL，暂无法自动化 |
-| 5 | 前端闭环 | **部分完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；前 CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转 | 浏览器端 11 模块逐一验收待用户启用远端后执行 |
+| 4 | 知识库治理 | **完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化；URL 回填分析结论：19 个正式法规来源 100% URL 覆盖，83 个内部参考材料无公开 URL（符合预期，无需进一步操作） | — |
+| 5 | 前端闭环 | **代码级完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转；前端 build 通过（commit `8063e09`）；npm test 26/27 files（127/129 tests）通过 | 浏览器端 11 模块逐一验收待用户启用远端后执行 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
 ## 9. 最终完成定义
