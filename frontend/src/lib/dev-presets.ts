@@ -28,8 +28,13 @@ export type AssessmentDevPreset = ModuleDevPreset & {
   expectedPath: "security_assessment" | "scc_or_certification" | "exemption";
 };
 
-const SHARED_CONTRACT_FIXTURE = "benchmarks/sample-inputs/sample_contract.txt";
-const SHARED_EVIDENCE_FIXTURE = "benchmarks/sample-inputs/sample_evidence.txt";
+/** 各模块默认预填的真实测试文档路径 */
+const PIPIA_SCC = "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx";
+const PIPIA_FILING_GUIDE = "resources/legal/sources/cn/references/个人信息出境标准合同备案指南（第二版）.docx";
+const SCC_INPUT = "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx";
+const BCR_INPUT = "resources/templates/eu/3.2_bcr_review_template_v0.docx";
+const DPIA_INPUT = "resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx";
+const TIA_INPUT = "resources/legal/sources/eu/references/TIA - Template.docx";
 
 function assertCase(module: DevCaseModule) {
   const found = getDefaultTestCase(module);
@@ -97,7 +102,7 @@ const PIPIA_BASELINE_PRESET: ModuleDevPreset = {
     org_structure_privacy_team: "设DPO与专项隐私治理小组",
     attachment_role: "scc_contract"
   },
-  backendFilePaths: [SHARED_CONTRACT_FIXTURE, SHARED_EVIDENCE_FIXTURE]
+  backendFilePaths: [PIPIA_SCC, PIPIA_FILING_GUIDE]
 };
 
 const EU_SCC_BASELINE_PRESET: ModuleDevPreset = {
@@ -125,7 +130,7 @@ const EU_SCC_BASELINE_PRESET: ModuleDevPreset = {
     spi_count: 5000,
     has_scc_draft: true
   },
-  backendFilePaths: [SHARED_CONTRACT_FIXTURE]
+  backendFilePaths: [SCC_INPUT]
 };
 
 const BCR_BASELINE_PRESET: ModuleDevPreset = {
@@ -152,7 +157,7 @@ const BCR_BASELINE_PRESET: ModuleDevPreset = {
     definitions_quality: "术语体系与GDPR保持一致",
     review_focus: "重点审查责任承担、补充措施和第三方受益人条款"
   },
-  backendFilePaths: ["resources/templates/eu/3.2_bcr_review_template_v0.docx"]
+  backendFilePaths: [BCR_INPUT]
 };
 
 const DPIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -196,7 +201,7 @@ const DPIA_BASELINE_PRESET: ModuleDevPreset = {
     review_schedule: "每季度复核",
     attachment_role: "data_flow_diagram"
   },
-  backendFilePaths: ["resources/legal/sources/eu/references/2.2 ICO_DPIA_Temple.docx"]
+  backendFilePaths: [DPIA_INPUT]
 };
 
 const TIA_BASELINE_PRESET: ModuleDevPreset = {
@@ -226,7 +231,7 @@ const TIA_BASELINE_PRESET: ModuleDevPreset = {
     review_date: "2026-07-01",
     attachment_role: "country_law_analysis"
   },
-  backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
+  backendFilePaths: [TIA_INPUT]
 };
 
 const DIAGNOSIS_BASELINE_PRESET: ModuleDevPreset = {
