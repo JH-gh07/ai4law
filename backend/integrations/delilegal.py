@@ -1,11 +1,28 @@
 from __future__ import annotations
 
+import json
+import logging
 import time
 from typing import Any
 
 import httpx
 
 from backend.core.settings import Settings
+
+logger = logging.getLogger(__name__)
+
+
+def _create_http_client(timeout: float = 10.0) -> httpx.Client:
+    """Create httpx client with SOCKS proxy fallback."""
+    try:
+        client = httpx.Client(timeout=timeout)
+        return client
+    except Exception:
+        pass
+    try:
+        return httpx.Client(timeout=timeout, proxy=None)
+    except Exception:
+        return httpx.Client(timeout=timeout)
 
 
 class DeliLegalService:
@@ -76,7 +93,7 @@ class DeliLegalService:
             "Content-Type": "application/json",
         }
         try:
-            with httpx.Client(timeout=10.0) as client:
+            with _create_http_client(10.0) as client:
                 response = client.post(
                     f"{self.base_url}/api/qa/v3/search/queryListCase",
                     headers=headers,
@@ -86,10 +103,12 @@ class DeliLegalService:
                 data = response.json()
         except Exception as exc:
             self.last_error = f"queryListCase request failed: {exc}"
+            logger.warning("得理 queryListCase 请求失败: %s", exc)
             return []
 
         if not self._is_success(data):
             self.last_error = self._build_api_error("queryListCase", data)
+            logger.warning("得理 queryListCase 非成功响应: %s", self.last_error)
             return []
 
         candidates = self._extract_candidate_list(data)
@@ -126,7 +145,7 @@ class DeliLegalService:
             "Content-Type": "application/json",
         }
         try:
-            with httpx.Client(timeout=10.0) as client:
+            with _create_http_client(10.0) as client:
                 response = client.post(
                     f"{self.base_url}/api/qa/v3/search/queryListLaw",
                     headers=headers,
@@ -136,10 +155,12 @@ class DeliLegalService:
                 data = response.json()
         except Exception as exc:
             self.last_error = f"queryListLaw request failed: {exc}"
+            logger.warning("得理 queryListLaw 请求失败: %s", exc)
             return []
 
         if not self._is_success(data):
             self.last_error = self._build_api_error("queryListLaw", data)
+            logger.warning("得理 queryListLaw 非成功响应: %s", self.last_error)
             return []
 
         candidates = self._extract_candidate_list(data)
@@ -157,9 +178,16 @@ class DeliLegalService:
     def _is_success(self, data: Any) -> bool:
         if not isinstance(data, dict):
             return False
-        if data.get("success") is True:
+        success_val = data.get("success")
+        if success_val is True or str(success_val).lower() == "true":
             return True
-        return str(data.get("code")) == "0"
+        code_val = data.get("code")
+        if code_val is not None and str(code_val) in ("0", "200"):
+            return True
+        status_val = data.get("status")
+        if status_val is not None and str(status_val) in ("0", "200", "ok"):
+            return True
+        return False
 
     def _build_api_error(self, endpoint: str, data: Any) -> str:
         if isinstance(data, dict):
@@ -224,4 +252,4 @@ def _classify_delilegal_error(error: str) -> tuple[str, str, str]:
     for needles, classification in patterns:
         if any(needle in text for needle in needles):
             return classification
-    return "PROVIDER_ERROR", "provider", "得理 API 最小查询探测失败，请查看后端错误日志"
+    return "PROVIDER_ERROR", "provider", f"得理探测失败: {error[:200]}"

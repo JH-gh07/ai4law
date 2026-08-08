@@ -389,17 +389,40 @@ class LLMClient:
             return None
         if self._client is not None:
             return self._client
-        if self._client_init_error is not None:
-            return None
         try:
             self._client = OpenAI(
                 api_key=self._api_key,
                 base_url=self._api_url,
                 timeout=self._timeout,
             )
+            self._client_init_error = None
             return self._client
         except Exception as exc:
-            self._client_init_error = str(exc)
+            error_msg = str(exc)
+            if "socks" in error_msg.lower() and "socksio" in error_msg.lower():
+                import httpx as _httpx
+                logger.warning(
+                    "SOCKS proxy detected but socksio missing, retrying with no proxy for provider_id=%s",
+                    self._provider_id,
+                )
+                try:
+                    self._client = OpenAI(
+                        api_key=self._api_key,
+                        base_url=self._api_url,
+                        timeout=self._timeout,
+                        http_client=_httpx.Client(proxy=None),
+                    )
+                    self._client_init_error = None
+                    return self._client
+                except Exception as retry_exc:
+                    self._client_init_error = str(retry_exc)
+                    logger.error(
+                        "LLMClient initialization error (retry) for provider_id=%s: %s",
+                        self._provider_id,
+                        retry_exc,
+                    )
+                    return None
+            self._client_init_error = error_msg
             logger.error(
                 "LLMClient initialization error for provider_id=%s base_url=%s: %s",
                 self._provider_id,
