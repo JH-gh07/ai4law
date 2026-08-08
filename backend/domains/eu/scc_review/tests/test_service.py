@@ -158,6 +158,68 @@ def test_source_case_packet_preserves_contract_sections_and_destination() -> Non
     )
 
 
+def test_post_pipeline_agents_remain_inside_run_trace(tmp_path, monkeypatch) -> None:
+    from backend.common.trace.context import current_trace
+    from backend.common.trace.recorder import TraceRecorder
+
+    monkeypatch.chdir(tmp_path)
+    recorder = TraceRecorder(tmp_path / "trace", task_id="post-agent-trace")
+    service = EU_SCCService(llm_client=_DisabledLLM())
+    observed: list[bool] = []
+
+    class _TraceCheckingRemediationAgent:
+        def run(self, **_kwargs):
+            observed.append(current_trace.get() is recorder)
+            return {"patched_findings": [], "action_plan": [], "p0_count": 0}
+
+    service.agents["remediation"] = _TraceCheckingRemediationAgent()
+    payload = _make_request(
+        _SCC_C2P_INDIA_HEALTH,
+        declared_module="Module Two",
+        exporter_role="controller",
+        importer_role="processor",
+        has_tia=False,
+        has_supplementary=False,
+    )
+
+    service.generate_report(payload, task_id="post-agent-trace", trace=recorder)
+
+    assert observed == [True]
+
+
+def test_agent_json_parse_fallback_is_written_to_trace(tmp_path) -> None:
+    from backend.common.runtime.run_manifest import summarize_trace
+    from backend.common.trace.context import current_trace
+    from backend.common.trace.recorder import TraceRecorder
+    from backend.domains.eu.scc_review.agents import SCCAgentBase
+
+    class _MalformedJSONLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '{"enhanced": [{"finding_id": "broken"}'
+
+    class _TestAgent(SCCAgentBase):
+        agent_name = "trace_test_agent"
+
+    recorder = TraceRecorder(tmp_path / "trace", task_id="agent-fallback")
+    token = current_trace.set(recorder)
+    try:
+        result = _TestAgent(_MalformedJSONLLM())._call_llm("test")
+    finally:
+        current_trace.reset(token)
+
+    assert result is None
+    fallback = json.loads(
+        (tmp_path / "trace" / "001_agent_fallback.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert fallback["payload"]["detail"]["agent"] == "trace_test_agent"
+    assert fallback["payload"]["detail"]["fallback"] is True
+    assert summarize_trace(recorder)["fallback_count"] == 1
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Test data: EU 2021/914 style SCC document snippets
 # ═══════════════════════════════════════════════════════════════════════

@@ -172,9 +172,27 @@ class EU_SCCService:
             run_result = self._build_pipeline(rule_result).run(
                 payload=payload, task_id=run_task_id, trace=trace
             )
+            return self._complete_report(
+                payload=payload,
+                document=doc,
+                transfer_chain=chain,
+                rule_result=rule_result,
+                run_result=run_result,
+                trace=trace,
+            )
         finally:
             finalize_run(token)
 
+    def _complete_report(
+        self,
+        *,
+        payload: SCCReviewRequest,
+        document,
+        transfer_chain,
+        rule_result: SCCRuleEngineResult,
+        run_result,
+        trace: TraceRecorder,
+    ) -> SCCReviewResult:
         # ── Agent 5: Evidence Review (post-pipeline) ──
         try:
             evidence_agent_out = self.agents["evidence_review"].run(
@@ -193,7 +211,8 @@ class EU_SCCService:
         # ── Agent 6: Remediation Generation ──
         remediation_out = self.agents["remediation"].run(
             findings=[f.model_dump() for f in rule_result.all_findings],
-            document=doc.model_dump(), transfer_chain=chain.model_dump(),
+            document=document.model_dump(),
+            transfer_chain=transfer_chain.model_dump(),
             module_validation=rule_result.module_validation.model_dump(),
         )
         trace.record("agent_remediation", remediation_out)
