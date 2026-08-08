@@ -157,6 +157,8 @@ class ReviewService:
             rulebook_loader=self.rulebook,
         )
         self.renderer = ReviewReportRenderer()
+        from backend.core.settings import get_settings as _gs
+        self.schema_first_enabled = _gs().schema_first_document_review_enabled
         self.structured_parser = StructuredDocumentParser()
         self.citation_checker = CitationRelevanceChecker()
         self.annotated_builder = AnnotatedDocxBuilder()
@@ -414,6 +416,30 @@ class ReviewService:
 
             # ── Stage 7: RENDERING (92‑100%) ──
             self._update_task(db, task, ReviewTaskStatus.RENDERING, 95)
+            if self.schema_first_enabled:
+                from backend.common.citation.registry import CitationRegistry as _LR
+                from backend.common.reporting import DocumentCompiler
+                from backend.domains.cn.document_review.schema_first import build_document_review_ir
+                _sections_tmp = self.renderer.build_sections(aggregated)
+                _doc, _rr = build_document_review_ir(
+                    task_id=task_id,
+                    document_title=doc_type or 'document',
+                    review=aggregated,
+                    sections=_sections_tmp,
+                    citation_registry=_LR(),
+                    model='legacy-review',
+                )
+                _cr = DocumentCompiler().compile(_doc, _rr)
+                if _cr.status != 'success':
+                    _codes = ', '.join(i.code for i in _cr.diagnostics)
+                    raise ValueError(f'Schema-first compiler blocked review output: {_codes}')
+                import json as _json
+                from pathlib import Path as _Path
+                _ir_dir = _Path('outputs/review') / task_id / 'outputs'
+                _ir_dir.mkdir(parents=True, exist_ok=True)
+                (_ir_dir / 'document_ir.json').write_text(
+                    _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
+                    encoding='utf-8')
             sections = self.renderer.build_sections(aggregated)
             report_preview = {
                 "overall_rating": aggregated.overall_rating,
