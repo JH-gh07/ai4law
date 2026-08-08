@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -19,6 +20,25 @@ class _Reg:
     title = "GDPR"
     article = "Article 46"
     content = "Appropriate safeguards must be provided for third-country transfers."
+
+
+class _CitationLLM:
+    enabled = True
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def chat(self, **kwargs) -> str:
+        self.calls += 1
+        return f"第{self.calls}章应提供适当保障措施 {{{{CIT-EU-GDPR-ART46-P01}}}}。"
+
+
+class _StaticAgent:
+    def __init__(self, result: dict) -> None:
+        self.result = result
+
+    def run(self, **kwargs) -> dict:
+        return self.result
 
 
 def _fast_render(task_id, payload, chapters, attachment_notes, citation_registry):
@@ -177,3 +197,55 @@ def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) 
     assert result.measure_assessments
     assert any("edpb-recommendations.pdf:" in note for note in result.attachment_notes)
     assert not any("parse skipped" in note for note in result.attachment_notes)
+
+
+def test_service_keeps_markdown_map_and_document_ir_citations_in_sync(
+    monkeypatch, tmp_path
+) -> None:
+    """The service must carry one citation identity through every output layer."""
+    case = json.loads(Path("backend/tests/tia/cases/02_structured_local_attachment.json").read_text())
+    case["input"]["attachments"][0]["storage_uri"] = str(
+        Path(case["input"]["attachments"][0]["storage_uri"]).resolve()
+    )
+    payload = TIARequest.model_validate(case["input"])
+
+    service = TIAService()
+    service.llm_client = _CitationLLM()
+    service.renderer.schema_first_enabled = True
+    service.agents = {
+        "rag_planning": _StaticAgent({"queries": [{"query": "GDPR Article 46"}]}),
+        "attachment_review": _StaticAgent({
+            "conflicts": [],
+            "missing_evidence": [],
+            "overall_evidence_quality": "adequate",
+        }),
+        "dpo_review": _StaticAgent({
+            "non_reliance_warning_needed": False,
+            "dpo_position": "",
+            "mandatory_conditions": [],
+        }),
+    }
+    monkeypatch.setattr(
+        "backend.domains.eu.tia.service.retrieve_legal_documents",
+        lambda *args, **kwargs: type("Hits", (), {"documents": [_Reg()]})(),
+    )
+    monkeypatch.chdir(tmp_path)
+
+    result = service.generate_report(payload, task_id="citation-sync")
+
+    markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
+    citation_map = json.loads(Path(result.output_files["citation_map_json"]).read_text())
+    document_ir = json.loads(Path(result.output_files["document_ir_json"]).read_text())
+
+    markdown_numbers = set(re.findall(r"\[(\d+)\]", markdown))
+    map_numbers = set(citation_map["footnote_map"])
+    claim_refs = {
+        citation_id
+        for section in document_ir["sections"]
+        for block in section["blocks"]
+        for citation_id in block.get("citation_refs", [])
+    }
+
+    assert markdown_numbers == {"1"}
+    assert map_numbers == markdown_numbers
+    assert claim_refs == {"CIT-EU-GDPR-ART46-P01"}
