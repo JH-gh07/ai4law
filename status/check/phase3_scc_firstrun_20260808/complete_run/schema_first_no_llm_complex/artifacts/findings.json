@@ -1,0 +1,98 @@
+[
+  {
+    "finding_id": "EU-SCC-CLAUSE-15-DEVIATION",
+    "location": "Clause 15(a) notification",
+    "clause_ref": "15(a)",
+    "original_text": "as soon as legally permissible",
+    "issue_type": "clause_weakened",
+    "severity": "HIGH",
+    "risk_analysis": "Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'",
+    "legal_basis": "EU 2021/914, Recital 3 (invariability of Clauses); GDPR Article 46",
+    "recommendation": "restore 'promptly notify'",
+    "suggested_text": "Restore the standard EU 2021/914 text for this provision."
+  },
+  {
+    "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+    "location": "Annex I.A",
+    "clause_ref": "Annex I.A",
+    "original_text": "",
+    "issue_type": "annex_incomplete",
+    "severity": "MEDIUM",
+    "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+    "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+    "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-ANNEX-IB-MISCLASSIFIED-SPECIAL",
+    "location": "Annex I.B",
+    "clause_ref": "Annex I.B",
+    "original_text": "does not constitute special categories of data",
+    "issue_type": "special_category_misclassified",
+    "severity": "HIGH",
+    "risk_analysis": "Transfer description contains health/medical data terms but special category data is NOT declared. Under GDPR Article 9, health data requires explicit consent or another exemption, and SCCs alone may not be sufficient.",
+    "legal_basis": "GDPR Article 9; EU 2021/914; EDPB Recommendations 01/2020",
+    "recommendation": "(1) Verify whether the data includes special categories; (2) If yes, declare them explicitly in Annex I.B; (3) Assess whether supplementary measures are needed for special category data transfers.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+    "location": "Annex II",
+    "clause_ref": "Annex II",
+    "original_text": "",
+    "issue_type": "annex_incomplete",
+    "severity": "HIGH",
+    "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+    "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+    "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-TIA-MISSING",
+    "location": "Clause 14",
+    "clause_ref": "14",
+    "original_text": "",
+    "issue_type": "tia_missing",
+    "severity": "HIGH",
+    "risk_analysis": "Third country transfer identified to: India. No Transfer Impact Assessment (TIA) has been provided. Under GDPR and Schrems II (C-311/18), a documented TIA is required before transferring personal data to a third country without an adequacy decision.",
+    "legal_basis": "GDPR Article 46; Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Clause 14",
+    "recommendation": "Complete a TIA for transfers to India. The TIA must: (1) assess the laws and practices of the destination country; (2) evaluate whether they impinge on the SCCs' effectiveness; (3) identify and implement supplementary measures as needed.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-SUPP-MEASURES-INSUFFICIENT",
+    "location": "Annex II",
+    "clause_ref": "Annex II & Clause 14",
+    "original_text": "",
+    "issue_type": "supplementary_measures_insufficient",
+    "severity": "HIGH",
+    "risk_analysis": "Third country transfer to non-adequate jurisdiction 'India' requires Schrems II supplementary measures. Technical: NOT FOUND. Contractual: NOT FOUND. Organizational: NOT FOUND.",
+    "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; EU 2021/914 Annex II",
+    "recommendation": "Implement Schrems II supplementary measures: (1) Technical — end-to-end encryption with EU-held keys, zero-access architecture; (2) Contractual — government access notification obligation, commitment to challenge unlawful requests, transparency reporting; (3) Organizational — independent annual audit, data minimization.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-CLAUSE-15-SEMANTIC-INFORMATION_PROVISION",
+    "location": "Clause 15",
+    "clause_ref": "15",
+    "original_text": "",
+    "issue_type": "clause_weakened",
+    "severity": "HIGH",
+    "risk_analysis": "Semantic weakening (information_provision): Information provision made discretionary",
+    "legal_basis": "EU 2021/914 Recital 3; SCC Clause 15; GDPR Article 46",
+    "recommendation": "Restore the standard EU 2021/914 text for this provision.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+    "location": "Annex II / TIA",
+    "clause_ref": "",
+    "original_text": "",
+    "issue_type": "supplementary_measures_insufficient",
+    "severity": "HIGH",
+    "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+    "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+    "recommendation": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+    "suggested_text": ""
+  }
+]

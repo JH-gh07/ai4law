@@ -1,0 +1,224 @@
+{
+  "schema_version": "3.0",
+  "compiler_version": "0.1.0",
+  "prompt_version": "legacy-scc-adapter-v1",
+  "template_version": "scc-v0",
+  "model": "legacy-scc",
+  "document_id": "scc:3e99f605-7e7a-47e2-a791-83b11d6c9f97",
+  "report_type": "scc",
+  "metadata": {
+    "title": "EU Health GmbH — EU SCC 审查报告草案",
+    "company_name": "EU Health GmbH",
+    "report_date": "2026-08-08",
+    "report_id": "3e99f605-7e7a-47e2-a791-83b11d6c9f97"
+  },
+  "sections": [
+    {
+      "section_id": "scc.chapter.1",
+      "title": "文件概要",
+      "level": 2,
+      "ordinal": "1",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.1.block.1",
+          "type": "paragraph",
+          "text": "文件概要",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.1.block.2",
+          "type": "paragraph",
+          "text": "- SCC 模块: 声明=Module Two, 预期=Module Two, 正确=是\n- 条款数: 3\n- Annex I.A 主体数: 0\n- Annex II 措施数: 0\n- Annex III 子处理者数: 0",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.2",
+      "title": "总体合规评级",
+      "level": 2,
+      "ordinal": "2",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.2.block.1",
+          "type": "paragraph",
+          "text": "总体合规评级: HIGH",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.2.block.2",
+          "type": "claim",
+          "text": "- 模块选择: 正确\n- 标准条款偏离: 1处\n- 第三国传输: 是 (India)\n- TIA: 存在\n- Schrems II 补充措施: 不足",
+          "citation_refs": [
+            "CIT-EU-EDPB-ART6-P01"
+          ],
+          "fact_refs": [],
+          "issue_refs": [],
+          "verification": "verified",
+          "verification_reason": "由 legacy citation marker 迁移"
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.3",
+      "title": "条款级审查发现",
+      "level": 2,
+      "ordinal": "3",
+      "reuse_policy": "reference",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.3.block.1",
+          "type": "paragraph",
+          "text": "条款级审查发现",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.2",
+          "type": "paragraph",
+          "text": "1. [HIGH] Clause 15(a) notification",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.3",
+          "type": "paragraph",
+          "text": "- 问题类型: clause_weakened\n- 风险分析: Clause 15 deviation detected: 修改为'法律许可时'通知，而非'立即(promptly)'\n- 法规依据: EU 2021/914, Recital 3 (invariability of Clauses); GDPR Article 46\n- 修改建议: restore 'promptly notify'\n- 建议文本: Restore the standard EU 2021/914 text for this provision.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.4",
+          "type": "paragraph",
+          "text": "2. [MEDIUM] Annex I.A",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.5",
+          "type": "paragraph",
+          "text": "- 问题类型: annex_incomplete\n- 风险分析: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.\n- 法规依据: EU 2021/914 Annex I.A; Clause 7\n- 修改建议: Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.6",
+          "type": "paragraph",
+          "text": "3. [HIGH] Annex I.B",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.7",
+          "type": "paragraph",
+          "text": "- 问题类型: specialcategorymisclassified\n- 风险分析: Transfer description contains health/medical data terms but special category data is NOT declared. Under GDPR Article 9, health data requires explicit consent or another exemption, and SCCs alone may not be sufficient.\n- 法规依据: GDPR Article 9; EU 2021/914; EDPB Recommendations 01/2020\n- 修改建议: (1) Verify whether the data includes special categories; (2) If yes, declare them explicitly in Annex I.B; (3) Assess whether supplementary measures are needed for special category data transfers.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.8",
+          "type": "paragraph",
+          "text": "4. [HIGH] Annex II",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.9",
+          "type": "paragraph",
+          "text": "- 问题类型: annex_incomplete\n- 风险分析: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.\n- 法规依据: EU 2021/914 Annex II; GDPR Articles 32, 46\n- 修改建议: Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.10",
+          "type": "paragraph",
+          "text": "5. [HIGH] Clause 15",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.11",
+          "type": "paragraph",
+          "text": "- 问题类型: clause_weakened\n- 风险分析: Semantic weakening (information_provision): Information provision made discretionary\n- 法规依据: EU 2021/914 Recital 3; SCC Clause 15; GDPR Article 46\n- 修改建议: Restore the standard EU 2021/914 text for this provision.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.12",
+          "type": "paragraph",
+          "text": "6. [HIGH] Annex II / TIA",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.13",
+          "type": "claim",
+          "text": "- 问题类型: supplementarymeasuresinsufficient\n- 风险分析: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.\n- 法规依据: Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46\n- 修改建议: Technical: implement e2eeeukeys, basicencryptiononly, accesscontrols | Contractual: add govaccess, onwardrestrictions | Organizational: establish audit, logging, keymanagement",
+          "citation_refs": [
+            "CIT-EU-REG-ART27-P01"
+          ],
+          "fact_refs": [],
+          "issue_refs": [],
+          "verification": "verified",
+          "verification_reason": "由 legacy citation marker 迁移"
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.4",
+      "title": "法规依据与修改建议",
+      "level": 2,
+      "ordinal": "4",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.4.block.1",
+          "type": "paragraph",
+          "text": "法规依据与修改建议",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.2",
+          "type": "paragraph",
+          "text": "- EU 2021/914, Recital 3 (invariability of Clauses); GDPR Article 46\n- EU 2021/914 Annex I.A; Clause 7\n- GDPR Article 9; EU 2021/914; EDPB Recommendations 01/2020\n- EU 2021/914 Annex II; GDPR Articles 32, 46\n- EU 2021/914 Recital 3; SCC Clause 15; GDPR Article 46\n- Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.3",
+          "type": "paragraph",
+          "text": "修改建议汇总",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.4",
+          "type": "claim",
+          "text": "- [HIGH] Clause 15(a) notification: restore 'promptly notify'\n- [MEDIUM] Annex I.A: Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.\n- [HIGH] Annex I.B: (1) Verify whether the data includes special categories; (2) If yes, declare them explicitly in Annex I.B; (3) Assess whether supplementary measures are needed for special category data transfers.\n- [HIGH] Annex II: Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.\n- [HIGH] Clause 15: Restore the standard EU 2021/914 text for this provision.\n- [HIGH] Annex II / TIA: Technical: implement e2eeeukeys, basicencryptiononly, accesscontrols | Contractual: add govaccess, onwardrestrictions | Organizational: establish audit, logging, keymanagement",
+          "citation_refs": [
+            "CIT-EU-REG-ART26-P01"
+          ],
+          "fact_refs": [],
+          "issue_refs": [],
+          "verification": "verified",
+          "verification_reason": "由 legacy citation marker 迁移"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "provenance": {
+    "generated_at": "2026-08-08T06:24:56.035124Z",
+    "facts_version": null,
+    "issues_version": null,
+    "evidence_version": null
+  },
+  "input_hash": null,
+  "document_ir_hash": null
+}
