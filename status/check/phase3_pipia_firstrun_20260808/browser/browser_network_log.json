@@ -1,0 +1,72 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v0/files/upload",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/pipia/generate_async",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pipia/tasks/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pipia/tasks/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pipia/tasks/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pipia/tasks/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/reports/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/citations/reports/8e0156db0b204c03a64b18cd616d4a50",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003/articles/4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003/articles/4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003/articles/4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003/articles/4",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/knowledge/sources/CN-LAW-003",
+    "status": 200
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "task_id": "8e0156db0b204c03a64b18cd616d4a50",
+  "fixture": "backend/tests/pipia/fixtures/case_03_seacommerce_scc_draft.md",
+  "upload_status": 200,
+  "submit_status": 200,
+  "final_url": "http://127.0.0.1:5197/knowledge/laws/CN-LAW-003?article=4",
+  "citation_drawer_exact_article": true
+}

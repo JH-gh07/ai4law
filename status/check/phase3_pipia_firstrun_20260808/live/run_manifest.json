@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20260808_200220_866306_03_source_derived_scc_draft",
+  "module": "pipia",
+  "module_id": "cn.pipia",
+  "case_id": "03_source_derived_scc_draft",
+  "status": "PASS",
+  "duration_ms": 392110.0332049973,
+  "attempts": 1,
+  "max_attempts": 1,
+  "input_hash": "0a08172b8b8f",
+  "provider_snapshot": {
+    "mode": "live",
+    "provider_id": "siliconflow",
+    "provider_name": "siliconflow",
+    "provider_type": "openai_compatible",
+    "api_url": "https://api.siliconflow.cn/v1",
+    "model": "deepseek-ai/DeepSeek-V3.2",
+    "enabled": true,
+    "timeout": 60,
+    "api_key_configured": true,
+    "fingerprint": "853fb8a7e7595db8325fd6879e15d4be917eb475ef2762b488b7466f0aedfd09",
+    "captured_at": "2026-08-08T12:08:52.985107+00:00"
+  },
+  "input": {
+    "sha256": "07491896edf2edebabd74c0cd00e4c2a4a516de34656718f0d1fc1d9abc4ab6e",
+    "fields": [
+      "attachments",
+      "company_profile",
+      "emergency_plan",
+      "personal_info_scope",
+      "rights_protection",
+      "route_type",
+      "transfer_context"
+    ],
+    "artifacts": [
+      {
+        "file_name": "case_03_seacommerce_scc_draft.md",
+        "file_role": "scc_contract",
+        "storage_uri": "backend/tests/pipia/fixtures/case_03_seacommerce_scc_draft.md",
+        "file_format": "md"
+      },
+      {
+        "file_name": "“认证_标准合同路径”测试案例及预期输出.docx",
+        "file_role": "supporting_evidence",
+        "storage_uri": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx",
+        "file_format": "docx"
+      }
+    ]
+  },
+  "output": {
+    "fields": [
+      "attachment_notes",
+      "chapters",
+      "chapters_count",
+      "consistency_issues",
+      "evidence_chain",
+      "facts",
+      "filing_readiness",
+      "issues",
+      "material_gaps",
+      "output_files",
+      "report_path",
+      "risk_level",
+      "route_type"
+    ],
+    "artifacts": [
+      {
+        "role": "markdown",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/海淘优选（杭州）科技有限公司_PIPIA_报告_草案_20260808.md"
+      },
+      {
+        "role": "docx",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/海淘优选（杭州）科技有限公司_PIPIA_报告_草案_20260808.docx"
+      },
+      {
+        "role": "pdf",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/海淘优选（杭州）科技有限公司_PIPIA_报告_草案_20260808.pdf"
+      },
+      {
+        "role": "zip",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/海淘优选（杭州）科技有限公司_PIPIA_输出包_草案_20260808.zip"
+      },
+      {
+        "role": "document_ir_json",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/document_ir.json"
+      },
+      {
+        "role": "citation_map_json",
+        "path": "outputs/pipia/a4373fa51d4a4fbb88c073cac83b4712/outputs/citation_map.json"
+      }
+    ]
+  },
+  "observability": {
+    "event_count": 22,
+    "trace_manifest": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/runs/pipia/20260808_200220_866306_03_source_derived_scc_draft/trace/manifest.json",
+    "llm_calls": 7,
+    "tokens": {
+      "prompt_tokens": 35625,
+      "completion_tokens": 5536,
+      "total_tokens": 41161
+    },
+    "fallback_count": 0,
+    "error_count": 0
+  },
+  "checks_passed": 31,
+  "checks_failed": 0,
+  "checks_skipped": 0,
+  "recommended_path": "",
+  "risk_level": "HIGH",
+  "error": null
+}
