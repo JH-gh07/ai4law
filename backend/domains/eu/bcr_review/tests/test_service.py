@@ -216,3 +216,31 @@ def test_bcr_render_writes_shared_citation_map(tmp_path, monkeypatch) -> None:
     citation_map = Path(outputs["citation_map_json"])
     assert citation_map.name == "citation_map.json"
     assert '"CIT-EU-GDPR-ART47-P01"' in citation_map.read_text(encoding="utf-8")
+
+
+def test_bcr_schema_first_service_exposes_document_ir(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    service = BCRService(llm_client=_DisabledLLM())
+    service.schema_first_enabled = True
+    payload = BCRRequest.model_validate(
+        {
+            "company_name": "Schema-first BCR 集团",
+            "review_items": [
+                {
+                    "code": "3.2-C1",
+                    "title": "结构完整性",
+                    "score": "partial",
+                    "finding": "章节覆盖不完整",
+                    "legal_basis": "GDPR 第47条",
+                    "recommendation": "补齐约束力章节",
+                    "evidence": "BCR-v1 第3章",
+                }
+            ],
+            "attachments": [],
+        }
+    )
+
+    result = service.generate_report(payload, task_id="schema-first-service")
+
+    assert "document_ir_json" in result.output_files
+    assert Path(result.output_files["document_ir_json"]).exists()

@@ -647,6 +647,7 @@ class BCRService:
         attachment_notes,
         citation_registry: CitationRegistry,
     ) -> dict[str, str]:
+        document_ir_path: Path | None = None
         if self.schema_first_enabled:
             from backend.common.reporting import DocumentCompiler
             from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
@@ -661,8 +662,11 @@ class BCRService:
             _ir_dir = Path("outputs/bcr") / task_id / "outputs"
             _ir_dir.mkdir(parents=True, exist_ok=True)
             import json as _json
-            _ir_path = _ir_dir / "document_ir.json"
-            _ir_path.write_text(_json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
+            document_ir_path = _ir_dir / "document_ir.json"
+            document_ir_path.write_text(
+                _json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
         output_dir = Path("outputs/bcr") / task_id / "outputs"
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
@@ -697,13 +701,18 @@ class BCRService:
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
             z.write(citation_map_json, arcname=Path(citation_map_json).name)
-        return {
+            if document_ir_path is not None:
+                z.write(document_ir_path, arcname=document_ir_path.name)
+        result = {
             "markdown": str(md_out),
             "docx": str(docx_out),
             "pdf": str(pdf_out),
             "zip": str(zip_out),
             "citation_map_json": citation_map_json,
         }
+        if document_ir_path is not None:
+            result["document_ir_json"] = str(document_ir_path)
+        return result
 
     # ------------------------------------------------------------------
     # Document-driven rendering
