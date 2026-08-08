@@ -21,6 +21,11 @@ from backend.domains.cn.security_assessment.schema import ChapterContent
 
 _HEADING_PREFIX_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
 _SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？])")
+# Matches [N] footnote residue that extract_citation_refs leaves in text when
+# the registry has no mapping for that number.  We surface it as a citation_ref
+# so it becomes a ClaimBlock and reaches the compiler rather than crashing
+# ParagraphBlock validation first.
+_FOOTNOTE_RESIDUE_RE = re.compile(r"\[\d+\]")
 
 
 def _semantic_text(paragraph: str) -> str:
@@ -57,6 +62,14 @@ def build_assessment_document_ir(
             # Accepts both citation shapes: raw {{CIT-*}} markers (pre-generator)
             # and [N] footnotes (post-generator, the production shape).
             citation_free, citation_refs = extract_citation_refs(paragraph, citation_registry)
+            # Surface any [N] residue the registry could not resolve.  Without this
+            # step the text still contains "[999]" which ParagraphBlock rejects,
+            # blocking the real failure (CITATION_NOT_REGISTERED) from ever reaching
+            # the compiler.
+            residue = _FOOTNOTE_RESIDUE_RE.findall(citation_free)
+            if residue:
+                citation_refs = list(dict.fromkeys(citation_refs + residue))
+                citation_free = _FOOTNOTE_RESIDUE_RE.sub("", citation_free)
             text = _semantic_text(citation_free)
             if not text:
                 continue
