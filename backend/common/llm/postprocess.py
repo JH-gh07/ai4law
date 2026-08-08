@@ -17,6 +17,7 @@ _MARKDOWN_PREFIX_RE = re.compile(
     r"^\s*(?:#{1,6}\s|[*_]{2,3}[^*_\s]|[-*]\s|\d+\.\s|>\s|\|)"
 )
 _BASIS_BLOCK_RE = re.compile(r"【依据：[^】]+】")
+_TRUNCATED_CIT_MARKER_RE = re.compile(r"\{\{CIT-[A-Z0-9_-]*(?:\}\}?)?")
 # P0-7: Tighten patterns to avoid flagging generic descriptive prose
 # Only match when asserting specific legal obligations or definitive judgments
 _LEGAL_RULE_RE = re.compile(
@@ -461,4 +462,8 @@ def _replace_registered_markers(text: str, registry: "CitationRegistry") -> str:
         # deleting evidence from the delivered text.
         return "【待核验：引用无法映射】"
 
-    return _CIT_MARKER_RE.sub(_replace_marker, text)
+    converted = _CIT_MARKER_RE.sub(_replace_marker, text)
+    return _TRUNCATED_CIT_MARKER_RE.sub(
+        "【待核验：引用格式不完整】",
+        converted,
+    )

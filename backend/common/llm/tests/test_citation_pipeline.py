@@ -90,3 +90,14 @@ def test_pipeline_requires_registry_when_citation_syntax_is_present() -> None:
             "企业应当完成评估。{{CIT-CN-PIPL-ART39-P01}}",
             registry=None,
         )
+
+
+def test_pipeline_replaces_truncated_citation_marker_with_pending_status() -> None:
+    result = apply_citation_pipeline(
+        "企业应当完成评估。{{CIT-CN-PIPL-ART39",
+        registry=_registry(),
+    )
+
+    assert "CIT-CN-PIPL-ART39" not in result.text
+    assert result.text == "企业应当完成评估。【待核验：引用格式不完整】"
+    assert [item.code for item in result.violations] == ["required_citation_missing"]
