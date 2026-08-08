@@ -401,7 +401,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、61 项回归 + 本地首跑验收报告（`status/check/phase2_assessment_firstrun_20260808/`） | — |
 | 3 | 其他模块 | **完成（代码+测试）** | 8个模块均已迁移（DPIA/TIA/PIPIA/BCR/SCC/CPRA/EO14117/document_review），723 passed | 各模块本地真实产物首跑待补（目前为 fixture 首跑） |
-| 4 | 知识库治理 | 部分完成 | 现状分析文档 | URL、条文唯一性、条号清理 |
+| 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复），`scripts/check_citation_source_integrity.py` | URL回填：2620条缺失、无已知URL，暂无法自动化 |
 | 5 | 前端闭环 | 部分完成 | 待核验状态测试 | 全部跳转状态和截图 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
