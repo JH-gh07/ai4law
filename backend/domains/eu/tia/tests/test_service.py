@@ -51,7 +51,9 @@ def _fast_render(task_id, payload, chapters, attachment_notes, citation_registry
 
 
 def test_tia_generate_report() -> None:
-    service = TIAService()
+    # This contract test asserts orchestration and output wiring. Live provider
+    # verification is recorded separately and must not inherit .env credentials.
+    service = TIAService(llm_client=_DisabledLLM())
     service._render = _fast_render
     payload = TIARequest.model_validate(
         {
