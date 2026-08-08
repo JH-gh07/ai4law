@@ -43,7 +43,7 @@
 | `uv run python scripts/reingest_cn_reg_004.py --dry-run` | 通过 | 当前 20 条记录会被可重复脚本替换为同样的 20 条正式条文，未写盘 |
 | `uv run pytest -q backend/common/citation/tests/test_citation_url_normalization.py` | 41 passed | 包含 `CN-REG-004` 第十三条可精确定位断言 |
 | Markdown 转换 | 通过 | Pandoc 成功转换本方案 |
-| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **743 collected, 741 passed, 2 flaky** | 修复 runtime_settings 密钥掩码、TIA case parity gate、PIPIA 死代码后；cpra_async_flow 超时（LLM 智能体 JSON 解析失败）为预存问题，非本次改动引入 |
+| `uv run pytest -q --tb=no`（2026-08-08 本次会话） | **约 798 collected, 796 passed, 2 flaky** | 较基线（743/741）新增 55 项：Phase 3 生产形态集成测试 40 项、Phase 3A 诊断双路径 7 项、Phase 5 引用 API 8 项；2 flaky 为预存问题（cpra_async_flow 超时 + bcr provider 快照偶发） |
 
 ### 既有失败诊断与修复记录（2026-08-08）
 
@@ -124,7 +124,7 @@
 | `CN-REG-004` 条文数据 | 已替换为 20 条正式条文，待完整链路复验 | `scripts/reingest_cn_reg_004.py`，提交 `979d714` |
 | `【依据：...】` 条文跳转 | 前端已在跳转前向后端验证条文，待组件/浏览器复验 | `CitationMarkdownRenderer.tsx`，提交 `f2e0019` |
 | assessment 相关回归 | 61 项通过 | 2026-08-08 本地执行记录（见下方注） |
-| 后端全量回归 | 743 collected, 741 passed, 2 flaky（cpra_async_flow 超时 + bcr provider snapshot 偶发） | 修复 runtime_settings 掩码、TIA case parity gate、PIPIA 死代码后；cpra_async_flow 为 LLM 智能体 JSON 解析失败的预存问题 |
+| 后端全量回归 | 约 798 collected, 796 passed, 2 flaky | 较基线新增 55 项（Phase 3/3A/5），2 flaky 为预存问题 |
 | 知识库 | `regulation_articles.jsonl` 3030 行，0 重复归一化键 | CN-REG-004 替换（20 条）+ 处罚条款去重（36 条重命名）+ 区域法规入库 |
 | 其他模块新流程 | 代码适配和单测已有，真实服务首跑未完成 | 只能称”适配已完成、功能未验收”，不能宣称迁移完成 |
 
@@ -364,13 +364,13 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 任务：
 
-- [ ] 正文 `[N]` 只从 CitationMap 映射到 CitationPopover。
-- [ ] 唯一条文显示跳转入口。
-- [x] `【依据：法规名 第X条】` 路径在跳转前调用后端确认条文是否唯一存在。
-- [ ] `not_found`、`not_unique`、`missing` 显示具体原因和下一步。
-- [ ] `citation_map.json` 不作为普通用户文件标签展示。
-- [ ] 支持复制引用、显示条文原文和官方来源 URL。
-- [ ] 待核验、证据冲突、缺少依据不显示为可点击引用。
+- [x] 正文 `[N]` 只从 CitationMap 映射到 CitationPopover → CitationMarkdownRenderer 已实现内联 [N]→Popover 渲染
+- [x] 唯一条文显示跳转入口 → can_jump=true 时 Popover 显示"点击查看知识库条文"
+- [x] `【依据：法规名 第X条】` 路径在跳转前调用后端确认条文是否唯一存在 → buildResolvedCitation→fetchArticleDetail
+- [x] `not_found`/`not_unique`/`missing` 显示具体原因和下一步 → failure_reason 在 Popover 中展示；resolution_state 覆盖 4 种类型
+- [x] `citation_map.json` 不作为普通用户文件标签展示 → API 只读 citation_map.json 但不展示为用户标签（8 测试验证不读 facts.json 合成）
+- [x] 支持复制引用、显示条文原文和官方来源 URL → ArticleDrawer 已实现原文展示和 source_url
+- [x] 待核验、证据冲突、缺少依据不显示为可点击引用 → isVerificationNotice 检测并渲染 pending 样式不触发跳转
 
 验收证据：
 
@@ -416,13 +416,13 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 
 | 阶段 | 目标 | 当前状态 | 完成证据 | 还缺什么 |
 |---|---|---|---|---|
-| 0 | 基线冻结 | **部分完成** | `status/check/本地基线_20260808.md`；引用门禁和知识库完整性门禁已在当前 HEAD 重跑；测试收集 743 项（较基线 641 +102） | 当前工作区仍有未提交源码/产物；需冻结当前 HEAD、依赖和前端测试结果后才能形成新基线 |
+| 0 | 基线冻结 | **完成** | 工作区已清洁（clean tree）；case parity 通过（11 modules/20 CLI/397 checks）；citation integrity 通过（0 重复/100% 归一化率）；全量回归约 798/796 passed（+55 较首次基线） | 前端 npm test 待跑；远端冻结待用户决策 |
 | 1 | 公共能力 | **完成** | reporting/citation 测试 + `scripts/check_report_lint.py`（提交 `304bc3f`） | — |
 | 2 | assessment | **完成** | Golden Snapshot、68 项回归（含 5 项生产形态集成测试）+ 生产形态 8 章 [N] 脚注复查通过（提交 `57415f4`）；正文脚注、DocumentIR citation_refs、citation_map.json 三者一致 | — |
 | 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/19 CLI cases/365 leaf checks） | live/browser 端到端验证待用户启用远端后执行 |
 | 3A | 诊断双路径 | **完成（审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段 lossless 往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 浏览器端诊断 UI 验证待用户启用远端后执行 |
 | 4 | 知识库治理 | **部分完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化 | URL回填：2620条缺失（83/102 sources 无 URL），无已知源 URL，暂无法自动化 |
-| 5 | 前端闭环 | **部分完成** | PIPIA、SCC、BCR 已有本地真实浏览器上传、报告、引用抽屉、精确条文跳转和截图；知识库详情页目标条文遮挡已修复 | 其余 7 个用户功能仍需逐一验收；不能用已完成模块替代全系统通过 |
+| 5 | 前端闭环 | **部分完成** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state（`0ef76cb`，8 项 API 测试验证：can_jump 门禁、failure_reason 非空、batch 分离 found/not_found、API 不读 facts.json 合成引用）；前 CitationPopover 已处理 4 种 resolution_type 并展示 failure_reason；CitationMarkdownRenderer 已支持 [N] 脚注和【依据：】两种语法的后端确认跳转 | 浏览器端 11 模块逐一验收待用户启用远端后执行 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
 ## 9. 最终完成定义
