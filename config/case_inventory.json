@@ -102,6 +102,10 @@
         {
           "case_id": "02_source_case_missing_scc",
           "assertions": 29
+        },
+        {
+          "case_id": "03_source_derived_scc_draft",
+          "assertions": 31
         }
       ],
       "frontend_cases": 2
