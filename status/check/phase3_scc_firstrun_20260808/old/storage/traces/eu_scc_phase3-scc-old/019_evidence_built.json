@@ -1,0 +1,129 @@
+{
+  "name": "evidence_built",
+  "seq": 19,
+  "created_at": "2026-08-08T04:39:22.033837+00:00",
+  "payload": {
+    "issues": [
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "title": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "description": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY"
+        ],
+        "recommended_action": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "title": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "description": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS"
+        ],
+        "recommended_action": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ],
+    "evidence_chain": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ]
+  }
+}

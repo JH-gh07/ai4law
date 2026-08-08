@@ -1,0 +1,38 @@
+[
+  {
+    "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+    "location": "Annex I.A",
+    "clause_ref": "Annex I.A",
+    "original_text": "",
+    "issue_type": "annex_incomplete",
+    "severity": "MEDIUM",
+    "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+    "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+    "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+    "location": "Annex II",
+    "clause_ref": "Annex II",
+    "original_text": "",
+    "issue_type": "annex_incomplete",
+    "severity": "HIGH",
+    "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+    "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+    "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+    "suggested_text": ""
+  },
+  {
+    "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+    "location": "Annex II / TIA",
+    "clause_ref": "",
+    "original_text": "",
+    "issue_type": "supplementary_measures_insufficient",
+    "severity": "HIGH",
+    "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+    "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+    "recommendation": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+    "suggested_text": ""
+  }
+]

@@ -1,0 +1,139 @@
+{
+  "name": "diagnosis",
+  "seq": 14,
+  "created_at": "2026-08-08T04:39:22.300388+00:00",
+  "payload": {
+    "recommended_path": "eu_scc",
+    "rationale": "EU SCC deterministic rule engine review",
+    "document": {
+      "module_type": "Module Two",
+      "clauses": [
+        {
+          "clause_no": 1,
+          "title": "Clause 1",
+          "content": "er to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate",
+          "has_deviation": false,
+          "deviation_type": "",
+          "deviation_description": ""
+        }
+      ],
+      "annex_i_a": {
+        "parties": [],
+        "signing_info": ""
+      },
+      "annex_i_b": {
+        "data_subjects": "",
+        "data_categories": "",
+        "special_category_data": [],
+        "processing_purpose": "",
+        "processing_nature": "",
+        "transfer_frequency": "",
+        "retention_period": ""
+      },
+      "annex_ii": {
+        "tom_items": [],
+        "supplementary_measures": []
+      },
+      "annex_iii": {
+        "sub_processors": []
+      },
+      "raw_text": "Module Two: Controller to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate technical and organisational measures. 4. Sub-processing. The data importer shall not engage another processor without prior specific or general written authorisation. 5. Data subject rights. The data importer shall assist the data exporter in fulfilling its obligations to respond to data subject requests. 6. Breach notification. The data importer shall notify the data exporter without undue delay after becoming aware of a personal data breach. 7. Deletion or return. At the choice of the data exporter, the data importer shall delete or return all personal data after the end of the provision of services. 8. Audits. The data importer shall make available to the data exporter all information necessary to demonstrate compliance."
+    },
+    "transfer_chain": {
+      "exporter_name": "",
+      "exporter_role": "controller",
+      "importer_name": "",
+      "importer_role": "processor",
+      "sub_processors": [],
+      "onward_transfer_locations": [],
+      "storage_locations": [],
+      "access_locations": []
+    },
+    "module_validation": {
+      "expected_module": "Module Two",
+      "actual_module": "Module Two",
+      "is_correct": true,
+      "mismatch_reason": ""
+    },
+    "clause_comparison": {
+      "clauses_checked": 1,
+      "deviations_found": 0,
+      "findings": []
+    },
+    "annex_review": {
+      "findings": [
+        {
+          "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "location": "Annex I.A",
+          "clause_ref": "Annex I.A",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "MEDIUM",
+          "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+          "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+          "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+          "location": "Annex II",
+          "clause_ref": "Annex II",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "HIGH",
+          "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+          "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+          "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "suggested_text": ""
+        }
+      ]
+    },
+    "tia_review": {
+      "has_third_country_transfer": false,
+      "third_country_transfers": [],
+      "tia_present": false,
+      "has_supplementary_measures": false,
+      "schrems_ii_measures_present": false,
+      "findings": []
+    },
+    "all_findings": [
+      {
+        "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+        "location": "Annex I.A",
+        "clause_ref": "Annex I.A",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "MEDIUM",
+        "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+        "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+        "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+        "location": "Annex II",
+        "clause_ref": "Annex II",
+        "original_text": "",
+        "issue_type": "annex_incomplete",
+        "severity": "HIGH",
+        "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+        "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "suggested_text": ""
+      },
+      {
+        "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "location": "Annex II / TIA",
+        "clause_ref": "",
+        "original_text": "",
+        "issue_type": "supplementary_measures_insufficient",
+        "severity": "HIGH",
+        "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+        "recommendation": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "suggested_text": ""
+      }
+    ],
+    "overall_rating": "HIGH"
+  }
+}

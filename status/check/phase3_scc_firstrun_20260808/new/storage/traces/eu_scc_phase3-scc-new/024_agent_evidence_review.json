@@ -1,0 +1,112 @@
+{
+  "name": "agent_evidence_review",
+  "seq": 24,
+  "created_at": "2026-08-08T04:39:22.476799+00:00",
+  "payload": {
+    "revised_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "evidence_patches": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "missing_rule_refs": [
+          "GDPR Article 46",
+          "EU 2021/914"
+        ],
+        "irrelevant_rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "reason": "Expected citations: ['GDPR Article 46', 'EU 2021/914']"
+      }
+    ],
+    "low_confidence_evidence": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "problem": "Confidence 60% — missing key citations",
+        "needs_human_review": true
+      }
+    ],
+    "patch_count": 2
+  }
+}

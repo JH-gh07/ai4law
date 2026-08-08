@@ -1,0 +1,728 @@
+{
+  "name": "context_pack_built",
+  "seq": 20,
+  "created_at": "2026-08-08T04:39:22.034423+00:00",
+  "payload": {
+    "module_key": "eu_scc",
+    "request_id": "phase3-scc-old",
+    "facts": [
+      {
+        "fact_id": "EU-SCC-FACT-request-project-name",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.project_name",
+        "value": "EU SCC合规审查",
+        "normalized_value": "EU SCC合规审查",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-declared-module-type",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.declared_module_type",
+        "value": "Module Two",
+        "normalized_value": "Module Two",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-exporter-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.exporter_role",
+        "value": "controller",
+        "normalized_value": "controller",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-importer-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.importer_role",
+        "value": "processor",
+        "normalized_value": "processor",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-has-tia",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.has_tia",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-request-has-supplementary-measures",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "request.has_supplementary_measures",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-module-type",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.module_type",
+        "value": "Module Two",
+        "normalized_value": "Module Two",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-clause-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.clause_count",
+        "value": 1,
+        "normalized_value": 1,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-ia-party-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_ia.party_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-ii-tom-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_ii.tom_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-doc-annex-iii-sub-processor-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "doc.annex_iii.sub_processor_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-exporter-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.exporter_role",
+        "value": "controller",
+        "normalized_value": "controller",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-importer-role",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.importer_role",
+        "value": "processor",
+        "normalized_value": "processor",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-chain-sub-processor-count",
+        "source_type": "schema",
+        "source_ref": "SCCReviewRequest",
+        "field_path": "chain.sub_processor_count",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-module-is-correct",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.module_is_correct",
+        "value": true,
+        "normalized_value": true,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-expected-module",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.expected_module",
+        "value": "Module Two",
+        "normalized_value": "Module Two",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-clauses-checked",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.clauses_checked",
+        "value": 1,
+        "normalized_value": 1,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-deviations-found",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.deviations_found",
+        "value": 0,
+        "normalized_value": 0,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-has-third-country-transfer",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.has_third_country_transfer",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-tia-present",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.tia_present",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-schrems-ii-measures",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.schrems_ii_measures",
+        "value": false,
+        "normalized_value": false,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-overall-rating",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.overall_rating",
+        "value": "HIGH",
+        "normalized_value": "HIGH",
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      },
+      {
+        "fact_id": "EU-SCC-FACT-review-finding-count",
+        "source_type": "derived",
+        "source_ref": "RuleEngine",
+        "field_path": "review.finding_count",
+        "value": 3,
+        "normalized_value": 3,
+        "confidence": 1.0,
+        "evidence_status": "user_claim_only",
+        "supporting_material_refs": [],
+        "can_support_external_positive_claim": false,
+        "requires_user_confirmation": false,
+        "notes": null,
+        "jurisdiction": ""
+      }
+    ],
+    "diagnosis_result": {
+      "recommended_path": "eu_scc",
+      "rationale": "EU SCC deterministic rule engine review",
+      "document": {
+        "module_type": "Module Two",
+        "clauses": [
+          {
+            "clause_no": 1,
+            "title": "Clause 1",
+            "content": "er to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate",
+            "has_deviation": false,
+            "deviation_type": "",
+            "deviation_description": ""
+          }
+        ],
+        "annex_i_a": {
+          "parties": [],
+          "signing_info": ""
+        },
+        "annex_i_b": {
+          "data_subjects": "",
+          "data_categories": "",
+          "special_category_data": [],
+          "processing_purpose": "",
+          "processing_nature": "",
+          "transfer_frequency": "",
+          "retention_period": ""
+        },
+        "annex_ii": {
+          "tom_items": [],
+          "supplementary_measures": []
+        },
+        "annex_iii": {
+          "sub_processors": []
+        },
+        "raw_text": "Module Two: Controller to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate technical and organisational measures. 4. Sub-processing. The data importer shall not engage another processor without prior specific or general written authorisation. 5. Data subject rights. The data importer shall assist the data exporter in fulfilling its obligations to respond to data subject requests. 6. Breach notification. The data importer shall notify the data exporter without undue delay after becoming aware of a personal data breach. 7. Deletion or return. At the choice of the data exporter, the data importer shall delete or return all personal data after the end of the provision of services. 8. Audits. The data importer shall make available to the data exporter all information necessary to demonstrate compliance."
+      },
+      "transfer_chain": {
+        "exporter_name": "",
+        "exporter_role": "controller",
+        "importer_name": "",
+        "importer_role": "processor",
+        "sub_processors": [],
+        "onward_transfer_locations": [],
+        "storage_locations": [],
+        "access_locations": []
+      },
+      "module_validation": {
+        "expected_module": "Module Two",
+        "actual_module": "Module Two",
+        "is_correct": true,
+        "mismatch_reason": ""
+      },
+      "clause_comparison": {
+        "clauses_checked": 1,
+        "deviations_found": 0,
+        "findings": []
+      },
+      "annex_review": {
+        "findings": [
+          {
+            "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+            "location": "Annex I.A",
+            "clause_ref": "Annex I.A",
+            "original_text": "",
+            "issue_type": "annex_incomplete",
+            "severity": "MEDIUM",
+            "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+            "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+            "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+            "suggested_text": ""
+          },
+          {
+            "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+            "location": "Annex II",
+            "clause_ref": "Annex II",
+            "original_text": "",
+            "issue_type": "annex_incomplete",
+            "severity": "HIGH",
+            "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+            "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+            "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+            "suggested_text": ""
+          }
+        ]
+      },
+      "tia_review": {
+        "has_third_country_transfer": false,
+        "third_country_transfers": [],
+        "tia_present": false,
+        "has_supplementary_measures": false,
+        "schrems_ii_measures_present": false,
+        "findings": []
+      },
+      "all_findings": [
+        {
+          "finding_id": "EU-SCC-ANNEX-IA-MISSING-PARTIES",
+          "location": "Annex I.A",
+          "clause_ref": "Annex I.A",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "MEDIUM",
+          "risk_analysis": "Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.",
+          "legal_basis": "EU 2021/914 Annex I.A; Clause 7",
+          "recommendation": "Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-ANNEX-II-EMPTY",
+          "location": "Annex II",
+          "clause_ref": "Annex II",
+          "original_text": "",
+          "issue_type": "annex_incomplete",
+          "severity": "HIGH",
+          "risk_analysis": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+          "legal_basis": "EU 2021/914 Annex II; GDPR Articles 32, 46",
+          "recommendation": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "suggested_text": ""
+        },
+        {
+          "finding_id": "EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "location": "Annex II / TIA",
+          "clause_ref": "",
+          "original_text": "",
+          "issue_type": "supplementary_measures_insufficient",
+          "severity": "HIGH",
+          "risk_analysis": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+          "legal_basis": "Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+          "recommendation": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+          "suggested_text": ""
+        }
+      ],
+      "overall_rating": "HIGH"
+    },
+    "regulations": [
+      {
+        "source_id": "EU-SUP-026",
+        "title": "EN Standard Contractual Clauses (1)",
+        "article": "段落7",
+        "snippet": "(2) Pursuant to Article 46(1) of Regulation (EU) 2016/679, in the absence of an adequacy decision by the Commission pursuant to Article 45(3), a controller or processor may transfer personal data to a third country only if it has provided appropriate safeguards, and on condition that enforceable rights and effective legal remedies for data subjects are available. Such safeguards may be provided for by standard data protection clauses adopted by the Commission pursuant to Article 46(2)(c)."
+      },
+      {
+        "source_id": "EU-SUP-026",
+        "title": "EN Standard Contractual Clauses (1)",
+        "article": "段落10",
+        "snippet": "(5) Commission Decisions 2001/497/EC and 2010/87/EU contain standard contractual clauses to facilitate the transfer of personal data from a data controller established in the Union to a controller or processor established in a third country that does not offer an adequate level of protection. Those decisions were based on Directive 95/46/EC of the European Parliament and of the Council."
+      },
+      {
+        "source_id": "EU-SUP-026",
+        "title": "EN Standard Contractual Clauses (1)",
+        "article": "段落12",
+        "snippet": "(7) A controller or processor may use the standard contractual clauses set out in the Annex to this Decision to provide appropriate safeguards within the meaning of Article 46(1) of Regulation (EU) 2016/679 for the transfer of personal data to a processor or controller established in a third country, without prejudice to the interpretation of the notion of international transfer in Regulation (EU) 2016/679. The standard contractual clauses may be used for such transfers only to the extent that the processing by the importer does not fall within the scope of Regulation (EU) 2016/679. This also includes the transfer of personal data by a controller or processor not established in the Union, to the extent that the processing is subject to Regulation (EU) 2016/679 (pursuant to Article 3(2) thereof), because it relates to the offering of goods or services to data subjects in the Union or the monitoring of their behaviour as far as it takes place within the Union."
+      },
+      {
+        "source_id": "EU-SUP-026",
+        "title": "EN Standard Contractual Clauses (1)",
+        "article": "段落9",
+        "snippet": "(4) Beyond using standard contractual clauses to provide appropriate safeguards for transfers pursuant to Article 46(1) of Regulation (EU) 2016/679, the data exporter has to fulfil its general responsibilities as controller or processor under Regulation (EU) 2016/679. Those responsibilities include an obligation of the controller to provide data subjects with information about the fact that it intends to transfer their personal data to a third country pursuant to Article 13(1)(f) and Article 14(1)(f) of Regulation (EU) 2016/679. In the case of transfers pursuant to Article 46 of Regulation (EU) 2016/679, such information must include a reference to the appropriate safeguards and the means by which to obtain a copy of them or information where they have been made available."
+      },
+      {
+        "source_id": "EU-SUP-026",
+        "title": "EN Standard Contractual Clauses (1)",
+        "article": "段落8",
+        "snippet": "(3) The role of standard contractual clauses is limited to ensuring appropriate data protection safeguards for international data transfers. Therefore, the controller or processor transferring the personal data to a third country (the ‘data exporter’) and the controller or processor receiving the personal data (the ‘data importer’) are free to include those standard contractual clauses in a wider contract and to add other clauses or additional safeguards, provided that they do not contradict, directly or indirectly, the standard contractual clauses or prejudice the fundamental rights or freedoms of data subjects. Controllers and processors are encouraged to provide additional safeguards by means of contractual commitments that supplement the standard contractual clauses. The use of the standard contractual clauses is without prejudice to any contractual obligations of the data exporter and/or importer to ensure respect for applicable privileges and immunities."
+      },
+      {
+        "source_id": "EU-LAW-001",
+        "title": "GDPR (EU) 2016/679",
+        "article": "段落1",
+        "snippet": "# GDPR (EU) 2016/679 - Real Excerpts for RAG"
+      },
+      {
+        "source_id": "EU-LAW-001",
+        "title": "GDPR (EU) 2016/679",
+        "article": "段落2",
+        "snippet": "Source: https://eur-lex.europa.eu/eli/reg/2016/679/oj"
+      },
+      {
+        "source_id": "EU-LAW-001",
+        "title": "GDPR (EU) 2016/679",
+        "article": "段落3",
+        "snippet": "1. Where a type of processing in particular using new technologies, and taking into account the nature, scope, context and purposes of the processing, is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall, prior to the processing, carry out an assessment of the impact of the envisaged processing operations on the protection of personal data. A single assessment may address a set of similar processing operations that present similar high risks."
+      },
+      {
+        "source_id": "EU-LAW-001",
+        "title": "GDPR (EU) 2016/679",
+        "article": "段落4",
+        "snippet": "1. The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63, provided that they: (a) are legally binding and apply to and are enforced by every member concerned of the group of undertakings, or group of enterprises engaged in a joint economic activity, including their employees; (b) expressly confer enforceable rights on data subjects with regard to the processing of their personal data; and (c) fulfil the requirements laid down in paragraph 2."
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落1",
+        "snippet": "# EDPB Recommendations 01/2020 - Real Excerpts for RAG"
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落2",
+        "snippet": "Source: https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf"
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落3",
+        "snippet": "## Step 1: Know your transfers"
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落4",
+        "snippet": "8. To know what may be required for you (the data exporter) to be able to continue with or to conduct new transfers of personal data, 23 the first step is to ensure that you are fully aware of your transfers (know your tr ansfers). Recording and mapping all transfers can be a complex exercise for entities engaging into multiple, diverse and regular transfers with third countries and using a series of processors and sub -processors. Knowing your transfers is an essential firs t step to fulfil your obligations under the principle of accountability. 9. To gain full awareness of your transfers, you can build on the records of processing activities that you may be obliged to maintain as controller or processor under Article 30 GDPR .24 Previous 17 C-311/18 (Schrems II), paragraph 134. 18 Article 5 (2) and Article 28 (3) (h) GDPR. 19 Therefore, for example, you will not be considered a data exporter if you are a data subject providing your personal data via an online questionnaire to a controller established in a third country. 20 See EDPB Guidelines 3/2018 on the territorial scope of the GDPR (Article 3) https://edpb.europa.eu/our-work- tools/our-documents/guidelines/guidelines-32018-territorial-scope-gdpr-article-3-version_en 21 EDPB Guidelines 2/2020 on Articles 46 (2) (a) and 46 (3) (b) of Regulation 2016/679 for transfers of personal data between EEA and non -EEA public authorities and bodi es; see https://edpb.europa.eu/our-work- tools/public-consultations-art-704/2020/guidelines-22020-articles-46-2-and-46-3-b_en 22 Article 5(2) GDPR and Article 24 (1) GDPR. 23 Please note that remote access by an entity from a third country to data located in the EEA is also considered a transfer. 24 See Article 30 GDPR and in particular paragraphs 1.e and 2.c. Moreover, your rec ords of processing should contain a description of your processing activities (including, but not limited to, the categories of data subjects, the categories of personal data and purposes of the processing and specific information about data transfers. Some controllers and processors are exempt from the obligation to keep records of processing (Article 30.5 GDPR). For guidance on this exemption, see Article 29 Working Party, Position Paper on the derogations from the obligation to maintain records of proces sing activities pursuant to Article 30.5 GDPR (endorsed by the EDPB on 25 May 2018). Adopted 11 actions to fulfil the obligations to inform data subjects under Articles 13.1.f and 14.1.f GPDR "
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落5",
+        "snippet": "## Step 3: Assess transfer tool effectiveness"
+      },
+      {
+        "source_id": "EU-GUIDE-002",
+        "title": "EDPB Recommendations 01/2020",
+        "article": "段落6",
+        "snippet": "Step 3: Assess whether the Article 46 GD PR transfer tool you are relying on is effective in light of all circumstances of the transfer 28. The selected Article 46 GDPR transfer tool must be effective in ensuring that the level of protection guaranteed by the GDPR is not undermined by the transfer in practice.38 29. In particular, the protection afforded to the transferred personal data in the third country must be essentially equivalent to that guaranteed in the EEA by the GDPR, read in light of the Charter of Fundamental Rights of the EU .39 This is not t he case if the data importer is prevented from complying with its obligations under the chosen Article 46 GDPR transfer tool due to the third country’s legislation and practices applicable to the transfer, including during the transit of data from the exporter to the importer’s country.40 30. You must first assess, where appropriate in collaboration with the importer, if there is anything in the law and/or practices in force41 in the third country that may impinge on the effectiveness of the appropriate safeguards of the Article 46 GDPR transfer tool you are relying on, in the context of your specific transfer. This implies determining whether your transfer falls within the scope of legislation and/or practices which may impinge on the effectiveness of your Articl e 46 GDPR transfer tool. The assessment required must be based first and foremost on legislation publicly available. 31. This assessment must contain elements concerning access to data by public authorities of the third country of your importer such as: - Elements on whether public authorities of the third country of your importer may seek to access the data with or without the data importer’s knowledge, in light of legislation, practice and reported precedents; - Elements on whether public authorities of the third country of your importer may be able to access the data through the data importer or through the telecommunication providers or communication channels in light of legislation, legal powers, technical, financial, and human resources at their disposal and of reported precedents. Identifying laws and practices relevant in light of all circumstances of the transfer"
+      }
+    ],
+    "issues": [
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "title": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "description": "Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY"
+        ],
+        "recommended_action": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      },
+      {
+        "issue_id": "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "title": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "description": "Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.",
+        "category": "other",
+        "severity": "HIGH",
+        "issue_certainty": "default_review_item",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "evidence_refs": [
+          "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS"
+        ],
+        "recommended_action": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "affects_outputs": [
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ],
+        "missing_materials": [],
+        "internal_review_required": true,
+        "external_report_strategy_required": true,
+        "can_enter_external_report": true
+      }
+    ],
+    "evidence_chain": [
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+        "claim": "[HIGH] Annex II: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without speci",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-ANNEX-II-EMPTY",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      },
+      {
+        "evidence_id": "EU-SCC-EVIDENCE-EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+        "claim": "[HIGH] Annex II / TIA: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Org",
+        "fact_refs": [
+          "EU-SCC-FACT-request-project-name"
+        ],
+        "rule_refs": [
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026",
+          "EU-SUP-026"
+        ],
+        "issue_refs": [],
+        "legal_basis": [],
+        "supporting_basis": [],
+        "discarded_basis": [],
+        "document_refs": [],
+        "rag_query_used": "",
+        "rag_hits_count": 0,
+        "conclusion": "Technical: implement e2ee_eu_keys, basic_encryption_only, access_controls | Contractual: add gov_access, onward_restrictions | Organizational: establish audit, logging, key_management",
+        "usage_constraint": "",
+        "confidence": 0.9,
+        "used_by": [
+          "EU-SCC-FINDING-EU-SCC-TIA-MEASURES-EFFECTIVENESS",
+          "clause_findings",
+          "legal_basis_and_recommendations"
+        ]
+      }
+    ],
+    "path_warning": null,
+    "risk_summary": {
+      "overall_rating": "HIGH",
+      "finding_count": 3
+    },
+    "attachment_notes": [],
+    "output_requirements": {
+      "chapter_keys": [
+        "document_overview",
+        "overall_rating",
+        "clause_findings",
+        "legal_basis_and_recommendations"
+      ]
+    },
+    "legal_grounding": null,
+    "case_grounding": null,
+    "writing_strategy": null,
+    "generation_basis_pack": null,
+    "citation_registry": null,
+    "legal_grounding_context": [],
+    "workflow_rule_context": [],
+    "template_context": [],
+    "evaluation_context": [],
+    "compliance_reasoning": []
+  }
+}

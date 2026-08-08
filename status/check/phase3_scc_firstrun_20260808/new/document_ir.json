@@ -1,0 +1,146 @@
+{
+  "schema_version": "3.0",
+  "compiler_version": "0.1.0",
+  "prompt_version": "legacy-scc-adapter-v1",
+  "template_version": "scc-v0",
+  "model": "legacy-scc",
+  "document_id": "scc:local-scc-new-20260808",
+  "report_type": "scc",
+  "metadata": {
+    "title": "EU Tech Solutions GmbH — EU SCC 审查报告草案",
+    "company_name": "EU Tech Solutions GmbH",
+    "report_date": "2026-08-08",
+    "report_id": "local-scc-new-20260808"
+  },
+  "sections": [
+    {
+      "section_id": "scc.chapter.1",
+      "title": "文件概要",
+      "level": 2,
+      "ordinal": "1",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.1.block.1",
+          "type": "paragraph",
+          "text": "文件概要",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.1.block.2",
+          "type": "paragraph",
+          "text": "- SCC 模块: 声明=Module Two, 预期=Module Two, 正确=是\n- 条款数: 1\n- Annex I.A 主体数: 0\n- Annex II 措施数: 0\n- Annex III 子处理者数: 0",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.2",
+      "title": "总体合规评级",
+      "level": 2,
+      "ordinal": "2",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.2.block.1",
+          "type": "paragraph",
+          "text": "总体合规评级: HIGH",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.2.block.2",
+          "type": "paragraph",
+          "text": "- 模块选择: 正确\n- 标准条款偏离: 0处\n- 第三国传输: 否\n- TIA: 缺失\n- Schrems II 补充措施: 不足",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.3",
+      "title": "条款级审查发现",
+      "level": 2,
+      "ordinal": "3",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.3.block.1",
+          "type": "paragraph",
+          "text": "条款级审查发现",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.2",
+          "type": "paragraph",
+          "text": "[MEDIUM] Annex I.A\n- 问题类型: annex_incomplete\n- 风险分析: Less than 2 parties identified in Annex I.A. Docking Clause (Clause 7) parties may also be missing.\n- 法规依据: EU 2021/914 Annex I.A; Clause 7\n- 修改建议: Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.3",
+          "type": "paragraph",
+          "text": "[HIGH] Annex II\n- 问题类型: annex_incomplete\n- 风险分析: Annex II (Technical and Organisational Measures) appears empty or could not be parsed. Without specified TOMs, the SCC does not demonstrate adequate data protection safeguards.\n- 法规依据: EU 2021/914 Annex II; GDPR Articles 32, 46\n- 修改建议: Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.3.block.4",
+          "type": "paragraph",
+          "text": "[HIGH] Annex II / TIA\n- 问题类型: supplementarymeasuresinsufficient\n- 风险分析: Technical: insufficient (Technical measures are limited or not detected.). Contractual: missing. Organizational: missing. Overall: insufficient.\n- 法规依据: Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46\n- 修改建议: Technical: implement e2eeeukeys, basicencryptiononly, accesscontrols | Contractual: add govaccess, onwardrestrictions | Organizational: establish audit, logging, keymanagement",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    },
+    {
+      "section_id": "scc.chapter.4",
+      "title": "法规依据与修改建议",
+      "level": 2,
+      "ordinal": "4",
+      "reuse_policy": "single_use",
+      "blocks": [
+        {
+          "block_id": "scc.chapter.4.block.1",
+          "type": "paragraph",
+          "text": "法规依据与修改建议",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.2",
+          "type": "paragraph",
+          "text": "- EU 2021/914 Annex I.A; Clause 7\n- EU 2021/914 Annex II; GDPR Articles 32, 46\n- Schrems II C-311/18; EDPB Recommendations 01/2020; GDPR Article 46",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.3",
+          "type": "paragraph",
+          "text": "修改建议汇总",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "scc.chapter.4.block.4",
+          "type": "paragraph",
+          "text": "- [MEDIUM] Annex I.A: Complete Annex I.A with all data exporters and importers, including any additional parties via Docking Clause.\n- [HIGH] Annex II: Complete Annex II with specific technical and organisational measures, including encryption standards, access controls, incident response, and data minimization practices.\n- [HIGH] Annex II / TIA: Technical: implement e2eeeukeys, basicencryptiononly, accesscontrols | Contractual: add govaccess, onwardrestrictions | Organizational: establish audit, logging, keymanagement",
+          "fact_refs": [],
+          "issue_refs": []
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "provenance": {
+    "generated_at": "2026-08-08T04:41:31.058023Z",
+    "facts_version": null,
+    "issues_version": null,
+    "evidence_version": null
+  },
+  "input_hash": null,
+  "document_ir_hash": null
+}

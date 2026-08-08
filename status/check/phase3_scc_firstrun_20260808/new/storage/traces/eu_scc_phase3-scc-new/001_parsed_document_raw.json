@@ -1,0 +1,39 @@
+{
+  "name": "parsed_document_raw",
+  "seq": 1,
+  "created_at": "2026-08-08T04:39:22.294417+00:00",
+  "payload": {
+    "module_type": "Module Two",
+    "clauses": [
+      {
+        "clause_no": 1,
+        "title": "Clause 1",
+        "content": "er to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate",
+        "has_deviation": false,
+        "deviation_type": "",
+        "deviation_description": ""
+      }
+    ],
+    "annex_i_a": {
+      "parties": [],
+      "signing_info": ""
+    },
+    "annex_i_b": {
+      "data_subjects": "",
+      "data_categories": "",
+      "special_category_data": [],
+      "processing_purpose": "",
+      "processing_nature": "",
+      "transfer_frequency": "",
+      "retention_period": ""
+    },
+    "annex_ii": {
+      "tom_items": [],
+      "supplementary_measures": []
+    },
+    "annex_iii": {
+      "sub_processors": []
+    },
+    "raw_text": "Module Two: Controller to Processor. 1. Purpose limitation. The data importer shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement appropriate technical and organisational measures. 4. Sub-processing. The data importer shall not engage another processor without prior specific or general written authorisation. 5. Data subject rights. The data importer shall assist the data exporter in fulfilling its obligations to respond to data subject requests. 6. Breach notification. The data importer shall notify the data exporter without undue delay after becoming aware of a personal data breach. 7. Deletion or return. At the choice of the data exporter, the data importer shall delete or return all personal data after the end of the provision of services. 8. Audits. The data importer shall make available to the data exporter all information necessary to demonstrate compliance."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "agent_transfer_chain",
+  "seq": 5,
+  "created_at": "2026-08-08T04:39:22.296796+00:00",
+  "payload": {
+    "patched_chain": {
+      "exporter_name": "",
+      "exporter_role": "controller",
+      "importer_name": "",
+      "importer_role": "processor",
+      "sub_processors": [],
+      "onward_transfer_locations": [],
+      "storage_locations": [],
+      "access_locations": []
+    },
+    "chain_graph": {
+      "nodes": [],
+      "edges": []
+    },
+    "risk_hints": [],
+    "nodes_found": 0,
+    "edges_found": 0
+  }
+}

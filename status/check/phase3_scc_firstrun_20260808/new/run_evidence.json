@@ -1,0 +1,76 @@
+{
+  "mode": "new",
+  "schema_first_enabled": true,
+  "case_path": "backend/tests/eu_scc/cases/01_minimal.json",
+  "case_sha256": "f1e74635ef067f3cd2866a10ebbb895a7dbcd1bf70cadb868849824e14ad535f",
+  "execution": {
+    "service": "backend.domains.eu.scc_review.service.EU_SCCService.generate_report",
+    "duration_ms": 195,
+    "llm_calls": 0,
+    "tokens": 0
+  },
+  "result": {
+    "company_name": "EU Tech Solutions GmbH",
+    "overall_rating": "HIGH",
+    "chapters": 4,
+    "findings": 3,
+    "consistency_issues": [
+      "Contains HIGH risk items — recommend legal review before filing."
+    ],
+    "output_roles": [
+      "citation_map_json",
+      "document_ir_json",
+      "docx",
+      "findings_json",
+      "markdown",
+      "pdf",
+      "rule_engine_result_json"
+    ]
+  },
+  "artifacts": {
+    "markdown": {
+      "path": "EU_Tech_Solutions_GmbH_EU_SCC审查报告_20260808.md",
+      "size": 2656,
+      "sha256": "4e6fb3abe8c1e1325993f7c372b377e5a80fa030799e2053e36f4569d97f23e9"
+    },
+    "docx": {
+      "path": "EU_Tech_Solutions_GmbH_EU_SCC审查报告_20260808.docx",
+      "size": 37703,
+      "sha256": "ac1e892d95c046690bf0f33c86ee46ea656cc145746b398819dfd7d18c5b26ba"
+    },
+    "pdf": {
+      "path": "EU_Tech_Solutions_GmbH_EU_SCC审查报告_20260808.pdf",
+      "size": 6341,
+      "sha256": "296d667b920c056eb1875ed1d2e9eaf48d643ab734543a695c0175c3bb6c10ee"
+    },
+    "findings_json": {
+      "path": "findings.json",
+      "size": 1955,
+      "sha256": "9af147b155da05dfc865f2df01e97e863c87e2e1d5fcec6963cf15dbd6d06189"
+    },
+    "rule_engine_result_json": {
+      "path": "rule_engine_result.json",
+      "size": 6493,
+      "sha256": "05bda1a933a81d55cb9e80ab66bf4909cfab607eba99bf16d00aa581821281d0"
+    },
+    "citation_map_json": {
+      "path": "citation_map.json",
+      "size": 12665,
+      "sha256": "07377bc61b5ceca070e31ec60a10f8c356f815058e13da24c0379abcc8c85b3d"
+    },
+    "document_ir_json": {
+      "path": "document_ir.json",
+      "size": 5962,
+      "sha256": "0fa63be6f3dc739a99cecc44c368006100f8913b5dc1681c4ded7459ac7e6b93"
+    }
+  },
+  "citation_map": {
+    "footnotes": 0,
+    "all_items": 6
+  },
+  "document_ir": {
+    "sections": 4,
+    "blocks": 12,
+    "diagnostics": []
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "agent_document_structure",
+  "seq": 2,
+  "created_at": "2026-08-08T04:39:20.681664+00:00",
+  "payload": {
+    "patches": [
+      {
+        "field_path": "clauses",
+        "problem": "Only 1 clauses extracted",
+        "action": "re_scan"
+      },
+      {
+        "field_path": "annex_ia.exporter",
+        "old_value": "",
+        "new_value": ". 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have committed themselves to confidentiality. 3. Security. The data importer shall implement a",
+        "source_quote": "exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the ",
+        "confidence": 0.85
+      },
+      {
+        "field_path": "annex_ia.importer",
+        "old_value": "",
+        "new_value": "shall process the personal data only on documented instructions from the data exporter. 2. Confidentiality. The data importer shall ensure that persons authorised to process the personal data have com",
+        "source_quote": "importer shall process the personal data only on documented instructions from the data exporter. 2. ",
+        "confidence": 0.85
+      }
+    ],
+    "uncertainties": [],
+    "patch_count": 3,
+    "regions_found": [],
+    "completeness": "ok"
+  }
+}
