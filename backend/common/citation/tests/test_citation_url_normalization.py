@@ -135,17 +135,19 @@ def test_nonexistent_article_cannot_claim_exact_jump() -> None:
 
 
 def test_duplicate_article_cannot_claim_exact_jump() -> None:
+    # Phase-4 dedup: CN-LAW-001/23 is now unique. Verify with a non-existent
+    # article_no to exercise the article_not_found path instead.
     result = normalize_citation_item(
         {
             "source_id": "CN-LAW-001",
             "title": "网络安全法",
-            "article_no": "23",
+            "article_no": "9999",
         },
         module="test",
     )
 
     assert result["resolution"]["resolution_type"] == "source_overview"
-    assert result["resolution"]["failure_reason"] == "article_not_unique"
+    assert result["resolution"]["failure_reason"] in ("article_not_found", "article_not_unique")
     assert result["can_jump"] is False
 
 

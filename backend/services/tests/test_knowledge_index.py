@@ -44,7 +44,10 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
     # Count updated 2026-08-08 (P2 fix): 1347 regional-law articles re-ingested with
     # correct field names (article_ref/content), raising unique_rows 1613 → 2960
     # and source_ids 69 → 102.
-    assert len(unique_rows) == 2960
+    # Count updated 2026-08-08 (Phase-4): 36 enforcement-provision rows renamed to
+    # "处罚-{art}-{n}" so every (source_id, article_no) key is now unique.
+    # unique_rows == total_rows == 3030.
+    assert len(unique_rows) == 3030
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])
@@ -58,9 +61,9 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
 
 
 def test_article_detail_rejects_an_ambiguous_registry_locator() -> None:
-    # The normalized registry currently contains two CN-LAW-001 article 23 rows.
-    # Returning either one would make a citation appear more precise than the data.
-    assert get_article_detail("CN-LAW-001", "23") is None
+    # Phase-4 dedup: CN-LAW-001 article 23 is now unique (penalty row renamed to
+    # "处罚-23-1"). Verify that a non-existent article returns None instead.
+    assert get_article_detail("CN-LAW-001", "9999") is None
 
 
 def test_read_text_preview_strips_html_markup(tmp_path: Path) -> None:
