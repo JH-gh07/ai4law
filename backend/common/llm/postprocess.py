@@ -345,7 +345,7 @@ def apply_citation_policy(
             numeric_footnotes & (verified_footnotes or set())
         )
         if claim_type != "NONE" and not has_verified_marker:
-            if "【待核验：缺少法规依据】" not in paragraph_without_basis:
+            if "【待核验：" not in paragraph_without_basis:
                 paragraph_without_basis = (
                     f"{paragraph_without_basis} 【待核验：缺少法规依据】"
                 )
@@ -459,6 +459,6 @@ def _replace_registered_markers(text: str, registry: "CitationRegistry") -> str:
             return f"[{num}]"
         # Keep unresolved identity visible for diagnostics instead of silently
         # deleting evidence from the delivered text.
-        return f"【未注册引用：{cid}】"
+        return "【待核验：引用无法映射】"
 
     return _CIT_MARKER_RE.sub(_replace_marker, text)

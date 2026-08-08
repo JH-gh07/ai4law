@@ -77,8 +77,10 @@ def test_pipeline_does_not_leave_unregistered_marker_or_basis_text() -> None:
     )
 
     assert "{{CIT-" not in result.text
+    assert "CIT-CN-PIPL-ART99-P01" not in result.text
     assert "【依据：" not in result.text
-    assert "【待核验：缺少法规依据】" in result.text
+    assert "【待核验：引用无法映射】" in result.text
+    assert "【待核验：缺少法规依据】" not in result.text
     assert any(item.code == "required_citation_missing" for item in result.violations)
 
 

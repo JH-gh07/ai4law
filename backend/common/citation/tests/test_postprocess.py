@@ -192,7 +192,8 @@ def test_convert_citation_markers_skips_unknown_markers() -> None:
     result = convert_citation_markers(text, reg)
     assert "[1]" in result
     assert "{{CIT-CN-UNKNOWN-ART99-P01}}" not in result
-    assert "【未注册引用：CIT-CN-UNKNOWN-ART99-P01】" in result
+    assert "CIT-CN-UNKNOWN-ART99-P01" not in result
+    assert "【待核验：引用无法映射】" in result
 
 
 def test_convert_citation_markers_accepts_hyphenated_registry_abbreviation() -> None:
