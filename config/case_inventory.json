@@ -22,6 +22,10 @@
         {
           "case_id": "01_minimal",
           "assertions": 15
+        },
+        {
+          "case_id": "02_healthdata_source_draft",
+          "assertions": 32
         }
       ],
       "frontend_cases": 3
