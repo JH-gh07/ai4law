@@ -1,0 +1,45 @@
+{
+  "case_id": "02_structured_local_attachment",
+  "description": "TIA 结构化输入 + 本地 EDPB PDF 附件解析",
+  "input": {
+    "transfer_tool": "scc",
+    "data_exporter_profile": "EU Exporter",
+    "data_importer_profile": "US Importer",
+    "third_country_assessment": "Government access risk requires review.",
+    "supplementary_measures": "End-to-end encryption and EU-managed keys.",
+    "final_conclusion": "SCC remains conditional on the measures.",
+    "attachments": [
+      {
+        "file_role": "country_law_analysis",
+        "file_name": "edpb-recommendations.pdf",
+        "file_format": "pdf",
+        "storage_uri": "resources/legal/sources/eu/references/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf"
+      }
+    ],
+    "structured_input": {
+      "exporter_country": "DE",
+      "importer_country": "US",
+      "destination_country": "US",
+      "transfer_purpose": "CRM support",
+      "data_categories": ["crm_data", "contact_information"],
+      "has_special_category_data": false,
+      "data_subjects": ["customers"],
+      "transfer_frequency": "daily",
+      "transfer_scale": "medium",
+      "encryption_before_transfer": true,
+      "key_managed_in_eu": true,
+      "has_end_to_end_encryption": true,
+      "has_key_separation": true
+    }
+  },
+  "expected": {
+    "result_not_empty": true,
+    "fields_present": [
+      "route_decision",
+      "country_risk",
+      "measure_assessments"
+    ],
+    "attachment_parse_skipped": false,
+    "coverage_note": "本案例覆盖 structured_input 规则分支和真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
+  }
+}

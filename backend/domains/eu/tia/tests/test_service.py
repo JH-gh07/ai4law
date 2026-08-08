@@ -1,11 +1,24 @@
+import json
 from pathlib import Path
 from zipfile import ZipFile
 
 from pypdf import PdfReader
 
 from backend.common.citation.registry import CitationRegistry
+from backend.domains.eu.tia.agents import create_tia_agents
 from backend.domains.eu.tia.schema import TIAChapter, TIARequest
 from backend.domains.eu.tia.service import TIAService
+
+
+class _DisabledLLM:
+    enabled = False
+
+
+class _Reg:
+    id = "eu_gdpr_art46"
+    title = "GDPR"
+    article = "Article 46"
+    content = "Appropriate safeguards must be provided for third-country transfers."
 
 
 def _fast_render(task_id, payload, chapters, attachment_notes, citation_registry):
@@ -134,3 +147,33 @@ def test_tia_real_renderer_generates_pdf_in_bundle() -> None:
     assert len(PdfReader(pdf_path).pages) >= 1
     with ZipFile(outputs["zip"]) as bundle:
         assert pdf_path.name in bundle.namelist()
+
+
+def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) -> None:
+    """Structured rules and attachment parsing must run in the service path."""
+    service = TIAService()
+    service.llm_client = _DisabledLLM()
+    service.agents = create_tia_agents(None)
+    monkeypatch.setattr(
+        "backend.domains.eu.tia.service.retrieve_legal_documents",
+        lambda *args, **kwargs: type("Hits", (), {"documents": [_Reg()]})(),
+    )
+    service._render = lambda task_id, payload, chapters, attachment_notes, citation_registry: {
+        "markdown": str(tmp_path / "report.md"),
+        "docx": str(tmp_path / "report.docx"),
+        "pdf": str(tmp_path / "report.pdf"),
+        "zip": str(tmp_path / "report.zip"),
+        "citation_map_json": str(tmp_path / "citation_map.json"),
+    }
+
+    case = json.loads(Path("backend/tests/tia/cases/02_structured_local_attachment.json").read_text())
+    payload = TIARequest.model_validate(case["input"])
+
+    result = service.generate_report(payload, task_id="structured-local-attachment")
+
+    assert result.route_decision is not None
+    assert result.country_risk is not None
+    assert result.country_risk.country == "US"
+    assert result.measure_assessments
+    assert any("edpb-recommendations.pdf:" in note for note in result.attachment_notes)
+    assert not any("parse skipped" in note for note in result.attachment_notes)
