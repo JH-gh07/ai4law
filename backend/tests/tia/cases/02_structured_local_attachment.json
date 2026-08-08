@@ -21,9 +21,14 @@
       "importer_country": "US",
       "destination_country": "US",
       "transfer_purpose": "CRM support",
-      "data_categories": ["crm_data", "contact_information"],
+      "data_categories": [
+        "crm_data",
+        "contact_information"
+      ],
       "has_special_category_data": false,
-      "data_subjects": ["customers"],
+      "data_subjects": [
+        "customers"
+      ],
       "transfer_frequency": "daily",
       "transfer_scale": "medium",
       "encryption_before_transfer": true,
@@ -39,7 +44,26 @@
       "country_risk",
       "measure_assessments"
     ],
-    "attachment_parse_skipped": false,
-    "coverage_note": "本案例覆盖 structured_input 规则分支和真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
-  }
+    "min_counts": {
+      "chapters": 6,
+      "output_files": 5
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "json",
+      "zip"
+    ]
+  },
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx",
+  "attachment_parse_skipped": false,
+  "coverage_note": "本案例覆盖 structured_input 规则分支和真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
 }

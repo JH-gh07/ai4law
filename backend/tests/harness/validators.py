@@ -242,11 +242,22 @@ def _op_legal_basis_contains(
     return _op_list_contains(actual, {"legal_basis": payload})
 
 
+def _op_fields_present(actual: dict[str, Any], payload: Any) -> list[tuple[bool, str]]:
+    """Assert every listed key exists at the top level of the result dict."""
+    if not isinstance(payload, list):
+        raise TypeError("fields_present expects a list of field names")
+    return [
+        (key in actual, f"fields_present[{key}]: {'present' if key in actual else 'absent'}")
+        for key in payload
+    ]
+
+
 Operator = Callable[[dict[str, Any], Any], list[tuple[bool, str]]]
 
 ASSERTION_OPERATORS: dict[str, Operator] = {
     "result_not_empty": _op_result_not_empty,
     "fields_equal": _op_fields_equal,
+    "fields_present": _op_fields_present,
     "min_counts": _op_min_counts,
     "max_counts": _op_max_counts,
     "list_contains": _op_list_contains,

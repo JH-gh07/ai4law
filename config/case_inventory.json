@@ -114,6 +114,10 @@
         {
           "case_id": "01_minimal",
           "assertions": 18
+        },
+        {
+          "case_id": "02_structured_local_attachment",
+          "assertions": 16
         }
       ],
       "frontend_cases": 2

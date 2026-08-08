@@ -55,6 +55,7 @@ ASSERTION_FLOOR = 8
 
 _COUNTED_AS_LENGTH = {
     "fields_equal",
+    "fields_present",
     "min_counts",
     "max_counts",
     "output_formats",
