@@ -33,7 +33,7 @@ def render_pdf_report(output_path: Path, title: str, sections: list[tuple[str, s
     for header, content in sections:
         story.append(Paragraph(_inline_markup(header), styles["section"]))
         story.append(Spacer(1, 8))
-        story.extend(_markdown_to_flowables(content or "", styles))
+        story.extend(_markdown_to_flowables(content or "", styles, doc.width))
         story.append(Spacer(1, 12))
 
     doc.build(story)
@@ -187,7 +187,11 @@ def _inline_markup(text: str) -> str:
     return safe
 
 
-def _markdown_to_flowables(content: str, styles: dict[str, object]) -> list:
+def _markdown_to_flowables(
+    content: str,
+    styles: dict[str, object],
+    available_width: float,
+) -> list:
     lines = (content or "").replace("\r\n", "\n").replace("\r", "\n").split("\n")
     flowables: list = []
     i = 0
@@ -254,7 +258,9 @@ def _markdown_to_flowables(content: str, styles: dict[str, object]) -> list:
                     break
                 table_lines.append(cur)
                 i += 1
-            flowables.extend(_build_table_flowables(table_lines, styles))
+            flowables.extend(
+                _build_table_flowables(table_lines, styles, available_width)
+            )
             continue
 
         flowables.append(Paragraph(_inline_markup(line), styles["p"]))
@@ -263,7 +269,11 @@ def _markdown_to_flowables(content: str, styles: dict[str, object]) -> list:
     return flowables
 
 
-def _build_table_flowables(table_lines: list[str], styles: dict[str, object]) -> list:
+def _build_table_flowables(
+    table_lines: list[str],
+    styles: dict[str, object],
+    available_width: float,
+) -> list:
     if not table_lines:
         return []
     rows = [[cell.strip() for cell in raw.strip("|").split("|")] for raw in table_lines]
@@ -275,15 +285,24 @@ def _build_table_flowables(table_lines: list[str], styles: dict[str, object]) ->
         [Paragraph(_inline_markup(cell), styles["p"]) for cell in row]
         for row in normalized
     ]
-    table = Table(cell_data, repeatRows=1)
+    max_lengths = [
+        max(len(re.sub(r"<br\s*/?>", " ", row[index], flags=re.IGNORECASE)) for row in normalized)
+        for index in range(max_cols)
+    ]
+    weights = [min(4.0, max(1.0, length / 12)) for length in max_lengths]
+    weight_total = sum(weights)
+    column_widths = [available_width * weight / weight_total for weight in weights]
+    cell_padding = min(6.0, max(1.0, min(column_widths) * 0.15))
+
+    table = Table(cell_data, colWidths=column_widths, repeatRows=1)
     table.setStyle(
         TableStyle(
             [
                 ("GRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#d0d7de")),
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef5ff")),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), cell_padding),
+                ("RIGHTPADDING", (0, 0), (-1, -1), cell_padding),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
