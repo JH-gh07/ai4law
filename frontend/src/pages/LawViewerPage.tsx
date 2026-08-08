@@ -141,6 +141,7 @@ export function LawViewerPage() {
       <div className="law-viewer-container">
         <header className="law-viewer-header">
           <button
+            type="button"
             className="law-viewer-back"
             onClick={() => navigate(-1)}
           >
