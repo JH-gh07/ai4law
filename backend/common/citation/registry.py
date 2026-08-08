@@ -232,7 +232,10 @@ def registry_from_documents(
                 display_label=f"{title}{article_label}",
                 title=title,
                 article_no=article_no,
-                quote_text=_document_value(document, "content")[:500],
+                quote_text=(
+                    _document_value(document, "content")
+                    or _document_value(document, "snippet")
+                )[:500],
                 source_url=_document_value(document, "source_url"),
                 citation_granularity="article" if article_no else "source",
             )

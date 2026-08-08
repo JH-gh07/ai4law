@@ -7,6 +7,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from backend.common.citation.output import write_citation_map_json
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
@@ -277,6 +279,7 @@ class US14117Service:
                 },
                 attachment_notes=attachment_notes,
                 output_requirements={"chapter_keys": list(US_14117_CHAPTER_KEYS.values())},
+                citation_registry=registry_from_documents(regulations, jurisdiction="US"),
             )
         return _inner
 
@@ -286,17 +289,22 @@ class US14117Service:
             regulations: list[dict],
             context_pack: GenerationContextPack,
         ) -> list[US14117Chapter]:
-            citations = [
-                f"{item.get('title', '')}{item.get('article', '')}"
-                for item in regulations
-            ]
+            citation_registry: CitationRegistry = context_pack.citation_registry
+            citations = [item.display_label for item in citation_registry]
             chapters: list[US14117Chapter] = []
             for idx, title in enumerate(US_14117_CHAPTERS, start=1):
                 chapter_id = US_14117_CHAPTER_KEYS[title]
                 context_block = _build_context_block(payload, context_pack, rule_result, chapter_id)
                 if self.llm_client and self.llm_client.enabled:
                     content = generate_chapter(
-                        self.llm_client, "us_14117", title, context_block, citations=citations
+                        self.llm_client,
+                        "us_14117",
+                        title,
+                        context_block,
+                        citations=citations,
+                        citation_marker_section=citation_registry.build_marker_list(),
+                        use_citation_markers=True,
+                        citation_registry=citation_registry,
                     )
                 else:
                     content = _render_placeholder_chapter(title, chapter_id, rule_result)
@@ -367,15 +375,16 @@ class US14117Service:
             trace_manifest_path: str,
             facts,
             diagnosis: US14117RuleEngineResult,
+            context_pack: GenerationContextPack,
             **kwargs,
         ) -> dict[str, str]:
+            citation_registry: CitationRegistry = context_pack.citation_registry
             if self.schema_first_enabled:
-                from backend.common.citation.registry import CitationRegistry as _LR
                 from backend.common.reporting import DocumentCompiler
                 from backend.domains.us.eo14117.schema_first import build_eo14117_document_ir
                 _doc, _rr = build_eo14117_document_ir(
                     task_id=task_id, company_name=payload.company_name,
-                    chapters=chapters, citation_registry=_LR(), model='legacy-eo14117',
+                    chapters=chapters, citation_registry=citation_registry, model='legacy-eo14117',
                 )
                 _cr = DocumentCompiler().compile(_doc, _rr)
                 if _cr.status != 'success':
@@ -419,7 +428,12 @@ class US14117Service:
             zip_output = output_dir / f"{base}_14117_输出包_草案_{date_stamp}.zip"
 
             # Markdown template rendering
-            mapping = _build_template_mapping(payload, chapters, rule_result)
+            mapping = _build_template_mapping(
+                payload,
+                chapters,
+                rule_result,
+                citation_registry=citation_registry,
+            )
             if TEMPLATE_MD.exists():
                 render_markdown_template(md_output, TEMPLATE_MD, mapping)
             else:
@@ -487,6 +501,17 @@ class US14117Service:
                 bundle_members.append(docx_output)
             bundle_files(zip_output, bundle_members)
 
+            citation_map_json = write_citation_map_json(
+                output_dir=output_dir,
+                module="us_14117",
+                task_id=task_id,
+                footnote_map={
+                    str(number): item.to_dict()
+                    for number, item in citation_registry.get_footnote_map().items()
+                },
+                all_items=citation_registry.to_list(),
+            )
+
             return {
                 "markdown": str(md_output),
                 "docx": str(docx_output),
@@ -498,6 +523,7 @@ class US14117Service:
                 "facts_json": str(facts_json),
                 "rule_engine_result_json": str(rule_engine_json),
                 "trace_manifest": str(trace_dest),
+                "citation_map_json": citation_map_json,
             }
         return _inner
 
@@ -758,6 +784,7 @@ def _build_template_mapping(
     payload: US14117Request,
     chapters: list[US14117Chapter],
     rule_result: US14117RuleEngineResult,
+    citation_registry: CitationRegistry | None = None,
 ) -> dict[str, str]:
     """Build template variable mapping for MD/DOCX rendering."""
     def pick(no: int) -> str:
@@ -831,6 +858,7 @@ def _build_template_mapping(
         "overall_conclusion": attach_citations(
             summarize_for_slot(pick(1), max_sentences=4, max_chars=500),
             citations,
+            registry=citation_registry,
         ),
         "traffic_light_label": light_label.get(tl.overall_light, tl.overall_light),
         "traffic_light_summary": tl.summary,
@@ -839,7 +867,11 @@ def _build_template_mapping(
         "prohibition_reasons": "\n".join(f"- {r}" for r in tl.prohibition_reasons) or "无",
         "restriction_reasons": "\n".join(f"- {r}" for r in tl.restriction_reasons) or "无",
         "covered_entity_list": entity_block,
-        "data_classification_summary": attach_citations(data_block, citations),
+        "data_classification_summary": attach_citations(
+            data_block,
+            citations,
+            registry=citation_registry,
+        ),
         "risk_matrix_table": matrix_block,
         "security_gaps": missing_block,
         "required_measures": "\n".join(f"- {m}" for m in tl.required_security_measures) or "无",
@@ -850,14 +882,17 @@ def _build_template_mapping(
         "risk_details": attach_citations(
             summarize_for_slot(pick(2), max_sentences=4, max_chars=500),
             citations,
+            registry=citation_registry,
         ),
         "compliance_actions": attach_citations(
             summarize_for_slot(pick(3), max_sentences=4, max_chars=500),
             citations,
+            registry=citation_registry,
         ),
         "attachments_monitoring": attach_citations(
             summarize_for_slot(pick(4), max_sentences=3, max_chars=400),
             citations,
+            registry=citation_registry,
         ),
     }
     return mapping
