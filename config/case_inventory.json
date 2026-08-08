@@ -98,6 +98,10 @@
         {
           "case_id": "01_minimal",
           "assertions": 16
+        },
+        {
+          "case_id": "02_source_case_missing_scc",
+          "assertions": 29
         }
       ],
       "frontend_cases": 2

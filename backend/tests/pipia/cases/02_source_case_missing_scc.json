@@ -1,0 +1,109 @@
+{
+  "case_id": "02_source_case_missing_scc",
+  "description": "PIPIA真实来源案例一—新加坡营销分析场景，原始资料未提供标准合同，必须阻断备案",
+  "input": {
+    "route_type": "scc_filing",
+    "company_profile": {
+      "company_name": "海淘优选（杭州）科技有限公司",
+      "company_uscc": "原始测试案例未提供",
+      "is_ciio": false,
+      "processing_person_count": 8000000,
+      "outbound_pi_count": 500000,
+      "outbound_spi_count": 0,
+      "industry": "跨境电子商务"
+    },
+    "transfer_context": {
+      "purpose": "个性化营销与市场分析",
+      "recipient_name": "SeaCommerce Pte. Ltd.",
+      "recipient_country_region": "新加坡",
+      "legal_basis": "单独同意；合同履行必要性主张待复核"
+    },
+    "personal_info_scope": {
+      "pi_categories": [
+        "偏好标签",
+        "浏览记录（哈希设备ID）",
+        "订单摘要"
+      ],
+      "spi_categories": [
+        "可能推断健康或孕产状态的偏好标签（原材料未完成敏感信息分类）"
+      ],
+      "subject_volume": 500000
+    },
+    "rights_protection": {
+      "notice_mechanism": "隐私政策仅概括披露关联方，未明确新加坡接收方",
+      "consent_mechanism": "提供单独同意截图，但缺少覆盖全部50万人的批量记录",
+      "dsar_channel": "原始测试案例未提供",
+      "retention_policy": "原始材料未给出具体期限，且隐私政策版本停留在2023年"
+    },
+    "emergency_plan": {
+      "incident_response_sla_hours": 72,
+      "escalation_path": "原始测试案例未提供，待企业补充"
+    },
+    "attachments": [
+      {
+        "file_role": "supporting_evidence",
+        "file_name": "“认证_标准合同路径”测试案例及预期输出.docx",
+        "file_format": "docx",
+        "storage_uri": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "route_type": "scc_filing",
+      "risk_level": "MEDIUM",
+      "filing_readiness.status": "blocked",
+      "material_gaps": [
+        "scc_contract: 缺少标准合同文本或附件"
+      ]
+    },
+    "fields_present": [
+      "facts",
+      "issues",
+      "evidence_chain",
+      "attachment_notes",
+      "filing_readiness"
+    ],
+    "min_counts": {
+      "chapters": 7,
+      "facts": 21,
+      "issues": 1,
+      "evidence_chain": 3,
+      "attachment_notes": 1,
+      "output_files": 5
+    },
+    "list_contains": {
+      "issues[].title": [
+        "缺少标准合同备案核心材料"
+      ],
+      "material_gaps": [
+        "scc_contract"
+      ],
+      "consistency_issues": [
+        "no scc_contract"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "zip",
+      "json"
+    ]
+  },
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx",
+  "fixture_provenance": {
+    "source_case": "案例1：跨境电商企业向新加坡集团公司传输用户行为数据",
+    "extraction": "企业、接收方、规模、目的、数据类别、现有措施和缺口来自原文；未提供字段均在输入值中明示，72小时仅为满足当前 Schema 的测试默认值，不作为原文事实",
+    "source_sha256": "3f2d7dd0dd842a7e15b17dbb8490517a4c4f71756057c7299f9e22c0e7aeec74"
+  },
+  "coverage_note": "本案例验证真实来源 DOCX 解析和缺少 scc_contract 时的阻断逻辑；原始案例文档只是 supporting_evidence，不冒充标准合同。正文引用、真实模型和浏览器跳转另行验收。"
+}
