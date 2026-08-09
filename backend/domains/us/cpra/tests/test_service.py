@@ -82,6 +82,7 @@ def test_cpra_generate_report(monkeypatch) -> None:
 
 def test_cpra_real_renderer_generates_valid_pdf_in_bundle() -> None:
     service = CPRAService()
+    service.schema_first_enabled = True
     payload = CPRARequest.model_validate(
         {
             "company_name": "真实渲染测试企业",
@@ -130,6 +131,13 @@ def test_cpra_real_renderer_generates_valid_pdf_in_bundle() -> None:
     assert len(PdfReader(pdf_path).pages) >= 1
     with ZipFile(outputs["zip"]) as bundle:
         assert pdf_path.name in bundle.namelist()
+        assert "document_ir.json" in bundle.namelist()
+        assert "citation_map.json" in bundle.namelist()
+    assert Path(outputs["document_ir_json"]).exists()
+    markdown = Path(outputs["markdown"]).read_text(encoding="utf-8")
+    assert "评估日期**：评估日期" not in markdown
+    assert "## 1. 执行摘要" in markdown
+    assert "## 7. 行动清单与优先级" in markdown
 
 
 def test_cpra_generate_report_uses_enhanced_attachment_facts(monkeypatch) -> None:

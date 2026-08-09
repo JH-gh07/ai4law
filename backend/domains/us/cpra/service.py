@@ -30,6 +30,10 @@ from backend.common.trace.recorder import TraceRecorder
 from backend.core.resource_paths import report_template_path
 from backend.domains.us.cpra.attachment_extractor import CPRAAttachmentExtractor
 from backend.domains.us.cpra.agents import create_cpra_agents
+from backend.domains.us.cpra.deterministic_chapters import (
+    build_deterministic_cpra_chapters,
+    is_usable_cpra_chapter,
+)
 from backend.domains.us.cpra.fact_merger import CPRAFactMerger
 from backend.domains.us.cpra.gap_merger import CPRAGapMerger
 from backend.domains.us.cpra.gap_rules import run_all_rules
@@ -392,7 +396,6 @@ class CPRAService:
         citation_registry._items = dict(bundle.registry._items)  # noqa: SLF001
 
         refs_by_id = {item.citation_id: _cpra_ref_from_item(item) for item in bundle.items}
-        issue_index = {issue.issue_id: issue for issue in issues}
         for gap in gap_items:
             issue_id = gap_issue_ids.get(id(gap))
             if not issue_id:
@@ -469,12 +472,17 @@ class CPRAService:
     @staticmethod
     def _resolve_overall_level(items: list[CPRAGapItem]) -> str:
         levels = {item.risk_level for item in items}
-        if "HIGH" in levels: return "HIGH"
-        if "MEDIUM" in levels: return "MEDIUM"
+        if "HIGH" in levels:
+            return "HIGH"
+        if "MEDIUM" in levels:
+            return "MEDIUM"
         return "LOW"
 
     def _build_enhanced_context(self, payload: CPRARequest, gaps: list[CPRAGapItem], level: str) -> str:
-        gap_summary = "；".join(f"{g.domain}:{g.gap}" for g in gaps[:10])
+        gap_summary = "\n".join(
+            f"- [{g.risk_level}] {g.domain}｜{g.gap}｜{g.legal_basis}｜{g.recommendation}"
+            for g in gaps[:10]
+        )
         facts_block = ""
         if payload.applicability:
             facts_block += f"\n- 年收入: {payload.applicability.annual_revenue_usd or '未提供'}\n"
@@ -492,8 +500,12 @@ class CPRAService:
             f"【企业信息】\n- 企业名称：{payload.company_name}\n"
             f"- 业务模型：{payload.business_model}\n"
             f"- 数据生命周期：{payload.data_lifecycle}\n"
+            f"- 告知与同意现状：{payload.notice_and_consent}\n"
+            f"- 消费者权利流程：{payload.consumer_rights_process}\n"
+            f"- 出售或共享现状：{payload.opt_out_and_sale_sharing}\n"
+            f"- 供应商管理现状：{payload.vendor_management or '未提供'}\n"
             f"【结构化事实】{facts_block}\n"
-            f"【合规差距摘要】{gap_summary}\n"
+            f"【合规差距摘要】\n{gap_summary}\n"
             f"【风险等级】{level}\n"
         )
 
@@ -505,37 +517,49 @@ class CPRAService:
         citation_registry: CitationRegistry,
         citation_bundle: CitationBundle,
     ) -> list[CPRAChapter]:
+        fallback_chapters = build_deterministic_cpra_chapters(
+            context=context_block,
+            level=level,
+            citations=citations,
+            registry=citation_registry,
+        )
+        if not self.llm_client or not self.llm_client.enabled:
+            return fallback_chapters
+
         chapters: list[CPRAChapter] = []
-        citation_ids = [item.citation_id for item in citations]
         marker_block = citation_bundle.prompt_block if citation_bundle.prompt_block else citation_registry.build_marker_list()
         chapter_context = context_block
         if citations:
             chapter_context = f"{context_block}\n【可引用法规依据】\n{marker_block}\n"
-        for idx, title in enumerate(CPRA_CHAPTERS, start=1):
-            if self.llm_client and self.llm_client.enabled:
+        for fallback in fallback_chapters:
+            try:
                 content = generate_chapter(
                     self.llm_client,
                     "cpra",
-                    title,
+                    fallback.title,
                     chapter_context,
                     citations=[item.display_label for item in citations],
                     citation_marker_section=marker_block,
                     use_citation_markers=True,
                     citation_registry=citation_registry,
                 )
-                content = apply_citation_pipeline(
+                processed = apply_citation_pipeline(
                     content,
                     registry=citation_registry,
                     allowed_citations=[item.display_label for item in citations],
-                ).text
-            else:
-                content = f"（{title}：LLM未配置，此处为占位内容）"
+                )
+            except Exception:
+                chapters.append(fallback)
+                continue
+            if not is_usable_cpra_chapter(processed.text, processed.violations):
+                chapters.append(fallback)
+                continue
             chapters.append(
                 CPRAChapter(
-                    chapter_no=idx,
-                    title=title,
-                    content=content,
-                    citations=list(citation_ids),
+                    chapter_no=fallback.chapter_no,
+                    title=fallback.title,
+                    content=processed.text,
+                    citations=list(fallback.citations),
                     citation_refs=list(citations),
                     risk_level=level,
                 )
@@ -566,6 +590,7 @@ class CPRAService:
         return issues
 
     def _render(self, task_id: str, payload, chapters, gaps, attachment_notes, citation_registry: CitationRegistry) -> dict[str, str]:
+        document_ir_path: Path | None = None
         if self.schema_first_enabled:
             from backend.common.reporting import DocumentCompiler
             from backend.domains.us.cpra.schema_first import build_cpra_document_ir
@@ -583,6 +608,7 @@ class CPRAService:
             _ir_dir.mkdir(parents=True, exist_ok=True)
             _ir_path = _ir_dir / "document_ir.json"
             _ir_path.write_text(_json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
+            document_ir_path = _ir_path
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
             ("差距清单摘要", "\n".join(f"- [{g.risk_level}] {g.domain}: {g.gap}" for g in gaps)),
@@ -608,7 +634,6 @@ class CPRAService:
         headers = ["domain", "risk_level", "gap", "legal_basis", "recommendation", "phase", "evidence_source"]
         rows = [[g.domain, g.risk_level, g.gap, g.legal_basis, g.recommendation, g.phase, g.evidence_source] for g in gaps]
         render_simple_xlsx(xlsx_out, headers=headers, rows=rows)
-        bundle_files(zip_out, [docx_out, md_out, pdf_out, xlsx_out])
         footnote_map = {
             str(num): item.to_dict()
             for num, item in citation_registry.get_footnote_map().items()
@@ -620,7 +645,11 @@ class CPRAService:
             footnote_map=footnote_map,
             all_items=citation_registry.to_list(),
         )
-        return {
+        bundle_inputs = [docx_out, md_out, pdf_out, xlsx_out, Path(citation_map_json)]
+        if document_ir_path is not None:
+            bundle_inputs.append(document_ir_path)
+        bundle_files(zip_out, bundle_inputs)
+        outputs = {
             "markdown": str(md_out),
             "docx": str(docx_out),
             "pdf": str(pdf_out),
@@ -628,6 +657,9 @@ class CPRAService:
             "zip": str(zip_out),
             "citation_map_json": citation_map_json,
         }
+        if document_ir_path is not None:
+            outputs["document_ir_json"] = str(document_ir_path)
+        return outputs
 
     @staticmethod
     def _collect_chapter_citation_refs(gap_items: list[CPRAGapItem], limit: int) -> list[CPRACitationRef]:
@@ -701,13 +733,20 @@ def _cpra_ref_from_item(item) -> CPRACitationRef:
 def _build_template_mapping(payload, chapters, gaps, date_stamp):
     def pick(no):
         for c in chapters:
-            if c.chapter_no == no: return c.content
+            if c.chapter_no == no:
+                return c.content
         return ""
     gap_summary = "; ".join(f"[{g.risk_level}] {g.domain}: {g.gap}" for g in gaps) or "暂无"
     return {
-        "current_state": pick(2) or "企业业务与数据处理现状概述。",
-        "cpra_mapping": pick(3) or "依据CPRA条款进行映射分析。",
+        "executive_summary": pick(1) or "尚未形成执行摘要。",
+        "applicability_scope": pick(2) or "企业业务与数据处理现状概述。",
+        "processing_analysis": pick(3) or "依据CPRA条款进行处理活动分析。",
+        "consumer_rights": pick(4) or "尚未形成消费者权利评估。",
+        "sensitive_and_vendor": pick(5) or "尚未形成敏感信息与第三方管理评估。",
+        "action_plan": pick(6) or "按优先级制定整改路线图。",
+        "current_state": "\n\n".join(filter(None, [pick(1), pick(2)])),
+        "cpra_mapping": "\n\n".join(filter(None, [pick(3), pick(4), pick(5)])),
         "gaps_and_risks": gap_summary,
         "remediation_roadmap": pick(6) or "按优先级制定整改路线图。",
-        "final_conclusion": f"评估日期：{date_stamp}。",
+        "final_conclusion": date_stamp,
     }
