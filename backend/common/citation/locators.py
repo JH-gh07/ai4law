@@ -22,9 +22,11 @@ _ARTICLE_PATTERN = re.compile(
     r"第\s*([0-9]+|[零〇一二两三四五六七八九十百千万]+)\s*条"
     r"(?:之\s*([0-9]+|[零〇一二两三四五六七八九十百千万]+))?"
 )
-# Match "Art 44", "Art.44", "Article 44", "s.11", "Section 5", "Clause 28", etc.
-_LAW_SECTION_PATTERN = re.compile(
-    r"^(?:Art(?:icle)?\.?\s*|s\.\s*|Section\s+|Clause\s+)(\d+[A-Za-z]?(?:\(\d+\))?)"
+# Match "Art 44", "Art.44", "Article 44", "s.11", "Section 5", "Clause 28",
+# "§1798.140(ii)", "§ 5", "§5(a)(1)"
+_SECTION_PATTERN = re.compile(
+    r"^(?:Art(?:icle)?\.?\s*|s\.\s*|Section\s+|Clause\s+|§\s*)"
+    r"(\d+(?:\.\d+)?(?:\(\w+\))?)"
     r"(?:\s*[-–—]\s*(\d+[A-Za-z]?))?$",
     re.IGNORECASE,
 )
@@ -49,8 +51,8 @@ def normalize_article_no(article_no: str) -> str:
         if normalized_base and normalized_suffix:
             return f"{normalized_base}之{normalized_suffix}"
 
-    # Normalize "Art 44" / "Section 5" / "s.11" → raw number
-    section_match = _LAW_SECTION_PATTERN.match(value)
+    # Normalize "Art 44" / "Section 5" / "s.11" / "§1798.140(ii)" → extracted number
+    section_match = _SECTION_PATTERN.match(value)
     if section_match:
         if section_match.group(2):
             return f"{section_match.group(1)}-{section_match.group(2)}"
