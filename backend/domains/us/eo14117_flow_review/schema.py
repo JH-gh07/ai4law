@@ -29,6 +29,9 @@ class CNFlowRequest(BaseModel):
     transfer_chain: str = Field(min_length=2)
     attachments: list[CNFlowAttachment] = Field(min_length=2)
     company_name: str = Field(default="示例企业")
+    us_person_count: int | None = Field(default=None, ge=0)
+    transaction_type: str | None = None
+    doj_data_category_by_item: dict[str, str] = Field(default_factory=dict)
 
 
 class CNFlowRiskItem(BaseModel):
@@ -77,4 +80,3 @@ class CNFlowAsyncStatus(BaseModel):
     updated_at: str
     error: str | None = None
     result: CNFlowResult | None = None
-
