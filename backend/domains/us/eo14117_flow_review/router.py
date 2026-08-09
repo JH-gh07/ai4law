@@ -13,6 +13,7 @@ from backend.domains.us.eo14117_flow_review.schema import (
     CNFlowRequest,
     CNFlowResult,
 )
+from backend.domains.us.eo14117_flow_review.compatibility import CompatibilityClarificationRequired
 from backend.domains.us.eo14117_flow_review.service import CNFlowService
 
 router = APIRouter(prefix="/cn-flow", tags=["cn-flow"])
@@ -26,7 +27,10 @@ def generate_cn_flow(
     current_user: AuthUser = Depends(get_current_user),
     container=Depends(get_container),
 ) -> CNFlowResult:
-    result = trace_sync("cn_flow", lambda: service.generate_report(payload))
+    try:
+        result = trace_sync("cn_flow", lambda: service.generate_report(payload))
+    except CompatibilityClarificationRequired as exc:
+        raise _clarification_http_error(exc) from exc
     register_module_result_artifacts(
         db=db,
         container=container,
@@ -43,7 +47,10 @@ def generate_cn_flow_async(
     db: Session = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ) -> CNFlowAsyncAccepted:
-    accepted = service.submit_async(payload)
+    try:
+        accepted = service.submit_async(payload)
+    except CompatibilityClarificationRequired as exc:
+        raise _clarification_http_error(exc) from exc
     claim_task_access(db, task_id=accepted.task_id, user_id=current_user.id, module="cn_flow")
     return accepted
 
@@ -70,6 +77,18 @@ def get_cn_flow_task(
         return status
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+def _clarification_http_error(exc: CompatibilityClarificationRequired) -> HTTPException:
+    return HTTPException(
+        status_code=422,
+        detail={
+            "code": "CN_FLOW_COMPATIBILITY_CLARIFICATION_REQUIRED",
+            "canonical_module": "us_14117",
+            "lossy_fields": exc.lossy_fields,
+            "clarification_questions": exc.questions,
+        },
+    )
 
 
 @router.post(

@@ -1,11 +1,13 @@
 import time
 from pathlib import Path
 
+import pytest
 from docx import Document
 
 from backend.domains.us.eo14117_flow_review import service as cn_flow_service
 from backend.domains.us.eo14117_flow_review.schema import CNFlowRequest
 from backend.domains.us.eo14117_flow_review.service import CNFlowService
+from backend.domains.us.eo14117_flow_review.compatibility import CompatibilityClarificationRequired
 
 
 class _DisabledLLM:
@@ -81,3 +83,27 @@ def test_cn_flow_async_flow(tmp_path, monkeypatch) -> None:
         time.sleep(0.05)
 
     raise AssertionError("cn-flow async task timeout")
+
+
+def test_incomplete_async_request_is_rejected_before_task_creation() -> None:
+    service = CNFlowService(llm_client=_DisabledLLM())
+    payload = CNFlowRequest.model_validate(
+        {
+            "company_name": "Incomplete",
+            "transfer_purpose": "云服务",
+            "data_categories": ["账户信息"],
+            "recipient_entities": [
+                {"entity_name": "US ServiceCo", "country_region": "美国", "entity_role": "processor"}
+            ],
+            "transfer_chain": "CN -> US",
+            "attachments": [
+                {"file_role": "data_inventory", "file_name": "data.csv", "file_format": "csv", "storage_uri": "data.csv"},
+                {"file_role": "entity_inventory", "file_name": "entity.csv", "file_format": "csv", "storage_uri": "entity.csv"},
+            ],
+        }
+    )
+
+    with pytest.raises(CompatibilityClarificationRequired):
+        service.submit_async(payload)
+
+    assert service.tasks._tasks == {}

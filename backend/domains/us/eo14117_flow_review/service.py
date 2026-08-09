@@ -36,7 +36,6 @@ from backend.domains.us.eo14117_flow_review.schema import (
     CNFlowRiskItem,
 )
 from backend.domains.us.eo14117_flow_review.compatibility import (
-    CompatibilityClarificationRequired,
     adapt_cn_flow_request,
 )
 from backend.domains.us.eo14117.service import US14117Service
@@ -254,6 +253,8 @@ class CNFlowService:
         return chapters
 
     def submit_async(self, payload: CNFlowRequest) -> CNFlowAsyncAccepted:
+        # Reject incomplete legacy input before creating a task that can only fail.
+        adapt_cn_flow_request(payload)
         task_id = str(uuid.uuid4())
         trace = TraceRecorder(Path("outputs/cn_flow") / task_id / "trace", task_id=task_id)
         snapshot = self.tasks.submit_with_trace(
