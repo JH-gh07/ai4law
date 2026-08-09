@@ -516,3 +516,39 @@ def test_external_draft_prompt_uses_generation_basis_contract() -> None:
     assert "CIT-EU-GDPR-ART35-P01" in prompt
     assert "项目事实：\n未提供" not in prompt
     assert "法规依据：\n无引用" not in prompt
+
+
+def test_agent_json_parse_fallback_is_written_to_trace(tmp_path) -> None:
+    """Malformed model JSON must be visible in trace and fallback metrics."""
+    import json
+
+    from backend.common.runtime.run_manifest import summarize_trace
+    from backend.common.trace.context import current_trace
+    from backend.common.trace.recorder import TraceRecorder
+    from backend.domains.eu.dpia.agents import DPIAAgentBase
+
+    class _MalformedJSONLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '{"content": "broken"'
+
+    class _TestAgent(DPIAAgentBase):
+        agent_name = "trace_test_agent"
+
+    recorder = TraceRecorder(tmp_path / "trace", task_id="agent-fallback")
+    token = current_trace.set(recorder)
+    try:
+        result = _TestAgent(_MalformedJSONLLM())._call_llm("test")
+    finally:
+        current_trace.reset(token)
+
+    assert result is None
+    fallback = json.loads(
+        (tmp_path / "trace" / "001_agent_fallback.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert fallback["payload"]["detail"]["agent"] == "trace_test_agent"
+    assert fallback["payload"]["detail"]["fallback"] is True
+    assert summarize_trace(recorder)["fallback_count"] == 1

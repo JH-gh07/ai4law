@@ -17,6 +17,8 @@ import json
 import logging
 from typing import TYPE_CHECKING
 
+from backend.common.trace.context import current_trace
+
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
 
@@ -61,11 +63,42 @@ class DPIAAgentBase:
             start = raw.find("{")
             end = raw.rfind("}") + 1
             if start == -1 or end == 0:
+                self._record_fallback(
+                    error="Model response contains no complete JSON object",
+                    error_type="JSONShapeError",
+                )
                 return None
             return json.loads(raw[start:end])
         except Exception as exc:
             logger.warning("DPIA Agent %s failed: %s", self.agent_name, exc)
+            self._record_fallback(
+                error=str(exc),
+                error_type=type(exc).__name__,
+            )
             return None
+
+    def _record_fallback(self, *, error: str, error_type: str) -> None:
+        trace = current_trace.get()
+        if trace is None:
+            return
+        trace.record(
+            "agent_fallback",
+            {
+                "summary": "DPIA Agent 结构化响应解析失败，使用确定性结果",
+                "level": "audit",
+                "detail": {
+                    "agent": self.agent_name,
+                    "stage": "structured_response_parse",
+                    "fallback": True,
+                    "error": error,
+                    "error_type": error_type,
+                    "llm": {
+                        "channel": "agent",
+                        "fallback": True,
+                    },
+                },
+            },
+        )
 
     def run(self, **kwargs) -> dict | list[dict]:
         raise NotImplementedError
