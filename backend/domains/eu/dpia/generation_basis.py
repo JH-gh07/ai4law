@@ -25,6 +25,67 @@ DPIA_CHAPTER_ID_TO_TITLE: dict[str, str] = {
 
 DPIA_CHAPTER_KEYS = list(DPIA_CHAPTER_ID_TO_TITLE.keys())
 
+# Facts required by a chapter even when no issue points at them. Issue-driven
+# routing alone left consultation empty and omitted lawful-basis facts from the
+# necessity chapter, which made the model contradict known request data.
+_SECTION_FACT_PATH_PREFIXES: dict[str, tuple[str, ...]] = {
+    "need_identification": (
+        "dpia.project_name",
+        "dpia.project_goal",
+        "dpia_need.",
+    ),
+    "processing_description": (
+        "dpia.processing_flow_description",
+        "dpia.data_categories",
+        "dpia.data_subject_",
+        "dpia.retention_period",
+        "dpia.cross_border_transfer",
+        "dpia.transfer_destination",
+        "dpia.automated_decision_making",
+        "dpia.systematic_monitoring",
+        "dpia.large_scale_processing",
+        "dpia.data_matching",
+        "dpia.new_technology",
+    ),
+    "consultation": (
+        "dpia.consulted_internal_departments",
+        "dpia.external_experts",
+        "dpia.data_subject_consultation_plan",
+        "dpia.dpo_name",
+        "dpia.dpo_opinion",
+    ),
+    "necessity_proportionality": (
+        "dpia.lawful_basis",
+        "dpia.necessity_statement",
+        "dpia.proportionality_statement",
+        "dpia.transparency_information",
+        "dpia.special_category_",
+    ),
+    "risk_assessment": (
+        "dpia.identified_risks.",
+        "dpia.automated_decision_making",
+        "dpia.large_scale_processing",
+        "dpia.new_technology",
+        "dpia.vulnerable_data_subjects",
+    ),
+    "mitigation": ("dpia.mitigation_measures.",),
+    "signoff": (
+        "dpia.dpia_owner",
+        "dpia.dpo_name",
+        "dpia.dpo_opinion",
+        "dpia.review_date",
+        "dpia_need.prior_consultation_possible",
+    ),
+}
+
+
+def _is_section_fact(section_id: str, fact: FactItem) -> bool:
+    path = fact.field_path or ""
+    return any(
+        path == prefix or (prefix.endswith(".") and path.startswith(prefix))
+        for prefix in _SECTION_FACT_PATH_PREFIXES.get(section_id, ())
+    )
+
 
 def _fact_summary(fact: FactItem) -> dict[str, Any]:
     return {
@@ -133,6 +194,9 @@ def build_generation_basis_pack(
             for fact_ref in issue.fact_refs
             if fact_ref in facts_by_id
         }
+        fact_refs.update(
+            fact.fact_id for fact in facts if _is_section_fact(section_id, fact)
+        )
         evidence_refs = {
             evidence_ref
             for issue in related_issues

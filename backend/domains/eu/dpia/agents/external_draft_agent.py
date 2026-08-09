@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.domains.eu.dpia.agents import DPIAAgentBase
+from backend.domains.eu.dpia.deterministic_chapters import build_deterministic_chapter
 
 
 # ── Key constraints for DPIA draft generation ──
@@ -65,10 +66,18 @@ class ExternalDPIAgent(DPIAAgentBase):
         # Generate chapters individually
         chapters: list[dict] = []
         chapter_ids = list(DPIA_CHAPTER_TITLES_CN.keys())
+        section_packs = {
+            item.get("section_id"): item
+            for item in gen_basis.get("section_packs", [])
+            if isinstance(item, dict) and item.get("section_id")
+        }
 
         for i, chapter_id in enumerate(chapter_ids, 1):
             title = DPIA_CHAPTER_TITLES_CN.get(chapter_id, chapter_id)
-            section = gen_basis.get(chapter_id, gen_basis.get("sections", {}).get(chapter_id, {}))
+            section = section_packs.get(
+                chapter_id,
+                gen_basis.get(chapter_id, gen_basis.get("sections", {}).get(chapter_id, {})),
+            )
 
             chapter_prompt = _build_chapter_prompt(
                 chapter_id=chapter_id,
@@ -80,13 +89,14 @@ class ExternalDPIAgent(DPIAAgentBase):
 
             result = self._call_llm(chapter_prompt)
             if result is None:
-                chapters.append({
-                    "chapter_no": i,
-                    "title": title,
-                    "content": f"（{title}：Agent不可用，此处为占位内容。建议补充相关事实和法规依据后人工撰写。）",
-                    "citations": [],
-                    "risk_level": "medium",
-                })
+                fallback = build_deterministic_chapter(
+                    chapter_id=chapter_id,
+                    title=title,
+                    section=section,
+                    generation_basis_pack=gen_basis,
+                    citation_registry=citation_registry,
+                )
+                chapters.append({"chapter_no": i, **fallback})
             else:
                 content = apply_citation_pipeline(
                     result.get("content", result.get("draft_text", "")),
@@ -117,17 +127,42 @@ def _build_chapter_prompt(
     # ``build_generation_basis_pack`` is the canonical producer and names
     # the complete request-derived fact list ``user_facts``.  Keep the older
     # aliases as read-only fallbacks for stored/replayed packs.
-    facts_brief = _format_facts(
-        gen_basis.get("user_facts", gen_basis.get("facts", gen_basis.get("all_facts", [])))
+    has_section_contract = bool(section)
+    facts_source = (
+        section.get("confirmed_facts", [])
+        if has_section_contract
+        else gen_basis.get("user_facts", gen_basis.get("facts", gen_basis.get("all_facts", [])))
     )
-    issues_brief = _format_issues(gen_basis.get("issues", gen_basis.get("all_issues", [])))
-    risk_brief = _format_risks(gen_basis.get("risk_matrix", []))
-    mit_brief = _format_mitigation(gen_basis.get("mitigation_plan", []))
-    dpo_brief = _format_dpo(gen_basis.get("dpo_decision_pack", {}))
+    issues_source = (
+        section.get("issues", [])
+        if has_section_contract
+        else gen_basis.get("issues", gen_basis.get("all_issues", []))
+    )
+    facts_brief = _format_facts(facts_source)
+    issues_brief = _format_issues(issues_source)
+    risk_brief = _format_risks(
+        gen_basis.get("risk_matrix", [])
+        if chapter_id in {"risk_assessment", "mitigation", "signoff"}
+        else []
+    )
+    mit_brief = _format_mitigation(
+        gen_basis.get("mitigation_plan", [])
+        if chapter_id in {"mitigation", "signoff"}
+        else []
+    )
+    dpo_brief = _format_dpo(
+        gen_basis.get("dpo_decision_pack", {})
+        if chapter_id in {"need_identification", "consultation", "signoff"}
+        else {}
+    )
     citations_brief = _format_citations(
         gen_basis.get("citations", gen_basis.get("regulations", []))
     )
-    legal_brief = _format_legal(gen_basis.get("legal_grounding", {}))
+    legal_brief = _format_legal(
+        section.get("legal_grounding", [])
+        if has_section_contract
+        else gen_basis.get("legal_grounding", {})
+    )
     need_brief = _format_need(gen_basis.get("need_assessment", {}))
 
     chapter_strategy = writing.get("chapters", {}).get(chapter_id, {})
@@ -181,16 +216,21 @@ DPO 意见：
 
 
 def _placeholder_chapters(gen_basis: dict) -> list[dict]:
-    """Fallback placeholder chapters when agent is unavailable."""
+    """Backward-compatible no-provider path using structured chapter fallbacks."""
+    section_packs = {
+        item.get("section_id"): item
+        for item in gen_basis.get("section_packs", [])
+        if isinstance(item, dict) and item.get("section_id")
+    }
     chapters: list[dict] = []
     for i, (cid, title) in enumerate(DPIA_CHAPTER_TITLES_CN.items(), 1):
-        chapters.append({
-            "chapter_no": i,
-            "title": title,
-            "content": f"（{title}：LLM未配置，此处为占位内容。请根据GDPR Article 35和ICO DPIA模板要求人工撰写。）",
-            "citations": [],
-            "risk_level": "medium",
-        })
+        fallback = build_deterministic_chapter(
+            chapter_id=cid,
+            title=title,
+            section=section_packs.get(cid, {}),
+            generation_basis_pack=gen_basis,
+        )
+        chapters.append({"chapter_no": i, **fallback})
     return chapters
 
 
@@ -247,7 +287,7 @@ def _format_citations(citations: list) -> str:
     if not citations:
         return "无引用"
     lines: list[str] = []
-    for citation in citations[:10]:
+    for citation in citations:
         if isinstance(citation, dict):
             rule_id = citation.get(
                 "citation_id",
@@ -260,11 +300,31 @@ def _format_citations(citations: list) -> str:
             lines.append(str(citation)[:120])
     return "\n".join(lines) or "无引用"
 
-def _format_legal(legal: dict) -> str:
+def _format_legal(legal: object) -> str:
     if not legal:
         return "未提供"
-    issues = legal.get("issue_legal_mapping", legal.get("legal_basis", {}))
-    return str(issues)[:300]
+    if isinstance(legal, list):
+        lines = [
+            f"- {item.get('issue_id', '')}: {item.get('title', '')} "
+            f"{item.get('article', '')} (confidence={item.get('confidence_score', 'N/A')})"
+            for item in legal[:8]
+            if isinstance(item, dict)
+        ]
+        return "\n".join(lines) or "未提供"
+    if isinstance(legal, dict):
+        by_issue = legal.get("by_issue")
+        if isinstance(by_issue, dict):
+            flattened = [
+                item
+                for items in by_issue.values()
+                if isinstance(items, list)
+                for item in items
+                if isinstance(item, dict)
+            ]
+            return _format_legal(flattened)
+        issues = legal.get("issue_legal_mapping", legal.get("legal_basis", {}))
+        return str(issues)[:600]
+    return str(legal)[:600]
 
 def _format_need(need: dict) -> str:
     if not need:

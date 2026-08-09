@@ -518,6 +518,150 @@ def test_external_draft_prompt_uses_generation_basis_contract() -> None:
     assert "法规依据：\n无引用" not in prompt
 
 
+def test_generation_basis_routes_consultation_and_lawful_basis_facts_to_sections() -> None:
+    from backend.domains.eu.dpia.evidence_builder import build_dpia_evidence
+    from backend.domains.eu.dpia.fact_builder import build_dpia_facts
+    from backend.domains.eu.dpia.generation_basis import build_generation_basis_pack
+    from backend.domains.eu.dpia.issue_builder import build_dpia_issues
+    from backend.domains.eu.dpia.need_detector import DPIANeedDetector
+    from backend.domains.eu.dpia.profile_extractor import DPIAProfileExtractor
+
+    request = _make_valid_request()
+    profile = DPIAProfileExtractor().extract(request)
+    diagnosis = DPIANeedDetector.evaluate(request)
+    facts = build_dpia_facts(request, profile, diagnosis)
+    issues = build_dpia_issues(facts, diagnosis, [], [])
+    issues, evidence = build_dpia_evidence(facts, issues, [], diagnosis)
+    pack = build_generation_basis_pack(
+        task_id="section-facts",
+        facts=facts,
+        issues=issues,
+        evidence_chain=evidence,
+        regulations=[],
+        attachment_notes=[],
+    )
+    sections = {item["section_id"]: item for item in pack["section_packs"]}
+    consultation_paths = {
+        item["field_path"] for item in sections["consultation"]["confirmed_facts"]
+    }
+    necessity_paths = {
+        item["field_path"]
+        for item in sections["necessity_proportionality"]["confirmed_facts"]
+    }
+
+    assert "dpia.consulted_internal_departments" in consultation_paths
+    assert "dpia.data_subject_consultation_plan" in consultation_paths
+    assert "dpia.dpo_opinion" in consultation_paths
+    assert "dpia.lawful_basis" in necessity_paths
+
+
+def test_external_draft_prompt_prefers_section_facts_over_global_prefix() -> None:
+    from backend.domains.eu.dpia.agents.external_draft_agent import _build_chapter_prompt
+
+    prompt = _build_chapter_prompt(
+        chapter_id="necessity_proportionality",
+        title="4. 必要性与相称性评估",
+        section={
+            "confirmed_facts": [
+                {
+                    "field_path": "dpia.lawful_basis",
+                    "value": ["GDPR Art 6(1)(a) 同意", "GDPR Art 6(1)(f) 正当利益"],
+                }
+            ],
+            "issues": [],
+        },
+        gen_basis={
+            "user_facts": [
+                {"field_path": f"dpia.unrelated_{index}", "value": index}
+                for index in range(20)
+            ],
+            "citations": [],
+            "risk_matrix": [],
+            "mitigation_plan": [],
+            "dpo_decision_pack": {},
+            "need_assessment": {},
+            "legal_grounding": {},
+        },
+        writing={},
+    )
+
+    assert "GDPR Art 6(1)(a) 同意" in prompt
+    assert "unrelated_0" not in prompt
+
+
+def test_external_draft_uses_structured_fallback_instead_of_placeholder() -> None:
+    from backend.common.citation.registry import registry_from_documents
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    class _TimeoutLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return "Request timed out."
+
+    registry = registry_from_documents(
+        [
+            {
+                "source_id": "EU-LAW-001",
+                "title": "GDPR (EU) 2016/679",
+                "article": article,
+                "snippet": f"Article {article}",
+            }
+            for article in ("5", "6", "13", "14", "22", "35", "36")
+        ],
+        jurisdiction="EU",
+    )
+    section_packs = [
+        {"section_id": section_id, "confirmed_facts": [], "issues": [], "legal_grounding": []}
+        for section_id in (
+            "need_identification",
+            "processing_description",
+            "consultation",
+            "necessity_proportionality",
+            "risk_assessment",
+            "mitigation",
+            "signoff",
+        )
+    ]
+    section_packs[2]["confirmed_facts"] = [
+        {"field_path": "dpia.consulted_internal_departments", "value": ["法务部", "IT部门"]},
+        {"field_path": "dpia.data_subject_consultation_plan", "value": "学生代表会议"},
+    ]
+    section_packs[3]["confirmed_facts"] = [
+        {"field_path": "dpia.lawful_basis", "value": ["GDPR Art 6(1)(a) 同意"]},
+        {"field_path": "dpia.necessity_statement", "value": "个性化推荐所必需"},
+    ]
+    chapters = ExternalDPIAgent(_TimeoutLLM()).run(
+        generation_basis_pack={
+            "section_packs": section_packs,
+            "need_assessment": {
+                "dpia_required": True,
+                "trigger_reasons": ["automated_decision_making"],
+                "prior_consultation_possible": True,
+            },
+            "processing_activity_pack": {"draft_text": "收集并分析学生学习行为数据。"},
+            "necessity_findings": {"draft_text": "数据范围和保留期仍需进一步证明。"},
+            "risk_matrix": [],
+            "mitigation_plan": [],
+            "dpo_decision_pack": {
+                "dpo_position": "conditional_approval",
+                "conditions": ["上线前完成人工复核机制"],
+                "prior_consultation_recommended": True,
+            },
+            "citations": registry.to_list(),
+        },
+        citation_registry=registry,
+    )
+
+    assert len(chapters) == 7
+    assert all("Agent不可用" not in chapter["content"] for chapter in chapters)
+    assert all("LLM未配置" not in chapter["content"] for chapter in chapters)
+    assert "法务部" in chapters[2]["content"]
+    assert "学生代表会议" in chapters[2]["content"]
+    assert "GDPR Art 6(1)(a) 同意" in chapters[3]["content"]
+    assert any("[" in chapter["content"] for chapter in chapters)
+
+
 def test_agent_json_parse_fallback_is_written_to_trace(tmp_path) -> None:
     """Malformed model JSON must be visible in trace and fallback metrics."""
     import json
