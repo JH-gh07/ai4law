@@ -9,6 +9,7 @@ Reference: docs/archive/design-provenance/dpia.md Section 8
 
 from __future__ import annotations
 
+from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.domains.eu.dpia.agents import DPIAAgentBase
 
 
@@ -24,7 +25,8 @@ DPIA_DRAFT_CONSTRAINTS = """写作约束：
 7. 高风险必须说明可能性、影响和缓解措施。
 8. 对user_claim_only的事实使用保守表达（如"用户表示..."而非"已确认..."）。
 9. 缺少证据时写"需补充证据"，不得跳过。
-10. 每个法律结论必须有法规引用。"""
+10. 每个法律结论必须有法规引用。
+11. 法规引用只能使用“法规依据”中提供的完整 {{CIT-...}} 标记，禁止使用来源 ID、CIT-001 或文字引用代替。"""
 
 DPIA_CHAPTER_TITLES_CN = {
     "need_identification": "1. 识别 DPIA 需求",
@@ -46,6 +48,7 @@ class ExternalDPIAgent(DPIAAgentBase):
         section_pack: dict | None = None,
         generation_basis_pack: dict | None = None,
         writing_strategy: dict | None = None,
+        citation_registry=None,
     ) -> list[dict]:
         """Generate DPIA draft chapters from generation basis pack.
 
@@ -85,10 +88,17 @@ class ExternalDPIAgent(DPIAAgentBase):
                     "risk_level": "medium",
                 })
             else:
+                content = apply_citation_pipeline(
+                    result.get("content", result.get("draft_text", "")),
+                    registry=citation_registry,
+                    allowed_citations=[
+                        item.display_label for item in citation_registry
+                    ] if citation_registry is not None else [],
+                ).text
                 chapters.append({
                     "chapter_no": i,
                     "title": title,
-                    "content": result.get("content", result.get("draft_text", "")),
+                    "content": content,
                     "citations": result.get("citations", []),
                     "risk_level": result.get("risk_level", "medium"),
                 })
@@ -239,7 +249,10 @@ def _format_citations(citations: list) -> str:
     lines: list[str] = []
     for citation in citations[:10]:
         if isinstance(citation, dict):
-            rule_id = citation.get("rule_id", citation.get("source_id", ""))
+            rule_id = citation.get(
+                "citation_id",
+                citation.get("rule_id", citation.get("source_id", "")),
+            )
             title = citation.get("title", "")
             article = citation.get("article", citation.get("article_no", ""))
             lines.append(f"{{{{{rule_id}}}}} {title} {article}".strip())

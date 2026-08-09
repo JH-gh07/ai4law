@@ -18,13 +18,14 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from backend.common.citation.registry import registry_from_documents
 from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
 from backend.common.trace.thoughts import summarize_agent_output
-from backend.common.workflow import GenerationContextPack, WorkflowPipeline
+from backend.common.workflow import GenerationContextPack
 
 from backend.domains.eu.dpia.agents import create_dpia_agents, DPIAAgentBase
 from backend.domains.eu.dpia.chapter_generator import DPIAChapterGenerator
@@ -36,7 +37,6 @@ from backend.domains.eu.dpia.issue_builder import build_dpia_issues
 from backend.domains.eu.dpia.legal_grounding import build_dpia_legal_grounding
 from backend.domains.eu.dpia.need_detector import DPIANeedDetector
 from backend.domains.eu.dpia.profile_extractor import DPIAProfileExtractor
-from backend.domains.eu.dpia.repair_generator import run_dpia_repair_pass
 from backend.domains.eu.dpia.report_renderer import DPIAReportRenderer
 from backend.domains.eu.dpia.retriever import DPIARetriever
 from backend.domains.eu.dpia.writing_strategy_builder import build_writing_strategy
@@ -173,6 +173,7 @@ class DPIAService:
             # Phase 2: RAG + Issues + Evidence (rule layer)
             regulations = self.retriever.search(profile)
             trace.record("retrieval_hits", {"count": len(regulations)})
+            citation_registry = registry_from_documents(regulations, jurisdiction="EU")
 
             attachment_notes = _attachment_notes_from_profile(profile)
             issues = build_dpia_issues(facts, need_assessment_raw, regulations, attachment_notes)
@@ -273,6 +274,7 @@ class DPIAService:
             gen_basis["risk_matrix"] = risk_dicts
             gen_basis["mitigation_plan"] = mit_dicts
             gen_basis["dpo_decision_pack"] = dpo_pack.model_dump()
+            gen_basis["citations"] = citation_registry.to_list()
 
             regulation_dicts = [hit.model_dump() for hit in regulations]
             context_pack = GenerationContextPack(
@@ -295,6 +297,7 @@ class DPIAService:
                 case_grounding=case_grounding,
                 writing_strategy=writing_strategy,
                 generation_basis_pack=gen_basis,
+                citation_registry=citation_registry,
             )
             trace.record("context_pack_built", {"has_agent_outputs": True})
 
@@ -302,6 +305,7 @@ class DPIAService:
             chapters = self.agents["external_draft"].run(
                 generation_basis_pack=gen_basis,
                 writing_strategy=writing_strategy,
+                citation_registry=citation_registry,
             )
             # Convert to DPIAChapterContent format
             from backend.domains.eu.dpia.schema import DPIAChapterContent

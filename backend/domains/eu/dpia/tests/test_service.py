@@ -552,3 +552,44 @@ def test_agent_json_parse_fallback_is_written_to_trace(tmp_path) -> None:
     assert fallback["payload"]["detail"]["agent"] == "trace_test_agent"
     assert fallback["payload"]["detail"]["fallback"] is True
     assert summarize_trace(recorder)["fallback_count"] == 1
+
+
+def test_external_draft_converts_registered_citation_markers() -> None:
+    from backend.common.citation.registry import registry_from_documents
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    registry = registry_from_documents(
+        [{
+            "source_id": "EU-LAW-001",
+            "title": "GDPR (EU) 2016/679",
+            "article": "35",
+            "snippet": "Article 35 requires a DPIA for likely high-risk processing.",
+        }],
+        jurisdiction="EU",
+    )
+    citation_id = next(iter(registry)).citation_id
+
+    class _MarkerLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return (
+                '{"content":"该处理需要开展DPIA {{'
+                + citation_id
+                + '}}。","citations":["'
+                + citation_id
+                + '"],"risk_level":"high"}'
+            )
+
+    chapters = ExternalDPIAgent(_MarkerLLM()).run(
+        generation_basis_pack={
+            "user_facts": [{"value": "高风险处理"}],
+            "citations": registry.to_list(),
+        },
+        citation_registry=registry,
+    )
+
+    assert len(chapters) == 7
+    assert all("{{CIT-" not in chapter["content"] for chapter in chapters)
+    assert all("[1]" in chapter["content"] for chapter in chapters)
+    assert registry.get_footnote_map()[1].citation_id == citation_id
