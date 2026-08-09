@@ -22,11 +22,13 @@ from backend.domains.us.cpra.schema import CPRAChapter
 _HEADING_PREFIX_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
 _SPACE_BEFORE_PUNCTUATION_RE = re.compile(r"\s+([，。；：！？])")
 _FOOTNOTE_RESIDUE_RE = re.compile(r"\[\d+\]")
+_RESIDUAL_MD_DELIMITER_RE = re.compile(r"(?<!\w)[*_`]+|[*_`]+(?!\w)")
 
 
 def _semantic_text(paragraph: str) -> str:
     without_headings = _HEADING_PREFIX_RE.sub("", paragraph)
     normalized = strip_markdown_inline(without_headings).strip()
+    normalized = _RESIDUAL_MD_DELIMITER_RE.sub("", normalized).strip()
     return _SPACE_BEFORE_PUNCTUATION_RE.sub(r"\1", normalized)
 
 

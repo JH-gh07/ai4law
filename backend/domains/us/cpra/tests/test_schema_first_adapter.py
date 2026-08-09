@@ -6,8 +6,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
-
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
 from backend.common.reporting import DocumentCompiler
@@ -71,3 +69,25 @@ def test_both_citation_shapes_produce_identical_ir() -> None:
         )
         return doc.model_dump(mode="json")
     assert build("{{CIT-EU-GDPR-ART35-P01}} 法规依据。") == build("法规依据 [1]。")
+
+
+def test_cpra_document_ir_strips_unclosed_markdown_emphasis() -> None:
+    chapter = CPRAChapter(
+        chapter_no=1,
+        title="执行摘要",
+        content="**法律依据\n\nCPRA 合规结论应以已提交证据为限。",
+        citations=[],
+        citation_refs=[],
+        risk_level="MEDIUM",
+    )
+
+    doc, _ = build_cpra_document_ir(
+        task_id="markdown-residue",
+        company_name="测试企业",
+        chapters=[chapter],
+        citation_registry=CitationRegistry(),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc),
+        model="test",
+    )
+
+    assert doc.sections[0].blocks[0].text == "法律依据"
