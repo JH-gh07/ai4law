@@ -301,6 +301,9 @@ class DPODecisionPack(BaseModel):
     prior_consultation_recommended: bool = False
     reason: str = ""
     draft_text: str = ""
+    source_opinion: str = ""
+    source_opinion_provenance: Literal["user_input", "missing"] = "missing"
+    decision_basis: Literal["structured_risk_assessment"] = "structured_risk_assessment"
 
 
 class InternalReviewOutput(BaseModel):

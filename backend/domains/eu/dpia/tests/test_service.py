@@ -396,6 +396,37 @@ def test_dpo_agent_recommends_prior_consultation() -> None:
     )
     assert result["prior_consultation_recommended"] is True
     assert result["dpo_position"] in ("conditional_approval", "objection")
+    assert result["source_opinion"] == "需要更多时间评估"
+    assert result["decision_basis"] == "structured_risk_assessment"
+
+
+def test_dpo_agent_does_not_promote_user_comment_to_formal_dpo_approval() -> None:
+    """Critical sign-off fields must come from rules, not generated attribution."""
+    from backend.domains.eu.dpia.agents.dpo_consultation_agent import DPOConsultationAgent
+
+    class _OverclaimingLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '''{
+              "dpo_position": "approval",
+              "conditions": [],
+              "prior_consultation_recommended": false,
+              "reason": "DPO formally approved launch",
+              "draft_text": "DPO已正式无条件批准上线"
+            }'''
+
+    result = DPOConsultationAgent(_OverclaimingLLM()).run(
+        risk_matrix=[{"risk_id": "RISK-1", "overall_level": "HIGH"}],
+        mitigation_plan=[{"risk_id": "RISK-1", "measures": [], "residual_risk": "HIGH"}],
+        dpo_opinion="建议上线但需要持续监控推荐质量指标",
+        remaining_high_risks=["RISK-1"],
+    )
+
+    assert result["prior_consultation_recommended"] is True
+    assert result["dpo_position"] != "approval"
+    assert result["source_opinion"] == "建议上线但需要持续监控推荐质量指标"
+    assert "正式" not in result["draft_text"]
 
 
 def test_internal_review_recommends_delay() -> None:
@@ -518,6 +549,94 @@ def test_external_draft_enforces_article_36_conclusion_when_dpo_requires_it() ->
     assert "必须在开始处理前" in signoff["content"]
     assert "[1]" in signoff["content"]
     assert next(iter(registry)).citation_id in signoff["citations"]
+
+
+def test_external_draft_uses_structured_chapters_for_consultation_and_signoff() -> None:
+    """User-entered DPO text must not be rewritten as a signed formal approval."""
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    class _OverclaimingDraftLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '{"content":"DPO已正式审阅并无条件批准上线。","citations":[],"risk_level":"low"}'
+
+    section_packs = [
+        {"section_id": key, "confirmed_facts": [], "issues": [], "legal_grounding": []}
+        for key in (
+            "need_identification", "processing_description", "consultation",
+            "necessity_proportionality", "risk_assessment", "mitigation", "signoff",
+        )
+    ]
+    for section in section_packs:
+        if section["section_id"] in {"consultation", "signoff"}:
+            section["confirmed_facts"] = [
+                {
+                    "field_path": "dpia.dpo_opinion",
+                    "value": "建议上线但需要持续监控推荐质量指标",
+                    "evidence_status": "user_claim_only",
+                }
+            ]
+
+    chapters = ExternalDPIAgent(_OverclaimingDraftLLM()).run(
+        generation_basis_pack={
+            "section_packs": section_packs,
+            "dpo_decision_pack": {
+                "dpo_position": "conditional_approval",
+                "conditions": ["验证计划措施"],
+                "prior_consultation_recommended": True,
+                "reason": "存在HIGH剩余风险",
+                "source_opinion": "建议上线但需要持续监控推荐质量指标",
+                "decision_basis": "structured_risk_assessment",
+            },
+        },
+    )
+
+    consultation = chapters[2]["content"]
+    signoff = chapters[-1]["content"]
+    assert "用户填写的 DPO 意见" in consultation
+    assert "不等同于正式签署或批准" in consultation
+    assert "结构化风险评估结论" in signoff
+    assert "DPO已正式审阅" not in consultation + signoff
+
+
+def test_external_draft_rejects_provable_cross_chapter_contradictions() -> None:
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    class _ContradictingLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '{"content":"目前无任何缓解措施，DPO意见未提供。","citations":[],"risk_level":"high"}'
+
+    section_ids = (
+        "need_identification", "processing_description", "consultation",
+        "necessity_proportionality", "risk_assessment", "mitigation", "signoff",
+    )
+    chapters = ExternalDPIAgent(_ContradictingLLM()).run(
+        generation_basis_pack={
+            "section_packs": [
+                {"section_id": key, "confirmed_facts": [], "issues": [], "legal_grounding": []}
+                for key in section_ids
+            ],
+            "risk_matrix": [{"risk_id": "RISK-1", "overall_level": "HIGH"}],
+            "mitigation_plan": [{
+                "risk_id": "RISK-1",
+                "measures": [{"measure": "人工复核", "status": "planned"}],
+                "residual_risk": "HIGH",
+            }],
+            "dpo_decision_pack": {
+                "source_opinion": "建议上线但持续监控",
+                "prior_consultation_recommended": True,
+                "decision_basis": "structured_risk_assessment",
+            },
+        },
+    )
+
+    combined = "\n".join(chapter["content"] for chapter in chapters)
+    assert "目前无任何缓解措施" not in combined
+    assert "DPO意见未提供" not in combined
+    assert "人工复核" in chapters[5]["content"]
 
 
 def test_processing_activity_extracts_data_flow() -> None:
@@ -814,7 +933,10 @@ def test_external_draft_converts_registered_citation_markers() -> None:
 
     assert len(chapters) == 7
     assert all("{{CIT-" not in chapter["content"] for chapter in chapters)
-    assert all("[1]" in chapter["content"] for chapter in chapters)
+    # Consultation and sign-off are now compiled from structured records; the
+    # remaining model-drafted chapters still normalize registered markers.
+    for chapter_index in (0, 1, 3, 4, 5):
+        assert "[1]" in chapters[chapter_index]["content"]
     assert registry.get_footnote_map()[1].citation_id == citation_id
 
 

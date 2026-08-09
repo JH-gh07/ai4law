@@ -95,6 +95,7 @@ def _fact_summary(fact: FactItem) -> dict[str, Any]:
         "field_path": fact.field_path,
         "value": fact.normalized_value if fact.normalized_value is not None else fact.value,
         "confidence": fact.confidence,
+        "evidence_status": fact.evidence_status,
         "notes": fact.notes,
     }
 

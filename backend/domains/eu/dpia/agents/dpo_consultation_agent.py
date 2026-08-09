@@ -22,68 +22,16 @@ class DPOConsultationAgent(DPIAAgentBase):
         dpo_opinion: str = "",
         remaining_high_risks: list[str] | None = None,
     ) -> dict:
-        """Determine DPO position (approval/conditional/objection) and Art 36 recommendation."""
+        """Derive sign-off fields from structured risks and preserve attribution.
+
+        These fields control whether processing may proceed and whether Article 36
+        consultation is required. An LLM must not upgrade a user-entered comment
+        into a signed DPO approval, so the critical result is rule-derived.
+        """
         risk_matrix = risk_matrix or []
         mitigation_plan = mitigation_plan or []
         remaining_high_risks = remaining_high_risks or []
-
-        if not self.enabled:
-            return _rule_based_dpo(risk_matrix, mitigation_plan, dpo_opinion, remaining_high_risks)
-
-        risks_text = _format_risks_summary(risk_matrix)
-        mitigation_text = _format_mitigation_summary(mitigation_plan)
-        high_text = ", ".join(remaining_high_risks) if remaining_high_risks else "无"
-
-        prompt = f"""Determine the DPO position and prior consultation recommendation for a GDPR DPIA.
-
-RISK MATRIX SUMMARY:
-{risks_text}
-
-MITIGATION PLAN SUMMARY:
-{mitigation_text}
-
-DPO OPINION: {dpo_opinion or "未提供"}
-
-REMAINING HIGH RISKS: {high_text}
-
-TASKS:
-1. Determine DPO position:
-   - "approval": all risks addressed, project can proceed
-   - "conditional_approval": project can proceed IF specified conditions are met before launch
-   - "objection": risks cannot be sufficiently mitigated, project should NOT proceed
-
-2. List specific conditions for conditional_approval
-
-3. Determine if GDPR Article 36 prior consultation is recommended:
-   - TRUE if ANY residual risk remains HIGH after mitigation
-   - TRUE if special category data + automated decision-making + large scale
-   - FALSE if all residual risks are MEDIUM or LOW
-
-4. Explain reasoning
-
-Return JSON:
-{{
-  "agent_name": "DPOPriorConsultationAgent",
-  "dpo_position": "approval" | "conditional_approval" | "objection",
-  "conditions": ["condition1", "condition2"],
-  "prior_consultation_recommended": true | false,
-  "reason": "<1-2 sentence explanation>",
-  "draft_text": "<DPO opinion in Chinese for the sign-off section>"
-}}
-
-CRITICAL: If conditions cannot reduce residual risk below HIGH, prior_consultation must be true."""
-
-        result = self._call_llm(prompt)
-        if result is None:
-            return _rule_based_dpo(risk_matrix, mitigation_plan, dpo_opinion, remaining_high_risks)
-
-        result.setdefault("agent_name", "DPOPriorConsultationAgent")
-        result.setdefault("dpo_position", "conditional_approval")
-        result.setdefault("conditions", [])
-        result.setdefault("prior_consultation_recommended", False)
-        result.setdefault("reason", "")
-        result.setdefault("draft_text", "")
-        return result
+        return _rule_based_dpo(risk_matrix, mitigation_plan, dpo_opinion, remaining_high_risks)
 
 
 def _rule_based_dpo(
@@ -124,7 +72,7 @@ def _rule_based_dpo(
     if not conditions:
         conditions = ["完成DPIA中所有计划措施的落实和验证"]
 
-    draft = "DPO对项目上线持有条件同意意见"
+    draft = "系统根据结构化风险记录形成附条件推进建议"
     if conditions:
         draft += f"，前提是：{'；'.join(conditions[:3])}"
     if prior_consultation:
@@ -137,6 +85,9 @@ def _rule_based_dpo(
         "prior_consultation_recommended": prior_consultation,
         "reason": f"共{len(high_risks)}项HIGH风险，{len(high_residual)}项HIGH剩余风险，{len(planned_only)}项措施仍为planned状态",
         "draft_text": draft,
+        "source_opinion": dpo_opinion,
+        "source_opinion_provenance": "user_input" if dpo_opinion.strip() else "missing",
+        "decision_basis": "structured_risk_assessment",
     }
 
 

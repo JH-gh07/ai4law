@@ -107,14 +107,15 @@ def build_deterministic_chapter(
             "在这些信息补齐前，本章不对数据共享、安全措施或权利响应机制作出已落实结论。"
         )
     elif chapter_id == "consultation":
+        source_opinion = facts.get("dpia.dpo_opinion") or dpo.get("source_opinion")
         content = (
             f"已记录的内部咨询对象：{_display(facts.get('dpia.consulted_internal_departments'))}。"
             f"外部专家：{_display(facts.get('dpia.external_experts'))}。\n\n"
             f"数据主体咨询计划：{_display(facts.get('dpia.data_subject_consultation_plan'))}。"
             "咨询记录应保留参与人、日期、关键意见、采纳结果和未采纳理由。\n\n"
-            f"DPO：{_display(facts.get('dpia.dpo_name'))}；已提供意见："
-            f"{_display(facts.get('dpia.dpo_opinion'))}。当前 DPO 结论为"
-            f"{_display(dpo.get('dpo_position'))}，其前置条件为：{_display(dpo.get('conditions'))}。{cite('35')}"
+            f"DPO 姓名：{_display(facts.get('dpia.dpo_name'))}。用户填写的 DPO 意见为："
+            f"“{_display(source_opinion)}”。该内容属于用户输入，不等同于正式签署或批准；"
+            "仍需补充可核验的 DPO 审阅记录。"
         )
     elif chapter_id == "necessity_proportionality":
         content = (
@@ -144,11 +145,14 @@ def build_deterministic_chapter(
             f"对自动化决策、安全处理和 DPIA 持续复评的措施，应分别验证权利救济、技术与组织控制以及风险变化触发机制。{cite('22')}{cite('32')}{cite('35')}"
         )
     else:
+        source_opinion = facts.get("dpia.dpo_opinion") or dpo.get("source_opinion")
         content = (
             f"DPIA 负责人：{_display(facts.get('dpia.dpia_owner'))}；DPO："
             f"{_display(facts.get('dpia.dpo_name'))}；复审日期：{_display(facts.get('dpia.review_date'))}。\n\n"
-            f"DPO 立场：{_display(dpo.get('dpo_position'))}。前置条件："
-            f"{_display(dpo.get('conditions'))}。在条件完成且有实施证据前，不得将附条件意见表述为无条件批准。\n\n"
+            f"用户填写的 DPO 意见为：“{_display(source_opinion)}”。该输入不等同于正式 DPO 签署或批准。\n\n"
+            f"结构化风险评估结论：{_display(dpo.get('dpo_position'))}。前置条件："
+            f"{_display(dpo.get('conditions'))}。该结论由系统依据风险矩阵和措施状态生成，"
+            "不得冒充 DPO 本人意见；条件完成后仍需取得正式审阅记录。\n\n"
             f"是否建议事先咨询：{_display(dpo.get('prior_consultation_recommended'))}。"
             f"理由：{_display(dpo.get('reason'))}。如剩余高风险无法降低，应在开始处理前完成事先咨询。{cite('36')}"
         )
@@ -185,7 +189,7 @@ def enforce_article36_conclusion(
     marker = _citation_marker(citation_registry, "36", used)
     reason = _display(dpo_decision_pack.get("reason"))
     content += (
-        "\n\n事先咨询结论：根据当前 DPO 意见和剩余风险判断，"
+        "\n\n事先咨询结论：根据结构化风险矩阵与缓解后剩余风险判断，"
         f"控制者必须在开始处理前履行 GDPR 第36条事先咨询程序。"
         f"理由：{reason}。在咨询和 DPO 前置条件完成前，不建议上线。{marker}"
     )

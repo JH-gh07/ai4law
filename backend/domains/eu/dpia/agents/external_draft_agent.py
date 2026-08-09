@@ -82,6 +82,26 @@ class ExternalDPIAgent(DPIAAgentBase):
                 gen_basis.get(chapter_id, gen_basis.get("sections", {}).get(chapter_id, {})),
             )
 
+            # These chapters carry attribution and go/no-go meaning. Compile them
+            # directly from structured records so generated prose cannot turn a
+            # user-entered comment into a formal DPO approval.
+            if chapter_id in {"consultation", "signoff"}:
+                compiled = build_deterministic_chapter(
+                    chapter_id=chapter_id,
+                    title=title,
+                    section=section,
+                    generation_basis_pack=gen_basis,
+                    citation_registry=citation_registry,
+                )
+                if chapter_id == "signoff":
+                    compiled = enforce_article36_conclusion(
+                        compiled,
+                        dpo_decision_pack=gen_basis.get("dpo_decision_pack", {}) or {},
+                        citation_registry=citation_registry,
+                    )
+                chapters.append({"chapter_no": i, **compiled})
+                continue
+
             chapter_prompt = _build_chapter_prompt(
                 chapter_id=chapter_id,
                 title=title,
@@ -101,8 +121,19 @@ class ExternalDPIAgent(DPIAAgentBase):
                 )
                 chapters.append({"chapter_no": i, **fallback})
             else:
+                raw_content = str(result.get("content", result.get("draft_text", "")))
+                if _contradicts_structured_basis(raw_content, gen_basis):
+                    fallback = build_deterministic_chapter(
+                        chapter_id=chapter_id,
+                        title=title,
+                        section=section,
+                        generation_basis_pack=gen_basis,
+                        citation_registry=citation_registry,
+                    )
+                    chapters.append({"chapter_no": i, **fallback})
+                    continue
                 content = apply_citation_pipeline(
-                    result.get("content", result.get("draft_text", "")),
+                    raw_content,
                     registry=citation_registry,
                     allowed_citations=[
                         item.display_label for item in citation_registry
@@ -124,6 +155,28 @@ class ExternalDPIAgent(DPIAAgentBase):
                 chapters.append(chapter)
 
         return chapters
+
+
+def _contradicts_structured_basis(content: str, generation_basis_pack: dict) -> bool:
+    """Reject mechanically provable contradictions before they enter the report."""
+    has_mitigation = any(
+        isinstance(entry, dict) and bool(entry.get("measures"))
+        for entry in generation_basis_pack.get("mitigation_plan", [])
+    )
+    no_mitigation_phrases = (
+        "目前无缓解计划",
+        "当前无缓解计划",
+        "目前无任何缓解措施",
+        "未提供任何已实施或计划中的风险缓解措施",
+        "均未制定缓解措施",
+    )
+    if has_mitigation and any(phrase in content for phrase in no_mitigation_phrases):
+        return True
+
+    dpo = generation_basis_pack.get("dpo_decision_pack", {}) or {}
+    has_source_opinion = bool(str(dpo.get("source_opinion") or "").strip())
+    no_dpo_phrases = ("未提供DPO意见", "未提供 DPO 意见", "DPO意见未提供", "DPO 意见未提供")
+    return has_source_opinion and any(phrase in content for phrase in no_dpo_phrases)
 
 
 def _build_chapter_prompt(
@@ -150,20 +203,12 @@ def _build_chapter_prompt(
     )
     facts_brief = _format_facts(facts_source)
     issues_brief = _format_issues(issues_source)
-    risk_brief = _format_risks(
-        gen_basis.get("risk_matrix", [])
-        if chapter_id in {"risk_assessment", "mitigation", "signoff"}
-        else []
-    )
-    mit_brief = _format_mitigation(
-        gen_basis.get("mitigation_plan", [])
-        if chapter_id in {"mitigation", "signoff"}
-        else []
-    )
+    # Compact shared summaries prevent chapters from contradicting records that
+    # were previously omitted from their individual prompts.
+    risk_brief = _format_risks(gen_basis.get("risk_matrix", []))
+    mit_brief = _format_mitigation(gen_basis.get("mitigation_plan", []))
     dpo_brief = _format_dpo(
         gen_basis.get("dpo_decision_pack", {})
-        if chapter_id in {"need_identification", "consultation", "signoff"}
-        else {}
     )
     citations_brief = _format_citations(
         gen_basis.get("citations", gen_basis.get("regulations", []))
