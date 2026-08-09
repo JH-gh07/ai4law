@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from backend.common.knowledge.v2 import RetrievalRequest
 from backend.common.rag.service import LegalRetrievalService
@@ -184,5 +183,5 @@ class LocalRegulationKnowledgeBase:
         if "eo 14117" in lowered or "data brokerage" in lowered or document_type == "vendor_agreement":
             return "us_eo14117"
         if document_type == "privacy_policy" or clause_type in {ClauseType.RIGHTS_REQUEST, ClauseType.SENSITIVE_PI}:
-            return "us_privacy_review"
+            return "us_cpra"
         return "us_vendor_review"

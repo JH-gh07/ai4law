@@ -44,3 +44,37 @@ def test_cpra_legal_retriever_extracts_us_article_and_source_metadata() -> None:
     assert result["article_no"] == "7004"
     assert result["display_label"] == "CPPA Art.7004"
     assert result["confidence_score"] == 0.64
+
+
+def test_cpra_legal_retriever_preserves_canonical_registry_source_id() -> None:
+    retriever = CPRALegalRetriever()
+
+    class _Hit:
+        title = "California Civil Code — CCPA"
+        article = "§ 1798.120"
+        content = "Consumers may direct a business not to sell or share personal information."
+        score = 0.91
+        id = "US-CA-001"
+
+    result = retriever._normalize_hit(_Hit())  # noqa: SLF001
+
+    assert result["source_id"] == "US-CA-001"
+    assert result["article_no"] == "1798.120"
+    assert result["display_label"] == "CPRA § 1798.120"
+
+
+def test_cpra_legal_retriever_uses_product_registry_module(monkeypatch) -> None:
+    calls: list[dict] = []
+
+    def _retrieve(query: str, **kwargs):
+        calls.append({"query": query, **kwargs})
+        return type("Hits", (), {"documents": []})()
+
+    monkeypatch.setattr(
+        "backend.domains.us.cpra.legal_retriever.retrieve_legal_documents",
+        _retrieve,
+    )
+
+    CPRALegalRetriever().retrieve("opt_out")
+
+    assert calls[0]["module"] == "us_cpra"

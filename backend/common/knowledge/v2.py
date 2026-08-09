@@ -47,7 +47,7 @@ ModuleKey = Literal[
     "eu_tia",
     "us_eo14117",
     "us_vendor_review",
-    "us_privacy_review",
+    "us_cpra",
 ]
 
 TaskStage = Literal[

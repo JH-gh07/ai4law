@@ -40,7 +40,7 @@ class CPRALegalRetriever:
         try:
             hits = retrieve_legal_documents(
                 query,
-                module="us_privacy_review",
+                module="us_cpra",
                 top_k=3,
                 jurisdiction="us",
                 path="all",
@@ -127,11 +127,13 @@ class CPRALegalRetriever:
     def _normalize_source_id(source: str) -> str:
         value = str(source or "").strip()
         lower = value.lower()
+        if re.fullmatch(r"[A-Za-z]{2}-[A-Za-z]+-\d+", value):
+            return value.upper()
         if "cppa" in lower or "700" in lower:
             return "us_cppa_regulations"
         if "ccpa" in lower or "cpra" in lower or "1798." in lower:
-            return "us_cpra"
-        return re.sub(r"[^a-z0-9]+", "_", lower).strip("_") or "us_cpra"
+            return "US-CA-001"
+        return re.sub(r"[^a-z0-9]+", "_", lower).strip("_") or "US-CA-001"
 
     @staticmethod
     def _extract_article_no(value: str) -> str:
@@ -170,7 +172,7 @@ class CPRALegalRetriever:
 
     @staticmethod
     def _infer_authority_level(source_id: str, title: str) -> str:
-        if source_id == "us_cpra":
+        if source_id == "US-CA-001":
             return "high"
         if source_id == "us_cppa_regulations":
             return "medium"

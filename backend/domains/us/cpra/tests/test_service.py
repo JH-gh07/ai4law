@@ -322,7 +322,7 @@ def test_cpra_generate_report_prefers_gap_level_citations(monkeypatch) -> None:
         service.legal_retriever._gap_key(gap, idx): [  # noqa: SLF001
             {
                 "source": f"GAP:{gap.domain}:{idx}",
-                "source_id": "us_cpra",
+                "source_id": "US-CA-001",
                 "source_title": "California Consumer Privacy Act / CPRA",
                 "article_no": "1798.121",
                 "display_label": f"CPRA §1798.121 GAP:{gap.domain}:{idx}",
@@ -339,7 +339,7 @@ def test_cpra_generate_report_prefers_gap_level_citations(monkeypatch) -> None:
     service.legal_retriever.retrieve = lambda domain, extra_context="": [
         {
             "source": f"DOMAIN:{domain}",
-            "source_id": "us_cpra",
+            "source_id": "US-CA-001",
             "source_title": "California Consumer Privacy Act / CPRA",
             "article_no": "1798.120",
             "display_label": f"CPRA §1798.120 DOMAIN:{domain}",

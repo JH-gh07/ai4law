@@ -1080,7 +1080,7 @@ def build_workflow_chunks_us() -> list[KnowledgeChunkV2]:
             "source_id": "WF-US-PRIVACY",
             "title": "CPRA 重点核查 notice 和 consumer rights",
             "content": "US privacy review 先核查 notice at collection、opt-out / limit use、delete / correct / know rights 和 sensitive PI handling。",
-            "module": "us_privacy_review",
+            "module": "us_cpra",
             "path": "privacy",
             "reference_ids": ["US-CA-001"],
             "scenario_tags": ["review", "issue_discovery", "privacy_policy"],
@@ -1147,7 +1147,7 @@ def build_standard_clause_chunks_us() -> list[KnowledgeChunkV2]:
         },
         {
             "chunk_id": "STD-US-CPRA-RIGHTS",
-            "module": "us_privacy_review",
+            "module": "us_cpra",
             "title": "CPRA consumer rights and SPI limitation",
             "content": "Privacy notices must explain consumer rights to know, delete, correct, opt out and limit use of sensitive personal information.",
             "clause_type": "RIGHTS_REQUEST",
@@ -1218,7 +1218,7 @@ def build_template_chunks_us() -> list[KnowledgeChunkV2]:
         {
             "chunk_id": "TPL-US-PRIVACY-1",
             "source_id": "US-TEMPLATE-PRIVACY-OFFICIAL",
-            "module": "us_privacy_review",
+            "module": "us_cpra",
             "title": "Notice and consumer-rights disclosure",
             "content": "Document notice at collection, rights to know, delete, correct, opt out and limit sensitive personal information use.",
             "path": "privacy",
@@ -1283,7 +1283,7 @@ def build_testcase_chunks_us() -> list[KnowledgeChunkV2]:
         },
         {
             "chunk_id": "TC-US-PRIVACY-001",
-            "module": "us_privacy_review",
+            "module": "us_cpra",
             "title": "CPRA privacy notice misses limit-sensitive-PI right",
             "content": "The privacy notice omits the right to limit the use of sensitive personal information and does not explain correction rights.",
             "path": "privacy",

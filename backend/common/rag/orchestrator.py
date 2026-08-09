@@ -103,7 +103,7 @@ class RetrievalOrchestrator:
             return self._retrieve_cn_review(request)
         if request.module in {"eu_scc", "eu_bcr", "eu_dpia", "eu_tia"}:
             return self._retrieve_eu(request)
-        if request.module in {"us_eo14117", "us_vendor_review", "us_privacy_review"}:
+        if request.module in {"us_eo14117", "us_vendor_review", "us_cpra"}:
             return self._retrieve_us(request)
         return RetrievalBundle(debug={"unsupported_module": request.module})
 

@@ -187,7 +187,7 @@ def _normalize_article_token(article_no: str) -> str:
 
 def _infer_authority(title: str, source_id: str) -> str:
     upper = (title or "").upper()
-    if source_id == "us_cpra" or "CPRA" in upper or "CCPA" in upper:
+    if source_id == "US-CA-001" or "CPRA" in upper or "CCPA" in upper:
         return "high"
     if source_id == "us_cppa_regulations" or "CPPA" in upper:
         return "medium"
@@ -201,7 +201,7 @@ def _infer_authority(title: str, source_id: str) -> str:
 
 
 def _infer_binding_force(title: str, source_id: str) -> str:
-    if source_id == "us_cpra":
+    if source_id == "US-CA-001":
         return "mandatory"
     if source_id == "us_cppa_regulations":
         return "recommended"
@@ -218,7 +218,7 @@ def _infer_binding_force(title: str, source_id: str) -> str:
 def _display_label(title: str, article_no: str, source_id: str, raw_article: str) -> str:
     if source_id == "us_cppa_regulations":
         return f"CPPA {raw_article or f'Art.{article_no}'}".strip()
-    if source_id == "us_cpra":
+    if source_id == "US-CA-001":
         return f"CPRA {raw_article or f'§{article_no}'}".strip()
     upper = (title or "").upper()
     if "GDPR" in upper:
@@ -231,7 +231,7 @@ def _display_label(title: str, article_no: str, source_id: str, raw_article: str
 
 
 def _citation_abbr(source_id: str, title: str) -> str:
-    if source_id == "us_cpra":
+    if source_id == "US-CA-001":
         return "CPRA"
     if source_id == "us_cppa_regulations":
         return "CPPA"

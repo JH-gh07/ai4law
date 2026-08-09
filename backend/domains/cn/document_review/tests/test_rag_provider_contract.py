@@ -26,4 +26,4 @@ def test_lookup_tracks_resolved_jurisdiction_and_module() -> None:
         document_type="privacy_policy",
     )
     assert result["usage_policy_debug"]["jurisdiction"] == "us"
-    assert result["usage_policy_debug"]["module"] == "us_privacy_review"
+    assert result["usage_policy_debug"]["module"] == "us_cpra"
