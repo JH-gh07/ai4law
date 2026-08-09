@@ -1,0 +1,532 @@
+[
+  {
+    "fact_id": "FACT-request-company-name",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.company_name",
+    "value": "跨境优品科技有限公司",
+    "normalized_value": "跨境优品科技有限公司",
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-industry",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.industry",
+    "value": "跨境电商",
+    "normalized_value": "跨境电商",
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-is-ciio",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.is_ciio",
+    "value": false,
+    "normalized_value": false,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-contains-important-data",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.contains_important_data",
+    "value": false,
+    "normalized_value": false,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-pii-count",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.pii_count",
+    "value": 450000,
+    "normalized_value": 450000,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-spi-count",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.spi_count",
+    "value": 0,
+    "normalized_value": 0,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-transfer-purpose",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.transfer_purpose",
+    "value": "订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+    "normalized_value": "订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-receiver-country",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.receiver_country",
+    "value": "新加坡",
+    "normalized_value": "新加坡",
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-uploaded-files",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.uploaded_files",
+    "value": [],
+    "normalized_value": [],
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": "Uploaded file paths are captured as a list, not as parsed content.",
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-data-inventory-items",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.data_inventory_items",
+    "value": [
+      {
+        "name": "用户姓名",
+        "description": "消费者真实姓名",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "订单履行必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "收货地址",
+        "description": "消费者收货地址",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "物流配送必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "联系电话",
+        "description": "消费者手机号码",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "配送联系必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "商品订单号",
+        "description": "系统生成的订单编号",
+        "data_subject": "消费者",
+        "personal_info_type": "general",
+        "is_important_data_candidate": false,
+        "necessity": "订单跟踪必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      }
+    ],
+    "normalized_value": [
+      {
+        "name": "用户姓名",
+        "description": "消费者真实姓名",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "订单履行必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "收货地址",
+        "description": "消费者收货地址",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "物流配送必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "联系电话",
+        "description": "消费者手机号码",
+        "data_subject": "消费者",
+        "personal_info_type": "personal_information",
+        "is_important_data_candidate": false,
+        "necessity": "配送联系必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      },
+      {
+        "name": "商品订单号",
+        "description": "系统生成的订单编号",
+        "data_subject": "消费者",
+        "personal_info_type": "general",
+        "is_important_data_candidate": false,
+        "necessity": "订单跟踪必需",
+        "example": "",
+        "volume": "450000",
+        "retention_period": "36个月",
+        "remarks": ""
+      }
+    ],
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": "Structured data inventory items supplied by the user.",
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-recipient-info",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.recipient_info",
+    "value": {
+      "name": "SeaCommerce Pte. Ltd.",
+      "country_or_region": "新加坡",
+      "role": "境外接收方",
+      "relationship": "子公司",
+      "security_certifications": [],
+      "audit_reports": [],
+      "legal_environment_summary": "",
+      "processing_purpose": "区域物流优化与精准营销",
+      "processing_method": "通过加密API同步至AWS Redshift数据仓库",
+      "storage_location": "新加坡AWS亚太数据中心"
+    },
+    "normalized_value": {
+      "name": "SeaCommerce Pte. Ltd.",
+      "country_or_region": "新加坡",
+      "role": "境外接收方",
+      "relationship": "子公司",
+      "security_certifications": [],
+      "audit_reports": [],
+      "legal_environment_summary": "",
+      "processing_purpose": "区域物流优化与精准营销",
+      "processing_method": "通过加密API同步至AWS Redshift数据仓库",
+      "storage_location": "新加坡AWS亚太数据中心"
+    },
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-downstream-processors",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.downstream_processors",
+    "value": [],
+    "normalized_value": [],
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-legal-document-review",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.legal_document_review",
+    "value": {
+      "document_name": "数据跨境处理协议",
+      "clause_coverage": {
+        "purpose_method_scope": "covered",
+        "overseas_retention_location_period": "covered",
+        "onward_transfer_constraint": "covered",
+        "legal_environment_change_response": "missing",
+        "breach_liability_dispute_resolution": "covered",
+        "incident_response_and_individual_rights": "partial"
+      },
+      "raw_clause_refs": [],
+      "missing_items": [
+        "法律环境变化应对条款"
+      ],
+      "risk_level": "MEDIUM"
+    },
+    "normalized_value": {
+      "document_name": "数据跨境处理协议",
+      "clause_coverage": {
+        "purpose_method_scope": "covered",
+        "overseas_retention_location_period": "covered",
+        "onward_transfer_constraint": "covered",
+        "legal_environment_change_response": "missing",
+        "breach_liability_dispute_resolution": "covered",
+        "incident_response_and_individual_rights": "partial"
+      },
+      "raw_clause_refs": [],
+      "missing_items": [
+        "法律环境变化应对条款"
+      ],
+      "risk_level": "MEDIUM"
+    },
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-security-capability",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.security_capability",
+    "value": {
+      "management_measures": [
+        "数据安全管理制度",
+        "个人信息保护制度"
+      ],
+      "technical_measures": [
+        "加密传输",
+        "访问控制",
+        "日志审计"
+      ],
+      "certifications": [
+        "ISO27001"
+      ],
+      "compliance_records": []
+    },
+    "normalized_value": {
+      "management_measures": [
+        "数据安全管理制度",
+        "个人信息保护制度"
+      ],
+      "technical_measures": [
+        "加密传输",
+        "访问控制",
+        "日志审计"
+      ],
+      "certifications": [
+        "ISO27001"
+      ],
+      "compliance_records": []
+    },
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-compliance-history",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.compliance_history",
+    "value": null,
+    "normalized_value": null,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-personal-info-protection",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.personal_info_protection",
+    "value": null,
+    "normalized_value": null,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-system-link",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.system_link",
+    "value": {
+      "domestic_systems": [
+        "杭州阿里云RDS数据库"
+      ],
+      "transfer_links": [
+        "加密API同步"
+      ],
+      "transit_locations": [],
+      "overseas_systems": [
+        "新加坡AWS Redshift"
+      ]
+    },
+    "normalized_value": {
+      "domestic_systems": [
+        "杭州阿里云RDS数据库"
+      ],
+      "transfer_links": [
+        "加密API同步"
+      ],
+      "transit_locations": [],
+      "overseas_systems": [
+        "新加坡AWS Redshift"
+      ]
+    },
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-request-self-assessment-info",
+    "source_type": "schema",
+    "source_ref": "AssessmentRequest",
+    "field_path": "request.self_assessment_info",
+    "value": null,
+    "normalized_value": null,
+    "confidence": 0.6,
+    "evidence_status": "user_claim_only",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": false,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-diagnosis-result-recommended-path",
+    "source_type": "diagnosis",
+    "source_ref": "DiagnosisResult",
+    "field_path": "diagnosis_result.recommended_path",
+    "value": "scc_or_certification",
+    "normalized_value": "scc_or_certification",
+    "confidence": 1.0,
+    "evidence_status": "documented_evidence",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": true,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-diagnosis-result-rationale",
+    "source_type": "diagnosis",
+    "source_ref": "DiagnosisResult",
+    "field_path": "diagnosis_result.rationale",
+    "value": "未触发强制安全评估门槛，可走标准合同备案或认证路径。",
+    "normalized_value": "未触发强制安全评估门槛，可走标准合同备案或认证路径。",
+    "confidence": 1.0,
+    "evidence_status": "documented_evidence",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": true,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-diagnosis-result-risk-level",
+    "source_type": "diagnosis",
+    "source_ref": "DiagnosisResult",
+    "field_path": "diagnosis_result.risk_level",
+    "value": "MEDIUM",
+    "normalized_value": "MEDIUM",
+    "confidence": 1.0,
+    "evidence_status": "documented_evidence",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": true,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  },
+  {
+    "fact_id": "FACT-diagnosis-result-matched-rule-id",
+    "source_type": "diagnosis",
+    "source_ref": "DiagnosisResult",
+    "field_path": "diagnosis_result.matched_rule_id",
+    "value": "default",
+    "normalized_value": "default",
+    "confidence": 1.0,
+    "evidence_status": "documented_evidence",
+    "supporting_material_refs": [],
+    "can_support_external_positive_claim": true,
+    "requires_user_confirmation": false,
+    "notes": null,
+    "jurisdiction": ""
+  }
+]

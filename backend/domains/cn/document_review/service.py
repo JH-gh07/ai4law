@@ -747,18 +747,14 @@ class ReviewService:
         if not resolved.exists() or not resolved.is_file():
             raise HTTPException(status_code=404, detail=f"Uploaded file not found: {resolved}")
 
-        preset_roots = (
-            (Path.cwd() / "doc").resolve(),
-            (Path.cwd() / "resources" / "legal" / "sources").resolve(),
-        )
-        if not any(self._is_under_root(resolved, root) for root in preset_roots):
-            return None
-
         ext = resolved.suffix.lower()
         if ext not in self.file_service.allowed_extensions:
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-        destination = self.file_service.settings.upload_dir / "review-dev-presets"
+        # Allow preset roots (doc/, resources/) as well as any valid file on disk.
+        # User-uploaded files outside storage are copied in so the review pipeline
+        # never receives a path outside the storage directory.
+        destination = self.file_service.settings.upload_dir / "review-external"
         destination.mkdir(parents=True, exist_ok=True)
         copied_path = destination / f"{resolved.stem[:40]}_{abs(hash(str(resolved))) & 0xFFFFFFFF:x}{ext}"
         if not copied_path.exists():

@@ -170,22 +170,45 @@ def test_review_dev_preset_copies_current_legal_resource_into_storage(tmp_path: 
     assert copied.is_relative_to(upload_dir)
 
 
-def test_review_dev_preset_rejects_untrusted_external_path(tmp_path: Path, monkeypatch) -> None:
+def test_review_dev_preset_copies_external_file_into_storage(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     source = tmp_path / "private" / "secret.md"
     source.parent.mkdir(parents=True)
     source.write_text("secret", encoding="utf-8")
 
+    upload_dir = tmp_path / "storage" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
     service = object.__new__(ReviewService)
     service.file_service = SimpleNamespace(
-        settings=SimpleNamespace(storage_dir=tmp_path / "storage", upload_dir=tmp_path / "storage" / "uploads"),
+        settings=SimpleNamespace(storage_dir=tmp_path / "storage", upload_dir=upload_dir),
+        allowed_extensions={".md"},
+    )
+
+    copied = service._resolve_uploaded_path(str(source))
+
+    assert copied.is_file()
+    assert copied.read_text(encoding="utf-8") == "secret"
+    assert copied.is_relative_to(upload_dir)
+
+
+def test_review_dev_preset_rejects_unsupported_extension(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "private" / "secret.exe"
+    source.parent.mkdir(parents=True)
+    source.write_text("binary", encoding="utf-8")
+
+    upload_dir = tmp_path / "storage" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    service = object.__new__(ReviewService)
+    service.file_service = SimpleNamespace(
+        settings=SimpleNamespace(storage_dir=tmp_path / "storage", upload_dir=upload_dir),
         allowed_extensions={".md"},
     )
 
     with pytest.raises(HTTPException) as exc_info:
         service._resolve_uploaded_path(str(source))
 
-    assert exc_info.value.status_code == 403
+    assert exc_info.value.status_code == 400
 
 
 def test_select_llm_candidates_caps_non_other_clauses() -> None:

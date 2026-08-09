@@ -1,3 +1,16 @@
+/**
+ * useTaskEvents 模块
+ *
+ * 函数：
+ * - extractTokenUsage: 从运行事件中提取令牌使用情况的函数，接收一个 RunEvent 数组作为参数，返回一个 TokenUsageBreakdown 对象。
+ * - mergeRunEvents: 合并运行事件的函数，接收两个 RunEvent 数组作为参数，返回一个合并后的 RunEvent 数组。
+ * - useTaskEvents: 自定义 Hook，用于订阅任务事件流，接收一个任务 ID 作为参数，返回一个 RunEvent 数组。
+ *
+ * 类型：
+ * - RunEvent: 运行事件类型，包含事件 ID、任务 ID、序列号、相关 ID、事件类型、时间戳、摘要、详细信息和日志级别等属性。
+ * - TokenUsage: 令牌使用情况类型，包含提示令牌数、完成令牌数和总令牌数等属性。
+ * - TokenUsageBreakdown: 令牌使用情况细分类型，包含总计、Copilot 和工作流的令牌使用情况。
+ */
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchStreamToken, fetchTaskEvents } from "../api/events";

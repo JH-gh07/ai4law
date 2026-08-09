@@ -342,8 +342,8 @@ class BCRService:
         gov_text = "\n".join(ch.content for ch in main_doc.chapters if any(kw in ch.title.lower() for kw in ["government", "access"]))
         if tia_text:
             agent_tia = self.agents["tia_reasoning"].run(
-                tia_section=tia_text, gov_access_section=gov_text,
-                legal_refs=["Schrems II", "EDPB 01/2020"],
+                tia_text=tia_text + "\n" + gov_text,
+                has_tia_document=bool(tia_text),
             )
             if trace:
                 thought = summarize_agent_output("BCR TIA 评估", agent_tia)

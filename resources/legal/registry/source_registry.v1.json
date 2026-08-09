@@ -1,5 +1,6 @@
 {
-  "schema_version": "v1",
+  "version": "v1",
+  "generated_from": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/resources/legal/catalog/sources.csv",
   "entries": [
     {
       "source_id": "CN-LAW-001",
@@ -7,7 +8,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -27,7 +29,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment",
         "category": "核心法律",
         "doc_type": "law",
         "publisher": "国家互联网信息办公室",
@@ -48,7 +50,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -68,7 +71,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment",
         "category": "核心法律",
         "doc_type": "law",
         "publisher": "国家互联网信息办公室",
@@ -89,7 +92,9 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_pipia"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -109,7 +114,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment|cn-pipia",
         "category": "核心法律",
         "doc_type": "law",
         "publisher": "国家互联网信息办公室",
@@ -130,7 +135,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_assessment"
+        "cn_assessment",
+        "cn_pipia"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -150,7 +156,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "assessment",
-        "module": "cn-assessment",
+        "module": "cn-assessment|cn-pipia",
         "category": "部门规章",
         "doc_type": "administrative_regulation",
         "publisher": "国家互联网信息办公室",
@@ -212,7 +218,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
@@ -232,7 +239,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment",
         "category": "部门规章",
         "doc_type": "administrative_regulation",
         "publisher": "国家互联网信息办公室",
@@ -253,7 +260,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
@@ -273,7 +281,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment",
         "category": "部门规章",
         "doc_type": "administrative_regulation",
         "publisher": "国家互联网信息办公室",
@@ -294,7 +302,8 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_diagnosis"
+        "cn_diagnosis",
+        "cn_assessment"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -314,7 +323,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "cn-diagnosis",
+        "module": "cn-diagnosis|cn-assessment",
         "category": "部门规章",
         "doc_type": "administrative_regulation",
         "publisher": "国家互联网信息办公室",
@@ -750,7 +759,8 @@
       "aliases": [],
       "jurisdiction": "us",
       "modules": [
-        "us_cpra"
+        "us_cpra",
+        "us_vendor_review"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -770,7 +780,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "privacy",
-        "module": "us-cpra",
+        "module": "us-cpra|us-vendor-review",
         "category": "核心法律",
         "doc_type": "law",
         "publisher": "California Legislative Information",
@@ -955,7 +965,7 @@
       "aliases": [],
       "jurisdiction": "cn",
       "modules": [
-        "cn_assessment"
+        "cn_pipia"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
@@ -975,7 +985,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "assessment",
-        "module": "cn-assessment",
+        "module": "cn-pipia",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
@@ -1323,9 +1333,7 @@
       "title": "2.2 ICO DPIA Temple (1)",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1343,8 +1351,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1364,9 +1372,7 @@
       "title": "CELEX 32002D0002 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1384,8 +1390,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1405,9 +1411,7 @@
       "title": "CELEX 32003D0490 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1425,8 +1429,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1446,9 +1450,7 @@
       "title": "CELEX 32003D0821 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1466,8 +1468,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1487,9 +1489,7 @@
       "title": "CELEX 32004D0411 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1507,8 +1507,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1528,9 +1528,7 @@
       "title": "CELEX 32008D0393 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1548,8 +1546,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1569,9 +1567,7 @@
       "title": "CELEX 32010D0146 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1589,8 +1585,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1610,9 +1606,7 @@
       "title": "CELEX 32010D0625 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1630,8 +1624,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1651,9 +1645,7 @@
       "title": "CELEX 32011D0061 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1671,8 +1663,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1692,9 +1684,7 @@
       "title": "CELEX 32012D0484 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1712,8 +1702,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1733,9 +1723,7 @@
       "title": "CELEX 32013D0065 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1753,8 +1741,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1774,9 +1762,7 @@
       "title": "CELEX 32019D0419 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1794,8 +1780,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1815,9 +1801,7 @@
       "title": "CELEX 32021D0914 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1835,8 +1819,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1856,9 +1840,7 @@
       "title": "CELEX 32021D1772 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1876,8 +1858,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1897,9 +1879,7 @@
       "title": "CELEX 32022D0254 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1917,8 +1897,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1938,9 +1918,7 @@
       "title": "CELEX 32023D1795 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1958,8 +1936,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1979,9 +1957,7 @@
       "title": "CELEX 62018CJ0311 EN TXT",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1999,8 +1975,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2020,9 +1996,7 @@
       "title": "EN Standard Contractual Clauses (1)",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2040,8 +2014,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2061,9 +2035,7 @@
       "title": "EPO Adequacy Decision July 2025",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2081,8 +2053,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2102,9 +2074,7 @@
       "title": "JUST template comingsoon standard 2",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -2122,8 +2092,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
@@ -2143,9 +2113,7 @@
       "title": "JUST template comingsoon standard 26",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -2163,8 +2131,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
@@ -2184,9 +2152,7 @@
       "title": "JUST template comingsoon standard 27",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -2204,8 +2170,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
@@ -2225,9 +2191,7 @@
       "title": "TIA Template (1)",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -2245,8 +2209,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
@@ -2266,9 +2230,7 @@
       "title": "edpb guidelines 2 2018 derogations en",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -2286,8 +2248,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "项目资料库",
@@ -2307,9 +2269,7 @@
       "title": "edpb guidelines 3 2018 territorial scope after public consultation en 1",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -2327,8 +2287,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "项目资料库",
@@ -2348,9 +2308,7 @@
       "title": "edpb guidelines codes conduct transfers after public consultation en 1",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -2368,8 +2326,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "项目资料库",
@@ -2389,9 +2347,7 @@
       "title": "edpb recommendations 20221 bcr c v2 en",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -2409,8 +2365,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "项目资料库",
@@ -2430,9 +2386,7 @@
       "title": "recommendations 20221 bcr c edpb en",
       "aliases": [],
       "jurisdiction": "eu",
-      "modules": [
-        "eu_scc"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -2450,8 +2404,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "eu-scc",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "项目资料库",
@@ -2471,9 +2425,7 @@
       "title": "19 Digital Trade",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2491,8 +2443,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2512,9 +2464,7 @@
       "title": "2012 31341",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2532,8 +2482,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2553,9 +2503,7 @@
       "title": "217 ecsg 2015 apec privacy framework",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2573,8 +2521,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2594,9 +2542,7 @@
       "title": "DCPD 202200894",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2614,8 +2560,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2635,9 +2581,7 @@
       "title": "FISA Section 702 FISA Resource Library",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2655,8 +2599,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2676,9 +2620,7 @@
       "title": "Full Text EU U.S. DPF",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2696,8 +2638,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2717,9 +2659,7 @@
       "title": "NIST.CSWP.01162020",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2737,8 +2677,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2758,9 +2698,7 @@
       "title": "cloud act",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2778,8 +2716,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -2799,9 +2737,7 @@
       "title": "ftc act incorporatingus safe web act",
       "aliases": [],
       "jurisdiction": "us",
-      "modules": [
-        "us_14117"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -2819,8 +2755,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "us-14117",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",

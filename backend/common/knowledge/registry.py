@@ -158,12 +158,16 @@ def _authority_level_from_row(row: dict[str, str]) -> str:
 
 
 def _modules_for_row(jurisdiction: str, path: str) -> list[str]:
+    if path == "reference":
+        return []  # reference-only sources stay out of retrieval pools
     if jurisdiction == "cn":
         modules = ["cn_diagnosis"]
         if path in {"assessment", "all"}:
             modules.append("cn_assessment")
         if path in {"review", "all", "scc"}:
             modules.append("cn_review")
+        if path in {"assessment", "all", "pipia"}:
+            modules.append("cn_pipia")
         return modules
     if jurisdiction == "eu":
         modules: list[str] = []

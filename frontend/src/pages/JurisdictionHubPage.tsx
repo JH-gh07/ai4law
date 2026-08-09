@@ -1,3 +1,12 @@
+/**
+ * 法域中心页面组件
+ *
+ * 该组件用于展示法域中心的内容，包括法域的横幅、简介、模块列表和操作按钮。
+ * 用户可以通过该页面查看不同法域下的模块信息，快速进入工作区或报告页面进行任务处理。
+ *
+ * @param {Object} props - 组件的属性对象
+ * @param {Function} props.onStart - 点击“开始”按钮时的回调函数
+ */
 import { Link, useParams } from "react-router-dom";
 import { listModules } from "../api/modules";
 import { useLang } from "../lib/language";

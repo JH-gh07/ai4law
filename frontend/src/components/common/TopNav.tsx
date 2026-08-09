@@ -1,3 +1,13 @@
+/**
+ * 顶部导航栏组件
+ *  * 函数：
+ * - TopNav: 顶部导航栏组件，接收一组属性并渲染导航栏内容，导航栏指的是在页面顶部显示的菜单栏，用于提供网站的主要导航功能。该组件可以根据传入的属性动态显示不同的导航链接、用户菜单、语言切换等内容，并处理用户的点击操作。
+ *
+ *
+ * Props:
+ * - onStart: 点击开始按钮时触发的回调函数
+ * - onReplayGuide: 点击重播指南按钮时触发的回调函数
+ */
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { UserMenu } from "../auth/UserMenu";
 import { useAuth } from "../../lib/auth/AuthContext";

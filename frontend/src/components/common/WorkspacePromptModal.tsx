@@ -1,6 +1,32 @@
+/**
+ * 工作区提示模态框组件
+ * 用于在工作区中显示提示信息，并提供确认和取消操作
+ * 
+ * 函数：
+ * - WorkspacePromptModal: 工作区提示模态框组件，接收一组属性并渲染模态框内容，模态框指的是在当前页面上方显示的对话框，用于提示用户进行某些操作或提供信息。该组件可以根据传入的属性动态显示标题、描述、输入框、错误提示等内容，并处理用户的确认和取消操作。
+ * 
+ * 
+ * Props:
+ * - open: 是否显示模态框
+ * - title: 模态框标题
+ * - description: 模态框描述信息
+ * - confirmText: 确认按钮文本
+ * - cancelText: 取消按钮文本
+ * - onCancel: 取消操作回调函数
+ * - onConfirm: 确认操作回调函数
+ * - value: 输入框的值（可选）
+ * - valueLabel: 输入框的标签（可选）
+ * - valuePlaceholder: 输入框的占位符（可选）
+ * - onValueChange: 输入框值变化回调函数（可选）
+ * - confirmDisabled: 确认按钮是否禁用（可选，默认false）
+ * - errorText: 错误提示文本（可选）
+ * - modalClassName: 模态框自定义类名（可选）
+ * - closeOnBackdrop: 点击背景是否关闭模态框（可选，默认true）
+ * - allowEscapeClose: 是否允许按下Esc键关闭模态框（可选，默认true）
+ */
 import { useEffect, useId, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
-type WorkspacePromptModalProps = {
+type WorkspacePromptModalProps = {// type 定义了一个名为WorkspacePromptModalProps的类型，用于描述WorkspacePromptModal组件的属性。类型是指在TypeScript中用于定义变量、函数参数、返回值等的结构和类型。它可以帮助开发者在编写代码时提供类型检查和自动补全功能，从而提高代码的可靠性和可维护性。跟python中的dataclass类似，都是用来定义数据结构的。
   open: boolean;
   title: string;
   description: string;

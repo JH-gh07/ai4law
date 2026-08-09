@@ -1,3 +1,13 @@
+/**
+ * 语言上下文模块
+ *
+ * 函数：
+ * - LanguageProvider: 语言上下文提供者组件，接收子组件作为参数，并提供语言状态和翻译函数给子组件使用。
+ * - useLang: 自定义Hook，用于在子组件中访问语言上下文的值，包括当前语言、设置语言的函数和翻译函数。
+ *
+ * 类型：
+ * - LangContextValue: 语言上下文的值类型，包含当前语言、设置语言的函数和翻译函数。
+ */ 
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { MESSAGES, type Language, type MessageKey } from "./i18n";

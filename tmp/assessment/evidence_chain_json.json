@@ -1,0 +1,110 @@
+[
+  {
+    "evidence_id": "EVIDENCE-recommended-path-mismatch",
+    "claim": "诊断路径与安全评估报告不匹配",
+    "fact_refs": [
+      "FACT-diagnosis-result-recommended-path"
+    ],
+    "rule_refs": [
+      "diagnosis:default"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "诊断模块推荐路径与当前生成的安全评估报告不一致，需标注为强制生成的参考草案。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "ISSUE-recommended-path-mismatch",
+      "overview",
+      "risk_remediation",
+      "conclusion"
+    ]
+  },
+  {
+    "evidence_id": "EVIDENCE-missing-attachments",
+    "claim": "附件缺失影响材料完整性风险判断",
+    "fact_refs": [
+      "FACT-request-uploaded-files"
+    ],
+    "rule_refs": [],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "未上传申报支撑材料会削弱报告的材料审查和证据追溯能力。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "ISSUE-missing-attachments",
+      "overview",
+      "security_measures",
+      "risk_remediation",
+      "conclusion"
+    ]
+  },
+  {
+    "evidence_id": "EVIDENCE-necessity-argument-generic",
+    "claim": "出境必要性论证可能过于泛化",
+    "fact_refs": [
+      "FACT-request-transfer-purpose"
+    ],
+    "rule_refs": [
+      "diagnosis:default",
+      "CN-LAW-001",
+      "CN-REG-006",
+      "CN-QA-012"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "当前出境目的描述可能不足以支撑严格的必要性审查。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "ISSUE-necessity-argument-generic",
+      "necessity_legal_basis",
+      "risk_remediation"
+    ]
+  },
+  {
+    "evidence_id": "EVIDENCE-recipient-security-evidence-missing",
+    "claim": "境外接收方安全保障能力证明不足",
+    "fact_refs": [
+      "FACT-request-receiver-country"
+    ],
+    "rule_refs": [
+      "diagnosis:default",
+      "CN-LAW-001",
+      "CN-REG-006",
+      "CN-QA-012"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "当前材料对境外接收方的数据安全管理制度、认证证明或第三方审计材料描述不足。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "ISSUE-recipient-security-evidence-missing",
+      "recipient_capability",
+      "risk_remediation",
+      "conclusion"
+    ]
+  }
+]

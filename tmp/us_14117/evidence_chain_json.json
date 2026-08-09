@@ -1,0 +1,182 @@
+[
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-RESTRICTED-TRANSACTION",
+    "claim": "限制性交易 (Restricted Transaction)",
+    "fact_refs": [
+      "US14117-FACT-tx-is-restricted"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "EO 14117 §100.3"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "在实施所有必要安全措施并经法务审批后方可继续交易。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "US14117-ISSUE-RESTRICTED-TRANSACTION",
+      "overall_conclusion",
+      "risk_details",
+      "compliance_actions"
+    ]
+  },
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-THRESHOLD-GPS",
+    "claim": "批量阈值命中: 精确GPS轨迹数据",
+    "fact_refs": [
+      "US14117-FACT-data-item-GPS-us-person-count",
+      "US14117-FACT-data-item-GPS-data-subject-type"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "评估 精确GPS轨迹数据 的传输必要性，考虑数据最小化、聚合或去标识化。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "US14117-ISSUE-THRESHOLD-精确GPS轨迹数据",
+      "risk_details",
+      "compliance_actions"
+    ]
+  },
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-COVERED",
+    "claim": "涵盖人员/实体: 深度洞察人工智能有限公司",
+    "fact_refs": [
+      "US14117-FACT-entity-country-of-registration",
+      "US14117-FACT-entity-governing-law"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "EO 14117 §100.1"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "审查与 深度洞察人工智能有限公司 的交易关系，评估是否属于禁止或限制性交易。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "US14117-ISSUE-COVERED-深度洞察人工智能有限公司",
+      "risk_details",
+      "compliance_actions"
+    ]
+  },
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-SECURITY-GAPS",
+    "claim": "安全措施缺口",
+    "fact_refs": [
+      "US14117-FACT-request-security-measure-count"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "EO 14117 §100.3"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "补充缺失的安全措施: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。具体要求参见 EO 14117 实施指南。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "US14117-ISSUE-SECURITY-GAPS",
+      "compliance_actions"
+    ]
+  },
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-YELLOW-BLOCKED",
+    "claim": "黄灯-整改前禁止推进",
+    "fact_refs": [
+      "US14117-FACT-request-security-measure-count"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "EO 14117 §100.3"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "在90天内完成以下措施整改: logical_isolation_of_covered_data, multi_factor_authentication, least_privilege_access, role_based_access_control, encryption_at_rest, encryption_in_transit。完成后重新提交评估。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "US14117-ISSUE-YELLOW-BLOCKED",
+      "compliance_actions",
+      "overall_conclusion"
+    ]
+  },
+  {
+    "evidence_id": "US14117-EVIDENCE-US14117-ISSUE-CLARIFICATION-NEEDED",
+    "claim": "需补充尽调材料",
+    "fact_refs": [
+      "US14117-FACT-request-project-name"
+    ],
+    "rule_refs": [
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001",
+      "US-FED-001"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "参见报告中的追问清单，补充相关材料后重新提交评估。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "US14117-ISSUE-CLARIFICATION-NEEDED",
+      "overall_conclusion",
+      "attachments_monitoring"
+    ]
+  }
+]

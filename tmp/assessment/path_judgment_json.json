@@ -1,0 +1,7 @@
+{
+  "recommended_path": "scc_or_certification",
+  "risk_level": "MEDIUM",
+  "rationale": "未触发强制安全评估门槛，可走标准合同备案或认证路径。",
+  "path_warning": "诊断推荐路径为 scc_or_certification：未触发强制安全评估门槛，可走标准合同备案或认证路径。",
+  "is_override": false
+}

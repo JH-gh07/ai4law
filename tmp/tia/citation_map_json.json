@@ -1,0 +1,124 @@
+{
+  "task_id": "5d01ae5fc573438c8c6377220a031690",
+  "module": "tia",
+  "footnote_map": {
+    "1": {
+      "citation_id": "CIT-EU-EDPB-ART1-P01",
+      "source_id": "EU-GUIDE-002",
+      "jurisdiction": "EU",
+      "display_label": "EDPB Recommendations 01/2020 段落1",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "EDPB Recommendations 01/2020",
+      "article_no": "段落1",
+      "quote_text": "# EDPB Recommendations 01/2020 - Real Excerpts for RAG",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "TIA-001-transfer-tool",
+        "TIA-002-country-risk",
+        "TIA-003-supplementary-measures",
+        "TIA-004-residual-risk"
+      ],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.61,
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "source_kind": "official_guide",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.3,
+      "external_report_allowed": false,
+      "citation_granularity": "article",
+      "source_url": "https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+      "publish_date": "2021-06-18",
+      "effective_date": "2021-06-18",
+      "source_status": "effective",
+      "is_recent": false,
+      "amendment_note": "",
+      "module": "tia",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/EU-GUIDE-002?article=%E6%AE%B5%E8%90%BD1",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "EU-GUIDE-002:段落1",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview",
+          "open_official_source"
+        ]
+      },
+      "can_jump": true
+    }
+  },
+  "all_items": [
+    {
+      "citation_id": "CIT-EU-EDPB-ART1-P01",
+      "source_id": "EU-GUIDE-002",
+      "jurisdiction": "EU",
+      "display_label": "EDPB Recommendations 01/2020 段落1",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "EDPB Recommendations 01/2020",
+      "article_no": "段落1",
+      "quote_text": "# EDPB Recommendations 01/2020 - Real Excerpts for RAG",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "TIA-001-transfer-tool",
+        "TIA-002-country-risk",
+        "TIA-003-supplementary-measures",
+        "TIA-004-residual-risk"
+      ],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.61,
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "source_kind": "official_guide",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.3,
+      "external_report_allowed": false,
+      "citation_granularity": "article",
+      "source_url": "https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+      "publish_date": "2021-06-18",
+      "effective_date": "2021-06-18",
+      "source_status": "effective",
+      "is_recent": false,
+      "amendment_note": "",
+      "module": "tia",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/EU-GUIDE-002?article=%E6%AE%B5%E8%90%BD1",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "EU-GUIDE-002:段落1",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview",
+          "open_official_source"
+        ]
+      },
+      "can_jump": true
+    }
+  ]
+}

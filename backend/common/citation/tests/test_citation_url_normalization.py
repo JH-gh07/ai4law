@@ -28,6 +28,12 @@ from backend.common.citation.output import (
         ("第二十三条之一", "23之1"),
         ("23之2", "23之2"),
         ("4", "4"),
+        ("Art 44", "44"),
+        ("Art.44", "44"),
+        ("Article 46", "46"),
+        ("s.11", "11"),
+        ("Section 5", "5"),
+        ("Clause 28", "28"),
         ("", ""),
     ],
 )
@@ -232,11 +238,11 @@ ALL_MODULES = [
     ("scc", "CN-REG-005", "个人信息出境标准合同办法", "一", False),
     ("cn_flow", "CN-REG-004", "数据出境安全评估办法", "十三", True),  # article 13 now ingested
     ("cpra", "US-CA-001", "CCPA/CPRA", "一", False),
-    ("tia", "EU-LAW-001", "GDPR", "4", False),
-    ("eu_scc", "EU-LAW-001", "GDPR", "1", False),
+    ("tia", "EU-LAW-001", "GDPR", "4", True),   # Art 4 → normalized key now resolves
+    ("eu_scc", "EU-LAW-001", "GDPR", "1", True),  # Art 1 → normalized key now resolves
     ("us_14117", "US-FED-001", "EO 14117", "5", False),
     ("pipia", "CN-LAW-003", "个人信息保护法", "十", True),
-    ("bcr", "EU-LAW-001", "GDPR", "2", False),
+    ("bcr", "EU-LAW-001", "GDPR", "2", True),  # Art 2 → normalized key now resolves
     ("v0_task_gateway", "CN-LAW-003", "个人信息保护法", "4", True),
     ("review", "CN-LAW-003", "个人信息保护法", "七", True),
 ]

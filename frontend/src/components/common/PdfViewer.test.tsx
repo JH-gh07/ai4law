@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchArtifactBlob } from "../../api/artifacts";
 import { PdfViewer } from "./PdfViewer";
 
+
 vi.mock("../../api/artifacts", () => ({
   fetchArtifactBlob: vi.fn(),
 }));

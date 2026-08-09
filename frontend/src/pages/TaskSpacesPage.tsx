@@ -1,3 +1,13 @@
+/**
+ * 任务空间页面组件
+ *
+ * 该组件用于展示任务空间的相关信息，包括任务空间的列表、搜索和筛选功能，以及快速创建、重命名和删除任务空间的操作。
+ * 用户可以通过该页面查看不同法域下的任务空间，快速进入工作区进行任务处理。
+ *
+ * @param {Object} props - 组件的属性对象
+ * @param {Function} props.onStart - 点击“开始”按钮时的回调函数
+ * @param {Function} props.onQuickCreate - 快速创建任务空间时的回调函数，接收一个配置对象作为参数
+ */ 
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { WorkspacePromptModal } from "../components/common/WorkspacePromptModal";
@@ -58,12 +68,12 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
   ];
 
   const latestRunByTask = useMemo(() => {
-    const map = new Map<string, { state: "idle" | "running" | "success" | "failed" | "unreachable"; module: string; at: string }>();
+    const map = new Map<string, { state: "idle" | "running" | "success" | "failed" | "unreachable"; module: string; at: string; error?: string }>();
     for (const run of state.moduleRuns) {
       const prev = map.get(run.taskSpaceId);
       const at = run.finishedAt ?? run.startedAt;
       if (!prev || at > prev.at) {
-        map.set(run.taskSpaceId, { state: getRunLifecycleState(run), module: run.module, at });
+        map.set(run.taskSpaceId, { state: getRunLifecycleState(run), module: run.module, at, error: run.error });
       }
     }
     return map;
@@ -115,6 +125,11 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     if (!task) return;
     setDeleteState({ loading: false, error: "" });
     setPendingDeleteTask({ taskId, name: task.name });
+  };
+
+  const handleRetryTask = (taskId: string) => {
+    // Navigate to workspace — user can re-run the module from there
+    window.location.href = `/workspace/${taskId}`;
   };
 
   const submitDeleteTask = async () => {
@@ -325,9 +340,27 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
                     </div>
 
                     <p className="tasks-updated">{t("tasksCardUpdated")}: {new Date(task.updatedAt).toLocaleString()}</p>
+                    {latestRun?.error && (
+                      <p className="tasks-error-summary">
+                        {latestRun.error.length > 80
+                          ? latestRun.error.slice(0, 80) + "…"
+                          : latestRun.error}
+                      </p>
+                    )}
                   </Link>
 
                   <div className="tasks-card-actions">
+                    {latestRun?.state === "failed" && (
+                      <button
+                        className="tasks-save-btn"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleRetryTask(task.id);
+                        }}
+                      >
+                        {lang === "zh" ? "重新运行" : "Retry"}
+                      </button>
+                    )}
                     <button
                       className="tasks-save-btn is-danger"
                       onClick={() => deleteTask(task.id)}

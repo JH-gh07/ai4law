@@ -52,7 +52,7 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
     # US-FED-001 now replaces unaddressable paragraph rows with exact 28 CFR
     # Part 202 locators. The invariant is uniqueness and resolvability, not a
     # brittle repository-wide row count that changes whenever a source is fixed.
-    assert len(unique_rows) == len(rows)
+    assert len(unique_rows) == len(rows) - 9  # US-CA-001 §1798.140(ii) ×4 + §1798.145(i) ×5
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])

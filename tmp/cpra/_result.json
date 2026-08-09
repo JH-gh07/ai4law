@@ -1,0 +1,677 @@
+{
+  "report_path": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_合规全景报告_草案_20260807.docx",
+  "output_files": {
+    "markdown": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_合规全景报告_草案_20260807.md",
+    "docx": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_合规全景报告_草案_20260807.docx",
+    "pdf": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_合规全景报告_草案_20260807.pdf",
+    "xlsx": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_整改路线图_草案_20260807.xlsx",
+    "zip": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/DataComply_Inc._CPRA_输出包_草案_20260807.zip",
+    "citation_map_json": "outputs/cpra/4fc6a42b9a344efeb544fdd4f42411b3/outputs/citation_map.json"
+  },
+  "company_name": "DataComply Inc.",
+  "risk_level": "HIGH",
+  "gap_items": [
+    {
+      "domain": "notice_and_consent",
+      "risk_level": "HIGH",
+      "gap": "隐私告知或同意机制不完整",
+      "legal_basis": "CPRA §1798.100 Notice at Collection",
+      "recommendation": "补齐分场景告知文本与同意留痕机制",
+      "phase": "short_term",
+      "evidence_source": "user_input",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ]
+    },
+    {
+      "domain": "notice_and_consent",
+      "risk_level": "MEDIUM",
+      "gap": "隐私告知可能未涵盖数据类别、处理目的或留存期限",
+      "legal_basis": "CPRA §1798.100(a)",
+      "recommendation": "在隐私政策中明确数据类别、目的和留存期限",
+      "phase": "short_term",
+      "evidence_source": "rule_inferred",
+      "citations": [
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01",
+        "CIT-US-CPRA-ART3-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        }
+      ]
+    },
+    {
+      "domain": "consumer_rights_process",
+      "risk_level": "MEDIUM",
+      "gap": "消费者权利响应时限与SLA未明确",
+      "legal_basis": "CPRA §1798.130(a) 45-day response",
+      "recommendation": "建立统一DSR流程并设置45天响应时限",
+      "phase": "short_term",
+      "evidence_source": "user_input",
+      "citations": [
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01",
+        "CIT-US-CPRA-ART3-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        }
+      ]
+    },
+    {
+      "domain": "opt_out_and_sale_sharing",
+      "risk_level": "MEDIUM",
+      "gap": "opt-out链接可能不规范（缺标准文字/图标/GPC支持）",
+      "legal_basis": "CPRA §1798.120, CPPA §7010",
+      "recommendation": "使用标准化Do Not Sell or Share链接和图标",
+      "phase": "mid_term",
+      "evidence_source": "rule_inferred",
+      "citations": [
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01",
+        "CIT-US-CPRA-ART3-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        }
+      ]
+    },
+    {
+      "domain": "consent_ui",
+      "risk_level": "MEDIUM",
+      "gap": "同意界面使用混淆性或不清晰的语言",
+      "legal_basis": "CPRA §1798.140(l), CPPA §7004",
+      "recommendation": "使用清晰、通俗的语言描述数据实践",
+      "phase": "short_term",
+      "evidence_source": "rule_inferred",
+      "citations": [
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01",
+        "CIT-US-CPRA-ART3-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "chapter_no": 1,
+      "title": "执行摘要",
+      "content": "（执行摘要：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    },
+    {
+      "chapter_no": 2,
+      "title": "企业适用性与范围",
+      "content": "（企业适用性与范围：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    },
+    {
+      "chapter_no": 3,
+      "title": "数据处理活动合规分析",
+      "content": "（数据处理活动合规分析：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    },
+    {
+      "chapter_no": 4,
+      "title": "消费者权利保障评估",
+      "content": "（消费者权利保障评估：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    },
+    {
+      "chapter_no": 5,
+      "title": "敏感信息与第三方管理",
+      "content": "（敏感信息与第三方管理：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    },
+    {
+      "chapter_no": 6,
+      "title": "行动清单与优先级",
+      "content": "（行动清单与优先级：LLM未配置，此处为占位内容）",
+      "citations": [
+        "CIT-US-CPRA-ART3-P01",
+        "CIT-US-CPRA-ART1-P01",
+        "CIT-US-CPRA-ART2-P01"
+      ],
+      "citation_refs": [
+        {
+          "citation_id": "CIT-US-CPRA-ART3-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "3",
+          "display_label": "CPRA 段落3",
+          "snippet": "right to know about the personal information a business collects about them and how it is used and shared",
+          "confidence_score": 0.547,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=3"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART1-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "1",
+          "display_label": "CPRA 段落1",
+          "snippet": "# California OAG CCPA/CPRA - Real Excerpts for RAG",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=1"
+        },
+        {
+          "citation_id": "CIT-US-CPRA-ART2-P01",
+          "source_id": "us_ca_001",
+          "source_title": "California Consumer Privacy Act / CPRA",
+          "article_no": "2",
+          "display_label": "CPRA 段落2",
+          "snippet": "Source: https://oag.ca.gov/privacy/ccpa",
+          "confidence_score": 0.507,
+          "authority_level": "high",
+          "binding_force": "mandatory",
+          "citation_type": "law_article",
+          "source_kind": "law_article",
+          "jurisdiction": "US",
+          "knowledge_url": "/knowledge/laws/us_ca_001?article=2"
+        }
+      ],
+      "risk_level": "HIGH"
+    }
+  ],
+  "consistency_issues": [
+    "Contains HIGH risk gaps; remediation should be scheduled in short_term phase."
+  ],
+  "attachment_notes": [
+    "privacy_policy_v2.pdf: [parse skipped] File not found: storage://uploads/privacy_policy.pdf"
+  ],
+  "chapters_count": 6
+}

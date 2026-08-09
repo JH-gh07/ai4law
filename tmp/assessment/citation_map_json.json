@@ -1,0 +1,528 @@
+{
+  "task_id": "7f0477c5-5754-4182-b59c-d73192beef73",
+  "module": "assessment",
+  "footnote_map": {},
+  "all_items": [
+    {
+      "citation_id": "CIT-CN-PIPL-GEN-P01",
+      "source_id": "CN-LAW-003",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "中华人民共和国个人信息保护法",
+      "article_no": "3",
+      "quote_text": "内部审批和数据出境监控机制未体现 未体现企业内部数据出境审批流程、定期监控机制和责任人信息。 [default_review_item] 补充内部数据出境管理制度、审批流程和定期安全评估机制说明。 internal_approval  ",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-internal-approval-missing"
+      ],
+      "related_fact_ids": [],
+      "related_evidence_ids": [],
+      "confidence_score": 0.23,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-LAW-003",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-LAW-003",
+        "confidence": 0.6,
+        "failure_reason": "article_not_unique",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-EXPORT-ASSESSMENT-ART5-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "5",
+      "quote_text": "诊断路径与安全评估报告不匹配 诊断模块推荐路径为 scc_or_certification，当前仍在生成安全评估报告。 [confirmed_issue] 复核合规路径；如继续生成，应在报告中标注为强制生成的参考草案。 path 安全评估 申报 CIIO 关键信息基础设施 重要数据 个人信息 scc_or_certification",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-recommended-path-mismatch"
+      ],
+      "related_fact_ids": [
+        "FACT-diagnosis-result-recommended-path"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-recommended-path-mismatch"
+      ],
+      "confidence_score": 0.73,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-004",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-004",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-CSL-GEN-P01",
+      "source_id": "CN-LAW-001",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "中华人民共和国网络安全法（2025修正）",
+      "article_no": "78",
+      "quote_text": "出境必要性论证可能过于泛化 当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。 [suspected_issue] 补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。 necessity  订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-necessity-argument-generic",
+        "ISSUE-recipient-security-evidence-missing",
+        "ISSUE-consent-evidence-missing"
+      ],
+      "related_fact_ids": [
+        "FACT-request-transfer-purpose"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-necessity-argument-generic"
+      ],
+      "confidence_score": 0.67,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-LAW-001?article=78",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "CN-LAW-001:78",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview"
+        ]
+      },
+      "can_jump": true,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-EXPORT-ASSESSMENT-ART4-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "4",
+      "quote_text": "诊断路径与安全评估报告不匹配 诊断模块推荐路径为 scc_or_certification，当前仍在生成安全评估报告。 [confirmed_issue] 复核合规路径；如继续生成，应在报告中标注为强制生成的参考草案。 path 安全评估 申报 CIIO 关键信息基础设施 重要数据 个人信息 scc_or_certification",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-recommended-path-mismatch"
+      ],
+      "related_fact_ids": [
+        "FACT-diagnosis-result-recommended-path"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-recommended-path-mismatch"
+      ],
+      "confidence_score": 0.65,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-004",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-004",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-UNKNOWN-ART3-P01",
+      "source_id": "CN-REG-006",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "standard_clause",
+      "title": "促进和规范数据跨境流动规定（发布页）",
+      "article_no": "3",
+      "quote_text": "出境必要性论证可能过于泛化 当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。 [suspected_issue] 补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。 necessity  订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-necessity-argument-generic",
+        "ISSUE-legal-document-gaps"
+      ],
+      "related_fact_ids": [
+        "FACT-request-transfer-purpose"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-necessity-argument-generic"
+      ],
+      "confidence_score": 0.53,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "standard_clause",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.3,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-006",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-006",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-EXPORT-ASSESSMENT-ART1-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "1",
+      "quote_text": "申报支撑材料缺失 当前请求未提供上传附件，报告中的材料审查和证据追溯能力不足。 [default_review_item] 补充数据清单、隐私政策、合同/协议、安全措施说明等材料。 documentation 申报材料 自评估报告 附件 证明材料 ",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-missing-attachments"
+      ],
+      "related_fact_ids": [
+        "FACT-request-uploaded-files"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-missing-attachments"
+      ],
+      "confidence_score": 0.43,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-004",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-004",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-EXPORT-ASSESSMENT-ART2-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "2",
+      "quote_text": "申报支撑材料缺失 当前请求未提供上传附件，报告中的材料审查和证据追溯能力不足。 [default_review_item] 补充数据清单、隐私政策、合同/协议、安全措施说明等材料。 documentation 申报材料 自评估报告 附件 证明材料 ",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-missing-attachments"
+      ],
+      "related_fact_ids": [
+        "FACT-request-uploaded-files"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-missing-attachments"
+      ],
+      "confidence_score": 0.43,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-004",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-004",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-EXPORT-ASSESSMENT-ART3-P01",
+      "source_id": "CN-REG-004",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全评估办法",
+      "article_no": "3",
+      "quote_text": "申报支撑材料缺失 当前请求未提供上传附件，报告中的材料审查和证据追溯能力不足。 [default_review_item] 补充数据清单、隐私政策、合同/协议、安全措施说明等材料。 documentation 申报材料 自评估报告 附件 证明材料 ",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-missing-attachments"
+      ],
+      "related_fact_ids": [
+        "FACT-request-uploaded-files"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-missing-attachments"
+      ],
+      "confidence_score": 0.43,
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-REG-004",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "source_overview",
+        "target_id": "CN-REG-004",
+        "confidence": 0.6,
+        "failure_reason": "article_not_found",
+        "available_actions": [
+          "view_source_overview",
+          "search_within_source"
+        ]
+      },
+      "can_jump": false,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-UNKNOWN-GEN-P01",
+      "source_id": "CN-QA-012",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "数据出境安全管理政策问答（2025年4月）",
+      "article_no": "62",
+      "quote_text": "出境必要性论证可能过于泛化 当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。 [suspected_issue] 补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。 necessity  订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-necessity-argument-generic",
+        "ISSUE-legal-document-gaps"
+      ],
+      "related_fact_ids": [
+        "FACT-request-transfer-purpose"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-necessity-argument-generic"
+      ],
+      "confidence_score": 0.42,
+      "authority_level": "low",
+      "binding_force": "reference",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-QA-012?article=62",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "CN-QA-012:62",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview"
+        ]
+      },
+      "can_jump": true,
+      "source_url": ""
+    },
+    {
+      "citation_id": "CIT-CN-DSL-GEN-P01",
+      "source_id": "CN-LAW-002",
+      "jurisdiction": "",
+      "display_label": "",
+      "chunk_id": "",
+      "citation_type": "law_article",
+      "title": "中华人民共和国数据安全法",
+      "article_no": "11",
+      "quote_text": "出境必要性论证可能过于泛化 当前出境目的描述可能不足以支撑严格的必要性审查，需补充业务场景和不可替代性分析。 [suspected_issue] 补充业务必要性论证，说明为何必须将数据转移至境外而非境内处理。 necessity  订单数据同步至新加坡亚太数据中心用于物流算法优化和精准营销",
+      "source_file_id": "",
+      "page_no": 0,
+      "related_issue_ids": [
+        "ISSUE-necessity-argument-generic",
+        "ISSUE-legal-document-gaps"
+      ],
+      "related_fact_ids": [
+        "FACT-request-transfer-purpose"
+      ],
+      "related_evidence_ids": [
+        "EVIDENCE-necessity-argument-generic"
+      ],
+      "confidence_score": 0.28,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "source_kind": "law_article",
+      "allowed_usage": [
+        "external_report",
+        "internal_review",
+        "risk_explanation"
+      ],
+      "can_enter_external_report": true,
+      "confidence_threshold": 0.2,
+      "external_report_allowed": true,
+      "module": "assessment",
+      "anchor": "",
+      "section_id": "",
+      "clause_id": "",
+      "knowledge_url": "/knowledge/laws/CN-LAW-002?article=11",
+      "open_mode": "in_app",
+      "resolution": {
+        "resolution_type": "exact_article",
+        "target_id": "CN-LAW-002:11",
+        "confidence": 1.0,
+        "failure_reason": "",
+        "available_actions": [
+          "view_article",
+          "view_source_overview"
+        ]
+      },
+      "can_jump": true,
+      "source_url": ""
+    }
+  ]
+}

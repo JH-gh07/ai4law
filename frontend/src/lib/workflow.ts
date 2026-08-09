@@ -1,3 +1,12 @@
+/**
+ * 工作流步骤推导模块
+ *
+ * 函数：
+ * - deriveWorkflowSteps: 根据任务空间、最新运行、输出工件、证据和一致性问题推导出工作流步骤的状态。
+ *
+ * 类型：
+ * - WorkflowStepState: 工作流步骤的状态类型，包含步骤的键、状态、原因和更新时间。
+ */
 import type {
   ConsistencyIssue,
   EvidenceHit,

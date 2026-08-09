@@ -1,0 +1,234 @@
+[
+  {
+    "evidence_id": "DPIA-EVIDENCE-automated-decision",
+    "claim": "自动化决策或画像处理可能对数据主体产生法律效力或类似重大影响",
+    "fact_refs": [
+      "DPIA-FACT-dpia-automated-decision-making"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "该项目涉及自动化决策/画像，应落实 GDPR Art 22 要求，确保人工干预、表达观点和质疑决策的权利。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "DPIA-ISSUE-automated-decision",
+      "need_identification",
+      "processing_description",
+      "necessity_proportionality",
+      "risk_assessment",
+      "mitigation",
+      "signoff"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-large-scale",
+    "claim": "大规模处理个人数据属于 WP248 高风险标准",
+    "fact_refs": [
+      "DPIA-FACT-dpia-large-scale-processing"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "WP248"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "大规模处理触发严格的数据最小化和定期审查要求，需补充统计口径和管控措施。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "DPIA-ISSUE-large-scale",
+      "need_identification",
+      "processing_description",
+      "risk_assessment",
+      "mitigation"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-new-technology",
+    "claim": "使用新技术处理方式需评估对个人数据保护的影响",
+    "fact_refs": [
+      "DPIA-FACT-dpia-new-technology"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "GDPR Article 35(1)"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "应补充新技术技术说明和隐私风险评估。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "DPIA-ISSUE-new-technology",
+      "need_identification",
+      "processing_description",
+      "risk_assessment",
+      "mitigation"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-necessity-weak",
+    "claim": "处理必要性论证不充分",
+    "fact_refs": [
+      "DPIA-FACT-dpia-necessity-statement"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "GDPR Article 35(7)(b)",
+      "GDPR Article 5"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "当前必要性陈述过短，应补充详细论证说明为何必须处理该数据及为何无法以侵入性更低的方式实现目的。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "DPIA-ISSUE-necessity-weak",
+      "necessity_proportionality",
+      "risk_assessment"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-proportionality-weak",
+    "claim": "相称性分析不充分",
+    "fact_refs": [
+      "DPIA-FACT-dpia-proportionality-statement"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "GDPR Article 5(c) (data minimisation)"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "当前相称性陈述过短，应论证处理范围、频率和存储期限与处理目的相称。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "DPIA-ISSUE-proportionality-weak",
+      "necessity_proportionality",
+      "risk_assessment"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-transparency-gap",
+    "claim": "透明度信息不足以满足 GDPR Art 13/14 告知要求",
+    "fact_refs": [
+      "DPIA-FACT-dpia-transparency-information"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "GDPR Article 13",
+      "GDPR Article 14"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "应补充数据主体告知内容，包括处理目的、法律依据、接收方、保留期限和权利。",
+    "usage_constraint": "",
+    "confidence": 0.75,
+    "used_by": [
+      "DPIA-ISSUE-transparency-gap",
+      "processing_description",
+      "necessity_proportionality"
+    ]
+  },
+  {
+    "evidence_id": "DPIA-EVIDENCE-prior-consultation-needed",
+    "claim": "剩余高风险可能需要监管机构事先咨询",
+    "fact_refs": [
+      "DPIA-FACT-dpia-need-prior-consultation-possible"
+    ],
+    "rule_refs": [
+      "dpia_need:GDPR Article 35",
+      "dpia_need:GDPR Article 22",
+      "dpia_need:WP251",
+      "dpia_need:WP248",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "EU-LAW-001",
+      "GDPR Article 36"
+    ],
+    "issue_refs": [],
+    "legal_basis": [],
+    "supporting_basis": [],
+    "discarded_basis": [],
+    "document_refs": [],
+    "rag_query_used": "",
+    "rag_hits_count": 0,
+    "conclusion": "应评估剩余风险可接受性。如不可接受，准备事先咨询材料。",
+    "usage_constraint": "",
+    "confidence": 0.9,
+    "used_by": [
+      "DPIA-ISSUE-prior-consultation-needed",
+      "signoff"
+    ]
+  }
+]

@@ -1,5 +1,19 @@
 /** Frontend fallback equivalent of backend normalize_legal_markdown_structure. */
-
+/**
+ * fallback-markdown.ts
+ *
+ * 这个文件定义了一个用于规范化 Markdown 文本的函数 `normalizeFallbackMarkdown`，以及一些辅助函数和类型。
+ *
+ * 函数：
+ * - normalizeFallbackMarkdown: 接收一个字符串输入，返回规范化后的 Markdown 字符串。它会处理换行符、空格、章节标题、列表项等，并确保输出符合 Markdown 语法。
+ *
+ * 辅助函数：
+ * - explodePackedLine: 将一行文本拆分为多个块，处理章节标题、列表项等。
+ * - classifyBlock: 根据文本内容分类块的类型，如标题、列表项、表格行等。
+ *
+ * 类型：
+ * - BlockKind: 定义了可能的块类型，包括 "basis"、"heading"、"list_item"、"table_row"、"table_rule" 和 "paragraph"。
+ */
 type BlockKind = "basis" | "heading" | "list_item" | "table_row" | "table_rule" | "paragraph";
 
 const markdownPrefix = /^\s*(?:#{1,6}\s|[*_]{2,3}[^*_\s]|[-*]\s|\d+\.\s|>\s|\|)/;

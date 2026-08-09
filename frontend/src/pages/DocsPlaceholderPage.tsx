@@ -1,3 +1,7 @@
+/**
+ * 文档占位页面组件
+ * 该组件用于展示文档占位页面的内容，包括文档的标题、简介、章节列表和相关信息。
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useLang } from "../lib/language";
 
@@ -626,7 +630,7 @@ const DOC_SECTIONS_EN: DocSection[] = [
 const collectIds = (sections: DocSection[]): string[] =>
   sections.flatMap((section) => [section.id, ...(section.children ?? []).map((child) => child.id)]);
 
-export function DocsPlaceholderPage() {
+export function DocsPlaceholderPage() { // 用于 Docs 页面占位，避免直接访问 /docs 时出现空白页面的情况
   const { lang } = useLang();
   const docsSections = lang === "zh" ? DOC_SECTIONS_ZH : DOC_SECTIONS_EN;
   const allIds = useMemo(() => collectIds(docsSections), [docsSections]);

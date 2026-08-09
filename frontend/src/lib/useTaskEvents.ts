@@ -1,3 +1,14 @@
+/**
+ * useTaskEvents 模块
+ *
+ * 函数：
+ * - useTaskEvents: 自定义Hook，用于在组件中订阅和获取指定任务的事件流。
+ *
+ * 类型：
+ * - RunEvent: 任务事件的类型，包含事件ID、任务ID、序列号、相关ID、事件类型、时间戳、摘要、详细信息和日志级别。
+ * - TokenUsage: 令牌使用情况的类型，包含提示令牌数、完成令牌数和总令牌数。
+ * - TokenUsageBreakdown: 令牌使用情况的分类类型，包含总计、Copilot和工作流的使用情况。
+ */
 import { useCallback, useEffect, useState } from "react";
 import { fetchStreamToken, fetchTaskEvents, getTaskEventStreamUrl } from "../api/events";
 

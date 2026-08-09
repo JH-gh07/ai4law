@@ -1,3 +1,13 @@
+/**
+ * 认证上下文模块
+ *
+ * 函数：
+ * - AuthProvider: 认证上下文提供者组件，接收子组件作为参数，并提供用户认证状态和相关操作函数给子组件使用。
+ * - useAuth: 自定义Hook，用于在子组件中访问认证上下文的值，包括当前用户、加载状态、是否已认证以及登录、注册、登出和刷新用户信息的函数。
+ *
+ * 类型：
+ * - AuthContextValue: 认证上下文的值类型，包含当前用户、加载状态、是否已认证以及登录、注册、登出和刷新用户信息的函数。
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { authService } from "../../api/auth";
@@ -15,6 +25,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// 用于在子组件中访问认证上下文的值，包括当前用户、加载状态、是否已认证以及登录、注册、登出和刷新用户信息的函数。
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// 用于在子组件中访问认证上下文的值，包括当前用户、加载状态、是否已认证以及登录、注册、登出和刷新用户信息的函数。
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {

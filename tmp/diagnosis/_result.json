@@ -1,0 +1,33 @@
+{
+  "recommended_path": "exemption",
+  "legal_basis": [
+    "促进和规范数据跨境流动规定 第4条",
+    "网络数据安全管理条例 第38条"
+  ],
+  "rationale": "不含个人信息且不涉及重要数据，无需申报",
+  "action_items": [
+    "在标准合同备案与个人信息保护认证之间确定实施路径。",
+    "生成 PIPIA 报告及标准合同配套附件。",
+    "准备省级网信备案/留档材料并完成内部审批。"
+  ],
+  "risk_level": "LOW",
+  "conclusion_source": "rule",
+  "confidence": "HIGH",
+  "matched_rule_id": "no_personal_info",
+  "final_explanation": "不含个人信息且不涉及重要数据，无需申报",
+  "uncertainty_notes": [
+    "[Agent] 豁免情形辅助判断: hr_management (置信度 65%)"
+  ],
+  "fact_provenance": {
+    "is_ciio": "user",
+    "contains_important_data": "user",
+    "personal_info_count": "user",
+    "sensitive_personal_info_count": "user",
+    "no_personal_info": "user",
+    "transfer_scenario": "user",
+    "receiver_type": "user",
+    "transfer_purpose": "user"
+  },
+  "missing_facts": [],
+  "requires_human_review": false
+}

@@ -15,6 +15,11 @@ EU_SCC_CHAPTER_KEYS: dict[str, str] = {
 
 
 def _issue(issue_id, title, description, category, severity, fact_refs, rule_refs, recommended_action, affects_outputs) -> IssueItem:
+    if not (recommended_action or "").strip():
+        recommended_action = (
+            "针对发现的问题进行详细评估，根据 SCC 标准条款和适用法规完成合规整改，"
+            "并在补充条款中明确双方责任与保障措施。"
+        )
     return IssueItem(
         issue_id=issue_id, title=title, description=description,
         category=category, severity=severity, fact_refs=fact_refs,

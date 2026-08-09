@@ -1,3 +1,8 @@
+/** 
+ * 国际化消息模块    
+ * i18n.ts是什么意思？是指国际化（Internationalization）模块，通常用于处理应用程序中的多语言支持。i18n是“internationalization”的缩写，其中“i”和“n”之间有18个字母，因此简称为i18n。这个模块定义了不同语言的消息内容，并提供了类型和常量，以便在应用程序中实现多语言功能。
+ */
+
 export type Language = "zh" | "en";
 
 export const MESSAGES = {
@@ -533,4 +538,4 @@ export const MESSAGES = {
   onboardingReplay: { zh: "重播引导", en: "Replay Guide" }
 } as const;
 
-export type MessageKey = keyof typeof MESSAGES;
+export type MessageKey = keyof typeof MESSAGES;// 定义MessageKey类型，它是一个字符串字面量类型，取自MESSAGES的键，用于在代码中引用消息键，确保类型安全和自动补全。比如，使用MESSAGES['homeDeckMethodTitle']可以获取对应的消息内容，同时MessageKey类型可以用于函数参数或变量声明，限制只能使用MESSAGES中定义的键，从而避免拼写错误和不一致的引用。

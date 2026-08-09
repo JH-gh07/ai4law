@@ -135,15 +135,14 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
     from itertools import groupby
     merged_rows: list[dict] = []
     for src_id, group in groupby(all_rows, key=lambda r: str(r.get("source_id", ""))):
-        source_rows = list(group)
-        merged_rows.extend(_merge_short_articles(source_rows, min_len=120, max_merge=4))
+        src_group = list(group)
+        merged_rows.extend(_merge_short_articles(src_group, min_len=120, max_merge=4))
 
     for row in merged_rows:
         source_id = str(row.get("source_id") or "")
         registry_entry = registry.get(source_id)
-        source_row = source_rows.get(source_id, {})
-        title = str(row.get("law_name") or source_row.get("title") or "")
-        path = str(row.get("path") or source_row.get("path") or "all")
+        title = str(row.get("law_name") or (registry_entry.title if registry_entry else ""))
+        path = str(row.get("path") or (registry_entry.metadata.get("path", "all") if registry_entry else "all"))
         modules = []
         if registry_entry is not None:
             modules = list(registry_entry.modules)
@@ -168,7 +167,7 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
                     source_kind=str(source_kind),
                     module=module,
                     jurisdiction="cn",
-                    doc_type=str(row.get("doc_type") or source_row.get("doc_type") or "law"),
+                    doc_type=str(row.get("doc_type") or (registry_entry.metadata.get("doc_type", "law") if registry_entry else "law")),
                     authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
                     binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
                     allowed_usage=allowed_usage,
@@ -178,13 +177,13 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
                     citation_anchor=str(row.get("article_ref") or ""),
                     scenario_tags=[path],
                     chunk_strategy="article_split",
-                    article_no=str(row.get("article_ref") or ""),
+                    article_no=str(row.get("article_no") or row.get("article_ref") or ""),
                     path=path,
-                    source_url=str(row.get("source_url") or source_row.get("url") or ""),
-                    snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
+                    source_url=str(row.get("source_url") or (registry_entry.metadata.get("url", "") if registry_entry else "")),
+                    snapshot_path=str(row.get("snapshot_path") or (registry_entry.metadata.get("snapshot_path", "") if registry_entry else "")),
                     keywords=[str(item) for item in row.get("keywords", [])],
                     structured_payload={
-                        "status": str(row.get("status") or source_row.get("status") or "effective"),
+                        "status": str(row.get("status") or (registry_entry.metadata.get("status", "effective") if registry_entry else "effective")),
                         "publish_date": str(row.get("publish_date") or ""),
                         "effective_date": str(row.get("effective_date") or ""),
                     },
@@ -665,7 +664,7 @@ def build_legal_chunks_eu() -> list[KnowledgeChunkV2]:
                         citation_anchor=str(row.get("article_ref") or ""),
                         scenario_tags=[path, module],
                         chunk_strategy="article_split",
-                        article_no=str(row.get("article_ref") or ""),
+                        article_no=str(row.get("article_no") or row.get("article_ref") or ""),
                         path=path,
                         source_url=str(row.get("source_url") or source_row.get("url") or ""),
                         snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),
@@ -1044,7 +1043,7 @@ def build_legal_chunks_us() -> list[KnowledgeChunkV2]:
                         citation_anchor=str(row.get("article_ref") or ""),
                         scenario_tags=[path, module],
                         chunk_strategy="article_split",
-                        article_no=str(row.get("article_ref") or ""),
+                        article_no=str(row.get("article_no") or row.get("article_ref") or ""),
                         path=path,
                         source_url=str(row.get("source_url") or source_row.get("url") or ""),
                         snapshot_path=str(row.get("snapshot_path") or source_row.get("snapshot_path") or ""),

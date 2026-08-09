@@ -1,3 +1,9 @@
+/**
+ * 本文件用于展示法律文档的查看页面
+ * 
+ * 该页面会根据传入的 sourceId 和 article 参数，加载对应的法律文档元数据和条文内容，并展示在页面上。
+ * 用户可以通过点击返回按钮返回到上一个页面，或者点击官方来源链接查看完整的法律文档。
+ */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {

@@ -101,6 +101,8 @@ class RetrievalOrchestrator:
             return self._retrieve_cn_assessment(request)
         if request.module == "cn_review":
             return self._retrieve_cn_review(request)
+        if request.module == "cn_pipia":
+            return self._retrieve_cn_pipia(request)
         if request.module in {"eu_scc", "eu_bcr", "eu_dpia", "eu_tia"}:
             return self._retrieve_eu(request)
         if request.module in {"us_eo14117", "us_vendor_review", "us_cpra"}:
@@ -272,6 +274,60 @@ class RetrievalOrchestrator:
                 request.query,
                 top_k=request.top_k,
                 filters={"module": "cn_review"},
+            )
+            bundle.testcases = UsagePolicyFilter.filter(
+                testcases,
+                usage="evaluator",
+                environment=request.environment,
+            ).chunks
+        return bundle
+
+    def _retrieve_cn_pipia(self, request: RetrievalRequest) -> RetrievalBundle:
+        bundle = RetrievalBundle(debug={"stage": request.task_stage})
+        if request.task_stage in {"issue_discovery", "legal_grounding"}:
+            workflow = self._search_index(
+                "workflow_index_cn",
+                request.query,
+                top_k=max(4, request.top_k),
+                filters={"module": "cn_pipia"},
+            )
+            bundle.workflow_rules = UsagePolicyFilter.filter(
+                workflow,
+                usage="internal_review",
+                environment=request.environment,
+            ).chunks
+            legal = self._search_index(
+                "legal_index_cn",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": "cn_pipia"},
+            )
+            legal.extend(self._legal_by_reference_ids(bundle.workflow_rules))
+            bundle.legal_grounding = self._dedupe_chunks(
+                UsagePolicyFilter.filter(
+                    self._dedupe_chunks(legal),
+                    usage="legal_grounding",
+                    environment=request.environment,
+                ).chunks
+            )
+        if request.task_stage == "report_generation":
+            templates = self._search_index(
+                "template_index_cn",
+                request.query or "个人信息保护影响评估 模板",
+                top_k=request.top_k,
+                filters={"module": "cn_pipia"},
+            )
+            bundle.templates = UsagePolicyFilter.filter(
+                templates,
+                usage="structure_control",
+                environment=request.environment,
+            ).chunks
+        if request.task_stage == "evaluation":
+            testcases = self._search_index(
+                "testcase_index_cn",
+                request.query,
+                top_k=request.top_k,
+                filters={"module": "cn_pipia"},
             )
             bundle.testcases = UsagePolicyFilter.filter(
                 testcases,
@@ -496,6 +552,7 @@ class RetrievalOrchestrator:
         *,
         top_k: int,
         filters: dict[str, str] | None = None,
+        source_cap: int = 3,
     ) -> list[KnowledgeChunkV2]:
         entries = self._load_entries(index_name)
         if not entries:
@@ -519,11 +576,16 @@ class RetrievalOrchestrator:
             payloads[entry.doc_id] = entry.payload
         ordered = sorted(merged_scores.items(), key=lambda item: item[1], reverse=True)
         results: list[KnowledgeChunkV2] = []
+        source_counts: dict[str, int] = {}
         for doc_id, _ in ordered:
             chunk = _payload_to_chunk(payloads[doc_id])
             if not self._match_filters(chunk, filters or {}):
                 continue
+            source_id = chunk.source_id or chunk.chunk_id
+            if source_counts.get(source_id, 0) >= source_cap:
+                continue
             results.append(chunk)
+            source_counts[source_id] = source_counts.get(source_id, 0) + 1
             if len(results) >= top_k:
                 break
         return results

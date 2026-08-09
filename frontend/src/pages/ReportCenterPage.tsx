@@ -1,3 +1,11 @@
+/**
+ * 本文档用于展示报告中心页面的组件
+ *
+ * 该页面会根据用户的任务空间和报告快照信息，展示报告列表、报告预览和追踪信息。
+ * 用户可以通过搜索关键字筛选报告，查看报告的详细内容和相关追踪信息。
+ *
+ * @returns {JSX.Element} - 报告中心页面的组件  
+ */
 import { useEffect, useMemo, useState } from "react";
 import { ReportTaskTreeSidebar, type ReportTaskTreeNode } from "../components/report-center/ReportTaskTreeSidebar";
 import { useAppStore } from "../lib/app-store";
