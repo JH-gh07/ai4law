@@ -563,3 +563,218 @@
 
 > **审计总结**：11个模块、98个文件全覆盖。共发现问题 **R(渲染)12项 + F(格式)9项 + C(功能)11项 + B(业务)8项 = 合计40项**。  
 > 核心结论：**pipia/bcr/tia/eu_scc 4个模块基本可用，需修复标记泄漏和截断；dpia/cpra/cn_flow/us_14117 4个模块存在严重LLM生成失效，实际不可用；assessment有路径匹配和引用映射问题；diagnosis状态最好。**
+
+
+---
+
+## 八、问题共性与特殊性统计分析
+
+> 对前七部分 40 个问题按根因维度重新归类，区分跨模块共性缺陷与单模块特殊问题。
+
+---
+
+### 8.1 问题共性归类（跨模块系统性缺陷）
+
+#### C-COMMON-1 — LLM 生成静默失败/占位（影响 4 模块）
+
+| 子类型 | 影响模块 | 严重度 | 共性特征 |
+|--------|---------|:---:|---------|
+| 全部 Agent 未执行 | dpia | P0 | generation_basis_pack 构建完毕，Agent链零调用 |
+| 部分章节占位 | cpra, cn_flow | P0 | 使用 module_generator.generate_chapter()，特定章节返回空 |
+| 正文极薄 | us_14117 | P0 | markdown 13行格式崩坏，可能是相同根因的不同表现 |
+
+- **统计**：11 模块中 4 个命中 = **36% 影响面**
+- **共同根因**：LLM 调用链路存在三类故障模式——(a) Agent 链前置检查失败但异常被吞没（dpia）；(b) 章节级 user_context 超过 token 限制（cpra, cn_flow）；(c) LLM 返回被截断后无完整性校验（us_14117）
+- **统一修复方向**：增加 `LLMExecutionGuard` — 在每个 LLM 调用点增加 pre-check（可达性）+ post-check（内容完整性，检测占位关键词/长度阈值），失败时统一抛异常，由 state 管理器设 `LLM_UNAVAILABLE`
+
+#### C-COMMON-2 — CIT 引用标记崩溃（影响 3 模块）
+
+| 子类型 | 影响模块 | 症状 |
+|--------|---------|------|
+| 截断标记残留 | pipia | `{{CIT-CN-CNLAW003-ART50` 未闭合 |
+| 截断标记残留 | pipia | `{{CIT-CN-CN_` 中途截断 |
+| footnote_map 全空 | assessment | 10条all_items, 0条footnote_map |
+| footnote_map 极弱 | cpra | 3条all_items, 0条footnote_map |
+| citation 近失效 | bcr | 26条findings, 仅2条引用注册 |
+
+- **统计**：11 模块中 4 个命中 = **36% 影响面**
+- **共同根因**：CitationRegistry 的 marker→footnote 管道有两处断裂 —— (a) LLM 输出截断导致 `{{CIT` 不闭合（postprocessor 正则无法匹配）；(b) `assign_footnote_number()` 在部分模块未被调用或仅对正文中已匹配到的 marker 分配编号（但 LLM 未插入足量 marker）
+- **统一修复方向**：postprocessor 增加截断标记清理步骤（检测未闭合 `{{CIT` 并移除/修复）；保证所有调用链中 CitationRegistry.build_citation_map_section() 被调用；增加"引用注册数 vs. 脚注数"的 post-run 一致性校验
+
+#### C-COMMON-3 — evidence_chain 溯源字段系统性为空（影响 3+ 模块）
+
+| 缺失字段 | 影响模块 |
+|----------|---------|
+| legal_basis / supporting_basis / document_refs / rag_query_used / usage_constraint | assessment(4项全空), cn_flow(2项全空), us_14117(6项全空) |
+
+- **统计**：至少 3 模块命中（pipia/dpia 的 evidence_chain 在 result.json 内嵌，未逐项检查但大概率相同）
+- **共同根因**：`build_evidence()` 步骤中这些字段被预留了 Schema 但未实现填充逻辑——等同于"空壳证据链"
+- **统一修复方向**：在 `build_evidence()` 父类或公共工具函数中实现字段填充 —— legal_basis 从 RAG hits 提取，document_refs 从 payload 中 uploaded_files 映射，rag_query_used 从 RAG 调用日志获取
+
+#### C-COMMON-4 — 工程标注泄漏到对外报告（影响 4 模块）
+
+| 标注类型 | 出现模块 | 次数 |
+|---------|---------|:---:|
+| `【待核验：缺少法规依据】` | tia | 6 |
+| `【待核验：缺少法规依据】` | pipia | 多处 |
+| `【待核验：缺少法规依据】` | eu_scc | 2 |
+| `【推测】` | tia | 1 |
+| `【已移除禁用措辞：完⋯全⋯合⋯规】` | assessment | 1 |
+
+- **统计**：11 模块中 4 个命中 = **36% 影响面**
+- **共同根因**：内外部表达策略分离不彻底 —— 内部版通过 `internal_markdown.md` / `internal_review_md.md` 单独输出，但 markdown.md（对客版）在渲染时未执行工程标注过滤器
+- **统一修复方向**：在 markdown 渲染管线末尾增加统一的 `sanitize_external_markdown()` 步骤，自动移除 `【待核验】`/`【推测】`/`【已移除】` 等工程标注
+
+#### C-COMMON-5 — state=COMPLETED 掩盖实质失败（影响 3 模块）
+
+| 模块 | state | 实际情况 |
+|------|-------|---------|
+| dpia | COMPLETED | 7/7章占位，Agent全未执行 |
+| assessment | COMPLETED | 路径不匹配，报告为"强制生成参考草案" |
+| cpra | HIGH | 3/4章占位，仅有规则引擎gap |
+| cn_flow | HIGH | 3/5章占位 |
+
+- **统计**：11 模块中 4 个命中 = **36% 影响面**
+- **共同根因**：state 枚举值仅有 `COMPLETED`/`FAILED` 两种终态，缺少中间态（`PARTIAL`/`WITH_WARNINGS`/`LLM_UNAVAILABLE`/`DEGRADED`）
+- **统一修复方向**：扩展 state 枚举，前端根据 state 展示不同的用户提示（绿色勾/黄色三角警告/红色叉）
+
+#### C-COMMON-6 — facts_json 的 supporting_material_refs 全空（影响 4 模块）
+
+| 模块 | FactItem 数量 | supporting_material_refs 空 |
+|------|:---:|:---:|
+| assessment | 22 | 22 (100%) |
+| cn_flow | 9 | 9 (100%) |
+| us_14117 | 37 | 37 (100%) |
+| dpia | 37 | 37 (100%) |
+
+- **统计**：至少 4 模块，105 个 FactItem 全部缺失溯源引用
+- **共同根因**：`build_facts()` 公共步骤不支持材料引用填充
+- **统一修复方向**：在事实提取时，若事实来源于文件解析（FileParser），应将源文件路径写入 `supporting_material_refs`
+
+#### C-COMMON-7 — document_ir 的 sections 为空壳（影响 2+ 模块）
+
+- **受影响的**：bcr(14KB 但 sections 空), tia(34KB 但 sections 空)
+- **共同根因**：document_ir 规范定义了13键元数据+sections，但实际填充逻辑被跳过或仅写了元数据包装器
+- **统一修复方向**：document_ir 作为中间表示层要么充分实现，要么明确标注为WIP并移除输出——当前半成品状态造成误导
+
+---
+
+### 8.2 问题特殊性归类（单模块独有问题）
+
+#### S-1 — us_14117 DOCX 渲染 0 字节（唯一）
+- **特殊性**：仅 us_14117 出现 docx 为空文件，其他10个模块的 docx 均正常（3KB~49KB）
+- **特殊根因**：us_14117 的 markdown 正文极端简略（13行无结构），可能触发渲染器的最小内容阈值检查导致 abort
+- **与共性的关联**：如果 C-COMMON-1(LLM生成失败) 被修复，us_14117 的正文恢复正常，此问题可能自动消失
+
+#### S-2 — pipia 正文第166行 Markdown 表格截断（唯一）
+- **特殊性**：pipia 的整改计划表在 `<br>` 标签后截断，其他模块无此模式
+- **特殊根因**：pipia Agent 在生成表格时使用了 HTML `<br>` 标签作为单元格内换行，后续行在 token 限制下被截断
+
+#### S-3 — eu_scc 正文第158行 "健康数据属于GDPR第" 截断（唯一）
+- **特殊性**：仅在 eu_scc 的 Annex I.B 特殊类别数据小节出现精确截断
+- **特殊根因**：该小节涉及 GDPR Article 9 的引用字符串，可能在 tokenization 边界处恰好截断
+
+#### S-4 — dpia 必要性预判泄露 Python dict repr（唯一）
+- **特殊性**：dpia 第0章将 rule engine 产出的 `dict` 直接以 `repr()` 格式写入 markdown
+- **特殊根因**：dpia 的 `need_assessment` 结果与其他模块不同 —— 其他模块的规则结果经格式化后再写入 markdown，dpia 跳过了格式化步骤
+
+#### S-5 — BCR 模板变量泄漏（唯一）
+- **特殊性**：`[Company Name]` / `[EU Member State]` / `[Insert specific clause...]` 占位符仅在 BCR 出现
+- **特殊根因**：BCR 的整改建议由特定模板生成（bcr_rulebook.json 或专门模板文件），该模板的变量替换步骤被遗漏
+
+#### S-6 — BCR 法律依据字符串异常格式（唯一）
+- **特殊性**：`第段落X条` 这种错误翻译格式仅出现在 BCR
+- **特殊根因**：BCR 的引用来源可能经过了不同的翻译管道（中文版本的 GDPR 引用格式）
+
+#### S-7 — review 无中间产物 + docx/report 路径重复（唯一）
+- **特殊性**：review 是唯一完全不产生 JSON 中间产物的模块，也是唯一两个 output_file key 指向同一路径的模块
+- **特殊根因**：review 使用完全独立的 8 阶段 pipeline（SQLite + WebSocket），不走公共 WorkflowPipeline，因此没接入公共中间结构
+
+#### S-8 — assessment 材料清单仅 1 项（唯一）
+- **特殊性**：安全评估申报材料清单通常需 20+ 项，仅生成 1 条
+- **特殊根因**：material_checklist 构建依赖 uploaded_files，本次测试运行未上传材料文件，仅基于输入字段推测材料需求
+
+#### S-9 — diagnosis 无渲染产物（符合预期，非bug）
+- **特殊性**：diagnosis 是纯规则引擎判断服务，设计上即不产生报告文件
+- **结论**：符合设计预期，无需修复
+
+---
+
+### 8.3 共性 vs 特殊性 分布统计
+
+| 分类 | 数量 | 占比 | 影响模块数 | 修复策略 |
+|------|:---:|:---:|:---:|------|
+| **共性—LLM生成静默失败** | 4 个模块 | 36% | dpia,cpra,cn_flow,us_14117 | 统一 LLMExecutionGuard |
+| **共性—CIT引用崩溃** | 4 个模块 | 36% | pipia,assessment,cpra,bcr | 统一 postprocessor 修复 |
+| **共性—evidence_chain空壳** | 3+ 模块 | 27%+ | assessment,cn_flow,us_14117,(dpia?pipia?) | 统一 build_evidence() 增强 |
+| **共性—工程标注泄漏** | 4 模块 | 36% | tia,pipia,eu_scc,assessment | 统一 sanitize_external_markdown() |
+| **共性—假COMPLETED** | 4 模块 | 36% | dpia,assessment,cpra,cn_flow | 统一 state 枚举扩展 |
+| **共性—facts溯源缺失** | 4 模块 | 36% | assessment,cn_flow,us_14117,dpia | 统一 build_facts() 增强 |
+| **共性—document_ir空壳** | 2 模块 | 18% | bcr,tia | 要么实现，要么移除 |
+| **特殊—us_14117 docx 0B** | 1 模块 | 9% | us_14117 | 随 C-COMMON-1 修复自动解决 |
+| **特殊—pipia表格截断** | 1 模块 | 9% | pipia | 随 C-COMMON-1/2 修复自动解决 |
+| **特殊—eu_scc正文截断** | 1 模块 | 9% | eu_scc | 随 C-COMMON-1 修复自动解决 |
+| **特殊—dpia dict泄漏** | 1 模块 | 9% | dpia | 格式化逻辑修复 |
+| **特殊—BCR模板变量** | 1 模块 | 9% | bcr | 模板引擎修复 |
+| **特殊—BCR法律格式** | 1 模块 | 9% | bcr | 翻译管道修复 |
+| **特殊—review架构隔离** | 1 模块 | 9% | review | 要么接入公共层，要么补齐独立层 |
+| **特殊—assessment材料清单** | 1 模块 | 9% | assessment | 材料清单逻辑增强 |
+
+---
+
+### 8.4 核心洞察
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  40 个问题中，7 个共性缺陷覆盖了 25 个问题（62.5%）。    │
+│  修复这 7 个共性缺陷，可同时解决 4~5 个模块的问题。      │
+│                                                          │
+│  P0 紧急（3项共性）：                                     │
+│  C-COMMON-1  LLM生成静默失败 → 4模块受影响               │
+│  C-COMMON-2  CIT引用崩溃    → 4模块受影响                │
+│  C-COMMON-5  假COMPLETED    → 4模块受影响                │
+│                                                          │
+│  修这3个 = 解决12个模块级问题 + 大部分特殊问题自动消失    │
+└──────────────────────────────────────────────────────────┘
+```
+
+**关键因果链**：
+
+```text
+C-COMMON-1 (LLM生成失败/占位)
+  ├── 直接导致：dpia全部占位、cpra 3/4占位、cn_flow 3/5占位
+  ├── 连锁导致：us_14117正文崩坏 → us_14117 docx 0B (S-1)
+  ├── 连锁导致：LLM输出截断 → CIT标记不闭合 (C-COMMON-2的一部分)
+  │                            → eu_scc正文截断 (S-3)
+  │                            → pipia表格截断 (S-2)
+  └── 被掩盖：state仍为COMPLETED (C-COMMON-5)
+
+C-COMMON-2 (CIT引用崩溃)
+  ├── 直接导致：pipia截断标记、assessment空footnote_map
+  └── 被掩盖：state仍为COMPLETED/正常状态
+
+结论：C-COMMON-1 是 40 个问题的最大单一根因，
+     修它 = 解决约 12-15 个下游问题。
+```
+
+---
+
+### 8.5 各模块健康度与受影响共性缺陷的映射
+
+| 模块 | 评级 | 命中共性缺陷 | 命中特殊问题 |
+|------|:---:|------|------|
+| diagnosis | A | — | S-9（符合预期） |
+| pipia | B+ | C-COMMON-2, C-COMMON-4 | S-2 |
+| bcr | B | C-COMMON-2, C-COMMON-7 | S-5, S-6 |
+| tia | B | C-COMMON-4, C-COMMON-7 | — |
+| eu_scc | B- | C-COMMON-4, C-COMMON-2? | S-3 |
+| assessment | B- | C-COMMON-2, C-COMMON-3, C-COMMON-4, C-COMMON-5, C-COMMON-6 | S-8 |
+| review | B- | C-COMMON-5? | S-7 |
+| us_14117 | D | C-COMMON-1, C-COMMON-3, C-COMMON-6 | S-1 |
+| cn_flow | D | C-COMMON-1, C-COMMON-3, C-COMMON-5, C-COMMON-6 | — |
+| cpra | D | C-COMMON-1, C-COMMON-2, C-COMMON-5 | — |
+| dpia | F | C-COMMON-1, C-COMMON-5, C-COMMON-6 | S-4 |
+
+**规律**：评级越低的模块，命中共性缺陷越多（dpia/us_14117 命中 3+ 个共性缺陷），说明系统性问题有放大效应。
+
+> **最终建议**：优先修复 3 个 P0 共性缺陷（LLM生成失败 + CIT引用崩溃 + 假COMPLETED），预计解决约 50% 的问题。剩余 7 个特殊问题中 4 个（S-1/S-2/S-3 及其连锁问题）将随共性修复自动消失。
