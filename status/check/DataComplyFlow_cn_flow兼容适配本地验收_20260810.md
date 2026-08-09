@@ -75,4 +75,7 @@ bf9463c feat: add cn flow compatibility boundary
 c5e4bd7 fix: reject incomplete legacy cn flow requests
 ae5f90e fix: align cn flow test inputs with canonical fields
 9a2deb8 fix: expose canonical facts in legacy cn flow form
+32e98d4 test: verify cn flow canonical rule parity
+8bea85e test: align v0 cn flow gateway payload
+f622da4 refactor: remove duplicate cn flow report pipeline
 ```
