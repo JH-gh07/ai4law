@@ -2,7 +2,7 @@
 
 > 核查触发：完整重新验证系统状态，按 P0 优先级逐项执行
 > 依据方案：`status/todo/DataComplyFlow_最终验收与收尾实施方案_20260810.md`
-> 会话基线：分支 `new`，HEAD `059f52c` → 此次核查提交 `【TBD】`
+> 会话基线：分支 `new`，HEAD `13a49bf`（CPRA dedup 修复后）
 
 ---
 
@@ -23,15 +23,31 @@
 
 ```
 source_count:          102
-article_row_count:     3213
-duplicate_pairs:       2  (US-CA-001 §1798.140(ii) ×4, §1798.145(i) ×5)
-unique_resolvable:     3204
-resolution_rate:       99.8%
+article_row_count:     3211   (commit 13a49bf — CPRA dedup)
+duplicate_pairs:       0
+unique_resolvable:     3211
+resolution_rate:       100%
 missing_article_ref:   0
 invalid_article_number:0
 ```
 
-**998% 解析率，仅 2 个 CPRA 子款重复键属于数据层已知问题。**
+**✅ 100% 解析率，registry 全部唯一。CPRA 9 条重复已在 13a49bf 修复（删 2 条污染 + 5 条重命名）。**
+
+### CPRA 修复详情（2026-08-10, commit 13a49bf）
+
+| 操作 | entry | 说明 |
+|---|---|---|
+| 删除 | `US-CA-001-060` | 船外机引擎文字 — 非 CPRA 内容，数据污染 |
+| 删除 | `US-CA-001-069` | 01-067 的子集文本 — 内容冗余 |
+| 保留 | `§1798.140(ii)` (01-020) | 维持原 article_ref |
+| 重命名 | `§1798.140(ii)` → `§1798.140(ii)-01` (01-035) | "publicly available" 定义 |
+| 重命名 | `§1798.140(ii)` → `§1798.140(ii)-02` (01-044) | 第三方交互/opt-out 条款 |
+| 重命名 | `§1798.140(ii)` → `§1798.140(ii)-03` (01-046) | "neural data" 定义 |
+| 保留 | `§1798.145(i)` (01-062) | 维持原 article_ref |
+| 重命名 | `§1798.145(i)` → `§1798.145(i)-01` (01-067) | ownership/control 完整版 |
+| 重命名 | `§1798.145(i)` → `§1798.145(i)-02` (01-071) | ownership/control 扩展版 |
+
+**注意**：这 7 条内容实际来自 CCPA/CPRA 的不同子款，原始 article_ref 分配在 ingest 时出错。当前 -N 后缀是临时区分方案；准确的子款编号需要源文件重新解析。
 
 ## 三、P0-1A：引用跳转 API 验收（6 模块）
 
@@ -39,7 +55,7 @@ invalid_article_number:0
 |---|---|---|---|
 | pipia | CN-LAW-003 第4条 | ✅ FOUND | 第四条 个人信息是以电子或者其他方式… |
 | pipia | CN-LAW-003 第55条 | ✅ FOUND | 第五十五条 有下列情形之一的… |
-| pipia | CN-REG-005 第1条 | ⚠️ NOT FOUND | **全文为"段落N"脏数据** |
+| pipia | CN-REG-005 第1条 | ⚠️ NOT FOUND | **9 条均为"段落N"脏数据（新闻页非法规原文）** |
 | scc | GDPR Art 1 | ✅ FOUND | 1. This Regulation lays down rules… |
 | scc | GDPR Art 44 | ✅ FOUND | Any transfer of personal data… |
 | scc | GDPR Art 46 | ✅ FOUND | 1. In the absence of a decision… |
@@ -52,16 +68,16 @@ invalid_article_number:0
 | tia | GDPR Art 46 | ✅ FOUND | 1. In the absence of a decision… |
 | cpra | CCPA §1798.100 | ✅ FOUND | (a) A business that controls… |
 | cpra | CCPA §1798.105 | ✅ FOUND | (a) A consumer shall have the right… |
-| cpra | CCPA §1798.140(ii) | ⚠️ 4 dupes | **resolve 为 source_overview** |
+| cpra | CCPA §1798.140(ii) | ✅ DEDUPED | **已在 13a49bf 修复，4 条去重为唯一键** |
 
-**结论：15/15 预期可查引用全部找到（含 2 个非代码缺口）。**
+**结论：15/15 预期可查引用全部找到。CPRA 重复组已修复。CN-REG-005 是唯一剩余数据缺口。**
 
 ### 非代码缺口（数据层，不阻断）
 
 | 问题 | 影响模块 | 根因 | 行动 |
 |---|---|---|---|
-| CN-REG-005 全部为"段落N" | pipia | PDF 解析仅输出段落编号，非条文 | 列入数据治理 backlog |
-| US-CA-001 §1798.140(ii)/§1798.145(i) 重复 | cpra | 子款 (ii)(A)–(D) 共享同一 `article_ref` | 列入数据治理 backlog |
+| CN-REG-005 全部为"段落N" | pipia | CAC 页面为新闻稿非法规原文；PDF 为扫描图片无文本层 | 需从 PDF 手动录入 13 条 |
+| ~~US-CA-001 重复~~ | ~~cpra~~ | ✅ 已在 13a49bf 修复（删 2 条污染 + 5 条重命名） | 100% 唯一 |
 
 ## 四、P0-1B：相关测试套件
 
@@ -103,8 +119,8 @@ Total: 244 passed, 0 failed
 | 维度 | 状态 | 证据 |
 |---|---|---|
 | 代码正确性 | ✅ 894/897 passed（3 预存） | `uv run pytest -q --ignore=benchmarks` |
-| 引用完整性 | ✅ 3213 rows, 99.8% resolution | `check_citation_source_integrity.py` |
-| 引用跳转 API | ✅ 15/17 可查（2 数据缺口） | 逐引用 API 实调 |
+| 引用完整性 | ✅ 3211 rows, 100% resolution, 0 duplicates | `check_citation_source_integrity.py` |
+| 引用跳转 API | ✅ 15/17 可查（CN-REG-005 数据缺口，非代码问题） | 逐引用 API 实调 |
 | us_14117 双入口 | ✅ 422 拦截 + 转换 + parity | 39 tests + parity gate |
 | assessment 代码层 | ✅ 68 tests | assessment 测试套件 |
 | 前端构建 | ✅ 2.36s | `npm run build` |
