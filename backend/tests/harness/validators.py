@@ -193,6 +193,30 @@ def _op_list_contains(actual: dict[str, Any], payload: Any) -> list[tuple[bool, 
     return checks
 
 
+def _op_list_excludes(actual: dict[str, Any], payload: Any) -> list[tuple[bool, str]]:
+    checks: list[tuple[bool, str]] = []
+    for path, needles in _require_mapping("list_excludes", payload).items():
+        if not isinstance(needles, list):
+            raise TypeError(f"list_excludes[{path}] expects a list of substrings")
+        value = resolve_path(actual, path)
+        if value is _MISSING:
+            checks.append((False, f"list_excludes[{path}]: path absent from result"))
+            continue
+        if not isinstance(value, list):
+            checks.append((False, f"list_excludes[{path}]: {_describe(value)} is not a list"))
+            continue
+        haystack = [item for item in value if isinstance(item, str)]
+        for needle in needles:
+            found = any(needle in item for item in haystack)
+            checks.append(
+                (
+                    not found,
+                    f"list_excludes[{path}]: {needle!r} absent from {len(haystack)} entries={not found}",
+                )
+            )
+    return checks
+
+
 def _op_output_formats(actual: dict[str, Any], payload: Any) -> list[tuple[bool, str]]:
     if not isinstance(payload, list):
         raise TypeError("output_formats expects a list of extensions")
@@ -261,6 +285,7 @@ ASSERTION_OPERATORS: dict[str, Operator] = {
     "min_counts": _op_min_counts,
     "max_counts": _op_max_counts,
     "list_contains": _op_list_contains,
+    "list_excludes": _op_list_excludes,
     "output_formats": _op_output_formats,
     "output_roles_contains": _op_output_roles,
     "profile_contains": _op_profile_contains,

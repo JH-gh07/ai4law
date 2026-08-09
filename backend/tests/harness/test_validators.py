@@ -190,6 +190,22 @@ def test_rule_derived_expectations_are_asserted_even_offline() -> None:
     assert any("expected 'HIGH', got 'LOW'" in message for message in outcome.failed)
 
 
+def test_list_excludes_rejects_placeholder_prose() -> None:
+    passing = validate_expected(
+        {"chapters": [{"content": "完整正文"}]},
+        {"list_excludes": {"chapters[].content": ["占位内容"]}},
+        no_llm=True,
+    )
+    failing = validate_expected(
+        {"chapters": [{"content": "LLM未配置，此处为占位内容"}]},
+        {"list_excludes": {"chapters[].content": ["占位内容"]}},
+        no_llm=True,
+    )
+
+    assert passing.ok
+    assert not failing.ok
+
+
 def test_malformed_expectation_is_reported_not_raised() -> None:
     outcome = validate_expected({}, {"min_counts": ["legal_basis"]}, no_llm=True)
 

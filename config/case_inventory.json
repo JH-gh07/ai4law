@@ -45,7 +45,7 @@
       "cli_cases": [
         {
           "case_id": "01_minimal",
-          "assertions": 18
+          "assertions": 29
         }
       ],
       "frontend_cases": 3
