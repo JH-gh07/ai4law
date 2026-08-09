@@ -50,3 +50,10 @@ bf9463c feat: add cn flow compatibility boundary
 ```
 
 服务接入改动待本地全量测试后单独提交。
+
+后续已完成提交：
+
+```text
+5749e57 refactor: delegate cn flow reports to EO 14117
+c5e4bd7 fix: reject incomplete legacy cn flow requests
+```

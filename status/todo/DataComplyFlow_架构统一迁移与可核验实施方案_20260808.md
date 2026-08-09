@@ -327,7 +327,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 4 | BCR 审核 | `backend/domains/eu/bcr_review/` | 无条号法规引用的能力边界 |
 | 5 | SCC 审查 | `backend/domains/eu/scc_review/` | 合同条款审查结果和引用统一 |
 | 6 | CPRA 合规 | `backend/domains/us/cpra/` | 用户材料和法规引用区分 |
-| 7 | 14117 行政令合规 | `backend/domains/us/eo14117/` + `eo14117_flow_review/` | 主入口和兼容入口规则、引用、输出一致 |
+| 7 | 14117 行政令合规 | `backend/domains/us/eo14117/` + `eo14117_flow_review/` | **兼容入口已接管统一服务**；仍需主入口/兼容入口等价结果对照和浏览器验收 |
 | 8 | 文档专项智能审查 | `backend/domains/cn/document_review/` | 上传文件、解析、报告生成的两步流程 |
 
 ### 阶段 3A：合规路径诊断单独处理
@@ -525,7 +525,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | **本地完整闭环通过**：来源 DOCX、old/new、live provider、26 项完整详细表、2 条正文引用、DocumentIR、浏览器上传/引用/段落 4 跳转均有证据；provider 最后一次请求超时回退，远端未部署 |
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | **本地完整闭环通过**：两个案例分别 24/24、26/26 通过；最终真实 provider 运行耗时 525,537 ms，12 次调用、12,207 Token，7 个 Agent 降级均由结构化正文接管，无占位内容；一致性 10/10；DocumentIR 为 7 节、27 块、15 个 ClaimBlock；9 个引用均高权威、高置信、可跳转；浏览器 Article 36 精确跳转和 PDF 预览证据齐全。旧 task 事件轮询噪声已转为独立 P1，不阻断 DPIA；远端未部署。详见 `status/check/phase3_dpia_firstrun_20260808/验收报告.md` |
 | EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | **本地完整闭环通过**：最终 Schema-first live 332,388 ms、9 calls、16,102 token、24/24 checks；真实 EDPB/FISA/CLOUD Act 附件解析；确定性规则输出 `suspend`，模型和用户输入不能覆盖；DocumentIR 6 sections/45 blocks/0 diagnostics；Markdown、CitationMap、DocumentIR 使用同一组 GDPR 44/46 与 EDPB Step 1/3；章节截断自动换用结构化正文；浏览器引用精确跳转、PDF 3 页、errors=0。远端未部署。详见 `status/check/phase3_tia_firstrun_20260808/验收报告.md` |
-| US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
+| US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | **部分完成**：`cn_flow` 已通过适配器委托 `US14117Service`，同步/异步和原模块共 36 项测试通过；缺关键事实时在建任务前明确拦截。仍缺等价 payload parity、两条 API 和浏览器真实验收 |
 | US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | **本地完整闭环通过**：统一 `us_cpra` 模块标识；`US-CA-001` 入库 12 个准确 Civil Code 条号；无模型 33/33 checks；live 364,326 ms、46 events、10 calls、13,544 tokens、33/33 checks；6 章正文有确定性质量底线；Markdown/CitationMap/DocumentIR 使用同一组 7 条引用；浏览器一键运行、过程显示、精确跳转和 PDF 预览均通过，console error=0。子 Agent JSON 稳定性和业务回退统计列为 P1，不阻断用户交付。远端未部署。详见 `status/check/phase_cpra_local_20260810/验收报告.md` |
 
 `cn_flow` 不是第三个美国用户功能。它是历史 API/兼容入口，当前执行 EO 14117 数据流评估；迁移 `us_14117` 时必须同时验证 `us_14117` 和 `cn_flow` 两个后端入口输出同一套 EO 14117 规则结果，防止兼容接口与主入口分叉。
