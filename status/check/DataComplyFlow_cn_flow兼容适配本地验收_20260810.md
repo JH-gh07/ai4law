@@ -14,7 +14,7 @@
 | `backend/domains/us/eo14117_flow_review/tests/test_compatibility.py` | 新增适配契约测试 | 防止缺失事实被静默补默认值 |
 | `backend/domains/us/eo14117_flow_review/tests/test_service.py` | 补充统一路径所需字段 | 验证历史响应兼容 |
 
-旧实现没有删除，已改名为 `_generate_legacy_report()`，只用于回退和对照；待 parity 验证完成后再删除。
+旧独立实现已在 parity 测试通过后删除。`cn_flow` 只保留兼容转换、旧 API/任务契约和旧响应包装；规则、RAG、章节与产物全部由 `us_14117` 负责。
 
 ## 安全行为
 
@@ -38,10 +38,25 @@ uv run pytest backend/domains/us/eo14117_flow_review/tests backend/domains/us/eo
 ## 尚未完成
 
 1. 旧输入案例补齐新字段并运行全量 parity，对比旧结果与 canonical 结果。
-2. 旧 router 对 `CompatibilityClarificationRequired` 增加明确的 422/补材料响应契约。
-3. 异步任务中对适配失败状态的前端展示验收。
-4. parity 通过后删除旧风险计算、旧章节和旧独立证据链代码。
-5. 完成 diagnosis、assessment、14117 浏览器闭环及截图验收。
+2. 异步任务中对适配失败状态的前端展示验收。
+3. 完成 diagnosis、assessment、14117 浏览器闭环及截图验收。
+
+## 旧实现删除复验
+
+删除文件：
+
+```text
+backend/domains/us/eo14117_flow_review/fact_builder.py
+backend/domains/us/eo14117_flow_review/issue_builder.py
+backend/domains/us/eo14117_flow_review/evidence_builder.py
+```
+
+`service.py` 已重写为兼容薄层。删除后的本地回归：
+
+```text
+69 passed
+ruff: All checks passed
+```
 
 ## Git
 

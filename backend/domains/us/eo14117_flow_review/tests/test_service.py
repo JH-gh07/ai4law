@@ -2,10 +2,8 @@ import json
 from pathlib import Path
 from zipfile import ZipFile
 
-from docx import Document
 from pypdf import PdfReader
 
-from backend.domains.us.eo14117_flow_review import service as cn_flow_service
 from backend.domains.us.eo14117_flow_review.schema import CNFlowRequest
 from backend.domains.us.eo14117_flow_review.service import CNFlowService
 
@@ -15,17 +13,6 @@ class _DisabledLLM:
 
 
 def test_cn_flow_generate_report(tmp_path, monkeypatch) -> None:
-    tmp_dir = tmp_path
-    md_template = tmp_dir / "cn_flow_template.md"
-    md_template.write_text("# {{business_overview}}\n\n{{risk_rating}}\n", encoding="utf-8")
-    docx_template = tmp_dir / "cn_flow_template.docx"
-    document = Document()
-    document.add_heading("{{business_overview}}", level=1)
-    document.add_paragraph("{{risk_rating}}")
-    document.save(docx_template)
-    monkeypatch.setattr(cn_flow_service, "TEMPLATE_MD", md_template)
-    monkeypatch.setattr(cn_flow_service, "TEMPLATE_PATH", docx_template)
-
     service = CNFlowService(llm_client=_DisabledLLM())
     payload = CNFlowRequest.model_validate(
         {
