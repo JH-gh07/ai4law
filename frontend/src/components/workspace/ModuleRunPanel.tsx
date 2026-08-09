@@ -27,6 +27,7 @@ import {
   buildTiaPayload as createTiaPayload,
   buildUs14117Payload as createUs14117Payload,
 } from "../../features/module-runner/payload-builders";
+import type { CpraResolvedFiles } from "../../features/module-runner/payload-builders";
 
 import {
   ASSESSMENT_STEPS,
@@ -739,15 +740,18 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     });
   };
 
-  const buildCpraPayload = async (): Promise<unknown> => {
-    assertInput(hasText(cpraValues.company_name), "请填写企业名称。");
-    assertInput(hasText(cpraValues.business_model), "请填写业务模型。");
-    assertInput(hasText(cpraValues.data_lifecycle), "请填写数据生命周期说明。");
-    assertInput(hasText(cpraValues.notice_and_consent), "请填写告知与同意机制。");
-    assertInput(hasText(cpraValues.consumer_rights_process), "请填写消费者权利响应机制。");
-    assertInput(hasText(cpraValues.opt_out_and_sale_sharing), "请填写出售/共享与Opt-out机制。");
+  const buildCpraPayloadFrom = async (
+    values: CpraFormValues,
+    files: Record<keyof CpraResolvedFiles, File[]>,
+  ): Promise<unknown> => {
+    assertInput(hasText(values.company_name), "请填写企业名称。");
+    assertInput(hasText(values.business_model), "请填写业务模型。");
+    assertInput(hasText(values.data_lifecycle), "请填写数据生命周期说明。");
+    assertInput(hasText(values.notice_and_consent), "请填写告知与同意机制。");
+    assertInput(hasText(values.consumer_rights_process), "请填写消费者权利响应机制。");
+    assertInput(hasText(values.opt_out_and_sale_sharing), "请填写出售/共享与Opt-out机制。");
     assertInput(
-      hasText(cpraValues.privacy_policy_url) || cpraPrivacyPolicyFiles.length > 0,
+      hasText(values.privacy_policy_url) || files.privacyPolicy.length > 0,
       "请提供隐私政策URL或上传隐私政策文件。"
     );
 
@@ -758,11 +762,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       vendorPaths,
       otherPaths
     ] = await Promise.all([
-      uploadFiles(cpraPrivacyPolicyFiles),
-      uploadFiles(cpraRightsSopFiles),
-      uploadFiles(cpraDataMapFiles),
-      uploadFiles(cpraVendorListFiles),
-      uploadFiles(cpraOtherFiles)
+      uploadFiles(files.privacyPolicy),
+      uploadFiles(files.rightsSop),
+      uploadFiles(files.dataMap),
+      uploadFiles(files.vendorList),
+      uploadFiles(files.other)
     ]);
 
     const validatePaths = (paths: string[], label: string) => {
@@ -778,11 +782,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     validatePaths(dataMapPaths, "数据映射");
     validatePaths(vendorPaths, "供应商");
     validatePaths(otherPaths, "补充");
-    if (hasText(cpraValues.privacy_policy_url)) {
-      assertInput(isValidUrl(cpraValues.privacy_policy_url), "隐私政策URL格式不正确，请使用 http(s) 链接。");
+    if (hasText(values.privacy_policy_url)) {
+      assertInput(isValidUrl(values.privacy_policy_url), "隐私政策URL格式不正确，请使用 http(s) 链接。");
     }
 
-    return createCpraPayload(cpraValues, {
+    return createCpraPayload(values, {
       privacyPolicy: privacyPaths,
       rightsSop: rightsPaths,
       dataMap: dataMapPaths,
@@ -790,6 +794,15 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       other: otherPaths,
     });
   };
+
+  const buildCpraPayload = async (): Promise<unknown> =>
+    buildCpraPayloadFrom(cpraValues, {
+      privacyPolicy: cpraPrivacyPolicyFiles,
+      rightsSop: cpraRightsSopFiles,
+      dataMap: cpraDataMapFiles,
+      vendorList: cpraVendorListFiles,
+      other: cpraOtherFiles,
+    });
 
   const buildUs14117PayloadFrom = async (
     values: Us14117FormValues,
@@ -1063,8 +1076,19 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     const preset = getModuleDevPreset("cpra");
     const nextValues: CpraFormValues = { ...cpraValues, ...(preset.formDefaults as Partial<CpraFormValues>) };
     setCpraValues(nextValues);
+    setCpraPrivacyPolicyFiles([]);
+    setCpraRightsSopFiles([]);
+    setCpraDataMapFiles([]);
+    setCpraVendorListFiles([]);
+    setCpraOtherFiles([]);
     setCpraStepIndex(CPRA_STEPS.length - 1);
-    const payload = await buildCpraPayload();
+    const payload = await buildCpraPayloadFrom(nextValues, {
+      privacyPolicy: [],
+      rightsSop: [],
+      dataMap: [],
+      vendorList: [],
+      other: [],
+    });
     await runWithPayload(payload);
   };
 
