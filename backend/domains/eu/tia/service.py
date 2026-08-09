@@ -341,6 +341,9 @@ class TIAService:
             f"- 最终结论：{payload.final_conclusion}",
             f"- 风险等级：{level}",
         ]
+        if payload.structured_input:
+            lines.append(f"- 数据出口方 GDPR 角色：{payload.structured_input.exporter_role}")
+            lines.append(f"- 数据进口方 GDPR 角色：{payload.structured_input.importer_role}")
         if route:
             lines.append(f"\n【路径判断】")
             lines.append(f"- 评估路径：{route.route}")
@@ -394,6 +397,12 @@ class TIAService:
             issues.append("Risk is HIGH; consider adding transfer suspension decision.")
 
         # NEW checks
+        if payload.structured_input:
+            if payload.structured_input.exporter_role == "unknown":
+                issues.append("Data exporter GDPR role is not confirmed.")
+            if payload.structured_input.importer_role == "unknown":
+                issues.append("Data importer GDPR role is not confirmed.")
+
         # Route consistency
         if route and route.adequacy_decision_exists and payload.transfer_tool != "derogation":
             issues.append(f"Adequacy decision exists for {route.adequacy_country}; "

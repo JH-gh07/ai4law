@@ -1,11 +1,11 @@
 {
   "case_id": "02_structured_local_attachment",
-  "description": "TIA 结构化输入 + 本地 EDPB PDF 附件解析",
+  "description": "TIA 结构化角色与美国风险输入 + 本地 EDPB/FISA/CLOUD Act PDF 附件解析",
   "input": {
     "transfer_tool": "scc",
     "data_exporter_profile": "EU Exporter",
     "data_importer_profile": "US Importer",
-    "third_country_assessment": "Government access risk requires review.",
+    "third_country_assessment": "United States is HIGH risk for this transfer because FISA Section 702, EO 12333, and the CLOUD Act may enable government access and limit effective redress.",
     "supplementary_measures": "End-to-end encryption and EU-managed keys.",
     "final_conclusion": "SCC remains conditional on the measures.",
     "attachments": [
@@ -14,12 +14,26 @@
         "file_name": "edpb-recommendations.pdf",
         "file_format": "pdf",
         "storage_uri": "resources/legal/sources/eu/references/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf"
+      },
+      {
+        "file_role": "country_law_analysis",
+        "file_name": "fisa-section-702.pdf",
+        "file_format": "pdf",
+        "storage_uri": "resources/legal/sources/us/references/FISA_Section_702_FISA_Resource_Library.pdf"
+      },
+      {
+        "file_role": "country_law_analysis",
+        "file_name": "cloud-act.pdf",
+        "file_format": "pdf",
+        "storage_uri": "resources/legal/sources/us/references/cloud_act.pdf"
       }
     ],
     "structured_input": {
       "exporter_country": "DE",
       "importer_country": "US",
       "destination_country": "US",
+      "exporter_role": "controller",
+      "importer_role": "processor",
       "transfer_purpose": "CRM support",
       "data_categories": [
         "crm_data",
@@ -65,5 +79,5 @@
   },
   "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx",
   "attachment_parse_skipped": false,
-  "coverage_note": "本案例覆盖 structured_input 规则分支和真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
+  "coverage_note": "本案例覆盖 structured_input 角色/国家风险规则和三份真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
 }

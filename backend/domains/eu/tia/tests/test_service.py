@@ -85,6 +85,48 @@ def test_tia_generate_report() -> None:
     assert result.transfer_tool == "scc"
 
 
+def test_us_alias_and_gdpr_roles_enter_structured_context() -> None:
+    service = TIAService(llm_client=_DisabledLLM())
+    payload = TIARequest.model_validate({
+        "transfer_tool": "scc",
+        "data_exporter_profile": "EU Exporter",
+        "data_importer_profile": "US Importer",
+        "third_country_assessment": "FISA 702 and EO 12333 require review.",
+        "supplementary_measures": "End-to-end encryption with EU-managed keys.",
+        "final_conclusion": "SCC remains conditional on the measures.",
+        "attachments": [{
+            "file_role": "country_law_analysis",
+            "file_name": "country-law.pdf",
+            "file_format": "pdf",
+            "storage_uri": "storage://uploads/country-law.pdf",
+        }],
+        "structured_input": {
+            "exporter_country": "DE",
+            "importer_country": "US",
+            "destination_country": "USA",
+            "exporter_role": "controller",
+            "importer_role": "processor",
+        },
+    })
+
+    country_risk = service.country_risk.assess(payload.structured_input)
+    context = service._build_context(
+        payload,
+        "HIGH",
+        None,
+        country_risk,
+        {},
+        [],
+        "",
+    )
+
+    assert country_risk.country == "United States"
+    assert country_risk.risk_level == "HIGH"
+    assert country_risk.gov_access_risk is True
+    assert "数据出口方 GDPR 角色：controller" in context
+    assert "数据进口方 GDPR 角色：processor" in context
+
+
 def test_dpo_revision_issues_are_exposed_to_callers(monkeypatch) -> None:
     service = TIAService(llm_client=_DisabledLLM())
     service._render = _fast_render
@@ -237,9 +279,13 @@ def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) 
 
     assert result.route_decision is not None
     assert result.country_risk is not None
-    assert result.country_risk.country == "US"
+    assert result.country_risk.country == "United States"
+    assert result.country_risk.risk_level == "HIGH"
+    assert result.country_risk.gov_access_risk is True
     assert result.measure_assessments
     assert any("edpb-recommendations.pdf:" in note for note in result.attachment_notes)
+    assert any("fisa-section-702.pdf:" in note for note in result.attachment_notes)
+    assert any("cloud-act.pdf:" in note for note in result.attachment_notes)
     assert not any("parse skipped" in note for note in result.attachment_notes)
 
 

@@ -30,6 +30,7 @@ DataCategory = Literal[
 ]
 
 TransferTool = Literal["scc", "bcr", "derogation", "adequacy_decision", "unknown"]
+GDPRRole = Literal["controller", "processor", "joint_controller", "subprocessor", "unknown"]
 
 
 class TIAStructuredInput(BaseModel):
@@ -37,6 +38,8 @@ class TIAStructuredInput(BaseModel):
     exporter_country: str = ""
     importer_country: str = ""
     destination_country: str = ""
+    exporter_role: GDPRRole = "unknown"
+    importer_role: GDPRRole = "unknown"
     transfer_purpose: str = ""
     data_categories: list[DataCategory] = Field(default_factory=list)
     has_special_category_data: bool = False

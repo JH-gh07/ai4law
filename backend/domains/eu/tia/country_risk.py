@@ -8,6 +8,16 @@ from pathlib import Path
 from backend.domains.eu.tia.schema import TIACountryRisk, TIAStructuredInput
 
 
+COUNTRY_ALIASES = {
+    "us": "United States",
+    "u.s.": "United States",
+    "usa": "United States",
+    "u.s.a.": "United States",
+    "uk": "United Kingdom",
+    "u.k.": "United Kingdom",
+}
+
+
 class TIACountryRiskAssessor:
     def __init__(self) -> None:
         path = Path(__file__).resolve().parent / "data" / "tia_country_riskbook.json"
@@ -18,6 +28,7 @@ class TIACountryRiskAssessor:
             return TIACountryRisk(country="unknown", risk_level="MEDIUM")
 
         dest = (structured.destination_country or structured.importer_country or "").strip()
+        dest = COUNTRY_ALIASES.get(dest.lower(), dest)
         country_risks: dict = self.riskbook.get("country_risks", {})
 
         # Exact match first

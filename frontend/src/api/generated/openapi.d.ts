@@ -3004,6 +3004,11 @@ export interface components {
             /** Allowed Usage */
             allowed_usage?: string[];
             /**
+             * Amendment Note
+             * @default
+             */
+            amendment_note?: string;
+            /**
              * Anchor
              * @default
              */
@@ -3033,6 +3038,12 @@ export interface components {
              * @default false
              */
             can_jump?: boolean;
+            /**
+             * Citation Granularity
+             * @default article
+             * @enum {string}
+             */
+            citation_granularity?: "article" | "source";
             /** Citation Id */
             citation_id: string;
             /** Citation Type */
@@ -3058,12 +3069,22 @@ export interface components {
              */
             display_label?: string;
             /**
+             * Effective Date
+             * @default
+             */
+            effective_date?: string;
+            /**
              * External Report Allowed
              * @default true
              */
             external_report_allowed?: boolean;
             /** Footnote Number */
             footnote_number?: number | null;
+            /**
+             * Is Recent
+             * @default false
+             */
+            is_recent?: boolean;
             /**
              * Jurisdiction
              * @default
@@ -3084,6 +3105,11 @@ export interface components {
              * @default in_app
              */
             open_mode?: string;
+            /**
+             * Publish Date
+             * @default
+             */
+            publish_date?: string;
             /**
              * Quote Text
              * @default
@@ -3108,6 +3134,11 @@ export interface components {
              * @default law_article
              */
             source_kind?: string;
+            /**
+             * Source Status
+             * @default
+             */
+            source_status?: string;
             /**
              * Source Url
              * @default
@@ -5994,6 +6025,12 @@ export interface components {
              */
             exporter_country?: string;
             /**
+             * Exporter Role
+             * @default unknown
+             * @enum {string}
+             */
+            exporter_role?: "controller" | "processor" | "joint_controller" | "subprocessor" | "unknown";
+            /**
              * Has End To End Encryption
              * @default false
              */
@@ -6018,6 +6055,12 @@ export interface components {
              * @default
              */
             importer_country?: string;
+            /**
+             * Importer Role
+             * @default unknown
+             * @enum {string}
+             */
+            importer_role?: "controller" | "processor" | "joint_controller" | "subprocessor" | "unknown";
             /**
              * Key Managed In Eu
              * @default false
