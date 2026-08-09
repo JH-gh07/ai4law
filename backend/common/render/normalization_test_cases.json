@@ -57,6 +57,11 @@
       "expected": "第三章数据安全管理\n\n## 一、组织保障-建立数据安全委员会-明确负责人\n\n【依据：数安法第27条】"
     },
     {
+      "id": "prose_unified_not_heading",
+      "input": "美国缺乏一部全面、统一、强有力的综合性数据保护法律。",
+      "expected": "美国缺乏一部全面、统一、强有力的综合性数据保护法律。"
+    },
+    {
       "id": "fullwidth_space_norm",
       "input": "第一章　总则",
       "expected": "# 第一章 总则"

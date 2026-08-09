@@ -176,7 +176,13 @@ def _explode_packed_line(line: str) -> list[str]:
 
     if not _MARKDOWN_PREFIX_RE.match(line):
         line = re.sub(r"(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)", r"\n\1", line)
-        line = re.sub(r"(?<!\n)([一二三四五六七八九十百千万零〇两0-9]+、)", r"\n\1", line)
+        # Do not split lexical phrases such as “统一、”“唯一、”“逐一、”“之一、”.
+        # Their trailing “一、” is punctuation inside prose, not a section label.
+        line = re.sub(
+            r"(?<!\n)(?<![统唯逐之])([一二三四五六七八九十百千万零〇两0-9]+、)",
+            r"\n\1",
+            line,
+        )
         line = re.sub(r"(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)", r"\n\1", line)
         # P0-3: Fix regex to avoid breaking TLS 1.3, v1.2.3 etc.
         # Only match numbered lists at line start or after whitespace, exclude \d.\d patterns

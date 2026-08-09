@@ -14,7 +14,8 @@ function explodePackedLine(line: string): string[] {
   if (!markdownPrefix.test(next)) {
     next = next
       .replace(/(?<!\n)(第[一二三四五六七八九十百千万零〇两0-9]+章)/g, "\n$1")
-      .replace(/(?<!\n)([一二三四五六七八九十百千万零〇两0-9]+、)/g, "\n$1")
+      // “统一、”“唯一、”“逐一、”“之一、” are prose, not section labels.
+      .replace(/(?<!\n)(?<![统唯逐之])([一二三四五六七八九十百千万零〇两0-9]+、)/g, "\n$1")
       .replace(/(?<!\n)(（[一二三四五六七八九十百千万零〇两0-9]+）)/g, "\n$1")
       .replace(/(?<!\n)(\(?\d+\)|\d+[、.])\s*(?=\S)/g, "\n$1 ");
   }
