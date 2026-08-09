@@ -49,9 +49,10 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
     # Before the 2026-08-09 EDPB cleanup, unique_rows == total_rows == 3030.
     # Metadata/heading fallback rows were replaced by semantic Step 1/Step 3
     # chunks, reducing the canonical registry to 3026 unique rows.
-    # 2026-08-09: registry grew to 3035 (5 new articles added, e.g. supplemental
-    # EDPB guidance paragraphs), raising the canonical count to 3031.
-    assert len(unique_rows) == 3035
+    # US-FED-001 now replaces unaddressable paragraph rows with exact 28 CFR
+    # Part 202 locators. The invariant is uniqueness and resolvability, not a
+    # brittle repository-wide row count that changes whenever a source is fixed.
+    assert len(unique_rows) == len(rows)
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])
@@ -79,6 +80,20 @@ def test_gdpr_transfer_articles_have_semantic_locators() -> None:
     assert article_46 is not None
     assert "appropriate safeguards" in article_46["article_content"]
     assert get_article_detail("EU-LAW-001", "段落1") is None
+
+
+def test_eo14117_rules_have_exact_ecfr_locators() -> None:
+    prohibited = get_article_detail("US-FED-001", "202.301")
+    restricted = get_article_detail("US-FED-001", "202.401")
+    recordkeeping = get_article_detail("US-FED-001", "202.1101")
+
+    assert prohibited is not None
+    assert "Prohibited data-brokerage transactions" in prohibited["article_content"]
+    assert restricted is not None
+    assert "Authorization to conduct restricted transactions" in restricted["article_content"]
+    assert recordkeeping is not None
+    assert "at least 10 years" in recordkeeping["article_content"]
+    assert get_article_detail("US-FED-001", "段落1") is None
 
 
 def test_read_text_preview_strips_html_markup(tmp_path: Path) -> None:

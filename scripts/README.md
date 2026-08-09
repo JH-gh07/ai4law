@@ -7,6 +7,7 @@
 | 用途 | 命令 | 输出或效果 |
 | --- | --- | --- |
 | 生成法规条款数据 | `uv run --frozen python scripts/build_regulation_articles.py` | 更新法规条款 JSONL |
+| 重建 EO 14117 条文 | `uv run --frozen python scripts/reingest_us_fed_001.py --dry-run` | 从离线快照校验 `US-FED-001` 的 28 CFR Part 202 精确条号；显式加 `--refresh` 才访问 eCFR |
 | 构建本地 RAG 索引 | `uv run --frozen python scripts/build_rag_vector_index.py` | 更新当前配置使用的本地索引 |
 | 构造检索数据集 | `uv run --frozen python scripts/build_rag_retrieval_dataset.py` | 更新 `benchmarks/datasets/rag_retrieval/queries.csv` |
 | 构造困难负例 | `uv run --frozen python scripts/build_rag_hard_negatives.py` | 更新 `benchmarks/datasets/rag_retrieval/hard_negatives.csv` |

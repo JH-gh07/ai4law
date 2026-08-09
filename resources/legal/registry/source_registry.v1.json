@@ -705,7 +705,7 @@
     },
     {
       "source_id": "US-FED-001",
-      "title": "U.S. DOJ Rule implementing EO 14117",
+      "title": "28 CFR Part 202 — EO 14117 implementing rule",
       "aliases": [],
       "jurisdiction": "us",
       "modules": [
@@ -732,16 +732,16 @@
         "module": "us-14117",
         "category": "部门规章",
         "doc_type": "administrative_regulation",
-        "publisher": "Federal Register",
-        "source_org": "Federal Register",
-        "publish_date": "2024-12-27",
+        "publisher": "U.S. Department of Justice / eCFR",
+        "source_org": "U.S. Department of Justice / eCFR",
+        "publish_date": "2025-01-08",
         "effective_date": "2025-04-08",
         "snapshot_path": "resources/legal/sources/us/snapshots/fr_2025_01_08_eo14117_excerpts.md",
-        "external_url": "https://www.govinfo.gov/content/pkg/FR-2025-01-08/pdf/FR-2025-01-08.pdf",
+        "external_url": "https://www.ecfr.gov/current/title-28/chapter-I/part-202",
         "usage": "审查基准",
         "suitable_for": "EO14117合规",
         "report_usage": "可直接引用条文号",
-        "summary": "美国司法部 EO 14117 实施规则用于界定受限交易、受规制对象和对华敏感数据流动限制，是美国路径中的核心联邦依据。"
+        "summary": "28 CFR Part 202 是美国司法部落实 EO 14117 的现行实施规则，用于判断受关注国家、受规制对象、禁止或限制交易、安全措施及尽调审计义务。"
       }
     },
     {
