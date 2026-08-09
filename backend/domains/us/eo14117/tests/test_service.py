@@ -3,8 +3,10 @@
 from pathlib import Path
 from zipfile import ZipFile
 
+from docx import Document
 from pypdf import PdfReader
 from backend.core.resource_paths import report_template_path
+from backend.domains.us.eo14117 import service as eo14117_service
 from backend.domains.us.eo14117.schema import US14117Request
 from backend.domains.us.eo14117.service import US14117Service
 
@@ -433,15 +435,16 @@ def test_evidence_builder_links_properly() -> None:
         assert len(ev.fact_refs) > 0
 
 
-def test_output_files_generated() -> None:
+def test_output_files_generated_when_docx_template_is_missing(tmp_path, monkeypatch) -> None:
     """Verify all expected output files are produced."""
     _install_test_templates()
+    monkeypatch.setattr(eo14117_service, "TEMPLATE_PATH", tmp_path / "missing.docx")
     payload = _build_red_scenario_payload()
     service = US14117Service(llm_client=_DisabledLLM())
     result = service.generate_report(payload)
 
     expected_keys = [
-        "markdown", "pdf", "xlsx", "zip",
+        "markdown", "docx", "pdf", "xlsx", "zip",
         "issue_list_json", "evidence_chain_json", "facts_json",
         "rule_engine_result_json",
     ]
@@ -451,8 +454,12 @@ def test_output_files_generated() -> None:
     pdf_path = Path(result.output_files["pdf"])
     assert pdf_path.read_bytes().startswith(b"%PDF")
     assert len(PdfReader(pdf_path).pages) >= 1
+    docx_path = Path(result.output_files["docx"])
+    assert docx_path.stat().st_size > 0
+    assert Document(docx_path).paragraphs
     with ZipFile(result.output_files["zip"]) as bundle:
         assert pdf_path.name in bundle.namelist()
+        assert docx_path.name in bundle.namelist()
     assert result.report_path.endswith(".md")
 
 

@@ -15,6 +15,7 @@ from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
 from backend.common.render.report import (
     format_date_stamp,
+    render_docx_report,
     render_docx_template,
     render_markdown_template,
     safe_filename,
@@ -441,7 +442,11 @@ class US14117Service:
             if TEMPLATE_PATH.exists():
                 render_docx_template(docx_output, TEMPLATE_PATH, mapping)
             else:
-                docx_output.touch()
+                render_docx_report(
+                    docx_output,
+                    "EO 14117 风险评估结论报告（草案）",
+                    sections,
+                )
 
             render_pdf_report(pdf_output, "EO 14117 风险评估结论报告（草案）", sections)
 
