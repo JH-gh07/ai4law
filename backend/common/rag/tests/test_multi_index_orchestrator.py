@@ -1,3 +1,5 @@
+import json
+
 from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.knowledge.v2 import RetrievalRequest
 from backend.common.knowledge.v2 import KnowledgeChunkV2
@@ -101,6 +103,27 @@ def test_eu_module_returns_scaffold_debug_bundle() -> None:
     assert any(item.module == "eu_scc" for item in bundle.standard_clauses)
 
 
+def test_eu_tia_retrieves_current_gdpr_article_46() -> None:
+    orchestrator = RetrievalOrchestrator()
+    bundle = orchestrator.retrieve(
+        RetrievalRequest(
+            module="eu_tia",
+            task_stage="legal_grounding",
+            query="GDPR Article 46 appropriate safeguards SCC international transfer",
+            path="all",
+            jurisdiction="eu",
+            top_k=8,
+        )
+    )
+
+    assert any(
+        chunk.source_id == "EU-LAW-001"
+        and chunk.article_no == "46"
+        and "appropriate safeguards" in chunk.content
+        for chunk in bundle.legal_grounding
+    )
+
+
 def test_us_module_returns_scaffold_debug_bundle() -> None:
     orchestrator = RetrievalOrchestrator()
     bundle = orchestrator.retrieve(
@@ -157,4 +180,26 @@ def test_orchestrator_rejects_index_without_current_embedding_version(tmp_path) 
     )
 
     assert orchestrator._is_index_current("legal_index_cn") is False
-import json
+
+
+def test_orchestrator_rejects_legal_index_with_stale_source_fingerprint(tmp_path) -> None:
+    settings = Settings(rag_v3_dir=tmp_path / "rag" / "v3")
+    orchestrator = RetrievalOrchestrator(settings)
+    index_path = settings.rag_v3_dir / "legal_index_eu.vector.json"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(
+        json.dumps(
+            {
+                "metadata": {
+                    "schema_version": "v3.2",
+                    "embedding_version": orchestrator.embedder.version,
+                    "embedding_dimension": orchestrator.embedder.dimension,
+                    "source_fingerprint": "stale",
+                },
+                "entries": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert orchestrator._is_index_current("legal_index_eu") is False

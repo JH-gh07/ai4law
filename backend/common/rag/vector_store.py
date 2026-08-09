@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
 from backend.common.rag.embedding import HashingEmbedder
+
+
+def content_fingerprint(paths: Iterable[Path]) -> str:
+    digest = hashlib.sha256()
+    for index, path in enumerate(paths):
+        digest.update(f"{index}:".encode("ascii"))
+        try:
+            digest.update(path.read_bytes())
+        except FileNotFoundError:
+            digest.update(b"<missing>")
+    return digest.hexdigest()
 
 
 @dataclass
@@ -33,12 +46,15 @@ class LocalVectorStore:
         metadata = data.get("metadata", {})
         return dict(metadata) if isinstance(metadata, dict) else {}
 
-    def has_compatible_embedding(self) -> bool:
+    def has_compatible_embedding(self, source_fingerprint: str | None = None) -> bool:
         metadata = self.load_metadata()
-        return (
+        compatible = (
             metadata.get("embedding_version") == self.embedder.version
             and metadata.get("embedding_dimension") == self.embedder.dimension
         )
+        if source_fingerprint is not None:
+            compatible = compatible and metadata.get("source_fingerprint") == source_fingerprint
+        return compatible
 
     def save(self, entries: list[VectorIndexEntry], metadata: dict | None = None) -> Path:
         self.index_path.parent.mkdir(parents=True, exist_ok=True)

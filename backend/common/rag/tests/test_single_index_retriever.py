@@ -148,6 +148,31 @@ def test_rag_service_rebuilds_legacy_embedding_index(tmp_path: Path) -> None:
     assert metadata["embedding_version"] == "sha256-v1"
 
 
+def test_rag_service_rebuilds_index_when_source_content_changes(tmp_path: Path) -> None:
+    source = tmp_path / "regulation_articles.jsonl"
+    index = tmp_path / "regulation_index_v2.json"
+    _write_fixture(source)
+    settings = Settings(
+        rag_source_jsonl=source,
+        rag_index_path=index,
+        rag_embedding_dimension=128,
+        rag_auto_build_index=True,
+    )
+    build_regulation_index(settings)
+    old_fingerprint = json.loads(index.read_text(encoding="utf-8"))["metadata"]["source_fingerprint"]
+    source.write_text(
+        source.read_text(encoding="utf-8")
+        + '\n{"article_id":"gdpr-46","law_name":"GDPR","article_ref":"46","content":"appropriate safeguards","jurisdiction":"eu","path":"all","doc_type":"law"}',
+        encoding="utf-8",
+    )
+
+    entries = RegulationRAGService(settings)._ensure_entries()
+    metadata = json.loads(index.read_text(encoding="utf-8"))["metadata"]
+
+    assert len(entries) == 4
+    assert metadata["source_fingerprint"] != old_fingerprint
+
+
 def test_rag_service_does_not_load_incompatible_index_when_rebuild_disabled(
     tmp_path: Path,
 ) -> None:

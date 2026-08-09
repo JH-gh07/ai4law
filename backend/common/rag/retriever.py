@@ -13,7 +13,7 @@ from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokeni
 from backend.common.rag.ingest import build_regulation_index
 from backend.common.rag.orchestrator import RetrievalOrchestrator
 from backend.common.rag.reranker import HeuristicReranker, RerankCandidate
-from backend.common.rag.vector_store import LocalVectorStore
+from backend.common.rag.vector_store import LocalVectorStore, content_fingerprint
 from backend.core.settings import Settings, get_settings
 
 if TYPE_CHECKING:
@@ -266,6 +266,7 @@ class RegulationRAGService:
         score_floor: Optional[float] = None,
     ) -> list[RegulationDoc]:
         if mode == "hybrid_enhanced":
+            self._ensure_entries()
             return self._get_enhanced_retriever().search(
                 query,
                 top_k=top_k,
@@ -337,7 +338,8 @@ class RegulationRAGService:
 
     @lru_cache(maxsize=1)
     def _ensure_entries(self) -> tuple:
-        if not self.vector_store.has_compatible_embedding():
+        source_fingerprint = content_fingerprint([self.settings.rag_source_jsonl])
+        if not self.vector_store.has_compatible_embedding(source_fingerprint):
             if not self.settings.rag_auto_build_index:
                 return ()
             build_regulation_index(self.settings)

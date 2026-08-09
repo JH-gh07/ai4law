@@ -24,9 +24,14 @@ from backend.common.knowledge.builders_v2 import (
 )
 from backend.common.knowledge.usage_policy import UsagePolicyFilter
 from backend.common.knowledge.v2 import KnowledgeChunkV2, RetrievalBundle, RetrievalRequest
+from backend.common.knowledge.paths import (
+    regulation_articles_jsonl_path,
+    source_registry_path,
+    sources_csv_path,
+)
 from backend.common.rag.constants import MULTI_INDEX_SCHEMA_VERSION
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
-from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
+from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry, content_fingerprint
 from backend.core.settings import Settings, get_settings
 
 INDEX_NAMES = (
@@ -46,6 +51,17 @@ INDEX_NAMES = (
     "template_index_us",
     "testcase_index_us",
 )
+LEGAL_INDEX_NAMES = frozenset({"legal_index_cn", "legal_index_eu", "legal_index_us"})
+
+
+def legal_source_fingerprint() -> str:
+    return content_fingerprint(
+        [
+            regulation_articles_jsonl_path(),
+            sources_csv_path(),
+            source_registry_path(),
+        ]
+    )
 
 
 
@@ -458,11 +474,14 @@ class RetrievalOrchestrator:
         except json.JSONDecodeError:
             return False
         metadata = payload.get("metadata", {})
-        return (
+        is_current = (
             metadata.get("schema_version") == MULTI_INDEX_SCHEMA_VERSION
             and metadata.get("embedding_version") == self.embedder.version
             and metadata.get("embedding_dimension") == self.embedder.dimension
         )
+        if name in LEGAL_INDEX_NAMES:
+            is_current = is_current and metadata.get("source_fingerprint") == legal_source_fingerprint()
+        return is_current
 
     @lru_cache(maxsize=None)
     def _load_entries(self, name: str) -> tuple[VectorIndexEntry, ...]:

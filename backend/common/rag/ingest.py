@@ -5,9 +5,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from backend.common.rag.constants import MULTI_INDEX_SCHEMA_VERSION
-from backend.common.rag.orchestrator import INDEX_NAMES, build_chunk_sets
+from backend.common.rag.orchestrator import (
+    INDEX_NAMES,
+    LEGAL_INDEX_NAMES,
+    build_chunk_sets,
+    legal_source_fingerprint,
+)
 from backend.common.rag.embedding import HashingEmbedder
-from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry
+from backend.common.rag.vector_store import LocalVectorStore, VectorIndexEntry, content_fingerprint
 
 if TYPE_CHECKING:
     from backend.core.settings import Settings
@@ -82,6 +87,7 @@ def build_regulation_index(settings: Settings, source_jsonl: Path | None = None,
             "entry_count": len(entries),
             "embedding_dimension": settings.rag_embedding_dimension,
             "embedding_version": embedder.version,
+            "source_fingerprint": content_fingerprint([source_path]),
         },
     )
     return index_path
@@ -121,15 +127,18 @@ def build_multi_index_v3(settings: Settings) -> dict[str, Path]:
                     embedding=embedder.embed(search_text),
                 )
             )
+        metadata = {
+            "index_name": index_name,
+            "entry_count": len(entries),
+            "schema_version": MULTI_INDEX_SCHEMA_VERSION,
+            "embedding_dimension": embedder.dimension,
+            "embedding_version": embedder.version,
+        }
+        if index_name in LEGAL_INDEX_NAMES:
+            metadata["source_fingerprint"] = legal_source_fingerprint()
         LocalVectorStore(index_path=vector_path, embedder=embedder).save(
             entries,
-            metadata={
-                "index_name": index_name,
-                "entry_count": len(entries),
-                "schema_version": MULTI_INDEX_SCHEMA_VERSION,
-                "embedding_dimension": embedder.dimension,
-                "embedding_version": embedder.version,
-            },
+            metadata=metadata,
         )
         jsonl_path.write_text(
             "\n".join(json.dumps(row, ensure_ascii=False) for row in rows),
