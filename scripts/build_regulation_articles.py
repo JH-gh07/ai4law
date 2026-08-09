@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import html
 import json
@@ -15,12 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path
+from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path  # noqa: E402
 
 SOURCES_CSV = sources_csv_path()
 OUTPUT_JSONL = regulation_articles_jsonl_path()
 
 ARTICLE_PATTERN = re.compile(r"(第[一二三四五六七八九十百千万零〇0-9]{1,10}条)")
+ENGLISH_ARTICLE_HEADING_PATTERN = re.compile(
+    r"(?im)^[ \t]*(?:#{1,6}[ \t]+)?Article[ \t]+([0-9]+(?:\.[0-9]+)*)\b[^\n]*"
+)
 WHITESPACE_PATTERN = re.compile(r"[ \t\x0b\x0c\r]+")
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script>", flags=re.IGNORECASE | re.DOTALL)
@@ -46,6 +50,18 @@ def _html_to_text(raw: str) -> str:
 
 
 def _extract_article_chunks(text: str) -> list[tuple[str, str]]:
+    english_matches = list(ENGLISH_ARTICLE_HEADING_PATTERN.finditer(text))
+    if english_matches:
+        chunks: list[tuple[str, str]] = []
+        for idx, match in enumerate(english_matches):
+            end = english_matches[idx + 1].start() if idx + 1 < len(english_matches) else len(text)
+            content = text[match.start():end].strip()
+            content = re.sub(r"^#{1,6}[ \t]+", "", content)
+            if len(content) >= 40:
+                chunks.append((match.group(1), content[:2500]))
+        if chunks:
+            return chunks
+
     matches = list(ARTICLE_PATTERN.finditer(text))
     chunks: list[tuple[str, str]] = []
 
@@ -94,7 +110,7 @@ def _derive_keywords(row: dict[str, str], article_ref: str, content: str) -> lis
     return keywords
 
 
-def build_records() -> list[dict[str, object]]:
+def build_records(*, source_ids: set[str] | None = None) -> list[dict[str, object]]:
     if not SOURCES_CSV.exists():
         raise FileNotFoundError(f"sources csv not found: {SOURCES_CSV}")
 
@@ -104,6 +120,9 @@ def build_records() -> list[dict[str, object]]:
         rows = list(csv.DictReader(fp))
 
     for row in rows:
+        source_id = row.get("source_id", "UNKNOWN")
+        if source_ids is not None and source_id not in source_ids:
+            continue
         snapshot_rel = row.get("snapshot_path", "").strip()
         snapshot_path = ROOT / snapshot_rel if snapshot_rel else None
 
@@ -116,8 +135,6 @@ def build_records() -> list[dict[str, object]]:
             continue
 
         chunks = _extract_article_chunks(plain)
-        source_id = row.get("source_id", "UNKNOWN")
-
         for idx, (article_ref, content) in enumerate(chunks, start=1):
             article_id = f"{source_id}-{idx:03d}"
             records.append(
@@ -151,6 +168,39 @@ def write_jsonl(records: list[dict[str, object]]) -> None:
             fp.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
+def replace_source_records(records: list[dict[str, object]], source_ids: set[str]) -> None:
+    """Replace selected sources without changing unrelated registry rows."""
+    generated_by_source = {
+        source_id: [row for row in records if row.get("source_id") == source_id]
+        for source_id in source_ids
+    }
+    missing = sorted(source_id for source_id, rows in generated_by_source.items() if not rows)
+    if missing:
+        raise ValueError(f"no records generated for source_ids: {', '.join(missing)}")
+
+    existing: list[dict[str, object]] = []
+    if OUTPUT_JSONL.exists():
+        existing = [
+            json.loads(line)
+            for line in OUTPUT_JSONL.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    merged: list[dict[str, object]] = []
+    inserted: set[str] = set()
+    for row in existing:
+        source_id = str(row.get("source_id", ""))
+        if source_id not in source_ids:
+            merged.append(row)
+            continue
+        if source_id not in inserted:
+            merged.extend(generated_by_source[source_id])
+            inserted.add(source_id)
+    for source_id in sorted(source_ids - inserted):
+        merged.extend(generated_by_source[source_id])
+    write_jsonl(merged)
+
+
 def print_summary(records: list[dict[str, object]]) -> None:
     by_source: dict[str, int] = defaultdict(int)
     for item in records:
@@ -164,6 +214,18 @@ def print_summary(records: list[dict[str, object]]) -> None:
 
 
 if __name__ == "__main__":
-    built = build_records()
-    write_jsonl(built)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--source-id",
+        action="append",
+        dest="source_ids",
+        help="Rebuild only this source_id; may be specified more than once.",
+    )
+    args = parser.parse_args()
+    selected_source_ids = set(args.source_ids) if args.source_ids else None
+    built = build_records(source_ids=selected_source_ids)
+    if selected_source_ids is None:
+        write_jsonl(built)
+    else:
+        replace_source_records(built, selected_source_ids)
     print_summary(built)

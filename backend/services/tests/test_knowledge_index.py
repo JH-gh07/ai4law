@@ -66,6 +66,17 @@ def test_article_detail_rejects_an_ambiguous_registry_locator() -> None:
     assert get_article_detail("CN-LAW-001", "9999") is None
 
 
+def test_gdpr_transfer_articles_have_semantic_locators() -> None:
+    article_44 = get_article_detail("EU-LAW-001", "44")
+    article_46 = get_article_detail("EU-LAW-001", "46")
+
+    assert article_44 is not None
+    assert "Any transfer of personal data" in article_44["article_content"]
+    assert article_46 is not None
+    assert "appropriate safeguards" in article_46["article_content"]
+    assert get_article_detail("EU-LAW-001", "段落1") is None
+
+
 def test_read_text_preview_strips_html_markup(tmp_path: Path) -> None:
     snapshot = tmp_path / "source.html"
     snapshot.write_text(

@@ -257,14 +257,47 @@ def _stage1_source_match(module: str, issue: ModuleIssue, regulation: dict[str, 
     reg_title = str(regulation.get("source_title") or regulation.get("title") or "")
     reg_article = str(regulation.get("article_no") or regulation.get("article") or "")
     for entry in entries:
-        if entry["title"].lower() in reg_title.lower() or reg_title.lower() in entry["title"].lower():
-            score += 0.25 * float(entry.get("weight", 1.0))
-            reasons.append(f"S1:法规匹配({entry['title']})")
-            if entry.get("article") and entry["article"] in reg_article:
-                score += 0.10
-                reasons.append(f"S1:条文匹配({entry['article']})")
-            break
+        title_matches = bool(reg_title) and (
+            entry["title"].lower() in reg_title.lower()
+            or reg_title.lower() in entry["title"].lower()
+        )
+        if not title_matches:
+            continue
+        expected_article = str(entry.get("article") or "").strip()
+        if expected_article and expected_article.lower() not in f"{reg_title} {reg_article}".lower():
+            continue
+        score += 0.25 * float(entry.get("weight", 1.0))
+        reasons.append(f"S1:法规匹配({entry['title']})")
+        if expected_article:
+            score += 0.10
+            reasons.append(f"S1:条文匹配({expected_article})")
+        break
     return min(score, 0.40), " + ".join(reasons) if reasons else ""
+
+
+def _has_conflicting_eu_article(module: str, issue: ModuleIssue, regulation: dict[str, Any]) -> bool:
+    """Reject a known EU authority only when its mapped locator clearly conflicts."""
+    if module not in {"tia", "eu_scc"}:
+        return False
+    entries = _MODULE_LEGAL_SOURCE_MAP.get(module, {}).get(issue.category) or _MODULE_LEGAL_SOURCE_MAP.get(module, {}).get("other", [])
+    reg_title = str(regulation.get("source_title") or regulation.get("title") or "")
+    reg_article = str(regulation.get("article_no") or regulation.get("article") or "")
+    title_matches = [
+        entry
+        for entry in entries
+        if reg_title
+        and (
+            entry["title"].lower() in reg_title.lower()
+            or reg_title.lower() in entry["title"].lower()
+        )
+    ]
+    if not title_matches:
+        return False
+    expected_articles = [str(entry.get("article") or "").strip() for entry in title_matches]
+    if not expected_articles or any(not article for article in expected_articles):
+        return False
+    candidate = f"{reg_title} {reg_article}".lower()
+    return not any(article.lower() in candidate for article in expected_articles)
 
 
 def _stage2_content_relevance(issue: ModuleIssue, regulation: dict[str, Any]) -> tuple[float, str]:
@@ -313,6 +346,8 @@ def build_module_legal_grounding(
     for issue in issues:
         candidates: list[LegalBinding] = []
         for regulation in regulations_by_issue.get(issue.issue_id, []):
+            if _has_conflicting_eu_article(module, issue, regulation):
+                continue
             s1, r1 = _stage1_source_match(module, issue, regulation)
             s2, r2 = _stage2_content_relevance(issue, regulation)
             s3, r3 = _stage3_authority_adjustment(issue, regulation)
