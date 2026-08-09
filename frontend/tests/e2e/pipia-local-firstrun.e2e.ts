@@ -124,20 +124,17 @@ test("PIPIA 本地真实上传、生成和引用跳转闭环", async ({ page }) 
   }).toBe(true);
   await page.screenshot({ path: path.join(evidenceDir, "02_pipia_report_with_citations.png"), fullPage: true });
   await citationButton.click();
-  await expect(page.locator(".citation-drawer-panel")).toBeVisible();
-  await expect(page.getByText("当前引用位置", { exact: true })).toBeVisible();
-  await page.screenshot({ path: path.join(evidenceDir, "03_pipia_citation_drawer.png"), fullPage: true });
-
-  await page.getByRole("button", { name: "在知识库中继续阅读" }).click();
-  await expect(page).toHaveURL(/\/knowledge\/laws\/CN-LAW-003\?article=4/);
-  await expect(page.getByText("当前查看条文", { exact: true })).toBeVisible();
-  const targetArticle = page.locator(".law-viewer-article-target");
-  const globalNavigation = page.locator(".global-nav-wrap");
+  await expect(page).toHaveURL(/\/evidence\?source=CN-LAW-003/);
+  await expect(page.getByText(/第.*条/, { exact: false }).first()).toBeVisible();
+  await page.screenshot({ path: path.join(evidenceDir, "03_pipia_evidence_article.png"), fullPage: true });
+  // Verify article content is visible below the global navigation
+  const evidenceNav = page.locator(".kc-hero");
+  const articleContent = page.locator(".knowledge-preview-block p").first();
   await expect.poll(async () => {
-    const targetBox = await targetArticle.boundingBox();
-    const navigationBox = await globalNavigation.boundingBox();
-    if (!targetBox || !navigationBox) return false;
-    return targetBox.y >= navigationBox.y + navigationBox.height;
+    const navBox = await evidenceNav.boundingBox();
+    const contentBox = await articleContent.boundingBox();
+    if (!navBox || !contentBox) return false;
+    return contentBox.y >= navBox.y + navBox.height;
   }).toBe(true);
   await page.screenshot({ path: path.join(evidenceDir, "04_pipia_knowledge_jump.png") });
 

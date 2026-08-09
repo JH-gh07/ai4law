@@ -4,17 +4,17 @@ import { fetchCitationMap, type CitationDetail } from "../../api/citations";
 import { CitationMarkdownRenderer } from "./CitationMarkdownRenderer";
 
 const popoverClick = vi.hoisted(() => vi.fn());
+const mockNavigate = vi.hoisted(() => vi.fn());
 
 vi.mock("../../api/citations", async () => {
   const actual = await vi.importActual<typeof import("../../api/citations")>("../../api/citations");
   return { ...actual, fetchCitationMap: vi.fn() };
 });
 
-vi.mock("./CitationArticleDrawer", () => ({
-  CitationArticleDrawer: ({ citation }: { citation: CitationDetail }) => (
-    <div data-testid="citation-drawer">{citation.title}</div>
-  ),
-}));
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return { ...actual, useNavigate: () => mockNavigate };
+});
 
 vi.mock("./CitationPopover", () => ({
   CitationPopover: ({
@@ -59,7 +59,7 @@ const exactCitation: CitationDetail = {
   can_enter_external_report: true,
   external_report_allowed: true,
   confidence_threshold: 0.2,
-  knowledge_url: "/knowledge/laws/CN-LAW-003?article=39",
+  knowledge_url: "/evidence?source=CN-LAW-003&article=39",
   anchor: "",
   section_id: "",
   clause_id: "",
@@ -79,6 +79,7 @@ describe("CitationMarkdownRenderer", () => {
 
   beforeEach(() => {
     popoverClick.mockReset();
+    mockNavigate.mockReset();
     fetchMap.mockReset();
     fetchMap.mockResolvedValue({
       task_id: "task-1",
@@ -88,8 +89,7 @@ describe("CitationMarkdownRenderer", () => {
     });
   });
 
-  it("opens the controlled in-app drawer without creating a new tab", async () => {
-    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  it("navigates to evidence page on citation click", async () => {
     render(
       <CitationMarkdownRenderer
         markdown="审查结论[1]"
@@ -102,8 +102,7 @@ describe("CitationMarkdownRenderer", () => {
     await act(async () => openButton.click());
 
     expect(popoverClick).toHaveBeenCalledOnce();
-    expect(await screen.findByTestId("citation-drawer")).toHaveTextContent("个人信息保护法");
-    expect(openSpy).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith("/evidence?source=CN-LAW-003&article=39");
   });
 
   it("renders missing-evidence notices as warnings, never as citation controls", async () => {

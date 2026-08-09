@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "react-router-dom";
 import remarkGfm from "remark-gfm";
 import { fetchCitationMap, type CitationDetail, type CitationResolutionType } from "../../api/citations";
 import { fetchArticleDetail, fetchKnowledgeCitation } from "../../api/knowledge";
 import type { ModuleKey } from "../../lib/domain";
 import { formatLegalLocator } from "../../lib/legal-locator";
-import { CitationArticleDrawer } from "./CitationArticleDrawer";
 import { CitationPopover } from "./CitationPopover";
 
 interface Props {
@@ -141,7 +141,7 @@ async function buildResolvedCitation(
   let targetId = sourceId;
   let resolutionConfidence = 0.7;
   let failureReason = articleNo ? "article_requires_server_resolution" : "article_missing";
-  let knowledgeUrl = `/knowledge/laws/${encodeURIComponent(sourceId)}`;
+  let knowledgeUrl = `/evidence?source=${encodeURIComponent(sourceId)}`;
   let availableActions = ["view_source_overview", "search_within_source"];
 
   if (articleNo) {
@@ -153,7 +153,7 @@ async function buildResolvedCitation(
       targetId = `${sourceId}:${articleNo}`;
       resolutionConfidence = 1.0;
       failureReason = "";
-      knowledgeUrl = `/knowledge/laws/${encodeURIComponent(sourceId)}?article=${encodeURIComponent(articleNo)}`;
+      knowledgeUrl = `/evidence?source=${encodeURIComponent(sourceId)}&article=${encodeURIComponent(articleNo)}`;
       availableActions = ["view_article", "view_source_overview"];
     } catch {
       // Article not found or ambiguous — fall back to source_overview defaults
@@ -290,8 +290,8 @@ function flattenTextChildren(children: unknown): string | null {
 }
 
 export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props) {
+  const navigate = useNavigate();
   const [citationMap, setCitationMap] = useState<Record<string, CitationDetail>>({});
-  const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
   const [resolvedBasisMap, setResolvedBasisMap] = useState<Record<string, CitationDetail | null>>({});
 
   useEffect(() => {
@@ -349,7 +349,13 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
   }
 
   const handleOpenCitation = (citation: CitationDetail) => {
-    setSelectedCitation(citation);
+    // Navigate directly to the knowledge center (EvidenceCenterPage),
+    // which auto-expands the source and scrolls to the article when
+    // ?source= and &article= query params are present.
+    const targetUrl = citation.knowledge_url;
+    if (targetUrl.startsWith("/evidence")) {
+      navigate(targetUrl);
+    }
   };
 
   return (
@@ -409,9 +415,6 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
           {markdown}
         </ReactMarkdown>
       </div>
-      {selectedCitation ? (
-        <CitationArticleDrawer citation={selectedCitation} onClose={() => setSelectedCitation(null)} />
-      ) : null}
     </>
   );
 }

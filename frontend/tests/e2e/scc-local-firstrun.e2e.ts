@@ -136,16 +136,20 @@ test("SCC 本地真实上传、生成和引用跳转闭环", async ({ page }) =>
   await page.screenshot({ path: path.join(evidenceDir, "02_scc_report_with_citations.png"), fullPage: true });
   await citationButton.click();
 
-  await expect(page.locator(".citation-drawer-panel")).toBeVisible();
-  await expect(page.getByText("当前引用位置", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "在知识库中继续阅读" })).toBeVisible();
-  await page.screenshot({ path: path.join(evidenceDir, "03_scc_citation_exact_article.png"), fullPage: true });
+  await expect(page).toHaveURL(/\/evidence\?source=/);
+  await expect(page.getByRole("heading", { level: 2, name: "知识库中心" })).toBeVisible();
+  await page.screenshot({ path: path.join(evidenceDir, "03_scc_evidence_article.png"), fullPage: true });
 
-  await page.getByRole("button", { name: "在知识库中继续阅读" }).click();
-  await expect(page).toHaveURL(/\/knowledge\/laws\/EU-(GUIDE-002|SUP-026)\?article=/);
-  await expect(page.getByText("当前查看条文", { exact: true })).toBeVisible();
-  await expect(page.locator(".law-viewer-article-target")).toContainText("Step 3: Assess whether the Article 46");
-  await page.screenshot({ path: path.join(evidenceDir, "04_scc_knowledge_jump.png"), fullPage: true });
+  // Verify article content is visible below the global navigation
+  const sccNav = page.locator(".kc-hero");
+  const sccContent = page.locator(".knowledge-preview-block p").first();
+  await expect.poll(async () => {
+    const navBox = await sccNav.boundingBox();
+    const contentBox = await sccContent.boundingBox();
+    if (!navBox || !contentBox) return false;
+    return contentBox.y >= navBox.y + navBox.height;
+  }).toBe(true);
+  await page.screenshot({ path: path.join(evidenceDir, "04_scc_knowledge_jump.png") });
 
   const relevantNetwork = network.filter((entry) =>
     entry.path === "/api/v0/files/upload"

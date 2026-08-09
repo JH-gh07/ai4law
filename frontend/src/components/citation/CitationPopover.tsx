@@ -49,6 +49,7 @@ export function CitationPopover({ footnoteNumber, citation, onClickSource, label
       <button
         type="button"
         className="citation-sup"
+        title="点击跳转到知识库中心查看原文"
         onClick={(e) => {
           e.stopPropagation();
           onClickSource?.(citation);

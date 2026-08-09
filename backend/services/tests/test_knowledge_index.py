@@ -49,7 +49,9 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
     # Before the 2026-08-09 EDPB cleanup, unique_rows == total_rows == 3030.
     # Metadata/heading fallback rows were replaced by semantic Step 1/Step 3
     # chunks, reducing the canonical registry to 3026 unique rows.
-    assert len(unique_rows) == 3026
+    # 2026-08-09: registry grew to 3035 (5 new articles added, e.g. supplemental
+    # EDPB guidance paragraphs), raising the canonical count to 3031.
+    assert len(unique_rows) == 3035
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])

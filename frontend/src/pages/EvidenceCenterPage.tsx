@@ -1,13 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+/**
+ * 知识库中心页面组件
+ * 该组件用于展示知识库中心的内容，包括法规、案例、引用联动和条文检索等功能。
+ * 用户可以通过该页面搜索和浏览知识库条目，查看法规和案例的详细信息，以及进行引用联动和条文检索。
+ */
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { useLang } from "../lib/language";
+import { formatLegalLocator } from "../lib/legal-locator";
 import {
+  fetchArticleDetail,
   fetchKnowledgeCaseDetail,
   fetchKnowledgeCitation,
   fetchKnowledgeIndex,
   fetchKnowledgeSearch,
   fetchKnowledgeSourceDetail,
   syncKnowledgeIndex,
+  type ArticleDetail,
   type KnowledgeSearchItem,
 } from "../api/knowledge";
 
@@ -44,7 +53,7 @@ const articleScenarioSummary = (value: string, lang: "zh" | "en"): string => {
   return parts.map((item) => articleScenarioLabel(item, lang)).join(" / ");
 };
 
-export function EvidenceCenterPage() {
+export function EvidenceCenterPage() {// 知识库中心页面组件
   const { lang } = useLang();
 
   const copy = lang === "zh"
@@ -236,6 +245,14 @@ export function EvidenceCenterPage() {
   const [articlesHitCount, setArticlesHitCount] = useState(0);
   const [selectedArticleId, setSelectedArticleId] = useState<string>("");
 
+  // URL query parameter support for direct citation navigation.
+  // ?source=xxx  → auto-expand the source detail panel
+  // &article=yyy  → fetch and display the specific article content
+  const [searchParams] = useSearchParams();
+  const [urlArticleDetail, setUrlArticleDetail] = useState<ArticleDetail | null>(null);
+  const [urlArticleLoading, setUrlArticleLoading] = useState(false);
+  const urlArticleRef = useRef<HTMLDivElement>(null);
+
   const applyKnowledgeIndexData = (
     data: Awaited<ReturnType<typeof fetchKnowledgeIndex>>
   ): void => {
@@ -280,6 +297,45 @@ export function EvidenceCenterPage() {
       isActive = false;
     };
   }, []);
+
+  // ── URL query parameter handling ──────────────────────────────────────────
+  // When the page is opened with ?source=CN-LAW-003&article=13 (from a
+  // citation click in a report), auto-expand the matching source and fetch
+  // the article detail.
+
+  useEffect(() => {
+    const sourceParam = searchParams.get("source");
+    const articleParam = searchParams.get("article");
+
+    if (!sourceParam || loading) return;
+
+    // Switch to sources tab and select the requested source.
+    setTab("sources");
+    setSelectedSourceId(sourceParam);
+
+    if (articleParam) {
+      setUrlArticleLoading(true);
+      setUrlArticleDetail(null);
+      fetchArticleDetail(sourceParam, articleParam)
+        .then((detail) => {
+          setUrlArticleDetail(detail);
+          setUrlArticleLoading(false);
+        })
+        .catch(() => {
+          setUrlArticleDetail(null);
+          setUrlArticleLoading(false);
+        });
+    }
+  }, [searchParams, loading]);
+
+  // Auto-scroll to the article content when it renders.
+  useEffect(() => {
+    if (urlArticleDetail && urlArticleRef.current) {
+      urlArticleRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [urlArticleDetail]);
+
+  // ── end URL params ────────────────────────────────────────────────────────
 
   const filteredSources = useMemo(() => {
     const token = keyword.trim().toLowerCase();
@@ -796,6 +852,22 @@ export function EvidenceCenterPage() {
                     <strong>{copy.summaryTitle}</strong>
                     <p>{rowText(selectedSource, "summary", "-")}</p>
                   </div>
+
+                  {/* Article detail from ?article= query param */}
+                  {urlArticleLoading ? (
+                    <div className="knowledge-preview-block"><p>{copy.loading}</p></div>
+                  ) : urlArticleDetail ? (
+                    <div ref={urlArticleRef} className="knowledge-preview-block" style={{ borderLeft: "3px solid var(--color-primary, #2563eb)", paddingLeft: "0.75rem" }}>
+                      <strong>{formatLegalLocator(urlArticleDetail.article_no)}</strong>
+                      <p style={{ whiteSpace: "pre-wrap" }}>{urlArticleDetail.article_content}</p>
+                      {urlArticleDetail.source_url ? (
+                        <a className="ghost-btn link-btn" href={urlArticleDetail.source_url} target="_blank" rel="noreferrer" style={{ marginTop: "0.5rem" }}>
+                          {copy.openSource}
+                        </a>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   {selectedSource.external_url || selectedSource.url ? <a className="ghost-btn link-btn" href={selectedSource.external_url || selectedSource.url} target="_blank" rel="noreferrer">{copy.openSource}</a> : null}
                   {selectedSource.knowledge_url ? <a className="ghost-btn link-btn" href={selectedSource.knowledge_url}>{copy.openInLawReader}</a> : null}
                   {sourcePreview ? <div className="knowledge-preview-block"><strong>{copy.previewTitle}</strong><p>{sourcePreview}</p></div> : null}

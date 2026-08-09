@@ -149,17 +149,20 @@ test("BCR 本地真实上传、文档审查和引用跳转闭环", async ({ page
   await page.screenshot({ path: path.join(evidenceDir, "02_bcr_report_with_citations.png"), fullPage: true });
 
   await citationButton.click();
-  await expect(page.locator(".citation-drawer-panel")).toBeVisible();
-  await expect(page.getByText("当前引用位置", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/evidence\?source=EU-LAW-001/);
   await expect(page.getByText(/GDPR \(EU\) 2016\/679/).first()).toBeVisible();
-  await expect(page.getByText("段落4", { exact: true }).first()).toBeVisible();
-  await page.screenshot({ path: path.join(evidenceDir, "03_bcr_citation_drawer.png"), fullPage: true });
+  await page.screenshot({ path: path.join(evidenceDir, "03_bcr_evidence_article.png"), fullPage: true });
 
-  await page.getByRole("button", { name: "在知识库中继续阅读" }).click();
-  await expect(page).toHaveURL(/\/knowledge\/laws\/EU-LAW-001\?article=%E6%AE%B5%E8%90%BD4/);
-  await expect(page.getByText("当前查看条文", { exact: true })).toBeVisible();
-  await expect(page.locator(".law-viewer-article-target")).toContainText("binding corporate rules");
-  await page.screenshot({ path: path.join(evidenceDir, "04_bcr_knowledge_jump.png"), fullPage: true });
+  // Verify article content is visible below the global navigation
+  const bcrNav = page.locator(".kc-hero");
+  const bcrContent = page.locator(".knowledge-preview-block p").first();
+  await expect.poll(async () => {
+    const navBox = await bcrNav.boundingBox();
+    const contentBox = await bcrContent.boundingBox();
+    if (!navBox || !contentBox) return false;
+    return contentBox.y >= navBox.y + navBox.height;
+  }).toBe(true);
+  await page.screenshot({ path: path.join(evidenceDir, "04_bcr_knowledge_jump.png") });
 
   const relevantNetwork = network.filter((entry) =>
     entry.path === "/api/v0/files/upload"
