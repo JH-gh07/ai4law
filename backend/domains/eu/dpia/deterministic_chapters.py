@@ -14,6 +14,16 @@ def _display(value: Any) -> str:
         return "、".join(str(item) for item in value) or "未提供"
     if isinstance(value, bool):
         return "是" if value else "否"
+    labels = {
+        "approval": "可推进",
+        "conditional_approval": "附条件推进",
+        "objection": "不建议推进",
+        "planned": "计划中",
+        "implemented": "已实施",
+        "missing": "待补充",
+    }
+    if isinstance(value, str) and value in labels:
+        return labels[value]
     return str(value)
 
 
@@ -142,7 +152,7 @@ def build_deterministic_chapter(
             f"{_mitigation_lines(mitigations)}\n\n"
             "每项措施必须保留负责人、完成日期、验收方法和实施证据。"
             "状态为 planned 或 missing 的措施不得在报告中表述为已落实。\n\n"
-            f"对自动化决策、安全处理和 DPIA 持续复评的措施，应分别验证权利救济、技术与组织控制以及风险变化触发机制。{cite('22')}{cite('32')}{cite('35')}"
+            f"对自动化决策和 DPIA 持续复评的措施，应分别验证权利救济、技术与组织控制以及风险变化触发机制。{cite('22')}{cite('35')}"
         )
     else:
         source_opinion = facts.get("dpia.dpo_opinion") or dpo.get("source_opinion")
@@ -152,7 +162,7 @@ def build_deterministic_chapter(
             f"用户填写的 DPO 意见为：“{_display(source_opinion)}”。该输入不等同于正式 DPO 签署或批准。\n\n"
             f"结构化风险评估结论：{_display(dpo.get('dpo_position'))}。前置条件："
             f"{_display(dpo.get('conditions'))}。该结论由系统依据风险矩阵和措施状态生成，"
-            "不得冒充 DPO 本人意见；条件完成后仍需取得正式审阅记录。\n\n"
+            f"不得冒充 DPO 本人意见；条件完成后仍需取得正式审阅记录。{cite('35')}\n\n"
             f"是否建议事先咨询：{_display(dpo.get('prior_consultation_recommended'))}。"
             f"理由：{_display(dpo.get('reason'))}。如剩余高风险无法降低，应在开始处理前完成事先咨询。{cite('36')}"
         )

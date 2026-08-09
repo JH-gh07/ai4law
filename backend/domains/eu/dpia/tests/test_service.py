@@ -629,6 +629,8 @@ def test_external_draft_uses_structured_chapters_for_consultation_and_signoff() 
     assert "用户填写的 DPO 意见" in consultation
     assert "不等同于正式签署或批准" in consultation
     assert "结构化风险评估结论" in signoff
+    assert "附条件推进" in signoff
+    assert "conditional_approval" not in signoff
     assert "DPO已正式审阅" not in consultation + signoff
 
 
