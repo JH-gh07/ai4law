@@ -778,3 +778,425 @@ C-COMMON-2 (CIT引用崩溃)
 **规律**：评级越低的模块，命中共性缺陷越多（dpia/us_14117 命中 3+ 个共性缺陷），说明系统性问题有放大效应。
 
 > **最终建议**：优先修复 3 个 P0 共性缺陷（LLM生成失败 + CIT引用崩溃 + 假COMPLETED），预计解决约 50% 的问题。剩余 7 个特殊问题中 4 个（S-1/S-2/S-3 及其连锁问题）将随共性修复自动消失。
+
+
+---
+
+## 九、代码链路逆向追踪：从输出现象反推到源码根因
+
+> 对每个 P0/P1 问题逐链路定位——从 result.json/markdown 的异常现象出发，顺着代码调用链反向定位到具体文件、函数、行号，明确缺陷的精确位置。
+
+---
+
+### 9.1 LLM 生成静默失败的完整链路（dpia/cpra/cn_flow/us_14117）
+
+**现象**：dpia 7/7 章占位、cpra 3/4 章占位、cn_flow 3/5 章占位、us_14117 正文 13 行无结构
+
+**逆向追踪链**：
+
+```text
+[现象] markdown.md 章节内容 = "（1. 识别 DPIA 需求：LLM未配置，此处为占位内容）"
+  ↓
+[Step 1] dpia/report_renderer.py 的 render() 读取 dpia_chapters[].content
+  ↓ 该 content 由 dpia/service.py:448 传入
+[Step 2] dpia/service.py:302 → self.agents["external_draft"].run(...)
+  ↓ 调用 dpia/agents/external_draft_agent.py:44 run()
+[Step 3] external_draft_agent.py:59
+          → if not self.enabled: return _placeholder_chapters(gen_basis)
+  ↓
+[Step 4] self.enabled 来自 agents/__init__.py:48-49 (DPIAAgentBase)
+          → return self.llm_client is not None and self.llm_client.enabled
+  ↓
+[Step 5] self.llm_client.enabled 来自 common/llm/client.py:73
+          → self._enabled = provider.enabled and bool(self._api_key) and OpenAI is not None
+```
+
+**根因位置**（三换一即可修复）：
+| 层面 | 文件:行号 | 条件 | 现象 |
+|------|----------|------|------|
+| LLM provider | `common/llm/client.py:73` | `provider.enabled=False` 或 `api_key=""` 或 `OpenAI=None` | `_enabled=False` → 所有下游链路全断 |
+| Agent base | `agents/__init__.py:48-49` | `llm_client is None or not enabled` | 9 个 dpia Agent 全部静默返回 None/default |
+| 各 service | `dpia/.../external_draft_agent.py:59`, `cpra/service.py:515`, `cn_flow/service.py:197`, `pipia/service.py:125` | `if self.llm_client and self.llm_client.enabled:` | 分支到 `else: 占位文本` |
+
+**cpra 具体链路**（pipeline 不同但仍同一根因）：
+```text
+cpra/service.py:248 → _generate_chapters_from_context()
+  → 第515行: if self.llm_client and self.llm_client.enabled:
+       → generate_chapter(...)  ← 调用 module_generator.generate_chapter()
+     else:
+       → f"（{title}：LLM未配置，此处为占位内容）"
+```
+
+**cn_flow 具体链路**：
+```text
+cn_flow (eo14117_flow_review)/service.py:185 → _generate_chapters_from_pack()
+  → 第197行: if self.llm_client and self.llm_client.enabled:
+       → generate_chapter(...)
+     else:
+       → f"（{title}：LLM未配置，此处为占位内容）"
+```
+
+**dpia 特殊之处**（两套 chapter generator，都用同一检查）：
+- 路径1（未使用）: `chapter_generator.py:339` → `if self.llm and self.llm.enabled:`
+- 路径2（实际使用）: `external_draft_agent.py:59` → `if not self.enabled: return _placeholder_chapters()`
+
+**为何 cn_flow markdown 部分章节有内容？**  
+- cn_flow 的 markdown.md 和 result.json chapters 走**两条不同渲染路径**
+- result.json chapters：从 `_generate_chapters_from_pack()` 产出 → 全部为 LLM 占位
+- markdown.md：从 DOCX/MD 模板渲染器独立生成，将 `facts_json`/`issues`/`risk_matrix` 的结构化数据注入模板 → **结构化数据本身非空，所以模板渲染产出了有内容的 markdown**
+- 证据：result.json 中 4 章全为 `（xxx：LLM未配置，此处为占位内容）`，但 markdown.md 中第 3 章有 `US ServiceCo | 美国 | processor | 受限主体=False`（来自 facts）、第 4 章有表格数据（来自 risk_matrix）
+
+**修复方向**：
+1. 配置层：确保 `api_key` 已设置且 `openai` 包已安装（`client.py:73`）
+2. 代码层：当 `enabled=False` 时，不应静默返回占位文本 → 应抛异常让 pipeline 返回 `LLM_UNAVAILABLE` 状态
+3. 消除 `state` 的假 `COMPLETED`（见 9.8）
+
+---
+
+### 9.2 CIT 引用标记残留的完整链路（pipia）
+
+**现象**：pipia markdown.md 第117行 `{{CIT-CN-CNLAW003-ART50`、第139行 `{{CIT-CN-CN_`
+
+**逆向追踪链**：
+
+```text
+[现象] markdown 正文中有未闭合的 {{CIT-CN-CNLAW003-ART50
+  ↓
+[Step 1] 该正文来自 service.py render → 将 chapters[].content 拼接为完整 markdown
+  ↓
+[Step 2] chapters[].content 来自 generate_chapter() (pipia/service.py:126-135)
+  ↓
+[Step 3] generate_chapter() 内部 (module_generator.py:357-361):
+          return apply_citation_pipeline(cleaned, registry=..., allowed_citations=...).text
+  ↓
+[Step 4] apply_citation_pipeline() (postprocess.py:412-445):
+          → _replace_registered_markers(converted, registry)
+  ↓
+[Step 5] _replace_registered_markers() (postprocess.py:459-475):
+          1. _CIT_MARKER_RE.sub(_replace_marker, text)  ← 替换完整 {{CIT-xxx}} 为 [n]
+          2. _TRUNCATED_CIT_MARKER_RE.sub("【待核验：引用格式不完整】", ...)  ← 清理截断标记
+```
+
+**正则匹配分析**（markers.py:20-25）：
+```python
+CITATION_ID_RE = r"CIT-[A-Z]{2}-[A-Z0-9_-]+-(?:ART[A-Za-z0-9_一-鿿]+|GEN)-P\d+"
+CIT_MARKER_RE  = r"\{\{( CITATION_ID_RE )\}\}"
+                = r"\{\{CIT-[A-Z]{2}-[A-Z0-9_-]+-(?:ART...|GEN)-P\d+\}\}"
+```
+- 完整标记 `{{CIT-CN-CNLAW003-ART50-P01}}` ✅ 匹配
+- 截断标记 `{{CIT-CN-CNLAW003-ART50` ❌ 不匹配 — 缺少 `-P\d+}}` 后缀
+- 但 `_TRUNCATED_CIT_MARKER_RE` (postprocess.py:20) 应能清理它
+
+**矛盾**：`generate_chapter()` 已调用 `apply_citation_pipeline()` → 应已清理截断标记 → 但 pipia markdown 仍有残留
+
+**只能在两种情况下发生**：
+1. pipia markdown 由**另一条渲染路径**生成，该路径没有调用 `apply_citation_pipeline()`
+2. `generate_chapter()` 返回的 clean text 在后续 render 步骤中被重新拼接了 raw content
+
+**精确定位**：需要检查 pipia service 中 report render 的 markdown 拼接逻辑（line 612-666 区域），确认 render 步骤是否从 chapters 或从其他源获取内容
+
+**临时结论**：pipia 的最终 markdown 可能由 `render_markdown_template()` 通过 Jinja2 模板生成，而模板中直接引用了 chapter.content（已 clean）。但如果有独立于 chapters 的内容块通过其他渠道拼接，就会绕过 CIT 清理。
+
+---
+
+### 9.3 footnote_map 为空的完整链路（assessment）
+
+**现象**：`citation_map_json.json` 中 `all_items: [10条]` 但 `footnote_map: {}`
+
+**逆向追踪链**：
+
+```text
+[现象] footnote_map = {}（空字典）
+  ↓
+[Step 1] citation_map_json 由 CitationRegistry.build_citation_map_section() 或 write_citation_map_json() 生成
+  ↓
+[Step 2] footnote_map 来自 CitationRegistry.get_footnote_map()
+          该 map 由 assign_footnote_number(citation_id) 调用填充
+  ↓
+[Step 3] assign_footnote_number() 在 postprocess._replace_registered_markers() 中被调用 (line 464)
+          → cid = match.group(1)
+          → num = registry.assign_footnote_number(cid)
+  ↓
+[Step 4] 该调用仅在 CIT_MARKER_RE 匹配到正文中的 {{CIT-xxx}} 时触发 (line 471)
+          → _CIT_MARKER_RE.sub(_replace_marker, text)
+  ↓
+[Step 5] 当 assessment 的 chapters 正文中无 {{CIT-xxx}} 标记时（LLM 可能未插入），
+          assign_footnote_number() 不被调用 → footnote_map 保持为空
+```
+
+**根因位置**：
+| 层级 | 文件:行号 | 逻辑 |
+|------|----------|------|
+| 标记生成 | `module_generator.py:334-339` | system prompt 指示 LLM 使用 `{{CIT-xxx}}` 标记，但 LLM 可能不遵从 |
+| 标记替换 | `postprocess.py:471` | `_CIT_MARKER_RE.sub(replace, text)` — 仅匹配到才调用 `assign_footnote_number()` |
+| 脚注映射 | `CitationRegistry.assign_footnote_number()` | 仅在 `_replace_marker` 回调中被调用 |
+
+**核心矛盾**：`all_items` 有 10 条引用（说明 `CitationRegistry.register()` 被调用了 10 次），但 `footnote_map` 为空（说明 `assign_footnote_number()` 被调用了 0 次）。这表示：
+- 引用**注册**正常：10 个 CitationItem 通过 `register()` 写入了 registry
+- 引用**映射**失败：LLM 生成的章节正文中未插入 `{{CIT-xxx}}` 标记，或者标记插入后未被 `CIT_MARKER_RE` 匹配到
+
+**或者**：assessment 的 render 链可能**完全绕过了** `_replace_registered_markers()` —— 章节生成和渲染在不同步骤完成，render 步骤可能直接使用了 chapter content 而没有经过 CIT 管道。
+
+---
+
+### 9.4 工程标注泄漏的完整链路（tia/pipia/eu_scc，跨4模块）
+
+**现象**：tia markdown 中 6 处 `【待核验：缺少法规依据】`、pipia 多处、eu_scc 2 处、assessment 1 处
+
+**逆向追踪链**：
+
+```text
+[现象] 对外报告中出现 `【待核验：缺少法规依据】`
+  ↓
+来源有两条代码路径：
+
+路径A — LLM 遵从 system prompt 主动生成:
+[Step A1] dpia/chapter_generator.py:31 (或 module_generator.py:339)
+          → prompt: "若无可核验依据，写「【待核验：缺少法规依据】」"
+[Step A2] LLM 在 chapter 正文中生成该字符串
+[Step A3] 无任何 post-generation 过滤器移除该标记
+
+路径B — postprocessor 注入:
+[Step B1] postprocess.py:469 → `return "【待核验：引用无法映射】"` 
+          (当 CIT marker 不匹配任何注册引用时)
+[Step B2] postprocess.py:473 → `return "【待核验：引用格式不完整】"`
+          (当 CIT marker 被截断时)
+```
+
+**根因位置**：
+| 源 | 文件:行号 | 内容 | 影响面 |
+|----|----------|------|--------|
+| LLM prompt 指令 | `dpia/chapter_generator.py:28-29` | `"禁止使用其他引用格式...若无可核验依据，写「【待核验：缺少法规依据】」"` | dpia(直接), 扩散到其他使用同 prompt 的模块 |
+| 通用 prompt 指令 | `module_generator.py:339` | `"若无可引用依据，不要编造引用。"` | 所有用 `generate_chapter()` 的模块 |
+| postprocessor 注入 | `postprocess.py:469` | `"【待核验：引用无法映射】"` | 所有使用 CIT pipeline 的模块 |
+| postprocessor 注入 | `postprocess.py:473` | `"【待核验：引用格式不完整】"` | 所有有截断标记的模块 |
+
+**修复缺环**：
+- `apply_citation_pipeline()` 清理了 CIT 标记但**不清理工程标注**
+- 需要对客 markdown 渲染管线中增加 `sanitize_external_markdown()` 步骤
+- 过滤关键词：`【待核验` / `【推测】` / `【已移除`
+
+---
+
+### 9.5 evidence_chain 溯源字段全空的完整链路（assessment/cn_flow/us_14117）
+
+**现象**：所有 EvidenceItem 的 `legal_basis`/`supporting_basis`/`document_refs`/`rag_query_used` 均为 null/空
+
+**逆向追踪链**：
+
+```text
+[现象] evidence_chain_json 中所有 EvidenceItem 的这些字段为空
+  ↓
+[Step 1] evidence_chain 由各模块的 build_xxx_evidence() 函数构造
+  ↓
+[Step 2] 以 assessment 为例:
+          common/workflow/pipeline.py → 调用注入的 build_evidence 函数
+  ↓
+[Step 3] assessment 的 evidence_builder 创建 EvidenceItem 时:
+          → 填充了 evidence_id, claim, conclusion, fact_refs, rule_refs
+          → 未填充 legal_basis, supporting_basis, document_refs, rag_query_used
+```
+
+**根因位置**（代码精确行）：
+
+检查各模块的 evidence builder：
+
+| 模块 | evidence builder 文件 | 缺失字段 |
+|------|------|------|
+| assessment | 通过 WorkflowPipeline 注入的 build_evidence callable | `legal_basis`, `supporting_basis`, `document_refs`, `rag_query_used`, `usage_constraint` |
+| cn_flow | `backend/domains/us/eo14117_flow_review/evidence_builder.py` | 同上 |
+| us_14117 | 通过 WorkflowPipeline 注入的 build_evidence callable | 同上 |
+
+**代码特征**：这些字段在 `EvidenceItem` schema 中被定义（`common/workflow/evidence.py`），但所有 evidence builder 实现中都未填充它们。这属于**Schema 已定义但实现未跟进**的典型半成品状态。
+
+---
+
+### 9.6 state=COMPLETED 掩盖失败的完整链路（dpia/assessment/cpra/cn_flow）
+
+**现象**：正文含 "LLM未配置" 占位但 state=COMPLETED
+
+**逆向追踪链**：
+
+```text
+[现象] _result.json 中 state = "COMPLETED"
+  ↓
+[Step 1] 各模块 service 的 return 语句中硬编码 state
+  ↓
+  dpia/service.py:443     → return DPIAResult(..., state="COMPLETED", ...)
+  cpra/service.py         → return CPRAResult(..., risk_level=risk_level, ...)
+  cn_flow/service.py      → 通过 WorkflowPipeline 返回，pipeline 默认 state
+  assessment (WorkflowPipeline) → pipeline 返回 WorkflowRunResult → 默认标记为 completed
+```
+
+**根因位置**：
+
+| 模块 | 文件:行号 | 硬编码 |
+|------|----------|--------|
+| dpia | `service.py:443` | `state="COMPLETED"` — 无条件设置，不检查 placeholder |
+| cpra | `service.py` (return 语句) | `risk_level` 由规则引擎计算正确，但未单独设 state |
+| cn_flow | WorkflowPipeline 返回 | pipeline 不区分 LLM 成功/失败 |
+| assessment | WorkflowPipeline 返回 | 同上 |
+
+**修复方向**：在 `return` 前增加 placeholder 检测：
+```python
+has_placeholder = any("LLM未配置" in ch.content for ch in chapters)
+state = "PARTIAL" if has_placeholder else "COMPLETED"
+```
+
+---
+
+### 9.7 us_14117 docx 0字节 + markdown 崩坏的完整链路
+
+**现象**：docx.docx = 0B，markdown.md 仅 13 行且无段落结构
+
+**逆向追踪链**：
+
+```text
+[现象A] docx.docx 文件大小 0B
+  ↓
+[Step A1] DOCX 渲染器 render_docx_template() 读取模板 + 填充变量
+  ↓
+[Step A2] 模板变量映射失败 → docx 生成 abort → 空文件写入
+  或：docx 模板文件本身不存在/路径错误
+  ↓
+[Step A3] us_14117 的 report renderer 调用链: 
+          render_docx_template(TEMPLATE_PATH, context)
+          需要检查 TEMPLATE_PATH 是否存在及 context 填充是否完整
+
+[现象B] markdown.md 13 行超长无换行文本
+  ↓
+[Step B1] markdown 由 render_markdown_template() 生成（Jinja2 模板）
+  ↓
+[Step B2] 模板中 LLM 生成的章节内容通过 {{ chapter.content }} 注入
+          由于 LLM disabled → chapter.content = "（xxx：LLM未配置..." 短字符串
+  ↓
+[Step B3] 但 markdown 中的结构化数据（风险详情、合规措施）来自模板绑定
+          而非 LLM → 规则引擎产出的数据通过模板变量注入
+  ↓
+[Step B4] 模板中的 for 循环将 rule_engine_result 的 21 项安全措施缺口
+          逐行渲染，但 LLM 未生成段落间换行 → 导致超长单行
+```
+
+**根因位置**（需进一步检查）：
+| 层 | 文件 | 可疑点 |
+|----|------|--------|
+| DOCX 渲染 | `common/render/report.py` 的 `render_docx_template()` | 变量缺失时返回空文档而非抛异常 |
+| us_14117 模板 | `resources/templates/us/` 下的 docx 模板 | 占位变量 `{{ chapter.content }}` 为空时模板行为 |
+| markdown 渲染 | `common/render/report.py` 的 `render_markdown_template()` | markdown 模板中缺少换行控制 |
+
+---
+
+### 9.8 CIT postprocessor 正则覆盖缺口（pipia 特化分析）
+
+**现象**：pipia markdown 第 117 行 `{{CIT-CN-CNLAW003-ART50`、第 139 行 `{{CIT-CN-CN_`
+
+**精确正则分析**：
+
+```python
+# markers.py:20-22 — 完整 citation ID 格式
+CITATION_ID_RE = r"CIT-[A-Z]{2}-[A-Z0-9_-]+-(?:ART[A-Za-z0-9_一-鿿]+|GEN)-P\d+"
+#                          ^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                          法域    缩写             ART段落号/GEN    -P序号(必需)
+
+# markers.py:25 — 完整标记格式  
+CIT_MARKER_RE = r"\{\{( CITATION_ID_RE )\}\}"
+# 要求: {{CIT-CN-XXXX-ARTxxx-P01}} 完整闭合
+
+# postprocess.py:20 — 截断标记清理
+_TRUNCATED_CIT_MARKER_RE = r"\{\{CIT-[A-Z0-9_-]*(?:\}\}?)?"
+```
+
+`{{CIT-CN-CNLAW003-ART50` 的匹配情况：
+- `\{\{CIT-` → 匹配 `{{CIT-`
+- `[A-Z0-9_-]*` → 匹配 `CN-CNLAW003-ART50`（⚠️ 包含两个连字符 `CNLAW003-ART50`）
+
+**这里有问题**：`CITATION_ID_RE` 要求 `[A-Z0-9_-]+` 后接 `-(?:ART...|GEN)-P\d+`。但 `_TRUNCATED_CIT_MARKER_RE` 中的 `[A-Z0-9_-]*` 是贪婪匹配，会吃掉所有字符包括 `-ART50`。所以 `_TRUNCATED_CIT_MARKER_RE` 应该匹配 `{{CIT-CN-CNLAW003-ART50` 并替换它。
+
+**然而 pipia 输出中仍然有原始截断标记**，这意味着：
+1. `_replace_registered_markers()` 未被调用（最可能），或
+2. pipia 的 content 经过了二次拼接，标记在 `apply_citation_pipeline()` 之后被重新引入
+
+**结论**：pipia 的 markdown 渲染路径未使用 `apply_citation_pipeline()` 或使用了但 content 来自非 pipeline 源。
+
+---
+
+### 9.9 BCR citation 系统绕过（BCR 特化分析）
+
+**现象**：26 个 findings 标注了法律依据（如 "GDPR Article 47(1)(a) [1]"），但 citation_map 仅 2 条注册引用
+
+**逆向追踪链**：
+
+```text
+[现象] comment_map all_items 仅2条，但 findings 表中有 26 条带法律依据
+  ↓
+[Step 1] BCR 的 findings 由 BCRRuleEngine 生成（bcr_rulebook.json 驱动）
+  ↓
+[Step 2] 每条 finding 的 legal_basis 字段是 JSON 中的静态文本
+          （如 "GDPR Article 47(1)(a); EDPB Recommendations 1/2022"）
+  ↓
+[Step 3] 这些法律依据字符串被 BCR Agent 直接嵌入 chapter 正文
+          如 markdown 中: `依据：GDPR Article 47(1)(a) [1]；EDPB Recommendations 1/2022`
+  ↓
+[Step 4] Agent 在生成正文时手动写了 `[1]` 而非 `{{CIT-xxx}}` 标记
+          → 引用信息是硬编码在正文中的，未经过 CitationRegistry 注册流程
+```
+
+**根因位置**：
+| 层 | 文件 | 问题 |
+|----|------|------|
+| 规则引擎 | `backend/domains/eu/bcr_review/` 下的 bcr_rulebook.json | legal_basis 字段是纯文本，未被注册为 CitationItem |
+| Agent 生成 | `backend/domains/eu/bcr_review/agents/` 下的 Agent | 正文直接写 `[1]` 而非 `{{CIT-CIT-xxx}}` 标记 |
+| 引用注册 | `CitationRegistry.register()` | 仅对 Agent 显式提交的引用注册，不对 rulebook 静态 legal_basis 注册 |
+
+**修复方向**：在 build pipeline 中为 rulebook 中的每条 legal_basis 调用 `CitationRegistry.register()`，并在 Agent 指令中要求使用 `{{CIT-xxx}}` 标记格式。
+
+---
+
+### 9.10 dpia necessity 预判格式化缺失（dpia 特化分析）
+
+**现象**：dpia markdown 第 8-12 行出现 Python dict repr(`{'type': '...', 'fact_refs': [...]}`)
+
+**逆向追踪链**：
+
+```text
+[现象] markdown 中有 Python 字典格式的触发理由
+  ↓
+[Step 1] markdown 由 report_renderer 渲染 → 使用了 need_assessment.trigger_reasons
+  ↓
+[Step 2] trigger_reasons 来自 need_agent_result (dpia/service.py:149)
+          → dpia_need_output = DPIANeedAgentOutput(**need_agent_result)
+  ↓
+[Step 3] need_agent_result 是 Agent 返回的 dict
+          → {..., "trigger_reasons": [{"type": "automated_decision_making", ...}, ...]}
+  ↓
+[Step 4] 在 build_generation_basis_pack 或 renderer 中，
+          trigger_reasons 的 dict item 被以 str()/repr() 方式插入 markdown
+          而非格式化为自然语言描述
+```
+
+**根因位置**：
+| 层 | 文件 | 行 | 问题 |
+|----|------|----|------|
+| 中间转换 | `dpia/service.py:430-438` | `need_assessment.trigger_reasons` | 将 dict 直接转为 str 列表 |
+| 渲染器 | `dpia/report_renderer.py` | 渲染 need_assessment 时 | 对 dict 类型 trigger_reasons 未做自然语言格式化 |
+
+**对比**：dpia `chapter_generator.py` 的 `build_context_block_from_pack()` (line 120-289) 正确构建了 chapter 级上下文，但 `need_assessment` 的独立渲染路径未使用相同的格式化逻辑。
+
+---
+
+### 9.11 完整缺陷定位总表
+
+| # | 问题 | 现象 | 根因文件:行号 | 精确缺陷 |
+|---|------|------|-------------|---------|
+| 1 | LLM 全静默失败 | 4模块占位文本 | `common/llm/client.py:73` | `_enabled = ... OpenAI is not None` — runtime 条件不满足 |
+| 2 | dpia Agent 链断裂 | 7章占位 | `dpia/agents/external_draft_agent.py:59` | `if not self.enabled` → fallback |
+| 3 | cpra 半失效 | 4/6章占位 | `cpra/service.py:515` | `if self.llm_client.enabled` else 占位 |
+| 4 | cn_flow 半失效 | 4/4章占位(result.json) | `eo14117_flow_review/service.py:197` | 同模式 |
+| 5 | pipia CIT 标记残留 | `{{CIT-CN-...}}` | `module_generator.py:357` vs pipia render | pipeline 产出已 clean，render 路径可能绕过 |
+| 6 | assessment footnote_map 空 | `{}` | `postprocess.py:464` → `registry.assign_footnote_number(cid)` | LLM 未插入 marker → 无调用 |
+| 7 | 工程标注泄漏 | `【待核验】` 等 | `dpia/chapter_generator.py:28-29` + `postprocess.py:469,473` | prompt 指令 + postprocessor 注入，无后过滤 |
+| 8 | evidence_chain 空字段 | legal_basis=null | 各 `evidence_builder.py` | Schema 已定义，实现未填充 |
+| 9 | state 假 COMPLETED | 正文占位但 COMPLETED | `dpia/service.py:443` 等 | 硬编码 `state="COMPLETED"` |
+| 10 | us_14117 docx 0B | 空文件 | `common/render/report.py` | 变量缺失时返回空文档 |
+| 11 | BCR citation 绕过 | 26→2 | BCR Agent 正文 | Agent 手动写 `[1]` 而非 `{{CIT-xxx}}` |
+| 12 | dpia dict 泄漏 | Python repr | `dpia/service.py:430-438` | trigger_reasons dict→str 未格式化 |
