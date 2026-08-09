@@ -11,7 +11,22 @@ def _display(value: Any) -> str:
     if value is None or value == "" or value == []:
         return "未提供"
     if isinstance(value, list):
-        return "、".join(str(item) for item in value) or "未提供"
+        readable: list[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                text = next(
+                    (
+                        str(item.get(key) or "").strip()
+                        for key in ("reason", "title", "description", "name", "type")
+                        if str(item.get(key) or "").strip()
+                    ),
+                    "",
+                )
+                if text:
+                    readable.append(text)
+            elif str(item).strip():
+                readable.append(str(item).strip())
+        return "、".join(readable) or "未提供"
     if isinstance(value, bool):
         return "是" if value else "否"
     labels = {

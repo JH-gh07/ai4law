@@ -700,7 +700,13 @@ def test_external_draft_no_llm_path_keeps_citations_and_article36_decision() -> 
                 {"section_id": key, "confirmed_facts": [], "issues": [], "legal_grounding": []}
                 for key in section_ids
             ],
-            "need_assessment": {"dpia_required": True},
+            "need_assessment": {
+                "dpia_required": True,
+                "trigger_reasons": [
+                    {"type": "automated_decision", "reason": "涉及自动化决策"},
+                    {"type": "large_scale", "reason": "预计处理大量数据主体"},
+                ],
+            },
             "dpo_decision_pack": {
                 "prior_consultation_recommended": True,
                 "reason": "存在HIGH剩余风险",
@@ -710,6 +716,8 @@ def test_external_draft_no_llm_path_keeps_citations_and_article36_decision() -> 
     )
 
     assert "[" in chapters[0]["content"]
+    assert "涉及自动化决策、预计处理大量数据主体" in chapters[0]["content"]
+    assert "{'type':" not in chapters[0]["content"]
     assert "必须在开始处理前" in chapters[-1]["content"]
     assert any(chapter["citations"] for chapter in chapters)
 
