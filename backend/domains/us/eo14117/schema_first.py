@@ -87,6 +87,7 @@ def build_eo14117_document_ir(
             title=chapter.title,
             level=2,
             ordinal=str(chapter.chapter_no),
+            reuse_policy="reference" if chapter.chapter_no == 4 else "single_use",
             blocks=blocks,
         ))
 

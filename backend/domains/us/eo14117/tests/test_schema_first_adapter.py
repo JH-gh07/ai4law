@@ -71,3 +71,22 @@ def test_both_citation_shapes_produce_identical_ir() -> None:
         )
         return doc.model_dump(mode="json")
     assert build("{{CIT-EU-GDPR-ART35-P01}} 法规依据。") == build("法规依据 [1]。")
+
+
+def test_appendix_can_repeat_a_clarification_from_the_conclusion() -> None:
+    repeated = "请补充接收方控制权和政府投资信息。"
+    doc, reporting_registry = build_eo14117_document_ir(
+        task_id="repeat",
+        company_name="C",
+        chapters=[
+            US14117Chapter(chapter_no=1, title="总体结论", content=repeated, risk_level="HIGH"),
+            US14117Chapter(chapter_no=4, title="附件与持续监控", content=repeated, risk_level="HIGH"),
+        ],
+        citation_registry=CitationRegistry(),
+        generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc),
+        model="m",
+    )
+
+    assert doc.sections[0].reuse_policy == "single_use"
+    assert doc.sections[1].reuse_policy == "reference"
+    assert DocumentCompiler().compile(doc, reporting_registry).status == "success"
