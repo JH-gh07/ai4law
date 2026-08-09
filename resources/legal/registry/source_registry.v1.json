@@ -746,7 +746,7 @@
     },
     {
       "source_id": "US-CA-001",
-      "title": "California CPRA/CCPA",
+      "title": "California Civil Code — CCPA/CPRA",
       "aliases": [],
       "jurisdiction": "us",
       "modules": [
@@ -769,20 +769,20 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
+        "path": "privacy",
         "module": "us-cpra",
         "category": "核心法律",
         "doc_type": "law",
-        "publisher": "California Attorney General",
-        "source_org": "California AG",
-        "publish_date": "2023-03-29",
-        "effective_date": "2023-01-01",
-        "snapshot_path": "resources/legal/sources/us/snapshots/ca_oag_cpra_excerpts.md",
-        "external_url": "https://oag.ca.gov/privacy/ccpa",
+        "publisher": "California Legislative Information",
+        "source_org": "California Legislature",
+        "publish_date": "",
+        "effective_date": "",
+        "snapshot_path": "resources/legal/sources/us/snapshots/ca_civil_code_cpra_sections.md",
+        "external_url": "https://www.leginfo.legislature.ca.gov/faces/codes_displayText.xhtml?article=&chapter=&division=3.&lawCode=CIV&part=4.&title=1.81.5.",
         "usage": "审查基准",
         "suitable_for": "CPRA合规",
         "report_usage": "可直接引用条文号",
-        "summary": "California CPRA/CCPA 是加州隐私合规的核心法律依据，用于解释消费者权利、敏感个人信息限制使用和企业义务。"
+        "summary": "California Civil Code 中的 CCPA/CPRA 现行条文用于解释消费者权利和企业义务；入库内容按准确的 1798.x 条号切分。"
       }
     },
     {

@@ -78,3 +78,29 @@ def test_cpra_legal_retriever_uses_product_registry_module(monkeypatch) -> None:
     CPRALegalRetriever().retrieve("opt_out")
 
     assert calls[0]["module"] == "us_cpra"
+
+
+def test_cpra_legal_retriever_prioritizes_the_requested_exact_locator(monkeypatch) -> None:
+    class _Hit:
+        def __init__(self, article: str, score: float) -> None:
+            self.title = "California Civil Code — CCPA/CPRA"
+            self.article = article
+            self.content = f"Rule for {article}"
+            self.score = score
+            self.id = "US-CA-001"
+
+    def _retrieve(_query: str, **_kwargs):
+        return type(
+            "Hits",
+            (),
+            {"documents": [_Hit("1798.130", 0.99), _Hit("1798.100", 0.70)]},
+        )()
+
+    monkeypatch.setattr(
+        "backend.domains.us.cpra.legal_retriever.retrieve_legal_documents",
+        _retrieve,
+    )
+
+    results = CPRALegalRetriever().retrieve("notice", "Civil Code § 1798.100")
+
+    assert results[0]["article_no"] == "1798.100"

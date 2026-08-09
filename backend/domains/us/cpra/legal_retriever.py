@@ -53,6 +53,14 @@ class CPRALegalRetriever:
             self._normalize_hit(item)
             for item in hits
         ]
+        requested_locators = set(re.findall(r"\b1798\.\d+\b", query))
+        results.sort(
+            key=lambda item: (
+                item["article_no"] not in requested_locators,
+                -item["score"],
+            )
+        )
+        results = results[:3]
         self._retrieve_cache[cache_key] = results
         return results
 
