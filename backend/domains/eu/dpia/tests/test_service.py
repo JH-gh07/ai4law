@@ -479,3 +479,40 @@ def test_external_draft_produces_all_7_chapters() -> None:
         assert ch.get("chapter_no", 0) > 0
         assert ch.get("title")
         assert ch.get("content")
+
+
+def test_external_draft_prompt_uses_generation_basis_contract() -> None:
+    """The chapter prompt must include facts and legal sources from the basis pack."""
+    from backend.domains.eu.dpia.agents.external_draft_agent import _build_chapter_prompt
+
+    prompt = _build_chapter_prompt(
+        chapter_id="processing_description",
+        title="2. 描述处理活动",
+        section={},
+        gen_basis={
+            "user_facts": [
+                {"field_path": "dpia.project_name", "value": "智能课程推荐系统"},
+                {"field_path": "dpia.data_subject_count", "value": "50000"},
+            ],
+            "regulations": [
+                {
+                    "source_id": "CIT-EU-GDPR-ART35-P01",
+                    "title": "GDPR",
+                    "article": "35",
+                }
+            ],
+            "issues": [],
+            "risk_matrix": [],
+            "mitigation_plan": [],
+            "dpo_decision_pack": {},
+            "need_assessment": {"dpia_required": True},
+            "legal_grounding": {},
+        },
+        writing={},
+    )
+
+    assert "智能课程推荐系统" in prompt
+    assert "50000" in prompt
+    assert "CIT-EU-GDPR-ART35-P01" in prompt
+    assert "项目事实：\n未提供" not in prompt
+    assert "法规依据：\n无引用" not in prompt

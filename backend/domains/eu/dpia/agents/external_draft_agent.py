@@ -104,12 +104,19 @@ def _build_chapter_prompt(
     writing: dict,
 ) -> str:
     """Build chapter-specific prompt with writing strategy constraints."""
-    facts_brief = _format_facts(gen_basis.get("facts", gen_basis.get("all_facts", [])))
+    # ``build_generation_basis_pack`` is the canonical producer and names
+    # the complete request-derived fact list ``user_facts``.  Keep the older
+    # aliases as read-only fallbacks for stored/replayed packs.
+    facts_brief = _format_facts(
+        gen_basis.get("user_facts", gen_basis.get("facts", gen_basis.get("all_facts", [])))
+    )
     issues_brief = _format_issues(gen_basis.get("issues", gen_basis.get("all_issues", [])))
     risk_brief = _format_risks(gen_basis.get("risk_matrix", []))
     mit_brief = _format_mitigation(gen_basis.get("mitigation_plan", []))
     dpo_brief = _format_dpo(gen_basis.get("dpo_decision_pack", {}))
-    citations_brief = _format_citations(gen_basis.get("citations", []))
+    citations_brief = _format_citations(
+        gen_basis.get("citations", gen_basis.get("regulations", []))
+    )
     legal_brief = _format_legal(gen_basis.get("legal_grounding", {}))
     need_brief = _format_need(gen_basis.get("need_assessment", {}))
 
@@ -229,7 +236,16 @@ def _format_dpo(dpo: dict) -> str:
 def _format_citations(citations: list) -> str:
     if not citations:
         return "无引用"
-    return ", ".join(str(c)[:60] for c in citations[:10])
+    lines: list[str] = []
+    for citation in citations[:10]:
+        if isinstance(citation, dict):
+            rule_id = citation.get("rule_id", citation.get("source_id", ""))
+            title = citation.get("title", "")
+            article = citation.get("article", citation.get("article_no", ""))
+            lines.append(f"{{{{{rule_id}}}}} {title} {article}".strip())
+        else:
+            lines.append(str(citation)[:120])
+    return "\n".join(lines) or "无引用"
 
 def _format_legal(legal: dict) -> str:
     if not legal:
