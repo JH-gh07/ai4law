@@ -8,6 +8,7 @@ both on and off.
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 
@@ -112,6 +113,20 @@ def test_template_labels_user_conclusion_as_non_authoritative_input() -> None:
 
     assert "用户提交的拟定结论（不构成系统批准）" in mapping["final_assessment"]
     assert mapping["final_assessment"].count(payload.final_conclusion) == 1
+
+
+def test_template_mapping_never_places_chapter_headings_inline_with_labels() -> None:
+    mapping = build_template_mapping(_payload(), _chapters())
+
+    assert not mapping["transfer_context"].lstrip().startswith("#")
+    assert not mapping["transfer_tool"].lstrip().startswith("#")
+
+    template = Path("resources/templates/eu/3.4_tia_template_v0.md").read_text(encoding="utf-8")
+    rendered = template
+    for key, value in mapping.items():
+        rendered = rendered.replace(f"{{{{{key}}}}}", value)
+
+    assert not re.search(r"\*\*[^*]+\*\*:\s*#", rendered)
 
 
 # ── tests ────────────────────────────────────────────────────────────────────

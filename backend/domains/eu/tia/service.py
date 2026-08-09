@@ -34,7 +34,10 @@ from backend.domains.eu.tia.decision_policy import (
     build_decision_chapter_text,
     evaluate_tia_decision,
 )
-from backend.domains.eu.tia.deterministic_chapters import build_deterministic_tia_chapters
+from backend.domains.eu.tia.deterministic_chapters import (
+    build_deterministic_tia_chapters,
+    select_reliable_chapter,
+)
 from backend.domains.eu.tia.measure_sufficiency import TIAMeasureSufficiency
 from backend.domains.eu.tia.report_renderer import TIAReportRenderer
 from backend.domains.eu.tia.route_decider import TIARouteDecider
@@ -315,6 +318,11 @@ class TIAService:
 
             chapters: list[TIAChapter] = []
             for idx, title in enumerate(TIA_CHAPTERS, start=1):
+                fallback_content = apply_citation_pipeline(
+                    fallback_chapters.get(idx, ""),
+                    registry=citation_registry,
+                    allowed_citations=[ref.display_label for ref in citation_refs],
+                ).text
                 if self.llm_client and self.llm_client.enabled:
                     content = generate_chapter(
                         self.llm_client,
@@ -331,13 +339,9 @@ class TIAService:
                         registry=citation_registry,
                         allowed_citations=[ref.display_label for ref in citation_refs],
                     ).text
+                    content = select_reliable_chapter(content, fallback_content)
                 else:
-                    content = fallback_chapters.get(idx, "")
-                    content = apply_citation_pipeline(
-                        content,
-                        registry=citation_registry,
-                        allowed_citations=[ref.display_label for ref in citation_refs],
-                    ).text
+                    content = fallback_content
                 chapters.append(
                     TIAChapter(
                         chapter_no=idx,

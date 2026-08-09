@@ -9,6 +9,7 @@ schema-first compiler gate.  It makes no business decisions.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -30,6 +31,31 @@ TEMPLATE_PATH = report_template_path("eu", "3.4_tia_template_v0.docx")
 TEMPLATE_MD = report_template_path("eu", "3.4_tia_template_v0.md")
 
 
+def _prepare_markdown_section(content: str, *, strip_first_heading: bool) -> str:
+    """Fit generated chapter Markdown under one renderer-owned H2 section."""
+    lines = content.strip().splitlines()
+    first_content_index = next(
+        (index for index, line in enumerate(lines) if line.strip()),
+        None,
+    )
+    if (
+        strip_first_heading
+        and first_content_index is not None
+        and re.match(r"^#{1,6}\s+", lines[first_content_index].strip())
+    ):
+        del lines[first_content_index]
+
+    prepared: list[str] = []
+    for line in lines:
+        match = re.match(r"^(#{1,6})\s+(.*)$", line.strip())
+        if not match:
+            prepared.append(line)
+            continue
+        level = max(3, len(match.group(1)) + 1)
+        prepared.append(f"{'#' * min(level, 6)} {match.group(2)}")
+    return "\n".join(prepared).strip()
+
+
 def build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> dict[str, str]:
     """Map chapter content onto template slots.
 
@@ -42,7 +68,10 @@ def build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> d
                 return ch.content
         return ""
 
-    final_parts = [pick(5), pick(6)]
+    final_parts = [
+        _prepare_markdown_section(pick(5), strip_first_heading=False),
+        _prepare_markdown_section(pick(6), strip_first_heading=False),
+    ]
     proposed_label = "用户提交的拟定结论（不构成系统批准）"
     final_text = "\n".join(filter(None, final_parts))
     if payload.final_conclusion in final_text:
@@ -59,10 +88,22 @@ def build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> d
         ]))
 
     return {
-        "transfer_context": pick(1) or f"{payload.data_exporter_profile} -> {payload.data_importer_profile}",
-        "transfer_tool": pick(2) or payload.transfer_tool,
-        "third_country_analysis": pick(3) or payload.third_country_assessment,
-        "supplementary_measures": pick(4) or payload.supplementary_measures,
+        "transfer_context": _prepare_markdown_section(
+            pick(1) or f"{payload.data_exporter_profile} -> {payload.data_importer_profile}",
+            strip_first_heading=True,
+        ),
+        "transfer_tool": _prepare_markdown_section(
+            pick(2) or payload.transfer_tool,
+            strip_first_heading=True,
+        ),
+        "third_country_analysis": _prepare_markdown_section(
+            pick(3) or payload.third_country_assessment,
+            strip_first_heading=True,
+        ),
+        "supplementary_measures": _prepare_markdown_section(
+            pick(4) or payload.supplementary_measures,
+            strip_first_heading=True,
+        ),
         "final_assessment": final_text,
     }
 

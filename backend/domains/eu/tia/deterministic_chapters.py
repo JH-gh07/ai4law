@@ -6,6 +6,8 @@ missing evidence and never decides whether a transfer may proceed.
 
 from __future__ import annotations
 
+import re
+
 from backend.domains.eu.tia.schema import (
     TIACountryRisk,
     TIADecision,
@@ -21,6 +23,24 @@ _MEASURE_LABELS = {
     "encryption_before_transfer": "传输前加密",
     "contractual_only": "仅合同或组织措施",
 }
+
+_INTERNAL_REVIEW_MARKER_RE = re.compile(r"【(?:待核验|缺少依据|证据冲突)[^】]*】")
+_COMPLETE_ENDINGS = ("。", "！", "？", ".", "!", "?", "]", "）", ")", "”", "’", "》")
+_MIN_MODEL_CHAPTER_CHARS = 120
+
+
+def select_reliable_chapter(generated: str, fallback: str) -> str:
+    """Keep model prose only when it is complete and safe for a user report."""
+    content = generated.strip()
+    if len(content) < _MIN_MODEL_CHAPTER_CHARS:
+        return fallback
+    if _INTERNAL_REVIEW_MARKER_RE.search(content):
+        return fallback
+    if content.count("**") % 2 or content.count("{{") != content.count("}}"):
+        return fallback
+    if not content.endswith(_COMPLETE_ENDINGS):
+        return fallback
+    return content
 
 
 def _marker(markers: dict[str, str], key: str) -> str:
