@@ -380,6 +380,7 @@ class US14117Service:
             **kwargs,
         ) -> dict[str, str]:
             citation_registry: CitationRegistry = context_pack.citation_registry
+            document_ir_path: Path | None = None
             if self.schema_first_enabled:
                 from backend.common.reporting import DocumentCompiler
                 from backend.domains.us.eo14117.schema_first import build_eo14117_document_ir
@@ -392,10 +393,10 @@ class US14117Service:
                     _codes = ', '.join(i.code for i in _cr.diagnostics)
                     raise ValueError(f'Schema-first compiler blocked EO14117 output: {_codes}')
                 import json as _json
-                from pathlib import Path as _Path
-                _ir_dir = _Path('outputs/us_14117') / task_id / 'outputs'
+                _ir_dir = Path('outputs/us_14117') / task_id / 'outputs'
                 _ir_dir.mkdir(parents=True, exist_ok=True)
-                (_ir_dir / 'document_ir.json').write_text(
+                document_ir_path = _ir_dir / 'document_ir.json'
+                document_ir_path.write_text(
                     _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
                     encoding='utf-8')
             sections: list[tuple[str, str]] = [
@@ -492,20 +493,6 @@ class US14117Service:
                 Path(trace_manifest_path).read_text(encoding="utf-8"), encoding="utf-8",
             )
 
-            bundle_members = [
-                md_output,
-                pdf_output,
-                xlsx_output,
-                issue_json,
-                evidence_json,
-                facts_json,
-                rule_engine_json,
-                trace_dest,
-            ]
-            if docx_output.exists():
-                bundle_members.append(docx_output)
-            bundle_files(zip_output, bundle_members)
-
             citation_map_json = write_citation_map_json(
                 output_dir=output_dir,
                 module="us_14117",
@@ -517,7 +504,23 @@ class US14117Service:
                 all_items=citation_registry.to_list(),
             )
 
-            return {
+            bundle_members = [
+                md_output,
+                docx_output,
+                pdf_output,
+                xlsx_output,
+                issue_json,
+                evidence_json,
+                facts_json,
+                rule_engine_json,
+                trace_dest,
+                Path(citation_map_json),
+            ]
+            if document_ir_path is not None:
+                bundle_members.append(document_ir_path)
+            bundle_files(zip_output, bundle_members)
+
+            outputs = {
                 "markdown": str(md_output),
                 "docx": str(docx_output),
                 "pdf": str(pdf_output),
@@ -530,6 +533,9 @@ class US14117Service:
                 "trace_manifest": str(trace_dest),
                 "citation_map_json": citation_map_json,
             }
+            if document_ir_path is not None:
+                outputs["document_ir_json"] = str(document_ir_path)
+            return outputs
         return _inner
 
     # ── Async API ──

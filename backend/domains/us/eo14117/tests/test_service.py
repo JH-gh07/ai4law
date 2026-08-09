@@ -441,12 +441,13 @@ def test_output_files_generated_when_docx_template_is_missing(tmp_path, monkeypa
     monkeypatch.setattr(eo14117_service, "TEMPLATE_PATH", tmp_path / "missing.docx")
     payload = _build_red_scenario_payload()
     service = US14117Service(llm_client=_DisabledLLM())
+    service.schema_first_enabled = True
     result = service.generate_report(payload)
 
     expected_keys = [
         "markdown", "docx", "pdf", "xlsx", "zip",
         "issue_list_json", "evidence_chain_json", "facts_json",
-        "rule_engine_result_json",
+        "rule_engine_result_json", "citation_map_json", "document_ir_json",
     ]
     for key in expected_keys:
         assert key in result.output_files, f"Missing output key: {key}"
@@ -460,6 +461,8 @@ def test_output_files_generated_when_docx_template_is_missing(tmp_path, monkeypa
     with ZipFile(result.output_files["zip"]) as bundle:
         assert pdf_path.name in bundle.namelist()
         assert docx_path.name in bundle.namelist()
+        assert Path(result.output_files["citation_map_json"]).name in bundle.namelist()
+        assert Path(result.output_files["document_ir_json"]).name in bundle.namelist()
     assert result.report_path.endswith(".md")
 
 
