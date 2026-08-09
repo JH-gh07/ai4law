@@ -524,7 +524,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | EU | SCC 审查 | 按 GDPR SCC 模块审查跨境传输合同条款 | `eu_scc` | `backend/domains/eu/scc_review/` | **本地完整闭环通过**：真实 DOCX 进入核心审查，old/new、live provider、3 条正文引用、CitationMap、浏览器上传/引用/段落 6 跳转均有证据；远端未部署 |
 | EU | BCR 审核 | 审查集团内部约束性公司规则及其缺口 | `bcr` | `backend/domains/eu/bcr_review/` | **本地完整闭环通过**：来源 DOCX、old/new、live provider、26 项完整详细表、2 条正文引用、DocumentIR、浏览器上传/引用/段落 4 跳转均有证据；provider 最后一次请求超时回退，远端未部署 |
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | fixture 新旧产物已对比；service/token-time 和浏览器验收未完成 |
-| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | **执行链路部分通过**：old/new no-LLM 通过；既有 Schema-first live 16/16；角色、US 风险、三份真实 PDF、GDPR 44/46、EDPB Step 1/3、RAG 自动刷新已修复；最新 live 真实生成六章并使用 ART44/ART46/Step 1/3，但因末尾未闭合 `**` 在 Compiler 前失败；修复后用同一 live 原文重放为 Compiler success、0 diagnostics、6 sections/56 blocks | 仍未通过：最新完整 harness 保持 FAIL 记录；需再跑一次修复后的本地 live/browser 任务，验证产物、DPO 结论、CitationMap、DocumentIR 和知识跳转四层一致 |
+| EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | **执行与引用闭环通过**：最终 Schema-first live 319s、9 calls、14,484 token、16/16 checks；真实 EDPB/FISA/CLOUD Act 附件解析；DocumentIR 6 sections/77 blocks；正文、CitationMap、知识库跳转均使用 GDPR 44/46 与 EDPB Step 1/3；截断 Markdown 容错已修复 | **DPO 质量门禁不通过**：HIGH effective risk 下“有条件维持”被判定为风险弱化；需补齐能达到 essentially equivalent protection 的证据，或改为暂停/不批准结论后再验收 |
 | US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
 | US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 适配器和单测已有；真实 service 首跑未验收 |
 
