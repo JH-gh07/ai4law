@@ -28,12 +28,12 @@ Return JSON:
 {{
   "primary_query": "<targeted query for most critical provision>",
   "secondary_queries": ["<query for supporting provision>", "..."],
-  "jurisdiction_hints": ["<e.g. 'EO 14117 §100.2'>", "..."],
+  "jurisdiction_hints": ["<e.g. '28 CFR § 202.301'>", "..."],
   "filter_criteria": "<what to exclude from results>"
 }}"""
         return self._call_llm(prompt) or {
             "primary_query": "EO 14117 restricted transaction security measures covered person",
             "secondary_queries": [],
-            "jurisdiction_hints": ["EO 14117 §100.2", "EO 14117 §100.3"],
+            "jurisdiction_hints": ["28 CFR § 202.301", "28 CFR § 202.401"],
             "filter_criteria": "",
         }

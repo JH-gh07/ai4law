@@ -311,6 +311,23 @@ def test_rule_engine_classification() -> None:
     assert result_green.traffic_light.is_restricted is False
 
 
+def test_rule_hits_use_current_28_cfr_part_202_locators() -> None:
+    from backend.domains.us.eo14117.rule_engine import run_rule_engine
+
+    red = run_rule_engine(_build_red_scenario_payload())
+    red_refs = {hit.section_ref for hit in red.all_rule_hits}
+    assert "28 CFR § 202.303" in red_refs
+    assert "28 CFR § 202.205" in red_refs
+    assert "28 CFR § 202.211" in red_refs
+    assert all("100." not in ref for ref in red_refs)
+
+    yellow = run_rule_engine(_build_yellow_scenario_payload())
+    yellow_refs = {hit.section_ref for hit in yellow.all_rule_hits}
+    assert "28 CFR § 202.401" in yellow_refs
+    assert "28 CFR § 202.248" in yellow_refs
+    assert all("100." not in ref for ref in yellow_refs)
+
+
 def test_mixed_scenario_worst_case() -> None:
     """Verify worst-case resolution when multiple entities/data have different results."""
     payload = US14117Request.model_validate({

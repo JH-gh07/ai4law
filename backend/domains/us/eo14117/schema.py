@@ -156,8 +156,8 @@ class US14117RiskMatrixRow(BaseModel):
 class US14117TrafficLightResult(BaseModel):
     """EO 14117 traffic light assessment.
 
-    RED    = Prohibited transaction under §100.2
-    YELLOW = Restricted transaction under §100.3 — requires security measures
+    RED    = Prohibited transaction under 28 CFR §§ 202.243, 202.301-303
+    YELLOW = Restricted transaction under 28 CFR § 202.401 — requires security measures
              - yellow_status "blocked": measures missing, must not proceed
              - yellow_status "controlled": measures implemented, may proceed under monitoring
     GREEN  = No EO 14117 trigger detected

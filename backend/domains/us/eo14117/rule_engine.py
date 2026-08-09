@@ -33,7 +33,17 @@ from backend.domains.us.eo14117.schema import (
 # Configuration constants
 # ═════════════════════════════════════════════════════════════════════════
 
-# EO 14117 §100.1 — Countries of concern with aliases
+# 28 CFR Part 202 section references used by the deterministic rules.
+SECTION_BULK = "28 CFR § 202.205"
+SECTION_COVERED_PERSON = "28 CFR § 202.211"
+SECTION_PROHIBITED_BROKERAGE = "28 CFR § 202.301"
+SECTION_PROHIBITED_ONWARD_TRANSFER = "28 CFR § 202.302"
+SECTION_PROHIBITED_OMIC = "28 CFR § 202.303"
+SECTION_PROHIBITED_DEFINITION = "28 CFR § 202.243"
+SECTION_RESTRICTED_AUTHORIZATION = "28 CFR § 202.401"
+SECTION_SECURITY_REQUIREMENTS = "28 CFR § 202.248"
+
+# 28 CFR § 202.209 — Countries of concern with aliases
 # Each standard key maps to a list of aliases (lowercase, both EN and CN)
 _COUNTRY_OF_CONCERN_ALIASES: dict[str, list[str]] = {
     "china": [
@@ -108,7 +118,7 @@ def _match_country_of_concern(text: str) -> tuple[bool, str, str]:
 
     return False, "", ""
 
-# EO 14117 §100.2 / §100.3 — Bulk thresholds per DOJ data category
+# 28 CFR § 202.205 — Bulk thresholds per DOJ data category
 BULK_THRESHOLDS: dict[str, int] = {
     "human_genomic_data": 100,
     "biometric_identifiers": 1000,
@@ -120,7 +130,7 @@ BULK_THRESHOLDS: dict[str, int] = {
     "not_14117_data": 999_999_999,  # effectively never triggers
 }
 
-# EO 14117 — Required security measures for restricted transactions (§100.3)
+# 28 CFR § 202.248 — Security requirements referenced by restricted transactions
 REQUIRED_SECURITY_MEASURES = {
     "access_control": [
         "logical_isolation_of_covered_data",
@@ -802,13 +812,13 @@ def _evaluate_transaction(
         for c in data_classifications
     )
 
-    # ── Stage 5: Prohibited transactions (§100.2) ──
+    # ── Stage 5: Prohibited transactions (28 CFR §§ 202.243, 202.301-303) ──
     # 1. Data brokerage involving covered persons
     if tx_assessment.is_data_brokerage and tx_assessment.involves_covered_person:
         tx_assessment.is_prohibited = True
         tx_assessment.prohibition_reasons.append(
             "Data brokerage transaction involving a covered person — "
-            "prohibited under EO 14117 §100.2."
+            f"prohibited under {SECTION_PROHIBITED_BROKERAGE}."
         )
 
     # 2. Government-related data to covered persons
@@ -816,7 +826,7 @@ def _evaluate_transaction(
         tx_assessment.is_prohibited = True
         tx_assessment.prohibition_reasons.append(
             "Transfer of government-related data to a covered person — "
-            "prohibited under EO 14117 §100.2."
+            f"prohibited under {SECTION_PROHIBITED_DEFINITION}; review {SECTION_PROHIBITED_BROKERAGE}."
         )
 
     # 3. Bulk human genomic data + data brokerage to covered person
@@ -828,10 +838,10 @@ def _evaluate_transaction(
         tx_assessment.is_prohibited = True
         tx_assessment.prohibition_reasons.append(
             "Bulk human genomic data (>100 US persons) involving a covered person — "
-            "prohibited under EO 14117 §100.2."
+            f"prohibited under {SECTION_PROHIBITED_OMIC}."
         )
 
-    # ── Stage 6: Restricted transactions (§100.3) ──
+    # ── Stage 6: Restricted transactions (28 CFR § 202.401) ──
     if not tx_assessment.is_prohibited:
         # Vendor/employment/investment agreements + covered person + bulk sensitive
         restricted_types = {
@@ -846,13 +856,13 @@ def _evaluate_transaction(
             tx_assessment.restriction_reasons.append(
                 f"Restricted transaction type ({tx_assessment.transaction_type}) "
                 f"involving covered person(s) and bulk sensitive personal data — "
-                f"requires security measures under EO 14117 §100.3."
+                f"requires security measures under {SECTION_RESTRICTED_AUTHORIZATION} and {SECTION_SECURITY_REQUIREMENTS}."
             )
         elif is_restricted_type and tx_assessment.involves_covered_person:
             tx_assessment.is_restricted = True
             tx_assessment.restriction_reasons.append(
                 f"Restricted transaction type ({tx_assessment.transaction_type}) "
-                f"involving covered person(s) — requires security measures under EO 14117 §100.3."
+                f"involving covered person(s) — requires security measures under {SECTION_RESTRICTED_AUTHORIZATION} and {SECTION_SECURITY_REQUIREMENTS}."
             )
 
         # Onward transfer risk
@@ -962,8 +972,8 @@ def resolve_traffic_light(
 ) -> US14117TrafficLightResult:
     """Stage 8: Determine the final RED / YELLOW / GREEN result.
 
-    RED    = Prohibited transaction detected (§100.2)
-    YELLOW = Restricted transaction (§100.3):
+    RED    = Prohibited transaction detected (28 CFR §§ 202.243, 202.301-303)
+    YELLOW = Restricted transaction (28 CFR § 202.401):
              - "blocked": security measures missing, must NOT proceed
              - "controlled": measures implemented, may proceed under monitoring
     GREEN  = No EO 14117 trigger
@@ -972,7 +982,7 @@ def resolve_traffic_light(
         return US14117TrafficLightResult(
             overall_light="RED",
             summary=(
-                "禁止传输：该交易涉及 EO 14117 §100.2 禁止的交易类别。"
+                f"禁止传输：该交易涉及 28 CFR Part 202 的禁止交易类别（适用 {SECTION_PROHIBITED_DEFINITION}）。"
                 "建议立即停止数据传输并咨询法务团队。"
             ),
             is_prohibited=True,
@@ -987,7 +997,7 @@ def resolve_traffic_light(
             yellow_status = "blocked"
             can_proceed = False
             summary = (
-                f"限制性交易（整改前不得进行）：该交易属于 EO 14117 §100.3 限制性交易类别。"
+                f"限制性交易（整改前不得进行）：该交易属于 {SECTION_RESTRICTED_AUTHORIZATION} 规定的限制性交易类别。"
                 f"当前存在 {len(security_gaps.missing)} 项安全措施缺口，在全部整改完成并经法务审批前，"
                 f"不得继续推进数据传输。建议在 90 天内完成整改。"
             )
@@ -995,7 +1005,7 @@ def resolve_traffic_light(
             yellow_status = "controlled"
             can_proceed = True
             summary = (
-                "限制性交易（安全措施已落实）：该交易属于 EO 14117 §100.3 限制性交易类别，"
+                f"限制性交易（安全措施已落实）：该交易属于 {SECTION_RESTRICTED_AUTHORIZATION} 规定的限制性交易类别，"
                 "但所有必要安全措施已基本落实。可在持续监控、季度审计和合同约束下推进，"
                 "但需保持定期复审并随时准备应对法规更新。"
             )
@@ -1204,18 +1214,24 @@ def run_rule_engine(request: US14117Request) -> US14117RuleEngineResult:
     # Build rule hits
     all_rule_hits: list[US14117RuleHit] = []
     for reason in tx_assessment.prohibition_reasons:
+        if "genomic" in reason.lower() or "omic" in reason.lower():
+            prohibited_section = SECTION_PROHIBITED_OMIC
+        elif "brokerage" in reason.lower():
+            prohibited_section = SECTION_PROHIBITED_BROKERAGE
+        else:
+            prohibited_section = SECTION_PROHIBITED_DEFINITION
         all_rule_hits.append(US14117RuleHit(
-            rule_id="EO14117-S100.2-PROHIBITED",
+            rule_id=f"US14117-{prohibited_section.replace('28 CFR § ', '').replace('.', '-')}-PROHIBITED",
             rule_name="Prohibited Transaction",
-            section_ref="§100.2",
+            section_ref=prohibited_section,
             hit=True,
             reason=reason,
         ))
     for reason in tx_assessment.restriction_reasons:
         all_rule_hits.append(US14117RuleHit(
-            rule_id="EO14117-S100.3-RESTRICTED",
+            rule_id="US14117-202.401-RESTRICTED",
             rule_name="Restricted Transaction",
-            section_ref="§100.3",
+            section_ref=SECTION_RESTRICTED_AUTHORIZATION,
             hit=True,
             reason=reason,
         ))
@@ -1224,7 +1240,7 @@ def run_rule_engine(request: US14117Request) -> US14117RuleEngineResult:
             all_rule_hits.append(US14117RuleHit(
                 rule_id=f"EO14117-THRESHOLD-{c.doj_category.upper()}",
                 rule_name=f"Bulk Threshold Hit: {c.doj_category}",
-                section_ref="§100.3",
+                section_ref=SECTION_BULK,
                 hit=True,
                 reason=f"{c.data_item_name}: {c.us_person_count} US persons >= {c.bulk_threshold} threshold",
             ))
@@ -1233,7 +1249,7 @@ def run_rule_engine(request: US14117Request) -> US14117RuleEngineResult:
             all_rule_hits.append(US14117RuleHit(
                 rule_id=f"EO14117-COVERED-{ea.entity_name.upper().replace(' ', '-')[:40]}",
                 rule_name=f"Covered Person ({ea.covered_person_status}): {ea.entity_name}",
-                section_ref="§100.1",
+            section_ref=SECTION_COVERED_PERSON,
                 hit=True,
                 reason="; ".join(ea.covered_person_reasons),
             ))
@@ -1241,7 +1257,7 @@ def run_rule_engine(request: US14117Request) -> US14117RuleEngineResult:
         all_rule_hits.append(US14117RuleHit(
             rule_id=f"EO14117-SECGAP-{missing.upper().replace(' ', '-')[:50]}",
             rule_name=f"Security Gap: {missing}",
-            section_ref="§100.3",
+            section_ref=SECTION_SECURITY_REQUIREMENTS,
             hit=True,
             reason=f"Required security measure '{missing}' is missing.",
         ))

@@ -20,8 +20,8 @@ _US14117_SYSTEM_PROMPT = (
     "You are a US trade compliance lawyer specializing in EO 14117 "
     "(Preventing Access to Americans' Bulk Sensitive Personal Data and "
     "United States Government-Related Data by Countries of Concern). "
-    "You analyze data transactions for prohibited (§100.2) and restricted "
-    "(§100.3) classifications. Output ONLY valid JSON. "
+    "You analyze data transactions for prohibited (28 CFR §§ 202.243, 202.301-303) and restricted "
+    "(28 CFR § 202.401) classifications. Output ONLY valid JSON. "
     "When facts are uncertain, mark them and explain why."
 )
 

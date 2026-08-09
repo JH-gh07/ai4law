@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from backend.common.workflow import FactItem, IssueItem
 from backend.domains.us.eo14117.schema import US14117RuleEngineResult
+from backend.domains.us.eo14117.rule_engine import (
+    SECTION_BULK,
+    SECTION_COVERED_PERSON,
+    SECTION_PROHIBITED_DEFINITION,
+    SECTION_PROHIBITED_ONWARD_TRANSFER,
+    SECTION_RESTRICTED_AUTHORIZATION,
+    SECTION_SECURITY_REQUIREMENTS,
+)
 
 
 US_14117_CHAPTER_KEYS: dict[str, str] = {
@@ -47,7 +55,7 @@ def build_us_14117_issues(
     by_field = {fact.field_path: fact for fact in facts if fact.field_path}
     rule_refs = [item.get("source_id", "") for item in regulations if item.get("source_id")][:5]
     if not rule_refs:
-        rule_refs = ["EO 14117 §100.1", "EO 14117 §100.2", "EO 14117 §100.3"]
+        rule_refs = [SECTION_COVERED_PERSON, SECTION_PROHIBITED_DEFINITION, SECTION_RESTRICTED_AUTHORIZATION]
 
     issues: list[IssueItem] = []
     tc = rule_engine_result.transaction_classification
@@ -62,11 +70,11 @@ def build_us_14117_issues(
         issues.append(_issue(
             "US14117-ISSUE-PROHIBITED-TRANSACTION",
             "禁止交易 (Prohibited Transaction)",
-            f"检测到 EO 14117 §100.2 禁止交易: {'; '.join(tc.get('prohibition_reasons', []))}",
+            f"检测到 28 CFR Part 202 禁止交易: {'; '.join(tc.get('prohibition_reasons', []))}",
             "other",
             "BLOCKER",
             fact_refs or [f.fact_id for f in facts[:1]],
-            rule_refs + ["EO 14117 §100.2"],
+            rule_refs + [SECTION_PROHIBITED_DEFINITION],
             "立即停止数据传输，咨询法务团队评估替代方案或豁免申请。",
             ["overall_conclusion", "risk_details", "compliance_actions"],
         ))
@@ -80,11 +88,11 @@ def build_us_14117_issues(
         issues.append(_issue(
             "US14117-ISSUE-RESTRICTED-TRANSACTION",
             "限制性交易 (Restricted Transaction)",
-            f"检测到 EO 14117 §100.3 限制性交易: {'; '.join(tc.get('restriction_reasons', []))}",
+            f"检测到 {SECTION_RESTRICTED_AUTHORIZATION} 限制性交易: {'; '.join(tc.get('restriction_reasons', []))}",
             "other",
             "HIGH",
             fact_refs or [f.fact_id for f in facts[:1]],
-            rule_refs + ["EO 14117 §100.3"],
+            rule_refs + [SECTION_RESTRICTED_AUTHORIZATION],
             "在实施所有必要安全措施并经法务审批后方可继续交易。",
             ["overall_conclusion", "risk_details", "compliance_actions"],
         ))
@@ -99,7 +107,7 @@ def build_us_14117_issues(
                 "data_scope",
                 "HIGH",
                 [f.fact_id for f in facts if f.field_path and dc['data_item_name'] in f.field_path][:2],
-                rule_refs,
+                rule_refs + [SECTION_BULK],
                 f"评估 {dc['data_item_name']} 的传输必要性，考虑数据最小化、聚合或去标识化。",
                 ["risk_details", "compliance_actions"],
             ))
@@ -110,11 +118,11 @@ def build_us_14117_issues(
             issues.append(_issue(
                 f"US14117-ISSUE-COVERED-{ea['entity_name'].upper().replace(' ', '-')[:30]}",
                 f"涵盖人员/实体: {ea['entity_name']}",
-                f"实体 '{ea['entity_name']}' 被识别为 EO 14117 涵盖人员/实体: {'; '.join(ea.get('covered_person_reasons', []))}",
+                f"实体 '{ea['entity_name']}' 被识别为 28 CFR § 202.211 涵盖人员/实体: {'; '.join(ea.get('covered_person_reasons', []))}",
                 "recipient",
                 "HIGH",
                 [f.fact_id for f in facts if f.field_path and ea['entity_name'] in f.field_path][:2],
-                rule_refs + ["EO 14117 §100.1"],
+                rule_refs + [SECTION_COVERED_PERSON],
                 f"审查与 {ea['entity_name']} 的交易关系，评估是否属于禁止或限制性交易。",
                 ["risk_details", "compliance_actions"],
             ))
@@ -126,11 +134,11 @@ def build_us_14117_issues(
         issues.append(_issue(
             "US14117-ISSUE-SECURITY-GAPS",
             "安全措施缺口",
-            f"限制性交易缺少 {len(missing)} 项 EO 14117 要求的安全措施: {', '.join(missing[:6])}",
+            f"限制性交易缺少 {len(missing)} 项 28 CFR § 202.248 要求的安全措施: {', '.join(missing[:6])}",
             "security_measure",
             "HIGH",
             [f.fact_id for f in facts if f.field_path and "security_measure" in f.field_path][:2],
-            rule_refs + ["EO 14117 §100.3"],
+            rule_refs + [SECTION_SECURITY_REQUIREMENTS],
             f"补充缺失的安全措施: {', '.join(missing[:6])}。具体要求参见 EO 14117 实施指南。",
             ["compliance_actions"],
         ))
@@ -145,7 +153,7 @@ def build_us_14117_issues(
             "contract",
             "MEDIUM",
             [onward_fact.fact_id],
-            rule_refs + ["EO 14117"],
+            rule_refs + [SECTION_PROHIBITED_ONWARD_TRANSFER],
             "补充 onward transfer 清单、再传输审批与审计追踪机制。在合同中加入再传输限制条款。",
             ["risk_details", "compliance_actions"],
         ))
@@ -161,7 +169,7 @@ def build_us_14117_issues(
                 "recipient",
                 "MEDIUM",
                 [f.fact_id for f in facts if f.field_path and ea['entity_name'] in f.field_path][:2],
-                rule_refs + ["EO 14117 §100.1"],
+                rule_refs + [SECTION_COVERED_PERSON],
                 f"补充 {ea['entity_name']} 的尽调材料后重新评估。参见追问清单。",
                 ["risk_details", "overall_conclusion"],
             ))
@@ -175,7 +183,7 @@ def build_us_14117_issues(
             "security_measure",
             "HIGH",
             [f.fact_id for f in facts if f.field_path and "security_measure" in f.field_path][:2],
-            rule_refs + ["EO 14117 §100.3"],
+            rule_refs + [SECTION_SECURITY_REQUIREMENTS],
             f"在90天内完成以下措施整改: {', '.join(tl.missing_security_measures[:6])}。完成后重新提交评估。",
             ["compliance_actions", "overall_conclusion"],
         ))
@@ -220,7 +228,7 @@ def build_us_14117_issues(
         issues.append(_issue(
             "US14117-ISSUE-NO-TRIGGER",
             "未触发 EO 14117 规则",
-            "当前交易不直接触发 EO 14117 §100.2 或 §100.3。建议持续监控并定期复审。",
+            "当前交易不直接触发 28 CFR Part 202 的禁止或限制交易条款。建议持续监控并定期复审。",
             "other",
             "LOW",
             [f.fact_id for f in facts if f.field_path and "traffic_light" in f.field_path][:1],

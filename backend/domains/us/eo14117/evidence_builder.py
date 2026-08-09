@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 
 from backend.common.workflow import EvidenceItem, FactItem, IssueItem
+from backend.domains.us.eo14117.rule_engine import (
+    SECTION_COVERED_PERSON,
+    SECTION_PROHIBITED_DEFINITION,
+    SECTION_RESTRICTED_AUTHORIZATION,
+)
 
 
 def _evidence_id(issue_id: str) -> str:
@@ -25,7 +30,7 @@ def build_us_14117_evidence(
         if item.get("source_id")
     ]
     if not default_rule_refs:
-        default_rule_refs = ["EO 14117 §100.1", "EO 14117 §100.2", "EO 14117 §100.3"]
+        default_rule_refs = [SECTION_COVERED_PERSON, SECTION_PROHIBITED_DEFINITION, SECTION_RESTRICTED_AUTHORIZATION]
 
     updated_issues: list[IssueItem] = []
     evidence_chain: list[EvidenceItem] = []
