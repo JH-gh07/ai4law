@@ -55,3 +55,8 @@ def test_complete_legacy_request_converts_to_canonical_request() -> None:
     assert result.canonical_request.onward_transfer is True
     assert result.canonical_request.attachments == ["data.csv", "entity.csv"]
     assert "attachments.content_unparsed" in result.lossy_fields
+
+
+def test_legacy_missing_facts_never_produce_canonical_request() -> None:
+    with pytest.raises(CompatibilityClarificationRequired):
+        adapt_cn_flow_request(_legacy_request())

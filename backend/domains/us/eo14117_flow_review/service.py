@@ -35,6 +35,12 @@ from backend.domains.us.eo14117_flow_review.schema import (
     CNFlowResult,
     CNFlowRiskItem,
 )
+from backend.domains.us.eo14117_flow_review.compatibility import (
+    CompatibilityClarificationRequired,
+    adapt_cn_flow_request,
+)
+from backend.domains.us.eo14117.service import US14117Service
+from backend.domains.us.eo14117.schema import US14117Result
 
 TEMPLATE_PATH = report_template_path("us", "4.1_cn_flow_compliance_template_v0.docx")
 TEMPLATE_MD = report_template_path("us", "4.1_cn_flow_compliance_template_v0.md")
@@ -56,6 +62,7 @@ class CNFlowService:
         self.llm_client = llm_client
         self.parser = FileParser()
         self.tasks = InMemoryTaskManager(module="cn_flow")
+        self.canonical_service = US14117Service(llm_client=llm_client)
 
     def generate_report(
         self,
@@ -64,6 +71,34 @@ class CNFlowService:
         task_id: str | None = None,
         trace: TraceRecorder | None = None,
     ) -> CNFlowResult:
+        run_task_id = task_id or str(uuid.uuid4())
+        if trace is None:
+            trace = TraceRecorder(Path("outputs/us_14117") / run_task_id / "trace", task_id=run_task_id)
+        compatibility = adapt_cn_flow_request(payload)
+        if trace:
+            trace.record(
+                "cn_flow_request",
+                {
+                    "canonical_module": compatibility.canonical_module,
+                    "lossy_fields": compatibility.lossy_fields,
+                    "clarification_questions": compatibility.clarification_questions,
+                },
+            )
+        canonical_result = self.canonical_service.generate_report(
+            compatibility.canonical_request,
+            task_id=run_task_id,
+            trace=trace,
+        )
+        return _wrap_canonical_result(payload, canonical_result, compatibility.lossy_fields)
+
+    def _generate_legacy_report(
+        self,
+        payload: CNFlowRequest,
+        *,
+        task_id: str | None = None,
+        trace: TraceRecorder | None = None,
+    ) -> CNFlowResult:
+        """Pre-migration implementation retained only for rollback/debugging."""
         run_task_id = task_id or str(uuid.uuid4())
         trace, token = prepare_run(module="cn_flow", task_id=run_task_id, trace=trace)
         try:
@@ -515,6 +550,44 @@ class _CNFlowDiagnosis:
             "rationale": self.rationale,
             "risk_items": [item.model_dump() for item in self.risk_items],
         }
+
+
+def _wrap_canonical_result(payload: CNFlowRequest, result: US14117Result, lossy_fields: list[str]) -> CNFlowResult:
+    """Expose the historical response shape while US 14117 owns the decision."""
+    risk_level = {"RED": "HIGH", "YELLOW": "MEDIUM", "GREEN": "LOW"}.get(
+        result.overall_traffic_light, "MEDIUM"
+    )
+    risk_items = [
+        CNFlowRiskItem(
+            risk_id=hit.rule_id,
+            risk_level=risk_level,
+            title=hit.rule_name,
+            basis=hit.section_ref,
+            recommendation="按统一 EO 14117 规则结果处理并留存证据。",
+        )
+        for hit in result.rule_hits
+        if hit.hit
+    ]
+    return CNFlowResult(
+        report_path=result.output_files.get("docx", result.report_path),
+        output_files=result.output_files,
+        company_name=payload.company_name,
+        risk_level=risk_level,
+        risk_items=risk_items,
+        chapters=[
+            CNFlowChapter(
+                chapter_no=chapter.chapter_no,
+                title=chapter.title,
+                content=chapter.content,
+                citations=chapter.citations,
+                risk_level=risk_level,
+            )
+            for chapter in result.chapters
+        ],
+        consistency_issues=result.consistency_issues
+        + [f"compatibility_lossy_field: {field}" for field in lossy_fields],
+        attachment_notes=result.attachment_notes,
+    )
 
 
 def _build_template_mapping(
