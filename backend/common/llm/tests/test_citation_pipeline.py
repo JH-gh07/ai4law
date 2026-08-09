@@ -23,6 +23,19 @@ def _registry() -> CitationRegistry:
     return registry
 
 
+def _us_registry() -> CitationRegistry:
+    registry = CitationRegistry()
+    registry.register(
+        CitationItem(
+            citation_id="CIT-US-US_FED_001-ART202_303-P01",
+            source_id="US-FED-001",
+            title="28 CFR Part 202 - EO 14117 implementing rule",
+            article_no="202.303",
+        )
+    )
+    return registry
+
+
 def test_pipeline_converts_marker_and_runs_claim_gate_once() -> None:
     result = apply_citation_pipeline(
         "依据《个人信息保护法》第三十九条，企业应当完成评估。{{CIT-CN-PIPL-ART39-P01}}",
@@ -67,6 +80,16 @@ def test_pipeline_resolves_legacy_basis_text_to_the_same_registry_number() -> No
 
     assert result.text == "企业应当完成评估。[1]"
     assert "【依据：" not in result.text
+    assert result.violations == []
+
+
+def test_pipeline_resolves_us_cfr_decimal_section_basis() -> None:
+    result = apply_citation_pipeline(
+        "该交易属于禁止的人类组学数据交易。【依据：28 CFR § 202.303】",
+        registry=_us_registry(),
+    )
+
+    assert result.text == "该交易属于禁止的人类组学数据交易。[1]"
     assert result.violations == []
 
 

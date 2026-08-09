@@ -376,7 +376,10 @@ def apply_citation_policy(
 
 
 _BASIS_ARTICLE_RE = re.compile(
-    r"第\s*([零〇一二两三四五六七八九十百千万\d]+)\s*条"
+    r"第\s*([零〇一二两三四五六七八九十百千万\d]+(?:\.\d+)?)\s*条"
+)
+_US_CFR_SECTION_RE = re.compile(
+    r"(?:§|section)\s*(\d+)\s*\.\s*(\d+)", re.IGNORECASE
 )
 
 
@@ -386,15 +389,32 @@ def _basis_key(value: str) -> str:
 
 def _resolve_basis_to_number(raw_basis: str, registry: "CitationRegistry") -> int | None:
     article_match = _BASIS_ARTICLE_RE.search(raw_basis)
-    requested_article = normalize_article_no(article_match.group(0)) if article_match else ""
+    us_section_match = _US_CFR_SECTION_RE.search(raw_basis)
+    requested_article = (
+        normalize_article_no(article_match.group(1))
+        if article_match
+        else f"{us_section_match.group(1)}.{us_section_match.group(2)}"
+        if us_section_match
+        else ""
+    )
     basis_title = _basis_key(_BASIS_ARTICLE_RE.sub("", raw_basis))
+    if us_section_match:
+        basis_title = _basis_key(_US_CFR_SECTION_RE.sub("", basis_title))
     candidates: list[str] = []
     for item in registry:
         title_key = _basis_key(item.title or item.display_label)
-        if not title_key or not (title_key in basis_title or basis_title in title_key):
-            continue
         item_article = normalize_article_no(str(item.article_no or ""))
         if requested_article and item_article != requested_article:
+            continue
+        title_matches = bool(
+            title_key
+            and (title_key in basis_title or basis_title in title_key)
+        )
+        # U.S. CFR references often identify the source by title number and
+        # section only (for example, ``28 CFR § 202.303``), while the
+        # registry title contains the longer rule name. The exact article
+        # number is sufficient when the basis explicitly names CFR.
+        if not title_matches and not (requested_article and "cfr" in basis_title):
             continue
         candidates.append(item.citation_id)
     if len(candidates) != 1:

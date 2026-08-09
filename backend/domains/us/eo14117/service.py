@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -308,7 +309,9 @@ class US14117Service:
                         citation_registry=citation_registry,
                     )
                 else:
-                    content = _render_placeholder_chapter(title, chapter_id, rule_result)
+                    content = _render_placeholder_chapter(
+                        title, chapter_id, rule_result, citation_registry
+                    )
                 chapters.append(
                     US14117Chapter(
                         chapter_no=idx,
@@ -676,10 +679,18 @@ def _render_placeholder_chapter(
     title: str,
     chapter_id: str,
     rule_result: US14117RuleEngineResult,
+    citation_registry: CitationRegistry,
 ) -> str:
     """Render a structured placeholder when LLM is disabled."""
     tl = rule_result.traffic_light
-    tc = rule_result.transaction_classification
+
+    def basis(*article_numbers: str) -> str:
+        labels = [
+            item.display_label
+            for item in citation_registry
+            if item.article_no in article_numbers
+        ]
+        return f"\n\n【依据：{'；'.join(labels)}】" if labels else ""
 
     if chapter_id == "overall_conclusion":
         light_label = {"RED": "红灯（禁止传输）", "YELLOW": "黄灯（限制性交易）", "GREEN": "绿灯（低风险放行）"}
@@ -701,6 +712,11 @@ def _render_placeholder_chapter(
             + ("".join(f"- {r}\n" for r in tl.prohibition_reasons))
             + ("".join(f"- {r}\n" for r in tl.restriction_reasons))
             + ("\n### 需补充材料\n\n" + "".join(f"- {q}\n" for q in tl.clarification_questions) if tl.clarification_questions else "")
+            + basis(
+                "202.301" if any("brokerage" in r.lower() for r in tl.prohibition_reasons) else "",
+                "202.303" if any("genomic" in r.lower() or "omic" in r.lower() for r in tl.prohibition_reasons) else "",
+                "202.401" if tl.is_restricted else "",
+            )
         )
 
     elif chapter_id == "risk_details":
@@ -741,7 +757,7 @@ def _render_placeholder_chapter(
                 f"- {row.entity_name} [{row.covered_person_status}] × {row.data_item_name} → **{row.traffic_light}** "
                 f"({row.reason})"
             )
-        return "\n".join(lines)
+        return "\n".join(lines) + basis("202.205", "202.211", "202.248")
 
     elif chapter_id == "compliance_actions":
         lines = ["## 合规措施建议与行动清单\n"]
@@ -786,9 +802,9 @@ def _render_placeholder_chapter(
             "- 更新数据清单和人数统计\n"
             "- 接收方变更、数据类别新增、交易结构调整时触发重新评估"
         )
-        return "\n".join(lines)
+        return "\n".join(lines) + basis("202.248", "202.301", "202.302", "202.303", "202.401")
 
-    return f"（{title}：占位内容）"
+    return f"（{title}：占位内容）" + basis("202.1001", "202.1002", "202.1101")
 
 
 def _build_template_mapping(
@@ -798,6 +814,15 @@ def _build_template_mapping(
     citation_registry: CitationRegistry | None = None,
 ) -> dict[str, str]:
     """Build template variable mapping for MD/DOCX rendering."""
+    basis_re = re.compile(r"\n*【依据：[^】]+】\s*$")
+
+    def summarize_chapter(text: str, *, max_sentences: int, max_chars: int) -> str:
+        match = basis_re.search(text or "")
+        basis = match.group(0).strip() if match else ""
+        body = text[: match.start()] if match else text
+        summary = summarize_for_slot(body, max_sentences=max_sentences, max_chars=max_chars)
+        return f"{summary}\n\n{basis}" if basis else summary
+
     def pick(no: int) -> str:
         for chapter in chapters:
             if chapter.chapter_no == no:
@@ -867,7 +892,7 @@ def _build_template_mapping(
 
     mapping = {
         "overall_conclusion": attach_citations(
-            summarize_for_slot(pick(1), max_sentences=4, max_chars=500),
+            summarize_chapter(pick(1), max_sentences=4, max_chars=500),
             citations,
             registry=citation_registry,
         ),
@@ -891,17 +916,17 @@ def _build_template_mapping(
         "clarification_questions": "\n".join(f"- {q}" for q in tl.clarification_questions) if tl.clarification_questions else "无",
         "covered_entity_detail": entity_block,
         "risk_details": attach_citations(
-            summarize_for_slot(pick(2), max_sentences=4, max_chars=500),
+            summarize_chapter(pick(2), max_sentences=4, max_chars=500),
             citations,
             registry=citation_registry,
         ),
         "compliance_actions": attach_citations(
-            summarize_for_slot(pick(3), max_sentences=4, max_chars=500),
+            summarize_chapter(pick(3), max_sentences=4, max_chars=500),
             citations,
             registry=citation_registry,
         ),
         "attachments_monitoring": attach_citations(
-            summarize_for_slot(pick(4), max_sentences=3, max_chars=400),
+            summarize_chapter(pick(4), max_sentences=3, max_chars=400),
             citations,
             registry=citation_registry,
         ),

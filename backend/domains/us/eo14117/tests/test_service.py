@@ -1,5 +1,6 @@
 """Test US 14117 service with all three traffic light scenarios (without LLM)."""
 
+import json
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -480,6 +481,14 @@ def test_output_files_generated_when_docx_template_is_missing(tmp_path, monkeypa
         assert docx_path.name in bundle.namelist()
         assert Path(result.output_files["citation_map_json"]).name in bundle.namelist()
         assert Path(result.output_files["document_ir_json"]).name in bundle.namelist()
+    citation_map = json.loads(Path(result.output_files["citation_map_json"]).read_text())
+    assert citation_map["footnote_map"]
+    assert {
+        item["article_no"] for item in citation_map["all_items"]
+    } >= {"202.205", "202.211", "202.303", "202.401"}
+    markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
+    assert "【待核验：引用无法映射】" not in markdown
+    assert "[1]" in markdown
     assert result.report_path.endswith(".md")
 
 
