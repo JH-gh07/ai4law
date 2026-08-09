@@ -60,20 +60,13 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
         == 1
     ]
 
-    # Count updated 2026-08-08: CN-REG-004 replaced 9 web-noise records with
-    # 20 formal articles (commit 979d714), raising unique_rows from 1602 → 1613.
-    # Count updated 2026-08-08 (P2 fix): 1347 regional-law articles re-ingested with
-    # correct field names (article_ref/content), raising unique_rows 1613 → 2960
-    # and source_ids 69 → 102.
-    # Count updated 2026-08-08 (Phase-4): 36 enforcement-provision rows renamed to
-    # "处罚-{art}-{n}" so every (source_id, article_no) key is now unique.
-    # Before the 2026-08-09 EDPB cleanup, unique_rows == total_rows == 3030.
-    # Metadata/heading fallback rows were replaced by semantic Step 1/Step 3
-    # chunks, reducing the canonical registry to 3026 unique rows.
-    # US-FED-001 now replaces unaddressable paragraph rows with exact 28 CFR
-    # Part 202 locators. The invariant is uniqueness and resolvability, not a
-    # brittle repository-wide row count that changes whenever a source is fixed.
-    assert len(unique_rows) == len(rows) - 9  # US-CA-001 §1798.140(ii) ×4 + §1798.145(i) ×5
+    # 2026-08-10 (Phase-4 CPRA dedup): removed 2 contamination entries
+    # (US-CA-001-060 outboard-engine junk + US-CA-001-069 content subset),
+    # renamed 5 remaining duplicates with unique -N suffixes.
+    # Registry is now 100 % unique — every (source_id, article_ref) key
+    # resolves to exactly one row. Row count is not a frozen invariant;
+    # it shifts whenever a source is cleaned or extended.
+    assert len(unique_rows) == len(rows)
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])
