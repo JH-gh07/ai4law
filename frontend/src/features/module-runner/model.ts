@@ -801,6 +801,19 @@ export const CN_FLOW_STEPS: CnFlowStepConfig[] = [
       { name: "transfer_purpose", label: "出境目的", type: "textarea" },
       { name: "data_categories", label: "出境数据类别（逗号分隔）", type: "text" },
       { name: "sensitive_data_flags", label: "敏感/重点数据标签（逗号分隔）", type: "text" },
+      { name: "us_person_count", label: "涉及美国个人数量", type: "text" },
+      {
+        name: "transaction_type",
+        label: "交易类型",
+        type: "select",
+        options: ["vendor_agreement", "employment_agreement", "investment_agreement", "data_brokerage", "cooperative_research", "cloud_remote_access", "onward_transfer", "other"]
+      },
+      {
+        name: "doj_data_category",
+        label: "DOJ 数据分类（当前所有数据项）",
+        type: "select",
+        options: ["human_genomic_data", "biometric_identifiers", "precise_geolocation_data", "personal_health_data", "personal_financial_data", "covered_personal_identifiers", "government_related_data", "not_14117_data"]
+      },
       { name: "data_volume_note", label: "数据规模与体量说明", type: "textarea" },
       { name: "necessity_justification", label: "出境必要性与替代性说明", type: "textarea" }
     ]

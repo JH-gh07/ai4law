@@ -311,7 +311,7 @@ export function buildCnFlowPayload(
     ].filter((item) => item.length > 0).join("；"),
     data_categories: dataCategories,
     sensitive_data_flags: splitCsv(values.sensitive_data_flags),
-    us_person_count: Math.max(0, values.us_person_count),
+    us_person_count: Math.max(0, Number(values.us_person_count)),
     transaction_type: values.transaction_type,
     doj_data_category_by_item: Object.fromEntries(
       [...dataCategories, ...splitCsv(values.sensitive_data_flags)].map((item) => [
