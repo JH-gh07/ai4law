@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from functools import lru_cache
 from pathlib import Path
 
 from backend.common.citation.module_grounding import (
@@ -10,12 +11,16 @@ from backend.common.citation.module_grounding import (
     ModuleIssue,
     build_module_citation_bundle,
 )
+from backend.common.citation.locators import normalize_article_no
 from backend.common.citation.output import build_knowledge_url
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
+from backend.common.rag.ingest import load_regulation_rows
+from backend.common.rag.retriever import RegulationDoc
 from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
@@ -46,6 +51,42 @@ TIA_CHAPTERS = [
     "剩余风险与合规结论",
     "持续复审与行动计划",
 ]
+
+MANDATORY_TIA_LOCATORS = (
+    ("EU-LAW-001", "44"),
+    ("EU-LAW-001", "46"),
+    ("EU-GUIDE-002", "Step 3"),
+)
+
+
+@lru_cache(maxsize=1)
+def _mandatory_tia_regulations() -> tuple[RegulationDoc, ...]:
+    """Resolve decision-bearing authorities by canonical source and locator."""
+    required = {
+        (source_id, normalize_article_no(article_no))
+        for source_id, article_no in MANDATORY_TIA_LOCATORS
+    }
+    documents: list[RegulationDoc] = []
+    for row in load_regulation_rows(regulation_articles_jsonl_path()):
+        key = (
+            str(row.get("source_id", "")),
+            normalize_article_no(str(row.get("article_ref", ""))),
+        )
+        if key not in required:
+            continue
+        documents.append(RegulationDoc(
+            id=key[0],
+            title=str(row.get("law_name", "")),
+            article=str(row.get("article_ref", "")),
+            content=str(row.get("content", "")),
+            jurisdiction=str(row.get("jurisdiction", "")),
+            path=str(row.get("path", "")),
+            doc_type=str(row.get("doc_type", "")),
+            source_url=str(row.get("source_url", "")),
+            snapshot_path=str(row.get("snapshot_path", "")),
+            keywords=tuple(str(item) for item in row.get("keywords", [])),
+        ))
+    return tuple(documents)
 
 
 def _dedupe_regulations(regulations: list) -> list:
@@ -170,7 +211,10 @@ class TIAService:
                     jurisdiction="eu",
                     path="all",
                 ).documents
-            regs = _dedupe_regulations(all_regs)[:8]
+            regs = _dedupe_regulations([
+                *_mandatory_tia_regulations(),
+                *all_regs,
+            ])[:12]
             reg_snippet = "\n".join(
                 f"- {item.title}{item.article}：{(item.content or '')[:120]}"
                 for item in regs
@@ -355,9 +399,12 @@ class TIAService:
                 chapters[0].content += (
                     "\n\n**AI辅助复核意见（不构成DPO正式签署）**: " + review_position
                 )
-            if dpo_review.get("mandatory_conditions"):
+            if (
+                decision.transfer_status != "suspend"
+                and dpo_review.get("mandatory_conditions")
+            ):
                 chapters[5].content += (
-                    "\n\n**强制前置条件**:\n" +
+                    "\n\n**AI辅助补充建议（不构成正式批准条件）**:\n" +
                     "\n".join(f"- {c}" for c in dpo_review["mandatory_conditions"])
                 )
 

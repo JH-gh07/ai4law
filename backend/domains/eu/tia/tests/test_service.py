@@ -194,7 +194,7 @@ def test_system_suspension_decision_cannot_be_upgraded_by_dpo_text(monkeypatch) 
             "critical_issues": [],
             "non_reliance_warning_needed": False,
             "dpo_position": "No objection.",
-            "mandatory_conditions": [],
+            "mandatory_conditions": ["Obtain an AI-generated approval conclusion."],
         }),
     }
     monkeypatch.setattr(
@@ -233,6 +233,7 @@ def test_system_suspension_decision_cannot_be_upgraded_by_dpo_text(monkeypatch) 
     assert result.decision.transfer_status == "suspend"
     assert "系统规则结论：暂停传输" in report_text
     assert "DPO意见**: No objection." not in report_text
+    assert "AI-generated approval" not in report_text
     assert "[DPO复核] [系统决策]" not in "\n".join(result.consistency_issues)
 
 
@@ -359,6 +360,16 @@ def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) 
     assert "United States" in result.chapters[2].content
     assert "端到端加密" in result.chapters[3].content
     assert "e2eencryptioneukeymanagement" not in result.chapters[3].content
+    available_citations = {
+        ref.citation_id
+        for chapter in result.chapters
+        for ref in chapter.citation_refs
+    }
+    assert {
+        "CIT-EU-GDPR-ART44-P01",
+        "CIT-EU-GDPR-ART46-P01",
+        "CIT-EU-EDPB-ARTSTEP_3-P01",
+    } <= available_citations
 
 
 def test_service_keeps_markdown_map_and_document_ir_citations_in_sync(
@@ -407,7 +418,14 @@ def test_service_keeps_markdown_map_and_document_ir_citations_in_sync(
         for block in section["blocks"]
         for citation_id in block.get("citation_refs", [])
     }
+    map_ids = {
+        item["citation_id"]
+        for item in citation_map["footnote_map"].values()
+    }
 
-    assert markdown_numbers == {"1"}
     assert map_numbers == markdown_numbers
-    assert claim_refs == {"CIT-EU-GDPR-ART46-P01"}
+    assert claim_refs == map_ids
+    assert {
+        "CIT-EU-GDPR-ART46-P01",
+        "CIT-EU-EDPB-ARTSTEP_3-P01",
+    } <= map_ids
