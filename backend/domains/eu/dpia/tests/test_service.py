@@ -671,6 +671,47 @@ def test_external_draft_rejects_provable_cross_chapter_contradictions() -> None:
     assert "人工复核" in chapters[5]["content"]
 
 
+def test_external_draft_no_llm_path_keeps_citations_and_article36_decision() -> None:
+    from backend.common.citation.registry import registry_from_documents
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    registry = registry_from_documents(
+        [
+            {
+                "source_id": "EU-LAW-001",
+                "title": "GDPR (EU) 2016/679",
+                "article": article,
+                "snippet": f"Article {article}",
+                "confidence_score": 0.9,
+            }
+            for article in ("22", "35", "36")
+        ],
+        jurisdiction="EU",
+    )
+    section_ids = (
+        "need_identification", "processing_description", "consultation",
+        "necessity_proportionality", "risk_assessment", "mitigation", "signoff",
+    )
+    chapters = ExternalDPIAgent(llm_client=None).run(
+        generation_basis_pack={
+            "section_packs": [
+                {"section_id": key, "confirmed_facts": [], "issues": [], "legal_grounding": []}
+                for key in section_ids
+            ],
+            "need_assessment": {"dpia_required": True},
+            "dpo_decision_pack": {
+                "prior_consultation_recommended": True,
+                "reason": "存在HIGH剩余风险",
+            },
+        },
+        citation_registry=registry,
+    )
+
+    assert "[" in chapters[0]["content"]
+    assert "必须在开始处理前" in chapters[-1]["content"]
+    assert any(chapter["citations"] for chapter in chapters)
+
+
 def test_processing_activity_extracts_data_flow() -> None:
     """Processing activity agent should parse data flow into structured steps."""
     from backend.domains.eu.dpia.agents.processing_activity_agent import ProcessingActivityAgent

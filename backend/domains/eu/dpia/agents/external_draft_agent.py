@@ -64,7 +64,7 @@ class ExternalDPIAgent(DPIAAgentBase):
         writing = writing_strategy or {}
 
         if not self.enabled:
-            return _placeholder_chapters(gen_basis)
+            return _placeholder_chapters(gen_basis, citation_registry=citation_registry)
 
         # Generate chapters individually
         chapters: list[dict] = []
@@ -270,7 +270,7 @@ DPO 意见：
 - signoff: DPO结论、条件、监管咨询建议"""
 
 
-def _placeholder_chapters(gen_basis: dict) -> list[dict]:
+def _placeholder_chapters(gen_basis: dict, *, citation_registry=None) -> list[dict]:
     """Backward-compatible no-provider path using structured chapter fallbacks."""
     section_packs = {
         item.get("section_id"): item
@@ -284,7 +284,14 @@ def _placeholder_chapters(gen_basis: dict) -> list[dict]:
             title=title,
             section=section_packs.get(cid, {}),
             generation_basis_pack=gen_basis,
+            citation_registry=citation_registry,
         )
+        if cid == "signoff":
+            fallback = enforce_article36_conclusion(
+                fallback,
+                dpo_decision_pack=gen_basis.get("dpo_decision_pack", {}) or {},
+                citation_registry=citation_registry,
+            )
         chapters.append({"chapter_no": i, **fallback})
     return chapters
 
