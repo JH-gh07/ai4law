@@ -445,7 +445,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | 3 | 其他模块 | **完成（生产形态集成测试）** | 8 模块 × 5 测试 = 40 项生产形态集成测试全部通过（提交 `0843b99`）；每模块验证：schema_first=True→DocumentIR 生成、[N]脚注→citation_refs、三层 CID 一致性、编译器拦截未注册引用、block 计数不变性；case parity gate 通过（11 模块/20 CLI cases/397 leaf checks） | 生产形态测试已完成；各用户功能的 live provider、浏览器和真实产物仍按第 11 节逐项验收，不能等到远端才发现问题 |
 | 3A | 诊断双路径 | **完成（代码审计）** | `backend/tests/diagnosis/test_diagnosis_dual_path_parity.py` 7 项测试验证：8 核心字段无损往返、ModuleResult→SessionResult 完整保留、4 条路径 DiagnosisOutcome 映射正确、suggested_next_module 匹配目标模块、Handoff Schema 序列化正确 | 仍缺本地浏览器表单、两条 API 实际提交、HTML/PDF 和 handoff JSON 产物验收 |
 | 4 | 知识库治理 | **完成** | 唯一性修复（36条处罚条款重命名，0重复归一化键）；CN-REG-004 替换验证通过；`scripts/check_citation_source_integrity.py` 扩展至 12 项指标含 article 分类统计（提交 `38f64af`）：0 missing/0 not_found/0 not_unique/100% resolution rate；0 中文数字残留/0 非数字条号/0 无正式条号；357 中文数字条文已正确归一化；URL 回填分析结论：19 个正式法规来源 100% URL 覆盖，83 个内部参考材料无公开 URL（符合预期，无需进一步操作） | — |
-| 5 | 前端闭环 | **代码级完成，5/10 用户功能已有本地浏览器闭环** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state；恢复任务可从已登记 `citation_map_json` 解析引用（`1da770a`）；CitationMarkdownRenderer 支持 [N] 脚注和【依据：】两种语法的后端确认跳转；PIPIA、SCC、BCR、DPIA、TIA 已完成本地浏览器验收 | 其余 5 个用户功能仍须在本地逐一验收，远端继续禁止执行 |
+| 5 | 前端闭环 | **代码级完成，6/10 用户功能已有本地浏览器闭环** | 后端 CitationDetailResponse 已包含全部 14 个显示字段 + resolution_state；恢复任务可从已登记 `citation_map_json` 解析引用（`1da770a`）；CitationMarkdownRenderer 支持 [N] 脚注和【依据：】两种语法的后端确认跳转；PIPIA、SCC、BCR、DPIA、TIA、CPRA 已完成本地浏览器验收 | 其余 4 个用户功能仍须在本地逐一验收，远端继续禁止执行 |
 | 6 | 删除旧流程 | 未开始 | 无 | 前置阶段全部通过 |
 
 ## 9. 最终完成定义
@@ -526,7 +526,7 @@ uv run pytest -q backend/domains/cn/security_assessment/tests
 | EU | DPIA 草案生成 | 依据 GDPR 第 35 条生成数据保护影响评估草案 | `dpia` | `backend/domains/eu/dpia/` | **本地完整闭环通过**：两个案例分别 24/24、26/26 通过；最终真实 provider 运行耗时 525,537 ms，12 次调用、12,207 Token，7 个 Agent 降级均由结构化正文接管，无占位内容；一致性 10/10；DocumentIR 为 7 节、27 块、15 个 ClaimBlock；9 个引用均高权威、高置信、可跳转；浏览器 Article 36 精确跳转和 PDF 预览证据齐全。旧 task 事件轮询噪声已转为独立 P1，不阻断 DPIA；远端未部署。详见 `status/check/phase3_dpia_firstrun_20260808/验收报告.md` |
 | EU | TIA 草案生成 | 评估第三国保护水平和补充措施，生成传输影响评估草案 | `tia` | `backend/domains/eu/tia/` | **本地完整闭环通过**：最终 Schema-first live 332,388 ms、9 calls、16,102 token、24/24 checks；真实 EDPB/FISA/CLOUD Act 附件解析；确定性规则输出 `suspend`，模型和用户输入不能覆盖；DocumentIR 6 sections/45 blocks/0 diagnostics；Markdown、CitationMap、DocumentIR 使用同一组 GDPR 44/46 与 EDPB Step 1/3；章节截断自动换用结构化正文；浏览器引用精确跳转、PDF 3 页、errors=0。远端未部署。详见 `status/check/phase3_tia_firstrun_20260808/验收报告.md` |
 | US | 14117 行政令合规 | 判断 EO 14117 涵盖人员、受关注国家、受限交易和风险结论 | `us_14117` | `backend/domains/us/eo14117/`；兼容入口 `cn_flow` | 适配器和单测已有；主入口/兼容入口真实一致性未验收 |
-| US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | 适配器和单测已有；真实 service 首跑未验收 |
+| US | CPRA 合规 | 检查数据映射、告知、合同和治理要求，生成 CPRA 合规报告 | `cpra` | `backend/domains/us/cpra/` | **本地完整闭环通过**：统一 `us_cpra` 模块标识；`US-CA-001` 入库 12 个准确 Civil Code 条号；无模型 33/33 checks；live 364,326 ms、46 events、10 calls、13,544 tokens、33/33 checks；6 章正文有确定性质量底线；Markdown/CitationMap/DocumentIR 使用同一组 7 条引用；浏览器一键运行、过程显示、精确跳转和 PDF 预览均通过，console error=0。子 Agent JSON 稳定性和业务回退统计列为 P1，不阻断用户交付。远端未部署。详见 `status/check/phase_cpra_local_20260810/验收报告.md` |
 
 `cn_flow` 不是第三个美国用户功能。它是历史 API/兼容入口，当前执行 EO 14117 数据流评估；迁移 `us_14117` 时必须同时验证 `us_14117` 和 `cn_flow` 两个后端入口输出同一套 EO 14117 规则结果，防止兼容接口与主入口分叉。
 
