@@ -349,11 +349,12 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
   }
 
   const handleOpenCitation = (citation: CitationDetail) => {
-    // Navigate directly to the knowledge center (EvidenceCenterPage),
-    // which auto-expands the source and scrolls to the article when
-    // ?source= and &article= query params are present.
+    // Only allow the two supported in-app knowledge routes.  The citation API
+    // currently emits both the legacy /evidence query route and the canonical
+    // /knowledge/laws/:source route; rejecting the latter made valid DPIA
+    // citation buttons appear clickable while doing nothing.
     const targetUrl = citation.knowledge_url;
-    if (targetUrl.startsWith("/evidence")) {
+    if (/^\/(?:evidence(?:[/?]|$)|knowledge(?:[/?]|$))/.test(targetUrl)) {
       navigate(targetUrl);
     }
   };

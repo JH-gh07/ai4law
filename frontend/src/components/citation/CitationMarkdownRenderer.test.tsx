@@ -105,6 +105,59 @@ describe("CitationMarkdownRenderer", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/evidence?source=CN-LAW-003&article=39");
   });
 
+  it("navigates to the canonical knowledge article route", async () => {
+    fetchMap.mockResolvedValue({
+      task_id: "task-1",
+      module: "dpia",
+      footnote_map: {
+        "1": {
+          ...exactCitation,
+          module: "dpia",
+          source_id: "EU-LAW-001",
+          article_no: "36",
+          knowledge_url: "/knowledge/laws/EU-LAW-001?article=36",
+        },
+      },
+      citation_count: 1,
+    });
+
+    render(
+      <CitationMarkdownRenderer
+        markdown="事先咨询结论[1]"
+        taskId="task-1"
+        moduleKey="dpia"
+      />,
+    );
+
+    const openButton = await screen.findByRole("button", { name: "打开引用" });
+    await act(async () => openButton.click());
+
+    expect(mockNavigate).toHaveBeenCalledWith("/knowledge/laws/EU-LAW-001?article=36");
+  });
+
+  it("does not navigate to an external or unsupported citation URL", async () => {
+    fetchMap.mockResolvedValue({
+      task_id: "task-1",
+      module: "dpia",
+      footnote_map: {
+        "1": {
+          ...exactCitation,
+          knowledge_url: "https://example.invalid/redirect",
+        },
+      },
+      citation_count: 1,
+    });
+
+    render(
+      <CitationMarkdownRenderer markdown="结论[1]" taskId="task-1" moduleKey="dpia" />,
+    );
+
+    const openButton = await screen.findByRole("button", { name: "打开引用" });
+    await act(async () => openButton.click());
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("renders missing-evidence notices as warnings, never as citation controls", async () => {
     render(
       <CitationMarkdownRenderer
