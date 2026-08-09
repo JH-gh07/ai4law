@@ -33,6 +33,8 @@ uv run pytest backend/domains/us/eo14117_flow_review/tests backend/domains/us/eo
 
 已覆盖：同步生成、异步提交与轮询、规则结果、统一产物、历史 `cn_flow_request` 事件、缺失事实拦截、完整请求转换。
 
+补充验核：同一组事实经兼容适配和直接构造 canonical 请求后，红黄绿结论、规则 ID、法规条款和命中状态完全一致；RED 数据经纪场景已加入自动测试。
+
 ## 尚未完成
 
 1. 旧输入案例补齐新字段并运行全量 parity，对比旧结果与 canonical 结果。
@@ -56,4 +58,6 @@ bf9463c feat: add cn flow compatibility boundary
 ```text
 5749e57 refactor: delegate cn flow reports to EO 14117
 c5e4bd7 fix: reject incomplete legacy cn flow requests
+ae5f90e fix: align cn flow test inputs with canonical fields
+9a2deb8 fix: expose canonical facts in legacy cn flow form
 ```

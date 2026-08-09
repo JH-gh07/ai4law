@@ -5,6 +5,8 @@ from backend.domains.us.eo14117_flow_review.compatibility import (
     adapt_cn_flow_request,
 )
 from backend.domains.us.eo14117_flow_review.schema import CNFlowRequest
+from backend.domains.us.eo14117.rule_engine import run_rule_engine
+from backend.domains.us.eo14117.schema import US14117Request
 
 
 def _legacy_request() -> CNFlowRequest:
@@ -60,3 +62,31 @@ def test_complete_legacy_request_converts_to_canonical_request() -> None:
 def test_legacy_missing_facts_never_produce_canonical_request() -> None:
     with pytest.raises(CompatibilityClarificationRequired):
         adapt_cn_flow_request(_legacy_request())
+
+
+def test_legacy_adapter_preserves_canonical_rule_result() -> None:
+    payload = _legacy_request().model_copy(
+        update={
+            "us_person_count": 1_000,
+            "transaction_type": "data_brokerage",
+            "doj_data_category_by_item": {"账户信息": "biometric_identifiers"},
+            "recipient_entities": [
+                _legacy_request().recipient_entities[0].model_copy(
+                    update={"country_region": "中国"}
+                )
+            ],
+        }
+    )
+    adapted = adapt_cn_flow_request(payload).canonical_request
+    direct = US14117Request.model_validate(adapted.model_dump())
+
+    adapted_result = run_rule_engine(adapted)
+    direct_result = run_rule_engine(direct)
+
+    assert adapted_result.traffic_light.overall_light == direct_result.traffic_light.overall_light
+    assert adapted_result.traffic_light.overall_light == "RED"
+    assert {
+        (item.rule_id, item.section_ref, item.hit) for item in adapted_result.all_rule_hits
+    } == {
+        (item.rule_id, item.section_ref, item.hit) for item in direct_result.all_rule_hits
+    }
