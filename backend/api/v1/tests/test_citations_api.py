@@ -97,7 +97,7 @@ def test_citation_report_supports_module_and_knowledge_url(tmp_path: Path, monke
         data = response.json()
         assert data["module"] == "assessment"
         assert data["citation_count"] == 1
-        assert data["footnote_map"]["1"]["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=39"
+        assert data["footnote_map"]["1"]["knowledge_url"] == "/evidence?source=CN-LAW-003&article=39"
         assert data["footnote_map"]["1"]["can_jump"] is True
         assert data["footnote_map"]["1"]["resolution"]["resolution_type"] == "exact_article"
         assert data["footnote_map"]["1"]["resolution"]["target_id"] == "CN-LAW-003:39"

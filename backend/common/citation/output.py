@@ -300,8 +300,10 @@ def build_knowledge_url(
     elif anchor:
         query["anchor"] = anchor
 
-    suffix = f"?{urlencode(query)}" if query else ""
-    return f"/knowledge/laws/{source}{suffix}"
+    # Build /evidence?source=SOURCE_ID&article=ART_NO style URL.
+    # query dict always has exactly one key: article, section, clause, or anchor.
+    param_str = f"&{urlencode(query)}" if query else ""
+    return f"/evidence?source={source}{param_str}"
 
 
 def normalize_citation_item(item: dict[str, Any], *, module: str) -> dict[str, Any]:

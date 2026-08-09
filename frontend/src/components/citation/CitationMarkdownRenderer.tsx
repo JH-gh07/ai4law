@@ -349,14 +349,16 @@ export function CitationMarkdownRenderer({ markdown, taskId, moduleKey }: Props)
   }
 
   const handleOpenCitation = (citation: CitationDetail) => {
-    // Only allow the two supported in-app knowledge routes.  The citation API
-    // currently emits both the legacy /evidence query route and the canonical
-    // /knowledge/laws/:source route; rejecting the latter made valid DPIA
-    // citation buttons appear clickable while doing nothing.
-    const targetUrl = citation.knowledge_url;
-    if (/^\/(?:evidence(?:[/?]|$)|knowledge(?:[/?]|$))/.test(targetUrl)) {
-      navigate(targetUrl);
-    }
+    // Build the /evidence URL directly from source_id + article_no so that
+    // both [N] footnotes (from backend citation_map.json) and 【依据:】
+    // resolved citations navigate to the same knowledge center page.
+    const sourceId = citation.source_id;
+    if (!sourceId) return;
+    const articleNo = citation.article_no;
+    const url = articleNo
+      ? `/evidence?source=${encodeURIComponent(sourceId)}&article=${encodeURIComponent(articleNo)}`
+      : `/evidence?source=${encodeURIComponent(sourceId)}`;
+    navigate(url);
   };
 
   return (

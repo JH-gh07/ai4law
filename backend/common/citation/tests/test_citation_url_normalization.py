@@ -40,18 +40,18 @@ def test_normalize_article_no(input_value: str, expected: str) -> None:
     [
         (
             {"source_id": "CN-LAW-003", "article_no": "六十六"},
-            "/knowledge/laws/CN-LAW-003?article=66",
+            "/evidence?source=CN-LAW-003&article=66",
         ),
         (
             {"source_id": "CN-LAW-001", "article_no": "4"},
-            "/knowledge/laws/CN-LAW-001?article=4",
+            "/evidence?source=CN-LAW-001&article=4",
         ),
         (
             {"source_id": "CN-REG-004", "article_no": "十三"},
-            "/knowledge/laws/CN-REG-004?article=13",
+            "/evidence?source=CN-REG-004&article=13",
         ),
         ({"source_id": "", "article_no": "1"}, None),
-        ({"source_id": "CN-LAW-003"}, "/knowledge/laws/CN-LAW-003"),
+        ({"source_id": "CN-LAW-003"}, "/evidence?source=CN-LAW-003"),
     ],
 )
 def test_build_knowledge_url(kwargs: dict[str, str], expected: str | None) -> None:
@@ -66,19 +66,19 @@ def test_normalize_overwrites_cached_bad_url() -> None:
         "knowledge_url": "/evidence",
     }
     result = normalize_citation_item(item, module="test")
-    assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=66"
+    assert result["knowledge_url"] == "/evidence?source=CN-LAW-003&article=66"
 
 
 def test_normalize_generates_missing_url() -> None:
     item = {"source_id": "CN-LAW-003", "title": "个人信息保护法", "article_no": "66"}
     result = normalize_citation_item(item, module="test")
-    assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=66"
+    assert result["knowledge_url"] == "/evidence?source=CN-LAW-003&article=66"
 
 
 def test_normalize_converts_chinese_article_no() -> None:
     item = {"source_id": "CN-LAW-001", "title": "网络安全法", "article_no": "十三"}
     result = normalize_citation_item(item, module="test")
-    assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-001?article=13"
+    assert result["knowledge_url"] == "/evidence?source=CN-LAW-001&article=13"
     assert result["article_no"] == "13"
 
 
@@ -94,7 +94,7 @@ def test_unknown_source_cannot_claim_exact_knowledge_jump() -> None:
         "title": "指导性案例265号",
         "article_no": "1",
         "can_jump": True,
-        "knowledge_url": "/knowledge/laws/delilegal-case-指导性案例265号?article=1",
+        "knowledge_url": "/evidence?source=delilegal-case-指导性案例265号&article=1",
     }
 
     result = normalize_citation_item(item, module="test")
@@ -114,7 +114,7 @@ def test_known_source_without_article_is_source_overview() -> None:
     assert result["resolution"]["resolution_type"] == "source_overview"
     assert result["resolution"]["failure_reason"] == "source_level_by_design"
     assert result["resolution"]["target_id"] == "CN-LAW-003"
-    assert result["knowledge_url"] == "/knowledge/laws/CN-LAW-003"
+    assert result["knowledge_url"] == "/evidence?source=CN-LAW-003"
     assert result["can_jump"] is False
 
 
@@ -207,7 +207,7 @@ def test_write_citation_map_json_goes_through_normalize() -> None:
         written = json.loads(Path(path).read_text(encoding="utf-8"))
 
     footnote = written["footnote_map"]["1"]
-    assert footnote["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=66"
+    assert footnote["knowledge_url"] == "/evidence?source=CN-LAW-003&article=66"
     assert footnote["can_jump"] is True
     assert footnote["module"] == "test"
     assert written["all_items"][0]["knowledge_url"] == footnote["knowledge_url"]
@@ -266,7 +266,7 @@ def test_all_modules_have_controlled_resolution(
 
     footnote = written["footnote_map"]["1"]
     assert footnote["knowledge_url"]
-    assert "/knowledge/laws/" in footnote["knowledge_url"]
+    assert footnote["knowledge_url"].startswith("/evidence?source=")
     assert footnote["can_jump"] is exact
     assert footnote["resolution"]["resolution_type"] == (
         "exact_article" if exact else "source_overview"

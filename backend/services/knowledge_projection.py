@@ -173,7 +173,7 @@ def _summarize_source(
         "url": str(metadata.get("external_url") or metadata.get("source_url") or ""),
         "snapshot_path": str(metadata.get("snapshot_path") or ""),
         "module": str(metadata.get("module") or ""),
-        "knowledge_url": f"/knowledge/laws/{entry.source_id}",
+        "knowledge_url": f"/evidence?source={entry.source_id}",
         "suitable_for": scenario_text or "通用参考",
         "usage": usage_text or ("可作为正式依据" if entry.can_be_cited else "仅供内部参考"),
         "report_usage": str(metadata.get("report_usage") or ("可直接用于正式报告" if entry.can_enter_external_report else "不直接写入正式报告")),

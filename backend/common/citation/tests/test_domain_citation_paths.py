@@ -36,7 +36,7 @@ def _assert_normalized_map(path: str | Path, module: str) -> None:
     footnote = payload["footnote_map"]["1"]
     assert payload["module"] == module
     assert footnote["article_no"] == "66"
-    assert footnote["knowledge_url"] == "/knowledge/laws/CN-LAW-003?article=66"
+    assert footnote["knowledge_url"] == "/evidence?source=CN-LAW-003&article=66"
     assert footnote["can_jump"] is True
 
 
@@ -52,14 +52,14 @@ def test_dpia_writer_uses_common_citation_normalization(tmp_path: Path) -> None:
 
 def test_cpra_refs_have_knowledge_url() -> None:
     ref = cpra_service._cpra_ref_from_item(_citation_item())
-    assert ref.knowledge_url == "/knowledge/laws/CN-LAW-003?article=66"
+    assert ref.knowledge_url == "/evidence?source=CN-LAW-003&article=66"
 
 
 def test_tia_refs_have_knowledge_url() -> None:
     ref = _tia_ref_from_item(_citation_item())
-    assert ref.knowledge_url == "/knowledge/laws/CN-LAW-003?article=66"
+    assert ref.knowledge_url == "/evidence?source=CN-LAW-003&article=66"
 
 
 def test_eu_scc_refs_have_knowledge_url() -> None:
     ref = _eu_scc_ref_from_item(_citation_item())
-    assert ref.knowledge_url == "/knowledge/laws/CN-LAW-003?article=66"
+    assert ref.knowledge_url == "/evidence?source=CN-LAW-003&article=66"

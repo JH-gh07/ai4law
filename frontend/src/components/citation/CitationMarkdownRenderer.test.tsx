@@ -59,7 +59,7 @@ const exactCitation: CitationDetail = {
   can_enter_external_report: true,
   external_report_allowed: true,
   confidence_threshold: 0.2,
-  knowledge_url: "/evidence?source=CN-LAW-003&article=39",
+  knowledge_url: "/knowledge/laws/CN-LAW-003?article=39",
   anchor: "",
   section_id: "",
   clause_id: "",
@@ -105,7 +105,7 @@ describe("CitationMarkdownRenderer", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/evidence?source=CN-LAW-003&article=39");
   });
 
-  it("navigates to the canonical knowledge article route", async () => {
+  it("navigates to evidence page for any citation with a source_id", async () => {
     fetchMap.mockResolvedValue({
       task_id: "task-1",
       module: "dpia",
@@ -132,16 +132,18 @@ describe("CitationMarkdownRenderer", () => {
     const openButton = await screen.findByRole("button", { name: "打开引用" });
     await act(async () => openButton.click());
 
-    expect(mockNavigate).toHaveBeenCalledWith("/knowledge/laws/EU-LAW-001?article=36");
+    expect(mockNavigate).toHaveBeenCalledWith("/evidence?source=EU-LAW-001&article=36");
   });
 
-  it("does not navigate to an external or unsupported citation URL", async () => {
+  it("does not navigate when citation has no source_id", async () => {
     fetchMap.mockResolvedValue({
       task_id: "task-1",
       module: "dpia",
       footnote_map: {
         "1": {
           ...exactCitation,
+          source_id: "",
+          article_no: "",
           knowledge_url: "https://example.invalid/redirect",
         },
       },
