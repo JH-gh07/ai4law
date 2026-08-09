@@ -42,12 +42,28 @@ def build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> d
                 return ch.content
         return ""
 
+    final_parts = [pick(5), pick(6)]
+    proposed_label = "用户提交的拟定结论（不构成系统批准）"
+    final_text = "\n".join(filter(None, final_parts))
+    if payload.final_conclusion in final_text:
+        if proposed_label not in final_text:
+            final_text = final_text.replace(
+                payload.final_conclusion,
+                f"{proposed_label}：\n{payload.final_conclusion}",
+                1,
+            )
+    else:
+        final_text = "\n".join(filter(None, [
+            final_text,
+            f"{proposed_label}：\n{payload.final_conclusion}",
+        ]))
+
     return {
         "transfer_context": pick(1) or f"{payload.data_exporter_profile} -> {payload.data_importer_profile}",
         "transfer_tool": pick(2) or payload.transfer_tool,
         "third_country_analysis": pick(3) or payload.third_country_assessment,
         "supplementary_measures": pick(4) or payload.supplementary_measures,
-        "final_assessment": "\n".join(filter(None, [pick(5), pick(6), payload.final_conclusion])),
+        "final_assessment": final_text,
     }
 
 

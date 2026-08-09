@@ -7,7 +7,7 @@
     "data_importer_profile": "US Importer",
     "third_country_assessment": "United States is HIGH risk for this transfer because FISA Section 702, EO 12333, and the CLOUD Act may enable government access and limit effective redress.",
     "supplementary_measures": "End-to-end encryption and EU-managed keys.",
-    "final_conclusion": "SCC remains conditional on the measures.",
+    "final_conclusion": "Suspend the transfer until the applicable SCC, implemented technical controls, and formal DPO review are evidenced.",
     "attachments": [
       {
         "file_role": "country_law_analysis",
@@ -56,8 +56,22 @@
     "fields_present": [
       "route_decision",
       "country_risk",
-      "measure_assessments"
+      "measure_assessments",
+      "decision"
     ],
+    "fields_equal": {
+      "country_risk.risk_level": "HIGH",
+      "decision.transfer_status": "suspend",
+      "decision.inherent_risk": "HIGH",
+      "decision.residual_risk": "MEDIUM",
+      "decision.decision_source": "deterministic_rule"
+    },
+    "list_contains": {
+      "decision.missing_evidence": [
+        "传输工具文件",
+        "技术控制实施证据"
+      ]
+    },
     "min_counts": {
       "chapters": 6,
       "output_files": 5
@@ -79,5 +93,5 @@
   },
   "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx",
   "attachment_parse_skipped": false,
-  "coverage_note": "本案例覆盖 structured_input 角色/国家风险规则和三份真实本地 PDF 解析；LLM、浏览器引用跳转和最终正文脚注另行验收。"
+  "coverage_note": "本案例覆盖 structured_input 角色/国家风险规则、三份真实本地 PDF 解析和确定性停传决策。案例只有第三国法律资料，没有 SCC 合同和技术控制实施证明，因此预期结论必须是 suspend；LLM、浏览器引用跳转和最终正文脚注另行验收。"
 }

@@ -16,7 +16,7 @@ class DPOReviewAgent(TIAAgentBase):
     max_tokens = 600
 
     def run(self, route: str, country_risk_level: str, sensitivity: str,
-            measure_overall: str, effective_risk: str, issues: list[str],
+            measure_overall: str, residual_risk: str, issues: list[str],
             chapter_summaries: list[dict]) -> dict:
         ch_block = "\n".join(
             f"- Ch{c.get('no','?')} '{c.get('title','?')}': {c.get('content','')[:200]}..."
@@ -30,7 +30,7 @@ Route: {route}
 Country risk: {country_risk_level}
 Data sensitivity: {sensitivity}
 Measure sufficiency: {measure_overall}
-Effective risk: {effective_risk}
+Residual risk after supplementary measures: {residual_risk}
 Issues found by rule engine:
 {issues_block}
 
@@ -51,7 +51,7 @@ Return JSON:
   "non_reliance_warning_needed": true|false
 }}"""
         fallback = {
-            "review_result": "needs_revision" if effective_risk in ("VERY_HIGH", "HIGH") else "approved",
+            "review_result": "needs_revision" if residual_risk in ("VERY_HIGH", "HIGH") else "approved",
             "critical_issues": issues[:3],
             "risk_softening_detected": False,
             "risk_softening_examples": [],
@@ -59,7 +59,7 @@ Return JSON:
             "dpo_position": "Conditional approval pending resolution of flagged issues." if issues else "No objection.",
             "mandatory_conditions": [],
             "review_plan_suggestion": "Review every 6 months or upon material legal change.",
-            "regulatory_consultation_required": effective_risk == "VERY_HIGH",
-            "non_reliance_warning_needed": effective_risk == "VERY_HIGH",
+            "regulatory_consultation_required": residual_risk == "VERY_HIGH",
+            "non_reliance_warning_needed": residual_risk == "VERY_HIGH",
         }
         return self._call_llm(prompt) or fallback

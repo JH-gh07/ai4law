@@ -129,11 +129,11 @@
       "cli_cases": [
         {
           "case_id": "01_minimal",
-          "assertions": 18
+          "assertions": 26
         },
         {
           "case_id": "02_structured_local_attachment",
-          "assertions": 16
+          "assertions": 24
         }
       ],
       "frontend_cases": 2

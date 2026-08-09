@@ -15,7 +15,7 @@ import pytest
 
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
-from backend.domains.eu.tia.report_renderer import TIAReportRenderer
+from backend.domains.eu.tia.report_renderer import TIAReportRenderer, build_template_mapping
 from backend.domains.eu.tia.schema import TIAChapter, TIAAttachment, TIARequest
 
 # ── production-shaped fixtures ───────────────────────────────────────────────
@@ -102,6 +102,16 @@ def _chapters() -> list[TIAChapter]:
                    citations=["GDPR Art 44", "GDPR Art 45", "GDPR Art 46"],
                    citation_refs=[], risk_level="LOW"),
     ]
+
+
+def test_template_labels_user_conclusion_as_non_authoritative_input() -> None:
+    payload = _payload()
+    chapters = _chapters()
+    chapters[4].content += "\n\n用户拟定：" + payload.final_conclusion
+    mapping = build_template_mapping(payload, chapters)
+
+    assert "用户提交的拟定结论（不构成系统批准）" in mapping["final_assessment"]
+    assert mapping["final_assessment"].count(payload.final_conclusion) == 1
 
 
 # ── tests ────────────────────────────────────────────────────────────────────

@@ -89,6 +89,22 @@ class TIAMeasureAssessment(BaseModel):
     assessment: str = ""
 
 
+class TIADecision(BaseModel):
+    """Deterministic transfer decision; model reviews cannot override it."""
+
+    transfer_status: Literal["proceed", "proceed_with_conditions", "suspend"]
+    inherent_risk: Literal["LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+    residual_risk: Literal["LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+    measure_sufficiency: Literal[
+        "sufficient", "conditional", "highly_conditional", "insufficient", "unknown",
+    ] = "unknown"
+    evidence_status: Literal["verified", "partial", "missing"]
+    reasons: list[str] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    mandatory_conditions: list[str] = Field(default_factory=list)
+    decision_source: Literal["deterministic_rule"] = "deterministic_rule"
+
+
 # ── Request (backward compat) ──────────────────────────────────────────
 
 class TIARequest(BaseModel):
@@ -127,13 +143,24 @@ class TIAResult(BaseModel):
     route_decision: TIARouteDecision | None = None
     country_risk: TIACountryRisk | None = None
     measure_assessments: list[TIAMeasureAssessment] = Field(default_factory=list)
+    decision: TIADecision | None = None
 
 
 class TIAAsyncAccepted(BaseModel):
-    task_id: str; module: str; state: str; attempts: int; max_attempts: int
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
 
 
 class TIAAsyncStatus(BaseModel):
-    task_id: str; module: str; state: str; attempts: int; max_attempts: int
-    created_at: str; updated_at: str
-    error: str | None = None; result: TIAResult | None = None
+    task_id: str
+    module: str
+    state: str
+    attempts: int
+    max_attempts: int
+    created_at: str
+    updated_at: str
+    error: str | None = None
+    result: TIAResult | None = None

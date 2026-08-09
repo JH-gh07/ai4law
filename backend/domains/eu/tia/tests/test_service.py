@@ -179,6 +179,63 @@ def test_dpo_revision_issues_are_exposed_to_callers(monkeypatch) -> None:
     assert "[DPO复核] Supplementary measures lack supporting evidence." in result.consistency_issues
 
 
+def test_system_suspension_decision_cannot_be_upgraded_by_dpo_text(monkeypatch) -> None:
+    service = TIAService(llm_client=_DisabledLLM())
+    service._render = _fast_render
+    service.agents = {
+        "rag_planning": _StaticAgent({"queries": []}),
+        "attachment_review": _StaticAgent({
+            "conflicts": [],
+            "missing_evidence": [],
+            "overall_evidence_quality": "adequate",
+        }),
+        "dpo_review": _StaticAgent({
+            "review_result": "approved",
+            "critical_issues": [],
+            "non_reliance_warning_needed": False,
+            "dpo_position": "No objection.",
+            "mandatory_conditions": [],
+        }),
+    }
+    monkeypatch.setattr(
+        "backend.domains.eu.tia.service.retrieve_legal_documents",
+        lambda *args, **kwargs: type("Hits", (), {"documents": [_Reg()]})(),
+    )
+    payload = TIARequest.model_validate({
+        "transfer_tool": "scc",
+        "data_exporter_profile": "EU Exporter",
+        "data_importer_profile": "US Importer",
+        "third_country_assessment": "United States government access risk is HIGH.",
+        "supplementary_measures": "End-to-end encryption with EU-managed keys is claimed.",
+        "final_conclusion": "SCC remains conditional on the measures.",
+        "attachments": [{
+            "file_role": "country_law_analysis",
+            "file_name": "country-law.pdf",
+            "file_format": "pdf",
+            "storage_uri": "missing-country-law.pdf",
+        }],
+        "structured_input": {
+            "exporter_country": "DE",
+            "importer_country": "US",
+            "destination_country": "US",
+            "exporter_role": "controller",
+            "importer_role": "processor",
+            "encryption_before_transfer": True,
+            "key_managed_in_eu": True,
+            "has_end_to_end_encryption": True,
+        },
+    })
+
+    result = service.generate_report(payload, task_id="deterministic-suspension")
+    report_text = "\n".join(chapter.content for chapter in result.chapters)
+
+    assert result.decision is not None
+    assert result.decision.transfer_status == "suspend"
+    assert "系统规则结论：暂停传输" in report_text
+    assert "DPO意见**: No objection." not in report_text
+    assert "[DPO复核] [系统决策]" not in "\n".join(result.consistency_issues)
+
+
 def test_tia_citation_bundle_produces_structured_citations() -> None:
     service = TIAService()
     payload = TIARequest.model_validate(
@@ -297,6 +354,11 @@ def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) 
     assert any("fisa-section-702.pdf:" in note for note in result.attachment_notes)
     assert any("cloud-act.pdf:" in note for note in result.attachment_notes)
     assert not any("parse skipped" in note for note in result.attachment_notes)
+    assert all("LLM未配置" not in chapter.content for chapter in result.chapters)
+    assert all("占位内容" not in chapter.content for chapter in result.chapters)
+    assert "United States" in result.chapters[2].content
+    assert "端到端加密" in result.chapters[3].content
+    assert "e2eencryptioneukeymanagement" not in result.chapters[3].content
 
 
 def test_service_keeps_markdown_map_and_document_ir_citations_in_sync(

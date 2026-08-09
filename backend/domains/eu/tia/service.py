@@ -4,41 +4,39 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
 
 from backend.common.citation.module_grounding import (
     CitationBundle,
     ModuleIssue,
     build_module_citation_bundle,
 )
-from backend.common.citation.output import build_knowledge_url, write_citation_map_json
+from backend.common.citation.output import build_knowledge_url
 from backend.common.citation.registry import CitationRegistry
 from backend.common.llm.client import LLMClient
 from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.common.llm.module_generator import generate_chapter
 from backend.common.rag.service import retrieve_legal_documents
-from backend.common.render.report import (
-    format_date_stamp, render_docx_template, render_markdown_template, safe_filename,
-)
 from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
 from backend.common.trace.thoughts import summarize_agent_output
-from backend.core.resource_paths import report_template_path
+from backend.domains.eu.tia.agents import create_tia_agents
 from backend.domains.eu.tia.attachment_evidence import TIAAttachmentEvidence
 from backend.domains.eu.tia.country_risk import TIACountryRiskAssessor
 from backend.domains.eu.tia.data_sensitivity import TIADataSensitivity
+from backend.domains.eu.tia.decision_policy import (
+    build_decision_chapter_text,
+    evaluate_tia_decision,
+)
+from backend.domains.eu.tia.deterministic_chapters import build_deterministic_tia_chapters
 from backend.domains.eu.tia.measure_sufficiency import TIAMeasureSufficiency
+from backend.domains.eu.tia.report_renderer import TIAReportRenderer
 from backend.domains.eu.tia.route_decider import TIARouteDecider
-from backend.domains.eu.tia.agents import create_tia_agents
 from backend.domains.eu.tia.schema import (
     TIAAsyncAccepted, TIAAsyncStatus, TIAChapter, TIARequest, TIAResult,
 )
 from backend.domains.us.cpra.schema import CPRACitationRef
-
-TEMPLATE_PATH = report_template_path("eu", "3.4_tia_template_v0.docx")
-TEMPLATE_MD = report_template_path("eu", "3.4_tia_template_v0.md")
 
 TIA_CHAPTERS = [
     "跨境传输场景与角色识别",
@@ -63,9 +61,6 @@ def _dedupe_regulations(regulations: list) -> list:
         seen.add(identity)
         deduped.append(regulation)
     return deduped
-
-
-from backend.domains.eu.tia.report_renderer import TIAReportRenderer
 
 
 class TIAService:
@@ -110,7 +105,7 @@ class TIAService:
             country_risk_result = None
             measure_assessments = []
             measure_overall = "unknown"
-            effective_risk = "MEDIUM"
+            inherent_risk = "MEDIUM"
             data_sens = {}
 
             if payload.structured_input:
@@ -119,17 +114,17 @@ class TIAService:
                 data_sens = self.data_sensitivity.assess(payload.structured_input)
                 risk_level_str = country_risk_result.risk_level
                 if risk_level_str == "VERY_HIGH" or data_sens.get("sensitivity") == "very_high":
-                    effective_risk = "VERY_HIGH"
+                    inherent_risk = "VERY_HIGH"
                 elif risk_level_str == "HIGH" or data_sens.get("risk_factor", 1.0) >= 1.5:
-                    effective_risk = "HIGH"
+                    inherent_risk = "HIGH"
                 else:
-                    effective_risk = risk_level_str
+                    inherent_risk = risk_level_str
                 measure_assessments, measure_overall = self.measure_sufficiency.assess(
-                    payload.structured_input, effective_risk,
+                    payload.structured_input, inherent_risk,
                 )
-                if effective_risk == "VERY_HIGH" or measure_overall == "insufficient":
+                if inherent_risk == "VERY_HIGH" or measure_overall == "insufficient":
                     level = "HIGH"
-                elif effective_risk == "HIGH" or measure_overall == "conditional":
+                elif inherent_risk == "HIGH" or measure_overall == "conditional":
                     level = "MEDIUM"
                 else:
                     level = "LOW"
@@ -187,10 +182,12 @@ class TIAService:
                 try:
                     text = self.parser.parse_text(att.storage_uri)
                     attachment_notes.append(f"{att.file_name}: {text[:160].replace(chr(10), ' ')}")
-                    attachment_evidences.append(self.attachment_evidence.extract(att))
+                    attachment_evidences.append(
+                        self.attachment_evidence.extract(att, text=text)
+                    )
                 except (FileNotFoundError, ValueError) as exc:
                     attachment_notes.append(f"{att.file_name}: [parse skipped] {exc}")
-                    attachment_evidences.append({"parse_error": True})
+                    attachment_evidences.append({"role": att.file_role, "parse_error": True})
 
             ta_ev = next((e for e in attachment_evidences if e.get("role") == "transfer_agreement"), None)
             cl_ev = next((e for e in attachment_evidences if e.get("role") == "country_law_analysis"), None)
@@ -219,8 +216,34 @@ class TIAService:
             for missing in agent_att.get("missing_evidence", []):
                 attachment_notes.append(f"[缺失证据] {missing}")
 
+            issues = self._check_consistency(
+                payload,
+                level,
+                route,
+                country_risk_result,
+                data_sens,
+                measure_assessments,
+                attachment_evidences,
+            )
+            decision = evaluate_tia_decision(
+                transfer_tool=payload.transfer_tool,
+                structured_input=payload.structured_input,
+                inherent_risk=inherent_risk if payload.structured_input else level,
+                residual_risk=level,
+                measure_sufficiency=(
+                    measure_overall if payload.structured_input else "unknown"
+                ),
+                attachment_evidences=attachment_evidences,
+                consistency_issues=issues,
+            )
+            if decision.transfer_status == "suspend":
+                system_issue = "[系统决策] 关键证据或风险门槛未满足，必须暂停传输。"
+                if system_issue not in issues:
+                    issues.append(system_issue)
+
             context_block = self._build_context(payload, level, route, country_risk_result,
-                                                 data_sens, measure_assessments, reg_snippet)
+                                                 data_sens, measure_assessments, reg_snippet,
+                                                 decision=decision)
 
             citation_bundle = self._build_tia_citation_bundle(
                 payload=payload,
@@ -232,6 +255,19 @@ class TIAService:
             )
             citation_registry._items = dict(citation_bundle.registry._items)  # noqa: SLF001
             citation_refs = self._bundle_to_refs(citation_bundle)
+            marker_by_article = {
+                str(item.article_no).lower(): f"{{{{{item.citation_id}}}}}"
+                for item in citation_bundle.items
+            }
+            fallback_chapters = build_deterministic_tia_chapters(
+                payload=payload,
+                route=route,
+                country_risk=country_risk_result,
+                data_sensitivity=data_sens,
+                measures=measure_assessments,
+                decision=decision,
+                citation_markers=marker_by_article,
+            )
 
             chapters: list[TIAChapter] = []
             for idx, title in enumerate(TIA_CHAPTERS, start=1):
@@ -252,7 +288,12 @@ class TIAService:
                         allowed_citations=[ref.display_label for ref in citation_refs],
                     ).text
                 else:
-                    content = f"（{title}：LLM未配置，此处为占位内容）"
+                    content = fallback_chapters.get(idx, "")
+                    content = apply_citation_pipeline(
+                        content,
+                        registry=citation_registry,
+                        allowed_citations=[ref.display_label for ref in citation_refs],
+                    ).text
                 chapters.append(
                     TIAChapter(
                         chapter_no=idx,
@@ -264,15 +305,33 @@ class TIAService:
                     )
                 )
 
-            issues = self._check_consistency(payload, level, route, country_risk_result,
-                                              data_sens, measure_assessments, attachment_evidences)
+            decision_markers = [
+                marker_by_article[key]
+                for key in ("46", "step 3")
+                if key in marker_by_article
+            ]
+            decision_text, action_text = build_decision_chapter_text(
+                decision,
+                proposed_conclusion=payload.final_conclusion,
+                citation_markers=decision_markers,
+            )
+            for chapter, deterministic_text in zip(
+                chapters[4:6],
+                (decision_text, action_text),
+                strict=True,
+            ):
+                chapter.content = apply_citation_pipeline(
+                    deterministic_text,
+                    registry=citation_registry,
+                    allowed_citations=[ref.display_label for ref in citation_refs],
+                ).text
 
             dpo_review = self.agents["dpo_review"].run(
                 route=route.route if route else "unknown",
                 country_risk_level=country_risk_result.risk_level if country_risk_result else "MEDIUM",
                 sensitivity=data_sens.get("sensitivity", "unknown"),
                 measure_overall=measure_overall if (payload.structured_input and measure_overall) else "unknown",
-                effective_risk=effective_risk if payload.structured_input else level,
+                residual_risk=decision.residual_risk,
                 issues=issues,
                 chapter_summaries=[{
                     "no": ch.chapter_no, "title": ch.title, "content": ch.content[:300],
@@ -282,13 +341,20 @@ class TIAService:
                 thought = summarize_agent_output("TIA DPO审查", dpo_review)
                 trace.record("thought", {"summary": thought})
 
-            if dpo_review.get("non_reliance_warning_needed"):
+            if decision.transfer_status == "suspend" or dpo_review.get("non_reliance_warning_needed"):
                 chapters[0].content = (
                     "⚠️ 重要警告：不应仅依赖本TIA草案启动传输。"
-                    "建议在实施前寻求主管监管机构指导或批准。\n\n" + chapters[0].content
+                    "系统规则要求在问题修复并完成正式复核前暂停传输。\n\n" + chapters[0].content
                 )
-            if dpo_review.get("dpo_position"):
-                chapters[0].content += f"\n\n**DPO意见**: {dpo_review['dpo_position']}"
+            review_position = str(dpo_review.get("dpo_position", "")).strip()
+            if decision.transfer_status == "suspend":
+                review_position = (
+                    "规则结论要求暂停传输；补齐证据并完成正式 DPO 复核前不得启动或继续。"
+                )
+            if review_position:
+                chapters[0].content += (
+                    "\n\n**AI辅助复核意见（不构成DPO正式签署）**: " + review_position
+                )
             if dpo_review.get("mandatory_conditions"):
                 chapters[5].content += (
                     "\n\n**强制前置条件**:\n" +
@@ -297,6 +363,8 @@ class TIAService:
 
             for critical_issue in dpo_review.get("critical_issues", []):
                 if isinstance(critical_issue, str) and critical_issue.strip():
+                    if critical_issue.strip() in issues:
+                        continue
                     dpo_issue = f"[DPO复核] {critical_issue.strip()}"
                     if dpo_issue not in issues:
                         issues.append(dpo_issue)
@@ -314,9 +382,13 @@ class TIAService:
                         "conclusion": "TIA 传输影响评估已完成",
                         "files": list(outputs.values()) if isinstance(outputs, dict) else [],
                         "risks": issues,
-                        "next_steps": (["修复 DPO 复核问题", "重新审阅 TIA 结论"]
-                                       if dpo_review.get("review_result") in ("needs_revision", "rejected")
-                                       else ["复核 TIA 评估结论", "确认补充措施的充分性"]),
+                        "next_steps": (
+                            decision.mandatory_conditions
+                            if decision.transfer_status == "suspend"
+                            else (["修复 DPO 复核问题", "重新审阅 TIA 结论"]
+                                  if dpo_review.get("review_result") in ("needs_revision", "rejected")
+                                  else ["复核 TIA 评估结论", "确认补充措施的充分性"])
+                        ),
                     },
                 })
 
@@ -331,6 +403,7 @@ class TIAService:
                 route_decision=route,
                 country_risk=country_risk_result,
                 measure_assessments=measure_assessments,
+                decision=decision,
             )
         finally:
             finalize_run(token)
@@ -338,9 +411,9 @@ class TIAService:
     # ── Context builder ──
 
     def _build_context(self, payload, level, route, country_risk_result,
-                       data_sens, measure_assessments, reg_snippet):
+                       data_sens, measure_assessments, reg_snippet, decision=None):
         lines = [
-            f"【传输信息】",
+            "【传输信息】",
             f"- 传输工具：{payload.transfer_tool}",
             f"- 数据出口方：{payload.data_exporter_profile}",
             f"- 数据进口方：{payload.data_importer_profile}",
@@ -349,31 +422,39 @@ class TIAService:
             f"- 最终结论：{payload.final_conclusion}",
             f"- 风险等级：{level}",
         ]
+        if decision:
+            lines.extend([
+                f"- 系统传输决定：{decision.transfer_status}",
+                f"- 固有风险：{decision.inherent_risk}",
+                f"- 剩余风险：{decision.residual_risk}",
+                f"- 证据状态：{decision.evidence_status}",
+                "- 约束：模型不得覆盖系统传输决定",
+            ])
         if payload.structured_input:
             lines.append(f"- 数据出口方 GDPR 角色：{payload.structured_input.exporter_role}")
             lines.append(f"- 数据进口方 GDPR 角色：{payload.structured_input.importer_role}")
         if route:
-            lines.append(f"\n【路径判断】")
+            lines.append("\n【路径判断】")
             lines.append(f"- 评估路径：{route.route}")
             lines.append(f"- 需要完整TIA：{'是' if route.need_full_tia else '否'}")
             lines.append(f"- 理由：{route.reason}")
             if route.adequacy_decision_exists:
                 lines.append(f"- 充分性决定国家：{route.adequacy_country}")
         if country_risk_result:
-            lines.append(f"\n【国家风险评估】")
+            lines.append("\n【国家风险评估】")
             lines.append(f"- 国家：{country_risk_result.country}")
             lines.append(f"- 风险等级：{country_risk_result.risk_level}")
             lines.append(f"- 风险来源：{'; '.join(country_risk_result.risk_sources)}")
             lines.append(f"- 政府访问风险：{'是' if country_risk_result.gov_access_risk else '否'}")
             lines.append(f"- 补充说明：{country_risk_result.notes}")
         if data_sens:
-            lines.append(f"\n【数据敏感性】")
+            lines.append("\n【数据敏感性】")
             lines.append(f"- 敏感等级：{data_sens.get('sensitivity', 'unknown')}")
             lines.append(f"- 风险系数：{data_sens.get('risk_factor', 1.0)}")
             if data_sens.get("special_categories"):
                 lines.append(f"- 特殊类别数据：{', '.join(data_sens['special_categories'])}")
         if measure_assessments:
-            lines.append(f"\n【补充措施评估】")
+            lines.append("\n【补充措施评估】")
             for m in measure_assessments:
                 suf = "充足" if m.sufficient_for_risk else "不足"
                 lines.append(f"- [{suf}] {m.measure_name}: {m.assessment}")
@@ -533,20 +614,6 @@ class TIAService:
                                attempts=snapshot.attempts, max_attempts=snapshot.max_attempts,
                                created_at=snapshot.created_at, updated_at=snapshot.updated_at,
                                error=snapshot.error, result=result)
-
-
-def _build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> dict[str, str]:
-    def pick(no: int) -> str:
-        for ch in chapters:
-            if ch.chapter_no == no: return ch.content
-        return ""
-    return {
-        "transfer_context": pick(1) or f"{payload.data_exporter_profile} -> {payload.data_importer_profile}",
-        "transfer_tool": pick(2) or payload.transfer_tool,
-        "third_country_analysis": pick(3) or payload.third_country_assessment,
-        "supplementary_measures": pick(4) or payload.supplementary_measures,
-        "final_assessment": "\n".join(filter(None, [pick(5), pick(6), payload.final_conclusion])),
-    }
 
 
 def _reg_to_dict(reg) -> dict:

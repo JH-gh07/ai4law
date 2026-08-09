@@ -23,7 +23,21 @@
       "transfer_tool": "scc",
       "risk_level": "LOW",
       "country_risk": null,
-      "route_decision": null
+      "route_decision": null,
+      "decision.transfer_status": "suspend",
+      "decision.inherent_risk": "LOW",
+      "decision.residual_risk": "LOW",
+      "decision.evidence_status": "missing",
+      "decision.decision_source": "deterministic_rule"
+    },
+    "fields_present": [
+      "decision"
+    ],
+    "list_contains": {
+      "decision.missing_evidence": [
+        "传输工具文件",
+        "第三国法律分析"
+      ]
     },
     "max_counts": {
       "measure_assessments": 0
@@ -47,6 +61,6 @@
       "zip"
     ]
   },
-  "coverage_note": "This case exercises the UNSTRUCTURED path only. tia/service.py branches on payload.structured_input: when absent it computes risk_level via _resolve_risk_level(third_country_assessment, final_conclusion), a keyword scan (HIGH on 高/high/不可/cannot/not effective, MEDIUM on 中/medium/条件/conditional, else LOW). This input contains none of those tokens, so LOW is the correct computed result — not a fallback. country_risk, route_decision and measure_assessments are null/empty because TIACountryRiskAssessor, TIARouteDecider and TIAMeasureSufficiency only run inside the structured_input branch; the assertions above pin that contract. GAP: no CLI case supplies structured_input, so the structured decision engine (country risk, data sensitivity, measure sufficiency, route decision) has zero harness coverage. A 02_structured case is needed to reach it.",
+  "coverage_note": "This case exercises the UNSTRUCTURED compatibility path. risk_level remains the legacy keyword-derived LOW value, while the additive deterministic decision fails closed to suspend because the storage:// SCC is not locally verifiable and no country-law evidence is present. These fields have different meanings: LOW does not authorize a transfer. The 02_structured case separately covers the structured country-risk and measure-sufficiency engine.",
   "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx"
 }
