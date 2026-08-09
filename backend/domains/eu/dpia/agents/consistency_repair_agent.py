@@ -97,7 +97,7 @@ Return JSON:
   "blocking_issues": [
     {{"check": "<check name>", "finding": "<what's wrong>", "severity": "HIGH" | "MEDIUM"}}
   ],
-  "repairs_applied": [
+  "repair_suggestions": [
     {{"check": "<check name>", "original": "<original text>", "repaired": "<repaired text>"}}
   ],
   "needs_manual_review": true | false,
@@ -117,7 +117,14 @@ IMPORTANT: Be strict but fair. Flag real issues, not style preferences."""
         result.setdefault("checks_passed", 0)
         result.setdefault("checks_total", 10)
         result.setdefault("blocking_issues", [])
-        result.setdefault("repairs_applied", [])
+        # The review agent proposes edits; it does not own chapter mutation.
+        # Normalize older provider output so the audit trail never claims an
+        # unapplied suggestion was written into the report.
+        suggestions = result.get("repair_suggestions")
+        if suggestions is None:
+            suggestions = result.get("repairs_applied", [])
+        result["repair_suggestions"] = suggestions or []
+        result["repairs_applied"] = []
         result.setdefault("needs_manual_review", False)
         result.setdefault("final_status", "needs_repair")
         result.setdefault("draft_text", "")
@@ -141,6 +148,18 @@ def _remove_deterministic_false_positives(
         1 <= number <= len(unique_citations) for number in footnotes
     )
     conservative_markers = ("用户表示", "据用户提供", "用户申报", "用户声称")
+    has_explicit_dpo_boundary = (
+        "用户填写的 DPO 意见" in draft_text
+        and "不等同于正式 DPO 签署或批准" in draft_text
+        and "结构化风险评估结论" in draft_text
+    )
+    positive_formal_dpo_claims = (
+        "DPO已审阅",
+        "DPO 已审阅",
+        "DPO确认",
+        "DPO明确指出",
+        "DPO出具",
+    )
     kept: list[dict] = []
     removed_checks: set[str] = set()
     for issue in result.get("blocking_issues", []) or []:
@@ -154,6 +173,13 @@ def _remove_deterministic_false_positives(
             continue
         if check == "check_user_claim_as_fact" and any(
             marker in finding for marker in conservative_markers
+        ):
+            removed_checks.add(check)
+            continue
+        if (
+            check == "check_dpo_conditions_in_conclusion"
+            and has_explicit_dpo_boundary
+            and not any(claim in draft_text for claim in positive_formal_dpo_claims)
         ):
             removed_checks.add(check)
             continue
@@ -271,7 +297,8 @@ def _rule_based_consistency(
         "checks_passed": max(0, min(actual_passed, checks_total)),
         "checks_total": checks_total,
         "blocking_issues": blocking[:10],
-        "repairs_applied": repairs[:10],
+        "repairs_applied": [],
+        "repair_suggestions": repairs[:10],
         "needs_manual_review": needs_manual,
         "final_status": "blocked" if needs_manual else ("needs_repair" if blocking else "ready"),
         "draft_text": f"一致性检查：{actual_passed}/{checks_total}项通过。{'需要人工复核' if needs_manual else '可自动修复'}。",

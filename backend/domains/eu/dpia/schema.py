@@ -327,6 +327,7 @@ class ConsistencyReport(BaseModel):
     checks_total: int = 10
     blocking_issues: list[dict] = Field(default_factory=list)
     repairs_applied: list[dict] = Field(default_factory=list)
+    repair_suggestions: list[dict] = Field(default_factory=list)
     needs_manual_review: bool = False
     final_status: Literal["ready", "needs_repair", "blocked"] = "needs_repair"
     draft_text: str = ""

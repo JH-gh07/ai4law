@@ -490,7 +490,8 @@ def test_consistency_agent_removes_resolved_citation_and_conservative_claim_fals
               "checks_total": 10,
               "blocking_issues": [
                 {"check":"check_fabricated_citations","finding":"[1] is not defined","severity":"HIGH"},
-                {"check":"check_user_claim_as_fact","finding":"用户表示已通过隐私政策告知","severity":"MEDIUM"}
+                {"check":"check_user_claim_as_fact","finding":"用户表示已通过隐私政策告知","severity":"MEDIUM"},
+                {"check":"check_dpo_conditions_in_conclusion","finding":"DPO opinion is inconsistent","severity":"HIGH"}
               ],
               "repairs_applied": [],
               "needs_manual_review": true,
@@ -499,13 +500,44 @@ def test_consistency_agent_removes_resolved_citation_and_conservative_claim_fals
             }"""
 
     result = ConsistencyRepairAgent(_FalsePositiveLLM()).run(
-        draft_chapters=[{"content": "根据 GDPR 第35条需要评估[1]。用户表示已通过隐私政策告知。"}],
+        draft_chapters=[{"content": (
+            "根据 GDPR 第35条需要评估[1]。用户表示已通过隐私政策告知。"
+            "用户填写的 DPO 意见为：建议上线。该输入不等同于正式 DPO 签署或批准。"
+            "结构化风险评估结论：conditional_approval。"
+        )}],
         known_citations=["CIT-EU-EU_LAW_001-ART35-P01"],
     )
 
     assert result["blocking_issues"] == []
     assert result["needs_manual_review"] is False
     assert result["final_status"] == "ready"
+
+
+def test_consistency_agent_records_unapplied_edits_as_suggestions() -> None:
+    from backend.domains.eu.dpia.agents.consistency_repair_agent import ConsistencyRepairAgent
+
+    class _LegacyRepairLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '''{
+              "checks_passed": 9,
+              "checks_total": 10,
+              "blocking_issues": [],
+              "repairs_applied": [
+                {"check":"style","original":"原文","repaired":"建议文本"}
+              ],
+              "needs_manual_review": false,
+              "final_status": "ready",
+              "draft_text": "review"
+            }'''
+
+    result = ConsistencyRepairAgent(_LegacyRepairLLM()).run(
+        draft_chapters=[{"content": "原文"}],
+    )
+
+    assert result["repairs_applied"] == []
+    assert result["repair_suggestions"][0]["repaired"] == "建议文本"
 
 
 def test_external_draft_enforces_article_36_conclusion_when_dpo_requires_it() -> None:
@@ -980,3 +1012,38 @@ def test_grounded_citation_registry_uses_best_article_binding() -> None:
     assert item.authority_level == "high"
     assert item.binding_force == "mandatory"
     assert item.external_report_allowed is True
+
+
+def test_grounded_citation_registry_scores_direct_structured_article_signals() -> None:
+    from backend.domains.eu.dpia.schema import RegulationHit
+    from backend.domains.eu.dpia.service import _build_grounded_citation_registry
+
+    registry = _build_grounded_citation_registry(
+        [
+            RegulationHit(
+                source_id="EU-LAW-001",
+                title="GDPR (EU) 2016/679",
+                article="6",
+                snippet="Lawfulness of processing.",
+                authority_level="high",
+                binding_force="mandatory",
+            ),
+            RegulationHit(
+                source_id="EU-LAW-001",
+                title="GDPR (EU) 2016/679",
+                article="9",
+                snippet="Special categories of personal data.",
+                authority_level="high",
+                binding_force="mandatory",
+            ),
+        ],
+        {"by_issue": {}},
+        fact_values=["GDPR Art 6(1)(a) 同意"],
+        risk_matrix=[{"risk_name": "特殊类别数据推断风险"}],
+    )
+
+    by_article = {item.article_no: item for item in registry}
+    assert by_article["6"].confidence_score >= 0.9
+    assert by_article["9"].confidence_score >= 0.9
+    assert by_article["6"].external_report_allowed is True
+    assert by_article["9"].external_report_allowed is True

@@ -394,6 +394,10 @@ class LLMClient:
                 api_key=self._api_key,
                 base_url=self._api_url,
                 timeout=self._timeout,
+                # Workflow agents already have deterministic fallbacks. Letting
+                # the SDK retry a 60-second timeout two more times multiplies one
+                # unavailable call into minutes without improving correctness.
+                max_retries=0,
             )
             self._client_init_error = None
             return self._client
@@ -410,6 +414,7 @@ class LLMClient:
                         api_key=self._api_key,
                         base_url=self._api_url,
                         timeout=self._timeout,
+                        max_retries=0,
                         http_client=_httpx.Client(proxy=None),
                     )
                     self._client_init_error = None

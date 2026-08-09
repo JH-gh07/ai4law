@@ -135,3 +135,30 @@ def test_llm_call_stops_at_cancellation_boundary() -> None:
             client.chat_with_metadata(system="s", user="u")
     finally:
         current_cancel_event.reset(token)
+
+
+def test_openai_client_disables_sdk_retries_because_pipeline_owns_fallback(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    class _FakeOpenAI:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("backend.common.llm.client.OpenAI", _FakeOpenAI)
+    settings = Settings(_env_file=None)
+    settings._runtime_llm_providers = [{
+        "id": "retry-policy",
+        "name": "Retry Policy",
+        "provider_type": "openai_compatible",
+        "api_key": "test-key",
+        "api_url": "https://example.com/v1",
+        "model": "test-model",
+        "enabled": True,
+        "timeout": 7,
+    }]
+    settings._runtime_llm_active_provider_id = "retry-policy"
+
+    client = LLMClient(settings)
+    assert client._ensure_client() is not None
+    assert captured["timeout"] == 7
+    assert captured["max_retries"] == 0
