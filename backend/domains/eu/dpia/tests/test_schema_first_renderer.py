@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
-from backend.domains.eu.dpia.report_renderer import DPIAReportRenderer
+from backend.domains.eu.dpia.report_renderer import DPIAReportRenderer, _render_dpia_markdown
 from backend.domains.eu.dpia.schema import DPIAChapterContent, DPIAProjectProfile
 
 # ── production-shaped fixtures ───────────────────────────────────────────────
@@ -200,7 +199,7 @@ def test_production_form_without_schema_first_omits_document_ir(tmp_path, monkey
         assert "document_ir.json" not in z.namelist()
     assert Path(outputs["markdown"]).exists()
 
-    print(f"\n✅ DPIA schema_first=False: document_ir.json correctly absent")
+    print("\n✅ DPIA schema_first=False: document_ir.json correctly absent")
 
 
 def test_production_form_block_count_invariant(tmp_path, monkeypatch):
@@ -275,3 +274,25 @@ def test_citation_map_footnote_count_matches_body_references(tmp_path, monkeypat
         f"ir={sorted(ir_cids)} map={sorted(map_cids)} reg={sorted(reg_cids)}"
     )
     print(f"\n✅ DPIA citation identity: {len(ir_cids)} CIDs match across all 3 layers")
+
+
+def test_markdown_renders_structured_trigger_reasons_as_readable_text(tmp_path):
+    output = tmp_path / "dpia.md"
+    _render_dpia_markdown(
+        output,
+        _profile(),
+        _chapters(),
+        "20260809",
+        need_assessment={
+            "dpia_required": True,
+            "trigger_reasons": [
+                {"type": "automated_decision", "reason": "系统涉及自动化决策"},
+                {"type": "large_scale", "reason": "预计处理大量数据主体"},
+            ],
+        },
+    )
+
+    content = output.read_text(encoding="utf-8")
+    assert "  - 系统涉及自动化决策" in content
+    assert "  - 预计处理大量数据主体" in content
+    assert "{'type':" not in content

@@ -40,6 +40,16 @@ _MITIGATION_XLSX_HEADERS = [
 ]
 
 
+def _format_trigger_reason(reason: object) -> str:
+    if isinstance(reason, dict):
+        for key in ("reason", "title", "description", "type"):
+            value = str(reason.get(key) or "").strip()
+            if value:
+                return value
+        return "未说明原因"
+    return str(reason).strip() or "未说明原因"
+
+
 def _render_dpia_markdown(
     output_path: Path,
     profile: DPIAProjectProfile,
@@ -62,7 +72,7 @@ def _render_dpia_markdown(
         if na.get("trigger_reasons"):
             lines.append("- 触发理由:")
             for reason in na["trigger_reasons"]:
-                lines.append(f"  - {reason}")
+                lines.append(f"  - {_format_trigger_reason(reason)}")
         if na.get("prior_consultation_possible"):
             lines.append("- **可能需依据 GDPR Art 36 进行监管机构事先咨询**")
         if na.get("reasoning"):
