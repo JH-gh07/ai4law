@@ -371,6 +371,9 @@ export type CnFlowFormValues = {
   transfer_purpose: string;
   data_categories: string;
   sensitive_data_flags: string;
+  us_person_count: number;
+  transaction_type: string;
+  doj_data_category: string;
   transfer_chain: string;
   data_volume_note: string;
   necessity_justification: string;

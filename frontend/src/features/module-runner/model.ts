@@ -1569,6 +1569,9 @@ export const createDefaultCnFlowValues = (): CnFlowFormValues => {
     sensitive_data_flags: Array.isArray(demo.sensitive_data_flags)
       ? demo.sensitive_data_flags.filter((item): item is string => typeof item === "string").join(",")
       : "",
+    us_person_count: toNumber(demo.us_person_count, 0),
+    transaction_type: toString(demo.transaction_type, "vendor_agreement"),
+    doj_data_category: "not_14117_data",
     transfer_chain: toString(demo.transfer_chain, ""),
     data_volume_note: "",
     necessity_justification: "",

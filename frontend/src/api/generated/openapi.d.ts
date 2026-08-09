@@ -2469,14 +2469,22 @@ export interface components {
             company_name?: string;
             /** Data Categories */
             data_categories: string[];
+            /** Doj Data Category By Item */
+            doj_data_category_by_item?: {
+                [key: string]: string;
+            };
             /** Recipient Entities */
             recipient_entities: components["schemas"]["CNRecipientEntity"][];
             /** Sensitive Data Flags */
             sensitive_data_flags?: string[];
+            /** Transaction Type */
+            transaction_type?: string | null;
             /** Transfer Chain */
             transfer_chain: string;
             /** Transfer Purpose */
             transfer_purpose: string;
+            /** Us Person Count */
+            us_person_count?: number | null;
         };
         /** CNFlowResult */
         CNFlowResult: {

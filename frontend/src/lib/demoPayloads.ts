@@ -227,6 +227,13 @@ const demoCnFlow = () => ({
   transfer_purpose: "云服务监控与客服协同",
   data_categories: ["账户信息", "设备日志"],
   sensitive_data_flags: ["biometric"],
+  us_person_count: 100000,
+  transaction_type: "vendor_agreement",
+  doj_data_category_by_item: {
+    "账户信息": "covered_personal_identifiers",
+    "设备日志": "not_14117_data",
+    biometric: "biometric_identifiers"
+  },
   recipient_entities: [
     {
       entity_name: "US ServiceCo",
