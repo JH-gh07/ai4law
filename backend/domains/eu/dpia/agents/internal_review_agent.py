@@ -14,7 +14,9 @@ from backend.domains.eu.dpia.agents import DPIAAgentBase
 
 class InternalReviewAgent(DPIAAgentBase):
     agent_name = "dpia_internal_review"
-    max_tokens = 1200
+    # Eight required review sections plus structured arrays cannot reliably fit
+    # in 1200 tokens; truncation makes otherwise useful output unparsable.
+    max_tokens = 2000
 
     def run(
         self,

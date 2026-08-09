@@ -421,6 +421,14 @@ def test_internal_review_recommends_delay() -> None:
     assert len(result["draft_text"]) > 0
 
 
+def test_long_structured_agents_have_non_truncating_token_budgets() -> None:
+    from backend.domains.eu.dpia.agents.internal_review_agent import InternalReviewAgent
+    from backend.domains.eu.dpia.agents.mitigation_mapping_agent import MitigationMappingAgent
+
+    assert MitigationMappingAgent.max_tokens >= 2000
+    assert InternalReviewAgent.max_tokens >= 2000
+
+
 def test_consistency_agent_finds_missing_mitigation() -> None:
     """Consistency agent should flag HIGH risks without mitigation."""
     from backend.domains.eu.dpia.agents.consistency_repair_agent import ConsistencyRepairAgent

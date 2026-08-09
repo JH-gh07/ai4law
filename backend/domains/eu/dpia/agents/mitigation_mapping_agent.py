@@ -13,7 +13,10 @@ from backend.domains.eu.dpia.agents import DPIAAgentBase
 
 class MitigationMappingAgent(DPIAAgentBase):
     agent_name = "dpia_mitigation_mapping"
-    max_tokens = 1200
+    # The contract contains per-risk measures, effects, verification and
+    # residual-risk fields. Five risks routinely exceed the old 1200-token cap
+    # and produced truncated JSON after the provider had already done the work.
+    max_tokens = 2000
 
     def run(
         self,
