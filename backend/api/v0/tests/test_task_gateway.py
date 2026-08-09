@@ -331,7 +331,14 @@ def test_v0_task_gateway_cn_flow_flow() -> None:
                 "company_name": "V0CNFlowCo",
                 "transfer_purpose": "全球客服与风控",
                 "data_categories": ["账户信息", "设备信息"],
-                "sensitive_data_flags": ["生物识别"],
+                    "sensitive_data_flags": ["生物识别"],
+                    "us_person_count": 100000,
+                    "transaction_type": "vendor_agreement",
+                    "doj_data_category_by_item": {
+                        "账户信息": "covered_personal_identifiers",
+                        "设备信息": "not_14117_data",
+                        "生物识别": "biometric_identifiers",
+                    },
                 "recipient_entities": [
                     {
                         "entity_name": "US ServiceCo",
