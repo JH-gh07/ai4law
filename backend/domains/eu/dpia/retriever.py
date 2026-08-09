@@ -60,6 +60,12 @@ class DPIARetriever:
                 title=chunk.title,
                 article=chunk.citation_anchor or chunk.article_no,
                 snippet=chunk.content,
+                source_url=chunk.source_url,
+                source_kind=chunk.source_kind,
+                authority_level=chunk.authority_level,
+                binding_force=chunk.binding_force,
+                allowed_usage=[str(value) for value in chunk.allowed_usage],
+                can_enter_external_report=chunk.can_enter_external_report,
             )
             for chunk in result.bundle.legal_grounding
         ]

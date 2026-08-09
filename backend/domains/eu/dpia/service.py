@@ -18,9 +18,10 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
-from backend.common.citation.registry import registry_from_documents
+from backend.common.citation.locators import normalize_article_no
+from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
@@ -60,6 +61,58 @@ if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
 
 _NO_LLM = object()
+
+
+def _build_grounded_citation_registry(
+    regulations: list[Any],
+    legal_grounding: dict[str, Any],
+) -> CitationRegistry:
+    """Build citations from retrieved sources and their strongest exact-article binding."""
+    best_by_source_article: dict[tuple[str, str], dict[str, Any]] = {}
+    by_issue = legal_grounding.get("by_issue", {})
+    if isinstance(by_issue, dict):
+        for bindings in by_issue.values():
+            if not isinstance(bindings, list):
+                continue
+            for binding in bindings:
+                if not isinstance(binding, dict):
+                    continue
+                key = (
+                    str(binding.get("rule_id") or ""),
+                    normalize_article_no(str(binding.get("article") or "")),
+                )
+                if not all(key):
+                    continue
+                previous = best_by_source_article.get(key)
+                if previous is None or float(binding.get("confidence_score") or 0.0) > float(
+                    previous.get("confidence_score") or 0.0
+                ):
+                    best_by_source_article[key] = binding
+
+    documents: list[dict[str, Any]] = []
+    governance_fields = (
+        "confidence_score",
+        "authority_level",
+        "binding_force",
+        "source_kind",
+        "allowed_usage",
+        "can_enter_external_report",
+        "confidence_threshold",
+        "external_report_allowed",
+    )
+    for regulation in regulations:
+        document = regulation.model_dump() if hasattr(regulation, "model_dump") else dict(regulation)
+        key = (
+            str(document.get("source_id") or document.get("id") or ""),
+            normalize_article_no(str(document.get("article") or "")),
+        )
+        binding = best_by_source_article.get(key)
+        if binding:
+            for field in governance_fields:
+                if field in binding:
+                    document[field] = binding[field]
+        documents.append(document)
+    return registry_from_documents(documents, jurisdiction="EU")
 
 
 class DPIAService:
@@ -173,7 +226,6 @@ class DPIAService:
             # Phase 2: RAG + Issues + Evidence (rule layer)
             regulations = self.retriever.search(profile)
             trace.record("retrieval_hits", {"count": len(regulations)})
-            citation_registry = registry_from_documents(regulations, jurisdiction="EU")
 
             attachment_notes = _attachment_notes_from_profile(profile)
             issues = build_dpia_issues(facts, need_assessment_raw, regulations, attachment_notes)
@@ -252,6 +304,10 @@ class DPIAService:
 
             legal_grounding, case_grounding = build_dpia_legal_grounding(
                 issues=issues, facts=facts, regulations=regulations, per_issue_rag=None,
+            )
+            citation_registry = _build_grounded_citation_registry(
+                regulations,
+                legal_grounding,
             )
             writing_strategy = build_writing_strategy(issues=issues)
 

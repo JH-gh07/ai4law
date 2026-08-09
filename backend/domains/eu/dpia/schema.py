@@ -164,6 +164,12 @@ class RegulationHit(BaseModel):
     title: str
     article: str = ""
     snippet: str = ""
+    source_url: str = ""
+    source_kind: str = "law_article"
+    authority_level: str = "medium"
+    binding_force: str = "recommended"
+    allowed_usage: list[str] = Field(default_factory=lambda: ["external_report", "internal_review"])
+    can_enter_external_report: bool = True
 
 
 class DPIAChapterContent(BaseModel):

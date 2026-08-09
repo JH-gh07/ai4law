@@ -199,6 +199,12 @@ def _document_value(document: Any, name: str, default: str = "") -> str:
     return str(getattr(document, name, default) or default).strip()
 
 
+def _document_raw(document: Any, name: str, default: Any = None) -> Any:
+    if isinstance(document, dict):
+        return document.get(name, default)
+    return getattr(document, name, default)
+
+
 def registry_from_documents(
     documents: Iterable[Any],
     *,
@@ -237,6 +243,31 @@ def registry_from_documents(
                     or _document_value(document, "snippet")
                 )[:500],
                 source_url=_document_value(document, "source_url"),
+                confidence_score=float(_document_raw(document, "confidence_score", 0.0) or 0.0),
+                authority_level=(
+                    _document_value(document, "authority_level")
+                    if _document_value(document, "authority_level") in {"high", "medium", "low"}
+                    else "medium"
+                ),
+                binding_force=(
+                    _document_value(document, "binding_force")
+                    if _document_value(document, "binding_force") in {"mandatory", "recommended", "reference"}
+                    else "recommended"
+                ),
+                source_kind=_document_value(document, "source_kind", "law_article"),
+                allowed_usage=[
+                    str(value)
+                    for value in (_document_raw(document, "allowed_usage", None) or ["external_report", "internal_review"])
+                ],
+                can_enter_external_report=bool(
+                    _document_raw(document, "can_enter_external_report", True)
+                ),
+                confidence_threshold=float(
+                    _document_raw(document, "confidence_threshold", 0.20) or 0.20
+                ),
+                external_report_allowed=bool(
+                    _document_raw(document, "external_report_allowed", True)
+                ),
                 citation_granularity="article" if article_no else "source",
             )
         )

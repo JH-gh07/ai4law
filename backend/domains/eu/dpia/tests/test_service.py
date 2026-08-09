@@ -593,3 +593,45 @@ def test_external_draft_converts_registered_citation_markers() -> None:
     assert all("{{CIT-" not in chapter["content"] for chapter in chapters)
     assert all("[1]" in chapter["content"] for chapter in chapters)
     assert registry.get_footnote_map()[1].citation_id == citation_id
+
+
+def test_grounded_citation_registry_uses_best_article_binding() -> None:
+    from backend.domains.eu.dpia.schema import RegulationHit
+    from backend.domains.eu.dpia.service import _build_grounded_citation_registry
+
+    registry = _build_grounded_citation_registry(
+        [
+            RegulationHit(
+                source_id="EU-LAW-001",
+                title="GDPR (EU) 2016/679",
+                article="22",
+                snippet="Automated decision-making safeguards.",
+                authority_level="high",
+                binding_force="mandatory",
+            )
+        ],
+        {
+            "by_issue": {
+                "DPIA-ISSUE-automated-decision": [
+                    {
+                        "rule_id": "EU-LAW-001",
+                        "article": "22",
+                        "confidence_score": 0.88,
+                        "authority_level": "high",
+                        "binding_force": "mandatory",
+                        "source_kind": "law_article",
+                        "allowed_usage": ["external_report", "internal_review"],
+                        "can_enter_external_report": True,
+                        "confidence_threshold": 0.30,
+                        "external_report_allowed": True,
+                    }
+                ]
+            }
+        },
+    )
+
+    item = next(iter(registry))
+    assert item.confidence_score == 0.88
+    assert item.authority_level == "high"
+    assert item.binding_force == "mandatory"
+    assert item.external_report_allowed is True

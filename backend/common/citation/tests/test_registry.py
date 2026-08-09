@@ -115,6 +115,37 @@ def test_registry_from_documents_deduplicates_same_source_and_article() -> None:
     assert len(registry) == 1
 
 
+def test_registry_from_documents_preserves_citation_governance_metadata() -> None:
+    registry = registry_from_documents(
+        [
+            {
+                "source_id": "EU-LAW-001",
+                "title": "GDPR (EU) 2016/679",
+                "article": "22",
+                "snippet": "Automated decision-making safeguards.",
+                "confidence_score": 0.88,
+                "authority_level": "high",
+                "binding_force": "mandatory",
+                "source_kind": "law_article",
+                "allowed_usage": ["external_report", "internal_review"],
+                "can_enter_external_report": True,
+                "confidence_threshold": 0.30,
+                "external_report_allowed": True,
+            }
+        ],
+        jurisdiction="EU",
+    )
+
+    item = next(iter(registry))
+    assert item.confidence_score == 0.88
+    assert item.authority_level == "high"
+    assert item.binding_force == "mandatory"
+    assert item.source_kind == "law_article"
+    assert item.allowed_usage == ["external_report", "internal_review"]
+    assert item.confidence_threshold == 0.30
+    assert item.external_report_allowed is True
+
+
 # ---------------------------------------------------------------------------
 # RC-2 fix: register() must reject malformed IDs (fail-fast)
 # ---------------------------------------------------------------------------

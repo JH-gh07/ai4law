@@ -260,7 +260,7 @@ def _infer_source_kind(title: str) -> str:
 
 def _infer_authority(title: str) -> str:
     t = (title or "").lower()
-    if "gdpr" in t and "article" in t:
+    if "gdpr" in t:
         return "high"
     if any(kw in t for kw in ("wp248", "wp251", "wp260", "edpb", "ico")):
         return "medium"
