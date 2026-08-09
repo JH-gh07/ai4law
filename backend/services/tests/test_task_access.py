@@ -15,6 +15,7 @@ from backend.domains.eu.tia import router as tia_router
 from backend.domains.us.cpra import router as cpra_router
 from backend.domains.us.eo14117 import router as eo14117_router
 from backend.domains.us.eo14117_flow_review import router as flow_router
+from backend.models.report import ReportArtifactModel
 from backend.schemas.auth import AuthUser
 from backend.services.task_access import claim_task_access, require_task_access
 
@@ -223,3 +224,31 @@ def test_task_access_fails_closed_when_task_has_no_owner_record(tmp_path: Path) 
         session.close()
 
     assert exc_info.value.status_code == 404
+
+
+def test_legacy_task_access_accepts_multiple_artifacts_for_same_owner(tmp_path: Path) -> None:
+    app = _app(tmp_path)
+    from backend.core.db import init_db
+
+    init_db(app.state.container.engine)
+    session = app.state.container.session_factory()
+    try:
+        for artifact_type in ("report", "pdf"):
+            session.add(
+                ReportArtifactModel(
+                    user_id="legacy-owner",
+                    owner_type="task",
+                    owner_id="legacy-multi-artifact-task",
+                    artifact_type=artifact_type,
+                    file_path=f"outputs/{artifact_type}",
+                )
+            )
+        session.commit()
+
+        require_task_access(
+            session,
+            task_id="legacy-multi-artifact-task",
+            user_id="legacy-owner",
+        )
+    finally:
+        session.close()

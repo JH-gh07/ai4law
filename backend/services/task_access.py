@@ -53,7 +53,14 @@ def _has_legacy_access(db: Session, *, task_id: str, user_id: str) -> bool:
             DiagnosisSessionModel.user_id == user_id,
         ),
     )
-    return any(db.execute(statement).scalar_one_or_none() is not None for statement in checks)
+    # Legacy tasks may own multiple report artifacts (Markdown, PDF, DOCX, JSON,
+    # etc.). Access only needs proof that at least one matching record exists;
+    # asking SQLAlchemy for exactly zero-or-one rows raises on valid multi-file
+    # reports and turns authorized citation/artifact requests into HTTP 500.
+    return any(
+        db.execute(statement.limit(1)).scalar_one_or_none() is not None
+        for statement in checks
+    )
 
 
 def require_task_access(db: Session, *, task_id: str, user_id: str) -> None:
