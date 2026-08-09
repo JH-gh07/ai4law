@@ -1,13 +1,11 @@
 """Test DPIA service — lower-level components + full 9-agent pipeline."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 from zipfile import ZipFile
 
-import pytest
 from pypdf import PdfReader
 
-from backend.domains.eu.dpia.schema import DPIARequest, DPIAResult
+from backend.domains.eu.dpia.schema import DPIARequest
 from backend.domains.eu.dpia.service import DPIAService
 
 
@@ -439,6 +437,79 @@ def test_consistency_agent_finds_missing_mitigation() -> None:
     assert result["checks_passed"] < result["checks_total"]
     blocking = result.get("blocking_issues", [])
     assert any("RISK-1" in str(b) or "mitigation" in str(b).lower() for b in blocking)
+
+
+def test_consistency_agent_removes_resolved_citation_and_conservative_claim_false_positives() -> None:
+    from backend.domains.eu.dpia.agents.consistency_repair_agent import ConsistencyRepairAgent
+
+    class _FalsePositiveLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return """{
+              "checks_passed": 8,
+              "checks_total": 10,
+              "blocking_issues": [
+                {"check":"check_fabricated_citations","finding":"[1] is not defined","severity":"HIGH"},
+                {"check":"check_user_claim_as_fact","finding":"用户表示已通过隐私政策告知","severity":"MEDIUM"}
+              ],
+              "repairs_applied": [],
+              "needs_manual_review": true,
+              "final_status": "blocked",
+              "draft_text": "review"
+            }"""
+
+    result = ConsistencyRepairAgent(_FalsePositiveLLM()).run(
+        draft_chapters=[{"content": "根据 GDPR 第35条需要评估[1]。用户表示已通过隐私政策告知。"}],
+        known_citations=["CIT-EU-EU_LAW_001-ART35-P01"],
+    )
+
+    assert result["blocking_issues"] == []
+    assert result["needs_manual_review"] is False
+    assert result["final_status"] == "ready"
+
+
+def test_external_draft_enforces_article_36_conclusion_when_dpo_requires_it() -> None:
+    from backend.common.citation.registry import registry_from_documents
+    from backend.domains.eu.dpia.agents.external_draft_agent import ExternalDPIAgent
+
+    class _GenericDraftLLM:
+        enabled = True
+
+        def chat(self, **_kwargs):
+            return '{"content":"本章内容。","citations":[],"risk_level":"medium"}'
+
+    registry = registry_from_documents(
+        [{
+            "source_id": "EU-LAW-001",
+            "title": "GDPR (EU) 2016/679",
+            "article": "36",
+            "snippet": "Prior consultation.",
+        }],
+        jurisdiction="EU",
+    )
+    chapters = ExternalDPIAgent(_GenericDraftLLM()).run(
+        generation_basis_pack={
+            "section_packs": [
+                {"section_id": key, "confirmed_facts": [], "issues": [], "legal_grounding": []}
+                for key in (
+                    "need_identification", "processing_description", "consultation",
+                    "necessity_proportionality", "risk_assessment", "mitigation", "signoff",
+                )
+            ],
+            "dpo_decision_pack": {
+                "prior_consultation_recommended": True,
+                "reason": "缓解后仍有高剩余风险",
+            },
+            "citations": registry.to_list(),
+        },
+        citation_registry=registry,
+    )
+
+    signoff = chapters[-1]
+    assert "必须在开始处理前" in signoff["content"]
+    assert "[1]" in signoff["content"]
+    assert next(iter(registry)).citation_id in signoff["citations"]
 
 
 def test_processing_activity_extracts_data_flow() -> None:

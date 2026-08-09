@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from backend.common.knowledge import registry as registry_module
 from backend.schemas.knowledge import KnowledgeSyncMeta
@@ -35,3 +34,12 @@ def test_module_catalog_marks_non_cn_modules_as_disabled_by_default() -> None:
     catalog = registry_module.load_module_catalog()
     assert catalog["modules"]["eu_scc"]["production_enabled"] is False
     assert catalog["modules"]["us_vendor_review"]["production_enabled"] is False
+
+
+def test_source_registry_respects_declared_gdpr_binding_force() -> None:
+    entries = {
+        item.source_id: item
+        for item in registry_module.build_source_registry_from_sources_csv()
+    }
+
+    assert entries["EU-LAW-001"].binding_force == "mandatory"

@@ -11,7 +11,10 @@ from __future__ import annotations
 
 from backend.common.llm.postprocess import apply_citation_pipeline
 from backend.domains.eu.dpia.agents import DPIAAgentBase
-from backend.domains.eu.dpia.deterministic_chapters import build_deterministic_chapter
+from backend.domains.eu.dpia.deterministic_chapters import (
+    build_deterministic_chapter,
+    enforce_article36_conclusion,
+)
 
 
 # ── Key constraints for DPIA draft generation ──
@@ -105,13 +108,20 @@ class ExternalDPIAgent(DPIAAgentBase):
                         item.display_label for item in citation_registry
                     ] if citation_registry is not None else [],
                 ).text
-                chapters.append({
+                chapter = {
                     "chapter_no": i,
                     "title": title,
                     "content": content,
                     "citations": result.get("citations", []),
                     "risk_level": result.get("risk_level", "medium"),
-                })
+                }
+                if chapter_id == "signoff":
+                    chapter = enforce_article36_conclusion(
+                        chapter,
+                        dpo_decision_pack=gen_basis.get("dpo_decision_pack", {}) or {},
+                        citation_registry=citation_registry,
+                    )
+                chapters.append(chapter)
 
         return chapters
 

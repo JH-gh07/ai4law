@@ -166,3 +166,39 @@ def build_deterministic_chapter(
         "citations": list(dict.fromkeys(used)),
         "risk_level": "high" if chapter_id in {"risk_assessment", "mitigation", "signoff"} else "medium",
     }
+
+
+def enforce_article36_conclusion(
+    chapter: dict[str, Any],
+    *,
+    dpo_decision_pack: dict[str, Any],
+    citation_registry: Any = None,
+) -> dict[str, Any]:
+    """Make a positive Article 36 decision deterministic when the DPO requires it."""
+    if not dpo_decision_pack.get("prior_consultation_recommended"):
+        return chapter
+    content = str(chapter.get("content") or "")
+    if "必须在开始处理前" in content and "事先咨询" in content:
+        return chapter
+
+    used = list(chapter.get("citations") or [])
+    marker = _citation_marker(citation_registry, "36", used)
+    reason = _display(dpo_decision_pack.get("reason"))
+    content += (
+        "\n\n事先咨询结论：根据当前 DPO 意见和剩余风险判断，"
+        f"控制者必须在开始处理前履行 GDPR 第36条事先咨询程序。"
+        f"理由：{reason}。在咨询和 DPO 前置条件完成前，不建议上线。{marker}"
+    )
+    rendered = apply_citation_pipeline(
+        content,
+        registry=citation_registry,
+        allowed_citations=[item.display_label for item in citation_registry]
+        if citation_registry is not None
+        else [],
+    ).text
+    return {
+        **chapter,
+        "content": rendered,
+        "citations": list(dict.fromkeys(used)),
+        "risk_level": "high",
+    }

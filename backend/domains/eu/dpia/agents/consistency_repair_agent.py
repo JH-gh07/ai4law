@@ -8,6 +8,8 @@ Reference: docs/archive/design-provenance/dpia.md Section 10
 
 from __future__ import annotations
 
+import re
+
 from backend.domains.eu.dpia.agents import DPIAAgentBase
 
 
@@ -77,6 +79,13 @@ DRAFT CONTENT (excerpt, first 3000 chars):
 GENERATION BASIS SUMMARY:
 {basis_summary}
 
+KNOWN CITATION IDS (each rendered [N] must resolve to this ordered set):
+{list(dict.fromkeys(known_citations))}
+
+EVIDENCE LANGUAGE RULE:
+Phrases such as "用户表示", "据用户提供" and "用户申报" are conservative attribution,
+not an assertion that a user_claim_only fact has been independently verified.
+
 CHECKS TO PERFORM:
 {checks_needed}
 
@@ -112,7 +121,59 @@ IMPORTANT: Be strict but fair. Flag real issues, not style preferences."""
         result.setdefault("needs_manual_review", False)
         result.setdefault("final_status", "needs_repair")
         result.setdefault("draft_text", "")
-        return result
+        return _remove_deterministic_false_positives(
+            result,
+            draft_text=draft_text,
+            known_citations=known_citations,
+        )
+
+
+def _remove_deterministic_false_positives(
+    result: dict,
+    *,
+    draft_text: str,
+    known_citations: list[str],
+) -> dict:
+    """Do not let an LLM override mechanically verifiable citation/attribution facts."""
+    unique_citations = list(dict.fromkeys(str(item) for item in known_citations if item))
+    footnotes = {int(value) for value in re.findall(r"\[(\d+)\]", draft_text)}
+    footnotes_resolve = bool(unique_citations) and bool(footnotes) and all(
+        1 <= number <= len(unique_citations) for number in footnotes
+    )
+    conservative_markers = ("用户表示", "据用户提供", "用户申报", "用户声称")
+    kept: list[dict] = []
+    removed_checks: set[str] = set()
+    for issue in result.get("blocking_issues", []) or []:
+        if not isinstance(issue, dict):
+            kept.append(issue)
+            continue
+        check = str(issue.get("check") or "")
+        finding = str(issue.get("finding") or "")
+        if check == "check_fabricated_citations" and footnotes_resolve:
+            removed_checks.add(check)
+            continue
+        if check == "check_user_claim_as_fact" and any(
+            marker in finding for marker in conservative_markers
+        ):
+            removed_checks.add(check)
+            continue
+        kept.append(issue)
+
+    result["blocking_issues"] = kept
+    result["checks_passed"] = min(
+        int(result.get("checks_total") or 10),
+        int(result.get("checks_passed") or 0) + len(removed_checks),
+    )
+    result["needs_manual_review"] = any(
+        isinstance(issue, dict) and issue.get("severity") == "HIGH" for issue in kept
+    )
+    if not kept:
+        result["final_status"] = "ready"
+    elif result["needs_manual_review"]:
+        result["final_status"] = "blocked"
+    else:
+        result["final_status"] = "needs_repair"
+    return result
 
 
 def _rule_based_consistency(

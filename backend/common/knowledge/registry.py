@@ -138,6 +138,13 @@ def _binding_force_from_title(title: str) -> str:
     return "reference"
 
 
+def _binding_force_from_row(row: dict[str, str]) -> str:
+    declared = (row.get("binding_force") or "").strip().lower()
+    if declared in {"mandatory", "recommended", "reference"}:
+        return declared
+    return _binding_force_from_title(row.get("title") or "")
+
+
 def _authority_level_from_row(row: dict[str, str]) -> str:
     normalized = (row.get("authority") or "").lower()
     if normalized in {"high", "medium", "low"}:
@@ -210,7 +217,7 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                     layer="L1_regulatory_evidence",
                     source_kind=_source_kind_from_row(row),
                     authority_level=_authority_level_from_row(row),
-                    binding_force=_binding_force_from_title(title),
+                    binding_force=_binding_force_from_row(row),
                     status=(row.get("status") or "effective").strip() or "effective",
                     review_status="published",
                     allowed_usage=["legal_grounding", "external_report", "internal_review"],
