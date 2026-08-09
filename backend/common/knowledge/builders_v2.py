@@ -48,6 +48,64 @@ def _binding_force(title: str) -> str:
     return "reference"
 
 
+def _merge_short_articles(
+    rows: list[dict], min_len: int = 120, max_merge: int = 4
+) -> list[dict]:
+    """Merge consecutive short articles from the same source_id.
+
+    Short legal provisions (e.g. single-sentence law articles, technical
+    standard bullet points) are merged so each chunk carries enough context
+    for semantic retrieval and LLM citation.
+
+    Merging rules:
+    1. Only consecutive entries with the same source_id are candidates
+    2. Up to max_merge entries with content_len < min_len are merged
+    3. Merged content uses double-newline separator
+    4. article_ref becomes a comma-joined list of the merged refs
+    5. A longer entry flushes the buffer immediately
+    """
+    if not rows:
+        return []
+
+    merged: list[dict] = []
+    buf: dict | None = None
+    buf_refs: list[str] = []
+    buf_count = 0
+
+    for row in rows:
+        content = str(row.get("content", ""))
+        if len(content) < min_len and buf_count < max_merge:
+            if buf is None:
+                buf = dict(row)
+                buf_refs = [str(row.get("article_ref", ""))]
+                buf_count = 1
+                continue
+            buf["content"] = str(buf.get("content", "")) + "\n\n" + content
+            buf_refs.append(str(row.get("article_ref", "")))
+            buf_count += 1
+            # If merged enough, flush
+            if len(str(buf.get("content", ""))) >= min_len:
+                buf["article_ref"] = ", ".join(buf_refs)
+                merged.append(buf)
+                buf = None
+                buf_refs = []
+                buf_count = 0
+        else:
+            if buf is not None:
+                buf["article_ref"] = ", ".join(buf_refs)
+                merged.append(buf)
+                buf = None
+                buf_refs = []
+                buf_count = 0
+            merged.append(row)
+
+    if buf is not None:
+        buf["article_ref"] = ", ".join(buf_refs)
+        merged.append(buf)
+
+    return merged
+
+
 def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
     registry = {item.source_id: item for item in ensure_source_registry()}
     source_rows = _load_source_rows()
@@ -55,6 +113,8 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
     if not NORMALIZED_JSONL.exists():
         return chunks
 
+    # Pre-collect all CN rows, merge short articles per source
+    all_rows: list[dict] = []
     with NORMALIZED_JSONL.open("r", encoding="utf-8") as handle:
         for line in handle:
             line = line.strip()
@@ -63,31 +123,43 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
             row = json.loads(line)
             if (row.get("jurisdiction") or "").strip().lower() != "cn":
                 continue
-            source_id = str(row.get("source_id") or "")
-            registry_entry = registry.get(source_id)
-            source_row = source_rows.get(source_id, {})
-            title = str(row.get("law_name") or source_row.get("title") or "")
-            path = str(row.get("path") or source_row.get("path") or "all")
-            modules = []
-            if registry_entry is not None:
-                modules = list(registry_entry.modules)
-            elif path in {"assessment", "all"}:
-                modules.append("cn_assessment")
-            elif path in {"review", "all", "scc"}:
-                modules.append("cn_review")
-            else:
-                modules.append("cn_diagnosis")
-            module = "cn_diagnosis"
-            if "cn_assessment" in modules:
-                module = "cn_assessment"
-            elif "cn_review" in modules:
-                module = "cn_review"
+            all_rows.append(row)
 
-            source_kind = registry_entry.source_kind if registry_entry is not None else "law_article"
-            allowed_usage = list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"]
+    # Sort by source_id then article_id for stable merging
+    all_rows.sort(key=lambda r: (
+        str(r.get("source_id", "")),
+        str(r.get("article_id", "")),
+    ))
+
+    # Group by source_id, merge short articles within each source
+    from itertools import groupby
+    merged_rows: list[dict] = []
+    for src_id, group in groupby(all_rows, key=lambda r: str(r.get("source_id", ""))):
+        source_rows = list(group)
+        merged_rows.extend(_merge_short_articles(source_rows, min_len=120, max_merge=4))
+
+    for row in merged_rows:
+        source_id = str(row.get("source_id") or "")
+        registry_entry = registry.get(source_id)
+        source_row = source_rows.get(source_id, {})
+        title = str(row.get("law_name") or source_row.get("title") or "")
+        path = str(row.get("path") or source_row.get("path") or "all")
+        modules = []
+        if registry_entry is not None:
+            modules = list(registry_entry.modules)
+        elif path in {"assessment", "all"}:
+            modules.append("cn_assessment")
+        elif path in {"review", "all", "scc"}:
+            modules.append("cn_review")
+        else:
+            modules.append("cn_diagnosis")
+
+        source_kind = registry_entry.source_kind if registry_entry is not None else "law_article"
+        allowed_usage = list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"]
+        for module in modules:
             chunks.append(
                 KnowledgeChunkV2(
-                    chunk_id=str(row.get("article_id") or ""),
+                    chunk_id=f"{row.get('article_id') or ''}::{module}",
                     source_id=source_id,
                     title=title,
                     content=str(row.get("content") or ""),
@@ -568,7 +640,9 @@ def build_legal_chunks_eu() -> list[KnowledgeChunkV2]:
             modules = [
                 item for item in (registry_entry.modules if registry_entry is not None else [])
                 if str(item).startswith("eu_")
-            ] or ["eu_scc"]
+            ]
+            if not modules:
+                continue
             for module in modules:
                 chunks.append(
                     KnowledgeChunkV2(
@@ -945,7 +1019,9 @@ def build_legal_chunks_us() -> list[KnowledgeChunkV2]:
             modules = [
                 item for item in (registry_entry.modules if registry_entry is not None else [])
                 if str(item).startswith("us_")
-            ] or ["us_vendor_review"]
+            ]
+            if not modules:
+                continue
             for module in modules:
                 chunks.append(
                     KnowledgeChunkV2(
