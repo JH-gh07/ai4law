@@ -928,11 +928,11 @@ def _annotate_finding_footnotes(findings: list[BCRFinding], registry: CitationRe
 def _normalize_bcr_citation_labels(registry: CitationRegistry) -> None:
     """Separate a human legal label from the current paragraph-based locator."""
     for item in registry:
-        if item.source_id == "EU-LAW-001" and item.article_no == "段落4":
+        if item.source_id == "EU-LAW-001" and item.article_no == "47":
             item.display_label = "GDPR Article 47(1)"
             item.authority_level = "high"
             item.binding_force = "mandatory"
-        elif item.source_id == "EU-GUIDE-002" and item.article_no == "段落5":
+        elif item.source_id == "EU-GUIDE-002" and item.article_no == "Step 3":
             item.display_label = "EDPB Recommendations 01/2020 Step 3"
             item.citation_type = "official_guide"
             item.source_kind = "official_guide"

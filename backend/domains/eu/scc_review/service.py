@@ -321,7 +321,22 @@ class EU_SCCService:
             jurisdiction="eu",
             path="scc",
         ).documents
-        return _select_relevant_eu_scc_regulations(docs)
+        scc_basis_docs = retrieve_legal_documents(
+            "Pursuant to Article 46(1) absence adequacy decision standard contractual clauses 2021/914",
+            module="eu_scc",
+            top_k=8,
+            jurisdiction="eu",
+            path="all",
+        ).documents
+        unique_docs = []
+        seen: set[tuple[str, str]] = set()
+        for document in [*docs, *scc_basis_docs]:
+            identity = (str(document.id or ""), str(document.article or ""))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            unique_docs.append(document)
+        return _select_relevant_eu_scc_regulations(unique_docs)
 
     def _extract_notes(self, payload: SCCReviewRequest) -> list[dict[str, str]]:
         notes: list[dict[str, str]] = []

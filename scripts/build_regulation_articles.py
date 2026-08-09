@@ -25,6 +25,9 @@ ARTICLE_PATTERN = re.compile(r"(第[一二三四五六七八九十百千万零�
 ENGLISH_ARTICLE_HEADING_PATTERN = re.compile(
     r"(?im)^[ \t]*(?:#{1,6}[ \t]+)?Article[ \t]+([0-9]+(?:\.[0-9]+)*)\b[^\n]*"
 )
+MARKDOWN_STEP_HEADING_PATTERN = re.compile(
+    r"(?im)^[ \t]*#{1,6}[ \t]+Step[ \t]+([0-9]+(?:\.[0-9]+)*)\b[^\n]*"
+)
 WHITESPACE_PATTERN = re.compile(r"[ \t\x0b\x0c\r]+")
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script>", flags=re.IGNORECASE | re.DOTALL)
@@ -49,16 +52,33 @@ def _html_to_text(raw: str) -> str:
     return _normalize_space(text)
 
 
+def _extract_heading_chunks(
+    text: str,
+    matches: list[re.Match[str]],
+    *,
+    reference_prefix: str,
+) -> list[tuple[str, str]]:
+    chunks: list[tuple[str, str]] = []
+    for idx, match in enumerate(matches):
+        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(text)
+        content = text[match.start():end].strip()
+        content = re.sub(r"^#{1,6}[ \t]+", "", content)
+        if len(content) >= 40:
+            article_ref = f"{reference_prefix}{match.group(1)}"
+            chunks.append((article_ref, content[:2500]))
+    return chunks
+
+
 def _extract_article_chunks(text: str) -> list[tuple[str, str]]:
+    step_matches = list(MARKDOWN_STEP_HEADING_PATTERN.finditer(text))
+    if step_matches:
+        chunks = _extract_heading_chunks(text, step_matches, reference_prefix="Step ")
+        if chunks:
+            return chunks
+
     english_matches = list(ENGLISH_ARTICLE_HEADING_PATTERN.finditer(text))
     if english_matches:
-        chunks: list[tuple[str, str]] = []
-        for idx, match in enumerate(english_matches):
-            end = english_matches[idx + 1].start() if idx + 1 < len(english_matches) else len(text)
-            content = text[match.start():end].strip()
-            content = re.sub(r"^#{1,6}[ \t]+", "", content)
-            if len(content) >= 40:
-                chunks.append((match.group(1), content[:2500]))
+        chunks = _extract_heading_chunks(text, english_matches, reference_prefix="")
         if chunks:
             return chunks
 

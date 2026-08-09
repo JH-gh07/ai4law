@@ -22,7 +22,7 @@ def test_module_grounding_preserves_registered_paragraph_locator() -> None:
                     "source_id": "EU-GUIDE-002",
                     "source_title": "EDPB Recommendations 01/2020",
                     "title": "EDPB Recommendations 01/2020",
-                    "article": "段落6",
+                    "article": "Step 3",
                     "content": "Step 3 assesses whether the Article 46 transfer tool is effective.",
                     "source_kind": "official_guide",
                     "authority_level": "medium",
@@ -32,7 +32,7 @@ def test_module_grounding_preserves_registered_paragraph_locator() -> None:
         },
     )
 
-    assert bundle.items[0].article_no == "段落6"
+    assert bundle.items[0].article_no == "Step 3"
 
 
 def test_tia_grounding_rejects_wrong_gdpr_locator() -> None:

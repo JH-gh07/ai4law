@@ -46,8 +46,10 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
     # and source_ids 69 → 102.
     # Count updated 2026-08-08 (Phase-4): 36 enforcement-provision rows renamed to
     # "处罚-{art}-{n}" so every (source_id, article_no) key is now unique.
-    # unique_rows == total_rows == 3030.
-    assert len(unique_rows) == 3030
+    # Before the 2026-08-09 EDPB cleanup, unique_rows == total_rows == 3030.
+    # Metadata/heading fallback rows were replaced by semantic Step 1/Step 3
+    # chunks, reducing the canonical registry to 3026 unique rows.
+    assert len(unique_rows) == 3026
     assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])

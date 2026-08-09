@@ -50,6 +50,21 @@ TIA_CHAPTERS = [
 ]
 
 
+def _dedupe_regulations(regulations: list) -> list:
+    deduped: list = []
+    seen: set[tuple[str, str]] = set()
+    for regulation in regulations:
+        identity = (
+            str(getattr(regulation, "id", regulation)),
+            str(getattr(regulation, "article", "")),
+        )
+        if identity in seen:
+            continue
+        seen.add(identity)
+        deduped.append(regulation)
+    return deduped
+
+
 from backend.domains.eu.tia.report_renderer import TIAReportRenderer
 
 
@@ -160,14 +175,7 @@ class TIAService:
                     jurisdiction="eu",
                     path="all",
                 ).documents
-            seen_ids = set()
-            regs = []
-            for r in all_regs:
-                rid = getattr(r, "id", str(r))
-                if rid not in seen_ids:
-                    seen_ids.add(rid)
-                    regs.append(r)
-            regs = regs[:8]
+            regs = _dedupe_regulations(all_regs)[:8]
             reg_snippet = "\n".join(
                 f"- {item.title}{item.article}：{(item.content or '')[:120]}"
                 for item in regs

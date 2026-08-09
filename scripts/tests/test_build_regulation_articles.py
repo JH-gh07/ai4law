@@ -27,6 +27,25 @@ A controller or processor may transfer personal data only if appropriate safegua
     assert all("Source:" not in content for _, content in chunks)
 
 
+def test_extract_article_chunks_recognizes_markdown_step_headings() -> None:
+    text = """# EDPB Recommendations 01/2020
+
+## Step 1: Know your transfers
+
+Map all transfers, including onward transfers and remote access.
+
+## Step 3: Assess transfer tool effectiveness
+
+Assess whether the Article 46 transfer tool is effective in practice.
+"""
+
+    chunks = _extract_article_chunks(text)
+
+    assert [article_ref for article_ref, _ in chunks] == ["Step 1", "Step 3"]
+    assert chunks[1][1].startswith("Step 3")
+    assert "effective in practice" in chunks[1][1]
+
+
 def test_replace_source_records_preserves_unrelated_rows(monkeypatch, tmp_path) -> None:
     output = tmp_path / "regulation_articles.jsonl"
     original_rows = [

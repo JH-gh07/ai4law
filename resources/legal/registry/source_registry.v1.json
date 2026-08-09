@@ -1,6 +1,5 @@
 {
-  "version": "v1",
-  "generated_from": "resources/legal/catalog/sources.csv",
+  "schema_version": "v1",
   "entries": [
     {
       "source_id": "CN-LAW-001",
@@ -36,12 +35,11 @@
         "publish_date": "2025-12-29",
         "effective_date": "2025-12-29",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2025_12_29_cybersecurity_law.html",
-        "source_url": "https://www.cac.gov.cn/2025-12/29/c_1768735112911946.htm",
+        "external_url": "https://www.cac.gov.cn/2025-12/29/c_1768735112911946.htm",
         "usage": "审查基准",
         "suitable_for": "路径判断、文档审查、评估申报",
         "report_usage": "可直接引用条文号",
-        "summary": "网络安全法是中国数据跨境合规的基础法之一，用于界定关键信息基础设施、网络运行安全义务和跨境场景中的底层安全要求。",
-        "knowledge_url": "/knowledge/sources/CN-LAW-001"
+        "summary": "网络安全法是中国数据跨境合规的基础法之一，用于界定关键信息基础设施、网络运行安全义务和跨境场景中的底层安全要求。"
       }
     },
     {
@@ -78,12 +76,11 @@
         "publish_date": "2021-06-11",
         "effective_date": "2021-09-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2021_06_11_data_security_law.html",
-        "source_url": "https://www.cac.gov.cn/2021-06/11/c_1624994566919140.htm",
+        "external_url": "https://www.cac.gov.cn/2021-06/11/c_1624994566919140.htm",
         "usage": "审查基准",
         "suitable_for": "路径判断、评估申报、文档审查",
         "report_usage": "可直接引用条文号",
-        "summary": "数据安全法提供数据分类分级、重要数据识别和数据安全治理的一般框架，是判断重要数据出境义务的核心依据。",
-        "knowledge_url": "/knowledge/sources/CN-LAW-002"
+        "summary": "数据安全法提供数据分类分级、重要数据识别和数据安全治理的一般框架，是判断重要数据出境义务的核心依据。"
       }
     },
     {
@@ -120,12 +117,11 @@
         "publish_date": "2021-08-20",
         "effective_date": "2021-11-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2021_08_20_pipl.html",
-        "source_url": "https://www.cac.gov.cn/2021-08/20/c_1631050028355286.htm",
+        "external_url": "https://www.cac.gov.cn/2021-08/20/c_1631050028355286.htm",
         "usage": "审查基准",
         "suitable_for": "路径判断、文档审查、评估申报、标准合同",
         "report_usage": "可直接引用条文号",
-        "summary": "个人信息保护法是个人信息跨境处理的总法基础，用于判断个人信息定义、敏感个人信息、单独同意、个人权利和跨境提供规则。",
-        "knowledge_url": "/knowledge/sources/CN-LAW-003"
+        "summary": "个人信息保护法是个人信息跨境处理的总法基础，用于判断个人信息定义、敏感个人信息、单独同意、个人权利和跨境提供规则。"
       }
     },
     {
@@ -162,12 +158,11 @@
         "publish_date": "2022-07-07",
         "effective_date": "2022-09-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2022_07_07_security_assessment_measures.html",
-        "source_url": "https://www.cac.gov.cn/2022-07/07/c_1658811536594644.htm",
+        "external_url": "https://www.cac.gov.cn/2022-07/07/c_1658811536594644.htm",
         "usage": "审查基准",
         "suitable_for": "评估申报",
         "report_usage": "可直接引用条文号",
-        "summary": "《数据出境安全评估办法》是中国安全评估路径的核心规范，用于判定触发门槛、申报义务和审查重点。",
-        "knowledge_url": "/knowledge/sources/CN-REG-004"
+        "summary": "《数据出境安全评估办法》是中国安全评估路径的核心规范，用于判定触发门槛、申报义务和审查重点。"
       }
     },
     {
@@ -204,12 +199,11 @@
         "publish_date": "2023-02-24",
         "effective_date": "2023-06-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2023_02_24_standard_contract_measures.html",
-        "source_url": "https://www.cac.gov.cn/2023-02/24/c_1678884831596384.htm",
+        "external_url": "https://www.cac.gov.cn/2023-02/24/c_1678884831596384.htm",
         "usage": "审查基准",
         "suitable_for": "标准合同、文档审查",
         "report_usage": "可直接引用条文号",
-        "summary": "《个人信息出境标准合同办法》规定了标准合同路径的适用条件、备案义务和配套评估要求，是标准合同审查与备案的主依据。",
-        "knowledge_url": "/knowledge/sources/CN-REG-005"
+        "summary": "《个人信息出境标准合同办法》规定了标准合同路径的适用条件、备案义务和配套评估要求，是标准合同审查与备案的主依据。"
       }
     },
     {
@@ -246,12 +240,11 @@
         "publish_date": "2024-03-22",
         "effective_date": "2024-03-22",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2024_03_22_crossborder_regulation_release.html",
-        "source_url": "https://www.cac.gov.cn/2024-03/22/c_1712776612187994.htm",
+        "external_url": "https://www.cac.gov.cn/2024-03/22/c_1712776612187994.htm",
         "usage": "审查基准",
         "suitable_for": "路径判断",
         "report_usage": "可直接引用条文号",
-        "summary": "《促进和规范数据跨境流动规定》发布页用于确认新规出台背景与生效口径，可辅助说明路径调整依据。",
-        "knowledge_url": "/knowledge/sources/CN-REG-006"
+        "summary": "《促进和规范数据跨境流动规定》发布页用于确认新规出台背景与生效口径，可辅助说明路径调整依据。"
       }
     },
     {
@@ -288,12 +281,11 @@
         "publish_date": "2024-03-22",
         "effective_date": "2024-03-22",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2024_03_22_crossborder_regulation_fulltext.html",
-        "source_url": "https://www.cac.gov.cn/2024-03/22/c_1712776611775634.htm",
+        "external_url": "https://www.cac.gov.cn/2024-03/22/c_1712776611775634.htm",
         "usage": "审查基准",
         "suitable_for": "路径判断、评估申报、标准合同",
         "report_usage": "可直接引用条文号",
-        "summary": "《促进和规范数据跨境流动规定》全文是当前中国数据出境三条路径分流判断的核心依据，应用于豁免、标准合同和安全评估的路径判断。",
-        "knowledge_url": "/knowledge/sources/CN-REG-007"
+        "summary": "《促进和规范数据跨境流动规定》全文是当前中国数据出境三条路径分流判断的核心依据，应用于豁免、标准合同和安全评估的路径判断。"
       }
     },
     {
@@ -330,12 +322,11 @@
         "publish_date": "2024-09-30",
         "effective_date": "2025-01-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2024_09_30_network_data_security_regulation.html",
-        "source_url": "https://www.cac.gov.cn/2024-09/30/c_1729384452307680.htm",
+        "external_url": "https://www.cac.gov.cn/2024-09/30/c_1729384452307680.htm",
         "usage": "条文匹配",
         "suitable_for": "路径判断、文档审查",
         "report_usage": "可直接引用条文号",
-        "summary": "《网络数据安全管理条例》补充了网络数据处理活动中的安全治理边界，适合用于合同条款审查和一般性合规论证。",
-        "knowledge_url": "/knowledge/sources/CN-REG-008"
+        "summary": "《网络数据安全管理条例》补充了网络数据处理活动中的安全治理边界，适合用于合同条款审查和一般性合规论证。"
       }
     },
     {
@@ -372,12 +363,11 @@
         "publish_date": "2025-06-27",
         "effective_date": "2025-06-27",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2025_06_27_assessment_guide_v3_release.html",
-        "source_url": "https://www.cac.gov.cn/2025-06/27/c_1752652339765002.htm",
+        "external_url": "https://www.cac.gov.cn/2025-06/27/c_1752652339765002.htm",
         "usage": "审查基准",
         "suitable_for": "评估申报",
         "report_usage": "可附带解释说明",
-        "summary": "《数据出境安全评估申报指南（第三版）》细化了申报流程、材料准备和表单口径，是安全评估交付物组织的重要操作性依据。",
-        "knowledge_url": "/knowledge/sources/CN-GUIDE-009"
+        "summary": "《数据出境安全评估申报指南（第三版）》细化了申报流程、材料准备和表单口径，是安全评估交付物组织的重要操作性依据。"
       }
     },
     {
@@ -414,12 +404,11 @@
         "publish_date": "2024-08-23",
         "effective_date": "2024-08-23",
         "snapshot_path": "resources/legal/sources/cn/snapshots/tjcac_2024_08_standard_contract_filing_guide_v2.html",
-        "source_url": "https://www.tjcac.gov.cn/wsfw/sjkj/grxxcjbzht/202408/t20240823_6705573.html",
+        "external_url": "https://www.tjcac.gov.cn/wsfw/sjkj/grxxcjbzht/202408/t20240823_6705573.html",
         "usage": "审查基准",
         "suitable_for": "标准合同、文档审查",
         "report_usage": "可附带解释说明",
-        "summary": "《个人信息出境标准合同备案指南（第二版）》细化了标准合同备案流程、材料要求和格式口径，用于支持标准合同路径落地。",
-        "knowledge_url": "/knowledge/sources/CN-GUIDE-010"
+        "summary": "《个人信息出境标准合同备案指南（第二版）》细化了标准合同备案流程、材料要求和格式口径，用于支持标准合同路径落地。"
       }
     },
     {
@@ -456,12 +445,11 @@
         "publish_date": "2023-02-24",
         "effective_date": "2023-02-24",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2023_02_24_standard_contract_qa.html",
-        "source_url": "https://www.cac.gov.cn/2023-02/24/c_1678884829601935.htm",
+        "external_url": "https://www.cac.gov.cn/2023-02/24/c_1678884829601935.htm",
         "usage": "条文匹配",
         "suitable_for": "标准合同、文档审查",
         "report_usage": "可辅助解释条文，但不宜单独作为核心依据",
-        "summary": "《个人信息出境标准合同办法》答记者问用于解释标准合同路径的适用边界、制度目的和备案实践中的常见理解问题。",
-        "knowledge_url": "/knowledge/sources/CN-QA-011"
+        "summary": "《个人信息出境标准合同办法》答记者问用于解释标准合同路径的适用边界、制度目的和备案实践中的常见理解问题。"
       }
     },
     {
@@ -498,12 +486,11 @@
         "publish_date": "2025-04-09",
         "effective_date": "2025-04-09",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2025_04_09_policy_qa.html",
-        "source_url": "https://www.cac.gov.cn/2025-04/09/c_1745906286623776.htm",
+        "external_url": "https://www.cac.gov.cn/2025-04/09/c_1745906286623776.htm",
         "usage": "审查基准",
         "suitable_for": "评估申报、路径判断",
         "report_usage": "可辅助解释条文，但不宜单独作为核心依据",
-        "summary": "2025年4月政策问答提供阶段性统计和政策解释，可用于补充说明安全评估路径的监管关注点与实践趋势。",
-        "knowledge_url": "/knowledge/sources/CN-QA-012"
+        "summary": "2025年4月政策问答提供阶段性统计和政策解释，可用于补充说明安全评估路径的监管关注点与实践趋势。"
       }
     },
     {
@@ -540,12 +527,11 @@
         "publish_date": "2025-05-30",
         "effective_date": "2025-05-30",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2025_05_30_policy_qa.html",
-        "source_url": "https://www.cac.gov.cn/2025-05/30/c_1750315283722063.htm",
+        "external_url": "https://www.cac.gov.cn/2025-05/30/c_1750315283722063.htm",
         "usage": "审查基准",
         "suitable_for": "评估申报、路径判断",
         "report_usage": "可辅助解释条文，但不宜单独作为核心依据",
-        "summary": "2025年5月政策问答提供更新的政策解释口径和阶段性数据，适合作为安全评估项目中的辅助说明材料。",
-        "knowledge_url": "/knowledge/sources/CN-QA-013"
+        "summary": "2025年5月政策问答提供更新的政策解释口径和阶段性数据，适合作为安全评估项目中的辅助说明材料。"
       }
     },
     {
@@ -582,12 +568,11 @@
         "publish_date": "2023-11-03",
         "effective_date": "2023-11-03",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cac_2023_11_03_contact_list.html",
-        "source_url": "https://www.cac.gov.cn/2023-11/03/c_1700672263791309.htm",
+        "external_url": "https://www.cac.gov.cn/2023-11/03/c_1700672263791309.htm",
         "usage": "条文匹配",
         "suitable_for": "评估申报、标准合同",
         "report_usage": "用于流程执行，不直接作为法律论证",
-        "summary": "各地省级网信部门申报/备案联系方式属于流程执行层资料，用于项目落地和实际申报沟通，不作为法律结论主依据。",
-        "knowledge_url": "/knowledge/sources/CN-OPS-014"
+        "summary": "各地省级网信部门申报/备案联系方式属于流程执行层资料，用于项目落地和实际申报沟通，不作为法律结论主依据。"
       }
     },
     {
@@ -624,12 +609,11 @@
         "publish_date": "2023-11-11",
         "effective_date": "2023-06-01",
         "snapshot_path": "resources/legal/sources/cn/snapshots/govcn_2023_standard_contract_measures.html",
-        "source_url": "https://www.gov.cn/zhengce/202311/content_6917770.htm",
+        "external_url": "https://www.gov.cn/zhengce/202311/content_6917770.htm",
         "usage": "条文匹配",
         "suitable_for": "标准合同、文档审查",
         "report_usage": "可附带解释说明",
-        "summary": "中国政府网转载版《个人信息出境标准合同办法》可作为交叉校验口径，用于提高标准合同条文引用的稳健性。",
-        "knowledge_url": "/knowledge/sources/CN-GOV-015"
+        "summary": "中国政府网转载版《个人信息出境标准合同办法》可作为交叉校验口径，用于提高标准合同条文引用的稳健性。"
       }
     },
     {
@@ -638,7 +622,10 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [
-        "eu_dpia"
+        "eu_dpia",
+        "eu_bcr",
+        "eu_scc",
+        "eu_tia"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
@@ -658,7 +645,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "eu-dpia",
+        "module": "eu-dpia|eu-bcr|eu-scc|eu-tia",
         "category": "核心法律",
         "doc_type": "law",
         "publisher": "EUR-Lex",
@@ -666,12 +653,11 @@
         "publish_date": "2016-04-27",
         "effective_date": "2018-05-25",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eurlex_gdpr_2016_679_excerpts.md",
-        "source_url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+        "external_url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
         "usage": "审查基准",
         "suitable_for": "DPIA草案、BCR审核、SCC审查、TIA草案",
         "report_usage": "可直接引用条文号",
-        "summary": "GDPR 是欧盟跨境数据保护合规的总法基础，用于 DPIA、BCR、SCC 和 TIA 等多个模块中的核心法条引用。",
-        "knowledge_url": "/knowledge/sources/EU-LAW-001"
+        "summary": "GDPR 是欧盟跨境数据保护合规的总法基础，用于 DPIA、BCR、SCC 和 TIA 等多个模块中的核心法条引用。"
       }
     },
     {
@@ -680,7 +666,9 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [
-        "eu_tia"
+        "eu_tia",
+        "eu_scc",
+        "eu_bcr"
       ],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
@@ -700,7 +688,7 @@
       "can_enter_external_report": true,
       "metadata": {
         "path": "all",
-        "module": "eu-tia",
+        "module": "eu-tia|eu-scc|eu-bcr",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "欧洲数据保护委员会",
@@ -708,12 +696,11 @@
         "publish_date": "2021-06-18",
         "effective_date": "2021-06-18",
         "snapshot_path": "resources/legal/sources/eu/snapshots/edpb_recommendations_01_2020_excerpts.md",
-        "source_url": "https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+        "external_url": "https://edpb.europa.eu/system/files/2021-06/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
         "usage": "审查基准",
         "suitable_for": "TIA草案、SCC审查、BCR审核",
         "report_usage": "可附带解释说明",
-        "summary": "EDPB Recommendations 01/2020 提供了 transfer impact assessment 和补充措施分析框架，是 TIA 草案生成和欧盟传输审查的重要解释性依据。",
-        "knowledge_url": "/knowledge/sources/EU-GUIDE-002"
+        "summary": "EDPB Recommendations 01/2020 提供了 transfer impact assessment 和补充措施分析框架，是 TIA 草案生成和欧盟传输审查的重要解释性依据。"
       }
     },
     {
@@ -750,12 +737,11 @@
         "publish_date": "2024-12-27",
         "effective_date": "2025-04-08",
         "snapshot_path": "resources/legal/sources/us/snapshots/fr_2025_01_08_eo14117_excerpts.md",
-        "source_url": "https://www.govinfo.gov/content/pkg/FR-2025-01-08/pdf/FR-2025-01-08.pdf",
+        "external_url": "https://www.govinfo.gov/content/pkg/FR-2025-01-08/pdf/FR-2025-01-08.pdf",
         "usage": "审查基准",
         "suitable_for": "EO14117合规",
         "report_usage": "可直接引用条文号",
-        "summary": "美国司法部 EO 14117 实施规则用于界定受限交易、受规制对象和对华敏感数据流动限制，是美国路径中的核心联邦依据。",
-        "knowledge_url": "/knowledge/sources/US-FED-001"
+        "summary": "美国司法部 EO 14117 实施规则用于界定受限交易、受规制对象和对华敏感数据流动限制，是美国路径中的核心联邦依据。"
       }
     },
     {
@@ -792,12 +778,11 @@
         "publish_date": "2023-03-29",
         "effective_date": "2023-01-01",
         "snapshot_path": "resources/legal/sources/us/snapshots/ca_oag_cpra_excerpts.md",
-        "source_url": "https://oag.ca.gov/privacy/ccpa",
+        "external_url": "https://oag.ca.gov/privacy/ccpa",
         "usage": "审查基准",
         "suitable_for": "CPRA合规",
         "report_usage": "可直接引用条文号",
-        "summary": "California CPRA/CCPA 是加州隐私合规的核心法律依据，用于解释消费者权利、敏感个人信息限制使用和企业义务。",
-        "knowledge_url": "/knowledge/sources/US-CA-001"
+        "summary": "California CPRA/CCPA 是加州隐私合规的核心法律依据，用于解释消费者权利、敏感个人信息限制使用和企业义务。"
       }
     },
     {
@@ -834,12 +819,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-016_个人信息出境标准合同模板_da18a8f4.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "文档审查、标准合同",
         "report_usage": "用于结构参照，不直接作为法律依据",
-        "summary": "用于标准合同结构比对和条款位置识别的模板样例。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-016"
+        "summary": "用于标准合同结构比对和条款位置识别的模板样例。"
       }
     },
     {
@@ -876,12 +860,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-017_数据处理协议样例_938a2963.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "文档审查、数据处理协议",
         "report_usage": "用于结构参照，不直接作为法律依据",
-        "summary": "用于数据处理协议版式和条款结构识别的样例文书。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-017"
+        "summary": "用于数据处理协议版式和条款结构识别的样例文书。"
       }
     },
     {
@@ -918,12 +901,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-018_数据安全及保密协议模板_266f3cad.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "文档审查、保密协议",
         "report_usage": "用于结构参照，不直接作为法律依据",
-        "summary": "用于保密义务和数据安全条款结构识别的样例模板。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-018"
+        "summary": "用于保密义务和数据安全条款结构识别的样例模板。"
       }
     },
     {
@@ -960,12 +942,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-019_数据出境风险自评估报告模板_48ec6e2b.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "评估申报",
         "report_usage": "用于结构参照，不直接作为法律依据",
-        "summary": "用于安全评估报告结构编排和章节组织的模板。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-019"
+        "summary": "用于安全评估报告结构编排和章节组织的模板。"
       }
     },
     {
@@ -1002,12 +983,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-020_个人信息保护影响评估报告模板_bcacf6d1.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "评估申报、PIPIA",
         "report_usage": "用于结构参照，不直接作为法律依据",
-        "summary": "用于个人信息保护影响评估报告结构生成的模板。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-020"
+        "summary": "用于个人信息保护影响评估报告结构生成的模板。"
       }
     },
     {
@@ -1044,12 +1024,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-021_个人信息保护影响评估报告_模板_1_2ba9ee34.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `个人信息保护影响评估报告（模板） (1).docx` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-021"
+        "summary": "由原始参考文件 `个人信息保护影响评估报告（模板） (1).docx` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1086,12 +1065,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-001_个人信息出境认证办法_b1078d14.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `个人信息出境认证办法.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-002"
+        "summary": "由原始参考文件 `个人信息出境认证办法.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1128,12 +1106,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-002_个人金融信息保护技术规范_44835b79.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `个人金融信息保护技术规范.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-003"
+        "summary": "由原始参考文件 `个人金融信息保护技术规范.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1170,12 +1147,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-003_信息安全技术_个人信息安全规范_98413de1.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `信息安全技术 个人信息安全规范.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-004"
+        "summary": "由原始参考文件 `信息安全技术 个人信息安全规范.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1212,12 +1188,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-004_数据出境申报系统使用手册_b6f010c5.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `数据出境申报系统使用手册.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-005"
+        "summary": "由原始参考文件 `数据出境申报系统使用手册.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1254,12 +1229,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-005_汽车数据安全管理若干规定_试行_中央网络安全和信息化委员会办公室_69b8dec0.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `汽车数据安全管理若干规定（试行）_中央网络安全和信息化委员会办公室.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-006"
+        "summary": "由原始参考文件 `汽车数据安全管理若干规定（试行）_中央网络安全和信息化委员会办公室.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1296,12 +1270,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-sup-006_金融数据安全_数据安全分级指南_1311542a.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "路径判断",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `金融数据安全+数据安全分级指南.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-SUP-007"
+        "summary": "由原始参考文件 `金融数据安全+数据安全分级指南.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1338,12 +1311,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/cn/snapshots/cn-tpl-022_隐私政策样例_510dc5fc.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "文档审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `隐私政策样例.PNG` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/CN-TPL-022"
+        "summary": "由原始参考文件 `隐私政策样例.PNG` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1380,12 +1352,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-001_2_2_ico_dpia_temple_1_8da2e5a1.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `2.2 ICO_DPIA_Temple (1).docx` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-009"
+        "summary": "由原始参考文件 `2.2 ICO_DPIA_Temple (1).docx` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1422,12 +1393,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-002_celex_32002d0002_en_txt_630ed471.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32002D0002_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-010"
+        "summary": "由原始参考文件 `CELEX_32002D0002_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1464,12 +1434,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-003_celex_32003d0490_en_txt_0c03d397.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32003D0490_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-011"
+        "summary": "由原始参考文件 `CELEX_32003D0490_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1506,12 +1475,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-004_celex_32003d0821_en_txt_72c43419.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32003D0821_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-012"
+        "summary": "由原始参考文件 `CELEX_32003D0821_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1548,12 +1516,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-005_celex_32004d0411_en_txt_6c7765c5.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32004D0411_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-013"
+        "summary": "由原始参考文件 `CELEX_32004D0411_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1590,12 +1557,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-006_celex_32008d0393_en_txt_5c003a8c.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32008D0393_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-014"
+        "summary": "由原始参考文件 `CELEX_32008D0393_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1632,12 +1598,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-007_celex_32010d0146_en_txt_10f5c027.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32010D0146_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-015"
+        "summary": "由原始参考文件 `CELEX_32010D0146_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1674,12 +1639,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-008_celex_32010d0625_en_txt_eda2fbb8.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32010D0625_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-016"
+        "summary": "由原始参考文件 `CELEX_32010D0625_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1716,12 +1680,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-009_celex_32011d0061_en_txt_52fc16c8.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32011D0061_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-017"
+        "summary": "由原始参考文件 `CELEX_32011D0061_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1758,12 +1721,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-010_celex_32012d0484_en_txt_10e59798.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32012D0484_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-018"
+        "summary": "由原始参考文件 `CELEX_32012D0484_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1800,12 +1762,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-011_celex_32013d0065_en_txt_c305dc26.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32013D0065_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-019"
+        "summary": "由原始参考文件 `CELEX_32013D0065_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1842,12 +1803,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-012_celex_32019d0419_en_txt_2ced3c3a.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32019D0419_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-020"
+        "summary": "由原始参考文件 `CELEX_32019D0419_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1884,12 +1844,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-013_celex_32021d0914_en_txt_a7400d96.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32021D0914_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-021"
+        "summary": "由原始参考文件 `CELEX_32021D0914_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1926,12 +1885,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-014_celex_32021d1772_en_txt_f01c242a.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32021D1772_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-022"
+        "summary": "由原始参考文件 `CELEX_32021D1772_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -1968,12 +1926,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-015_celex_32022d0254_en_txt_a6b2d568.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32022D0254_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-023"
+        "summary": "由原始参考文件 `CELEX_32022D0254_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2010,12 +1967,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-016_celex_32023d1795_en_txt_2cb8cc45.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_32023D1795_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-024"
+        "summary": "由原始参考文件 `CELEX_32023D1795_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2052,12 +2008,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-017_celex_62018cj0311_en_txt_c6ec140f.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `CELEX_62018CJ0311_EN_TXT.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-025"
+        "summary": "由原始参考文件 `CELEX_62018CJ0311_EN_TXT.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2094,12 +2049,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-018_en_standard_contractual_clauses_1_12278acc.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `EN Standard Contractual Clauses (1).doc` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-026"
+        "summary": "由原始参考文件 `EN Standard Contractual Clauses (1).doc` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2136,12 +2090,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-019_epo_adequacy_decision_july_2025_23830553.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `EPO Adequacy Decision July 2025.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-027"
+        "summary": "由原始参考文件 `EPO Adequacy Decision July 2025.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2178,12 +2131,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-tpl-001_just_template_comingsoon_standard_2_115042e7.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_2.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-TPL-001"
+        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_2.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2220,12 +2172,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-tpl-002_just_template_comingsoon_standard_26_25b2da8a.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_26.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-TPL-002"
+        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_26.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2262,12 +2213,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-tpl-003_just_template_comingsoon_standard_27_d51308c4.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_27.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-TPL-003"
+        "summary": "由原始参考文件 `JUST_template_comingsoon_standard_27.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2304,12 +2254,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-tpl-004_tia_template_1_3263b3d5.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "结构参照",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `TIA - Template (1).docx` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-TPL-004"
+        "summary": "由原始参考文件 `TIA - Template (1).docx` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2346,12 +2295,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-020_edpb_guidelines_2_2018_derogations_en_3160f84e.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "知识增强",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `edpb_guidelines_2_2018_derogations_en.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-028"
+        "summary": "由原始参考文件 `edpb_guidelines_2_2018_derogations_en.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2388,12 +2336,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-021_edpb_guidelines_3_2018_territorial_scope_after_p_e761c1f1.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "知识增强",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `edpb_guidelines_3_2018_territorial_scope_after_public_consultation_en_1.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-029"
+        "summary": "由原始参考文件 `edpb_guidelines_3_2018_territorial_scope_after_public_consultation_en_1.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2430,12 +2377,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-022_edpb_guidelines_codes_conduct_transfers_after_pu_7f49ba95.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "知识增强",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `edpb_guidelines_codes_conduct_transfers_after_public_consultation_en_1.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-030"
+        "summary": "由原始参考文件 `edpb_guidelines_codes_conduct_transfers_after_public_consultation_en_1.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2472,12 +2418,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-023_edpb_recommendations_20221_bcr_c_v2_en_49af01bf.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "知识增强",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `edpb_recommendations_20221_bcr-c_v2_en.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-031"
+        "summary": "由原始参考文件 `edpb_recommendations_20221_bcr-c_v2_en.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2514,12 +2459,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/eu/snapshots/eu-sup-024_recommendations_20221_bcr_c_edpb_en_52f5e0ed.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "知识增强",
         "suitable_for": "SCC审查",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `recommendations_20221_bcr-c_edpb_en.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/EU-SUP-032"
+        "summary": "由原始参考文件 `recommendations_20221_bcr-c_edpb_en.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2556,12 +2500,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-001_19_digital_trade_5987398f.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `19-Digital-Trade.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-006"
+        "summary": "由原始参考文件 `19-Digital-Trade.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2598,12 +2541,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-002_2012_31341_32b80d48.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `2012-31341.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-007"
+        "summary": "由原始参考文件 `2012-31341.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2640,12 +2582,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-003_217_ecsg_2015_apec_privacy_framework_26c6be63.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `217_ecsg_2015-apec-privacy-framework.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-008"
+        "summary": "由原始参考文件 `217_ecsg_2015-apec-privacy-framework.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2682,12 +2623,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-004_dcpd_202200894_78497390.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `DCPD-202200894.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-009"
+        "summary": "由原始参考文件 `DCPD-202200894.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2724,12 +2664,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-005_fisa_section_702_fisa_resource_library_50e54159.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `FISA_Section_702_FISA_Resource_Library.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-010"
+        "summary": "由原始参考文件 `FISA_Section_702_FISA_Resource_Library.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2766,12 +2705,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-006_full_text_eu_u_s_dpf_795adbfd.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `Full Text_EU-U.S. DPF.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-011"
+        "summary": "由原始参考文件 `Full Text_EU-U.S. DPF.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2808,12 +2746,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-007_nist_cswp_01162020_8ad94d46.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `NIST.CSWP.01162020.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-012"
+        "summary": "由原始参考文件 `NIST.CSWP.01162020.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2850,12 +2787,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-008_cloud_act_4b620891.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `cloud_act.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-013"
+        "summary": "由原始参考文件 `cloud_act.pdf` 自动扩展生成的知识条目。"
       }
     },
     {
@@ -2892,12 +2828,11 @@
         "publish_date": "",
         "effective_date": "",
         "snapshot_path": "resources/legal/sources/us/snapshots/us-sup-009_ftc_act_incorporatingus_safe_web_act_a228b4c9.md",
-        "source_url": "",
+        "external_url": "",
         "usage": "参考引用",
         "suitable_for": "EO14117合规",
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
-        "summary": "由原始参考文件 `ftc_act_incorporatingus_safe_web_act.pdf` 自动扩展生成的知识条目。",
-        "knowledge_url": "/knowledge/sources/US-SUP-014"
+        "summary": "由原始参考文件 `ftc_act_incorporatingus_safe_web_act.pdf` 自动扩展生成的知识条目。"
       }
     }
   ]

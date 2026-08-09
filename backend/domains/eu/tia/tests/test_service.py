@@ -8,7 +8,7 @@ from pypdf import PdfReader
 from backend.common.citation.registry import CitationRegistry
 from backend.domains.eu.tia.agents import create_tia_agents
 from backend.domains.eu.tia.schema import TIAChapter, TIARequest
-from backend.domains.eu.tia.service import TIAService
+from backend.domains.eu.tia.service import TIAService, _dedupe_regulations
 
 
 class _DisabledLLM:
@@ -20,6 +20,16 @@ class _Reg:
     title = "GDPR"
     article = "Article 46"
     content = "Appropriate safeguards must be provided for third-country transfers."
+
+
+def test_regulation_dedup_preserves_distinct_articles_from_one_source() -> None:
+    article_35 = type("Reg", (), {"id": "EU-LAW-001", "article": "35"})()
+    article_46 = type("Reg", (), {"id": "EU-LAW-001", "article": "46"})()
+
+    assert _dedupe_regulations([article_35, article_46, article_46]) == [
+        article_35,
+        article_46,
+    ]
 
 
 class _CitationLLM:

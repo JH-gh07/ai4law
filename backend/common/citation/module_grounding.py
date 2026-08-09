@@ -83,15 +83,15 @@ _MODULE_LEGAL_SOURCE_MAP: dict[str, dict[str, list[dict[str, Any]]]] = {
         ],
         "country_risk": [
             {"title": "GDPR", "article": "44", "weight": 0.90},
-            {"title": "EDPB Recommendations", "article": "01/2020", "weight": 0.75},
+            {"title": "EDPB Recommendations", "article": "Step 3", "weight": 0.75},
         ],
         "supplementary_measures": [
-            {"title": "EDPB Recommendations", "article": "01/2020", "weight": 1.0},
+            {"title": "EDPB Recommendations", "article": "Step 3", "weight": 1.0},
             {"title": "GDPR", "article": "46", "weight": 0.80},
         ],
         "residual_risk": [
             {"title": "GDPR", "article": "46", "weight": 0.85},
-            {"title": "EDPB Recommendations", "article": "01/2020", "weight": 0.70},
+            {"title": "EDPB Recommendations", "article": "Step 3", "weight": 0.70},
         ],
         "other": [
             {"title": "GDPR", "article": "44", "weight": 0.70},
@@ -109,7 +109,7 @@ _MODULE_LEGAL_SOURCE_MAP: dict[str, dict[str, list[dict[str, Any]]]] = {
         "cross_border": [
             {"title": "GDPR", "article": "44", "weight": 1.0},
             {"title": "GDPR", "article": "46", "weight": 0.90},
-            {"title": "EDPB", "article": "01/2020", "weight": 0.70},
+            {"title": "EDPB", "article": "Step 3", "weight": 0.70},
         ],
         "other": [
             {"title": "EU 2021/914", "article": "", "weight": 0.75},
@@ -162,6 +162,9 @@ def _extract_article_number(article: str, jurisdiction: str) -> str:
         if match:
             return match.group(1)
     if jurisdiction.upper() == "EU":
+        match = re.search(r"\bStep\s+([0-9]+(?:\.[0-9]+)*)", text, re.I)
+        if match:
+            return f"Step {match.group(1)}"
         match = re.search(r"\bArticle\s+([0-9]+(?:\.[0-9]+)*)", text, re.I)
         if match:
             return match.group(1)

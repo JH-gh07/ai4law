@@ -122,6 +122,12 @@ def test_eu_tia_retrieves_current_gdpr_article_46() -> None:
         and "appropriate safeguards" in chunk.content
         for chunk in bundle.legal_grounding
     )
+    assert any(
+        chunk.source_id == "EU-GUIDE-002"
+        and chunk.article_no == "Step 3"
+        and "transfer tool" in chunk.content
+        for chunk in bundle.legal_grounding
+    )
 
 
 def test_us_module_returns_scaffold_debug_bundle() -> None:
