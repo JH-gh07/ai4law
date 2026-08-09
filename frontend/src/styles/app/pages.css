@@ -1224,11 +1224,23 @@
   font-size: 1rem;
 }
 
-.law-viewer-article p {
+.law-viewer-article-body {
   margin: 0.75rem 0 0;
   color: #203f60;
   line-height: 1.8;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.law-viewer-article-body p,
+.law-viewer-article-body ul,
+.law-viewer-article-body ol,
+.law-viewer-article-body blockquote {
+  margin: 0 0 0.75rem;
+}
+
+.law-viewer-article-body > :last-child {
+  margin-bottom: 0;
 }
 
 .law-viewer-article-highlight-badge {

@@ -4,10 +4,31 @@ from pathlib import Path
 
 from backend.common.knowledge.paths import regulation_articles_jsonl_path
 from backend.services.knowledge_index import (
+    _clean_source_text,
     _normalize_article_lookup_key,
     get_article_detail,
     read_text_preview,
 )
+
+
+def test_clean_source_text_removes_snapshot_artifacts_and_rejoins_lines() -> None:
+    raw = (
+        "4.5.2016 EN Official Journal of the European Union L 119/1\n"
+        "L 119/2\n"
+        ". . . . . . . .\n"
+        "个人信息出境\n认证活动\n"
+        "cross-\nborder transfer\n"
+        "<p>第四条&nbsp;处理者应当履行义务。</p>\n"
+    )
+
+    cleaned = _clean_source_text(raw)
+
+    assert "Official Journal" not in cleaned
+    assert "L 119/2" not in cleaned
+    assert ". . ." not in cleaned
+    assert "个人信息出境认证活动" in cleaned
+    assert "crossborder transfer" in cleaned
+    assert "第四条 处理者应当履行义务。" in cleaned
 
 
 def _registry_rows() -> list[dict[str, object]]:

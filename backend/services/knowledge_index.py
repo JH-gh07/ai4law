@@ -298,12 +298,45 @@ def _parse_articles_from_text(full_text: str) -> dict[str, str]:
 
 
 def _clean_source_text(text: str) -> str:
-    normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    """Normalize source snapshots before preview or fallback article parsing.
+
+    Snapshot files include HTML wrappers and PDF/OCR artifacts. Keeping the
+    stages explicit makes each transformation easy to test and prevents the
+    preview API from exposing source-page chrome as legal content.
+    """
+    if not text:
+        return ""
+
+    normalized = text.replace("\ufeff", "").replace("\u200b", "")
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = normalized.replace("\f", "\n\n").replace("\v", "\n")
+
     if "<" in normalized and ">" in normalized:
         normalized = _extract_text_from_html(_extract_primary_html_segment(normalized))
     normalized = html.unescape(normalized)
-    normalized = re.sub(r"[ \t\f\v]+", " ", normalized)
+    normalized = normalized.replace("\u00a0", " ")
+
+    # Remove common EU Official Journal headers/page numbers and dot leaders.
+    normalized = re.sub(
+        r"^\s*\d{1,2}\.\d{1,2}\.\d{4}\s+EN\s+Official Journal of the European Union\s+L\s+\d+/\d+\s*$",
+        "",
+        normalized,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
+    normalized = re.sub(r"^\s*L\s+\d+/\d+\s*$", "", normalized, flags=re.MULTILINE)
+    normalized = re.sub(r"^\s*(?:[.·]\s*){4,}$", "", normalized, flags=re.MULTILINE)
+
+    # Rejoin PDF line wraps without joining separate paragraphs.
+    for _ in range(5):
+        joined = re.sub(r"([\u4e00-\u9fff])\n([\u4e00-\u9fff])", r"\1\2", normalized)
+        if joined == normalized:
+            break
+        normalized = joined
+    normalized = re.sub(r"([a-z]{3,})-\s*\n\s*([a-z]{3,})", r"\1\2", normalized)
+
+    normalized = re.sub(r"[ \t]+", " ", normalized)
     normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+    normalized = re.sub(r"^[ \t]+|[ \t]+$", "", normalized, flags=re.MULTILINE)
     return normalized.strip()
 
 

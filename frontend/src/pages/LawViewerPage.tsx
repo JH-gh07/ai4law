@@ -5,7 +5,9 @@
  * 用户可以通过点击返回按钮返回到上一个页面，或者点击官方来源链接查看完整的法律文档。
  */
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import remarkGfm from "remark-gfm";
 import {
   fetchArticleDetail,
   fetchKnowledgeSourceDetail,
@@ -247,7 +249,9 @@ export function LawViewerPage() {
               {article.prev_article_no && article.prev_article_content && (
                 <section className="law-viewer-article law-viewer-article-context">
                   <h3>{formatLegalLocator(article.prev_article_no, lang)}</h3>
-                  <p>{article.prev_article_content}</p>
+                  <div className="law-viewer-article-body">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.prev_article_content}</ReactMarkdown>
+                  </div>
                 </section>
               )}
 
@@ -261,13 +265,17 @@ export function LawViewerPage() {
                     {t("当前查看条文", "Current Article")}
                   </span>
                 </h3>
-                <p>{article.article_content}</p>
+                <div className="law-viewer-article-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.article_content}</ReactMarkdown>
+                </div>
               </section>
 
               {article.next_article_no && article.next_article_content && (
                 <section className="law-viewer-article law-viewer-article-context">
                   <h3>{formatLegalLocator(article.next_article_no, lang)}</h3>
-                  <p>{article.next_article_content}</p>
+                <div className="law-viewer-article-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.next_article_content}</ReactMarkdown>
+                </div>
                 </section>
               )}
             </article>
