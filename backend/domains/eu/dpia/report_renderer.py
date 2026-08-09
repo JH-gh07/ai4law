@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from shutil import copy2
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import openpyxl
@@ -16,11 +16,7 @@ from backend.common.workflow.facts import FactItem
 from backend.common.workflow.issues import IssueItem
 from backend.domains.eu.dpia.schema import (
     DPIAChapterContent,
-    DPIANeedAssessment,
-    DPIAMitigationItem,
     DPIAProjectProfile,
-    DPIARiskMatrixItem,
-    RegulationHit,
 )
 
 if TYPE_CHECKING:
@@ -50,6 +46,7 @@ def _render_dpia_markdown(
     chapters: list[DPIAChapterContent],
     date_stamp: str,
     need_assessment: dict | None = None,
+    citation_registry: "CitationRegistry | None" = None,
 ) -> str:
     """Render the DPIA draft as a Markdown document."""
     lines: list[str] = []
@@ -82,7 +79,20 @@ def _render_dpia_markdown(
         lines.append("")
         citations = chapter.citations
         if citations:
-            lines.append(f"*引用法规: {'; '.join(citations)}*")
+            if citation_registry is None:
+                lines.append(f"*引用法规: {'; '.join(citations)}*")
+            else:
+                footnote_numbers = {
+                    item.citation_id: number
+                    for number, item in citation_registry.get_footnote_map().items()
+                }
+                visible_refs = [
+                    f"[{footnote_numbers[citation_id]}]"
+                    for citation_id in citations
+                    if citation_id in footnote_numbers
+                ]
+                if visible_refs:
+                    lines.append(f"*引用编号: {'; '.join(dict.fromkeys(visible_refs))}*")
         lines.append("")
 
     content = "\n".join(lines)
@@ -331,7 +341,12 @@ class DPIAReportRenderer:
         # 1. Markdown and DOCX drafts
         md_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.md"
         result["markdown"] = _render_dpia_markdown(
-            md_path, profile, chapters, date_stamp, need_assessment
+            md_path,
+            profile,
+            chapters,
+            date_stamp,
+            need_assessment,
+            citation_registry,
         )
 
         from backend.common.render.pdf_renderer import get_pdf_renderer

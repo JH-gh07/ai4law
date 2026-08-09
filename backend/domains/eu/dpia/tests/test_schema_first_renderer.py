@@ -166,6 +166,9 @@ def test_production_form_with_schema_first_generates_document_ir(tmp_path, monke
     for key in ("markdown", "zip"):
         assert key in outputs
         assert Path(outputs[key]).exists()
+    markdown = Path(outputs["markdown"]).read_text(encoding="utf-8")
+    assert "{{CIT-" not in markdown
+    assert "CIT-EU-" not in markdown
 
     from zipfile import ZipFile
     with ZipFile(outputs["zip"]) as z:
