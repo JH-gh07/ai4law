@@ -34,6 +34,7 @@ _PLACEHOLDER_CITATIONS = {"未检索到", "未检索到相关法规", "未检索
 # Matches markdown inline formatting: **bold**, __bold__, *italic*, _italic_, `code`
 # Group 2 captures the inner content so we can strip the markers
 _MD_INLINE_RE = re.compile(r"(\*{1,3}|_{1,3})([^*_\n]+?)\1|`([^`\n]+)`")
+_TRUNCATED_MD_DELIMITER_RE = re.compile(r"(?:(?<=\s)|^)(?:\*{2,3}|_{2,3}|`)(?=\s*$)")
 
 
 @dataclass(frozen=True)
@@ -248,6 +249,7 @@ def strip_markdown_inline(text: str) -> str:
         return inner
 
     stripped = _MD_INLINE_RE.sub(_strip, protected)
+    stripped = _TRUNCATED_MD_DELIMITER_RE.sub("", stripped).rstrip()
     for index, marker in enumerate(citation_markers):
         stripped = stripped.replace(f"\ufff0{index}\ufff1", marker)
     return stripped

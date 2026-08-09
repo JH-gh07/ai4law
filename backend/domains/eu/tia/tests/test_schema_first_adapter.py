@@ -38,7 +38,7 @@ def _chapters_golden() -> list[TIAChapter]:
     """Chapters that match the golden snapshot fixture."""
     return [
         TIAChapter(chapter_no=1, title="传输工具适用性判断",
-                   content=f"本次传输依赖标准合同条款 [1]。",
+                   content="本次传输依赖标准合同条款 [1]。",
                    citations=[], citation_refs=[], risk_level="HIGH"),
         TIAChapter(chapter_no=2, title="补充措施建议",
                    content="需实施端到端加密。",
@@ -100,6 +100,26 @@ def test_tia_adapter_strips_markers_from_block_text() -> None:
     assert not block.text.lstrip().startswith("#")
 
 
+def test_tia_adapter_tolerates_truncated_markdown_delimiter() -> None:
+    document, _ = build_tia_document_ir(
+        task_id="truncated-markdown",
+        exporter_profile="E",
+        chapters=[TIAChapter(
+            chapter_no=1,
+            title="T",
+            content="1. 法律环境重大恶化时应暂停传输。\n4. **",
+            citations=[],
+            citation_refs=[],
+            risk_level="HIGH",
+        )],
+        citation_registry=CitationRegistry(),
+        model="m",
+        generated_at=datetime(2026, 8, 9, tzinfo=timezone.utc),
+    )
+
+    assert document.sections[0].blocks[0].text == "1. 法律环境重大恶化时应暂停传输。\n4."
+
+
 # ── ISSUE-reporting-001 regression: production [N] shape ──
 
 def test_production_footnote_shape_resolves_to_claim_block() -> None:
@@ -110,7 +130,7 @@ def test_production_footnote_shape_resolves_to_claim_block() -> None:
     document, reporting_registry = build_tia_document_ir(
         task_id="task-prod", exporter_profile="欧洲子公司",
         chapters=[TIAChapter(chapter_no=1, title="传输工具",
-                             content=f"本次传输依赖标准合同条款 [1]。",
+                             content="本次传输依赖标准合同条款 [1]。",
                              citations=[], citation_refs=[], risk_level="HIGH")],
         citation_registry=reg,
         generated_at=datetime(2026, 8, 8, tzinfo=timezone.utc), model="m",

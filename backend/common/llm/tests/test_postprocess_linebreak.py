@@ -1,6 +1,9 @@
 """Test P0-3: Line break regex should not shatter version numbers."""
 
-from backend.common.llm.postprocess import normalize_legal_markdown_structure
+from backend.common.llm.postprocess import (
+    normalize_legal_markdown_structure,
+    strip_markdown_inline,
+)
 
 
 def test_tls_version_not_broken():
@@ -64,3 +67,9 @@ def test_pipeless_table_repair():
     # Lines should be consecutive (single \n separator, not \n\n)
     assert "| 项目 | 内容\n| 企业名称" in result
     assert "| 企业名称 | 测试公司\n| 行业" in result
+
+
+def test_strip_markdown_inline_removes_truncated_delimiter() -> None:
+    text = "1. 法律环境重大恶化时应暂停传输。\n4. **"
+
+    assert strip_markdown_inline(text) == "1. 法律环境重大恶化时应暂停传输。\n4."
