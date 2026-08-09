@@ -57,11 +57,7 @@ def _prepare_markdown_section(content: str, *, strip_first_heading: bool) -> str
 
 
 def build_template_mapping(payload: TIARequest, chapters: list[TIAChapter]) -> dict[str, str]:
-    """Map chapter content onto template slots.
-
-    Moved verbatim from ``service._build_template_mapping`` so rendered output
-    stays byte-identical.
-    """
+    """Map chapters into renderer-owned sections with stable heading levels."""
     def pick(no: int) -> str:
         for ch in chapters:
             if ch.chapter_no == no:
