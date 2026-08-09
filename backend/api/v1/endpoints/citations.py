@@ -6,10 +6,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.common.citation.output import normalize_citation_item
 from backend.core.dependencies import get_current_user, get_db
+from backend.models.report import ReportArtifactModel
 from backend.schemas.auth import AuthUser
 from backend.schemas.citation import CitationDetailResponse, CitationMapResponse
 from backend.services.task_access import require_task_access
@@ -51,15 +53,37 @@ def _candidate_paths(task_id: str, module: str | None) -> list[tuple[str, Path]]
     return candidates
 
 
-def _find_citation_map(task_id: str, module: str | None = None) -> tuple[str, dict] | tuple[None, None]:
+def _read_citation_map(path: Path) -> dict | None:
+    if not path.is_file() or path.name != "citation_map.json":
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _find_citation_map(
+    db: Session,
+    task_id: str,
+    module: str | None = None,
+) -> tuple[str, dict] | tuple[None, None]:
     for resolved_module, path in _candidate_paths(task_id, module):
-        if not path.exists():
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        return resolved_module, data
+        data = _read_citation_map(path)
+        if data is not None:
+            return resolved_module, data
+
+    statement = select(ReportArtifactModel).where(
+        ReportArtifactModel.owner_id == task_id,
+        ReportArtifactModel.artifact_type == "citation_map_json",
+    )
+    if module:
+        statement = statement.where(ReportArtifactModel.owner_type == module)
+    artifacts = db.scalars(statement.order_by(ReportArtifactModel.created_at.desc())).all()
+    for artifact in artifacts:
+        data = _read_citation_map(Path(artifact.file_path))
+        if data is not None:
+            return artifact.owner_type, data
     return None, None
 
 
@@ -112,7 +136,7 @@ def get_report_citations(
     current_user: AuthUser = Depends(get_current_user),
 ) -> CitationMapResponse:
     require_task_access(db, task_id=task_id, user_id=current_user.id)
-    resolved_module, data = _find_citation_map(task_id, module)
+    resolved_module, data = _find_citation_map(db, task_id, module)
     target_module = resolved_module or module or ""
     if data is None:
         return CitationMapResponse(task_id=task_id, module=target_module, footnote_map={}, citation_count=0)
@@ -143,7 +167,7 @@ def get_citations_batch(
 ) -> BatchCitationResponse:
     """Fetch multiple citation details in a single request."""
     require_task_access(db, task_id=body.task_id, user_id=current_user.id)
-    resolved_module, data = _find_citation_map(body.task_id, body.module)
+    resolved_module, data = _find_citation_map(db, body.task_id, body.module)
     if data is None:
         return BatchCitationResponse(items={}, not_found=list(body.citation_ids))
 
@@ -186,7 +210,7 @@ def get_citation_detail(
         raise HTTPException(status_code=400, detail="task_id query parameter is required")
     require_task_access(db, task_id=task_id, user_id=current_user.id)
 
-    resolved_module, data = _find_citation_map(task_id, module)
+    resolved_module, data = _find_citation_map(db, task_id, module)
     if data is None:
         raise HTTPException(status_code=404, detail=f"No citation map found for task {task_id}")
 

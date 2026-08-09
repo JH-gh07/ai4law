@@ -5,9 +5,12 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from backend.app import create_app
 from backend.core.settings import Settings
+from backend.models.report import ReportArtifactModel
+from backend.models.task import TaskOwnershipModel
 from backend.services.task_access import claim_task_access
 
 
@@ -135,3 +138,64 @@ def test_citation_report_does_not_synthesize_empty_footnote_map(tmp_path: Path, 
         assert data["citation_count"] == 0
         assert data["footnote_map"] == {}
         assert json.loads((output_dir / "citation_map.json").read_text(encoding="utf-8"))["footnote_map"] == {}
+
+
+def test_citation_report_reads_registered_artifact_when_workspace_id_differs_from_output_id(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Recovered workspaces keep their own ID while artifacts retain the run output path."""
+    task_id = "workspace-task-id"
+    output_dir = tmp_path / "outputs" / "tia" / "run-output-id" / "outputs"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    citation_map_path = output_dir / "citation_map.json"
+    citation_map_path.write_text(
+        json.dumps(
+            {
+                "task_id": "run-output-id",
+                "module": "tia",
+                "footnote_map": {
+                    "1": {
+                        "citation_id": "CIT-EU-GDPR-ART46-P01",
+                        "source_id": "EU-LAW-001",
+                        "citation_type": "law_article",
+                        "title": "GDPR (EU) 2016/679",
+                        "article_no": "46",
+                        "quote_text": "appropriate safeguards",
+                    }
+                },
+                "all_items": [],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    with _owned_client(tmp_path, task_id) as (client, owner_token, _):
+        session = client.app.state.container.session_factory()
+        try:
+            owner_id = session.execute(
+                select(TaskOwnershipModel.user_id).where(TaskOwnershipModel.task_id == task_id)
+            ).scalar_one()
+            session.add(
+                ReportArtifactModel(
+                    user_id=owner_id,
+                    owner_type="tia",
+                    owner_id=task_id,
+                    artifact_type="citation_map_json",
+                    file_path=str(citation_map_path),
+                )
+            )
+            session.commit()
+        finally:
+            session.close()
+
+        response = client.get(
+            f"/api/v1/citations/reports/{task_id}?module=tia",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["citation_count"] == 1
+        assert response.json()["footnote_map"]["1"]["article_no"] == "46"
