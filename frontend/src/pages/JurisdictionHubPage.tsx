@@ -22,7 +22,7 @@ const JURISDICTION_META: Record<JurisdictionCode, { banner: string; summary: str
   us: {
     banner: "从美国向境外传输数据",
     summary: "覆盖 EO14117 与 CPRA 的风险结论与治理检查。",
-    modules: ["cn_flow", "cpra"]
+    modules: ["us_14117", "cpra"]
   }
 };
 
@@ -34,7 +34,7 @@ const MODULE_TEXT: Record<string, { input: string; output: string; scene: string
   bcr: { input: "BCR 文本 + 集团信息", output: "BCR 审查报告", scene: "集团规则审查" },
   dpia: { input: "问卷式风险信息", output: "DPIA 草案", scene: "处理活动风险评估" },
   tia: { input: "国家 + 接收方 + 补充措施", output: "TIA 草案", scene: "第三国保护水平评估" },
-  cn_flow: { input: "实体/数据清单", output: "14117 风险评估结论报告", scene: "限制性传输风险判断" },
+  us_14117: { input: "数据、实体与交易清单", output: "14117 风险评估结论报告", scene: "限制性传输风险判断" },
   cpra: { input: "数据映射与制度材料", output: "CPRA 合规全景报告", scene: "加州隐私治理检查" }
 };
 

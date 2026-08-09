@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { listModules } from "../api/modules";
 import { listModuleIdentities } from "./module-registry";
-import { findTaskTemplate } from "./task-templates";
+import {
+  findTaskTemplate,
+  listTaskTemplates,
+  listTaskTemplatesByJurisdiction
+} from "./task-templates";
 
 describe("module registry contract", () => {
   it("has unique stable ids and frontend keys", () => {
@@ -47,6 +51,15 @@ describe("module registry contract", () => {
       jurisdiction: "us",
       lifecycle: "legacy-compatible"
     });
+  });
+
+  it("keeps cn_flow readable for historical tasks without offering it for new tasks", () => {
+    expect(findTaskTemplate("us_14117_flow")?.module).toBe("cn_flow");
+    expect(listTaskTemplates().map((item) => item.id)).not.toContain("us_14117_flow");
+    expect(listTaskTemplatesByJurisdiction("US").map((item) => item.id)).toEqual([
+      "us_14117",
+      "us_cpra"
+    ]);
   });
 
   it("does not expose the retired China standard-contract review module", () => {

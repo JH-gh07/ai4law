@@ -10,6 +10,7 @@ export type TaskTemplate = {
   jurisdiction: Jurisdiction;
   module: ModuleKey;
   workspaceStyle: WorkspaceStyleKey;
+  availableForNewTasks?: boolean;
   title: LocalizedText;
   subtitle: LocalizedText;
   inputHint: LocalizedText;
@@ -127,6 +128,7 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
     jurisdiction: "US",
     module: "cn_flow",
     workspaceStyle: "us_14117",
+    availableForNewTasks: false,
     title: { zh: "EO 14117 数据流评估（兼容入口）", en: "EO 14117 Data Flow Review (Compatibility)" },
     subtitle: {
       zh: "保留历史 cn_flow 接口，按当前美国 EO 14117 实现执行数据流风险评估",
@@ -148,13 +150,16 @@ export const TASK_TEMPLATES: TaskTemplate[] = [
 ];
 
 const TEMPLATE_MAP = new Map(TASK_TEMPLATES.map((item) => [item.id, item]));
+const ACTIVE_TASK_TEMPLATES = TASK_TEMPLATES.filter(
+  (item) => item.availableForNewTasks !== false
+);
 
 export function listTaskTemplates(): TaskTemplate[] {
-  return TASK_TEMPLATES;
+  return ACTIVE_TASK_TEMPLATES;
 }
 
 export function listTaskTemplatesByJurisdiction(jurisdiction: Jurisdiction): TaskTemplate[] {
-  return TASK_TEMPLATES.filter((item) => item.jurisdiction === jurisdiction);
+  return ACTIVE_TASK_TEMPLATES.filter((item) => item.jurisdiction === jurisdiction);
 }
 
 export function findTaskTemplate(taskTemplateId: string): TaskTemplate | undefined {
@@ -163,8 +168,8 @@ export function findTaskTemplate(taskTemplateId: string): TaskTemplate | undefin
 
 export function getDefaultTaskTemplate(jurisdiction: Jurisdiction): TaskTemplate {
   return (
-    TASK_TEMPLATES.find((item) => item.jurisdiction === jurisdiction) ??
-    TASK_TEMPLATES[0]
+    ACTIVE_TASK_TEMPLATES.find((item) => item.jurisdiction === jurisdiction) ??
+    ACTIVE_TASK_TEMPLATES[0]
   );
 }
 
