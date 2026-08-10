@@ -1,211 +1,447 @@
 {
-  "verification_package_version": "final-2026-08-10",
-  "generated_at": "2026-08-10T15:49:05.193351",
-  "git": {
-    "commit": "58d9b260539d66aa4cc7b5c3d3bb68ff339d1d7c",
-    "short": "58d9b26",
-    "commit_date": "2026-08-10 15:43:59 +0800",
-    "branch": "new"
-  },
-  "canonical_articles": {
-    "total_rows": 1968,
-    "duplicate_locators": 0,
-    "missing_article_ref": 0,
-    "invalid_article_number": 0,
-    "resolution_success_rate": "100.0%",
-    "effective_url_coverage": "96.9%",
-    "effective_url_missing": 61,
-    "effective_url_missing_sources": 7
-  },
-  "index_stats": {
-    "legal_index_cn": {
-      "chunks": 619,
-      "modules": [
-        "cn_assessment",
-        "cn_diagnosis",
-        "cn_pipia",
-        "cn_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+  "generated_at": "2026-08-10T08:57:59.231499+00:00",
+  "commit": "a0c65b9",
+  "command": "python3 generate_manifest.py",
+  "exit_code": 0,
+  "indexes": [
+    {
+      "name": "legal_index_cn",
+      "entries": 619,
+      "size_bytes": 1179535,
+      "jurisdiction_distribution": {
+        "cn": 619
+      },
+      "source_count": 19,
+      "top_sources": {
+        "CN-LAW-003": 165,
+        "CN-LAW-001": 128,
+        "CN-REG-008": 100,
+        "CN-LAW-002": 68,
+        "CN-REG-004": 30
+      },
+      "module_distribution": {
+        "c": 619,
+        "n": 1111,
+        "_": 619,
+        "r": 56,
+        "e": 612,
+        "v": 56,
+        "i": 682,
+        "w": 56,
+        "d": 242,
+        "a": 563,
+        "g": 242,
+        "o": 242,
+        "s": 1484,
+        "m": 250,
+        "t": 250,
+        "p": 142
+      }
     },
-    "legal_index_eu": {
-      "chunks": 402,
-      "modules": [
-        "eu_bcr",
-        "eu_dpia",
-        "eu_scc",
-        "eu_tia"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "legal_index_eu",
+      "entries": 402,
+      "size_bytes": 1139302,
+      "jurisdiction_distribution": {
+        "eu": 402
+      },
+      "source_count": 2,
+      "top_sources": {
+        "EU-LAW-001": 396,
+        "EU-GUIDE-002": 6
+      },
+      "module_distribution": {
+        "e": 402,
+        "u": 402,
+        "_": 402,
+        "t": 101,
+        "i": 200,
+        "a": 200,
+        "s": 101,
+        "c": 303,
+        "b": 101,
+        "r": 101,
+        "d": 99,
+        "p": 99
+      }
     },
-    "legal_index_us": {
-      "chunks": 183,
-      "modules": [
-        "us_14117",
-        "us_cpra",
-        "us_vendor_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "legal_index_us",
+      "entries": 183,
+      "size_bytes": 449412,
+      "jurisdiction_distribution": {
+        "us": 183
+      },
+      "source_count": 2,
+      "top_sources": {
+        "US-CA-001": 166,
+        "US-FED-001": 17
+      },
+      "module_distribution": {
+        "u": 183,
+        "s": 183,
+        "_": 266,
+        "1": 51,
+        "4": 17,
+        "7": 17,
+        "c": 83,
+        "p": 83,
+        "r": 249,
+        "a": 83,
+        "v": 166,
+        "e": 249,
+        "n": 83,
+        "d": 83,
+        "o": 83,
+        "i": 83,
+        "w": 83
+      }
     },
-    "standard_clause_index_cn": {
-      "chunks": 5,
-      "modules": [
-        "cn_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "standard_clause_index_cn",
+      "entries": 5,
+      "size_bytes": 6709,
+      "jurisdiction_distribution": {
+        "cn": 5
+      },
+      "source_count": 5,
+      "top_sources": {
+        "STD-CN-SCC-PRIORITY": 1,
+        "STD-CN-SCC-RIGHTS": 1,
+        "STD-CN-SCC-LIABILITY": 1,
+        "STD-CN-DPA-DELETION": 1,
+        "STD-CN-DPA-COMPLIANCE": 1
+      },
+      "module_distribution": {
+        "c": 5,
+        "n": 5,
+        "_": 5,
+        "r": 5,
+        "e": 10,
+        "v": 5,
+        "i": 5,
+        "w": 5
+      }
     },
-    "standard_clause_index_eu": {
-      "chunks": 3,
-      "modules": [
-        "eu_bcr",
-        "eu_scc",
-        "eu_tia"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "standard_clause_index_eu",
+      "entries": 3,
+      "size_bytes": 3782,
+      "jurisdiction_distribution": {
+        "eu": 3
+      },
+      "source_count": 3,
+      "top_sources": {
+        "STD-EU-SCC-ONWARD": 1,
+        "STD-EU-BCR-RIGHTS": 1,
+        "STD-EU-TIA-MEASURES": 1
+      },
+      "module_distribution": {
+        "e": 3,
+        "u": 3,
+        "_": 3,
+        "s": 1,
+        "c": 3,
+        "b": 1,
+        "r": 1,
+        "t": 1,
+        "i": 1,
+        "a": 1
+      }
     },
-    "standard_clause_index_us": {
-      "chunks": 3,
-      "modules": [
-        "us_14117",
-        "us_cpra",
-        "us_vendor_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "standard_clause_index_us",
+      "entries": 3,
+      "size_bytes": 4016,
+      "jurisdiction_distribution": {
+        "us": 3
+      },
+      "source_count": 3,
+      "top_sources": {
+        "STD-US-EO14117-VENDOR": 1,
+        "STD-US-VENDOR-SECURITY": 1,
+        "STD-US-CPRA-RIGHTS": 1
+      },
+      "module_distribution": {
+        "u": 3,
+        "s": 3,
+        "_": 4,
+        "1": 3,
+        "4": 1,
+        "7": 1,
+        "v": 2,
+        "e": 3,
+        "n": 1,
+        "d": 1,
+        "o": 1,
+        "r": 3,
+        "i": 1,
+        "w": 1,
+        "c": 1,
+        "p": 1,
+        "a": 1
+      }
     },
-    "template_index_cn": {
-      "chunks": 10,
-      "modules": [
-        "cn_assessment"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "template_index_cn",
+      "entries": 10,
+      "size_bytes": 10972,
+      "jurisdiction_distribution": {
+        "cn": 10
+      },
+      "source_count": 2,
+      "top_sources": {
+        "CN-TEMPLATE-ASSESSMENT-OFFICIAL": 9,
+        "CN-TEMPLATE-ASSESSMENT-EXAMPLE": 1
+      },
+      "module_distribution": {
+        "c": 10,
+        "n": 20,
+        "_": 10,
+        "a": 10,
+        "s": 40,
+        "e": 20,
+        "m": 10,
+        "t": 10
+      }
     },
-    "template_index_eu": {
-      "chunks": 4,
-      "modules": [
-        "eu_dpia",
-        "eu_tia"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "template_index_eu",
+      "entries": 4,
+      "size_bytes": 3396,
+      "jurisdiction_distribution": {
+        "eu": 4
+      },
+      "source_count": 2,
+      "top_sources": {
+        "EU-TEMPLATE-DPIA-OFFICIAL": 2,
+        "EU-TEMPLATE-TIA-OFFICIAL": 2
+      },
+      "module_distribution": {
+        "e": 4,
+        "u": 4,
+        "_": 4,
+        "d": 2,
+        "p": 2,
+        "i": 4,
+        "a": 4,
+        "t": 2
+      }
     },
-    "template_index_us": {
-      "chunks": 3,
-      "modules": [
-        "us_14117",
-        "us_cpra"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "template_index_us",
+      "entries": 3,
+      "size_bytes": 2635,
+      "jurisdiction_distribution": {
+        "us": 3
+      },
+      "source_count": 2,
+      "top_sources": {
+        "US-TEMPLATE-EO14117-OFFICIAL": 2,
+        "US-TEMPLATE-PRIVACY-OFFICIAL": 1
+      },
+      "module_distribution": {
+        "u": 3,
+        "s": 3,
+        "_": 3,
+        "1": 6,
+        "4": 2,
+        "7": 2,
+        "c": 1,
+        "p": 1,
+        "r": 1,
+        "a": 1
+      }
     },
-    "testcase_index_cn": {
-      "chunks": 5,
-      "modules": [
-        "cn_assessment",
-        "cn_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "testcase_index_cn",
+      "entries": 5,
+      "size_bytes": 4458,
+      "jurisdiction_distribution": {
+        "cn": 5
+      },
+      "source_count": 5,
+      "top_sources": {
+        "TC-CN-ASSESS-001": 1,
+        "TC-CN-ASSESS-002": 1,
+        "TC-CN-REVIEW-001": 1,
+        "TC-CN-REVIEW-002": 1,
+        "TC-CN-REVIEW-003": 1
+      },
+      "module_distribution": {
+        "c": 5,
+        "n": 7,
+        "_": 5,
+        "a": 2,
+        "s": 8,
+        "e": 10,
+        "m": 2,
+        "t": 2,
+        "r": 3,
+        "v": 3,
+        "i": 3,
+        "w": 3
+      }
     },
-    "testcase_index_eu": {
-      "chunks": 4,
-      "modules": [
-        "eu_bcr",
-        "eu_dpia",
-        "eu_scc",
-        "eu_tia"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "testcase_index_eu",
+      "entries": 4,
+      "size_bytes": 3563,
+      "jurisdiction_distribution": {
+        "eu": 4
+      },
+      "source_count": 4,
+      "top_sources": {
+        "TC-EU-SCC-001": 1,
+        "TC-EU-BCR-001": 1,
+        "TC-EU-DPIA-001": 1,
+        "TC-EU-TIA-001": 1
+      },
+      "module_distribution": {
+        "e": 4,
+        "u": 4,
+        "_": 4,
+        "s": 1,
+        "c": 3,
+        "b": 1,
+        "r": 1,
+        "d": 1,
+        "p": 1,
+        "i": 2,
+        "a": 2,
+        "t": 1
+      }
     },
-    "testcase_index_us": {
-      "chunks": 3,
-      "modules": [
-        "us_14117",
-        "us_cpra",
-        "us_vendor_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "testcase_index_us",
+      "entries": 3,
+      "size_bytes": 2877,
+      "jurisdiction_distribution": {
+        "us": 3
+      },
+      "source_count": 3,
+      "top_sources": {
+        "TC-US-EO14117-001": 1,
+        "TC-US-VENDOR-001": 1,
+        "TC-US-PRIVACY-001": 1
+      },
+      "module_distribution": {
+        "u": 3,
+        "s": 3,
+        "_": 4,
+        "1": 3,
+        "4": 1,
+        "7": 1,
+        "v": 2,
+        "e": 3,
+        "n": 1,
+        "d": 1,
+        "o": 1,
+        "r": 3,
+        "i": 1,
+        "w": 1,
+        "c": 1,
+        "p": 1,
+        "a": 1
+      }
     },
-    "workflow_index_cn": {
-      "chunks": 7,
-      "modules": [
-        "cn_assessment",
-        "cn_diagnosis",
-        "cn_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "workflow_index_cn",
+      "entries": 7,
+      "size_bytes": 7524,
+      "jurisdiction_distribution": {
+        "cn": 7
+      },
+      "source_count": 3,
+      "top_sources": {
+        "WF-CN-DIAGNOSIS": 3,
+        "WF-CN-ASSESSMENT": 2,
+        "WF-CN-REVIEW": 2
+      },
+      "module_distribution": {
+        "c": 7,
+        "n": 12,
+        "_": 7,
+        "d": 3,
+        "i": 8,
+        "a": 5,
+        "g": 3,
+        "o": 3,
+        "s": 14,
+        "e": 8,
+        "m": 2,
+        "t": 2,
+        "r": 2,
+        "v": 2,
+        "w": 2
+      }
     },
-    "workflow_index_eu": {
-      "chunks": 4,
-      "modules": [
-        "eu_bcr",
-        "eu_dpia",
-        "eu_scc",
-        "eu_tia"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "workflow_index_eu",
+      "entries": 4,
+      "size_bytes": 4260,
+      "jurisdiction_distribution": {
+        "eu": 4
+      },
+      "source_count": 4,
+      "top_sources": {
+        "WF-EU-SCC": 1,
+        "WF-EU-BCR": 1,
+        "WF-EU-DPIA": 1,
+        "WF-EU-TIA": 1
+      },
+      "module_distribution": {
+        "e": 4,
+        "u": 4,
+        "_": 4,
+        "s": 1,
+        "c": 3,
+        "b": 1,
+        "r": 1,
+        "d": 1,
+        "p": 1,
+        "i": 2,
+        "a": 2,
+        "t": 1
+      }
     },
-    "workflow_index_us": {
-      "chunks": 7,
-      "modules": [
-        "us_14117",
-        "us_cpra",
-        "us_vendor_review"
-      ],
-      "empty_content": 0,
-      "paragraphN": 0,
-      "duplicate_chunk_ids": 0
+    {
+      "name": "workflow_index_us",
+      "entries": 7,
+      "size_bytes": 9113,
+      "jurisdiction_distribution": {
+        "us": 7
+      },
+      "source_count": 3,
+      "top_sources": {
+        "WF-US-EO14117": 5,
+        "WF-US-VENDOR": 1,
+        "WF-US-PRIVACY": 1
+      },
+      "module_distribution": {
+        "u": 7,
+        "s": 7,
+        "_": 8,
+        "1": 15,
+        "4": 5,
+        "7": 5,
+        "v": 2,
+        "e": 3,
+        "n": 1,
+        "d": 1,
+        "o": 1,
+        "r": 3,
+        "i": 1,
+        "w": 1,
+        "c": 1,
+        "p": 1,
+        "a": 1
+      }
     }
-  },
-  "module_legal_distribution": {
-    "cn.jsonl:cn_review": 56,
-    "cn.jsonl:cn_diagnosis": 242,
-    "cn.jsonl:cn_assessment": 250,
-    "cn.jsonl:cn_pipia": 71,
-    "eu.jsonl:eu_tia": 101,
-    "eu.jsonl:eu_scc": 101,
-    "eu.jsonl:eu_bcr": 101,
-    "eu.jsonl:eu_dpia": 99,
-    "us.jsonl:us_14117": 17,
-    "us.jsonl:us_cpra": 83,
-    "us.jsonl:us_vendor_review": 83
-  },
-  "benchmark": {
-    "modules": 11,
-    "total_fixtures": 33,
-    "pass_rate": "33/33 (100%)",
-    "test_command": "uv run pytest backend/common/rag/tests/test_module_retrieval_benchmark.py -v"
-  },
-  "gate_results": {
-    "citation_integrity": "PASSED",
-    "case_parity": "PASSED — 11 modules",
-    "backend_tests": "PASSED — 447 passed",
-    "benchmark": "PASSED — 33/33",
-    "frontend_tests": "PASSED — 139 tests",
-    "frontend_build": "PASSED"
+  ],
+  "totals": {
+    "entries": 1262,
+    "indexes": 15,
+    "unique_sources": 62
   }
 }
