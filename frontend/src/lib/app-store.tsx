@@ -321,6 +321,33 @@ const mergeTaskSpaces = (...groups: TaskSpace[][]): TaskSpace[] => {
   return result.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
 };
 
+/** Align recovery-only task spaces with the workspace that owns their run. */
+export function reconcileRecoveredTaskSpaces(taskSpaces: TaskSpace[], runs: ModuleRun[]): TaskSpace[] {
+  const byAsyncTask = new Map<string, ModuleRun>();
+  for (const run of runs) {
+    if (run.asyncTaskId && !byAsyncTask.has(run.asyncTaskId)) byAsyncTask.set(run.asyncTaskId, run);
+  }
+  const ownedIds = new Set(taskSpaces.map((task) => task.id));
+  const syntheticIds = new Set<string>();
+  for (const [asyncTaskId, run] of byAsyncTask) {
+    if (run.taskSpaceId !== asyncTaskId && ownedIds.has(run.taskSpaceId) && ownedIds.has(asyncTaskId)) {
+      syntheticIds.add(asyncTaskId);
+    }
+  }
+  return taskSpaces.filter((task) => !syntheticIds.has(task.id));
+}
+
+export function remapRecoveredArtifacts(artifacts: OutputArtifact[], runs: ModuleRun[]): OutputArtifact[] {
+  const byAsyncTask = new Map<string, string>();
+  for (const run of runs) {
+    if (run.asyncTaskId && run.taskSpaceId !== run.asyncTaskId) byAsyncTask.set(run.asyncTaskId, run.taskSpaceId);
+  }
+  return artifacts.map((artifact) => ({
+    ...artifact,
+    taskSpaceId: byAsyncTask.get(artifact.taskSpaceId) ?? artifact.taskSpaceId,
+  }));
+}
+
 const inferModuleKey = (item: MyTaskItem): string => {
   if (typeof item.module === "string" && item.module.length > 0) {
     return item.module;
@@ -735,10 +762,12 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         ...recovered.issues
       ]);
 
+      const alignedTaskSpaces = reconcileRecoveredTaskSpaces(mergedTaskSpaces, mergedModuleRuns);
+      const alignedArtifacts = remapRecoveredArtifacts(mergedArtifacts, mergedModuleRuns);
       const mergedState = {
-        taskSpaces: mergedTaskSpaces,
+        taskSpaces: alignedTaskSpaces,
         moduleRuns: mergedModuleRuns,
-        artifacts: mergedArtifacts,
+        artifacts: alignedArtifacts,
         evidenceHits: mergedEvidenceHits,
         issues: mergedIssues
       };
