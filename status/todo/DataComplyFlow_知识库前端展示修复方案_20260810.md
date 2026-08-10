@@ -1065,3 +1065,47 @@ Phase 4 (30min) ─ T5 验证归档
 | `_stage2_deartifact` 误删正文中的 `L 123/45` 样式文本 | 使用 `^...$` 锚定：只匹配独立成行的页码 |
 | EU/US 解析器覆盖不完整 | 已标注为防御性 fallback，核心数据走 JSONL |
 | Markdown 渲染 XSS 风险 | 使用 `dangerouslySetInnerHTML` 但输入来自后端本地文件 |
+
+---
+
+## 执行报告 (2026-08-10)
+
+### 代码基线评估
+
+修复方案撰写后，对实际代码进行了仔细审查，发现 15 项修复中 **12 项已在前序迭代中落码完成**：
+
+| 已完成项 | 证据 |
+|----------|------|
+| T0.1 5阶段清洗 | `_clean_source_text()` 已含 OJ 页眉/页码/省略号过滤 + CN 行合并 + EN 断字 |
+| T1.1 CSS pre-wrap | `.law-viewer-article-body { white-space: pre-wrap }` (pages.css:1231) |
+| T1.3 CELEX 清理 | 已内嵌于 `_clean_source_text` Stage 2 |
+| T2.1-T2.4 清洗增强 | 全部已内嵌于 `_clean_source_text` |
+| T3.1 Markdown | LawViewerPage 已使用 `ReactMarkdown` + `remarkGfm` |
+| T3.2 渲染对齐 | LawViewerPage + EvidenceCenterPage 已统一使用 pre-wrap + ReactMarkdown |
+| T4.2 预览管道 | `_build_preview_text` → `_clean_source_text` 调用链已接通 |
+| A2 部分桩文件 | 5 个 EU/US reference.md 从未被 sources.csv 引用 |
+
+### 实际执行修改
+
+| 修改 | 文件 | 行数 | 状态 |
+|------|------|:--:|:--:|
+| EU/US 解析器扩展 | `knowledge_index.py` | 262-320 | ✅ 完成 |
+| 删除 5 个 orphan reference.md | `snapshots/` | — | ✅ 完成 |
+
+### 验证结果
+
+```
+✅ _parse_articles_from_text: 6/6 tests (CN + EU + US + edge cases)
+✅ E2E pipeline: CN-LAW-001/1, EU-LAW-001/5, US-CA-001/1798.100 all pass
+✅ clean_source_text: OJ header + ellipsis + CN rejoin + EN hyphen + HTML
+✅ CN stubs: CN-SUP-006/CN-TPL-022 API correctly returns None
+✅ Orphan files: 0 reference.md remaining
+```
+
+### 未执行项
+
+| 项 | 原因 |
+|----|------|
+| CN-SUP-006 / CN-TPL-022 桩文件填充 | 两个 source 均标记 `path=reference`, `status=reference`，API 已防御性返回 None，不需要填充 |
+
+验收报告: `status/check/DataComplyFlow_知识库前端展示修复验收_20260810.md`

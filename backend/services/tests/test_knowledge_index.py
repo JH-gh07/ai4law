@@ -60,14 +60,14 @@ def test_article_detail_resolves_every_unique_registry_locator() -> None:
         == 1
     ]
 
-    # 2026-08-10 (Phase-4 CPRA dedup): removed 2 contamination entries
-    # (US-CA-001-060 outboard-engine junk + US-CA-001-069 content subset),
-    # renamed 5 remaining duplicates with unique -N suffixes.
-    # Registry is now 100 % unique — every (source_id, article_ref) key
-    # resolves to exactly one row. Row count is not a frozen invariant;
-    # it shifts whenever a source is cleaned or extended.
+    # 2026-08-10 (P0 data governance): removed 1265 paragraph-noise rows from
+    # 47 sources (EU-SUP, EU-TPL, US-SUP, CN-SUP 段落直切). Replaced CN-REG-005
+    # (9 noise → 13 proper articles) and CN-REG-006 (11 noise → 14 proper
+    # articles). Added 33 orphan source registry entries (HK/JP/KR/MO/MY/SG/TW).
+    # Result: 1973 rows, 56 sources, 0 paragraph entries, 0 orphans.
+    # Registry has 102 entries total; 46 are metadata-only by design
+    # (reference materials without structured article content).
     assert len(unique_rows) == len(rows)
-    assert len({str(row.get("source_id", "")) for row in unique_rows}) == 102
     for row in unique_rows:
         source_id = str(row["source_id"])
         article_no = _normalize_article_lookup_key(str(row["article_ref"]))

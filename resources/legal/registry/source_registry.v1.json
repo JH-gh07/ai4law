@@ -2770,6 +2770,1194 @@
         "report_usage": "用于知识参考与结构参照，不直接作为核心法律依据",
         "summary": "由原始参考文件 `ftc_act_incorporatingus_safe_web_act.pdf` 自动扩展生成的知识条目。"
       }
+    },
+    {
+      "source_id": "HK-GUIDE-002",
+      "title": "香港跨境资料转移（第六项保障资料原则）指引",
+      "aliases": [],
+      "jurisdiction": "hk",
+      "modules": [
+        "intl_hk"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_hk",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "跨境传输路径判断",
+        "report_usage": "可直接引用条文号",
+        "summary": "香港PCPD关于保障资料第六原则（限制转移）的官方指引，说明跨境转移资料的合法条件和合同保护安排。"
+      }
+    },
+    {
+      "source_id": "HK-GUIDE-003",
+      "title": "香港建议示范合同条款（2022年）",
+      "aliases": [],
+      "jurisdiction": "hk",
+      "modules": [
+        "intl_hk"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_hk",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "跨境传输合同起草",
+        "report_usage": "可直接引用条文号",
+        "summary": "香港PCPD提供的跨境资料转移建议示范合同条款，含数据出口方和进口方的权利义务标准条款。"
+      }
+    },
+    {
+      "source_id": "HK-GUIDE-005",
+      "title": "香港使用人工智能处理个人资料的实务守则（2024年）",
+      "aliases": [],
+      "jurisdiction": "hk",
+      "modules": [
+        "intl_hk"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_hk",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "AI系统个人资料合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "香港PCPD针对AI系统使用个人资料的实务守则，含AI系统生命周期各阶段的隐私保护要求。"
+      }
+    },
+    {
+      "source_id": "HK-GUIDE-007",
+      "title": "香港PCSO关键基础设施运营商合规指引（2025年）",
+      "aliases": [],
+      "jurisdiction": "hk",
+      "modules": [
+        "intl_hk"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_hk",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "关键基础设施运营商合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "香港PCSO关键基础设施运营商合规指引，含安全管理计划模板和事件报告流程。"
+      }
+    },
+    {
+      "source_id": "HK-LAW-006",
+      "title": "香港保护关键基础设施（电脑系统）条例（2024年）",
+      "aliases": [],
+      "jurisdiction": "hk",
+      "modules": [
+        "intl_hk"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_hk",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "关键基础设施运营商合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "香港PCSO，规定关键基础设施运营商的安全管理、事件报告和应急响应义务。"
+      }
+    },
+    {
+      "source_id": "JP-GUIDE-004",
+      "title": "日本个人信息保护法通则指南（2022年修订）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "条文解释、合规建议",
+        "report_usage": "可直接引用条文号",
+        "summary": "日本个人信息保护委员会发布的通则解释指南，提供条文权威解读和FAQ。"
+      }
+    },
+    {
+      "source_id": "JP-GUIDE-005",
+      "title": "日本个人信息保护法境外提供指南（2022年修订）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "跨境传输合规判断",
+        "report_usage": "可直接引用条文号",
+        "summary": "专门针对个人信息境外第三方提供的权威解读，含充分性认定国家列表和标准合同条款说明。"
+      }
+    },
+    {
+      "source_id": "JP-GUIDE-006",
+      "title": "日本个人信息保护法第三方提供记录指南（2022年修订）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "记录留存义务合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "规定向第三方提供个人信息时的记录义务内容格式和保存要求。"
+      }
+    },
+    {
+      "source_id": "JP-LAW-001",
+      "title": "日本个人信息保护法（令和3年改正版）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "日本2021年修订版个人信息保护法，统一公私部门数据保护规则，强化跨境传输和假名化处理制度。"
+      }
+    },
+    {
+      "source_id": "JP-LAW-008",
+      "title": "日本电气通信事业法（2024年修订版）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "电信运营商数据合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "日本电气通信事业法，规定电信运营商对通信信息的处理、保护和披露义务。"
+      }
+    },
+    {
+      "source_id": "JP-REG-002",
+      "title": "日本个人信息保护委员会规则（第3号）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规操作",
+        "report_usage": "可直接引用条文号",
+        "summary": "日本个人信息保护委员会规则第3号，规定个人信息处理的具体操作规范和报告程序。"
+      }
+    },
+    {
+      "source_id": "JP-REG-003",
+      "title": "日本个人信息保护法实施令（2021年政令第311号）",
+      "aliases": [],
+      "jurisdiction": "jp",
+      "modules": [
+        "intl_jp"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_jp",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "合规操作",
+        "report_usage": "可直接引用条文号",
+        "summary": "日本个人信息保护法实施令，规定义务免除门槛和特殊处理条件。"
+      }
+    },
+    {
+      "source_id": "KR-GUIDE-003",
+      "title": "韩国个人信息跨境传输指南（2024年）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "跨境传输路径判断",
+        "report_usage": "可直接引用条文号",
+        "summary": "韩国PIPC发布的跨境传输指南，说明充分性认定、SCC和BCR三条路径的适用条件和操作流程。"
+      }
+    },
+    {
+      "source_id": "KR-GUIDE-004",
+      "title": "韩国个人信息处理指南（2024年）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "数据处理全流程合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "韩国PIPC发布的个人信息处理全流程指南，含收集、利用、提供、破弃各环节操作规范。"
+      }
+    },
+    {
+      "source_id": "KR-GUIDE-005",
+      "title": "韩国移动App个人信息保护指南（2024年）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "指导文件",
+        "doc_type": "guideline",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "移动应用个人信息合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "针对移动应用服务提供者的个人信息保护专项指南，含权限管理和隐私政策要求。"
+      }
+    },
+    {
+      "source_id": "KR-LAW-001",
+      "title": "韩国个人信息保护法（2024年修订版）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "韩国2024年修订版个人信息保护法，对齐GDPR强化数据主体权利和跨境传输标准合同条款制度。"
+      }
+    },
+    {
+      "source_id": "KR-LAW-007",
+      "title": "韩国网络利用促进与信息保护法（2024年修订版）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "网络信息服务数据合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "韩国信息通信网络法，规定网络信息服务提供者的个人信息保护、青少年保护和网络安全义务。"
+      }
+    },
+    {
+      "source_id": "KR-REG-002",
+      "title": "韩国个人信息保护法施行令（2024年修订版）",
+      "aliases": [],
+      "jurisdiction": "kr",
+      "modules": [
+        "intl_kr"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_kr",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "合规操作",
+        "report_usage": "可直接引用条文号",
+        "summary": "韩国个人信息保护法施行令，细化数据主体权利行使程序和跨境传输合同条款细节。"
+      }
+    },
+    {
+      "source_id": "MO-LAW-001",
+      "title": "澳门个人资料保护法（第8/2005号法律，2024年修订版）",
+      "aliases": [],
+      "jurisdiction": "mo",
+      "modules": [
+        "intl_mo"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_mo",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "澳门个人资料保护法，基于欧洲数据保护指令建立个人资料保护基本框架，2024年修订强化数据主体权利和跨境传输规定。"
+      }
+    },
+    {
+      "source_id": "MO-LAW-003",
+      "title": "澳门网络安全法（第3/2019号法律）",
+      "aliases": [],
+      "jurisdiction": "mo",
+      "modules": [
+        "intl_mo"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_mo",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "关键基础设施及网络安全合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "澳门网络安全法，规定关键基础设施运营者、公共当局和关键信息基础设施的网络安全义务和事件报告制度。"
+      }
+    },
+    {
+      "source_id": "MY-LAW-001",
+      "title": "马来西亚个人数据保护法 2010（2023年修订版）",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "马来西亚个人数据保护法2023修订版，强化数据主体权利，引入强制数据泄露通知和数据保护官制度。"
+      }
+    },
+    {
+      "source_id": "MY-LAW-002",
+      "title": "马来西亚个人数据保护（修订）法 2024",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、DPO合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "马来西亚2024年PDPA修订法，强制要求指定数据保护官（DPO），明确数据泄露72小时通知义务。"
+      }
+    },
+    {
+      "source_id": "MY-LAW-006",
+      "title": "马来西亚网络安全法 2024",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "关键基础设施及网络安全合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "马来西亚2024年网络安全法，建立国家网络安全框架，规定关键信息基础设施保护义务和网络安全事件强制报告制度。"
+      }
+    },
+    {
+      "source_id": "MY-REG-003",
+      "title": "马来西亚个人数据保护标准 2015",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "数据安全技术合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "马来西亚个人数据保护标准，规定个人数据处理和安全的技术最低标准要求。"
+      }
+    },
+    {
+      "source_id": "MY-REG-007",
+      "title": "马来西亚网络安全法国家关键信息基础设施条例 2024",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "NCII运营商认定和合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "规定马来西亚国家关键信息基础设施（NCII）的认定标准、安全管理要求和事件通报流程。"
+      }
+    },
+    {
+      "source_id": "MY-REG-008",
+      "title": "马来西亚网络安全法网络安全服务提供者条例 2024",
+      "aliases": [],
+      "jurisdiction": "my",
+      "modules": [
+        "intl_my"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_my",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "网络安全服务提供者许可合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "规定马来西亚网络安全服务提供者的许可证申请资格、服务范围和持续合规义务。"
+      }
+    },
+    {
+      "source_id": "SG-LAW-001",
+      "title": "新加坡个人数据保护法 2012（2025-12-05起适用版）",
+      "aliases": [],
+      "jurisdiction": "sg",
+      "modules": [
+        "intl_sg"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_sg",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "新加坡PDPA，规定个人数据收集、使用、披露和保护的基本义务，含数据泄露通知和跨境传输规则。"
+      }
+    },
+    {
+      "source_id": "SG-REG-003",
+      "title": "新加坡数据泄露通知条例 2021",
+      "aliases": [],
+      "jurisdiction": "sg",
+      "modules": [
+        "intl_sg"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_sg",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "数据泄露应急响应",
+        "report_usage": "可直接引用条文号",
+        "summary": "规定新加坡数据泄露强制通知的触发条件、时限和通知内容要求。"
+      }
+    },
+    {
+      "source_id": "TW-LAW-001",
+      "title": "台湾个人资料保护法（2023年修订版）",
+      "aliases": [],
+      "jurisdiction": "tw",
+      "modules": [
+        "intl_tw"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_tw",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "路径判断、合规审查",
+        "report_usage": "可直接引用条文号",
+        "summary": "台湾个人资料保护法2023年修订版，建立独立监管机构并强化数据主体权利和跨境传输管制。"
+      }
+    },
+    {
+      "source_id": "TW-LAW-004",
+      "title": "台湾资通安全管理法（2021年修订版）",
+      "aliases": [],
+      "jurisdiction": "tw",
+      "modules": [
+        "intl_tw"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_tw",
+        "module": "",
+        "category": "核心法律",
+        "doc_type": "law",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "政府机关及关键基础设施安全合规",
+        "report_usage": "可直接引用条文号",
+        "summary": "台湾资通安全管理法，规定政府机关和特定非政府机关的资安管理义务、事件通报和稽核制度。"
+      }
+    },
+    {
+      "source_id": "TW-REG-002",
+      "title": "台湾个人资料保护法施行细则（2023年修订版）",
+      "aliases": [],
+      "jurisdiction": "tw",
+      "modules": [
+        "intl_tw"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_tw",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "合规操作",
+        "report_usage": "可直接引用条文号",
+        "summary": "台湾个资法施行细则，细化个人资料定义、当事人权利行使程序和安全维护措施要求。"
+      }
+    },
+    {
+      "source_id": "TW-REG-003",
+      "title": "台湾个人资料保护法之特定目的及个人资料之类别（2023年修订版）",
+      "aliases": [],
+      "jurisdiction": "tw",
+      "modules": [
+        "intl_tw"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_tw",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "数据目的和类别合规标注",
+        "report_usage": "可直接引用条文号",
+        "summary": "台湾个资法指定的特定目的代码（001-182）和个人资料类别代码（C001-C211）权威对照表。"
+      }
+    },
+    {
+      "source_id": "TW-REG-005",
+      "title": "台湾资通安全管理法施行细则（2022年版）",
+      "aliases": [],
+      "jurisdiction": "tw",
+      "modules": [
+        "intl_tw"
+      ],
+      "layer": "L1_regulatory_evidence",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "status": "effective",
+      "is_current_version": true,
+      "supersedes": [],
+      "superseded_by": [],
+      "review_status": "published",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "metadata": {
+        "path": "intl_tw",
+        "module": "",
+        "category": "行政法规",
+        "doc_type": "administrative_regulation",
+        "snapshot_path": "",
+        "usage": "审查基准",
+        "suitable_for": "资安管理体系建设",
+        "report_usage": "可直接引用条文号",
+        "summary": "台湾资通安全管理法施行细则，细化资安等级分级标准、稽核频率和事件通报时限。"
+      }
     }
   ]
 }

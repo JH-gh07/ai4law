@@ -260,39 +260,67 @@ def _normalize_article_lookup_key(article_no: str) -> str:
 
 
 def _parse_articles_from_text(full_text: str) -> dict[str, str]:
-    """Parse a Chinese law text into a dict of {article_no: article_text}.
+    """Parse legal text into a dict of {article_no: article_text}.
 
-    Uses a two-pass approach: first find all article header positions, then
-    split the text at those boundaries. This avoids the common pitfall of
-    content regexes consuming subsequent article markers.
+    Supports three jurisdiction patterns:
+      - CN: 第X条, 第X条之Y
+      - EU: Article X, Article Xa, Article X-Y
+      - US: §1798.XXX, § 1798.XXX
+
+    Falls back to CN-only patterns if no EU/US headers are found. Uses a
+    two-pass approach: first find all header positions, then split at boundaries.
     """
-    # Match article headers: 第X条 with optional suffix (之一/之二/之三)
-    header_re = re.compile(
+    # ── Pass 1: collect all candidate header positions across jurisdictions ──
+    cn_re = re.compile(
         r'第([一二两三四五六七八九十百千万零〇\d]+)条'
         r'(?:之[一二两三四五六七八九十百千万零〇\d]+)?'
     )
+    eu_re = re.compile(
+        r'^Article\s+(\d+[A-Za-z]?(?:\s*[-–—]\s*\d+[A-Za-z]?)?)\b',
+        re.MULTILINE,
+    )
+    us_re = re.compile(
+        r'§\s*(\d+\.\d+(?:\.\d+)?)\b',
+        re.MULTILINE,
+    )
 
-    # Find all header positions and article numbers
     headers: list[tuple[int, int, str]] = []  # (start, end, article_no)
-    for m in header_re.finditer(full_text):
+
+    for m in cn_re.finditer(full_text):
         num = normalize_article_no(m.group(0))
-        # Only record if this looks like a structural header
-        # In HTML files, headers may be inside tags (e.g. <strong>第三条</strong>),
-        # so we check that the char before 第 is a non-alphanumeric boundary character
         start = m.start()
         if start == 0 or not full_text[start - 1].isalnum():
             headers.append((start, m.end(), num))
 
-    if not headers:
+    for m in eu_re.finditer(full_text):
+        start = m.start()
+        # Boundary: preceding char must not be alnum (avoid sub-matches)
+        if start > 0 and full_text[start - 1].isalnum():
+            continue
+        raw_num = m.group(1).strip()
+        # Normalize en-dashes to standard hyphen
+        raw_num = re.sub(r'\s*[-–—]\s*', '-', raw_num)
+        headers.append((start, m.end(), raw_num))
+
+    for m in us_re.finditer(full_text):
+        start = m.start()
+        if start > 0 and full_text[start - 1].isalnum():
+            continue
+        headers.append((start, m.end(), m.group(1).strip()))
+
+    if len(headers) < 2:
         return {}
 
+    headers.sort(key=lambda x: x[0])
+
+    # ── Pass 2: split text at header boundaries, deduplicate ──
     result: dict[str, str] = {}
     for i, (hdr_start, hdr_end, num) in enumerate(headers):
-        # Content starts after header, ends at next header (or end of text)
         content_start = hdr_end
         content_end = headers[i + 1][0] if i + 1 < len(headers) else len(full_text)
         content = full_text[content_start:content_end].strip()
-        result[num] = content
+        if num not in result:
+            result[num] = content
 
     return result
 
