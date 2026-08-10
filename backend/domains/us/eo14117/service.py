@@ -12,6 +12,7 @@ from backend.common.citation.output import write_citation_map_json
 from backend.common.citation.registry import CitationRegistry, registry_from_documents
 from backend.common.llm.client import LLMClient
 from backend.common.llm.module_generator import generate_chapter
+from backend.common.llm.postprocess import normalize_legal_markdown_structure
 from backend.common.rag.service import retrieve_legal_documents
 from backend.common.render.artifacts import bundle_files, render_pdf_report, render_simple_xlsx
 from backend.common.render.report import (
@@ -941,9 +942,20 @@ def _render_markdown_fallback(
     rule_result: US14117RuleEngineResult,
     date_stamp: str,
 ) -> None:
-    """Render markdown report when no template file exists."""
+    """Render markdown report when no template file exists.
+
+    Uses the same rich template mapping as the DOCX renderer to produce
+    structured output with entity classifications, threshold details,
+    covered persons list, and security gap status.
+    """
     tl = rule_result.traffic_light
     light_label = {"RED": "红灯（禁止传输）", "YELLOW": "黄灯（限制性交易）", "GREEN": "绿灯（低风险放行）"}
+    yellow_label = {"blocked": "整改前禁止推进", "controlled": "条件满足可推进", "": ""}
+
+    mapping = _build_template_mapping(payload, chapters, rule_result)
+
+    def _norm(s: str) -> str:
+        return normalize_legal_markdown_structure(s) if s else ""
 
     lines = [
         f"# EO 14117 风险评估结论报告 — {payload.company_name}",
@@ -951,21 +963,84 @@ def _render_markdown_fallback(
         f"**项目**: {payload.project_name}",
         f"**交易类型**: {payload.transaction_type}",
         "",
-        f"## 总体结论",
         f"**红黄绿判定: {light_label.get(tl.overall_light, tl.overall_light)}**",
+        f"**是否禁止交易**: {'是' if tl.is_prohibited else '否'} | **是否限制交易**: {'是' if tl.is_restricted else '否'}",
+        f"**可条件性推进**: {'是（条件满足，可在持续监控下推进）' if tl.can_proceed_conditionally else '否（存在安全措施缺口）'}",
         "",
         tl.summary,
         "",
         "---",
+        "",
+        "## 一、总体结论",
+        "",
+        _norm(mapping.get("overall_conclusion", "")),
+        "",
+        "### 禁止交易原因",
+        _norm(mapping.get("prohibition_reasons", "无")),
+        "",
+        "### 限制交易原因",
+        _norm(mapping.get("restriction_reasons", "无")),
+        "",
+        "---",
+        "",
+        "## 二、实体分类结果",
+        "",
+        "### 受限制主体（涵盖人员）清单",
+        _norm(mapping.get("covered_entity_detail", "- 未发现涵盖人员/实体")),
+        "",
+        "### 黄灯状态",
+        yellow_label.get(tl.yellow_status, str(tl.yellow_status)),
+        "",
+        "---",
+        "",
+        "## 三、数据分类与阈值明细",
+        "",
+        _norm(mapping.get("data_classification_summary", "- 未提供数据分类")),
+        "",
+        "---",
+        "",
+        "## 四、风险匹配矩阵",
+        "",
+        _norm(mapping.get("risk_matrix_table", "无匹配项")),
+        "",
+        "---",
+        "",
+        "## 五、风险详情与分析",
+        "",
+        _norm(mapping.get("risk_details", "")),
+        "",
+        "---",
+        "",
+        "## 六、安全措施缺口状态",
+        "",
+        "### 缺失安全措施",
+        _norm(mapping.get("security_gaps", "- 无缺失")),
+        "",
+        "### 必备安全措施",
+        _norm(mapping.get("required_measures", "无")),
+        "",
+        "---",
+        "",
+        "## 七、合规措施建议与行动清单",
+        "",
+        _norm(mapping.get("compliance_actions", "")),
+        "",
+        "---",
+        "",
+        "## 八、需补充材料",
+        "",
+        _norm(mapping.get("clarification_questions", "无")),
+        "",
+        "---",
+        "",
+        "## 九、附件与持续监控",
+        "",
+        _norm(mapping.get("attachments_monitoring", "")),
+        "",
+        "---",
+        "",
+        "*本报告由 EO 14117 合规评估系统自动生成，仅供内部法律审查参考，不构成正式法律意见。*",
     ]
 
-    for chapter in chapters:
-        lines.append(f"## {chapter.title}")
-        lines.append("")
-        lines.append(chapter.content)
-        lines.append("")
-        if chapter.citations:
-            lines.append(f"*引用法规: {'; '.join(chapter.citations)}*")
-        lines.append("")
-
-    output_path.write_text("\n".join(lines), encoding="utf-8")
+    rendered = "\n".join(lines)
+    output_path.write_text(normalize_legal_markdown_structure(rendered), encoding="utf-8")
