@@ -525,9 +525,12 @@ class DPIAService:
             reasoning=dpia_need_output.draft_text,
         )
 
+        chapter_state = DPIAService._check_chapter_quality(
+            chapters=dpia_chapters, llm_enabled=bool(self.llm_client and self.llm_client.enabled)
+        )
         return DPIAResult(
             task_id=run_task_id,
-            state="COMPLETED",
+            state=chapter_state,
             report_path=outputs.get("markdown", ""),
             output_files=outputs,
             profile=profile,
@@ -546,6 +549,25 @@ class DPIAService:
             generation_basis_snapshot=gen_basis,
             trace_manifest_path=str(manifest),
         )
+
+    # ── Quality Gate ──
+
+    @staticmethod
+    def _check_chapter_quality(chapters: list, llm_enabled: bool) -> str:
+        if not chapters:
+            return "FAILED"
+        placeholder_markers = ("占位", "LLM未配置", "placeholder", "[PLACEHOLDER]")
+        total = len(chapters)
+        placeholder_count = 0
+        for ch in chapters:
+            content = getattr(ch, "content", "") or ""
+            if any(marker in content for marker in placeholder_markers) or not content.strip():
+                placeholder_count += 1
+        if placeholder_count == total:
+            return "FAILED"
+        if placeholder_count > 0:
+            return "PARTIAL"
+        return "COMPLETED"
 
     # ── Async API ──
 
