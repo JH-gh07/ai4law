@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 
 import { useLang } from "../lib/language";
 import { formatLegalLocator } from "../lib/legal-locator";
+import { KnowledgeContentRenderer } from "../components/citation/KnowledgeContentRenderer";
 import {
   fetchArticleDetail,
   fetchKnowledgeCaseDetail,
@@ -802,7 +803,7 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
                   <p style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{selectedArticle.article}</p>
                   <div className="knowledge-preview-block">
                     <strong>{copy.articlesContentLabel}</strong>
-                    <p style={{ whiteSpace: "pre-wrap" }}>{selectedArticle.content}</p>
+                    <KnowledgeContentRenderer content={selectedArticle.content} variant="evidence" />
                   </div>
                   <div className="knowledge-chip-row" style={{ marginTop: "0.75rem" }}>
                     <a
@@ -859,7 +860,7 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
                   ) : urlArticleDetail ? (
                     <div ref={urlArticleRef} className="knowledge-preview-block" style={{ borderLeft: "3px solid var(--color-primary, #2563eb)", paddingLeft: "0.75rem" }}>
                       <strong>{formatLegalLocator(urlArticleDetail.article_no)}</strong>
-                      <p style={{ whiteSpace: "pre-wrap" }}>{urlArticleDetail.article_content}</p>
+                      <KnowledgeContentRenderer content={urlArticleDetail.article_content} variant="evidence" />
                       {urlArticleDetail.source_url ? (
                         <a className="ghost-btn link-btn" href={urlArticleDetail.source_url} target="_blank" rel="noreferrer" style={{ marginTop: "0.5rem" }}>
                           {copy.openSource}
