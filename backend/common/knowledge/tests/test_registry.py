@@ -11,7 +11,7 @@ def test_module_catalog_uses_static_file_when_present() -> None:
     assert "cn_assessment" in catalog["modules"]
     assert "default_usage_scopes" in catalog["modules"]["cn_review"]
     assert "eu_scc" in catalog["modules"]
-    assert "us_eo14117" in catalog["modules"]
+    assert "us_14117" in catalog["modules"]
 
 
 def test_module_catalog_rebuilds_when_missing(tmp_path, monkeypatch) -> None:

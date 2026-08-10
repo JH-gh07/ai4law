@@ -83,7 +83,7 @@ DEFAULT_MODULE_CATALOG = {
             "requires_standard_clause_index": False,
             "template_policy": "official_only",
         },
-        "us_eo14117": {
+        "us_14117": {
             "indexes": ["workflow_index_us", "legal_index_us", "standard_clause_index_us", "template_index_us", "testcase_index_us"],
             "stages": ["document_type_detection", "clause_compare", "issue_discovery", "legal_grounding", "report_generation", "evaluation"],
             "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
@@ -183,7 +183,7 @@ def _modules_for_row(jurisdiction: str, path: str) -> list[str]:
     if jurisdiction == "us":
         modules: list[str] = []
         if path in {"review", "all", "eo14117"}:
-            modules.append("us_eo14117")
+            modules.append("us_14117")
         if path in {"review", "all", "vendor"}:
             modules.append("us_vendor_review")
         if path in {"review", "all", "privacy"}:

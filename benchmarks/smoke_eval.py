@@ -73,7 +73,7 @@ def _stage_for_case(case: dict[str, Any]) -> str:
     module = case["module"]
     if module.endswith("assessment") or module in {"eu_dpia", "eu_tia"}:
         return "legal_grounding"
-    if "review" in module or module in {"eu_scc", "eu_bcr", "us_eo14117"}:
+    if "review" in module or module in {"eu_scc", "eu_bcr", "us_14117"}:
         return "clause_compare"
     return "legal_grounding"
 

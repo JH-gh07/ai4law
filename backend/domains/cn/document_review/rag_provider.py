@@ -181,7 +181,7 @@ class LocalRegulationKnowledgeBase:
                 return "eu_tia"
             return "eu_scc" if document_type == "scc_contract" or clause_type in {ClauseType.ONWARD_TRANSFER, ClauseType.GOVERNMENT_ACCESS} else "eu_bcr"
         if "eo 14117" in lowered or "data brokerage" in lowered or document_type == "vendor_agreement":
-            return "us_eo14117"
+            return "us_14117"
         if document_type == "privacy_policy" or clause_type in {ClauseType.RIGHTS_REQUEST, ClauseType.SENSITIVE_PI}:
             return "us_cpra"
         return "us_vendor_review"

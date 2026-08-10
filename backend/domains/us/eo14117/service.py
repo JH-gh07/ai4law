@@ -180,7 +180,7 @@ class US14117Service:
             query = agent_rag["primary_query"]
         docs = retrieve_legal_documents(
             query,
-            module="us_eo14117",
+            module="us_14117",
             top_k=6,
             jurisdiction="us",
             path="eo14117",

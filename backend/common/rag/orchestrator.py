@@ -23,7 +23,7 @@ from backend.common.knowledge.builders_v2 import (
     build_workflow_chunks_us,
 )
 from backend.common.knowledge.usage_policy import UsagePolicyFilter
-from backend.common.knowledge.v2 import KnowledgeChunkV2, RetrievalBundle, RetrievalRequest
+from backend.common.knowledge.v2 import KnowledgeChunkV2, RetrievalBundle, RetrievalRequest, normalize_module_key
 from backend.common.knowledge.paths import (
     regulation_articles_jsonl_path,
     source_registry_path,
@@ -95,19 +95,21 @@ class RetrievalOrchestrator:
         self.rag_dir = self.settings.rag_v3_dir
 
     def retrieve(self, request: RetrievalRequest) -> RetrievalBundle:
-        if request.module == "cn_diagnosis":
+        # Normalize legacy module keys at the single entry boundary.
+        module = normalize_module_key(request.module)
+        if module == "cn_diagnosis":
             return self._retrieve_cn_diagnosis(request)
-        if request.module == "cn_assessment":
+        if module == "cn_assessment":
             return self._retrieve_cn_assessment(request)
-        if request.module == "cn_review":
+        if module == "cn_review":
             return self._retrieve_cn_review(request)
-        if request.module == "cn_pipia":
+        if module == "cn_pipia":
             return self._retrieve_cn_pipia(request)
-        if request.module in {"eu_scc", "eu_bcr", "eu_dpia", "eu_tia"}:
+        if module in {"eu_scc", "eu_bcr", "eu_dpia", "eu_tia"}:
             return self._retrieve_eu(request)
-        if request.module in {"us_eo14117", "us_vendor_review", "us_cpra"}:
+        if module in {"us_14117", "us_vendor_review", "us_cpra"}:
             return self._retrieve_us(request)
-        return RetrievalBundle(debug={"unsupported_module": request.module})
+        return RetrievalBundle(debug={"unsupported_module": module})
 
     def retrieve_legal_chunks(
         self,

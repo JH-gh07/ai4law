@@ -134,7 +134,7 @@ def test_us_module_returns_scaffold_debug_bundle() -> None:
     orchestrator = RetrievalOrchestrator()
     bundle = orchestrator.retrieve(
         RetrievalRequest(
-            module="us_eo14117",
+            module="us_14117",
             task_stage="issue_discovery",
             query="restricted transaction vendor agreement data brokerage",
             path="review",
@@ -143,7 +143,7 @@ def test_us_module_returns_scaffold_debug_bundle() -> None:
     )
     assert bundle.workflow_rules
     assert bundle.debug["jurisdiction"] == "us"
-    assert any(item.module == "us_eo14117" for item in bundle.workflow_rules)
+    assert any(item.module == "us_14117" for item in bundle.workflow_rules)
 
 
 def test_orchestrator_rebuilds_generated_indexes_in_empty_storage(tmp_path) -> None:

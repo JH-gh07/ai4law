@@ -45,10 +45,29 @@ ModuleKey = Literal[
     "eu_bcr",
     "eu_dpia",
     "eu_tia",
-    "us_eo14117",
+    "us_14117",
     "us_vendor_review",
     "us_cpra",
 ]
+
+# ---------------------------------------------------------------------------
+# Legacy module aliases — map deprecated names to the canonical ModuleKey.
+# Only this single map should translate legacy keys; no other code path may
+# silently accept a non-canonical module name.
+# ---------------------------------------------------------------------------
+LEGACY_MODULE_ALIASES: dict[str, str] = {
+    "us_eo14117": "us_14117",
+}
+
+
+def normalize_module_key(raw: str) -> str:
+    """Return the canonical ModuleKey for *raw*, applying legacy aliases.
+
+    This is the **only** boundary where a deprecated module name is accepted.
+    All downstream code (builders, orchestrator, domain services, tests) MUST
+    use the canonical key returned here.
+    """
+    return LEGACY_MODULE_ALIASES.get(raw, raw)
 
 TaskStage = Literal[
     "path_diagnosis",
