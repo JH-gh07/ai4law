@@ -26,6 +26,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from collections import Counter, defaultdict
@@ -34,8 +35,8 @@ from pathlib import Path
 # Allow running from repo root without install
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from backend.common.knowledge.paths import regulation_articles_jsonl_path
-from backend.services.knowledge_index import _normalize_article_lookup_key
+from backend.common.knowledge.paths import regulation_articles_jsonl_path, sources_csv_path
+from backend.services.knowledge_index import _normalize_article_lookup_key, resolve_effective_source_url
 
 # Chinese numeral set for detection
 _CHINESE_NUMERALS = set("一二三四五六七八九十百千万零〇两")
@@ -63,6 +64,20 @@ def _load_rows() -> list[dict]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+def _load_sources_csv() -> dict[str, dict[str, str]]:
+    """Load sources.csv as {source_id: row_dict} for URL fallback resolution."""
+    path = sources_csv_path()
+    if not path.exists():
+        return {}
+    result: dict[str, dict[str, str]] = {}
+    with path.open("r", encoding="utf-8", newline="") as fp:
+        for row in csv.DictReader(fp):
+            sid = (row.get("source_id") or "").strip()
+            if sid:
+                result[sid] = row
+    return result
 
 
 def _classify_articles(rows: list[dict]) -> dict:
@@ -173,8 +188,50 @@ def _url_coverage_by_source(rows: list[dict]) -> dict:
     }
 
 
+def _effective_url_coverage_by_source(
+    rows: list[dict],
+    sources_csv: dict[str, dict[str, str]],
+) -> dict:
+    """Per-source URL coverage using the same effective URL as the runtime API.
+
+    Unlike ``_url_coverage_by_source`` which only checks ``article.source_url``,
+    this function uses ``resolve_effective_source_url()`` which falls back to
+    ``sources.csv.url`` — matching the API's actual behavior.
+    """
+    src_data: dict[str, dict] = defaultdict(lambda: {"total": 0, "with_effective_url": 0})
+    for r in rows:
+        sid = str(r.get("source_id", ""))
+        src_data[sid]["total"] += 1
+        if resolve_effective_source_url(r, sources_csv.get(sid)):
+            src_data[sid]["with_effective_url"] += 1
+        src_data[sid]["jurisdiction"] = sid.split("-")[0] if "-" in sid else "?"
+        if "source_title" not in src_data[sid]:
+            src_data[sid]["source_title"] = r.get("law_name", "?")
+
+    fully_covered = [sid for sid, d in src_data.items() if d["with_effective_url"] == d["total"] > 0]
+    zero_covered = [sid for sid, d in src_data.items() if d["with_effective_url"] == 0]
+
+    return {
+        "fully_covered_sources": len(fully_covered),
+        "zero_url_sources": len(zero_covered),
+        "fully_covered_rows": sum(src_data[s]["total"] for s in fully_covered),
+        "zero_url_rows": sum(src_data[s]["total"] for s in zero_covered),
+        "effective_url_coverage_pct": round(
+            sum(d["with_effective_url"] for d in src_data.values())
+            / max(sum(d["total"] for d in src_data.values()), 1) * 100, 1
+        ),
+        "_zero_effective_url_sources": sorted([
+            {"source_id": s, "article_count": src_data[s]["total"],
+             "jurisdiction": src_data[s]["jurisdiction"],
+             "title": src_data[s].get("source_title", "?")}
+            for s in zero_covered
+        ], key=lambda x: x["article_count"], reverse=True),
+    }
+
+
 def run_checks(rows: list[dict]) -> dict:
     sources = {r.get("source_id", "") for r in rows}
+    sources_csv = _load_sources_csv()
 
     norm_buckets: dict[tuple[str, str], list[int]] = defaultdict(list)
     for i, r in enumerate(rows):
@@ -196,6 +253,12 @@ def run_checks(rows: list[dict]) -> dict:
         if not str(r.get("source_url", "")).strip()
     ]
 
+    # Effective URL: uses the same resolve_effective_source_url() as the runtime API
+    missing_effective_url = [
+        i for i, r in enumerate(rows)
+        if not resolve_effective_source_url(r, sources_csv.get(str(r.get("source_id", "")), None))
+    ]
+
     def _looks_valid_article(ref: str) -> bool:
         return bool(_normalize_article_lookup_key(str(ref)))
 
@@ -206,6 +269,7 @@ def run_checks(rows: list[dict]) -> dict:
 
     classification = _classify_articles(rows)
     url_coverage = _url_coverage_by_source(rows)
+    effective_url_coverage = _effective_url_coverage_by_source(rows, sources_csv)
 
     # Jurisdiction and source type distribution
     juris_dist = Counter(
@@ -224,12 +288,15 @@ def run_checks(rows: list[dict]) -> dict:
         "duplicate_source_article_count": sum(len(v) - 1 for v in duplicates.values()),
         "duplicate_pair_count": len(duplicates),
         "missing_article_ref_count": len(missing_ref),
-        "missing_source_url_count": len(missing_url),
+        "missing_source_url_count": len(missing_url),           # raw (article-level only)
+        "missing_effective_url_count": len(missing_effective_url),  # with sources.csv fallback
         "invalid_article_number_count": len(invalid_num),
         # Classification (Phase 4 task 7)
         "article_classification": classification,
-        # URL coverage
+        # URL coverage (raw = article-level only)
         "url_coverage": url_coverage,
+        # URL coverage (effective = with sources.csv fallback — matches runtime API)
+        "effective_url_coverage": effective_url_coverage,
         # Distributions
         "jurisdiction_distribution": {
             j: {"count": c, "label": _JURISDICTION_LABELS.get(j, j)}
@@ -277,13 +344,17 @@ def main() -> None:
     else:
         ac = result["article_classification"]
         uc = result["url_coverage"]
+        euc = result["effective_url_coverage"]
 
         print(f"source_count:                   {result['source_count']}")
         print(f"article_row_count:              {result['article_row_count']}")
         print(f"duplicate_source_article_count: {result['duplicate_source_article_count']}"
               f"  (pair_count={result['duplicate_pair_count']})")
         print(f"missing_article_ref_count:      {result['missing_article_ref_count']}")
-        print(f"missing_source_url_count:       {result['missing_source_url_count']}")
+        print(f"missing_source_url_count:       {result['missing_source_url_count']}"
+              f"  (raw, article-level only)")
+        print(f"missing_effective_url_count:    {result['missing_effective_url_count']}"
+              f"  (with sources.csv fallback)")
         print(f"invalid_article_number_count:   {result['invalid_article_number_count']}")
         print()
         print("── Article resolution classification ──")
@@ -297,12 +368,19 @@ def main() -> None:
         print(f"chinese numeral articles:       {ac['chinese_numeral_article_count']}")
         print(f"non-numeric articles:           {ac['non_numeric_article_count']}")
         print()
-        print("── URL coverage ──")
+        print("── URL coverage (raw, article-level) ──")
         print(f"fully covered sources:          {uc['fully_covered_sources']}"
               f"  ({uc['fully_covered_rows']} rows)")
         print(f"zero URL sources:               {uc['zero_url_sources']}"
               f"  ({uc['zero_url_rows']} rows)")
-        print(f"overall URL coverage:           {uc['url_coverage_pct']}%")
+        print(f"overall raw URL coverage:       {uc['url_coverage_pct']}%")
+        print()
+        print("── URL coverage (effective, with sources.csv fallback) ──")
+        print(f"fully covered sources:          {euc['fully_covered_sources']}"
+              f"  ({euc['fully_covered_rows']} rows)")
+        print(f"zero URL sources:               {euc['zero_url_sources']}"
+              f"  ({euc['zero_url_rows']} rows)")
+        print(f"overall effective URL coverage: {euc['effective_url_coverage_pct']}%")
         print()
         if args.verbose:
             print("── Jurisdiction distribution ──")
@@ -313,7 +391,13 @@ def main() -> None:
             for t, info in result["source_type_distribution"].items():
                 print(f"  {t} ({info['label']}): {info['count']} articles")
             print()
-            print("── Zero-URL sources (top 10) ──")
+            if euc["_zero_effective_url_sources"]:
+                print("── Zero effective-URL sources ──")
+                for s in euc["_zero_effective_url_sources"]:
+                    print(f"  {s['source_id']} ({s['jurisdiction']})"
+                          f" [{s['article_count']}]: {s['title']}")
+            print()
+            print("── Zero raw-URL sources (top 10) ──")
             for s in uc["_zero_url_sources"][:10]:
                 print(f"  {s['source_id']} ({s['jurisdiction']})"
                       f" [{s['article_count']}]: {s['title']}")

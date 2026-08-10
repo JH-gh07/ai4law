@@ -182,7 +182,7 @@ def get_article_detail(source_id: str, article_no: str) -> dict | None:
             "prev_article_content": _registry_article_content(previous),
             "next_article_no": _registry_article_no(following),
             "next_article_content": _registry_article_content(following),
-            "source_url": str(target.get("source_url", "") or source.get("url", "")).strip(),
+            "source_url": resolve_effective_source_url(target, source),
             "authority_level": (source.get("authority_level") or "medium").strip(),
             "binding_force": (source.get("binding_force") or "recommended").strip(),
             "jurisdiction": str(target.get("jurisdiction", "") or source.get("jurisdiction", "cn")).strip(),
@@ -257,6 +257,31 @@ def _article_sort_key(num_str: str) -> int:
 def _normalize_article_lookup_key(article_no: str) -> str:
     """Compatibility wrapper for the shared canonical locator normalizer."""
     return normalize_article_no(article_no)
+
+
+def resolve_effective_source_url(
+    article_row: dict[str, object],
+    source_row: dict[str, str] | None = None,
+) -> str:
+    """Return the effective source URL for an article using the same fallback
+    chain used by the runtime API.
+
+    Resolution order:
+      1. ``article_row["source_url"]`` (inline URL on the JSONL row)
+      2. ``source_row["url"]``             (sources.csv fallback)
+      3. ``""``                            (no URL available)
+
+    Only ``https://`` and ``http://`` URLs are returned; local absolute paths,
+    placeholder strings and empty values are treated as missing.
+    """
+    raw = str(article_row.get("source_url", "") or "").strip()
+    if raw and (raw.startswith("https://") or raw.startswith("http://")):
+        return raw
+    if source_row is not None:
+        fallback = str(source_row.get("url", "") or "").strip()
+        if fallback and (fallback.startswith("https://") or fallback.startswith("http://")):
+            return fallback
+    return ""
 
 
 def _parse_articles_from_text(full_text: str) -> dict[str, str]:
