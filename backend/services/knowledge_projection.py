@@ -27,6 +27,13 @@ _JURISDICTION_LABELS = {
     "cn": "中国",
     "eu": "欧盟",
     "us": "美国",
+    "hk": "中国香港",
+    "jp": "日本",
+    "kr": "韩国",
+    "mo": "中国澳门",
+    "my": "马来西亚",
+    "sg": "新加坡",
+    "tw": "中国台湾",
 }
 
 _AUTHORITY_LABELS = {
@@ -207,7 +214,15 @@ def build_user_source_catalog() -> list[dict[str, str]]:
     by_source: dict[str, list[KnowledgeChunkV2]] = defaultdict(list)
     for chunk in chunks:
         by_source[chunk.source_id].append(chunk)
-    rows = [_summarize_source(entry, by_source.get(entry.source_id, [])) for entry in registry_entries]
+    # Only include entries that have at least one indexed chunk in RAG v3.
+    # Entries without chunks (e.g. international orphan registrations with no
+    # vectorized content) are metadata-only — they provide no value in the
+    # user-facing knowledge catalog and would otherwise clutter the listing.
+    rows = [
+        _summarize_source(entry, by_source[entry.source_id])
+        for entry in registry_entries
+        if entry.source_id in by_source
+    ]
     rows.sort(key=lambda item: (item["jurisdiction"], item["category"], item["title"]))
     return rows
 
