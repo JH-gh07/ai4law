@@ -18,6 +18,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from backend.common.trace.context import current_trace
+from backend.core.json_utils import repair_llm_json
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
@@ -53,6 +54,9 @@ class DPIAAgentBase:
     def _call_llm(self, user_prompt: str, system_prompt: str | None = None) -> dict | None:
         if not self.enabled:
             return None
+        raw = ""
+        start = -1
+        end = 0
         try:
             raw = self.llm_client.chat(
                 system=system_prompt or _DPIA_SYSTEM_PROMPT,
@@ -68,7 +72,17 @@ class DPIAAgentBase:
                     error_type="JSONShapeError",
                 )
                 return None
-            return json.loads(raw[start:end])
+            json_str = raw[start:end]
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                repaired = repair_llm_json(json_str)
+                if repaired != json_str:
+                    try:
+                        return json.loads(repaired)
+                    except json.JSONDecodeError:
+                        pass
+                raise
         except Exception as exc:
             logger.warning("DPIA Agent %s failed: %s", self.agent_name, exc)
             self._record_fallback(

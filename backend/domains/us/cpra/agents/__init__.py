@@ -11,6 +11,8 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
+from backend.core.json_utils import repair_llm_json
+
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
 
@@ -40,6 +42,9 @@ class CPRAAgentBase:
     def _call_llm(self, user_prompt: str) -> dict | None:
         if not self.enabled:
             return None
+        raw = ""
+        start = -1
+        end = 0
         try:
             raw = self.llm_client.chat(
                 system=_CPRA_SYSTEM_PROMPT,
@@ -53,6 +58,15 @@ class CPRAAgentBase:
                 return None
             return json.loads(raw[start:end])
         except Exception as exc:
+            # Attempt JSON repair before giving up
+            json_str = raw[start:end] if start != -1 and end > 0 else ""
+            if json_str:
+                try:
+                    repaired = repair_llm_json(json_str)
+                    if repaired != json_str:
+                        return json.loads(repaired)
+                except Exception:
+                    pass
             logger.warning("Agent %s failed: %s", self.agent_name, exc)
             return None
 

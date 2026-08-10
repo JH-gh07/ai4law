@@ -93,7 +93,7 @@ class LLMProviderRegistry:
             api_key=self.settings.resolved_llm_api_key,
             model=self.settings.resolved_llm_model,
             enabled=bool(self.settings.resolved_llm_api_key),
-            timeout=60,
+            timeout=300,
         )
 
     @staticmethod

@@ -57,7 +57,7 @@ ISSUE_FIX_MAP = [
         "A3_assessment_rag":{"file":"backend/domains/cn/security_assessment/evidence_builder.py","pat":"rag_query_used="},
     }},
     {"id":"C4","title":"tia推测措辞","sev":"MEDIUM","task":"C2","checks":{
-        "C2_no_speculation":{"file":"backend/common/llm/module_generator.py","pat":"不得使用.*推测"},
+        "C2_no_speculation":{"file":"backend/common/llm/module_generator.py","pat":"不得使用推测"},
     }},
     {"id":"C5","title":"pipia测试泄漏","sev":"MEDIUM","task":"C1","checks":{
         "C1_disclaimer_re":{"file":"backend/domains/cn/pipia/service.py","pat":"_TEST_DISCLAIMER_RE"},
