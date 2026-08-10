@@ -15,7 +15,14 @@ from backend.common.runtime.module_run import finalize_run, prepare_run
 from backend.common.storage.file_parser import FileParser
 from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
-from backend.common.workflow import EvidenceItem, FactItem, IssueItem
+from backend.common.workflow import (
+    CitationBinding,
+    DocumentRef,
+    EvidenceItem,
+    FactItem,
+    IssueItem,
+    build_citation_bindings,
+)
 from backend.core.resource_paths import report_template_path
 from backend.domains.cn.pipia.schema import (
     PIPIAAsyncAccepted,
@@ -120,7 +127,7 @@ class PIPIAService:
             )
 
             facts = self._build_facts(payload, attachment_notes, level)
-            structured_issues, material_gaps = self._build_structured_issues(payload, level)
+            structured_issues, material_gaps = self._build_structured_issues(payload, level, facts, regs)
             evidence_chain = self._build_evidence_chain(facts, structured_issues, regs, payload)
             structured_issues = self._attach_issue_evidence_refs(structured_issues, evidence_chain)
 
@@ -498,6 +505,8 @@ class PIPIAService:
         self,
         payload: PIPIARequest,
         level: str,
+        facts: list[FactItem],
+        regulations: list,
     ) -> tuple[list[IssueItem], list[str]]:
         issues: list[IssueItem] = []
         material_gaps: list[str] = []
@@ -507,6 +516,30 @@ class PIPIAService:
             nonlocal counter
             counter += 1
             return f"PIPIA-ISSUE-{counter:03d}"
+
+        fact_by_field = {f.field_path: f for f in facts if f.field_path}
+        fact_by_path_prefix: dict[str, list] = {}
+        for f in facts:
+            if not f.field_path:
+                continue
+            for prefix in f.field_path.split("."):
+                fact_by_path_prefix.setdefault(prefix, []).append(f)
+
+        def matching_fact_ids(*field_paths: str) -> list[str]:
+            ids = []
+            seen = set()
+            for fp in field_paths:
+                for fact in fact_by_path_prefix.get(fp, []):
+                    if fact.fact_id not in seen:
+                        ids.append(fact.fact_id)
+                        seen.add(fact.fact_id)
+                for full_path, fact in fact_by_field.items():
+                    if full_path.startswith(fp) and fact.fact_id not in seen:
+                        ids.append(fact.fact_id)
+                        seen.add(fact.fact_id)
+            return ids
+
+        regulation_refs = [getattr(item, "source_id", str(item)) for item in regulations]
 
         attachment_roles = {item.file_role for item in payload.attachments}
 
@@ -520,6 +553,8 @@ class PIPIAService:
                     "legal_document",
                     "BLOCKER",
                     "补充标准合同完整文本及附件后，再执行备案版 PIPIA 审查。",
+                    fact_refs=matching_fact_ids("request.route_type", "request.legal_basis", "derived.attachment"),
+                    rule_refs=[ref for ref in regulation_refs if "合同" in ref or "标准" in ref][:2] or regulation_refs[:2],
                     missing_materials=["scc_contract"],
                 )
             )
@@ -534,6 +569,8 @@ class PIPIAService:
                     "legal_document",
                     "BLOCKER",
                     "补充 certification_material 后，再评估认证路径下的 PIPIA 与材料完整性。",
+                    fact_refs=matching_fact_ids("request.route_type", "derived.attachment"),
+                    rule_refs=[ref for ref in regulation_refs if "认证" in ref or "保护" in ref][:2] or regulation_refs[:2],
                     missing_materials=["certification_material"],
                 )
             )
@@ -547,6 +584,8 @@ class PIPIAService:
                     "security_measure",
                     "MEDIUM",
                     "将事件响应时限压缩至 72 小时以内，并补充升级与通知流程。",
+                    fact_refs=matching_fact_ids("request.incident_response", "request.emergency"),
+                    rule_refs=[ref for ref in regulation_refs if "安全" in ref or "应急" in ref][:2] or regulation_refs[:2],
                 )
             )
 
@@ -559,6 +598,8 @@ class PIPIAService:
                     "path",
                     "HIGH",
                     "先完成高风险项整改和法务复核，再决定是否推进备案或调整路径。",
+                    fact_refs=matching_fact_ids("request.outbound_pi", "request.outbound_spi", "derived.risk_level"),
+                    rule_refs=[ref for ref in regulation_refs if "评估" in ref or "风险" in ref or "出境" in ref][:2] or regulation_refs[:2],
                 )
             )
 
@@ -571,13 +612,91 @@ class PIPIAService:
                     "consent",
                     "HIGH",
                     "补充单独同意的获取、留痕和撤回机制说明，并在 PIPIA 中体现。",
+                    fact_refs=matching_fact_ids("request.spi_categories", "request.consent", "request.notice"),
+                    rule_refs=[ref for ref in regulation_refs if "同意" in ref or "告知" in ref or "敏感" in ref][:2] or regulation_refs[:2],
+                )
+            )
+
+        # B2: consent weakness beyond SPI
+        consent_weak = (
+            "告知" not in (payload.rights_protection.notice_mechanism or "")
+            and "同意" not in (payload.rights_protection.consent_mechanism or "")
+        )
+        if consent_weak and payload.personal_info_scope.pi_categories:
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "告知同意机制存在缺陷",
+                    "当前告知方式与同意机制描述不够完整，可能无法覆盖全部个人信息出境场景所需的法律要求。",
+                    "consent",
+                    "MEDIUM",
+                    "补充分层告知方案和场景化同意获取流程，覆盖收集、出境、再转移所有环节。",
+                    fact_refs=matching_fact_ids("request.notice", "request.consent", "request.pi_categories"),
+                    rule_refs=[ref for ref in regulation_refs if "告知" in ref or "同意" in ref or "个人信息" in ref][:2] or regulation_refs[:2],
+                )
+            )
+
+        # B2: recipient protection
+        if not payload.transfer_context.recipient_name:
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "境外接收方信息缺失影响保障能力评估",
+                    "缺少境外接收方名称信息，无法评估接收方的数据保护能力和法律环境。",
+                    "recipient",
+                    "HIGH",
+                    "补充境外接收方全称、安全管理制度、认证证明或第三方审计材料。",
+                    fact_refs=matching_fact_ids("request.recipient"),
+                    rule_refs=[ref for ref in regulation_refs if "接收方" in ref or "境外" in ref or "保障" in ref][:2] or regulation_refs[:2],
+                )
+            )
+
+        # B2: rights exercise (DSAR) weakness
+        dsar_weak = not payload.rights_protection.dsar_channel or len(payload.rights_protection.dsar_channel.strip()) < 10
+        if dsar_weak:
+            issues.append(
+                self._issue(
+                    next_id(),
+                    "个人信息行权机制不完善",
+                    "数据主体权利行使（DSAR）渠道描述过于简略，可能无法满足可操作性要求。",
+                    "rights_protection",
+                    "MEDIUM",
+                    "补充详细的行权受理流程、响应时限、身份验证机制和拒绝行权场景说明。",
+                    fact_refs=matching_fact_ids("request.dsar", "request.retention"),
+                    rule_refs=[ref for ref in regulation_refs if "权利" in ref or "行权" in ref or "个人信息" in ref][:2] or regulation_refs[:2],
                 )
             )
 
         return issues, material_gaps
 
     @staticmethod
+    def _extract_document_refs(
+        fact_refs: list[str],
+        facts: list[FactItem],
+    ) -> list[DocumentRef]:
+        fact_map = {f.fact_id: f for f in facts}
+        refs: list[DocumentRef] = []
+        for fact_id in fact_refs:
+            fact = fact_map.get(fact_id)
+            if fact is None:
+                continue
+            material_refs = getattr(fact, "supporting_material_refs", None)
+            if material_refs:
+                for ref in material_refs:
+                    if isinstance(ref, dict):
+                        refs.append(DocumentRef(**ref))
+                    elif isinstance(ref, DocumentRef):
+                        refs.append(ref)
+                    elif hasattr(ref, "file_name"):
+                        refs.append(DocumentRef(
+                            file_name=getattr(ref, "file_name", ""),
+                            page=getattr(ref, "page", 1),
+                            quote=getattr(ref, "quote", ""),
+                        ))
+        return refs
+
     def _build_evidence_chain(
+        self,
         facts: list[FactItem],
         issues: list[IssueItem],
         regulations: list,
@@ -618,15 +737,20 @@ class PIPIAService:
             fact = fact_by_field.get(field_path)
             if not fact:
                 continue
+            fact_refs = [fact.fact_id]
             evidence_chain.append(
                 EvidenceItem(
                     evidence_id=next_id(),
                     claim=claim,
-                    fact_refs=[fact.fact_id],
+                    fact_refs=fact_refs,
                     rule_refs=regulation_refs[:2],
                     conclusion=conclusion,
                     confidence=max(fact.confidence, 0.75),
                     used_by=["PIPIA报告", "备案准备评估"],
+                    legal_basis=build_citation_bindings(regulations),
+                    document_refs=PIPIAService._extract_document_refs(fact_refs, facts),
+                    rag_query_used=f"pipia:{field_path}",
+                    rag_hits_count=len(regulations),
                 )
             )
 
@@ -638,10 +762,14 @@ class PIPIAService:
                         evidence_id=next_id(),
                         claim=issue.title,
                         fact_refs=linked_fact_refs,
-                        rule_refs=regulation_refs[:2],
+                        rule_refs=issue.rule_refs if issue.rule_refs else regulation_refs[:2],
                         conclusion=issue.description,
                         confidence=0.8 if issue.severity in ("HIGH", "BLOCKER") else 0.7,
                         used_by=["PIPIA报告", "整改清单"],
+                        legal_basis=build_citation_bindings(regulations),
+                        document_refs=PIPIAService._extract_document_refs(linked_fact_refs, facts),
+                        rag_query_used=f"pipia:{issue.issue_id}",
+                        rag_hits_count=len(regulations),
                     )
                 )
 
