@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from shutil import copy2
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -589,63 +590,85 @@ def _write_material_checklist_json(material_rows: list[dict[str, str]], output_d
     return str(path)
 
 
+_SECURITY_ASSESSMENT_CHECKLIST: list[dict[str, object]] = [
+    {"item": "营业执照或统一社会信用代码证书", "required": True, "source": "企业提供"},
+    {"item": "数据出境安全评估申报书", "required": True, "source": "系统生成"},
+    {"item": "数据出境合同或法律文件（含标准合同条款）", "required": True, "source": "企业上传"},
+    {"item": "数据出境风险自评估报告", "required": True, "source": "系统生成"},
+    {"item": "数据处理者基本情况说明", "required": True, "source": "企业填写"},
+    {"item": "数据出境涉及的数据清单（含字段级描述）", "required": True, "source": "企业上传"},
+    {"item": "境外接收方数据保护能力说明", "required": True, "source": "企业上传"},
+    {"item": "境外接收方法律环境评估报告", "required": True, "source": "企业自行评估或聘请三方机构"},
+    {"item": "个人信息保护影响评估报告（PIPIA）", "required": True, "source": "系统生成或企业提供"},
+    {"item": "隐私政策或个人信息保护政策", "required": False, "source": "企业上传"},
+    {"item": "数据处理协议（DPA）", "required": False, "source": "企业上传"},
+    {"item": "境外接收方安全管理制度文件", "required": True, "source": "企业上传"},
+    {"item": "境外接收方认证或审计报告", "required": False, "source": "企业上传或第三方审计"},
+    {"item": "技术安全措施说明（加密、脱敏、访问控制等）", "required": True, "source": "企业填写"},
+    {"item": "数据主体行权渠道说明", "required": False, "source": "企业填写"},
+    {"item": "应急响应与安全事件处置预案", "required": False, "source": "企业填写"},
+    {"item": "内部数据出境审批记录", "required": False, "source": "企业内部文件"},
+    {"item": "数据出境定期监控与审计机制说明", "required": False, "source": "企业内部文件"},
+    {"item": "个人信息主体单独同意记录", "required": False, "source": "企业提供"},
+    {"item": "数据匿名化或去标识化技术验证报告", "required": False, "source": "企业提供或第三方评估"},
+]
+
+
 def _build_material_checklist_rows(
     attachment_notes: list[dict[str, str]],
     issues: list[IssueItem],
     facts: list[FactItem],
 ) -> list[dict[str, str]]:
+    # Collect uploaded file names for matching
+    uploaded_sources: set[str] = set()
     if attachment_notes:
-        return [
-            {
-                "source_ref": note.get("source_ref", ""),
-                "summary": note.get("summary", ""),
-                "status": "待补充",
-            }
-            for note in attachment_notes
-        ]
+        for note in attachment_notes:
+            src = note.get("source_ref", "")
+            if src:
+                uploaded_sources.add(src)
 
     uploaded_files_fact = next(
         (fact for fact in facts if fact.field_path == "request.uploaded_files"),
         None,
     )
     uploaded_files = uploaded_files_fact.normalized_value if uploaded_files_fact else []
-    if isinstance(uploaded_files, list) and uploaded_files:
-        return [
-            {
-                "source_ref": str(item),
-                "summary": "已提供附件路径，但尚未形成附件解析摘要，需补充材料审查结果。",
-                "status": "待解析",
-            }
-            for item in uploaded_files
-        ]
+    if isinstance(uploaded_files, list):
+        for item in uploaded_files:
+            uploaded_sources.add(str(item))
 
-    missing_attachments_issue = next(
-        (issue for issue in issues if issue.issue_id == "ISSUE-missing-attachments"),
-        None,
-    )
-    if missing_attachments_issue:
-        return [
-            {
-                "source_ref": "uploaded_files",
-                "summary": missing_attachments_issue.recommended_action,
-                "status": "待补充",
-            }
-        ]
+    def _upload_matches(item_name: str) -> bool:
+        keywords = re.split(r"[（(]", item_name)[0].strip()
+        for src in uploaded_sources:
+            if any(kw in src for kw in keywords.split("、")):
+                return True
+            common = sum(1 for c in keywords if c in src)
+            if common >= 4 and len(keywords) > 6:
+                return True
+        return False
 
-    return [
-        {
-            "source_ref": "attachment_summary",
-            "summary": "当前未形成附件解析摘要；如涉及申报材料，请补充数据清单、隐私政策、合同/协议与安全措施说明。",
-            "status": "待补充",
-        }
-    ]
+    rows: list[dict[str, str]] = []
+    for template_item in _SECURITY_ASSESSMENT_CHECKLIST:
+        name = str(template_item["item"])
+        required = bool(template_item["required"])
+        source = str(template_item["source"])
+        found = _upload_matches(name)
+        status = "已提供" if found else ("待补充" if required else "建议提供")
+        rows.append({
+            "source_ref": name,
+            "summary": f"来源: {source}",
+            "status": status,
+        })
 
+    # Append extra items from attachment_notes not covered
+    for note in (attachment_notes or []):
+        src = note.get("source_ref", "")
+        if src and not any(
+            any(kw in src for kw in str(item["item"]).split("、"))
+            for item in _SECURITY_ASSESSMENT_CHECKLIST
+        ):
+            rows.append({"source_ref": src, "summary": note.get("summary", "已上传附件"), "status": "已提供"})
 
-# ---------------------------------------------------------------------------
-# Batch 3: enhanced output artifact writers
-# ---------------------------------------------------------------------------
-
-
+    return rows
 def _write_internal_review(
     *,
     issues: list[IssueItem],

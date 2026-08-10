@@ -39,7 +39,7 @@ from backend.domains.cn.security_assessment.schema import (
     AssessmentRequest,
     AssessmentResult,
 )
-from backend.domains.cn.security_assessment.task_state import AssessmentTaskState
+from backend.domains.cn.security_assessment.task_state import AssessmentTaskState, PathMismatchError
 
 if TYPE_CHECKING:
     from backend.common.llm.client import LLMClient
@@ -92,15 +92,27 @@ class AssessmentService:
             if trace:
                 trace.record("status", {"summary": "开始安全自评估", "detail": {"module": "assessment", "company": getattr(payload, 'company_name', '')}})
             run_result = self._build_pipeline().run(payload=payload, task_id=run_task_id, trace=active_trace)
+        except PathMismatchError as e:
+            if trace:
+                trace.record("status", {"summary": "路径不匹配，中断生成", "detail": str(e)})
+            return AssessmentResult(
+                task_id=run_task_id,
+                state=AssessmentTaskState.PATH_MISMATCH,
+                error=str(e),
+            )
         finally:
             finalize_run(token)
 
         report_path = self._select_report_path(run_result.outputs)
         if trace:
             trace.record("final", {"summary": "安全自评估完成", "detail": {"report_path": report_path}})
+        chapter_state = self._check_chapter_quality(
+            chapters=run_result.chapters,
+            llm_enabled=bool(self.llm_client and self.llm_client.enabled),
+        )
         return AssessmentResult(
             task_id=run_task_id,
-            state=AssessmentTaskState.COMPLETED,
+            state=chapter_state,
             report_path=report_path,
             output_files=run_result.outputs,
             profile=run_result.profile,
@@ -108,6 +120,26 @@ class AssessmentService:
             chapters=run_result.chapters,
             consistency_issues=run_result.consistency_issues,
         )
+
+    @staticmethod
+    def _check_chapter_quality(chapters: list, llm_enabled: bool) -> AssessmentTaskState:
+        """Determine task state based on chapter content quality."""
+        if not chapters:
+            return AssessmentTaskState.FAILED
+        placeholder_markers = ("占位", "LLM未配置", "placeholder", "[PLACEHOLDER]")
+        total = len(chapters)
+        placeholder_count = 0
+        for ch in chapters:
+            content = getattr(ch, "content", "") or ""
+            if any(marker in content for marker in placeholder_markers) or not content.strip():
+                placeholder_count += 1
+        if placeholder_count == total:
+            return AssessmentTaskState.FAILED
+        if placeholder_count > 0:
+            return AssessmentTaskState.PARTIAL if hasattr(AssessmentTaskState, "PARTIAL") else AssessmentTaskState.FAILED
+        if not llm_enabled:
+            return AssessmentTaskState.COMPLETED
+        return AssessmentTaskState.COMPLETED
 
     def _build_pipeline(self) -> WorkflowPipeline:
         return WorkflowPipeline(
@@ -508,7 +540,7 @@ class AssessmentService:
         if mode == "warn_only":
             return warning
         if mode == "block_on_mismatch" and not payload.force_override_path:
-            raise ValueError(
+            raise PathMismatchError(
                 f"Path mismatch: {warning}。如需继续生成安全评估报告，请设置 force_override_path=true。"
             )
         return warning
