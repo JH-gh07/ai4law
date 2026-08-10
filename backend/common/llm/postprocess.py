@@ -435,6 +435,24 @@ def _convert_basis_blocks_to_footnotes(text: str, registry: "CitationRegistry") 
     return _BASIS_BLOCK_RE.sub(replace, text)
 
 
+def _resolve_numeric_footnotes(text: str, registry: "CitationRegistry") -> set[int]:
+    """Backward-scan LLM-generated [N] footnotes and assign them in the registry."""
+    if not text or registry is None:
+        return set()
+    found_numbers = {int(m.group(1)) for m in re.finditer(r"\[(\d+)\]", text) if 1 <= int(m.group(1)) <= 200}
+    if not found_numbers:
+        return set()
+    all_citations = list(registry)
+    assigned: set[int] = set()
+    for num in sorted(found_numbers):
+        if 1 <= num <= len(all_citations):
+            cid = all_citations[num - 1].citation_id
+            assigned_num = registry.assign_footnote_number(cid)
+            if assigned_num is not None:
+                assigned.add(assigned_num)
+    return assigned
+
+
 def apply_citation_pipeline(
     text: str,
     *,
@@ -458,6 +476,7 @@ def apply_citation_pipeline(
     if registry is not None:
         converted = _replace_registered_markers(converted, registry)
         converted = _convert_basis_blocks_to_footnotes(converted, registry)
+        _resolve_numeric_footnotes(converted, registry)
         verified_footnotes = set(registry.get_footnote_map())
     else:
         verified_footnotes = set()
