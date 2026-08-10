@@ -1,0 +1,337 @@
+{
+  "description": "Per-module retrieval benchmark fixtures. Each entry defines a fixed query, expected must-include sources/locators, and must-exclude noise sources. Used by test_retrieval_benchmark.py.",
+  "version": "v1",
+  "date": "2026-08-10",
+  "modules": {
+    "cn_diagnosis": {
+      "cases": [
+        {
+          "query": "个人信息保护法 告知同意 单独同意 跨境提供 个人信息处理",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-016"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "数据出境安全评估办法 申报 重要数据 处理者 网信部门",
+          "must_include_sources": [
+            "CN-REG-004"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-017"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "数据安全法 分类分级 重要数据目录 安全保护",
+          "must_include_sources": [
+            "CN-LAW-002"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-018"
+          ],
+          "top_k": 8
+        }
+      ]
+    },
+    "cn_assessment": {
+      "cases": [
+        {
+          "query": "数据出境安全评估办法 自评估 风险 申报材料 安全评估",
+          "must_include_sources": [
+            "CN-REG-004"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-016"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "重要数据 一百万人 个人信息 安全评估申报 触发条件",
+          "must_include_sources": [
+            "CN-REG-004",
+            "CN-LAW-002"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-017"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "个人信息保护影响评估 处理活动 保护措施 风险等级",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "cn_pipia": {
+      "cases": [
+        {
+          "query": "个人信息保护法 PIPIA 告知同意 单独同意 个人信息处理者 法律义务",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "个人信息保护法 标准合同 安全评估 告知同意 个人权利",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-016"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "个人信息保护法 第三十八条 标准合同 安全评估 认证 法定条件",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "cn_review": {
+      "cases": [
+        {
+          "query": "标准合同 数据出境 个人权利 告知义务 数据处理",
+          "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [
+            "CN-TPL-016"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "数据处理协议 安全义务 保密条款 违约责任",
+          "must_include_sources": [
+            "CN-REG-005"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "数据出境 审查 标准合同 条款 个人信息处理者",
+          "must_include_sources": [
+            "CN-TPL-016"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "eu_scc": {
+      "cases": [
+        {
+          "query": "standard contractual clauses appropriate safeguards data transfer",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "third country data exporter importer obligations module",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "SCC onward transfer data subject rights liability",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "eu_bcr": {
+      "cases": [
+        {
+          "query": "binding corporate rules approval supervisory authority data protection",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "BCR legally binding enforceable rights data subjects",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "intra-group international transfer binding corporate rules elements",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "eu_dpia": {
+      "cases": [
+        {
+          "query": "data protection impact assessment high risk natural persons rights freedoms",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "DPIA mandatory systematic extensive profiling large scale special categories",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "prior consultation supervisory authority processing high risk mitigate",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "eu_tia": {
+      "cases": [
+        {
+          "query": "transfer impact assessment third country law practice surveillance access",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "supplementary measures technical organizational contractual transfer safeguard",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "adequacy decision essential equivalence third country data protection level",
+          "must_include_sources": [
+            "EU-LAW-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "us_cpra": {
+      "cases": [
+        {
+          "query": "California consumer right to delete personal information CCPA CPRA 1798.105",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "CPRA 1798.120 right to opt out sale sharing California privacy",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "CPRA sensitive personal information limit use 1798.121 California consumer",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "us_vendor_review": {
+      "cases": [
+        {
+          "query": "CPRA contractor written contract prohibition selling sharing personal information",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "California service provider audit rights compliance monitoring every 12 months",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        },
+        {
+          "query": "CPRA section 1798.140 contractor certification business purpose written agreement",
+          "must_include_sources": [
+            "US-CA-001"
+          ],
+          "must_exclude_sources": [],
+          "top_k": 8
+        }
+      ]
+    },
+    "us_14117": {
+      "cases": [
+        {
+          "query": "prohibited transaction data brokerage covered person country of concern",
+          "must_include_sources": [
+            "US-FED-001"
+          ],
+          "must_exclude_sources": [
+            "US-CA-001"
+          ],
+          "top_k": 8,
+          "note": "Direct module filter — must NOT rely on workflow fallback"
+        },
+        {
+          "query": "restricted transaction vendor agreement employment agreement investment",
+          "must_include_sources": [
+            "US-FED-001"
+          ],
+          "must_exclude_sources": [
+            "US-CA-001"
+          ],
+          "top_k": 8
+        },
+        {
+          "query": "bulk threshold human genomic data biometric identifiers precise geolocation",
+          "must_include_sources": [
+            "US-FED-001"
+          ],
+          "must_exclude_sources": [
+            "US-CA-001"
+          ],
+          "top_k": 8
+        }
+      ]
+    }
+  }
+}
