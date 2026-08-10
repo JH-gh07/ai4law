@@ -573,6 +573,68 @@ def score_scc_risk(all_findings: list[SCCFinding]) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════
+# 6. Finding text enrichment — fill blank original_text / suggested_text
+# ═══════════════════════════════════════════════════════════════════════
+
+_SUGGESTED_TEXT_DEFAULTS: dict[str, str] = {
+    "module_mismatch": "Change the declared module from the current value to the expected module. Update exporter/importer role descriptions in Annex I.A to match the correct module per EU 2021/914.",
+    "clause_weakened": "Restore the standard EU 2021/914 text for this provision without modifications. If additional safeguards beyond the standard clause are desired, add them as a separate annex that does not conflict with the SCC.",
+    "clause_deleted": "Reinsert the deleted standard clause per EU 2021/914.",
+    "annex_incomplete": "Complete all required fields in this annex with specific information. Do not reference external documents.",
+    "annex_vague": "Replace vague data category descriptions with specific categories (e.g., break 'order history' into: products purchased, dates, transaction values, payment status).",
+    "special_category_misclassified": "Mark health/medical/biometric/genetic data as special categories under GDPR Article 9. In Annex I.B, explicitly state the Article 9(2) exemption relied upon.",
+    "tia_missing": "Complete a Transfer Impact Assessment per EDPB Recommendations 01/2020 covering: (1) factual assessment; (2) transfer tool evaluation; (3) third country law analysis; (4) supplementary measures; (5) procedural steps; (6) reassessment mechanism.",
+    "supplementary_measures_insufficient": "Add: (Technical) End-to-end encryption with EU-held keys, zero-access architecture. (Contractual) Government access notification, challenge unlawful requests, transparency reporting. (Organizational) Independent annual audit, comprehensive access logging.",
+    "sub_processor_chain_incomplete": "List all sub-processors with name, address, processing activities, and location. Include cloud providers (AWS/Azure/GCP) where applicable.",
+    "party_info_incomplete": "Enter all party information directly in Annex I.A — do not reference external documents (MSA, DPA) as substitutes.",
+}
+
+_CLAUSE_REF_RE = re.compile(r"(?:Clause|Annex)\s*([IVXLCDM\d]+(?:\.[IVXLCDM\d]+)?)", re.IGNORECASE)
+
+
+def _extract_text_by_location(doc_raw: str, location: str, clause_ref: str) -> str:
+    if not doc_raw:
+        return ""
+    patterns = []
+    if clause_ref:
+        clause_match = _CLAUSE_REF_RE.search(clause_ref)
+        if clause_match:
+            num = clause_match.group(1)
+            patterns.append(rf"(?:Clause|Section)\s+{re.escape(num)}\b[^\n]*\n([^\n]{{20,200}})")
+    if location and location not in (clause_ref or ""):
+        patterns.append(rf"{re.escape(location)}[^\n]*\n([^\n]{{20,300}})")
+    for pattern in patterns:
+        try:
+            match = re.search(pattern, doc_raw, re.MULTILINE | re.IGNORECASE)
+            if match:
+                return match.group(1).strip()[:300]
+        except re.error:
+            continue
+    return ""
+
+
+def _enrich_finding_texts(findings: list[SCCFinding], doc_raw: str) -> list[SCCFinding]:
+    enriched = []
+    for f in findings:
+        original = f.original_text
+        suggested = f.suggested_text
+        if not original and doc_raw:
+            extracted = _extract_text_by_location(doc_raw, f.location, f.clause_ref)
+            original = extracted or ("【无法定位】" + (
+                f"SCC {f.clause_ref} 正文在已上传文档中未找到匹配段落"
+                if f.clause_ref else f"在已上传文档中未找到 {f.location} 对应文本"))
+        if not suggested:
+            suggested = _SUGGESTED_TEXT_DEFAULTS.get(f.issue_type, f.recommendation or "Review and remediate per EU 2021/914.")
+        enriched.append(SCCFinding(
+            finding_id=f.finding_id, location=f.location, clause_ref=f.clause_ref,
+            original_text=original, issue_type=f.issue_type, severity=f.severity,
+            risk_analysis=f.risk_analysis, legal_basis=f.legal_basis,
+            recommendation=f.recommendation, suggested_text=suggested,
+        ))
+    return enriched
+
+
 # Main rule engine entry point
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -615,6 +677,9 @@ def run_eu_scc_rule_engine(
     all_findings.extend(clause_comp.findings)
     all_findings.extend(annex_rev.findings)
     all_findings.extend(tia_rev.findings)
+
+    # 4.5. Enrich findings
+    all_findings = _enrich_finding_texts(all_findings, doc.raw_text)
 
     # 5. Overall risk score
     overall_rating = score_scc_risk(all_findings)
