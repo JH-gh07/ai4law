@@ -1,0 +1,2288 @@
+{
+  "generated_at": "2026-08-10T08:57:51.661772+00:00",
+  "commit": "a0c65b9",
+  "command": "python3 generate_source_audit.py",
+  "exit_code": 0,
+  "total_sources": 102,
+  "by_availability": {
+    "indexed": 23,
+    "article_only": 33,
+    "preview_only": 46,
+    "metadata_only": 0
+  },
+  "by_kind": {
+    "law_article": 75,
+    "official_guide": 9,
+    "standard_clause": 18
+  },
+  "entries": [
+    {
+      "source_id": "CN-SUP-002",
+      "title": "个人信息出境认证办法",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 19,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-LAW-003",
+      "title": "中华人民共和国个人信息保护法",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 73,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment",
+        "cn_pipia"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-LAW-002",
+      "title": "中华人民共和国数据安全法",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 54,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-LAW-001",
+      "title": "中华人民共和国网络安全法（2025修正）",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 85,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-OPS-014",
+      "title": "各地省级网信部门申报/备案联系方式",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "assessment|scc"
+    },
+    {
+      "source_id": "CN-QA-012",
+      "title": "数据出境安全管理政策问答（2025年4月）",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 3,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_assessment"
+      ],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-QA-013",
+      "title": "数据出境安全管理政策问答（2025年5月）",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 3,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_assessment"
+      ],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-REG-004",
+      "title": "数据出境安全评估办法",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 20,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_assessment",
+        "cn_pipia"
+      ],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-SUP-005",
+      "title": "数据出境申报系统使用手册",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-SUP-006",
+      "title": "汽车数据安全管理若干规定（试行） 中央网络安全和信息化委员会办公室",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-REG-008",
+      "title": "网络数据安全管理条例",
+      "jurisdiction": "cn",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 65,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-GUIDE-010",
+      "title": "个人信息出境标准合同备案指南（第二版）",
+      "jurisdiction": "cn",
+      "source_kind": "official_guide",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 2,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "scc"
+    },
+    {
+      "source_id": "CN-GUIDE-009",
+      "title": "数据出境安全评估申报指南（第三版）",
+      "jurisdiction": "cn",
+      "source_kind": "official_guide",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-SUP-007",
+      "title": "金融数据安全+数据安全分级指南",
+      "jurisdiction": "cn",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-QA-011",
+      "title": "《个人信息出境标准合同办法》答记者问",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "scc"
+    },
+    {
+      "source_id": "CN-TPL-020",
+      "title": "个人信息保护影响评估报告模板",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 1,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_pipia"
+      ],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-TPL-021",
+      "title": "个人信息保护影响评估报告（模板） (1)",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 1,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-REG-005",
+      "title": "个人信息出境标准合同办法",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 13,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "scc"
+    },
+    {
+      "source_id": "CN-GOV-015",
+      "title": "个人信息出境标准合同办法（中国政府网转载）",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 13,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "scc"
+    },
+    {
+      "source_id": "CN-TPL-016",
+      "title": "个人信息出境标准合同模板",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 13,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "review"
+    },
+    {
+      "source_id": "CN-SUP-003",
+      "title": "个人金融信息保护技术规范",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-REG-007",
+      "title": "促进和规范数据跨境流动规定（全文页）",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 14,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-REG-006",
+      "title": "促进和规范数据跨境流动规定（发布页）",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 14,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_diagnosis",
+        "cn_assessment"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-SUP-004",
+      "title": "信息安全技术 个人信息安全规范",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "all"
+    },
+    {
+      "source_id": "CN-TPL-019",
+      "title": "数据出境风险自评估报告模板",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 3,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_assessment"
+      ],
+      "path": "assessment"
+    },
+    {
+      "source_id": "CN-TPL-017",
+      "title": "数据处理协议样例",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 18,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "review"
+    },
+    {
+      "source_id": "CN-TPL-018",
+      "title": "数据安全及保密协议模板",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 6,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "cn_review"
+      ],
+      "path": "review"
+    },
+    {
+      "source_id": "CN-TPL-022",
+      "title": "隐私政策样例",
+      "jurisdiction": "cn",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "review"
+    },
+    {
+      "source_id": "EU-SUP-009",
+      "title": "2.2 ICO DPIA Temple (1)",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-010",
+      "title": "CELEX 32002D0002 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-011",
+      "title": "CELEX 32003D0490 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-012",
+      "title": "CELEX 32003D0821 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-013",
+      "title": "CELEX 32004D0411 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-014",
+      "title": "CELEX 32008D0393 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-015",
+      "title": "CELEX 32010D0146 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-016",
+      "title": "CELEX 32010D0625 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-017",
+      "title": "CELEX 32011D0061 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-018",
+      "title": "CELEX 32012D0484 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-019",
+      "title": "CELEX 32013D0065 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-020",
+      "title": "CELEX 32019D0419 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-021",
+      "title": "CELEX 32021D0914 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-022",
+      "title": "CELEX 32021D1772 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-023",
+      "title": "CELEX 32022D0254 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-024",
+      "title": "CELEX 32023D1795 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-025",
+      "title": "CELEX 62018CJ0311 EN TXT",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-026",
+      "title": "EN Standard Contractual Clauses (1)",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-027",
+      "title": "EPO Adequacy Decision July 2025",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-LAW-001",
+      "title": "GDPR (EU) 2016/679",
+      "jurisdiction": "eu",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 99,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "eu_dpia",
+        "eu_bcr",
+        "eu_scc",
+        "eu_tia"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "EU-GUIDE-002",
+      "title": "EDPB Recommendations 01/2020",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "high",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 2,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "eu_tia",
+        "eu_scc",
+        "eu_bcr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "EU-SUP-028",
+      "title": "edpb guidelines 2 2018 derogations en",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-029",
+      "title": "edpb guidelines 3 2018 territorial scope after public consultation en 1",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-030",
+      "title": "edpb guidelines codes conduct transfers after public consultation en 1",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-031",
+      "title": "edpb recommendations 20221 bcr c v2 en",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-SUP-032",
+      "title": "recommendations 20221 bcr c edpb en",
+      "jurisdiction": "eu",
+      "source_kind": "official_guide",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-TPL-001",
+      "title": "JUST template comingsoon standard 2",
+      "jurisdiction": "eu",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-TPL-002",
+      "title": "JUST template comingsoon standard 26",
+      "jurisdiction": "eu",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-TPL-003",
+      "title": "JUST template comingsoon standard 27",
+      "jurisdiction": "eu",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "EU-TPL-004",
+      "title": "TIA Template (1)",
+      "jurisdiction": "eu",
+      "source_kind": "standard_clause",
+      "authority_level": "medium",
+      "binding_force": "reference",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-006",
+      "title": "19 Digital Trade",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-007",
+      "title": "2012 31341",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-008",
+      "title": "217 ecsg 2015 apec privacy framework",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-FED-001",
+      "title": "28 CFR Part 202 — EO 14117 implementing rule",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 17,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "us_14117"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "US-CA-001",
+      "title": "California Civil Code — CCPA/CPRA",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "indexed",
+      "article_count": 83,
+      "has_v3_chunks": true,
+      "has_snapshot": true,
+      "modules": [
+        "us_cpra",
+        "us_vendor_review"
+      ],
+      "path": "privacy"
+    },
+    {
+      "source_id": "US-SUP-009",
+      "title": "DCPD 202200894",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-010",
+      "title": "FISA Section 702 FISA Resource Library",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-011",
+      "title": "Full Text EU U.S. DPF",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-012",
+      "title": "NIST.CSWP.01162020",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-013",
+      "title": "cloud act",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "US-SUP-014",
+      "title": "ftc act incorporatingus safe web act",
+      "jurisdiction": "us",
+      "source_kind": "law_article",
+      "authority_level": "medium",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "preview_only",
+      "article_count": 0,
+      "has_v3_chunks": false,
+      "has_snapshot": true,
+      "modules": [],
+      "path": "reference"
+    },
+    {
+      "source_id": "TW-REG-003",
+      "title": "台湾个人资料保护法之特定目的及个人资料之类别（2023年修订版）",
+      "jurisdiction": "tw",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 37,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_tw"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "TW-REG-002",
+      "title": "台湾个人资料保护法施行细则（2023年修订版）",
+      "jurisdiction": "tw",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 43,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_tw"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "TW-LAW-001",
+      "title": "台湾个人资料保护法（2023年修订版）",
+      "jurisdiction": "tw",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 56,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_tw"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "TW-REG-005",
+      "title": "台湾资通安全管理法施行细则（2022年版）",
+      "jurisdiction": "tw",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 23,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_tw"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "TW-LAW-004",
+      "title": "台湾资通安全管理法（2021年修订版）",
+      "jurisdiction": "tw",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 37,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_tw"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "SG-LAW-001",
+      "title": "新加坡个人数据保护法 2012（2025-12-05起适用版）",
+      "jurisdiction": "sg",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 7,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_sg"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "SG-REG-003",
+      "title": "新加坡数据泄露通知条例 2021",
+      "jurisdiction": "sg",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 19,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_sg"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-REG-002",
+      "title": "日本个人信息保护委员会规则（第3号）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 95,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-GUIDE-005",
+      "title": "日本个人信息保护法境外提供指南（2022年修订）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 2,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-REG-003",
+      "title": "日本个人信息保护法实施令（2021年政令第311号）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 92,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-GUIDE-006",
+      "title": "日本个人信息保护法第三方提供记录指南（2022年修订）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 3,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-GUIDE-004",
+      "title": "日本个人信息保护法通则指南（2022年修订）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 5,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-LAW-001",
+      "title": "日本个人信息保护法（令和3年改正版）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 200,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "JP-LAW-008",
+      "title": "日本电气通信事业法（2024年修订版）",
+      "jurisdiction": "jp",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 44,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_jp"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MO-LAW-001",
+      "title": "澳门个人资料保护法（第8/2005号法律，2024年修订版）",
+      "jurisdiction": "mo",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 49,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_mo"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MO-LAW-003",
+      "title": "澳门网络安全法（第3/2019号法律）",
+      "jurisdiction": "mo",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 31,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_mo"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-REG-002",
+      "title": "韩国个人信息保护法施行令（2024年修订版）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 59,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-LAW-001",
+      "title": "韩国个人信息保护法（2024年修订版）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 76,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-GUIDE-004",
+      "title": "韩国个人信息处理指南（2024年）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 19,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-GUIDE-003",
+      "title": "韩国个人信息跨境传输指南（2024年）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 28,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-GUIDE-005",
+      "title": "韩国移动App个人信息保护指南（2024年）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 62,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "KR-LAW-007",
+      "title": "韩国网络利用促进与信息保护法（2024年修订版）",
+      "jurisdiction": "kr",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 23,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_kr"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "HK-GUIDE-007",
+      "title": "香港PCSO关键基础设施运营商合规指引（2025年）",
+      "jurisdiction": "hk",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 10,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_hk"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "HK-GUIDE-005",
+      "title": "香港使用人工智能处理个人资料的实务守则（2024年）",
+      "jurisdiction": "hk",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 2,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_hk"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "HK-LAW-006",
+      "title": "香港保护关键基础设施（电脑系统）条例（2024年）",
+      "jurisdiction": "hk",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 71,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_hk"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "HK-GUIDE-003",
+      "title": "香港建议示范合同条款（2022年）",
+      "jurisdiction": "hk",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 6,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_hk"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "HK-GUIDE-002",
+      "title": "香港跨境资料转移（第六项保障资料原则）指引",
+      "jurisdiction": "hk",
+      "source_kind": "law_article",
+      "authority_level": "guidance",
+      "binding_force": "recommended",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 5,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_hk"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-REG-003",
+      "title": "马来西亚个人数据保护标准 2015",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 13,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-LAW-001",
+      "title": "马来西亚个人数据保护法 2010（2023年修订版）",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 146,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-LAW-002",
+      "title": "马来西亚个人数据保护（修订）法 2024",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 14,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-LAW-006",
+      "title": "马来西亚网络安全法 2024",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 64,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-REG-007",
+      "title": "马来西亚网络安全法国家关键信息基础设施条例 2024",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 3,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    },
+    {
+      "source_id": "MY-REG-008",
+      "title": "马来西亚网络安全法网络安全服务提供者条例 2024",
+      "jurisdiction": "my",
+      "source_kind": "law_article",
+      "authority_level": "official",
+      "binding_force": "mandatory",
+      "allowed_usage": [
+        "legal_grounding",
+        "external_report",
+        "internal_review"
+      ],
+      "can_be_cited": true,
+      "can_enter_external_report": true,
+      "availability": "article_only",
+      "article_count": 3,
+      "has_v3_chunks": false,
+      "has_snapshot": false,
+      "modules": [
+        "intl_my"
+      ],
+      "path": "all"
+    }
+  ]
+}

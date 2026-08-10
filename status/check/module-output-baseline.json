@@ -1,0 +1,532 @@
+{
+  "generated_at": "2026-08-10T08:59:32.408795+00:00",
+  "commit": "a0c65b9",
+  "modules": {
+    "assessment": {
+      "task_id": "103ec0d7-ef4d-492a-9335-a7552391a0dd",
+      "files": [
+        {
+          "name": "citation_map.json",
+          "size": 35194
+        },
+        {
+          "name": "compliance_reasoning.json",
+          "size": 6454
+        },
+        {
+          "name": "compliance_reasoning.md",
+          "size": 7187
+        },
+        {
+          "name": "evidence_chain.json",
+          "size": 26919
+        },
+        {
+          "name": "evidence_chain.xlsx",
+          "size": 5995
+        },
+        {
+          "name": "facts.json",
+          "size": 10383
+        },
+        {
+          "name": "generation_basis_pack.json",
+          "size": 585028
+        },
+        {
+          "name": "internal_ai_review.md",
+          "size": 7590
+        },
+        {
+          "name": "issue_list.json",
+          "size": 9978
+        },
+        {
+          "name": "issue_list.xlsx",
+          "size": 7547
+        },
+        {
+          "name": "legal_grounding.json",
+          "size": 67869
+        },
+        {
+          "name": "material_checklist.json",
+          "size": 196
+        },
+        {
+          "name": "material_checklist.xlsx",
+          "size": 5065
+        },
+        {
+          "name": "path_judgment.json",
+          "size": 201
+        },
+        {
+          "name": "trace_manifest.json",
+          "size": 3194
+        },
+        {
+          "name": "writing_strategy.json",
+          "size": 9820
+        },
+        {
+          "name": "测试公司_内部风险分析报告_20260810.md",
+          "size": 551
+        },
+        {
+          "name": "测试公司_安全评估路径输出包_草案_20260810.zip",
+          "size": 132705
+        },
+        {
+          "name": "测试公司_数据出境风险自评估报告_草案_20260810.docx",
+          "size": 37051
+        },
+        {
+          "name": "测试公司_数据出境风险自评估报告_草案_20260810.md",
+          "size": 9504
+        },
+        {
+          "name": "测试公司_数据出境风险自评估报告_草案_20260810.pdf",
+          "size": 3184
+        },
+        {
+          "name": "测试公司_自评估报告正文_20260810.md",
+          "size": 7374
+        }
+      ],
+      "citation_all_items": 14,
+      "citation_footnote_map": 3,
+      "citation_resolution_types": [
+        "source_overview",
+        "exact_article"
+      ],
+      "markdown_lines": 71,
+      "markdown_chars": 3092,
+      "markdown_h1": 1,
+      "markdown_h2": 8,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 1,
+      "evidence_count": 5,
+      "evidence_empty_legal_basis": 0,
+      "evidence_empty_document_refs": 5,
+      "evidence_empty_rag_query": 0,
+      "docx_size": 37051
+    },
+    "dpia": {
+      "task_id": "4e7ed454-f261-407d-abc4-f7e9d09170ac",
+      "files": [
+        {
+          "name": "citation_map.json",
+          "size": 224373
+        },
+        {
+          "name": "dpia_need_assessment.json",
+          "size": 1172
+        },
+        {
+          "name": "evidence_chain.json",
+          "size": 46183
+        },
+        {
+          "name": "evidence_chain.xlsx",
+          "size": 7140
+        },
+        {
+          "name": "facts.json",
+          "size": 17529
+        },
+        {
+          "name": "generation_basis_pack.json",
+          "size": 1447771
+        },
+        {
+          "name": "issue_list.json",
+          "size": 13728
+        },
+        {
+          "name": "issue_list.xlsx",
+          "size": 7901
+        },
+        {
+          "name": "legal_grounding.json",
+          "size": 78016
+        },
+        {
+          "name": "trace_manifest.json",
+          "size": 6144
+        },
+        {
+          "name": "writing_strategy.json",
+          "size": 15470
+        },
+        {
+          "name": "高风险项目_DPIA草案_20260810.docx",
+          "size": 39183
+        },
+        {
+          "name": "高风险项目_DPIA草案_20260810.md",
+          "size": 6088
+        },
+        {
+          "name": "高风险项目_DPIA草案_20260810.pdf",
+          "size": 8915
+        },
+        {
+          "name": "高风险项目_DPIA输出包_20260810.zip",
+          "size": 201644
+        }
+      ],
+      "citation_all_items": 99,
+      "citation_footnote_map": 8,
+      "citation_resolution_types": [
+        "exact_article"
+      ],
+      "evidence_count": 12,
+      "evidence_empty_legal_basis": 0,
+      "evidence_empty_document_refs": 12,
+      "evidence_empty_rag_query": 0,
+      "docx_size": 39183,
+      "markdown_lines": 99,
+      "markdown_chars": 2612,
+      "markdown_h1": 1,
+      "markdown_h2": 8,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 0
+    },
+    "us_14117": {
+      "task_id": "def8ddfe-80f8-41bd-b06c-2c1e2366d050",
+      "files": [
+        {
+          "name": "citation_map.json",
+          "size": 73023
+        },
+        {
+          "name": "evidence_chain.json",
+          "size": 19341
+        },
+        {
+          "name": "facts.json",
+          "size": 23857
+        },
+        {
+          "name": "issue_list.json",
+          "size": 5067
+        },
+        {
+          "name": "rule_engine_result.json",
+          "size": 4851
+        },
+        {
+          "name": "trace_manifest.json",
+          "size": 5758
+        },
+        {
+          "name": "测试企业_14117_输出包_草案_20260810.zip",
+          "size": 59333
+        },
+        {
+          "name": "测试企业_14117_风险矩阵_草案_20260810.xlsx",
+          "size": 1945
+        },
+        {
+          "name": "测试企业_14117_风险评估结论报告_草案_20260810.docx",
+          "size": 38395
+        },
+        {
+          "name": "测试企业_14117_风险评估结论报告_草案_20260810.md",
+          "size": 2951
+        },
+        {
+          "name": "测试企业_14117_风险评估结论报告_草案_20260810.pdf",
+          "size": 8963
+        }
+      ],
+      "citation_all_items": 17,
+      "citation_footnote_map": 17,
+      "citation_resolution_types": [
+        "exact_article"
+      ],
+      "evidence_count": 5,
+      "evidence_empty_legal_basis": 0,
+      "evidence_empty_document_refs": 5,
+      "evidence_empty_rag_query": 0,
+      "docx_size": 38395,
+      "markdown_lines": 91,
+      "markdown_chars": 1988,
+      "markdown_h1": 1,
+      "markdown_h2": 9,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 1
+    },
+    "pipia": {
+      "task_id": "749329d89c4745f4aa499dc3a22b4317",
+      "files": [
+        {
+          "name": "citation_map.json",
+          "size": 156052
+        },
+        {
+          "name": "认证路径测试公司_PIPIA_报告_草案_20260810.docx",
+          "size": 37180
+        },
+        {
+          "name": "认证路径测试公司_PIPIA_报告_草案_20260810.md",
+          "size": 1166
+        },
+        {
+          "name": "认证路径测试公司_PIPIA_报告_草案_20260810.pdf",
+          "size": 3661
+        },
+        {
+          "name": "认证路径测试公司_PIPIA_输出包_草案_20260810.zip",
+          "size": 38098
+        }
+      ],
+      "citation_all_items": 72,
+      "citation_footnote_map": 0,
+      "citation_resolution_types": [
+        "exact_article"
+      ],
+      "docx_size": 37180,
+      "markdown_lines": 41,
+      "markdown_chars": 500,
+      "markdown_h1": 1,
+      "markdown_h2": 9,
+      "markdown_placeholders": 14,
+      "markdown_long_lines": 0
+    },
+    "bcr": {
+      "task_id": "1ce5d5401714428d9cc68884ed339435",
+      "files": [
+        {
+          "name": "citation_map.json",
+          "size": 205262
+        },
+        {
+          "name": "示例集团_BCR-C_合规审查报告_草案_20260810.docx",
+          "size": 37047
+        },
+        {
+          "name": "示例集团_BCR-C_合规审查报告_草案_20260810.md",
+          "size": 667
+        },
+        {
+          "name": "示例集团_BCR-C_合规审查报告_草案_20260810.pdf",
+          "size": 3753
+        },
+        {
+          "name": "示例集团_BCR-C_输出包_草案_20260810.zip",
+          "size": 56031
+        }
+      ],
+      "citation_all_items": 99,
+      "citation_footnote_map": 0,
+      "citation_resolution_types": [
+        "exact_article"
+      ],
+      "docx_size": 37047,
+      "markdown_lines": 45,
+      "markdown_chars": 377,
+      "markdown_h1": 1,
+      "markdown_h2": 7,
+      "markdown_placeholders": 2,
+      "markdown_long_lines": 0
+    },
+    "eu_scc": {
+      "task_id": "8b661d4b-7a0e-48ab-a64b-211030ec6c07",
+      "files": [
+        {
+          "name": "Test_Company_EU_SCC审查报告_20260810.docx",
+          "size": 38957
+        },
+        {
+          "name": "Test_Company_EU_SCC审查报告_20260810.md",
+          "size": 7971
+        },
+        {
+          "name": "Test_Company_EU_SCC审查报告_20260810.pdf",
+          "size": 11130
+        },
+        {
+          "name": "citation_map.json",
+          "size": 5135
+        },
+        {
+          "name": "evidence.json",
+          "size": 4703
+        },
+        {
+          "name": "findings.json",
+          "size": 7190
+        },
+        {
+          "name": "issues.json",
+          "size": 6147
+        },
+        {
+          "name": "rule_engine_result.json",
+          "size": 19656
+        }
+      ],
+      "docx_size": 38957,
+      "markdown_lines": 99,
+      "markdown_chars": 7453,
+      "markdown_h1": 1,
+      "markdown_h2": 8,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 6,
+      "citation_all_items": 1,
+      "citation_footnote_map": 1,
+      "citation_resolution_types": [
+        "exact_article"
+      ]
+    },
+    "tia": {
+      "task_id": "0e4f3de44873437da2b53658031318dc",
+      "files": [
+        {
+          "name": "EU_Exporter_A_scc_TIA_报告_草案_20260810.docx",
+          "size": 38337
+        },
+        {
+          "name": "EU_Exporter_A_scc_TIA_报告_草案_20260810.md",
+          "size": 3157
+        },
+        {
+          "name": "EU_Exporter_A_scc_TIA_报告_草案_20260810.pdf",
+          "size": 6773
+        },
+        {
+          "name": "EU_Exporter_A_scc_TIA_输出包_草案_20260810.zip",
+          "size": 42651
+        },
+        {
+          "name": "citation_map.json",
+          "size": 18243
+        }
+      ],
+      "docx_size": 38337,
+      "markdown_lines": 94,
+      "markdown_chars": 1303,
+      "markdown_h1": 1,
+      "markdown_h2": 5,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 0,
+      "citation_all_items": 4,
+      "citation_footnote_map": 4,
+      "citation_resolution_types": [
+        "exact_article"
+      ]
+    },
+    "cpra": {
+      "task_id": "4278b7040ebc4a729c82d27d18fbf44f",
+      "files": [
+        {
+          "name": "AsyncCPRA_CPRA_合规全景报告_草案_20260810.docx",
+          "size": 38460
+        },
+        {
+          "name": "AsyncCPRA_CPRA_合规全景报告_草案_20260810.md",
+          "size": 3886
+        },
+        {
+          "name": "AsyncCPRA_CPRA_合规全景报告_草案_20260810.pdf",
+          "size": 8621
+        },
+        {
+          "name": "AsyncCPRA_CPRA_整改路线图_草案_20260810.xlsx",
+          "size": 2354
+        },
+        {
+          "name": "AsyncCPRA_CPRA_输出包_草案_20260810.zip",
+          "size": 49033
+        },
+        {
+          "name": "citation_map.json",
+          "size": 24860
+        }
+      ],
+      "docx_size": 38460,
+      "markdown_lines": 61,
+      "markdown_chars": 1674,
+      "markdown_h1": 1,
+      "markdown_h2": 7,
+      "markdown_placeholders": 0,
+      "markdown_long_lines": 0,
+      "citation_all_items": 6,
+      "citation_footnote_map": 5,
+      "citation_resolution_types": [
+        "source_overview",
+        "exact_article"
+      ]
+    },
+    "cn_flow": {
+      "task_id": "a44bf110-1e51-403f-8034-813e8b9dc690",
+      "files": [
+        {
+          "name": "V0CNFlowCo_14117_输出包_草案_20260809.zip",
+          "size": 44440
+        },
+        {
+          "name": "V0CNFlowCo_14117_风险清单_草案_20260809.xlsx",
+          "size": 1936
+        },
+        {
+          "name": "V0CNFlowCo_14117_风险评估结论报告_草案_20260809.docx",
+          "size": 37222
+        },
+        {
+          "name": "V0CNFlowCo_14117_风险评估结论报告_草案_20260809.md",
+          "size": 1300
+        },
+        {
+          "name": "V0CNFlowCo_14117_风险评估结论报告_草案_20260809.pdf",
+          "size": 4986
+        },
+        {
+          "name": "citation_map.json",
+          "size": 15324
+        },
+        {
+          "name": "evidence_chain.json",
+          "size": 2594
+        },
+        {
+          "name": "facts.json",
+          "size": 5638
+        },
+        {
+          "name": "issue_list.json",
+          "size": 3188
+        },
+        {
+          "name": "trace_manifest.json",
+          "size": 2907
+        }
+      ],
+      "docx_size": 37222,
+      "markdown_lines": 43,
+      "markdown_chars": 610,
+      "markdown_h1": 1,
+      "markdown_h2": 5,
+      "markdown_placeholders": 6,
+      "markdown_long_lines": 0,
+      "citation_all_items": 8,
+      "citation_footnote_map": 0,
+      "citation_resolution_types": [
+        "exact_article"
+      ],
+      "evidence_count": 4,
+      "evidence_empty_legal_basis": 4,
+      "evidence_empty_document_refs": 4,
+      "evidence_empty_rag_query": 4
+    },
+    "review": {
+      "task_id": "c63afc71-b582-4d3c-996a-8bf384eb9483",
+      "files": []
+    },
+    "diagnosis": {
+      "status": "no_task_outputs"
+    }
+  }
+}
