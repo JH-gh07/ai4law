@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from backend.common.knowledge.paths import regulation_articles_jsonl_path
 from backend.common.knowledge.registry import ROOT, ensure_source_registry
 from backend.common.knowledge.v2 import KnowledgeChunkV2, SourceRegistryEntry
 from backend.common.rag.embedding import HashingEmbedder, normalize_text, tokenize_text
@@ -34,6 +35,13 @@ _JURISDICTION_LABELS = {
     "my": "马来西亚",
     "sg": "新加坡",
     "tw": "中国台湾",
+}
+
+# Explicit sort order — CN/EU/US first, then intl jurisdictions alphabetically.
+# Non-standard jurisdiction codes default to 99 and sort after the main three.
+_JURISDICTION_ORDER: dict[str, int] = {
+    "cn": 0, "eu": 1, "us": 2,
+    "hk": 3, "jp": 4, "kr": 5, "mo": 6, "my": 7, "sg": 8, "tw": 9,
 }
 
 _AUTHORITY_LABELS = {
@@ -141,16 +149,19 @@ def _status_label(status: str, is_current_version: bool = True) -> str:
 def _summarize_source(
     entry: SourceRegistryEntry,
     chunks: list[KnowledgeChunkV2],
+    *,
+    article_count: int = 0,
+    has_v3_chunks: bool = False,
 ) -> dict[str, str]:
     first_chunk = chunks[0] if chunks else None
     metadata = dict(entry.metadata or {})
     category = _category_for_chunk(first_chunk) if first_chunk else "知识条目"
-    category = str(metadata.get("category") or category)
+    category = str(metadata.get("category") or category or _source_kind_display(entry.source_kind))
     scenario_text = "、".join(sorted({_scenario_label(chunk) for chunk in chunks if _scenario_label(chunk)}))
     scenario_text = str(metadata.get("suitable_for") or scenario_text)
     usage_text = "、".join(_usage_labels([str(item) for item in entry.allowed_usage]))
     usage_text = str(metadata.get("usage") or usage_text)
-    article_count = sum(1 for chunk in chunks if chunk.article_no)
+    v3_article_count = sum(1 for chunk in chunks if chunk.article_no)
     template_hint = ""
     if first_chunk and first_chunk.layer == "L4_template":
         template_hint = "用于正式文档结构组织。" if first_chunk.template_type == "official_template" else "用于内部起草参考。"
@@ -160,6 +171,38 @@ def _summarize_source(
         or metadata.get("notes")
         or first_chunk.content[:120] if first_chunk and first_chunk.content else ""
     )
+    # Determine availability per three-layer alignment
+    if has_v3_chunks:
+        availability = "indexed"
+        rag_available = True
+        citation_available = True
+        usage_notice = ""
+    elif article_count > 0:
+        availability = "article_only"
+        rag_available = False
+        citation_available = True
+        usage_notice = "可浏览和引用，暂不参与业务模块检索"
+    elif entry.source_kind in ("template", "test_fixture"):
+        availability = "preview_only"
+        rag_available = False
+        citation_available = False
+        usage_notice = "仅供结构控制或内部参考，不进入正式报告"
+    else:
+        availability = "preview_only"
+        rag_available = False
+        citation_available = False
+        usage_notice = "快照可用，待解析为规范条文"
+    # metadata-only sources (no articles, no preview-able snapshot) are excluded
+    # upstream; we don't emit a "metadata_only" row.
+    highlights = ""
+    if article_count:
+        highlights = f"{article_count} 个重点条文"
+    elif v3_article_count:
+        highlights = f"{v3_article_count} 个重点条文"
+    elif template_hint:
+        highlights = template_hint
+    else:
+        highlights = "查看详情了解适用方式"
     return {
         "source_id": entry.source_id,
         "title": entry.title,
@@ -185,12 +228,36 @@ def _summarize_source(
         "usage": usage_text or ("可作为正式依据" if entry.can_be_cited else "仅供内部参考"),
         "report_usage": str(metadata.get("report_usage") or ("可直接用于正式报告" if entry.can_enter_external_report else "不直接写入正式报告")),
         "summary": (description or template_hint or entry.title)[:180],
-        "highlights": f"{article_count} 个重点条文" if article_count else template_hint or "查看详情了解适用方式",
+        "highlights": highlights,
         "doc_type": str(metadata.get("doc_type") or ""),
         "notes": (description or template_hint or entry.title)[:180],
         "layer": entry.layer,
         "path": str(metadata.get("path") or ""),
+        # Three-layer alignment fields
+        "availability": availability,
+        "article_count": str(article_count),
+        "rag_available": "true" if rag_available else "false",
+        "citation_available": "true" if citation_available else "false",
+        "usage_notice": usage_notice,
+        "source_kind": str(entry.source_kind or ""),
     }
+
+
+_SOURCE_KIND_DISPLAY: dict[str, str] = {
+    "law_article": "核心法律",
+    "official_guide": "官方指南",
+    "official_qa": "官方问答",
+    "standard_clause": "标准条款",
+    "procedure": "操作信息",
+    "technical_standard": "技术规范",
+    "template": "模板与样例",
+    "reference_material": "参考资料",
+    "workflow_rule": "适用规则",
+}
+
+
+def _source_kind_display(kind: str) -> str:
+    return _SOURCE_KIND_DISPLAY.get(kind, "知识条目")
 
 
 def _scenario_label(chunk: KnowledgeChunkV2) -> str:
@@ -209,21 +276,71 @@ def _scenario_label(chunk: KnowledgeChunkV2) -> str:
 
 
 def build_user_source_catalog() -> list[dict[str, str]]:
+    """Build the user-facing source catalog with three-layer alignment.
+
+    Every registry entry is included if it has at least one of:
+    - V3 chunks (indexed — full retrieval + citation)
+    - regulation articles (article_only — citation-available but not RAG-searchable)
+    - an accessible snapshot (preview_only — can preview text but no structured articles)
+
+    Purely metadata entries with none of the above are excluded from the user list.
+    Sorting uses explicit jurisdiction_order (CN/EU/US first, intl after) instead of
+    string order.
+
+    Three-layer availability tags per entry:
+    - ``availability``: indexed | article_only | preview_only
+    - ``rag_available``: bool
+    - ``citation_available``: bool
+    - ``usage_notice``: human-readable caveat when availability < indexed
+    """
     registry_entries = ensure_source_registry()
     chunks = _load_all_chunks()
     by_source: dict[str, list[KnowledgeChunkV2]] = defaultdict(list)
+    chunk_sids: set[str] = set()
     for chunk in chunks:
         by_source[chunk.source_id].append(chunk)
-    # Only include entries that have at least one indexed chunk in RAG v3.
-    # Entries without chunks (e.g. international orphan registrations with no
-    # vectorized content) are metadata-only — they provide no value in the
-    # user-facing knowledge catalog and would otherwise clutter the listing.
-    rows = [
-        _summarize_source(entry, by_source[entry.source_id])
-        for entry in registry_entries
-        if entry.source_id in by_source
-    ]
-    rows.sort(key=lambda item: (item["jurisdiction"], item["category"], item["title"]))
+        chunk_sids.add(chunk.source_id)
+
+    # Count regulation articles per source
+    article_counts: dict[str, int] = defaultdict(int)
+    articles_path = regulation_articles_jsonl_path()
+    if articles_path.exists():
+        with articles_path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    sid = str(obj.get("source_id", ""))
+                    if sid:
+                        article_counts[sid] += 1
+                except json.JSONDecodeError:
+                    continue
+
+    # Build rows: include every entry that has at least one content layer
+    rows: list[dict[str, str]] = []
+    for entry in registry_entries:
+        sid = entry.source_id
+        has_chunks = sid in chunk_sids
+        art_cnt = article_counts.get(sid, 0)
+        # A snapshot is considered "previewable" if metadata carries a snapshot_path
+        has_preview = bool((entry.metadata or {}).get("snapshot_path", ""))
+        if not has_chunks and art_cnt == 0 and not has_preview:
+            # Pure metadata ghost — no content at any layer. Exclude from user catalog.
+            continue
+        rows.append(
+            _summarize_source(entry, by_source.get(sid, []),
+                              article_count=art_cnt, has_v3_chunks=has_chunks)
+        )
+
+    # Sort: jurisdiction order first, then category, then title
+    rows.sort(key=lambda item: (
+        _JURISDICTION_ORDER.get(item.get("jurisdiction_code", ""), 99),
+        item.get("availability") != "indexed",  # indexed sources first within same jurisdiction
+        item.get("category", ""),
+        item.get("title", ""),
+    ))
     return rows
 
 
