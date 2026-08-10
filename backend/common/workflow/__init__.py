@@ -25,6 +25,8 @@ from backend.common.workflow.evidence import (
     DocumentRef,
     EvidenceItem,
     EvidencePack,
+    build_citation_bindings,
+    regulation_to_citation,
 )
 from backend.common.workflow.expression import (
     ExpressionStrategy,
@@ -70,6 +72,8 @@ __all__ = [
     "DocumentRef",
     "EvidenceItem",
     "EvidencePack",
+    "build_citation_bindings",
+    "regulation_to_citation",
     # action
     "ActionPlan",
     "MaterialItem",

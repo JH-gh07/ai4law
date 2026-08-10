@@ -183,3 +183,62 @@ class EvidencePack(BaseModel):
     partial_support_count: int = 0
     background_only_count: int = 0
     low_confidence_count: int = 0
+
+
+# ── Shared builders ────────────────────────────────────────────────────────
+
+def regulation_to_citation(reg: object, *, support: CitationSupportLevel = "background_only") -> CitationBinding | None:
+    """Convert a regulation hit (dict or object) to a CitationBinding.
+
+    Accepts dicts with keys: source_id/title/law_name, article/article_no/art,
+    snippet/content/quote_text, jurisdiction, effective_date, version.
+    Also accepts objects with equivalent attributes (e.g. RegulationHit).
+
+    Returns None if no source_title can be extracted (invalid/empty regulation).
+    """
+    def _get(key: str, *aliases: str) -> str:
+        if isinstance(reg, dict):
+            for k in (key, *aliases):
+                val = reg.get(k, "")
+                if val:
+                    return str(val)
+            return ""
+        for k in (key, *aliases):
+            val = getattr(reg, k, "")
+            if val:
+                return str(val)
+        return ""
+
+    source_title = _get("law_name", "title", "source_title")
+    if not source_title.strip():
+        return None
+
+    return CitationBinding(
+        source_title=source_title,
+        article=_get("article", "article_no", "article_ref", "art"),
+        snippet=_get("snippet", "content", "quote_text", "article_content")[:300],
+        support_level=support,
+        jurisdiction=_get("jurisdiction"),
+        effective_date=_get("effective_date"),
+        version=_get("version"),
+    )
+
+
+def build_citation_bindings(
+    regulations: list[object],
+    *,
+    max_bindings: int = 5,
+    support: CitationSupportLevel = "background_only",
+) -> list[CitationBinding]:
+    """Convert a list of regulation hits into CitationBinding objects.
+
+    Filters out entries without a valid source_title and caps at max_bindings.
+    """
+    bindings: list[CitationBinding] = []
+    for reg in regulations[: max_bindings * 2]:  # oversample in case some are invalid
+        cb = regulation_to_citation(reg, support=support)
+        if cb is not None:
+            bindings.append(cb)
+        if len(bindings) >= max_bindings:
+            break
+    return bindings

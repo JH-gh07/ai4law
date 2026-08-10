@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import re
 
-from backend.common.workflow import EvidenceItem, FactItem, IssueItem
+from backend.common.workflow import (
+    CitationBinding,
+    DocumentRef,
+    EvidenceItem,
+    FactItem,
+    IssueItem,
+    build_citation_bindings,
+)
 from backend.domains.us.eo14117.rule_engine import (
     SECTION_COVERED_PERSON,
     SECTION_PROHIBITED_DEFINITION,
@@ -15,6 +22,32 @@ from backend.domains.us.eo14117.rule_engine import (
 def _evidence_id(issue_id: str) -> str:
     safe = re.sub(r"[^a-zA-Z0-9]+", "-", issue_id).strip("-")
     return f"US14117-EVIDENCE-{safe}"
+
+
+def _extract_document_refs(
+    fact_refs: list[str],
+    facts: list[FactItem],
+) -> list[DocumentRef]:
+    fact_map = {f.fact_id: f for f in facts}
+    refs: list[DocumentRef] = []
+    for fact_id in fact_refs:
+        fact = fact_map.get(fact_id)
+        if fact is None:
+            continue
+        material_refs = getattr(fact, "supporting_material_refs", None)
+        if material_refs:
+            for ref in material_refs:
+                if isinstance(ref, dict):
+                    refs.append(DocumentRef(**ref))
+                elif isinstance(ref, DocumentRef):
+                    refs.append(ref)
+                elif hasattr(ref, "file_name"):
+                    refs.append(DocumentRef(
+                        file_name=getattr(ref, "file_name", ""),
+                        page=getattr(ref, "page", 1),
+                        quote=getattr(ref, "quote", ""),
+                    ))
+    return refs
 
 
 def build_us_14117_evidence(
@@ -59,6 +92,10 @@ def build_us_14117_evidence(
                 conclusion=issue.recommended_action,
                 confidence=confidence,
                 used_by=[issue.issue_id, *issue.affects_outputs],
+                legal_basis=build_citation_bindings(regulations),
+                document_refs=_extract_document_refs(fact_refs, facts),
+                rag_query_used=f"us14117:{issue.issue_id}",
+                rag_hits_count=len(regulations),
             )
         )
         updated_issues.append(issue.model_copy(update={"evidence_refs": [evidence_id]}))

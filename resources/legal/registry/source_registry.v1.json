@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "generated_from": "/Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/resources/legal/catalog/sources.csv",
+  "generated_from": "sources.csv + P0-2 orphan registrations (intl jurisdictions)",
   "entries": [
     {
       "source_id": "CN-LAW-001",
@@ -343,9 +343,7 @@
       "title": "数据出境安全评估申报指南（第三版）",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_assessment"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "high",
@@ -363,8 +361,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "assessment",
-        "module": "cn-assessment",
+        "path": "reference",
+        "module": "",
         "category": "官方指南",
         "doc_type": "guide",
         "publisher": "国家互联网信息办公室",
@@ -425,9 +423,7 @@
       "title": "《个人信息出境标准合同办法》答记者问",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_review"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "high",
@@ -445,8 +441,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "scc",
-        "module": "cn-review",
+        "path": "reference",
+        "module": "",
         "category": "官方问答",
         "doc_type": "qa",
         "publisher": "国家互联网信息办公室",
@@ -548,9 +544,7 @@
       "title": "各地省级网信部门申报/备案联系方式",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_assessment"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "high",
@@ -568,8 +562,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "assessment|scc",
-        "module": "cn-assessment",
+        "path": "reference",
+        "module": "",
         "category": "流程清单",
         "doc_type": "contact_list",
         "publisher": "国家互联网信息办公室",
@@ -1087,9 +1081,7 @@
       "title": "个人金融信息保护技术规范",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_diagnosis"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -1107,8 +1099,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "cn-diagnosis",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1128,9 +1120,7 @@
       "title": "信息安全技术 个人信息安全规范",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_diagnosis"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -1148,8 +1138,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "cn-diagnosis",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1169,9 +1159,7 @@
       "title": "数据出境申报系统使用手册",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_diagnosis"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1189,8 +1177,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "cn-diagnosis",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1210,9 +1198,7 @@
       "title": "汽车数据安全管理若干规定（试行） 中央网络安全和信息化委员会办公室",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_diagnosis"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "law_article",
       "authority_level": "medium",
@@ -1230,8 +1216,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "cn-diagnosis",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1251,9 +1237,7 @@
       "title": "金融数据安全+数据安全分级指南",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_diagnosis"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "official_guide",
       "authority_level": "medium",
@@ -1271,8 +1255,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "all",
-        "module": "cn-diagnosis",
+        "path": "reference",
+        "module": "",
         "category": "补充依据",
         "doc_type": "regulation",
         "publisher": "项目资料库",
@@ -1292,9 +1276,7 @@
       "title": "隐私政策样例",
       "aliases": [],
       "jurisdiction": "cn",
-      "modules": [
-        "cn_review"
-      ],
+      "modules": [],
       "layer": "L1_regulatory_evidence",
       "source_kind": "standard_clause",
       "authority_level": "medium",
@@ -1312,8 +1294,8 @@
       "can_be_cited": true,
       "can_enter_external_report": true,
       "metadata": {
-        "path": "review",
-        "module": "cn-review",
+        "path": "reference",
+        "module": "",
         "category": "官方模板",
         "doc_type": "template",
         "publisher": "项目资料库",
