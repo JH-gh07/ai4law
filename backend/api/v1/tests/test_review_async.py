@@ -106,6 +106,16 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
         assert payload["result"]["output_files"]["docx"].endswith("review_report.docx")
         assert payload["result"]["output_files"]["pdf"].endswith("review_report.pdf")
         assert Path(payload["result"]["report_path"]).exists()
+        events = client.get(
+            f"/api/v1/events/task/{task_id}/events?since=-1",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert events.status_code == 200
+        event_payload = events.json()["events"]
+        assert event_payload
+        assert event_payload[-1]["detail"]["state"] == "COMPLETED"
+        assert any(event["event_type"] == "tool_start" for event in event_payload)
+        assert any(event["event_type"] == "tool_result" for event in event_payload)
         pdf_path = Path(payload["result"]["output_files"]["pdf"])
         assert pdf_path.read_bytes().startswith(b"%PDF")
 

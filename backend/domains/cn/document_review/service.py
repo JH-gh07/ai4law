@@ -7,6 +7,8 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
+from backend.common.events.manager import get_ssemanager
+from backend.common.trace.events import RunEvent
 from backend.core.json_utils import dumps, loads
 from backend.models.review import ReviewTaskModel, UploadedFileModel
 from backend.repositories.review_repository import ReviewRepository
@@ -363,6 +365,12 @@ class ReviewService:
             checkpoints = self._review_progress_checkpoints(len(reviewable))
             for index, clause in enumerate(reviewable, start=1):
                 use_llm = clause.clause_id in llm_clause_ids
+                self._publish_event(
+                    task.id,
+                    "tool_start",
+                    f"审查条款 {index}/{len(reviewable)}",
+                    {"tool": "review_clause", "clause_id": clause.clause_id, "use_llm": use_llm},
+                )
                 issues.extend(
                     self._invoke_reviewer(
                         clause=clause,
@@ -371,6 +379,12 @@ class ReviewService:
                         scenario_context=scenario_dict,
                         jurisdiction=str(detected_jurisdiction),
                     )
+                )
+                self._publish_event(
+                    task.id,
+                    "tool_result",
+                    f"条款 {index}/{len(reviewable)} 审查完成",
+                    {"tool": "review_clause", "clause_id": clause.clause_id, "use_llm": use_llm},
                 )
                 if index in checkpoints:
                     progress = 57 + int((index / max(len(reviewable), 1)) * 22)
@@ -495,10 +509,11 @@ class ReviewService:
             task.summary_json = dumps(aggregated.model_dump())
             self._update_task(db, task, ReviewTaskStatus.COMPLETED, 100, persist=False)
             self.repository.save_task(db, task)
-        except Exception:
+        except Exception as exc:
             task = self._require_task(db, task_id, user_id)
             task.status = ReviewTaskStatus.FAILED.value
             self.repository.save_task(db, task)
+            self._publish_event(task_id, "status", "Review 任务失败", {"state": "FAILED", "error": str(exc)})
             raise
         finally:
             db.close()
@@ -767,7 +782,18 @@ class ReviewService:
         return copied_path
 
     def _publish_progress(self, task_id: str, status: str, progress: int) -> None:
+        self._publish_event(task_id, "status", f"Review 阶段：{status}", {"state": status, "progress": progress})
         try:
             asyncio.run(self.websocket_manager.publish(task_id, {"task_id": task_id, "status": status, "progress": progress}))
         except RuntimeError:
+            pass
+
+    @staticmethod
+    def _publish_event(task_id: str, event_type: str, summary: str, detail: dict | None = None) -> None:
+        try:
+            get_ssemanager().publish(
+                task_id,
+                RunEvent(task_id=task_id, event_type=event_type, summary=summary, detail=detail),
+            )
+        except Exception:
             pass

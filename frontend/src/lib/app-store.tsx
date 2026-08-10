@@ -285,6 +285,29 @@ const dedupeById = <T extends { id: string }>(items: T[]): T[] => {
   return result;
 };
 
+export function mergeModuleRuns(items: ModuleRun[]): ModuleRun[] {
+  const byAsyncTask = new Map<string, ModuleRun>();
+  const withoutAsync: ModuleRun[] = [];
+  const rank = (run: ModuleRun) => {
+    const state = (run.asyncState ?? "").toLowerCase();
+    const terminal = run.finishedAt || ["completed", "succeeded", "failed", "cancelled", "canceled"].includes(state);
+    const timestamp = new Date(run.finishedAt ?? run.startedAt).getTime() || 0;
+    return [terminal ? 1 : 0, timestamp] as const;
+  };
+
+  for (const run of items) {
+    if (!run.asyncTaskId) {
+      withoutAsync.push(run);
+      continue;
+    }
+    const previous = byAsyncTask.get(run.asyncTaskId);
+    if (!previous || rank(run)[0] > rank(previous)[0] || (rank(run)[0] === rank(previous)[0] && rank(run)[1] >= rank(previous)[1])) {
+      byAsyncTask.set(run.asyncTaskId, previous ? { ...previous, ...run, taskSpaceId: previous.taskSpaceId } : run);
+    }
+  }
+  return dedupeById([...byAsyncTask.values(), ...withoutAsync]);
+}
+
 const mergeTaskSpaces = (...groups: TaskSpace[][]): TaskSpace[] => {
   const seen = new Set<string>();
   const result: TaskSpace[] = [];
@@ -689,7 +712,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         recovered.taskSpaces,
         recoveredFromRuns.taskSpaces
       );
-      const mergedModuleRuns = dedupeById([
+      const mergedModuleRuns = mergeModuleRuns([
         ...normalizedRemote.moduleRuns,
         ...localSnapshot.moduleRuns,
         ...recovered.moduleRuns,
