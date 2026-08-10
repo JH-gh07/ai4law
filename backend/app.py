@@ -18,6 +18,7 @@ from backend.services.runtime_client_refresher import refresh_runtime_clients
 async def lifespan(app: FastAPI):
     container: AppContainer = app.state.container
     init_db(container.engine)
+    container.review_service.fail_interrupted_tasks()
 
     # 后台周期性清理 SSEManager 中已过期 task 的事件数据
     import asyncio as _asyncio

@@ -1,10 +1,21 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from backend.models.review import ReviewTaskModel, UploadedFileModel
 
 
 class ReviewRepository:
+    _INTERRUPTED_STATUSES = (
+        "PREPARING",
+        "SEGMENTING",
+        "CLASSIFYING",
+        "MISSING_CHECK",
+        "REVIEWING",
+        "CROSS_DOC_CHECK",
+        "AGGREGATING",
+        "RENDERING",
+    )
+
     def create_task(self, db: Session, user_id: str) -> ReviewTaskModel:
         record = ReviewTaskModel(user_id=user_id)
         db.add(record)
@@ -46,3 +57,12 @@ class ReviewRepository:
             .limit(limit)
         )
         return list(db.scalars(stmt))
+
+    def fail_interrupted_tasks(self, db: Session) -> int:
+        result = db.execute(
+            update(ReviewTaskModel)
+            .where(ReviewTaskModel.status.in_(self._INTERRUPTED_STATUSES))
+            .values(status="FAILED")
+        )
+        db.commit()
+        return int(result.rowcount or 0)

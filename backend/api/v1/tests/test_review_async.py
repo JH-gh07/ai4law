@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
+from backend.models.review import ReviewTaskModel
 from backend.core.settings import Settings
 from backend.schemas.review import ClausePosition, ClauseType, ClassifiedClause
 from backend.domains.cn.document_review.service import ReviewService
@@ -111,6 +112,56 @@ def test_review_generate_async_status_returns_completed_result(tmp_path: Path) -
         from pypdf import PdfReader
 
         assert len(PdfReader(pdf_path).pages) >= 1
+
+
+def test_review_service_restart_marks_incomplete_task_failed(tmp_path: Path) -> None:
+    storage_dir = tmp_path / "storage"
+    db_path = tmp_path / "review_restart_test.db"
+    settings = Settings(
+        database_url=f"sqlite:///{db_path}",
+        storage_dir=storage_dir,
+        task_mode="threaded",
+    )
+
+    first_app = create_app(settings)
+    with TestClient(first_app) as first_client:
+        token, user_id = _register(first_client)
+        with first_app.state.container.session_factory() as db:
+            db.add_all(
+                [
+                    ReviewTaskModel(
+                        id="stale-review-task",
+                        user_id=user_id,
+                        status="REVIEWING",
+                        progress=57,
+                    ),
+                    ReviewTaskModel(
+                        id="uploaded-review-task",
+                        user_id=user_id,
+                        status="UPLOADED",
+                        progress=10,
+                    ),
+                ]
+            )
+            db.commit()
+
+    restarted_app = create_app(settings)
+    with TestClient(restarted_app) as restarted_client:
+        status = restarted_client.get(
+            "/api/v1/review/tasks/stale-review-task",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        uploaded_status = restarted_client.get(
+            "/api/v1/review/tasks/uploaded-review-task",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert status.status_code == 200
+    assert status.json()["state"] == "FAILED"
+    assert status.json()["progress"] == 57
+    assert status.json()["error"] == "Review generation failed"
+    assert uploaded_status.status_code == 200
+    assert uploaded_status.json()["state"] == "UPLOADED"
 
 
 def test_review_sync_generation_refreshes_session_after_pipeline(monkeypatch) -> None:

@@ -167,6 +167,11 @@ class ReviewService:
         task = self.repository.create_task(db, user_id)
         return ReviewTaskCreateResponse(id=task.id, status=ReviewTaskStatus(task.status), created_at=task.created_at)
 
+    def fail_interrupted_tasks(self) -> int:
+        """Close tasks whose worker disappeared with the previous process."""
+        with self.session_factory() as db:
+            return self.repository.fail_interrupted_tasks(db)
+
     def upload_file(self, db: Session, user_id: str, task_id: str, upload: UploadFile) -> UploadedFileResponse:
         task = self._require_task(db, task_id, user_id)
         saved_path = self.file_service.save_upload(task_id, upload)
