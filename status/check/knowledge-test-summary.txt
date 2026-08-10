@@ -1,0 +1,104 @@
+=== CITATION INTEGRITY ===
+source_count:                   56
+article_row_count:              1968
+duplicate_source_article_count: 0  (pair_count=0)
+missing_article_ref_count:      0
+missing_source_url_count:       1408  (raw, article-level only)
+missing_effective_url_count:    61  (with sources.csv fallback)
+invalid_article_number_count:   0
+
+── Article resolution classification ──
+article_missing (empty ref):    0
+article_not_found (norm=empty): 0
+article_not_unique pairs:       0  (extra rows: 0)
+unique resovable pairs:         1968
+resolvable rows:                1968
+resolution success rate:        100.0%
+chinese numeral articles:       384
+non-numeric articles:           384
+
+── URL coverage (raw, article-level) ──
+fully covered sources:          16  (560 rows)
+zero URL sources:               40  (1408 rows)
+overall raw URL coverage:       28.5%
+
+── URL coverage (effective, with sources.csv fallback) ──
+fully covered sources:          49  (1907 rows)
+zero URL sources:               7  (61 rows)
+overall effective URL coverage: 96.9%
+
+── Jurisdiction distribution ──
+  JP (日本): 441 articles
+  CN (中国大陆): 420 articles
+  KR (韩国): 267 articles
+  MY (马来西亚): 243 articles
+  TW (中国台湾): 196 articles
+  EU (欧盟): 101 articles
+  US (美国): 100 articles
+  HK (中国香港): 94 articles
+  MO (中国澳门): 80 articles
+  SG (新加坡): 26 articles
+
+── Source type distribution ──
+  LAW (法律): 1129 articles
+  REG (法规/规章): 513 articles
+  GUIDE (指南): 146 articles
+  CA (州法律): 83 articles
+  TPL (模板): 42 articles
+  SUP (补充资料): 19 articles
+  FED (联邦法律): 17 articles
+  GOV (政府文件): 13 articles
+  QA (问答): 6 articles
+
+── Zero effective-URL sources ──
+  CN-SUP-002 (CN) [19]: 个人信息出境认证办法
+  CN-TPL-017 (CN) [18]: 数据处理协议样例
+  CN-TPL-016 (CN) [13]: 个人信息出境标准合同模板
+  CN-TPL-018 (CN) [6]: 数据安全及保密协议模板
+  CN-TPL-019 (CN) [3]: 数据出境风险自评估报告模板
+  CN-TPL-020 (CN) [1]: 个人信息保护影响评估报告模板
+  CN-TPL-021 (CN) [1]: 个人信息保护影响评估报告（模板） (1)
+
+── Zero raw-URL sources (top 10) ──
+  JP-LAW-001 (JP) [200]: 日本个人信息保护法（令和3年）
+  MY-LAW-001 (MY) [146]: 马来西亚个人数据保护法（PDPA 2010）
+  JP-REG-002 (JP) [95]: 日本个人信息保护委员会规则（第3号）
+  JP-REG-003 (JP) [92]: 日本个人信息保护法实施令（政令311号）
+  KR-LAW-001 (KR) [76]: 韩国个人信息保护法（2024）
+  HK-LAW-006 (HK) [71]: 香港保护关键基础设施（电脑系统）条例（2024）
+  MY-LAW-006 (MY) [64]: 马来西亚网络安全法（2024）
+  KR-GUIDE-005 (KR) [62]: 韩国移动App个人信息保护指南（2024）
+  KR-REG-002 (KR) [59]: 韩国个人信息保护法施行令（2024）
+  TW-LAW-001 (TW) [56]: 台湾个人资料保护法（2023）
+  ... and 30 more
+
+All blocking checks PASSED.
+
+=== CASE PARITY ===
+Case parity check passed (11 modules, 20 CLI cases carrying 424 leaf checks, 28 developer cases).
+
+=== BACKEND TESTS ===
+........................................................................ [ 16%]
+........................................................................ [ 32%]
+........................................................................ [ 48%]
+........................................................................ [ 64%]
+........................................................................ [ 80%]
+........................................................................ [ 96%]
+...............                                                          [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+447 passed, 1 warning in 81.11s (0:01:21)
+
+=== BENCHMARK ===
+.................................                                        [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/oujiazhan/Desktop/实验室/社团/代码/ai4law/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+33 passed, 1 warning in 20.29s

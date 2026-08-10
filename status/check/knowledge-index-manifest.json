@@ -1,0 +1,211 @@
+{
+  "verification_package_version": "final-2026-08-10",
+  "generated_at": "2026-08-10T15:49:05.193351",
+  "git": {
+    "commit": "58d9b260539d66aa4cc7b5c3d3bb68ff339d1d7c",
+    "short": "58d9b26",
+    "commit_date": "2026-08-10 15:43:59 +0800",
+    "branch": "new"
+  },
+  "canonical_articles": {
+    "total_rows": 1968,
+    "duplicate_locators": 0,
+    "missing_article_ref": 0,
+    "invalid_article_number": 0,
+    "resolution_success_rate": "100.0%",
+    "effective_url_coverage": "96.9%",
+    "effective_url_missing": 61,
+    "effective_url_missing_sources": 7
+  },
+  "index_stats": {
+    "legal_index_cn": {
+      "chunks": 619,
+      "modules": [
+        "cn_assessment",
+        "cn_diagnosis",
+        "cn_pipia",
+        "cn_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "legal_index_eu": {
+      "chunks": 402,
+      "modules": [
+        "eu_bcr",
+        "eu_dpia",
+        "eu_scc",
+        "eu_tia"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "legal_index_us": {
+      "chunks": 183,
+      "modules": [
+        "us_14117",
+        "us_cpra",
+        "us_vendor_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "standard_clause_index_cn": {
+      "chunks": 5,
+      "modules": [
+        "cn_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "standard_clause_index_eu": {
+      "chunks": 3,
+      "modules": [
+        "eu_bcr",
+        "eu_scc",
+        "eu_tia"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "standard_clause_index_us": {
+      "chunks": 3,
+      "modules": [
+        "us_14117",
+        "us_cpra",
+        "us_vendor_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "template_index_cn": {
+      "chunks": 10,
+      "modules": [
+        "cn_assessment"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "template_index_eu": {
+      "chunks": 4,
+      "modules": [
+        "eu_dpia",
+        "eu_tia"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "template_index_us": {
+      "chunks": 3,
+      "modules": [
+        "us_14117",
+        "us_cpra"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "testcase_index_cn": {
+      "chunks": 5,
+      "modules": [
+        "cn_assessment",
+        "cn_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "testcase_index_eu": {
+      "chunks": 4,
+      "modules": [
+        "eu_bcr",
+        "eu_dpia",
+        "eu_scc",
+        "eu_tia"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "testcase_index_us": {
+      "chunks": 3,
+      "modules": [
+        "us_14117",
+        "us_cpra",
+        "us_vendor_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "workflow_index_cn": {
+      "chunks": 7,
+      "modules": [
+        "cn_assessment",
+        "cn_diagnosis",
+        "cn_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "workflow_index_eu": {
+      "chunks": 4,
+      "modules": [
+        "eu_bcr",
+        "eu_dpia",
+        "eu_scc",
+        "eu_tia"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    },
+    "workflow_index_us": {
+      "chunks": 7,
+      "modules": [
+        "us_14117",
+        "us_cpra",
+        "us_vendor_review"
+      ],
+      "empty_content": 0,
+      "paragraphN": 0,
+      "duplicate_chunk_ids": 0
+    }
+  },
+  "module_legal_distribution": {
+    "cn.jsonl:cn_review": 56,
+    "cn.jsonl:cn_diagnosis": 242,
+    "cn.jsonl:cn_assessment": 250,
+    "cn.jsonl:cn_pipia": 71,
+    "eu.jsonl:eu_tia": 101,
+    "eu.jsonl:eu_scc": 101,
+    "eu.jsonl:eu_bcr": 101,
+    "eu.jsonl:eu_dpia": 99,
+    "us.jsonl:us_14117": 17,
+    "us.jsonl:us_cpra": 83,
+    "us.jsonl:us_vendor_review": 83
+  },
+  "benchmark": {
+    "modules": 11,
+    "total_fixtures": 33,
+    "pass_rate": "33/33 (100%)",
+    "test_command": "uv run pytest backend/common/rag/tests/test_module_retrieval_benchmark.py -v"
+  },
+  "gate_results": {
+    "citation_integrity": "PASSED",
+    "case_parity": "PASSED — 11 modules",
+    "backend_tests": "PASSED — 447 passed",
+    "benchmark": "PASSED — 33/33",
+    "frontend_tests": "PASSED — 139 tests",
+    "frontend_build": "PASSED"
+  }
+}
