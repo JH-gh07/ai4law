@@ -1,0 +1,37 @@
+{
+  "version": "v1",
+  "date": "2026-08-10",
+  "description": "CPRA legacy -NN locator migration table for the 5 artificial suffix entries removed in Task 2.1.",
+  "entries": [
+    {
+      "legacy_locator": "§1798.140(ii)-01",
+      "canonical_locator": "§1798.140(v)",
+      "action": "removed_wrong_locator",
+      "note": "Content belongs to §1798.140(v) subparagraph — covered by subdivision entries"
+    },
+    {
+      "legacy_locator": "§1798.140(ii)-02",
+      "canonical_locator": "§1798.140(ah)",
+      "action": "removed_wrong_locator",
+      "note": "Content overlaps with §1798.140(ah) end"
+    },
+    {
+      "legacy_locator": "§1798.140(ii)-03",
+      "canonical_locator": "§1798.140(ae)",
+      "action": "removed_wrong_locator",
+      "note": "Content belongs near §1798.140(ae) — neural data definition"
+    },
+    {
+      "legacy_locator": "§1798.145(i)-01",
+      "canonical_locator": "§1798.145(m)",
+      "action": "removed_wrong_locator",
+      "note": "Duplicate of §1798.145(i)-02, content belongs to §1798.145(m)"
+    },
+    {
+      "legacy_locator": "§1798.145(i)-02",
+      "canonical_locator": "§1798.145(m)",
+      "action": "removed_wrong_locator",
+      "note": "Duplicate of §1798.145(i)-01, content belongs to §1798.145(m)"
+    }
+  ]
+}
