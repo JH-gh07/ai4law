@@ -41,6 +41,7 @@ ModuleKey = Literal[
     "cn_diagnosis",
     "cn_assessment",
     "cn_review",
+    "cn_pipia",
     "eu_scc",
     "eu_bcr",
     "eu_dpia",
