@@ -209,6 +209,43 @@ def save_output(module: str, result: object) -> dict:
     return info
 
 
+def run_eu_scc():
+    from backend.domains.eu.scc_review.schema import SCCReviewRequest
+    from backend.domains.eu.scc_review.service import EU_SCCService
+
+    print("[eu_scc] Creating service with LLM...")
+    svc = EU_SCCService()
+    payload = SCCReviewRequest.model_validate({
+        "project_name": "SCC Compliance Review",
+        "scc_text": (
+            "STANDARD CONTRACTUAL CLAUSES\n\n"
+            "SECTION I\nClause 1\nPurpose and scope\n"
+            "(a) The purpose of these standard contractual clauses is to ensure "
+            "compliance with the requirements of Regulation (EU) 2016/679...\n\n"
+            "Clause 7\nDocking clause\n"
+            "(a) Any entity that is not a Party to these Clauses may, with the "
+            "agreement of the Parties, accede to these Clauses at any time...\n\n"
+            "Clause 14\nLocal laws and practices affecting compliance with the Clauses\n"
+            "(a) The Parties warrant that they have no reason to believe that the laws "
+            "and practices in the third country of destination applicable to the "
+            "processing of the personal data by the data importer...\n\n"
+            "Clause 15\nObligations of the data importer in case of access by public authorities\n"
+            "(a) The data importer shall promptly notify the data exporter if it "
+            "receives a legally binding request from a public authority...\n\n"
+        ),
+        "declared_module_type": "Module Two",
+        "exporter_role": "controller",
+        "importer_role": "processor",
+        "has_tia": True,
+        "has_supplementary_measures": True,
+        "company_name": "DataComply Europe GmbH",
+    })
+
+    print("[eu_scc] Running generate_report...")
+    result = svc.generate_report(payload)
+    return save_output("eu_scc", result)
+
+
 def main():
     modules = sys.argv[1].split(",") if len(sys.argv) > 1 else ["pipia", "dpia", "us_14117", "cpra"]
     results = {}
@@ -218,6 +255,7 @@ def main():
         "dpia": run_dpia,
         "us_14117": run_us_14117,
         "cpra": run_cpra,
+        "eu_scc": run_eu_scc,
     }
 
     for mod in modules:
