@@ -33,6 +33,13 @@ def _by_field(facts: list[FactItem]) -> dict[str, FactItem]:
     return {fact.field_path or "": fact for fact in facts}
 
 
+_SA_DEFAULT_ACTION = (
+    "针对安全评估中发现的合规问题进行详细评估，"
+    "根据《数据出境安全评估办法》和《个人信息保护法》完成合规整改，"
+    "并补充数据清单、隐私政策、合同及安全措施说明等申报材料。"
+)
+
+
 def _issue(
     issue_id: str,
     title: str,
@@ -44,6 +51,8 @@ def _issue(
     recommended_action: str,
     affects_outputs: list[str],
 ) -> IssueItem:
+    if not recommended_action or not str(recommended_action).strip():
+        recommended_action = _SA_DEFAULT_ACTION
     return IssueItem(
         issue_id=issue_id,
         title=title,

@@ -21,6 +21,11 @@ US_14117_CHAPTER_KEYS: dict[str, str] = {
     "附件与持续监控": "attachments_monitoring",
 }
 
+_EO14117_DEFAULT_ACTION = (
+    "针对 EO 14117 合规问题进行详细评估，根据受限交易类别完成合规整改，"
+    "并补充数据安全计划和相关合规证明材料。"
+)
+
 
 def _issue(
     issue_id: str,
@@ -33,6 +38,8 @@ def _issue(
     recommended_action: str,
     affects_outputs: list[str],
 ) -> IssueItem:
+    if not recommended_action or not str(recommended_action).strip():
+        recommended_action = _EO14117_DEFAULT_ACTION
     return IssueItem(
         issue_id=issue_id,
         title=title,

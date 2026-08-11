@@ -14,6 +14,12 @@ def _by_field(facts: list[FactItem]) -> dict[str, FactItem]:
     return {fact.field_path or "": fact for fact in facts}
 
 
+_DPIA_DEFAULT_ACTION = (
+    "针对发现的合规问题进行详细评估，根据 GDPR 相关条款完成合规整改，"
+    "并补充数据处理协议、影响评估报告等材料以确保合规。"
+)
+
+
 def _issue(
     issue_id: str,
     title: str,
@@ -25,6 +31,8 @@ def _issue(
     recommended_action: str,
     affects_outputs: list[str],
 ) -> IssueItem:
+    if not recommended_action or not str(recommended_action).strip():
+        recommended_action = _DPIA_DEFAULT_ACTION
     return IssueItem(
         issue_id=issue_id,
         title=title,

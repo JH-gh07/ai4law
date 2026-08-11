@@ -49,6 +49,22 @@ PIPIA_CHAPTERS = [
     "PIPIA 结论与备案建议",
 ]
 
+PIPIA_ROUTE_LEGAL_BASIS = {
+    "scc_filing": [
+        "中华人民共和国个人信息保护法 第十三条、第三十九条、第五十五条",
+        "个人信息出境标准合同办法 第五条、第七条",
+    ],
+    "hr_exemption": [
+        "促进和规范数据跨境流动规定 第六条",
+        "中华人民共和国个人信息保护法 第十三条、第二十八条、第三十九条",
+    ],
+    "certification": [
+        "中华人民共和国个人信息保护法 第三十八条、第三十九条、第五十五条",
+        "个人信息保护认证实施规则",
+        "个人信息出境认证办法",
+    ],
+}
+
 _ATTACHMENT_PROMPT_FILE_LIMIT = 3_000
 _ATTACHMENT_PROMPT_TOTAL_LIMIT = 8_000
 
@@ -91,12 +107,13 @@ class PIPIAService:
             if trace:
                 trace.record("status", {"summary": "开始 PIPIA 个人信息保护影响评估", "detail": {"module": "pipia"}})
                 trace.record("thought", {"summary": "路径判断：基于出境场景和路径类型确定 PIPIA 评估框架"})
-            level = risk_level(
+            base_level = risk_level(
                 is_ciio=profile.is_ciio,
                 contains_important_data=False,
                 pii_count=profile.outbound_pi_count,
                 spi_count=profile.outbound_spi_count,
             )
+            level = self._effective_risk_level(payload, base_level)
             _path_label = {"scc_filing": "scc", "certification": "all", "hr_exemption": "all"}.get(payload.route_type, "all")
             _query_scope = {"scc_filing": "standard contract", "certification": "certification", "hr_exemption": "HR exemption cross-border"}.get(payload.route_type, "PIPIA")
             regs = retrieve_legal_documents(
@@ -204,6 +221,7 @@ class PIPIAService:
                 output_files=outputs,
                 route_type=payload.route_type,
                 risk_level=level,
+                legal_basis=PIPIA_ROUTE_LEGAL_BASIS[payload.route_type],
                 chapters=chapters,
                 consistency_issues=issues,
                 attachment_notes=attachment_notes,
@@ -428,6 +446,7 @@ class PIPIAService:
         scope = payload.personal_info_scope
         rights = payload.rights_protection
         emergency = payload.emergency_plan
+        path_evidence = payload.path_evidence
 
         facts: list[FactItem] = [
             self._schema_fact("request.route_type", payload.route_type, evidence_status="documented_evidence"),
@@ -459,6 +478,7 @@ class PIPIAService:
                 evidence_status="documented_evidence",
                 confidence=0.95,
             ),
+            self._schema_fact("request.path_evidence", path_evidence.model_dump()),
         ]
 
         for note in attachment_notes:
@@ -477,6 +497,11 @@ class PIPIAService:
             )
         return facts
 
+    _PIPIA_DEFAULT_ACTION = (
+        "针对个人信息保护影响评估中发现的合规问题进行详细评估，"
+        "根据《个人信息保护法》相关条款完成合规整改，并补充备案材料。"
+    )
+
     @staticmethod
     def _issue(
         issue_id: str,
@@ -490,6 +515,8 @@ class PIPIAService:
         rule_refs: list[str] | None = None,
         missing_materials: list[str] | None = None,
     ) -> IssueItem:
+        if not recommended_action or not str(recommended_action).strip():
+            recommended_action = PIPIAService._PIPIA_DEFAULT_ACTION
         return IssueItem(
             issue_id=issue_id,
             title=title,
@@ -561,6 +588,48 @@ class PIPIAService:
                 )
             )
 
+        if payload.route_type == "scc_filing":
+            evidence = payload.path_evidence
+            if evidence.recipient_notice_complete is False:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "告知不充分",
+                        "隐私政策仅概括披露关联公司，未明确境外接收方名称、所在地和具体处理目的。",
+                        "transparency",
+                        "MEDIUM",
+                        "修订告知文本，明确 SeaCommerce、接收国家、处理目的、数据范围和权利行使方式。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.notice"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            if evidence.sensitive_information_classification_confirmed is False:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "敏感信息识别存疑",
+                        "偏好标签可能推断健康或孕产状态，哈希设备标识仍可能关联个人，现有分类结论缺乏充分证据。",
+                        "data_classification",
+                        "HIGH",
+                        "重新开展字段级个人信息和敏感个人信息分类，并补充哈希算法与重标识风险分析。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.pi_categories", "request.spi_categories"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            if evidence.consent_evidence_complete is False:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "同意记录不完整",
+                        "当前只有单份同意记录截图，无法证明全部目标用户均已完成场景化单独同意。",
+                        "consent",
+                        "MEDIUM",
+                        "补充覆盖目标人群的同意记录清单、统计报告和撤回记录。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.consent"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+
         if payload.route_type == "certification" and "certification_material" not in attachment_roles:
             material_gaps.append("certification_material: 缺少认证路径所需的认证材料")
             issues.append(
@@ -595,6 +664,117 @@ class PIPIAService:
                         fact_refs=matching_fact_ids("request.route_type", "request.legal_basis", "derived.attachment"),
                         rule_refs=regulation_refs[:2],
                         missing_materials=["internal_policy"],
+                    )
+                )
+
+            evidence = payload.path_evidence
+            if not all(
+                value is True
+                for value in (
+                    evidence.hr_rules_lawfully_adopted,
+                    evidence.employee_handbook_has_explicit_cross_border_terms,
+                    evidence.collective_agreement_has_explicit_cross_border_terms,
+                )
+            ):
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "跨境人力资源管理豁免条件待验证",
+                        "现有材料不能同时证明劳动规章制度依法制定、集体合同依法签订且包含明确的数据出境条款，不能直接确认人力资源管理豁免成立。",
+                        "path",
+                        "HIGH",
+                        "补充制度制定程序、现行员工手册和集体合同中的明确出境条款，再确认是否适用豁免。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.legal_basis"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            if (
+                evidence.employee_handbook_has_explicit_cross_border_terms is not True
+                or evidence.collective_agreement_has_explicit_cross_border_terms is not True
+            ):
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "集体合同和员工手册条款不充分",
+                        "员工手册仅概括集团内共享，集体合同未明确数据出境事项，现有制度证据不足以支持豁免。",
+                        "legal_document",
+                        "HIGH",
+                        "修订员工手册或集体合同，明确接收方、国家、目的、数据范围和员工权利保障。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "derived.attachment"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            if evidence.recipient_privacy_policy_provided is not True:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "境外接收方政策不透明",
+                        "未提供境外母公司的全球隐私政策或可核验的中国个人信息保护措施，无法确认接收方保障能力。",
+                        "recipient",
+                        "MEDIUM",
+                        "补充境外接收方隐私政策、内部控制和适用中国法律的承诺。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.recipient"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            if payload.personal_info_scope.spi_categories:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "薪酬等敏感信息需特殊保护",
+                        "出境范围包含薪酬、奖金和绩效等敏感个人信息，适用豁免不会降低敏感个人信息保护要求。",
+                        "spi_risk",
+                        "HIGH",
+                        "落实严格访问控制、加密、最小化、影响评估和敏感个人信息专项告知要求。",
+                        fact_refs=matching_fact_ids("request.spi_categories", "request.consent"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+
+        if payload.route_type == "certification":
+            evidence = payload.path_evidence
+            if evidence.certification_body_china_recognized is not True:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "认证机构资质不符合中国个人信息保护认证要求",
+                        "EuroCert 的欧盟业务认证资质不能替代中国个人信息出境认证所要求的专业认证机构资质。",
+                        "path",
+                        "BLOCKER",
+                        "停止把 EuroCert 业务认证作为中国数据出境认证路径依据，并核验中国认可的专业认证机构。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.recipient"),
+                        rule_refs=regulation_refs[:2],
+                        missing_materials=["china_recognized_certification_qualification"],
+                    )
+                )
+            if evidence.certification_legal_obligation_citation_provided is not True:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "合法性基础论证存在法律适用性争议",
+                        "未提供欧盟认证要求的具体法律条款，且境外业务准入义务不能自动成为中国法下处理个人信息的法定义务。",
+                        "lawful_basis",
+                        "HIGH",
+                        "重新论证中国法下处理基础，并提供可核验的法律条款或合同必要性材料。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "request.legal_basis"),
+                        rule_refs=regulation_refs[:2],
+                    )
+                )
+            foreign_forum = bool(
+                evidence.contract_governing_law.strip()
+                or evidence.contract_exclusive_jurisdiction.strip()
+            )
+            if foreign_forum and evidence.china_data_subject_rights_terms_present is not True:
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "法律文件管辖条款对中国个人信息主体维权构成障碍",
+                        f"合同适用{evidence.contract_governing_law or '境外法律'}并约定{evidence.contract_exclusive_jurisdiction or '境外法院'}专属管辖，但未提供中国个人信息主体权利保障条款。",
+                        "legal_document",
+                        "HIGH",
+                        "补充中国强制性法律适用、个人信息主体权利和可操作救济机制，并重新协商争议解决条款。",
+                        fact_refs=matching_fact_ids("request.path_evidence", "derived.attachment"),
+                        rule_refs=regulation_refs[:2],
                     )
                 )
 
@@ -739,7 +919,7 @@ class PIPIAService:
             (
                 "request.route_type",
                 f"当前选择路径为 {payload.route_type}",
-                f"系统将按 {'标准合同备案' if payload.route_type == 'scc_filing' else '认证路径'} 组织 PIPIA 输出。",
+                f"系统将按 {self._route_label(payload.route_type)} 组织 PIPIA 输出。",
             ),
             (
                 "request.legal_basis",
@@ -797,6 +977,37 @@ class PIPIAService:
                 )
 
         return evidence_chain
+
+    @staticmethod
+    def _route_label(route_type: str) -> str:
+        return {
+            "scc_filing": "标准合同备案",
+            "certification": "认证路径",
+            "hr_exemption": "人力资源管理豁免评估",
+        }.get(route_type, route_type)
+
+    @staticmethod
+    def _effective_risk_level(payload: PIPIARequest, base_level: str) -> str:
+        rank = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+        floor = "LOW"
+        evidence = payload.path_evidence
+        if payload.route_type == "hr_exemption" and not all(
+            value is True
+            for value in (
+                evidence.hr_rules_lawfully_adopted,
+                evidence.employee_handbook_has_explicit_cross_border_terms,
+                evidence.collective_agreement_has_explicit_cross_border_terms,
+                evidence.recipient_privacy_policy_provided,
+            )
+        ):
+            floor = "MEDIUM"
+        if payload.route_type == "certification" and (
+            evidence.certification_body_china_recognized is not True
+            or evidence.certification_legal_obligation_citation_provided is not True
+            or evidence.china_data_subject_rights_terms_present is not True
+        ):
+            floor = "HIGH"
+        return max((base_level, floor), key=lambda item: rank.get(item, 0))
 
     @staticmethod
     def _attach_issue_evidence_refs(
