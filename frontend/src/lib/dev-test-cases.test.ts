@@ -147,6 +147,26 @@ describe("developer test case API contracts", () => {
     }
   });
 
+  it("keeps PIPIA cases aligned with the official SCC and certification scenarios", () => {
+    const [ecommerce, certification] = DEV_TEST_CASES.pipia;
+
+    expect(ecommerce.payload.route_type).toBe("scc_filing");
+    expect(ecommerce.payload.company_profile.company_name).toBe("海淘优选（杭州）科技有限公司");
+    expect(ecommerce.payload.company_profile.processing_person_count).toBe(8_000_000);
+    expect(ecommerce.payload.company_profile.outbound_pi_count).toBe(500_000);
+    expect(ecommerce.payload.transfer_context.recipient_name).toBe("SeaCommerce Pte. Ltd.");
+    expect(ecommerce.payload.personal_info_scope.pi_categories).toContain("Hashed_Device_ID");
+    expect(ecommerce.payload.personal_info_scope.pi_categories).toContain("Product_Category_Preference");
+
+    expect(certification.payload.route_type).toBe("certification");
+    expect(certification.payload.company_profile.company_name).toBe("智付通科技有限公司");
+    expect(certification.payload.company_profile.outbound_pi_count).toBe(50_000);
+    expect(certification.payload.transfer_context.recipient_name).toBe("EuroCert");
+    expect(certification.payload.transfer_context.recipient_country_region).toBe("德国");
+    expect(certification.payload.personal_info_scope.pi_categories).toContain("Contact_Email");
+    expect(certification.payload.transfer_context.legal_basis).toContain("欧盟认证要求");
+  });
+
   it("provides review files to the single-request developer endpoint", () => {
     for (const testCase of DEV_TEST_CASES.review) {
       expect(testCase.payload.uploaded_files).toEqual(testCase.backendFilePaths);
