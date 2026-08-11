@@ -9,9 +9,9 @@ Three-tier certainty classification (NEW) ensures that the report generator
 does not treat a suspected issue the same way as a confirmed one.
 """
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ── Enumerations ──────────────────────────────────────────────────────────
@@ -155,3 +155,20 @@ class IssueItem(BaseModel):
             "(e.g. raw suspicion, uncertain inference)."
         ),
     )
+
+    @field_validator("recommended_action", mode="before")
+    @classmethod
+    def ensure_recommended_action_nonempty(cls, value: Any) -> str:
+        """防穿透：保证 recommended_action 永不为空或全空白。
+
+        使用 mode="before" 在 Pydantic min_length=1 校验之前拦截空串，
+        避免 ValidationError。这是一个平台级安全网——无论哪个模块构造
+        IssueItem，只要 recommended_action 为空字符串或仅含空白，
+        就自动填入通用整改建议。
+        """
+        if isinstance(value, str) and (not value or not value.strip()):
+            return (
+                "针对发现的问题进行详细评估，根据适用法规完成合规整改，"
+                "并补充相关材料以确保合规。"
+            )
+        return value

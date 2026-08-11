@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "case_id": "bcr_controller_basic",
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "跨国科技集团",
+      "rating": "部分缺失"
+    },
+    "min_counts": {
+      "chapters": 4,
+      "problems": 1,
+      "output_files": 4
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "zip"
+    ],
+    "list_contains": {
+      "problems[].code": [
+        "3.2-C1"
+      ]
+    }
+  }
+}

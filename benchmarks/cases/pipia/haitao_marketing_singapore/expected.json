@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "case_id": "haitao_marketing_singapore",
+  "overall_result": "缺少标准合同备案核心材料，备案被阻断",
+  "risk_level": "MEDIUM",
+  "required_findings": [
+    "缺少标准合同文本",
+    "告知不充分",
+    "敏感信息识别存疑",
+    "同意记录不完整"
+  ],
+  "legal_basis": [
+    "PIPL 第十三条",
+    "PIPL 第三十九条",
+    "PIPL 第五十五条",
+    "个人信息出境标准合同办法 第五条、第七条"
+  ],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "route_type": "scc_filing",
+      "risk_level": "MEDIUM",
+      "filing_readiness.status": "blocked",
+      "material_gaps": [
+        "scc_contract: 缺少标准合同文本或附件"
+      ]
+    },
+    "fields_present": [
+      "facts",
+      "issues",
+      "evidence_chain",
+      "attachment_notes",
+      "filing_readiness"
+    ],
+    "min_counts": {
+      "chapters": 7,
+      "facts": 20,
+      "issues": 1,
+      "evidence_chain": 3,
+      "attachment_notes": 1,
+      "output_files": 5
+    },
+    "list_contains": {
+      "issues[].title": [
+        "缺少标准合同备案核心材料"
+      ],
+      "material_gaps": [
+        "scc_contract"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "zip",
+      "json"
+    ]
+  }
+}

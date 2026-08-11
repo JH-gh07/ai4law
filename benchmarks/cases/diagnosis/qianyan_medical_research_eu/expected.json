@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "case_id": "qianyan_medical_research_eu",
+  "harness": {
+    "fields_equal": {
+      "recommended_path": "security_assessment",
+      "risk_level": "HIGH",
+      "conclusion_source": "rule",
+      "confidence": "HIGH",
+      "matched_rule_id": "important_data",
+      "requires_human_review": false
+    },
+    "legal_basis_contains": [
+      "数据安全法",
+      "数据出境安全评估办法"
+    ],
+    "min_counts": {
+      "legal_basis": 2,
+      "action_items": 3
+    },
+    "max_counts": {
+      "missing_facts": 0
+    },
+    "list_contains": {
+      "action_items": [
+        "数据出境清单"
+      ]
+    }
+  }
+}

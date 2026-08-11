@@ -1,59 +1,6 @@
 {
   "case_id": "01_minimal",
   "description": "BCR审查—集团公司BCR文件形式审查，结构完整性和内部约束力检查",
-  "input": {
-    "company_name": "跨国科技集团",
-    "review_items": [
-      {
-        "code": "3.2-C1",
-        "title": "结构完整性",
-        "score": "partial",
-        "finding": "章节覆盖不完整",
-        "legal_basis": "GDPR 第47条",
-        "recommendation": "补齐约束力与权利章节",
-        "evidence": "BCR-v1 第3章"
-      },
-      {
-        "code": "3.2-C2",
-        "title": "集团内部约束力",
-        "score": "compliant",
-        "finding": "已覆盖",
-        "legal_basis": "GDPR 第47条",
-        "recommendation": "保持",
-        "evidence": "BCR-v1 第4章"
-      }
-    ],
-    "attachments": [],
-    "uploaded_files": []
-  },
-  "expected": {
-    "result_not_empty": true,
-    "fields_equal": {
-      "company_name": "跨国科技集团",
-      "rating": "部分缺失"
-    },
-    "min_counts": {
-      "chapters": 4,
-      "problems": 1,
-      "output_files": 4
-    },
-    "output_roles_contains": [
-      "markdown",
-      "docx",
-      "pdf",
-      "zip"
-    ],
-    "output_formats": [
-      "md",
-      "docx",
-      "pdf",
-      "zip"
-    ],
-    "list_contains": {
-      "problems[].code": [
-        "3.2-C1"
-      ]
-    }
-  },
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：“BCR审核”路径描述及测试案例/“BCR审核”测试案例及预期输出.docx"
+  "scenario_path": "benchmarks/cases/bcr/bcr_controller_basic/scenario.json",
+  "expected_path": "benchmarks/cases/bcr/bcr_controller_basic/expected.json"
 }

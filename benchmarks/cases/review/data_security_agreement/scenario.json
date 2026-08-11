@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "case_id": "data_security_agreement",
+  "module": "review",
+  "classification": "source_exact",
+  "display": {
+    "name": "审查-1: 数据安全及保密协议",
+    "description": "对数据安全及保密协议进行专项智能审查",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/“文档专项智能审查”测试案例及预期输出.docx",
+    "case": "测试案例一：数据安全及保密协议"
+  },
+  "request": {
+    "uploaded_files": [
+      "backend/tests/fixtures/cn/data_security_agreement.docx"
+    ],
+    "document_type": "dpa",
+    "review_focus": "隐含跨境传输、个人信息处理目的、安全事件时限、删除义务和委托方审计权",
+    "scenario_context": {
+      "company_name": "金陵科技学院信息化建设与管理处",
+      "document_title": "数据安全及保密协议",
+      "publisher_entity": "金陵科技学院信息化建设与管理处",
+      "receiver_name": "云途信息技术有限公司",
+      "receiver_country": "Singapore",
+      "transfer_purpose": "校园一卡通系统数据分析和运维，乙方平台服务器位于海外",
+      "review_focus": "检查隐含出境、高风险缺失条款和审计权"
+    },
+    "review_config": {
+      "review_depth": "standard",
+      "target_jurisdiction": "cn",
+      "max_llm_clauses": 0,
+      "enable_cross_document_check": false,
+      "output_language": "zh"
+    }
+  }
+}

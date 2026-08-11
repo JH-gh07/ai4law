@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "case_id": "bcr_high_risk_health",
+  "module": "bcr",
+  "classification": "source_exact",
+  "display": {
+    "name": "BCR-2: 高风险/健康数据案例",
+    "description": "BCR审核中涉及健康数据等高风险场景的结构性检查",
+    "jurisdiction": "EU"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：“BCR审核”路径描述及测试案例/“BCR审核”测试案例及预期输出.docx",
+    "case": "BCR 高风险/健康数据案例"
+  },
+  "request": {
+    "company_name": "HealthData Alliance",
+    "review_items": [],
+    "attachments": [],
+    "uploaded_files": [],
+    "uploaded_documents": [
+      {
+        "file_id": "bcr-healthdata-02",
+        "file_name": "case_02_healthdata_bcr_c_draft.docx",
+        "file_type": "docx",
+        "file_path": "backend/tests/bcr/fixtures/case_02_healthdata_bcr_c_draft.docx",
+        "document_role": "main_bcr_document",
+        "auto_detected_role": false
+      }
+    ],
+    "scenario_context": {
+      "company_name": "HealthData Alliance",
+      "headquarters_country": "Germany",
+      "declared_bcr_type": "BCR-C",
+      "processes_on_behalf_of_clients": false,
+      "third_countries": []
+    },
+    "review_config": {
+      "review_depth": "deep",
+      "max_llm_clauses": 20,
+      "enable_cross_document_check": false
+    }
+  }
+}

@@ -22,7 +22,7 @@ const REVIEW_FILE_EXTENSIONS = ["txt", "md", "json", "csv", "pdf", "docx"] as co
 const CN_FLOW_RECIPIENT_ROLES = ["processor", "controller", "subprocessor", "affiliate", "vendor"] as const;
 const CN_FLOW_FILE_EXTENSIONS = ["xlsx", "csv", "docx", "pdf"] as const;
 const GENERAL_FILE_EXTENSIONS = ["doc", "docx", "pdf", "txt", "md", "json", "csv"] as const;
-const PIPIA_ROUTE_TYPES = ["certification", "scc_filing"] as const;
+const PIPIA_ROUTE_TYPES = ["certification", "scc_filing", "hr_exemption"] as const;
 
 export type CnFlowResolvedFiles = {
   dataInventory: string[];

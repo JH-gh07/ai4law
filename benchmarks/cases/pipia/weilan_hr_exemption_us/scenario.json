@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "case_id": "weilan_hr_exemption_us",
+  "module": "pipia",
+  "classification": "source_exact",
+  "display": {
+    "name": "PIPIA-2: 蔚蓝科技员工HR数据→美国总部（HR豁免评估）",
+    "description": "蔚蓝科技向美国母公司GlobalTech传输约2000名中国员工薪酬绩效数据用于全球人力资源管理，涉及HR豁免条件判断",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：\"认证标准合同路径\"路径描述及测试案例/\"认证_标准合同路径\"测试案例及预期输出.docx",
+    "case": "测试案例二：跨国企业员工数据跨境人力资源管理（标准合同路径，涉及豁免判断）"
+  },
+  "request": {
+    "route_type": "hr_exemption",
+    "company_profile": {
+      "company_name": "蔚蓝科技（中国）公司",
+      "company_uscc": "原始测试案例未提供",
+      "is_ciio": false,
+      "processing_person_count": 2000,
+      "outbound_pi_count": 2000,
+      "outbound_spi_count": 2000,
+      "industry": "信息技术"
+    },
+    "transfer_context": {
+      "purpose": "全球人力资源管理；场景：中国员工薪酬、绩效考核、岗位信息传输至美国集团总部HR系统；频率：periodic；方式：通过集团内部VPN加密传输；业务概况：跨国集团GlobalTech Inc.的子公司，需配合全球统一HR系统和人才盘点",
+      "recipient_name": "GlobalTech Inc.",
+      "recipient_country_region": "美国",
+      "legal_basis": "实施跨境人力资源管理所必需；合法性论证：声称依据依法制定的《员工手册》和集体合同，但《员工手册》中数据跨境条款简略，仅写\"您的个人信息可能会在集团内共享\"；集体合同为较早版本，未专门提及数据出境事项"
+    },
+    "personal_info_scope": {
+      "pi_categories": [
+        "员工ID",
+        "姓名",
+        "岗位",
+        "工作邮箱"
+      ],
+      "spi_categories": [
+        "基本工资",
+        "绩效奖金",
+        "绩效评级"
+      ],
+      "subject_volume": 2000
+    },
+    "rights_protection": {
+      "notice_mechanism": "《员工手册》仅概括提及集团内数据共享，未明确境外接收方和具体目的",
+      "consent_mechanism": "依据集体合同和员工手册，未取得针对敏感个人信息（薪酬）出境的单独同意",
+      "dsar_channel": "原始测试案例未提供",
+      "retention_policy": "原始测试案例未提供"
+    },
+    "emergency_plan": {
+      "incident_response_sla_hours": 48,
+      "escalation_path": "数据保护负责人 → 中国法务 → 集团首席隐私官"
+    },
+    "attachments": [
+      {
+        "file_role": "internal_policy",
+        "file_name": "蔚蓝科技_员工手册_跨境数据条款摘录.txt",
+        "file_format": "txt",
+        "storage_uri": "backend/tests/pipia/fixtures/weilan_employee_handbook_excerpt.txt"
+      }
+    ]
+  }
+}

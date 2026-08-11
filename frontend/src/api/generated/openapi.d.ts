@@ -4834,7 +4834,7 @@ export interface components {
              * Route Type
              * @enum {string}
              */
-            route_type: "certification" | "scc_filing";
+            route_type: "certification" | "scc_filing" | "hr_exemption";
             transfer_context: components["schemas"]["PIPIATransferContext"];
         };
         /** PIPIAResult */

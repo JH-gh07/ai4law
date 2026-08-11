@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "case_id": "zhifutong_eurocert_de",
+  "module": "pipia",
+  "classification": "source_exact",
+  "display": {
+    "name": "PIPIA-3: 智付通商户资料→德国EuroCert（认证路径）",
+    "description": "智付通向德国EuroCert提供约5万商户信息用于申请欧盟支付服务认证，认证机构资质不符、合法性基础存疑",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：\"认证标准合同路径\"路径描述及测试案例/\"认证_标准合同路径\"测试案例及预期输出.docx",
+    "case": "测试案例三：金融科技公司向境外认证机构传输数据（认证路径）"
+  },
+  "request": {
+    "route_type": "certification",
+    "company_profile": {
+      "company_name": "智付通科技有限公司",
+      "company_uscc": "原始测试案例未提供",
+      "is_ciio": false,
+      "processing_person_count": 50000,
+      "outbound_pi_count": 50000,
+      "outbound_spi_count": 0,
+      "industry": "金融科技"
+    },
+    "transfer_context": {
+      "purpose": "欧盟支付服务认证申请；场景：向 EuroCert 提交欧盟支付服务认证资料；频率：one_time；方式：安全邮件和加密链接手动传输；业务概况：提供跨境支付技术，计划拓展欧盟业务；处理活动：向欧盟认证机构提供商户基本信息和交易概况以申请支付服务认证",
+      "recipient_name": "EuroCert",
+      "recipient_country_region": "德国",
+      "legal_basis": "履行法定义务（欧盟认证要求）+商户合同授权；合法性论证：未提供欧盟认证要求的具体条款，将其等同于中国法下法定义务存在争议；必要性论证：需区分欧盟业务准入认证与中国个人信息出境认证，当前 EuroCert 的中国认可资质未证明"
+    },
+    "personal_info_scope": {
+      "pi_categories": [
+        "商户名称",
+        "工商注册号",
+        "联系人邮箱",
+        "联系人姓名",
+        "月交易笔数区间"
+      ],
+      "spi_categories": [],
+      "subject_volume": 50000
+    },
+    "rights_protection": {
+      "notice_mechanism": "资料未提供，需补充对商户联系人个人信息出境的明确告知",
+      "consent_mechanism": "声称商户合同已授权，但未提供可核验授权条款",
+      "dsar_channel": "原始测试案例未提供",
+      "retention_policy": "认证服务合同未明确中国个人信息主体保护和必要保存期限"
+    },
+    "emergency_plan": {
+      "incident_response_sla_hours": 24,
+      "escalation_path": "原始测试案例未提供，需补充跨境事件处置和监管上报流程"
+    },
+    "attachments": [
+      {
+        "file_role": "certification_material",
+        "file_name": "EuroCert_认证服务合同_数据保护附件摘录.txt",
+        "file_format": "txt",
+        "storage_uri": "backend/tests/pipia/fixtures/zhifutong_eurocert_contract_excerpt.txt"
+      }
+    ]
+  }
+}

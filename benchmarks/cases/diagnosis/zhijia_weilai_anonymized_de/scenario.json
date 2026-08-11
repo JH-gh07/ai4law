@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "case_id": "zhijia_weilai_anonymized_de",
+  "module": "diagnosis",
+  "classification": "source_exact",
+  "display": {
+    "name": "诊断-3: 智驾未来→德国（豁免路径）",
+    "description": "智驾未来向德国母公司传输完全匿名化传感器数据，不含个人信息，适用豁免",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx",
+    "case": "测试案例三：匿名地图数据出境（豁免路径）"
+  },
+  "request": {
+    "company_name": "智驾未来",
+    "answers": {
+      "q1_is_ciio": "no",
+      "q2_has_important_data": "no",
+      "q3_pii_count": 0,
+      "q4_spi_count": 0,
+      "q5_no_personal_info": "yes",
+      "q6_scenario": "other",
+      "q7_receiver_type": "intra_group",
+      "q8_purpose": "向德国母公司提供完全匿名化处理的车辆传感器数据包，用于改进全球自动驾驶算法",
+      "m1_enterprise_name": "智驾未来自动驾驶技术有限公司",
+      "m1_industry": "自动驾驶",
+      "m1_company_size": "中型企业",
+      "m3_processes_personal_info": "no",
+      "m3_personal_info_types": [],
+      "m3_sensitive_info_types": [],
+      "m3_processes_important_data": "no",
+      "m3_important_data_types": [],
+      "m3_data_sources": [
+        "车载传感器系统"
+      ],
+      "m3_data_volume_range": "100-1000万条",
+      "m3_retention_desc": "数据经完全匿名化处理，无法关联到特定车辆或个人",
+      "m4_cross_border_transfer": "yes",
+      "m4_cross_border_regions": "德国",
+      "m5_systems": [
+        "自动驾驶数据平台"
+      ],
+      "m5_security_measures": [
+        "数据匿名化",
+        "加密传输"
+      ]
+    }
+  }
+}

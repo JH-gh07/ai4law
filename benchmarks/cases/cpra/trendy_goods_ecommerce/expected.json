@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "trendy_goods_ecommerce",
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "DataComply Inc.",
+      "risk_level": "HIGH"
+    },
+    "min_counts": {
+      "chapters": 6,
+      "gap_items": 5,
+      "output_files": 7
+    },
+    "list_contains": {
+      "chapters[].title": [
+        "执行摘要",
+        "企业适用性与范围",
+        "数据处理活动合规分析",
+        "消费者权利保障评估",
+        "敏感信息与第三方管理",
+        "行动清单与优先级"
+      ],
+      "chapters[].content": [
+        "补齐分场景告知文本与同意留痕机制",
+        "消费者权利流程",
+        "供应商"
+      ],
+      "gap_items[].legal_basis": [
+        "CPRA"
+      ]
+    },
+    "list_excludes": {
+      "chapters[].content": [
+        "LLM未配置",
+        "占位内容",
+        "{{CIT-",
+        "引用无法映射"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "xlsx",
+      "zip",
+      "citation_map_json",
+      "document_ir_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "case_id": "smart_city_surveillance",
+  "module": "dpia",
+  "classification": "source_exact",
+  "display": {
+    "name": "DPIA-2: 智能城市公共空间人群分析",
+    "description": "智能城市公共空间人群分析系统DPIA评估，涉及大规模监控和生物识别风险",
+    "jurisdiction": "EU"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：“DPIA草案生成”路径描述及测试案例/“DPIA草案生成”测试案例及预期输出.docx",
+    "case": "测试案例二：智能城市公共空间人群分析系统"
+  },
+  "request": {
+    "project_name": "智能课程推荐系统",
+    "project_goal": "使用机器学习算法分析学生平台行为数据，推荐个性化学习路径和课程",
+    "dpia_trigger_reasons": [
+      "自动化决策与画像处理 GDPR Art 22",
+      "大规模处理 GDPR Art 35"
+    ],
+    "processing_flow_description": "收集学生在平台上的浏览记录、课程完成率、测试成绩、互动行为，通过协同过滤和内容推荐算法生成个性化课程推荐。数据存储在欧盟AWS法兰克福区域。",
+    "data_categories": [
+      "学生ID",
+      "邮箱",
+      "专业",
+      "浏览记录",
+      "课程完成率",
+      "测试成绩",
+      "学习时长",
+      "互动行为"
+    ],
+    "special_category_data": false,
+    "special_category_types": [],
+    "data_subject_categories": [
+      "学生"
+    ],
+    "data_subject_count": "50000",
+    "retention_period": "毕业后3年",
+    "cross_border_transfer": false,
+    "transfer_destination": "",
+    "automated_decision_making": true,
+    "systematic_monitoring": false,
+    "large_scale_processing": true,
+    "data_matching": false,
+    "new_technology": true,
+    "vulnerable_data_subjects": false,
+    "consulted_internal_departments": [
+      "IT部门",
+      "教务部"
+    ],
+    "external_experts": [],
+    "data_subject_consultation_plan": "通过学生代表会议征求意见",
+    "lawful_basis": [
+      "GDPR Art 6(1)(a) 同意",
+      "GDPR Art 6(1)(f) 正当利益"
+    ],
+    "necessity_statement": "AI个性化推荐是提升教学效果和学生学习体验的必要手段。",
+    "proportionality_statement": "仅收集与学习推荐直接相关的行为数据，不收集额外个人数据。",
+    "transparency_information": "通过隐私政策和首次登录弹窗告知学生数据处理方式和算法逻辑。",
+    "identified_risks": [
+      {
+        "risk_id": "RISK-001",
+        "risk_description": "推荐算法可能形成信息茧房，限制学生接触多样化内容",
+        "likelihood": "medium",
+        "impact": "medium",
+        "risk_source": "technology"
+      }
+    ],
+    "mitigation_measures": [
+      {
+        "mitigation_id": "MIT-001",
+        "description": "在推荐系统中增加多样性机制，确保推荐内容涵盖多领域",
+        "target_risk_ids": [
+          "RISK-001"
+        ],
+        "status": "in_progress"
+      }
+    ],
+    "dpia_owner": "隐私专员",
+    "dpo_name": "",
+    "dpo_opinion": "建议上线但需要持续监控推荐质量指标",
+    "review_date": "2026-09-30",
+    "uploaded_files": []
+  }
+}

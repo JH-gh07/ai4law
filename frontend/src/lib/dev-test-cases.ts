@@ -33,6 +33,9 @@ import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2
 import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
 import innovateUsTiaScenario from "../../../benchmarks/cases/tia/innovate_crm_us_saas/scenario.json";
 import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinical_india/scenario.json";
+import haitaoMarketingScenario from "../../../benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json";
+import weilanHrScenario from "../../../benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json";
+import zhifutongEurocertScenario from "../../../benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -74,6 +77,9 @@ const germanyIndiaSccRequest = germanyIndiaSccScenario.request as ModuleRequestM
 const netherlandsSerbiaSccRequest = netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"];
 const innovateUsTiaRequest = innovateUsTiaScenario.request as ModuleRequestMap["tia"];
 const leidenIndiaTiaRequest = leidenIndiaTiaScenario.request as ModuleRequestMap["tia"];
+const haitaoMarketingRequest = haitaoMarketingScenario.request as ModuleRequestMap["pipia"];
+const weilanHrRequest = weilanHrScenario.request as ModuleRequestMap["pipia"];
+const zhifutongEurocertRequest = zhifutongEurocertScenario.request as ModuleRequestMap["pipia"];
 
 function sharedTiaFormDefaults(
   request: ModuleRequestMap["tia"],
@@ -112,6 +118,55 @@ function sharedTiaFormDefaults(
     key_actions: labeled(conclusion, "关键行动："),
     dpo_opinion: labeled(conclusion, "DPO意见："),
     review_date: labeled(conclusion, "复审日期："),
+    attachment_role: attachment.file_role,
+  };
+}
+
+function sharedPipiaFormDefaults(
+  request: ModuleRequestMap["pipia"],
+): PipiaFormValues {
+  const profile = request.company_profile;
+  const transfer = request.transfer_context;
+  const scope = request.personal_info_scope;
+  const rights = request.rights_protection;
+  const emergency = request.emergency_plan;
+  const attachment = request.attachments[0];
+  return {
+    route_type: request.route_type,
+    company_name: profile.company_name,
+    company_uscc: profile.company_uscc,
+    industry: profile.industry ?? "",
+    shareholding_structure: "资料未提供",
+    actual_controller: "资料未提供",
+    overseas_investment: "资料未提供",
+    org_structure_privacy_team: "资料未提供",
+    business_overview: "",
+    processing_activity_overview: "",
+    is_ciio: profile.is_ciio ?? false,
+    processing_person_count: profile.processing_person_count ?? 0,
+    outbound_pi_count: profile.outbound_pi_count ?? 0,
+    outbound_spi_count: profile.outbound_spi_count ?? 0,
+    outbound_scenario_name: "",
+    outbound_frequency: "periodic",
+    transfer_method: "",
+    domestic_storage: "",
+    overseas_storage: "",
+    transfer_link: "",
+    purpose: transfer.purpose,
+    recipient_name: transfer.recipient_name,
+    recipient_country_region: transfer.recipient_country_region,
+    legal_basis: transfer.legal_basis,
+    legality_justification: "",
+    necessity_justification: "",
+    pi_categories: (scope.pi_categories ?? []).join(", "),
+    spi_categories: (scope.spi_categories ?? []).join(", "),
+    subject_volume: scope.subject_volume ?? 0,
+    notice_mechanism: rights.notice_mechanism,
+    consent_mechanism: rights.consent_mechanism,
+    dsar_channel: rights.dsar_channel,
+    retention_policy: rights.retention_policy,
+    incident_response_sla_hours: emergency.incident_response_sla_hours ?? 24,
+    escalation_path: emergency.escalation_path ?? "",
     attachment_role: attachment.file_role,
   };
 }
@@ -779,106 +834,36 @@ const tiaChinaBCR = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PIPIA — 2 cases (from docx extraction)
+// PIPIA — 3 cases (from shared scenarios, source_exact)
 //   来源测试文档:
 //     benchmarks/source-materials/cn/legacy-docx/“认证_标准合同路径”测试案例及预期输出.docx
 //     resources/new/…/中国/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例1_测试结果.docx
-//     backend/tests/pipia/cases/01_minimal.json
+//     benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json
+//     benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json
 // ═══════════════════════════════════════════════════════════════════════════
 
-const pipiaSCCFiling = {
-  name: "PIPIA-1: 海淘优选会员营销数据标准合同路径",
-  description: "海淘优选向新加坡子公司传输50万高价值会员营销数据，存在敏感属性识别和告知同意缺口",
+const pipiaHaitaoMarketing = {
+  name: haitaoMarketingScenario.display.name,
+  description: haitaoMarketingScenario.display.description,
   jurisdiction: "CN" as const,
-  formDefaults: {
-    company_name: "海淘优选（杭州）科技有限公司",
-    company_uscc: "待补充统一社会信用代码",
-    industry: "电商零售",
-    shareholding_structure: "资料未提供",
-    actual_controller: "资料未提供",
-    overseas_investment: "新加坡全资子公司 SeaCommerce Pte. Ltd.",
-    org_structure_privacy_team: "资料未提供",
-    business_overview: "面向中国消费者的跨境电商平台，注册会员800万",
-    processing_activity_overview: "筛选约50万年消费超万元的高价值会员，用于个性化推荐、精准营销和区域市场分析",
-    is_ciio: false,
-    processing_person_count: 8000000,
-    outbound_pi_count: 500000,
-    outbound_spi_count: 0,
-    route_type: "scc_filing" as const,
-    outbound_scenario_name: "高价值会员营销数据同步至新加坡亚太运营中心",
-    outbound_frequency: "periodic",
-    transfer_method: "加密 API 同步",
-    domestic_storage: "杭州阿里云 RDS 数据库",
-    overseas_storage: "新加坡 AWS Redshift 数据仓库",
-    transfer_link: "杭州阿里云 RDS→加密 API→新加坡 AWS Redshift",
-    purpose: "为高价值会员提供个性化商品推荐和营销活动，并开展区域市场分析",
-    recipient_name: "SeaCommerce Pte. Ltd.",
-    recipient_country_region: "新加坡",
-    legal_basis: "用户单独同意+履行个性化服务合同所必需",
-    legality_justification: "隐私政策仅写向关联公司共享用于营销，未明确 SeaCommerce 名称和所在地；批量同意记录不完整",
-    necessity_justification: "个性化服务作为合同必要性的论证较宽泛，字段范围仍需精简",
-    pi_categories: "Hashed_Device_ID,Product_Category_Preference,Browsing_History,Order_Summary",
-    spi_categories: "",
-    subject_volume: 500000,
-    notice_mechanism: "隐私政策仅笼统写明关联公司，未明确新加坡接收方名称和所在地",
-    consent_mechanism: "仅有单条同意记录截图，未提供覆盖50万目标用户的批量记录或统计报告",
-    dsar_channel: "待补充个人信息主体权利请求渠道",
-    retention_policy: "资料未提供，需补充最短必要保存期限",
-    incident_response_sla_hours: 24,
-    escalation_path: "资料未提供，需补充安全事件处置和上报流程",
-    attachment_role: "scc_contract"
-  },
-  backendFilePaths: [
-    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx",
-  ]
+  formDefaults: sharedPipiaFormDefaults(haitaoMarketingRequest),
+  backendFilePaths: haitaoMarketingRequest.attachments?.map((a: any) => a.storage_uri) ?? [],
 };
 
-const pipiaCertification = {
-  name: "PIPIA-2: 智付通向 EuroCert 提交商户资料",
-  description: "智付通为欧盟支付业务认证向德国 EuroCert 提供约5万商户资料，认证机构资格和法律基础存疑",
+const pipiaWeilanHr = {
+  name: weilanHrScenario.display.name,
+  description: weilanHrScenario.display.description,
   jurisdiction: "CN" as const,
-  formDefaults: {
-    company_name: "智付通科技有限公司",
-    company_uscc: "待补充统一社会信用代码",
-    industry: "金融科技",
-    shareholding_structure: "资料未提供",
-    actual_controller: "资料未提供",
-    overseas_investment: "资料未提供",
-    org_structure_privacy_team: "资料未提供",
-    business_overview: "提供跨境支付技术，计划拓展欧盟业务",
-    processing_activity_overview: "向欧盟认证机构提供商户基本信息和交易概况以申请支付服务认证",
-    is_ciio: false,
-    processing_person_count: 50000,
-    outbound_pi_count: 50000,
-    outbound_spi_count: 0,
-    route_type: "certification" as const,
-    outbound_scenario_name: "向 EuroCert 提交欧盟支付服务认证资料",
-    outbound_frequency: "one_time",
-    transfer_method: "安全邮件和加密链接手动传输",
-    domestic_storage: "资料未提供",
-    overseas_storage: "EuroCert 认证业务系统，具体位置待补充",
-    transfer_link: "中国境内→安全邮件/加密链接→德国 EuroCert",
-    purpose: "满足欧盟监管机构对支付服务商的尽职调查和合规认证要求",
-    recipient_name: "EuroCert",
-    recipient_country_region: "德国",
-    legal_basis: "履行法定义务（欧盟认证要求）+商户合同授权",
-    legality_justification: "未提供欧盟认证要求的具体条款，将其等同于中国法下法定义务存在争议",
-    necessity_justification: "需区分欧盟业务准入认证与中国个人信息出境认证，当前 EuroCert 的中国认可资质未证明",
-    pi_categories: "Merchant_Name,Business_Registration_Number,Contact_Email,Contact_Name,Monthly_Txn_Volume_Band",
-    spi_categories: "",
-    subject_volume: 50000,
-    notice_mechanism: "资料未提供，需补充对商户联系人个人信息出境的明确告知",
-    consent_mechanism: "声称商户合同已授权，但未提供可核验授权条款",
-    dsar_channel: "待补充中国个人信息主体权利请求渠道",
-    retention_policy: "认证服务合同未明确中国个人信息主体保护和必要保存期限",
-    incident_response_sla_hours: 24,
-    escalation_path: "资料未提供，需补充跨境事件处置和监管上报流程",
-    attachment_role: "certification_material"
-  },
-  backendFilePaths: [
-    "resources/legal/sources/cn/references/个人信息出境标准合同【模板】.docx",
-  ]
+  formDefaults: sharedPipiaFormDefaults(weilanHrRequest),
+  backendFilePaths: weilanHrRequest.attachments?.map((a: any) => a.storage_uri) ?? [],
+};
+
+const pipiaZhifutongEurocert = {
+  name: zhifutongEurocertScenario.display.name,
+  description: zhifutongEurocertScenario.display.description,
+  jurisdiction: "CN" as const,
+  formDefaults: sharedPipiaFormDefaults(zhifutongEurocertRequest),
+  backendFilePaths: zhifutongEurocertRequest.attachments?.map((a: any) => a.storage_uri) ?? [],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1071,7 +1056,7 @@ export const DEV_TEST_CASES = {
   bcr: defineDevCases("bcr", [bcrMediumRisk, bcrHighRisk, bcrStructuralFailure]),
   dpia: defineDevCases("dpia", [dpiaAIRecruitment, dpiaSmartCity]),
   tia: defineDevCases("tia", [tiaBasicSCC, tiaChinaBCR]),
-  pipia: defineDevCases("pipia", [pipiaSCCFiling, pipiaCertification]),
+  pipia: defineDevCases("pipia", [pipiaHaitaoMarketing, pipiaWeilanHr, pipiaZhifutongEurocert]),
   review: defineDevCases("review", [reviewPrivacyPolicy, reviewSccContract]),
   cn_flow: defineDevCases("cn_flow", [cnFlowBasic, cnFlowRestricted]),
   us_14117: defineDevCases("us_14117", [us14117Basic, us14117RestrictedParty, us14117TelemetryGreen]),

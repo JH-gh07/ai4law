@@ -50,7 +50,7 @@ class PIPIAAttachment(BaseModel):
 
 
 class PIPIARequest(BaseModel):
-    route_type: Literal["certification", "scc_filing"]
+    route_type: Literal["certification", "scc_filing", "hr_exemption"]
     company_profile: PIPIACompanyProfile
     transfer_context: PIPIATransferContext
     personal_info_scope: PIPIAPersonalInfoScope

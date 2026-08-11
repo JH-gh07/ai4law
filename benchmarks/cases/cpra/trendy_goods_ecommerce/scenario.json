@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "case_id": "trendy_goods_ecommerce",
+  "module": "cpra",
+  "classification": "source_exact",
+  "display": {
+    "name": "CPRA-1: TrendyGoods 电商平台",
+    "description": "中型电商年收入30M，缺少opt-out机制，Cookie暗模式，广告合同不合规",
+    "jurisdiction": "US"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：“CPRA合规”路径描述及测试案例/“CPRA合规”测试案例及预期输出.docx",
+    "case": "TrendyGoods 电商平台"
+  },
+  "request": {
+    "company_name": "DataComply Inc.",
+    "business_model": "SaaS平台，年收入超过2500万美元，50万加州消费者",
+    "data_lifecycle": "收集用户在平台上的行为数据→处理分析→存储在AWS→定期删除",
+    "notice_and_consent": "隐私告知缺失：未在收集时提供'Do Not Sell My Personal Information'链接",
+    "consumer_rights_process": "目前仅通过邮箱privacy@datacomply.com接收请求，无Web表单和电话渠道",
+    "opt_out_and_sale_sharing": "存在向第三方广告商共享用户数据以换取货币对价的行为，但未提供opt-out退出机制",
+    "vendor_management": "供应商管理未体现DPA条款，未对每个供应商进行数据合规尽职调查",
+    "attachments": [
+      {
+        "file_role": "privacy_policy",
+        "file_name": "synthetic_privacy_policy.url",
+        "file_format": "url",
+        "storage_uri": "https://example.com/privacy-policy"
+      }
+    ]
+  }
+}

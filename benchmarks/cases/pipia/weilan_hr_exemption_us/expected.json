@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "case_id": "weilan_hr_exemption_us",
+  "overall_result": "可能符合HR豁免条件但证据不足，建议审慎评估后按标准合同路径补充",
+  "risk_level": "LOW",
+  "required_findings": [
+    "跨境人力资源管理豁免条件待验证",
+    "集体合同和员工手册条款不充分",
+    "境外接收方政策不透明",
+    "薪酬等敏感信息需特殊保护"
+  ],
+  "legal_basis": [
+    "促进和规范数据跨境流动规定 第六条",
+    "PIPL 第十三条",
+    "PIPL 第二十八条",
+    "PIPL 第三十九条"
+  ],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "route_type": "hr_exemption",
+      "risk_level": "LOW"
+    },
+    "fields_present": [
+      "facts",
+      "issues",
+      "evidence_chain",
+      "attachment_notes",
+      "filing_readiness"
+    ],
+    "min_counts": {
+      "chapters": 7,
+      "facts": 18,
+      "issues": 1,
+      "evidence_chain": 3,
+      "output_files": 5
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "zip",
+      "json"
+    ]
+  }
+}

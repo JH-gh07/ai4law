@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "qianyan_medical_research_eu",
+  "module": "diagnosis",
+  "classification": "source_exact",
+  "display": {
+    "name": "诊断-2: 前沿生命科技→欧盟（安全评估路径）",
+    "description": "前沿生命科技研究院向欧盟传输1.5万名罕见病患者基因数据，涉及重要数据，触发安全评估",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx",
+    "case": "测试案例二：医疗研究数据出境（安全评估路径）"
+  },
+  "request": {
+    "company_name": "前沿生命科技研究院",
+    "answers": {
+      "q1_is_ciio": "no",
+      "q2_has_important_data": "yes",
+      "q3_pii_count": 15000,
+      "q4_spi_count": 15000,
+      "q5_no_personal_info": "no",
+      "q6_scenario": "other",
+      "q7_receiver_type": "third_party",
+      "q8_purpose": "与欧盟大学合作罕见病研究，传输脱敏医疗记录和基因测序数据",
+      "m1_enterprise_name": "前沿生命科技研究院",
+      "m1_industry": "卫生健康",
+      "m1_company_size": "中型机构",
+      "m3_processes_personal_info": "yes",
+      "m3_personal_info_types": [
+        "诊断结果",
+        "用药史",
+        "基因测序数据摘要"
+      ],
+      "m3_sensitive_info_types": [
+        "医疗健康数据",
+        "基因数据"
+      ],
+      "m3_processes_important_data": "yes",
+      "m3_important_data_types": [
+        "族群生物特征数据",
+        "罕见病基因测序数据"
+      ],
+      "m3_data_sources": [
+        "临床研究数据库"
+      ],
+      "m3_data_volume_range": "10万条以下",
+      "m4_cross_border_transfer": "yes",
+      "m4_cross_border_regions": "欧盟",
+      "m5_systems": [
+        "临床研究数据平台"
+      ],
+      "m5_security_measures": [
+        "数据脱敏",
+        "加密传输"
+      ]
+    }
+  }
+}

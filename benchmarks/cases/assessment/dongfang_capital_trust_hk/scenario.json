@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "case_id": "dongfang_capital_trust_hk",
+  "module": "assessment",
+  "classification": "source_exact",
+  "display": {
+    "name": "安全评估-1: 东方信托→香港（CIIO安全评估路径）",
+    "description": "东方信托作为CIIO向香港母公司传输金融结算和个人金融数据，触发安全评估",
+    "jurisdiction": "CN"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx",
+    "case": "测试案例一：CIIO金融机构向境外母公司传输数据"
+  },
+  "request": {
+    "company_name": "云帆数据科技有限公司",
+    "industry": "互联网SaaS",
+    "is_ciio": false,
+    "contains_important_data": false,
+    "pii_count": 1200000,
+    "spi_count": 15000,
+    "transfer_purpose": "全球客服与风控联防",
+    "receiver_country": "新加坡",
+    "force_override_path": false,
+    "uploaded_files": []
+  }
+}

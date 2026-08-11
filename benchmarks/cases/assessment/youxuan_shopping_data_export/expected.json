@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "case_id": "youxuan_shopping_data_export",
+  "harness": {
+    "fields_equal": {
+      "state": "COMPLETED"
+    },
+    "profile_contains": {
+      "company_name": "跨境优品科技有限公司",
+      "pii_count": 450000,
+      "is_ciio": false
+    },
+    "min_counts": {
+      "chapters": 8,
+      "regulations": 20,
+      "output_files": 23
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "official_markdown"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
+  }
+}

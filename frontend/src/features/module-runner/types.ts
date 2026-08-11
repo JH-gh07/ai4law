@@ -102,7 +102,7 @@ export type AssessmentFormValues = {
   force_override_path: boolean;
 };
 
-export type PipiaRouteType = "scc_filing" | "certification";
+export type PipiaRouteType = "scc_filing" | "certification" | "hr_exemption";
 
 export type PipiaAttachmentRole = "scc_contract" | "certification_material" | "internal_policy" | "supporting_evidence";
 

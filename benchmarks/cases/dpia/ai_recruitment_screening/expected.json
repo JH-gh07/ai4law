@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "case_id": "ai_recruitment_screening",
+  "harness": {
+    "fields_equal": {
+      "state": "COMPLETED",
+      "need_assessment.dpia_required": true
+    },
+    "profile_contains": {
+      "project_name": "员工健康AI评估系统",
+      "special_category_data": true,
+      "cross_border_transfer": true,
+      "automated_decision_making": true,
+      "large_scale_processing": true
+    },
+    "min_counts": {
+      "chapters": 7,
+      "regulations": 1,
+      "risk_matrix": 2,
+      "mitigation_plan": 2,
+      "need_assessment.trigger_reasons": 1,
+      "output_files": 14
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "need_assessment_json",
+      "legal_grounding_json",
+      "evidence_chain_xlsx"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
+  }
+}

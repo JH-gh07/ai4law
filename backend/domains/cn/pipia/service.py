@@ -97,12 +97,14 @@ class PIPIAService:
                 pii_count=profile.outbound_pi_count,
                 spi_count=profile.outbound_spi_count,
             )
+            _path_label = {"scc_filing": "scc", "certification": "all", "hr_exemption": "all"}.get(payload.route_type, "all")
+            _query_scope = {"scc_filing": "standard contract", "certification": "certification", "hr_exemption": "HR exemption cross-border"}.get(payload.route_type, "PIPIA")
             regs = retrieve_legal_documents(
-                f"PIPIA standard contract certification {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
+                f"PIPIA {_query_scope} {payload.transfer_context.purpose} {payload.transfer_context.recipient_country_region}",
                 module="cn_assessment",
                 top_k=4,
                 jurisdiction="cn",
-                path="scc" if payload.route_type == "scc_filing" else "all",
+                path=_path_label,
             ).documents
             citation_registry = registry_from_documents(regs, jurisdiction="CN")
             legal_prompt = build_pipia_legal_prompt_context(citation_registry)
@@ -318,7 +320,7 @@ class PIPIAService:
                 "## 处理者与出境活动基础信息\n\n"
                 f"- 企业名称：{profile.company_name}\n"
                 f"- 统一社会信用代码：{profile.company_uscc}\n"
-                f"- 合规路径：{'标准合同备案' if payload.route_type == 'scc_filing' else '认证路径'}\n"
+                f"- 合规路径：{'标准合同备案' if payload.route_type == 'scc_filing' else '认证路径' if payload.route_type == 'certification' else '人力资源管理豁免评估'}\n"
                 f"- 是否关键信息基础设施运营者（CIIO）：{'是' if profile.is_ciio else '否'}\n"
             ),
             "个人信息出境处理活动说明": (
@@ -371,7 +373,7 @@ class PIPIAService:
             "PIPIA 结论与备案建议": (
                 "## PIPIA 结论与备案建议\n\n"
                 f"- 综合风险等级：{level}\n"
-                f"- 合规路径：{'标准合同备案' if payload.route_type == 'scc_filing' else '认证'}\n"
+                f"- 合规路径：{'标准合同备案' if payload.route_type == 'scc_filing' else '认证' if payload.route_type == 'certification' else '人力资源管理豁免'}\n"
                 "- 备案准备度：需补充信息以确认\n"
                 "\n结论：\n"
                 "基于当前输入，PIPIA 草案已完成数据收集和初步分析。"
@@ -574,6 +576,27 @@ class PIPIAService:
                     missing_materials=["certification_material"],
                 )
             )
+
+        if payload.route_type == "hr_exemption":
+            has_hr_policy = any(
+                role in ("internal_policy", "supporting_evidence")
+                for role in attachment_roles
+            )
+            if not has_hr_policy:
+                material_gaps.append("internal_policy: 缺少人力资源管理相关制度文件")
+                issues.append(
+                    self._issue(
+                        next_id(),
+                        "缺少人力资源管理制度证据",
+                        "当前路径为人力资源管理豁免评估，但未提供员工手册、集体合同或跨境数据处理制度，无法判断是否满足《促进和规范数据跨境流动规定》第六条的豁免条件。",
+                        "legal_document",
+                        "BLOCKER",
+                        "补充依法制定的劳动规章制度或集体合同中包含明确数据出境条款的文件后，再评估豁免适用性。",
+                        fact_refs=matching_fact_ids("request.route_type", "request.legal_basis", "derived.attachment"),
+                        rule_refs=regulation_refs[:2],
+                        missing_materials=["internal_policy"],
+                    )
+                )
 
         if payload.emergency_plan.incident_response_sla_hours > 72:
             issues.append(
@@ -832,6 +855,13 @@ class PIPIAService:
             has_material = any(item.file_role == "certification_material" for item in payload.attachments)
             if not has_material:
                 issues.append("Route is certification but no certification_material attachment was provided.")
+        if payload.route_type == "hr_exemption":
+            has_hr_policy = any(
+                item.file_role in ("internal_policy", "supporting_evidence")
+                for item in payload.attachments
+            )
+            if not has_hr_policy:
+                issues.append("Route is hr_exemption but no internal_policy or supporting_evidence attachment was provided.")
         if payload.emergency_plan.incident_response_sla_hours > 72:
             issues.append("Incident response SLA exceeds 72 hours; suggest tightening escalation and response plan.")
         if level == "HIGH":

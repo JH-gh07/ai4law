@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "case_id": "smart_city_surveillance",
+  "harness": {
+    "fields_equal": {
+      "state": "COMPLETED",
+      "need_assessment.dpia_required": true
+    },
+    "profile_contains": {
+      "project_name": "智能课程推荐系统",
+      "special_category_data": false,
+      "cross_border_transfer": false,
+      "automated_decision_making": true,
+      "large_scale_processing": true,
+      "new_technology": true
+    },
+    "min_counts": {
+      "chapters": 7,
+      "regulations": 1,
+      "risk_matrix": 1,
+      "mitigation_plan": 1,
+      "output_files": 14
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "zip",
+      "need_assessment_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ]
+  }
+}

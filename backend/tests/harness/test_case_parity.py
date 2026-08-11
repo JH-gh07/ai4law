@@ -59,7 +59,7 @@ def test_committed_tree_passes_the_gate() -> None:
 def test_python_gate_reads_frontend_counts_from_structured_inventory() -> None:
     counts = gate._frontend_case_counts()
 
-    assert sum(counts.values()) == 27
+    assert sum(counts.values()) == 28
     assert counts["cpra"] == 3
     assert counts["review"] == 2
     assert counts["us_14117"] == 3

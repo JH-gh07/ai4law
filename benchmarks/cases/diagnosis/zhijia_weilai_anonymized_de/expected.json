@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "case_id": "zhijia_weilai_anonymized_de",
+  "harness": {
+    "fields_equal": {
+      "recommended_path": "exemption",
+      "risk_level": "LOW",
+      "conclusion_source": "rule",
+      "confidence": "HIGH",
+      "matched_rule_id": "no_personal_info",
+      "requires_human_review": false
+    },
+    "legal_basis_contains": [
+      "促进和规范数据跨境流动规定 第4条",
+      "网络数据安全管理条例 第38条"
+    ],
+    "min_counts": {
+      "legal_basis": 2,
+      "action_items": 3
+    },
+    "max_counts": {
+      "missing_facts": 0
+    }
+  }
+}

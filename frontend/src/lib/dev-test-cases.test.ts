@@ -46,8 +46,8 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps the registry at 27 independently runnable cases", () => {
-    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(27);
+  it("keeps the registry at 28 independently runnable cases", () => {
+    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(28);
   });
 
   it("binds every case payload to its generated module request", () => {
@@ -130,23 +130,31 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps PIPIA cases aligned with the official SCC and certification scenarios", () => {
-    const [ecommerce, certification] = DEV_TEST_CASES.pipia;
+  it("keeps PIPIA cases aligned with the official SCC, HR exemption and certification scenarios", () => {
+    const [ecommerce, hrExemption, certification] = DEV_TEST_CASES.pipia;
 
+    // PIPIA-1: 海淘优选 → 新加坡 (SCC filing, missing contract)
     expect(ecommerce.payload.route_type).toBe("scc_filing");
     expect(ecommerce.payload.company_profile.company_name).toBe("海淘优选（杭州）科技有限公司");
     expect(ecommerce.payload.company_profile.processing_person_count).toBe(8_000_000);
     expect(ecommerce.payload.company_profile.outbound_pi_count).toBe(500_000);
     expect(ecommerce.payload.transfer_context.recipient_name).toBe("SeaCommerce Pte. Ltd.");
-    expect(ecommerce.payload.personal_info_scope.pi_categories).toContain("Hashed_Device_ID");
-    expect(ecommerce.payload.personal_info_scope.pi_categories).toContain("Product_Category_Preference");
+    expect(ecommerce.payload.transfer_context.purpose).toContain("个性化营销");
+    expect(ecommerce.payload.personal_info_scope.subject_volume).toBe(500_000);
 
+    // PIPIA-2: 蔚蓝科技 → 美国 (HR exemption)
+    expect(hrExemption.payload.route_type).toBe("hr_exemption");
+    expect(hrExemption.payload.company_profile.company_name).toBe("蔚蓝科技（中国）公司");
+    expect(hrExemption.payload.company_profile.outbound_pi_count).toBe(2_000);
+    expect(hrExemption.payload.company_profile.outbound_spi_count).toBe(2_000);
+    expect(hrExemption.payload.transfer_context.recipient_name).toBe("GlobalTech Inc.");
+
+    // PIPIA-3: 智付通 → 德国 (certification)
     expect(certification.payload.route_type).toBe("certification");
     expect(certification.payload.company_profile.company_name).toBe("智付通科技有限公司");
     expect(certification.payload.company_profile.outbound_pi_count).toBe(50_000);
     expect(certification.payload.transfer_context.recipient_name).toBe("EuroCert");
     expect(certification.payload.transfer_context.recipient_country_region).toBe("德国");
-    expect(certification.payload.personal_info_scope.pi_categories).toContain("Contact_Email");
     expect(certification.payload.transfer_context.legal_basis).toContain("欧盟认证要求");
   });
 

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "case_id": "kuajing_youpin_ecommerce_sg",
+  "harness": {
+    "fields_equal": {
+      "recommended_path": "scc_or_certification",
+      "risk_level": "MEDIUM",
+      "conclusion_source": "rule",
+      "confidence": "MEDIUM",
+      "matched_rule_id": "default",
+      "requires_human_review": false
+    },
+    "legal_basis_contains": [
+      "个人信息出境标准合同办法",
+      "促进和规范数据跨境流动规定"
+    ],
+    "min_counts": {
+      "legal_basis": 3,
+      "action_items": 3
+    },
+    "max_counts": {
+      "missing_facts": 0
+    },
+    "list_contains": {
+      "action_items": [
+        "标准合同备案"
+      ]
+    }
+  }
+}

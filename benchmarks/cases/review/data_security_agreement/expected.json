@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "case_id": "data_security_agreement",
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "risk_level": "高风险"
+    },
+    "min_counts": {
+      "output_files": 3,
+      "result.issue_counts": 1
+    },
+    "output_roles_contains": [
+      "report",
+      "docx",
+      "pdf"
+    ],
+    "output_formats": [
+      "docx",
+      "pdf"
+    ]
+  }
+}

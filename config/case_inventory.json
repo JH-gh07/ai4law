@@ -109,14 +109,22 @@
         },
         {
           "case_id": "02_source_case_missing_scc",
-          "assertions": 29
+          "assertions": 28
         },
         {
           "case_id": "03_source_derived_scc_draft",
           "assertions": 31
+        },
+        {
+          "case_id": "04_hr_exemption",
+          "assertions": 23
+        },
+        {
+          "case_id": "05_certification_eurocert",
+          "assertions": 23
         }
       ],
-      "frontend_cases": 2
+      "frontend_cases": 3
     },
     "review": {
       "module_id": "cn.document_review",
