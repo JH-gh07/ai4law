@@ -96,6 +96,18 @@ describe("developer test case API contracts", () => {
     }
   });
 
+  it("keeps the first SCC case aligned with the official France-UK C2C scenario", () => {
+    const testCase = DEV_TEST_CASES.eu_scc[0];
+
+    expect(testCase.payload.declared_module_type).toBe("Module One");
+    expect(testCase.payload.company_name).toBe("EU Fashion E-commerce SAS");
+    expect(testCase.payload.scc_text).toContain("UK Marketing Analytics Ltd");
+    expect(testCase.payload.scc_text).toContain("MODULE ONE");
+    expect(testCase.payload.scc_text).toContain("Amazon Web Services");
+    expect(testCase.payload.scc_text).not.toContain("E-Commerce GmbH");
+    expect(testCase.payload.scc_text).not.toContain("MODULE TWO");
+  });
+
   it("includes current PIPIA company profile fields", () => {
     for (const testCase of DEV_TEST_CASES.pipia) {
       const company = asRecord(testCase.payload.company_profile);
