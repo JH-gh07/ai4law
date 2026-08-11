@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "case_id": "germany_c2p_india_health",
+  "overall_rating": "HIGH",
+  "required_findings": [
+    "Clause 15 notification obligation weakened to as soon as legally permissible",
+    "health data misclassified as not special categories under GDPR Article 9",
+    "transfer impact assessment (TIA) missing for high-risk India"
+  ],
+  "legal_basis": [
+    "EU 2021/914 Recital 3",
+    "Clause 15 standard text",
+    "GDPR Article 9",
+    "Recital 159"
+  ],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "Gesundheitsforschung GmbH",
+      "overall_rating": "HIGH",
+      "module_validation.actual_module": "Module Two",
+      "module_validation.expected_module": "Module Two",
+      "module_validation.is_correct": true
+    },
+    "min_counts": {
+      "chapters": 4,
+      "findings": 5,
+      "attachment_notes": 1,
+      "output_files": 7
+    },
+    "list_contains": {
+      "findings[].issue_type": [
+        "clause_weakened",
+        "special_category_misclassified",
+        "tia_missing"
+      ],
+      "findings[].location": [
+        "Clause 15",
+        "Annex I.B"
+      ],
+      "findings[].risk_analysis": [
+        "India",
+        "GDPR"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "findings_json",
+      "rule_engine_result_json",
+      "citation_map_json",
+      "annotated_docx"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "json"
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "case_id": "france_c2c_uk_aws",
+  "overall_rating": "HIGH",
+  "required_findings": [
+    "transfer impact assessment (TIA) missing for US AWS onward transfer",
+    "supplementary measures insufficient for US CLOUD Act / FISA 702 access risk",
+    "Annex I.B does not disclose final US storage location"
+  ],
+  "legal_basis": [
+    "GDPR Article 46",
+    "Schrems II C-311/18",
+    "EDPB Recommendations 01/2020"
+  ],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "EU Fashion E-commerce SAS",
+      "overall_rating": "HIGH",
+      "module_validation.actual_module": "Module One",
+      "module_validation.expected_module": "Module One",
+      "module_validation.is_correct": true
+    },
+    "min_counts": {
+      "chapters": 4,
+      "findings": 3,
+      "output_files": 6
+    },
+    "list_contains": {
+      "findings[].issue_type": [
+        "tia_missing",
+        "supplementary_measures_insufficient"
+      ],
+      "findings[].location": [
+        "Clause 14",
+        "Annex II"
+      ],
+      "findings[].risk_analysis": [
+        "United States",
+        "Schrems"
+      ]
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "findings_json",
+      "rule_engine_result_json",
+      "citation_map_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "json"
+    ]
+  }
+}

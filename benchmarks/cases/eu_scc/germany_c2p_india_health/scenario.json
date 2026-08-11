@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "case_id": "germany_c2p_india_health",
+  "module": "eu_scc",
+  "classification": "source_exact",
+  "display": {
+    "name": "SCC-2: 德国健康数据 C2P→印度（Clause 9/14/15 风险）",
+    "description": "德国健康研究公司向印度处理者传输患者健康数据，Clause 15 被不当削弱、健康数据误分类，印度高风险第三国缺 TIA，总体高风险",
+    "jurisdiction": "EU"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx",
+    "case": "测试案例二：C2P模块 - 高风险第三国且条款被不当修改"
+  },
+  "request": {
+    "project_name": "德国医疗研究数据向印度统计分析传输SCC审查",
+    "scc_text": "MODULE TWO: Transfer controller to processor\n\nData exporter: Gesundheitsforschung GmbH, Berlin, Germany (controller)\nData importer: Data Insights Solutions Pvt. Ltd., India (processor)\n\n场景：德国柏林的“健康研究所有限公司”（Gesundheitsforschung GmbH，数据输出方，控制者）委托印度班加罗尔的“数据洞察解决方案公司”（Data Insights Solutions Pvt. Ltd.，数据输入方，处理者）进行医疗研究数据的统计分析。传输的数据包含匿名的患者健康数据（patient health data）（但根据GDPR仍属特殊类别数据）。印度尚未获得欧盟充分性认定，且其《信息技术法》及修订案赋予政府广泛的数据访问权，与EDPB建议中关注的法律特征相符。\n\n提交审查的SCC文档全文（关键问题部分节选）：\n\nSTANDARD CONTRACTUAL CLAUSES\n\nClause 9: Use of sub-processors\n(g) The data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days of receipt of the notification, the data importer may engage the new sub-processor.\n\nClause 14: Local laws and practices affecting compliance with the Clauses\n(a) The Parties warrant that they have no reason to believe that the laws and practices in the third country of destination prevent the data importer from fulfilling its obligations under these Clauses.\n(b) The Parties declare that in providing the warranty in paragraph (a), they have taken due account of the specific circumstances of the transfer and the laws and practices of the third country of destination.\n(c) The data importer agrees to document the assessment made under paragraph (b) as well as any suitable safeguards identified and provide it to the data exporter only upon a specific, justified request.\n\nClause 15: Obligations of the data importer in case of access by public authorities\n(a) The data importer agrees to notify the data exporter and, where possible, the data subject (if necessary with the help of the data exporter) as soon as legally permissible if it:\n    (i) receives a legally binding request from a public authority, including judicial authorities, under the laws of the country of destination for the disclosure of personal data transferred pursuant to these Clauses; or\n    (ii) becomes aware of any direct access by public authorities to personal data transferred pursuant to these Clauses in accordance with the laws of the country of destination.\nThe data importer shall also provide the data exporter, at the data importer's discretion, with relevant information about the request.\n(b) The data importer shall review the legality of the request.\n(c) The data importer shall provide the data exporter with as much relevant information as possible.\n(d) The data importer agrees to preserve the information required to be provided pursuant to paragraph (a) for the duration of the contract and make it available to the competent supervisory authority on request.\n(e) Paragraphs (a) to (c) are without prejudice to the obligation of the data importer pursuant to Clause 14(e) and Clause 16 to inform the data exporter promptly where it is unable to comply with these Clauses.\n\nANNEX I\n\nA. LIST OF PARTIES\n\nData exporter(s):\nName: Gesundheitsforschung GmbH\nAddress: Berlin, Germany\nRole (controller/processor): Controller\n\nData importer(s):\nName: Data Insights Solutions Pvt. Ltd.\nAddress: Bangalore, India\nRole (controller/processor): Processor\n\nB. DESCRIPTION OF TRANSFER\n\nCategories of personal data transferred:\nPatient unique study identifier (pseudonymised), age group, gender, diagnostic codes, treatment codes, laboratory test results (anonymised).\nSensitive data transferred (if applicable) and applied restrictions or safeguards:\nNot applicable. The data is anonymised for research purposes and does not constitute special categories of data.\nThe frequency of the transfer:\nPeriodic.\nPurpose(s) of the data transfer and further processing:\nStatistical analysis of medical research data.\n\nANNEX II\n\nTECHNICAL AND ORGANISATIONAL MEASURES\nThe data importer shall implement the following measures:\n- Encryption of personal data in transit using TLS 1.2 or higher.\n- Encryption of personal data at rest using AES-256.\n- Access controls based on the principle of least privilege.\n",
+    "declared_module_type": "Module Two",
+    "exporter_role": "controller",
+    "importer_role": "processor",
+    "has_tia": false,
+    "has_supplementary_measures": false,
+    "uploaded_files": [
+      "backend/tests/eu_scc/fixtures/case_02_india_health_scc_input.docx"
+    ],
+    "company_name": "Gesundheitsforschung GmbH"
+  }
+}
