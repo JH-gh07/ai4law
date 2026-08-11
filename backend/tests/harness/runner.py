@@ -245,6 +245,26 @@ def _diagnosis_invoke(
     return _serialize_result(result)
 
 
+def _review_harness_settings(run_dir: Path, no_llm: bool):
+    from backend.core.settings import Settings
+
+    settings_kwargs: dict[str, Any] = {
+        "database_url": f"sqlite:///{run_dir / 'review.db'}",
+        "storage_dir": run_dir / "storage",
+        "task_mode": "inline",
+    }
+    if no_llm:
+        settings_kwargs.update(
+            {
+                "llm_provider": "none",
+                "llm_api_key": None,
+                "siliconflow_api_key": None,
+                "tencent_api_key": None,
+            }
+        )
+    return Settings(**settings_kwargs, _env_file=None)
+
+
 def _review_invoke(
     case: dict[str, Any],
     no_llm: bool,
@@ -254,20 +274,10 @@ def _review_invoke(
     from backend.common.trace.context import current_trace
     from backend.core.container import AppContainer
     from backend.core.db import init_db
-    from backend.core.settings import Settings
     from backend.schemas.review import ReviewGenerateRequest
 
     run_dir = trace_dir.parent
-    settings_kwargs = {
-        "database_url": f"sqlite:///{run_dir / 'review.db'}",
-        "storage_dir": run_dir / "storage",
-        "task_mode": "inline",
-    }
-    settings = (
-        Settings(**settings_kwargs, _env_file=None)
-        if no_llm
-        else Settings(**settings_kwargs)
-    )
+    settings = _review_harness_settings(run_dir, no_llm)
     container = AppContainer(settings)
     init_db(container.engine)
 

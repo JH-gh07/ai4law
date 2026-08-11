@@ -212,3 +212,16 @@ def test_execute_rejects_quiet_and_verbose_trace_together() -> None:
             quiet=True,
             verbose_trace=True,
         )
+
+
+def test_review_no_llm_settings_override_environment_keys(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("AI4LAW_LLM_PROVIDER", "siliconflow")
+    monkeypatch.setenv("AI4LAW_SILICONFLOW_API_KEY", "must-not-be-used")
+
+    settings = runner._review_harness_settings(tmp_path, no_llm=True)
+
+    assert settings.resolved_llm_provider == "none"
+    assert settings.resolved_llm_api_key is None
