@@ -23,6 +23,7 @@ IssueCategory = Literal[
     "data_classification",
     "necessity",
     "consent",
+    "rights_protection",
     "recipient",
     "contract",
     "legal_document",

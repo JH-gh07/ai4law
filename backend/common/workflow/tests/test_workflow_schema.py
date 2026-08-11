@@ -33,6 +33,20 @@ def test_issue_item_validates_category_and_severity() -> None:
         )
 
 
+def test_issue_item_accepts_personal_information_rights_protection() -> None:
+    issue = IssueItem(
+        issue_id="ISSUE-rights-channel",
+        title="个人信息行权机制不完善",
+        description="数据主体权利行使渠道缺少可操作信息。",
+        category="rights_protection",
+        severity="MEDIUM",
+        fact_refs=["FACT-request-dsar"],
+        recommended_action="补充受理渠道和响应时限。",
+    )
+
+    assert issue.category == "rights_protection"
+
+
 def test_context_pack_json_serializes() -> None:
     fact = FactItem(
         fact_id="FACT-request-company_name",
