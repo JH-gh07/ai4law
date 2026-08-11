@@ -352,45 +352,44 @@ const assessCIO = {
 };
 
 const assessEcommerce = {
-  name: "评估-2: 智慧云联科技（上海）有限公司（安全评估路径）",
-  description: "中外合资云计算服务商向新加坡子公司实时传输客户服务与交易行为数据，含重要数据与百万级PI，测试安全评估完整输入链路",
+  name: "评估-2: 优选购物 APP（120万用户行为数据）",
+  description: "非CIIO电商平台向开曼母公司及美国下游分析商传输去标识化用户行为日志，出境人数超过100万，触发安全评估",
   jurisdiction: "CN" as const,
   formDefaults: {
-    company_name: "智慧云联科技（上海）有限公司",
-    company_uscc: "91310000MA7F123456",
-    legal_representative: "张伟",
-    registered_address: "中国（上海）自由贸易试验区张江高科技园区亮秀路112号Y1座1001室",
-    company_nature: "有限责任公司（中外合资）",
-    industry: "云计算与数据服务",
-    receiver_country: "新加坡",
-    receiver_name: "Wisdom Cloud Connect Pte. Ltd.",
+    company_name: "优选购物",
+    company_uscc: "91440300MA5TEST002",
+    legal_representative: "待补充",
+    registered_address: "中国大陆",
+    company_nature: "有限责任公司",
+    industry: "电子商务",
+    receiver_country: "开曼群岛",
+    receiver_name: "Global E-commerce Inc.",
     assessment_start_date: "2025-08-01",
     assessment_end_date: "2025-09-15",
-    lead_department: "集团法律合规与公共事务部",
-    participant_departments: "信息技术部，网络安全部，亚太区业务运营部，数据中心管理部",
-    third_party_support: true,
-    third_party_name: "德勤企业风险管理咨询（上海）有限公司",
-    third_party_scope:
-      "对数据出境活动的风险评估方法、已采取的安全措施有效性进行审阅与验证，并出具第三方核查报告；协助对新加坡子公司的数据保护环境进行合规性差距分析",
-    scenario_name: "亚太区客户支持与实时风险控制数据同步",
+    lead_department: "法务合规部",
+    participant_departments: "信息技术部、网络安全部、业务运营部",
+    third_party_support: false,
+    third_party_name: "",
+    third_party_scope: "",
+    scenario_name: "全球推荐算法训练的用户行为数据同步",
     transfer_frequency: "continuous",
     is_long_term: true,
     transfer_purpose:
-      "全球统一客户服务、集中化风险分析与建模、履行与境外关联方的《全球运营支持与数据处理协议》",
+      "将中国大陆用户浏览、点击和购买行为日志传输至境外数据湖，用于训练全球推荐算法模型",
     legal_basis:
-      "根据《个人信息保护法》第十三条第一款第二项、第一款第七项以及《数据安全法》《网络安全法》相关规定，在完成安全评估后开展跨境传输",
+      "隐私政策仅概括说明可能向关联方共享数据，尚未针对该出境场景完成充分告知和单独同意",
     necessity_basis:
-      "保障全球服务连续性与质量；满足跨国欺诈侦测与集中风控建模需求；基于网络延迟、基础设施稳定性和运营成本综合评估后，新加坡数据中心为最优技术架构",
+      "全球推荐算法需要跨区域行为数据，但应先证明去标识化有效性并完成境外接收方及下游处理者约束",
     is_ciio: false,
-    contains_important_data: true,
+    contains_important_data: false,
     pii_count: 1200000,
-    spi_count: 15000,
+    spi_count: 0,
     data_inventory_summary:
-      "场景一：客户服务支持，字段包括客户唯一标识符、姓名、联系方式、服务请求内容、沟通记录、问题解决状态；场景二：交易风险控制，字段包括Device ID、IP地址、交易时间、金额、类型、收款方信息、行为序列、风险评分标签、加密后的证件号码及验证结果；场景三：系统运维与安全，字段包括系统日志、匿名化性能监控数据、安全事件告警信息",
+      "中国大陆用户浏览、点击、购买行为日志（去标识化后），年出境用户数预计约120万人；需核验K-匿名和差分隐私技术的有效性",
     system_chain_summary:
-      "数据来源于中国境内应用服务器和数据库；先在上海数据中心进行清洗、脱敏和格式化；随后通过IPSec VPN专线与TLS 1.3加密实时传输至新加坡数据中心；境外供客户服务系统、风控引擎和运维平台调用；风控结果与客户服务归档信息再回流境内",
+      "中国境内应用和数据库→杭州区域清洗、去标识化→阿里云国际站新加坡区域→Global E-commerce Inc. 数据湖→美国 DataMind LLC 分析处理",
     security_capability_summary:
-      "技术措施：传输全程加密、敏感个人信息AES-256加密存储、密钥由境内总部HSM管理、RBAC+MFA访问控制、日志留存不少于6年、非生产环境仅用合成/深度脱敏数据；管理措施：签署集团内数据跨境传输协议、每年两次内部审计和一次渗透测试、建立中新两地数据泄露应急响应预案并定期演练",
+      "使用K-匿名和差分隐私进行去标识化，但未提供第三方审计或技术验证；与母公司有协议，但未明确约束美国下游处理者 DataMind LLC",
     force_override_path: true
   },
   backendFilePaths: [
