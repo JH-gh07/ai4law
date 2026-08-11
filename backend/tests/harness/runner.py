@@ -184,7 +184,10 @@ def _make_service(alias: str, service_class, no_llm: bool):
         return service
     if alias in {"pipia", "dpia"}:
         return service_class(llm_client=None)
-    return service_class(llm_client=_DisabledLLM())
+    service = service_class(llm_client=_DisabledLLM())
+    if alias == "cpra":
+        service.schema_first_enabled = True
+    return service
 
 
 def _serialize_result(result: Any) -> dict[str, Any]:
