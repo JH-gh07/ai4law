@@ -77,21 +77,21 @@ def adapt_cn_flow_request(payload: CNFlowRequest) -> CNFlowCompatibilityResult:
         for item in payload.recipient_entities
     ]
     attachments = [item.storage_uri for item in payload.attachments]
-    onward_transfer = bool(payload.transfer_chain.strip())
     canonical = US14117Request(
         project_name=f"{payload.company_name}数据流合规评估",
-        transaction_description=payload.transfer_purpose,
+        transaction_description=f"{payload.transfer_purpose}；传输链路：{payload.transfer_chain}",
         transaction_type=payload.transaction_type,
         data_items=data_items,
         recipient_entities=entities,
         access_persons=[],
         security_measures=[],
-        onward_transfer=onward_transfer,
-        onward_transfer_description=payload.transfer_chain,
+        onward_transfer=False,
+        onward_transfer_description="",
         attachments=attachments,
         company_name=payload.company_name,
     )
     if any(item.is_restricted_party for item in payload.recipient_entities):
         lossy.append("recipient_entities.is_restricted_party")
+    lossy.append("onward_transfer")
     lossy.append("attachments.content_unparsed")
     return CNFlowCompatibilityResult(canonical, lossy, [], "us_14117")

@@ -54,8 +54,9 @@ def test_complete_legacy_request_converts_to_canonical_request() -> None:
     assert result.canonical_request.data_items[0].us_person_count == 100_000
     assert result.canonical_request.data_items[0].doj_data_category == "covered_personal_identifiers"
     assert result.canonical_request.recipient_entities[0].country_of_registration == "美国"
-    assert result.canonical_request.onward_transfer is True
+    assert result.canonical_request.onward_transfer is False
     assert result.canonical_request.attachments == ["data.csv", "entity.csv"]
+    assert "onward_transfer" in result.lossy_fields
     assert "attachments.content_unparsed" in result.lossy_fields
 
 
