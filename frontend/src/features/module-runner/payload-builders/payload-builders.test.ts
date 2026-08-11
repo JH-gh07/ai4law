@@ -382,9 +382,11 @@ describe("PIPIA payload builder", () => {
     expect(() => buildPipiaPayload(invalid, input.paths)).toThrow(/route_type/);
   });
 
-  it("requires an SCC contract attachment role for SCC filing", () => {
-    const invalid = { ...input.values, route_type: "scc_filing", attachment_role: "internal_policy" } as const;
-    expect(() => buildPipiaPayload(invalid, input.paths)).toThrow(/attachment_role/);
+  it("preserves supporting evidence without pretending it is an SCC contract", () => {
+    const values = { ...input.values, route_type: "scc_filing", attachment_role: "supporting_evidence" } as const;
+    const payload = buildPipiaPayload(values, input.paths);
+
+    expect(payload.attachments[0]?.file_role).toBe("supporting_evidence");
   });
 
   it("rejects an unsupported attachment extension", () => {

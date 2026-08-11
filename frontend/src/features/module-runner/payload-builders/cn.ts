@@ -186,9 +186,6 @@ export function buildPipiaPayload(
   requireText(values.retention_policy, "retention_policy");
   if (splitCsv(values.pi_categories).length === 0) throw new Error("pi_categories is required");
   if (resolvedFilePaths.length === 0) throw new Error("attachments is required");
-  if (values.route_type === "scc_filing" && values.attachment_role !== "scc_contract") {
-    throw new Error("attachment_role must be scc_contract for scc_filing");
-  }
   requireFileExtensions(resolvedFilePaths, GENERAL_FILE_EXTENSIONS);
   return {
     route_type: values.route_type,

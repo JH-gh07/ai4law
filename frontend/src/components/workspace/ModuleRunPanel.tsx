@@ -560,13 +560,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(values.retention_policy), "请填写保存与删除策略。");
     const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份PIPIA相关附件。");
-    if (values.route_type === "scc_filing") {
-      assertInput(
-        values.attachment_role === "scc_contract",
-        "标准合同备案路径下，附件角色需选择为 scc_contract。"
-      );
-    }
-
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     return createPipiaPayload(values, uploadedFiles);
   };
