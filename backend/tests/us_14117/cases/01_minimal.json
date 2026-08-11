@@ -1,71 +1,18 @@
 {
   "case_id": "01_minimal",
-  "description": "EO14117适用性评估—15万美国人精确地理位置数据向中国AI公司传输",
-  "input": {
-    "project_name": "EO14117评估—位置数据供应商协议",
-    "transaction_description": "通过供应商协议向中国AI公司提供150,000名美国人的精确地理位置数据用于算法训练",
-    "transaction_type": "vendor_agreement",
-    "data_items": [
-      {
-        "data_item_name": "精确GPS轨迹数据",
-        "data_description": "150,000名美国人的实时GPS轨迹数据，精度<10米",
-        "business_context": "AI模型训练——位置预测算法",
-        "is_personal_info": true,
-        "is_sensitive_personal_info": true,
-        "us_person_count": 150000,
-        "data_subject_type": "consumer",
-        "doj_data_category": "precise_geolocation_data",
-        "precision_level": "raw",
-        "is_government_related": false,
-        "export_necessity": "算法训练所需训练数据"
-      }
-    ],
-    "recipient_entities": [
-      {
-        "entity_name": "深度洞察人工智能有限公司",
-        "country_of_registration": "China",
-        "ownership_structure": "创始人持股60%，中国风投资本40%",
-        "governing_law": "中华人民共和国法律",
-        "government_control": false,
-        "entity_role": "processor"
-      }
-    ],
-    "access_persons": [
-      {
-        "person_name": "王芳",
-        "nationality": "中国",
-        "country_of_residence": "中国",
-        "department": "AI研发部",
-        "position": "机器学习工程师",
-        "employer": "深度洞察人工智能有限公司",
-        "has_actual_access": true,
-        "access_type": "remote"
-      }
-    ],
-    "security_measures": [
-      {
-        "measure_name": "logical_isolation_of_covered_data",
-        "category": "access_control",
-        "status": "missing",
-        "description": "尚未建立隔离工作区"
-      }
-    ],
-    "onward_transfer": false,
-    "onward_transfer_description": "",
-    "attachments": [],
-    "company_name": "GeoData Analytics Inc."
-  },
+  "description": "EO14117正式红灯案例—GeneGuard向中国国资控股公司传输1万名美国人的全基因组数据",
+  "scenario_path": "benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json",
   "expected": {
     "result_not_empty": true,
     "fields_equal": {
-      "company_name": "GeoData Analytics Inc.",
-      "overall_traffic_light": "YELLOW",
-      "traffic_light_result.is_prohibited": false,
-      "traffic_light_result.is_restricted": true
+      "company_name": "GeneGuard生物科技公司",
+      "overall_traffic_light": "RED",
+      "traffic_light_result.is_prohibited": true,
+      "traffic_light_result.is_restricted": false
     },
     "min_counts": {
       "chapters": 4,
-      "rule_hits": 24,
+      "rule_hits": 3,
       "risk_matrix": 1,
       "output_files": 10
     },

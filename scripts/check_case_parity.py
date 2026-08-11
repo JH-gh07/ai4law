@@ -208,7 +208,24 @@ def case_violations(module: str, path: Path) -> list[str]:
         )
     if not case.get("description"):
         violations.append(f"{label}: description is required")
-    if not isinstance(case.get("input"), dict) or not case["input"]:
+    scenario_path = str(case.get("scenario_path", "")).strip()
+    if scenario_path and "input" in case:
+        violations.append(f"{label}: must not define both scenario_path and input")
+    elif scenario_path:
+        resolved = (ROOT / scenario_path).resolve()
+        if not resolved.is_relative_to(ROOT.resolve()):
+            violations.append(f"{label}: scenario_path must stay inside the repository")
+        elif not resolved.is_file():
+            violations.append(f"{label}: scenario_path does not exist: {scenario_path}")
+        else:
+            try:
+                scenario = json.loads(resolved.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                scenario = None
+            request = scenario.get("request") if isinstance(scenario, dict) else None
+            if not isinstance(request, dict) or not request:
+                violations.append(f"{label}: shared scenario request must be a non-empty object")
+    elif not isinstance(case.get("input"), dict) or not case["input"]:
         violations.append(f"{label}: input must be a non-empty object")
 
     expected = case.get("expected")

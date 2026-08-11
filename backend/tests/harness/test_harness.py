@@ -32,6 +32,29 @@ def test_runner_does_not_restore_legacy_module_imports() -> None:
     assert "backend.modules" not in source
 
 
+def test_shared_scenario_replaces_inline_case_input(tmp_path: Path, monkeypatch) -> None:
+    scenario = tmp_path / "benchmarks" / "cases" / "us_14117" / "red" / "scenario.json"
+    scenario.parent.mkdir(parents=True)
+    scenario.write_text(
+        json.dumps({"request": {"company_name": "GeneGuard生物科技公司"}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(runner, "REPO_ROOT", tmp_path)
+
+    resolved = runner._resolve_case_input(
+        {"scenario_path": "benchmarks/cases/us_14117/red/scenario.json"}
+    )
+
+    assert resolved == {"company_name": "GeneGuard生物科技公司"}
+
+
+def test_shared_scenario_rejects_a_second_inline_fact_source(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(runner, "REPO_ROOT", tmp_path)
+
+    with pytest.raises(ValueError, match="must not define both"):
+        runner._resolve_case_input({"scenario_path": "scenario.json", "input": {"value": 1}})
+
+
 def test_execute_failure_writes_error_json_and_failed_manifest(
     tmp_path: Path, monkeypatch
 ) -> None:

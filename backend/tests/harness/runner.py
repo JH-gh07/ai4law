@@ -34,6 +34,23 @@ RUNS_DIR = REPO_ROOT / "runs"
 TESTS_DIR = REPO_ROOT / "backend" / "tests"
 
 
+def _resolve_case_input(case: dict[str, Any]) -> dict[str, Any]:
+    scenario_path = case.get("scenario_path")
+    if not scenario_path:
+        value = case.get("input", {})
+        return value if isinstance(value, dict) else {}
+    if "input" in case:
+        raise ValueError("case must not define both scenario_path and input")
+    path = (REPO_ROOT / str(scenario_path)).resolve()
+    if not path.is_relative_to(REPO_ROOT.resolve()):
+        raise ValueError("scenario_path must stay inside the repository")
+    scenario = json.loads(path.read_text(encoding="utf-8"))
+    request = scenario.get("request") if isinstance(scenario, dict) else None
+    if not isinstance(request, dict):
+        raise ValueError(f"shared scenario must contain an object request: {path}")
+    return request
+
+
 class _DisabledLLM:
     enabled = False
     _enabled = False
@@ -450,7 +467,8 @@ def execute(
     if not case_file.exists():
         raise SystemExit(f"Case not found: {case_file}")
     case = json.loads(case_file.read_text(encoding="utf-8"))
-    payload = case.get("input", {})
+    payload = _resolve_case_input(case)
+    case["input"] = payload
     _ensure_database_schema()
     run_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}_{case_id}"
     run_dir = RUNS_DIR / module / run_name

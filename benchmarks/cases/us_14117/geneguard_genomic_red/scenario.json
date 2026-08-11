@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "case_id": "geneguard_genomic_red",
+  "module": "us_14117",
+  "classification": "source_exact",
+  "display": {
+    "name": "14117-1: GeneGuard→华源生命科学基因组数据（红灯）",
+    "description": "GeneGuard 向中国国资控股的华源生命科学传输1万名美国人的全基因组数据，禁止传输",
+    "jurisdiction": "US"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx",
+    "case": "测试案例一：向中国生物公司提供人类基因组数据（红灯场景）"
+  },
+  "request": {
+    "project_name": "与华源生命科学联合研究",
+    "transaction_description": "GeneGuard加州精准医疗事业部向中国上海华源生命科学有限公司传输10,000名美国志愿者的全基因组测序数据，用于基因标记与疾病关联研究",
+    "transaction_type": "cooperative_research",
+    "data_items": [
+      {
+        "data_item_name": "全基因组测序原始数据",
+        "data_description": "10,000名美国志愿者的全基因组测序数据",
+        "business_context": "联合研究特定基因标记与疾病关联性",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": true,
+        "us_person_count": 10000,
+        "data_subject_type": "research_participant",
+        "doj_data_category": "human_genomic_data",
+        "precision_level": "raw",
+        "is_government_related": false,
+        "export_necessity": "联合研究协议要求提供原始测序数据"
+      }
+    ],
+    "recipient_entities": [
+      {
+        "entity_name": "华源生命科学有限公司",
+        "country_of_registration": "中国（上海）",
+        "ownership_structure": "由中国国资背景的华康集团100%控股",
+        "governing_law": "中华人民共和国法律",
+        "government_control": true,
+        "entity_role": "research_institution",
+        "is_covered_person": true
+      }
+    ],
+    "access_persons": [],
+    "security_measures": [
+      {
+        "measure_name": "改为聚合分析结果",
+        "category": "data_minimization",
+        "status": "missing",
+        "description": "当前仍计划传输原始全基因组测序数据"
+      }
+    ],
+    "onward_transfer": false,
+    "onward_transfer_description": "",
+    "attachments": [
+      "backend/tests/fixtures/us/us14117_data_inventory.csv",
+      "backend/tests/fixtures/us/us14117_entity_inventory.csv"
+    ],
+    "company_name": "GeneGuard生物科技公司"
+  }
+}

@@ -25,6 +25,7 @@ import type {
   Us14117FormValues,
 } from "../features/module-runner/types";
 import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
+import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -57,6 +58,38 @@ export type DevTestCase<Module extends DevCaseModule = DevCaseModule> = {
 
 type DevTestCaseSeed<Module extends DevCaseModule> =
   Omit<DevTestCase<Module>, "payload" | "caseId"> & { payload?: never };
+
+const genomicRedRequest = genomicRedScenario.request as ModuleRequestMap["us_14117"];
+
+function sharedUs14117FormDefaults(request: ModuleRequestMap["us_14117"]): Us14117FormValues {
+  const dataItem = request.data_items[0];
+  const entity = request.recipient_entities[0];
+  if (!request.company_name || !request.transaction_type || !dataItem || !entity) {
+    throw new Error("US 14117 shared scenario requires company, transaction, data and recipient facts");
+  }
+  return {
+    company_name: request.company_name,
+    project_name: request.project_name,
+    transaction_description: request.transaction_description,
+    transaction_type: request.transaction_type,
+    data_item_name: dataItem.data_item_name,
+    data_description: dataItem.data_description ?? "",
+    doj_data_category: dataItem.doj_data_category ?? "",
+    us_person_count: dataItem.us_person_count ?? 0,
+    entity_name: entity.entity_name,
+    country_of_registration: entity.country_of_registration,
+    government_control: entity.government_control ?? false,
+    entity_role: entity.entity_role ?? "other",
+    onward_transfer: request.onward_transfer ?? false,
+    onward_transfer_description: request.onward_transfer_description ?? "",
+    security_measures_summary: (request.security_measures ?? []).map((item) => item.description ?? item.measure_name).join("；"),
+    review_focus: "按统一场景核查数据阈值、被涵盖人员和交易类型",
+    data_items_override: request.data_items,
+    recipient_entities_override: request.recipient_entities,
+    access_persons_override: request.access_persons ?? [],
+    security_measures_override: request.security_measures ?? [],
+  };
+}
 
 function buildCasePayload<Module extends DevCaseModule>(
   module: Module,
@@ -848,40 +881,11 @@ const pipiaCertification = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const us14117Basic = {
-  name: "14117-1: GeneGuard→华源生命科学基因组数据（红灯）",
-  description: "GeneGuard 向中国国资控股的华源生命科学传输1万名美国人的全基因组数据，禁止传输",
+  name: genomicRedScenario.display.name,
+  description: genomicRedScenario.display.description,
   jurisdiction: "US" as const,
-  formDefaults: {
-    company_name: "GeneGuard生物科技公司",
-    project_name: "与华源生命科学联合研究",
-    transaction_description: "加州精准医疗事业部向中国上海华源生命科学有限公司传输10,000名美国志愿者的全基因组测序数据，用于基因标记与疾病关联研究",
-    transaction_type: "cooperative_research",
-    data_item_name: "人类全基因组测序数据",
-    data_description: "10,000名美国志愿者的全基因组测序原始数据",
-    doj_data_category: "human_genomic_data",
-    us_person_count: 10000,
-    entity_name: "华源生命科学有限公司",
-    country_of_registration: "中国",
-    government_control: true,
-    entity_role: "research_institution" as const,
-    onward_transfer: false,
-    onward_transfer_description: "",
-    security_measures_summary: "拟传输原始全基因组数据，现有措施不能消除其不可逆敏感性",
-    review_focus: "重点核查基因组数据阈值、被覆盖人员和研究合作豁免",
-    data_items_override: [
-      { data_item_name: "全基因组测序原始数据", data_description: "10,000名美国志愿者的全基因组测序数据", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 10000, doj_data_category: "human_genomic_data", precision_level: "raw" }
-    ],
-    recipient_entities_override: [
-      { entity_name: "华源生命科学有限公司", country_of_registration: "中国（上海）", entity_role: "research_institution" as const, government_control: true, is_covered_person: true }
-    ],
-    security_measures_override: [
-      { measure_name: "改为聚合分析结果", category: "data_minimization", status: "missing", description: "当前仍计划传输原始全基因组测序数据" }
-    ]
-  },
-  backendFilePaths: [
-    "backend/tests/fixtures/us/us14117_data_inventory.csv",
-    "backend/tests/fixtures/us/us14117_entity_inventory.csv",
-  ],
+  formDefaults: sharedUs14117FormDefaults(genomicRedRequest),
+  backendFilePaths: genomicRedRequest.attachments ?? [],
 };
 
 const us14117RestrictedParty = {

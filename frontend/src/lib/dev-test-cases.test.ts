@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import type { ModuleRequestMap } from "../api/api-contract";
 import { DEV_TEST_CASES } from "./dev-test-cases";
+import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -234,5 +235,9 @@ describe("developer test case API contracts", () => {
     expect(yellow.payload.data_items[0].us_person_count).toBe(150_000);
     expect(yellow.payload.data_items[0].doj_data_category).toBe("precise_geolocation_data");
     expect(yellow.payload.data_items[0].data_description).toContain("位置轨迹");
+  });
+
+  it("compiles the shared EO 14117 red scenario into the exact frontend payload", () => {
+    expect(DEV_TEST_CASES.us_14117[0].payload).toEqual(genomicRedScenario.request);
   });
 });

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "case_id": "geneguard_genomic_red",
+  "overall_traffic_light": "RED",
+  "is_prohibited": true,
+  "is_restricted": false,
+  "required_findings": [
+    "human_genomic_data threshold exceeded",
+    "recipient is a covered person",
+    "transaction must not proceed"
+  ],
+  "legal_basis": [
+    "28 CFR § 202.206",
+    "28 CFR § 202.211",
+    "28 CFR § 202.303"
+  ]
+}

@@ -142,6 +142,19 @@ def test_missing_description_and_input_are_reported(tmp_path: Path) -> None:
     assert any("input must be a non-empty object" in item for item in violations)
 
 
+def test_shared_scenario_is_accepted_as_the_only_input_source(tmp_path: Path, monkeypatch) -> None:
+    scenario = tmp_path / "benchmarks" / "cases" / "demo" / "scenario.json"
+    _write(scenario, {"request": {"company_name": "示例企业"}})
+    case = _sound_case()
+    case.pop("input")
+    case["scenario_path"] = "benchmarks/cases/demo/scenario.json"
+    case_path = tmp_path / "01_demo.json"
+    _write(case_path, case)
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+
+    assert gate.case_violations("demo", case_path) == []
+
+
 def test_unparseable_case_is_reported(tmp_path: Path) -> None:
     (tmp_path / "01_demo.json").write_text("{not json", encoding="utf-8")
 
