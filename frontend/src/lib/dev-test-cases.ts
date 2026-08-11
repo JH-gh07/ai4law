@@ -31,6 +31,8 @@ import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard
 import franceUkSccScenario from "../../../benchmarks/cases/eu_scc/france_c2c_uk_aws/scenario.json";
 import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2p_india_health/scenario.json";
 import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
+import innovateUsTiaScenario from "../../../benchmarks/cases/tia/innovate_crm_us_saas/scenario.json";
+import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinical_india/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -70,6 +72,49 @@ const telemetryGreenRequest = telemetryGreenScenario.request as ModuleRequestMap
 const franceUkSccRequest = franceUkSccScenario.request as ModuleRequestMap["eu_scc"];
 const germanyIndiaSccRequest = germanyIndiaSccScenario.request as ModuleRequestMap["eu_scc"];
 const netherlandsSerbiaSccRequest = netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"];
+const innovateUsTiaRequest = innovateUsTiaScenario.request as ModuleRequestMap["tia"];
+const leidenIndiaTiaRequest = leidenIndiaTiaScenario.request as ModuleRequestMap["tia"];
+
+function sharedTiaFormDefaults(
+  request: ModuleRequestMap["tia"],
+): TiaFormValues {
+  const parts = (value: string) => value.split("；").map((item) => item.trim()).filter(Boolean);
+  const labeled = (items: string[], label: string) =>
+    items.find((item) => item.startsWith(label))?.slice(label.length).trim() ?? "";
+  const exporter = parts(request.data_exporter_profile);
+  const importer = parts(request.data_importer_profile);
+  const assessment = parts(request.third_country_assessment);
+  const measures = parts(request.supplementary_measures);
+  const conclusion = parts(request.final_conclusion);
+  const attachment = request.attachments[0];
+  const frequency = labeled(exporter, "频率：");
+  if (!attachment || !["one_time", "periodic", "continuous"].includes(frequency)) {
+    throw new Error("TIA shared scenario requires one attachment and a supported transfer frequency");
+  }
+  return {
+    structured_input_override: request.structured_input,
+    data_exporter_name: exporter[0] ?? "",
+    data_importer_name: importer[0] ?? "",
+    importer_country_region: labeled(importer, "国家/地区："),
+    transfer_purpose: labeled(exporter, "传输目的："),
+    data_categories: labeled(exporter, "数据类别："),
+    sensitive_data_description: labeled(importer, "敏感数据："),
+    data_subject_categories: labeled(exporter, "数据主体："),
+    transfer_frequency: frequency as TiaFormValues["transfer_frequency"],
+    transfer_tool: request.transfer_tool,
+    law_assessed: assessment[0] === "已完成法律评估",
+    law_findings: assessment.find((item, index) => index > 0 && !item.startsWith("补充措施前判断：")) ?? "",
+    pre_effectiveness: labeled(assessment, "补充措施前判断："),
+    supplementary_technical: labeled(measures, "技术措施："),
+    supplementary_contractual: labeled(measures, "合同措施："),
+    supplementary_organizational: labeled(measures, "组织措施："),
+    post_effectiveness: conclusion[0] ?? "",
+    key_actions: labeled(conclusion, "关键行动："),
+    dpo_opinion: labeled(conclusion, "DPO意见："),
+    review_date: labeled(conclusion, "复审日期："),
+    attachment_role: attachment.file_role,
+  };
+}
 
 function sharedEuSccFormDefaults(
   request: ModuleRequestMap["eu_scc"],
@@ -721,28 +766,7 @@ const tiaBasicSCC = {
   name: "TIA-1: 德国公司→美国 SaaS 高风险评估",
   description: "德国创新软件公司将 CRM 迁移至美国 SaaS，评估 FISA 702/CLOUD Act 与补充措施",
   jurisdiction: "EU" as const,
-  formDefaults: {
-    data_exporter_name: "Innovate Software GmbH，注册于德国柏林，角色：数据控制者",
-    data_importer_name: "CloudForce Inc.，位于美国，提供 CRM SaaS 平台，角色：数据处理者",
-    importer_country_region: "美国",
-    transfer_purpose: "将全部客户关系管理（CRM）系统迁移至美国 SaaS 平台",
-    data_categories: "欧盟客户联系信息、交易记录",
-    sensitive_data_description: "不含特殊类别数据",
-    data_subject_categories: "欧盟客户",
-    transfer_frequency: "continuous",
-    transfer_tool: "scc" as const,
-    law_assessed: true,
-    law_findings: "美国 FISA 702 和 CLOUD Act 可能允许政府访问 SaaS 数据，依据 Schrems II 需要评估其对 SCC 有效性的影响",
-    pre_effectiveness: "仅依赖 SCC 不能消除美国政府访问风险，初步结论为可能无效",
-    supplementary_technical: "传输前端到端加密，密钥仅由德国出口方本地管理",
-    supplementary_contractual: "CloudForce 作出政府请求透明度和抵抗非法访问的合同承诺",
-    supplementary_organizational: "独立安全审计、访问控制、密钥管理验证和事件响应流程",
-    post_effectiveness: "在加密、出口方密钥管理和合同承诺持续有效并通过审计的前提下，传输可进行",
-    key_actions: "完成第三方安全审计、签署补充合同、验证密钥控制",
-    dpo_opinion: "有条件同意，前提是完成安全审计并签署补充合同",
-    review_date: "2026-07-01",
-    attachment_role: "country_law_analysis"
-  },
+  formDefaults: sharedTiaFormDefaults(innovateUsTiaRequest),
   backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 
@@ -750,28 +774,7 @@ const tiaChinaBCR = {
   name: "TIA-2: 荷兰→印度临床试验数据高风险评估",
   description: "荷兰生命科学研究所向印度临床研究公司传输可重新识别的健康和基因数据",
   jurisdiction: "EU" as const,
-  formDefaults: {
-    data_exporter_name: "Leiden Life Sciences Institute，位于荷兰，角色：数据控制者",
-    data_importer_name: "New Delhi Clinical Research Pvt. Ltd.，位于印度，角色：数据处理者",
-    importer_country_region: "印度",
-    transfer_purpose: "药物临床试验数据分析",
-    data_categories: "匿名化但可重新识别的健康数据、基因组序列片段",
-    sensitive_data_description: "健康数据和基因数据属于极敏感数据，需要额外保护",
-    data_subject_categories: "荷兰临床试验受试者",
-    transfer_frequency: "periodic",
-    transfer_tool: "scc" as const,
-    law_assessed: true,
-    law_findings: "印度 IT Act第69条体现政府访问风险，印度属于高风险目的地，初步结论为 SCC 可能无效",
-    pre_effectiveness: "SCC 本身不足以覆盖印度政府访问健康和基因数据的风险",
-    supplementary_technical: "安全飞地、密钥分离、出口方控制密钥和严格访问控制",
-    supplementary_contractual: "加强政府请求通知、用途限制和监管配合义务",
-    supplementary_organizational: "临床研究访问审批、独立安全验证、DPO 风险复核",
-    post_effectiveness: "在安全飞地、密钥分离和严格前提持续有效的条件下可进行，但属于高度条件化结论",
-    key_actions: "取得荷兰 AP 的非正式指导或正式批准，完成安全飞地验证并设置近期复审",
-    dpo_opinion: "极高风险警告，建议在实施前寻求荷兰 AP 指导或批准",
-    review_date: "2026-06-01",
-    attachment_role: "country_law_analysis"
-  },
+  formDefaults: sharedTiaFormDefaults(leidenIndiaTiaRequest),
   backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 

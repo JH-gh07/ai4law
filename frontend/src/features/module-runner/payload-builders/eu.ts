@@ -308,5 +308,6 @@ export function buildTiaPayload(
       values.review_date ? `复审日期：${values.review_date}` : "",
     ].filter((item) => item.trim().length > 0).join("；"),
     attachments,
+    structured_input: values.structured_input_override,
   };
 }

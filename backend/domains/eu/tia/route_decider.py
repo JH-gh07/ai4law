@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from backend.domains.eu.tia.schema import TIARouteDecision, TIAStructuredInput
+from backend.domains.eu.tia.country_names import country_name_matches, normalize_country_name
 
 
 class TIARouteDecider:
@@ -14,13 +15,15 @@ class TIARouteDecider:
         self.riskbook = json.loads(path.read_text(encoding="utf-8"))
 
     def decide(self, transfer_tool: str, structured: TIAStructuredInput | None) -> TIARouteDecision:
-        dest = (structured.destination_country or structured.importer_country or "").strip()
+        dest = normalize_country_name(
+            structured.destination_country or structured.importer_country or ""
+        )
         tool = transfer_tool.lower()
 
         # 1. Check adequacy
         adequacy_map: dict = self.riskbook.get("adequacy_countries", {})
         for country_name, info in adequacy_map.items():
-            if country_name.lower() in dest.lower() or dest.lower() in country_name.lower():
+            if country_name_matches(dest, country_name):
                 return TIARouteDecision(
                     route="adequacy_simplified",
                     need_full_tia=False,

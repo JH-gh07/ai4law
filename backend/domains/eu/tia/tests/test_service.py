@@ -22,6 +22,46 @@ class _Reg:
     content = "Appropriate safeguards must be provided for third-country transfers."
 
 
+def _structured_local_attachment_payload() -> dict:
+    return {
+        "transfer_tool": "scc",
+        "data_exporter_profile": "EU Exporter",
+        "data_importer_profile": "US Importer",
+        "third_country_assessment": "United States is HIGH risk because FISA Section 702, EO 12333, and the CLOUD Act may enable government access.",
+        "supplementary_measures": "End-to-end encryption and EU-managed keys.",
+        "final_conclusion": "Suspend until the applicable SCC and technical controls are evidenced.",
+        "attachments": [
+            {
+                "file_role": "country_law_analysis",
+                "file_name": "edpb-recommendations.pdf",
+                "file_format": "pdf",
+                "storage_uri": "resources/legal/sources/eu/references/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+            },
+            {
+                "file_role": "country_law_analysis",
+                "file_name": "fisa-section-702.pdf",
+                "file_format": "pdf",
+                "storage_uri": "resources/legal/sources/us/references/FISA_Section_702_FISA_Resource_Library.pdf",
+            },
+            {
+                "file_role": "country_law_analysis",
+                "file_name": "cloud-act.pdf",
+                "file_format": "pdf",
+                "storage_uri": "resources/legal/sources/us/references/cloud_act.pdf",
+            },
+        ],
+        "structured_input": {
+            "exporter_country": "DE", "importer_country": "US", "destination_country": "US",
+            "exporter_role": "controller", "importer_role": "processor",
+            "transfer_purpose": "CRM support", "data_categories": ["crm_data", "contact_information"],
+            "has_special_category_data": False, "data_subjects": ["customers"],
+            "transfer_frequency": "daily", "transfer_scale": "medium",
+            "encryption_before_transfer": True, "key_managed_in_eu": True,
+            "has_end_to_end_encryption": True, "has_key_separation": True,
+        },
+    }
+
+
 def test_regulation_dedup_preserves_distinct_articles_from_one_source() -> None:
     article_35 = type("Reg", (), {"id": "EU-LAW-001", "article": "35"})()
     article_46 = type("Reg", (), {"id": "EU-LAW-001", "article": "46"})()
@@ -135,6 +175,33 @@ def test_us_alias_and_gdpr_roles_enter_structured_context() -> None:
     assert country_risk.gov_access_risk is True
     assert "数据出口方 GDPR 角色：controller" in context
     assert "数据进口方 GDPR 角色：processor" in context
+
+
+def test_country_risk_accepts_india_iso_code() -> None:
+    service = TIAService(llm_client=_DisabledLLM())
+    payload = TIARequest.model_validate({
+        "transfer_tool": "scc",
+        "data_exporter_profile": "EU Exporter",
+        "data_importer_profile": "India Importer",
+        "third_country_assessment": "India IT Act Section 69 requires review.",
+        "supplementary_measures": "Secure enclave with EU-managed keys.",
+        "final_conclusion": "Transfer remains conditional.",
+        "attachments": [{
+            "file_role": "other",
+            "file_name": "tia-template.docx",
+            "file_format": "docx",
+            "storage_uri": "storage://uploads/tia-template.docx",
+        }],
+        "structured_input": {"destination_country": "IN"},
+    })
+
+    country_risk = service.country_risk.assess(payload.structured_input)
+    route = service.route_decider.decide("scc", payload.structured_input)
+
+    assert country_risk.country == "India"
+    assert country_risk.risk_level == "VERY_HIGH"
+    assert route.route == "full_tia_scc"
+    assert route.need_full_tia is True
 
 
 def test_dpo_revision_issues_are_exposed_to_callers(monkeypatch) -> None:
@@ -340,8 +407,7 @@ def test_structured_service_parses_real_local_attachment(monkeypatch, tmp_path) 
         "citation_map_json": str(tmp_path / "citation_map.json"),
     }
 
-    case = json.loads(Path("backend/tests/tia/cases/02_structured_local_attachment.json").read_text())
-    payload = TIARequest.model_validate(case["input"])
+    payload = TIARequest.model_validate(_structured_local_attachment_payload())
 
     result = service.generate_report(payload, task_id="structured-local-attachment")
 
@@ -376,11 +442,11 @@ def test_service_keeps_markdown_map_and_document_ir_citations_in_sync(
     monkeypatch, tmp_path
 ) -> None:
     """The service must carry one citation identity through every output layer."""
-    case = json.loads(Path("backend/tests/tia/cases/02_structured_local_attachment.json").read_text())
-    case["input"]["attachments"][0]["storage_uri"] = str(
-        Path(case["input"]["attachments"][0]["storage_uri"]).resolve()
+    payload_data = _structured_local_attachment_payload()
+    payload_data["attachments"][0]["storage_uri"] = str(
+        Path(payload_data["attachments"][0]["storage_uri"]).resolve()
     )
-    payload = TIARequest.model_validate(case["input"])
+    payload = TIARequest.model_validate(payload_data)
 
     service = TIAService()
     service.llm_client = _CitationLLM()

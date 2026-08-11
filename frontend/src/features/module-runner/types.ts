@@ -331,6 +331,7 @@ export type TiaStepConfig = {
 };
 
 export type TiaFormValues = {
+  structured_input_override?: ModuleRequestMap["tia"]["structured_input"];
   data_exporter_name: string;
   data_importer_name: string;
   importer_country_region: string;

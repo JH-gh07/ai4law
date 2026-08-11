@@ -8,6 +8,8 @@ import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard
 import franceUkSccScenario from "../../../benchmarks/cases/eu_scc/france_c2c_uk_aws/scenario.json";
 import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2p_india_health/scenario.json";
 import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
+import innovateUsTiaScenario from "../../../benchmarks/cases/tia/innovate_crm_us_saas/scenario.json";
+import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinical_india/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -116,23 +118,9 @@ describe("developer test case API contracts", () => {
     expect(DEV_TEST_CASES.eu_scc[2].payload).toEqual(canonicalRequest(netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"]));
   });
 
-  it("keeps TIA cases aligned with the official US SaaS and India clinical scenarios", () => {
-    const [usSaas, indiaClinical] = DEV_TEST_CASES.tia;
-
-    expect(usSaas.payload.data_exporter_profile).toContain("Innovate Software GmbH");
-    expect(usSaas.payload.data_importer_profile).toContain("CloudForce Inc.");
-    expect(usSaas.payload.data_importer_profile).toContain("美国");
-    expect(usSaas.payload.third_country_assessment).toContain("FISA 702");
-    expect(usSaas.payload.third_country_assessment).toContain("CLOUD Act");
-    expect(usSaas.payload.supplementary_measures).toContain("密钥");
-
-    expect(indiaClinical.payload.data_exporter_profile).toContain("Leiden Life Sciences Institute");
-    expect(indiaClinical.payload.data_importer_profile).toContain("New Delhi Clinical Research Pvt. Ltd.");
-    expect(indiaClinical.payload.data_importer_profile).toContain("印度");
-    expect(indiaClinical.payload.data_exporter_profile).toContain("基因组序列片段");
-    expect(indiaClinical.payload.third_country_assessment).toContain("IT Act第69条");
-    expect(indiaClinical.payload.supplementary_measures).toContain("安全飞地");
-    expect(indiaClinical.payload.final_conclusion).toContain("荷兰 AP");
+  it("builds the official TIA requests without changing shared facts", () => {
+    expect(DEV_TEST_CASES.tia[0].payload).toEqual(innovateUsTiaScenario.request);
+    expect(DEV_TEST_CASES.tia[1].payload).toEqual(leidenIndiaTiaScenario.request);
   });
 
   it("includes current PIPIA company profile fields", () => {

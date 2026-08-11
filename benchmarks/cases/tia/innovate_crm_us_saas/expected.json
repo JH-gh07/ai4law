@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "case_id": "innovate_crm_us_saas",
+  "formal_expected_conclusion": "proceed_with_conditions",
+  "required_conditions": [
+    "AES-256 encryption before transfer with keys managed by the exporter in the EU",
+    "signed SCC supplementary commitments",
+    "independent security audit before transfer",
+    "six-month review of transparency reports and US law changes"
+  ],
+  "legal_basis": ["GDPR Article 46", "Schrems II C-311/18", "FISA Section 702", "CLOUD Act", "EDPB Recommendations 01/2020"],
+  "evidence_gate_note": "The draft may conclude proceed-with-conditions, but the executable decision remains suspended until the transfer tool, country-law analysis and implemented technical controls are evidenced.",
+  "harness": {
+    "result_not_empty": true,
+    "fields_present": ["route_decision", "country_risk", "measure_assessments", "decision"],
+    "fields_equal": {
+      "transfer_tool": "scc",
+      "route_decision.route": "full_tia_scc",
+      "route_decision.need_full_tia": true,
+      "country_risk.country": "United States",
+      "country_risk.risk_level": "HIGH",
+      "country_risk.gov_access_risk": true,
+      "decision.transfer_status": "suspend",
+      "decision.inherent_risk": "HIGH",
+      "decision.residual_risk": "MEDIUM",
+      "decision.measure_sufficiency": "sufficient",
+      "decision.evidence_status": "missing",
+      "decision.decision_source": "deterministic_rule"
+    },
+    "list_contains": {
+      "measure_assessments[].measure_name": ["e2e_encryption_eu_key_management"],
+      "decision.missing_evidence": ["签署或适用的传输工具文件", "覆盖政府访问、救济和独立监督的第三国法律分析", "技术控制实施证据"]
+    },
+    "min_counts": {"chapters": 6, "measure_assessments": 1, "attachment_notes": 1, "output_files": 5},
+    "output_roles_contains": ["markdown", "docx", "pdf", "zip", "citation_map_json"],
+    "output_formats": ["md", "docx", "pdf", "json", "zip"]
+  }
+}

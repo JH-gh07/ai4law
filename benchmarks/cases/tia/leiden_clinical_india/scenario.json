@@ -19,6 +19,25 @@
     "third_country_assessment": "已完成法律评估；印度《信息技术法》及其实施细则，特别是第69条，授权政府为国家安全、调查犯罪等广泛目的命令任何公司截取、监控或解密任何计算机资源中的信息，相关程序缺乏与欧盟标准相匹配的独立性、必要性和相称性要求，且印度正在审议的《个人数据保护法案》草案包含广泛的数据本地化和政府访问豁免条款；补充措施前判断：否，可能无效（印度法律环境对个人数据特别是敏感健康数据的保护水平与欧盟存在显著差距，SCCs本身可能无法提供充分保障）",
     "supplementary_measures": "技术措施：强加密（在源头使用抗量子加密算法加密，解密密钥仅由位于荷兰的研究机构数据保管委员会持有，印度合作方仅能提交分析代码在安全飞地中运行，无法接触明文数据）与差分隐私（在共享结果数据集前添加统计噪声防止反推个体信息）；合同措施：联合控制者协议（明确双方责任，约定任何来自印度当局的请求必须立即通知欧方并由双方法律团队共同评估应对）与独立监督（聘请国际伦理委员会监督整个数据传输和分析过程）；组织措施：临床研究访问审批、独立安全验证、DPO 风险复核",
     "final_conclusion": "在安全飞地、密钥分离和严格前提持续有效的条件下可进行，但属于极度审慎的高度条件化结论；关键行动：部署并获得安全飞地解决方案的独立安全认证，签署详细的联合控制者协议和SCCs附录，并向荷兰数据保护机构（AP）和伦理委员会报备本次传输及所采取的措施；DPO意见：极高风险警告，目的地国法律保护水平薄弱且数据极为敏感，强烈建议在传输任何真实数据前进行模拟政府访问场景的压力测试，获得欧洲数据保护委员会（EDPB）或荷兰AP对此次传输安排的事先咨询意见，并准备应急计划；复审日期：2024-09-01",
+    "structured_input": {
+      "exporter_country": "NL",
+      "importer_country": "IN",
+      "destination_country": "IN",
+      "exporter_role": "controller",
+      "importer_role": "processor",
+      "transfer_purpose": "Clinical trial bioinformatics and statistical analysis",
+      "data_categories": ["clinical_trial_data", "health_data", "genetic_data"],
+      "has_special_category_data": true,
+      "special_category_types": ["health data", "genetic data"],
+      "data_subjects": ["clinical trial participants"],
+      "transfer_frequency": "one_time",
+      "transfer_scale": "medium",
+      "encryption_before_transfer": true,
+      "key_managed_in_eu": true,
+      "has_end_to_end_encryption": true,
+      "has_secure_enclave": true,
+      "has_key_separation": true
+    },
     "attachments": [
       {
         "file_role": "other",

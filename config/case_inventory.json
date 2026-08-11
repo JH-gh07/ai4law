@@ -133,11 +133,11 @@
       "cli_cases": [
         {
           "case_id": "01_minimal",
-          "assertions": 26
+          "assertions": 35
         },
         {
           "case_id": "02_structured_local_attachment",
-          "assertions": 24
+          "assertions": 35
         }
       ],
       "frontend_cases": 2

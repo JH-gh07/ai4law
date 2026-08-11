@@ -6,16 +6,8 @@ import json
 from pathlib import Path
 
 from backend.domains.eu.tia.schema import TIACountryRisk, TIAStructuredInput
+from backend.domains.eu.tia.country_names import country_name_matches, normalize_country_name
 
-
-COUNTRY_ALIASES = {
-    "us": "United States",
-    "u.s.": "United States",
-    "usa": "United States",
-    "u.s.a.": "United States",
-    "uk": "United Kingdom",
-    "u.k.": "United Kingdom",
-}
 
 
 class TIACountryRiskAssessor:
@@ -28,7 +20,7 @@ class TIACountryRiskAssessor:
             return TIACountryRisk(country="unknown", risk_level="MEDIUM")
 
         dest = (structured.destination_country or structured.importer_country or "").strip()
-        dest = COUNTRY_ALIASES.get(dest.lower(), dest)
+        dest = normalize_country_name(dest)
         country_risks: dict = self.riskbook.get("country_risks", {})
 
         # Exact match first
@@ -38,7 +30,7 @@ class TIACountryRiskAssessor:
 
         # Fuzzy match
         for country_name, risk_info in country_risks.items():
-            if country_name.lower() in dest.lower() or dest.lower() in country_name.lower():
+            if country_name_matches(dest, country_name):
                 return TIACountryRisk(country=country_name, **risk_info)
 
         # Unknown country
