@@ -39,6 +39,8 @@ import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
  */
 
 export type DevTestCase<Module extends DevCaseModule = DevCaseModule> = {
+  /** Stable identifier shared by the frontend case catalog and CLI adapters. */
+  caseId: string;
   /** 案例名称（显示在下拉菜单中） */
   name: string;
   /** 一句话描述 */
@@ -54,7 +56,7 @@ export type DevTestCase<Module extends DevCaseModule = DevCaseModule> = {
 };
 
 type DevTestCaseSeed<Module extends DevCaseModule> =
-  Omit<DevTestCase<Module>, "payload"> & { payload?: never };
+  Omit<DevTestCase<Module>, "payload" | "caseId"> & { payload?: never };
 
 function buildCasePayload<Module extends DevCaseModule>(
   module: Module,
@@ -93,8 +95,9 @@ export function defineDevCases<Module extends DevCaseModule>(
   module: Module,
   cases: DevTestCaseSeed<Module>[],
 ): DevTestCase<Module>[] {
-  return cases.map((testCase) => ({
+  return cases.map((testCase, index) => ({
     ...testCase,
+    caseId: `${module}-${String(index + 1).padStart(2, "0")}`,
     payload: buildCasePayload(module, testCase),
   }));
 }

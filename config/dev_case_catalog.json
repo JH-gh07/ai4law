@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "source_directories": [
+    "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例",
+    "resources/new/数规通黄金标准与种子案例/种子案例及测试结果"
+  ],
+  "cases": [
+    {"case_id":"cpra-01","module":"cpra","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：\"CPRA合规\"路径描述及测试案例/\"CPRA合规\"测试案例及预期输出.docx","source_case":"TrendyGoods 电商平台"},
+    {"case_id":"cpra-02","module":"cpra","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：\"CPRA合规\"路径描述及测试案例/\"CPRA合规\"测试案例及预期输出.docx","source_case":"DataFlow SaaS 服务商"},
+    {"case_id":"cpra-03","module":"cpra","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：\"CPRA合规\"路径描述及测试案例/\"CPRA合规\"测试案例及预期输出.docx","source_case":"FitLife AI 健康科技"},
+    {"case_id":"diagnosis-01","module":"diagnosis","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：\"合规路径诊断\"路径描述及测试案例/\"合规路径诊断\"测试案例及预期输出.docx","source_case":"测试案例一：电商用户数据出境"},
+    {"case_id":"diagnosis-02","module":"diagnosis","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：\"合规路径诊断\"路径描述及测试案例/\"合规路径诊断\"测试案例及预期输出.docx","source_case":"测试案例二：医疗研究数据出境"},
+    {"case_id":"diagnosis-03","module":"diagnosis","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：\"合规路径诊断\"路径描述及测试案例/\"合规路径诊断\"测试案例及预期输出.docx","source_case":"测试案例三：匿名地图数据出境"},
+    {"case_id":"assessment-01","module":"assessment","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：\"安全评估路径\"路径描述及测试案例/\"安全评估路径\"测试案例及预期输出.docx","source_case":"测试案例一：CIIO金融机构向境外母公司传输数据"},
+    {"case_id":"assessment-02","module":"assessment","classification":"product_extension","source_file":"","source_case":"当前前端智慧云联案例，正式指定资料未找到同名案例","change_reason":"待替换为正式优选购物或蔚驱汽车案例；在替换前不得宣称来源匹配"},
+    {"case_id":"eu_scc-01","module":"eu_scc","classification":"product_extension","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：\"SCC审查\"路径描述及测试案例/\"SCC审查\"测试案例及预期输出.docx","source_case":"正式案例一为法国电商 C2C→英国关联公司，当前前端事实不一致","change_reason":"恢复正式法国、英国、C2C和美国云服务商事实后再改为 source_exact"},
+    {"case_id":"eu_scc-02","module":"eu_scc","classification":"source_derived","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：\"SCC审查\"路径描述及测试案例/\"SCC审查\"测试案例及预期输出.docx","source_case":"测试案例二：C2P模块—高风险第三国且条款被不当修改","change_reason":"当前公司和城市被改写，需保留德国→印度、健康/基因数据、Clause 15修改和补充措施缺失事实"},
+    {"case_id":"eu_scc-03","module":"eu_scc","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：\"SCC审查\"路径描述及测试案例/\"SCC审查\"测试案例及预期输出.docx","source_case":"测试案例三：多方加入与模块选择错误"},
+    {"case_id":"bcr-01","module":"bcr","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：\"BCR审核\"路径描述及测试案例/\"BCR审核\"测试案例及预期输出.docx","source_case":"BCR 控制者场景基础案例"},
+    {"case_id":"bcr-02","module":"bcr","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：\"BCR审核\"路径描述及测试案例/\"BCR审核\"测试案例及预期输出.docx","source_case":"BCR 高风险/健康数据案例"},
+    {"case_id":"bcr-03","module":"bcr","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：\"BCR审核\"路径描述及测试案例/\"BCR审核\"测试案例及预期输出.docx","source_case":"BCR 结构缺失案例"},
+    {"case_id":"dpia-01","module":"dpia","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：\"DPIA草案生成\"路径描述及测试案例/\"DPIA草案生成\"测试案例及预期输出.docx","source_case":"测试案例一：基于人工智能的招聘筛选系统"},
+    {"case_id":"dpia-02","module":"dpia","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：\"DPIA草案生成\"路径描述及测试案例/\"DPIA草案生成\"测试案例及预期输出.docx","source_case":"测试案例二：智能城市公共空间人群分析系统"},
+    {"case_id":"tia-01","module":"tia","classification":"product_extension","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：\"TIA草案生成\"路径描述及测试案例/\"TIA草案生成\"测试案例及预期输出.docx","source_case":"正式案例一为德国→美国 SaaS，当前前端为爱尔兰→印度混合场景","change_reason":"恢复正式案例或明确保留为产品扩展，不能标为正式来源"},
+    {"case_id":"tia-02","module":"tia","classification":"source_derived","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：\"TIA草案生成\"路径描述及测试案例/\"TIA草案生成\"测试案例及预期输出.docx","source_case":"正式案例三为荷兰→印度临床试验，当前前端事实被改写","change_reason":"保留高风险第三国、健康/基因数据和监管指导结论，恢复正式主体和国家"},
+    {"case_id":"pipia-01","module":"pipia","classification":"source_derived","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：\"认证标准合同路径\"路径描述及测试案例/\"认证_标准合同路径\"测试案例及预期输出.docx","source_case":"海淘优选标准合同路径","change_reason":"当前企业名称和部分字段被重写，需逐项恢复正式主体、数量和传输目的"},
+    {"case_id":"pipia-02","module":"pipia","classification":"product_extension","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：\"认证标准合同路径\"路径描述及测试案例/\"认证_标准合同路径\"测试案例及预期输出.docx","source_case":"正式案例为智付通→欧盟认证机构，当前前端为美国母公司支付数据","change_reason":"待恢复正式智付通案例，或明确登记为认证路径扩展案例"},
+    {"case_id":"review-01","module":"review","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：\"文档专项智能审查\"路径描述及测试案例/\"文档专项智能审查\"测试案例及预期输出/数据安全及保密协议（模板） (1).docx","source_case":"测试案例一：数据安全及保密协议"},
+    {"case_id":"review-02","module":"review","classification":"product_extension","source_file":"","source_case":"当前智付通标准合同审查案例缺乏与文档专项审查正式案例的明确对应","change_reason":"已修正附件为标准合同模板；需补充正式来源定位后再升级为 source_exact"},
+    {"case_id":"us_14117-01","module":"us_14117","classification":"source_derived","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx","source_case":"基因组/人类组学数据传输案例","change_reason":"当前研究机构和接收方被改写，需保留正式红黄绿判定事实"},
+    {"case_id":"us_14117-02","module":"us_14117","classification":"product_extension","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx","source_case":"当前受限 AI 主体案例未对应正式红黄绿案例","change_reason":"待恢复正式案例或明确作为产品扩展，不得混入黄金种子覆盖率"},
+    {"case_id":"cn_flow-01","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"不属于正式资料独立功能；复用 us_14117-01 的 EO 14117 事实","change_reason":"只验证旧 cn_flow 请求适配到 us_14117 后的结果等价性"},
+    {"case_id":"cn_flow-02","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"不属于正式资料独立功能；复用 us_14117-02 的 EO 14117 事实","change_reason":"只验证旧 cn_flow 请求适配到 us_14117 后的结果等价性"}
+  ]
+}

@@ -64,6 +64,20 @@ def test_python_gate_reads_frontend_counts_from_structured_inventory() -> None:
     assert counts["review"] == 2
 
 
+def test_case_catalog_has_unique_registered_cases_and_real_sources() -> None:
+    assert gate.case_catalog_violations() == []
+
+
+def test_case_catalog_rejects_unknown_classification(monkeypatch) -> None:
+    catalog = json.loads(gate.CASE_CATALOG_PATH.read_text(encoding="utf-8"))
+    catalog["cases"][0]["classification"] = "invented"
+    monkeypatch.setattr(gate, "_case_catalog", lambda: catalog)
+
+    violations = gate.case_catalog_violations()
+
+    assert any("classification" in item for item in violations)
+
+
 def test_leaf_check_counter_matches_the_validator() -> None:
     """The inventory's arithmetic must equal what the validator really emits.
 

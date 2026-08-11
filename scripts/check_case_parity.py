@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -42,10 +43,18 @@ if str(ROOT) not in sys.path:
 from backend.tests.harness.validators import ASSERTION_OPERATORS  # noqa: E402
 
 INVENTORY_PATH = ROOT / "config" / "case_inventory.json"
+CASE_CATALOG_PATH = ROOT / "config" / "dev_case_catalog.json"
 MODULE_REGISTRY_PATH = ROOT / "config" / "module_registry.json"
 TESTS_DIR = ROOT / "backend" / "tests"
 
 SCHEMA_VERSION = "1.0"
+CASE_CATALOG_SCHEMA_VERSION = "1.0"
+CASE_CLASSIFICATIONS = {
+    "source_exact",
+    "source_derived",
+    "product_extension",
+    "compatibility_adapter",
+}
 
 # A case carrying fewer leaf checks than this is not asserting its module's
 # behaviour in any meaningful way. The floor is the weakest case currently in
@@ -88,6 +97,94 @@ def count_leaf_checks(expected: dict[str, Any]) -> int:
 def _registry_modules() -> dict[str, str]:
     records = json.loads(MODULE_REGISTRY_PATH.read_text(encoding="utf-8"))
     return {record["frontend_key"]: record["module_id"] for record in records}
+
+
+def _case_catalog() -> dict[str, Any]:
+    if not CASE_CATALOG_PATH.exists():
+        return {}
+    try:
+        value = json.loads(CASE_CATALOG_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _catalog_source_exists(source_file: str) -> bool:
+    """Resolve JSON-safe ASCII quotes used for Chinese curly-quote filenames."""
+    direct = ROOT / source_file
+    if direct.is_file():
+        return True
+    if source_file.count('"') and source_file.count('"') % 2 == 0:
+        quote_index = 0
+
+        def replace_quote(_match: Any) -> str:
+            nonlocal quote_index
+            mark = "“" if quote_index % 2 == 0 else "”"
+            quote_index += 1
+            return mark
+
+        normalized = re.sub(r'"', replace_quote, source_file)
+        return (ROOT / normalized).is_file()
+    return False
+
+
+def case_catalog_violations() -> list[str]:
+    """Validate the source/provenance catalog without parsing TypeScript text."""
+    catalog = _case_catalog()
+    violations: list[str] = []
+    if catalog.get("schema_version") != CASE_CATALOG_SCHEMA_VERSION:
+        violations.append(
+            f"case catalog schema_version must be {CASE_CATALOG_SCHEMA_VERSION!r}"
+        )
+    cases = catalog.get("cases")
+    if not isinstance(cases, list):
+        return ["case catalog cases must be a list"]
+
+    registry = _registry_modules()
+    seen: set[str] = set()
+    counts: dict[str, int] = {}
+    for index, case in enumerate(cases):
+        label = f"catalog case #{index + 1}"
+        if not isinstance(case, dict):
+            violations.append(f"{label} must be an object")
+            continue
+        case_id = str(case.get("case_id", "")).strip()
+        module = str(case.get("module", "")).strip()
+        classification = str(case.get("classification", "")).strip()
+        source_file = str(case.get("source_file", "")).strip()
+        source_case = str(case.get("source_case", "")).strip()
+        if not case_id:
+            violations.append(f"{label}: case_id is required")
+        elif case_id in seen:
+            violations.append(f"{label}: duplicate case_id {case_id!r}")
+        else:
+            seen.add(case_id)
+        if module not in registry:
+            violations.append(f"{label}: module {module!r} is not registered")
+        else:
+            counts[module] = counts.get(module, 0) + 1
+        if classification not in CASE_CLASSIFICATIONS:
+            violations.append(
+                f"{label}: classification {classification!r} is invalid"
+            )
+        if not source_case:
+            violations.append(f"{label}: source_case is required")
+        if source_file and not _catalog_source_exists(source_file):
+            violations.append(f"{label}: source_file does not exist: {source_file}")
+        if classification in {"source_exact", "source_derived"} and not source_file:
+            violations.append(f"{label}: {classification} requires source_file")
+
+    expected_total = sum(_frontend_case_counts().values())
+    if len(cases) != expected_total:
+        violations.append(
+            f"case catalog has {len(cases)} cases, inventory declares {expected_total} frontend cases"
+        )
+    for module, count in _frontend_case_counts().items():
+        if counts.get(module, 0) != count:
+            violations.append(
+                f"{module}: catalog has {counts.get(module, 0)} cases, inventory declares {count}"
+            )
+    return violations
 
 
 def _case_files(module: str) -> list[Path]:
@@ -282,6 +379,7 @@ def inventory_violations(committed: dict[str, Any], observed: dict[str, Any]) ->
 
 def collect_violations() -> list[str]:
     violations: list[str] = []
+    violations.extend(case_catalog_violations())
     registry = _registry_modules()
     for module in sorted(registry):
         for path in _case_files(module):
