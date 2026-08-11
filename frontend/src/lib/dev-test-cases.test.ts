@@ -108,6 +108,19 @@ describe("developer test case API contracts", () => {
     expect(testCase.payload.scc_text).not.toContain("MODULE TWO");
   });
 
+  it("keeps the second SCC case aligned with the official Germany-India C2P scenario", () => {
+    const testCase = DEV_TEST_CASES.eu_scc[1];
+
+    expect(testCase.payload.declared_module_type).toBe("Module Two");
+    expect(testCase.payload.company_name).toBe("Gesundheitsforschung GmbH");
+    expect(testCase.payload.scc_text).toContain("Berlin, Germany");
+    expect(testCase.payload.scc_text).toContain("Data Insights Solutions Pvt. Ltd.");
+    expect(testCase.payload.scc_text).toContain("patient health data");
+    expect(testCase.payload.scc_text).toContain("as soon as legally permissible");
+    expect(testCase.payload.scc_text).not.toContain("Amsterdam, Netherlands");
+    expect(testCase.payload.scc_text).not.toContain("genetic sequencing data");
+  });
+
   it("includes current PIPIA company profile fields", () => {
     for (const testCase of DEV_TEST_CASES.pipia) {
       const company = asRecord(testCase.payload.company_profile);

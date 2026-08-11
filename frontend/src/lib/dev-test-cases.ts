@@ -435,17 +435,17 @@ const euSccBasic = {
 
 const euSccHealthIndia = {
   name: "EU-SCC-2: 健康数据→印度 高风险修改",
-  description: "荷兰研究机构→印度分析公司，Clause 15被修改，SPI分类错误，缺少补充措施",
+  description: "德国健康研究公司→印度分析公司，Clause 15被修改，特殊类别数据分类错误，缺少补充措施",
   jurisdiction: "EU" as const,
   formDefaults: {
-    exporter_name: "Health Research Institute",
-    importer_name: "DataAnalytica India Pvt Ltd",
+    exporter_name: "Gesundheitsforschung GmbH",
+    importer_name: "Data Insights Solutions Pvt. Ltd.",
     importer_country: "印度",
     transfer_role: "c2p",
     scc_version: "eu_2021",
-    transfer_purpose: "罕见病研究数据分析，处理患者健康记录和基因测序数据",
-    data_categories: "患者健康记录、基因测序数据、治疗历史",
-    data_subject_categories: "罕见病研究参与者",
+    transfer_purpose: "医疗研究数据统计分析",
+    data_categories: "患者研究编号、年龄组、性别、诊断代码、治疗代码、实验室检测结果",
+    data_subject_categories: "医疗研究参与患者",
     transfer_frequency: "periodic",
     retention_rule: "研究项目结束后按法规要求保留",
     tom_summary: "数据传输加密，但Clause 15政府请求通知条款被非法修改为\"as soon as legally permissible\"",
@@ -456,8 +456,9 @@ const euSccHealthIndia = {
     has_scc_draft: true,
     has_tia: false,
     has_supplementary_measures: false,
-    project_name_override: "罕见病研究数据分析",
-    scc_text_override: "MODULE TWO: Transfer controller to processor\n\nData exporter: Health Research Institute, Amsterdam, Netherlands\nData importer: DataAnalytica India Pvt Ltd, Bangalore, India\n\nClause 15(a) - modified from standard text: The data importer shall, as soon as legally permissible, provide the data exporter with information about any legally binding request from a public authority. The data importer shall use reasonable discretion in determining what information to provide.\n\nAnnex I.B:\nCategories of data subjects: Patients participating in rare disease studies\nCategories of personal data: Patient health records, genetic sequencing data, treatment history\nSensitive data transferred: The parties confirm that no special categories of data are transferred\n\nClause 9: Use of sub-processors\nThe data importer shall submit any planned changes to its list of sub-processors to the data exporter via email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor."},
+    project_name_override: "德国医疗研究数据向印度统计分析传输",
+    scc_text_override: "MODULE TWO: Transfer controller to processor\n\nData exporter: Gesundheitsforschung GmbH, Berlin, Germany (controller)\nData importer: Data Insights Solutions Pvt. Ltd., Bangalore, India (processor)\n\nClause 9: Use of sub-processors\nThe data importer shall submit planned changes to its list of sub-processors by email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor.\n\nClause 14(c) - modified from standard text\nThe data importer shall provide the documented assessment and suitable safeguards only upon a specific, justified request.\n\nClause 15(a) - modified from standard text\nThe data importer shall notify the data exporter as soon as legally permissible after a legally binding public-authority request and may provide relevant information at its discretion.\n\nAnnex I.B - Description of transfer\nCategories of personal data: Patient unique study identifier (pseudonymised), age group, gender, diagnostic codes, treatment codes, and laboratory test results (anonymised).\nSensitive data transferred: Not applicable. The patient health data is anonymised for research purposes and does not constitute special categories of data."
+  },
   backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
 };
 
