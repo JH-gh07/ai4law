@@ -7,6 +7,7 @@ must never turn an omitted value into a benign default such as zero.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from backend.domains.us.eo14117.schema import (
     US14117DataItem,
@@ -31,6 +32,66 @@ class CNFlowCompatibilityResult:
     lossy_fields: list[str]
     clarification_questions: list[str]
     canonical_module: str = "us_14117"
+
+
+@dataclass(frozen=True)
+class CNFlowProjectionResult:
+    legacy_request: CNFlowRequest
+    lossy_fields: list[str]
+
+
+def project_us14117_request_to_cn_flow(payload: US14117Request) -> CNFlowProjectionResult:
+    """Project canonical facts into the historical request without inventing detail."""
+    if len(payload.attachments) < 2:
+        raise ValueError("CN Flow projection requires data and entity inventory attachments")
+
+    def legacy_role(role: str) -> str:
+        return role if role in {"processor", "controller", "subprocessor", "affiliate", "vendor"} else "vendor"
+
+    item_names = [item.data_item_name for item in payload.data_items]
+    counts = {item.us_person_count for item in payload.data_items}
+    if len(counts) != 1:
+        raise ValueError("CN Flow cannot represent different US-person counts per data item")
+    attachments = []
+    for index, path in enumerate(payload.attachments):
+        suffix = Path(path).suffix.lower().lstrip(".")
+        if suffix not in {"xlsx", "csv", "docx", "pdf"}:
+            raise ValueError(f"CN Flow does not support attachment format: {path}")
+        attachments.append({
+            "file_role": "data_inventory" if index == 0 else "entity_inventory" if index == 1 else "supporting_material",
+            "file_name": Path(path).name,
+            "file_format": suffix,
+            "storage_uri": path,
+        })
+
+    legacy = CNFlowRequest.model_validate({
+        "company_name": payload.company_name,
+        "transfer_purpose": payload.transaction_description,
+        "data_categories": item_names,
+        "sensitive_data_flags": [item.data_item_name for item in payload.data_items if item.is_sensitive_personal_info],
+        "us_person_count": counts.pop(),
+        "transaction_type": payload.transaction_type,
+        "doj_data_category_by_item": {item.data_item_name: item.doj_data_category for item in payload.data_items},
+        "recipient_entities": [
+            {
+                "entity_name": entity.entity_name,
+                "country_region": entity.country_of_registration,
+                "entity_role": legacy_role(entity.entity_role),
+                "is_restricted_party": entity.is_covered_person is True,
+            }
+            for entity in payload.recipient_entities
+        ],
+        "transfer_chain": f"{payload.company_name} -> " + " -> ".join(entity.entity_name for entity in payload.recipient_entities),
+        "attachments": attachments,
+    })
+    lossy = [
+        "data_items.details",
+        "recipient_entities.ownership_and_governance",
+        "access_persons",
+        "security_measures",
+        "onward_transfer",
+    ]
+    return CNFlowProjectionResult(legacy_request=legacy, lossy_fields=lossy)
 
 
 def adapt_cn_flow_request(payload: CNFlowRequest) -> CNFlowCompatibilityResult:

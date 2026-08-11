@@ -1,12 +1,18 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from backend.domains.us.eo14117_flow_review.compatibility import (
     CompatibilityClarificationRequired,
     adapt_cn_flow_request,
+    project_us14117_request_to_cn_flow,
 )
 from backend.domains.us.eo14117_flow_review.schema import CNFlowRequest
 from backend.domains.us.eo14117.rule_engine import run_rule_engine
 from backend.domains.us.eo14117.schema import US14117Request
+
+ROOT = Path(__file__).resolve().parents[5]
 
 
 def _legacy_request() -> CNFlowRequest:
@@ -91,3 +97,30 @@ def test_legacy_adapter_preserves_canonical_rule_result() -> None:
     } == {
         (item.rule_id, item.section_ref, item.hit) for item in direct_result.all_rule_hits
     }
+
+
+@pytest.mark.parametrize(
+    ("scenario_dir", "expected_light"),
+    [("geneguard_genomic_red", "RED"), ("geneguard_geolocation_yellow", "YELLOW")],
+)
+def test_shared_scenario_preserves_core_facts_and_light_through_legacy_adapter(
+    scenario_dir: str, expected_light: str
+) -> None:
+    document = json.loads(
+        (ROOT / "benchmarks" / "cases" / "us_14117" / scenario_dir / "scenario.json").read_text(encoding="utf-8")
+    )
+    direct = US14117Request.model_validate(document["request"])
+
+    projected = project_us14117_request_to_cn_flow(direct)
+    adapted = adapt_cn_flow_request(projected.legacy_request)
+
+    assert adapted.canonical_request.company_name == direct.company_name
+    assert adapted.canonical_request.transaction_type == direct.transaction_type
+    assert adapted.canonical_request.data_items[0].data_item_name == direct.data_items[0].data_item_name
+    assert adapted.canonical_request.data_items[0].us_person_count == direct.data_items[0].us_person_count
+    assert adapted.canonical_request.data_items[0].doj_data_category == direct.data_items[0].doj_data_category
+    assert adapted.canonical_request.recipient_entities[0].entity_name == direct.recipient_entities[0].entity_name
+    assert run_rule_engine(direct).traffic_light.overall_light == expected_light
+    assert run_rule_engine(adapted.canonical_request).traffic_light.overall_light == expected_light
+    assert "access_persons" in projected.lossy_fields
+    assert "security_measures" in projected.lossy_fields
