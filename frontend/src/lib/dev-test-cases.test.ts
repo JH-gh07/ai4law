@@ -183,6 +183,24 @@ describe("developer test case API contracts", () => {
     }
   });
 
+  it("reuses the official EO 14117 red and yellow facts in CN Flow compatibility cases", () => {
+    const [red, yellow] = DEV_TEST_CASES.cn_flow;
+
+    expect(red.payload.company_name).toBe("GeneGuard生物科技公司");
+    expect(red.payload.us_person_count).toBe(10_000);
+    expect(red.payload.recipient_entities[0].entity_name).toBe("华源生命科学有限公司");
+    expect(red.payload.doj_data_category_by_item).toMatchObject({
+      全基因组测序原始数据: "human_genomic_data",
+    });
+
+    expect(yellow.payload.company_name).toBe("GeneGuard生物科技公司");
+    expect(yellow.payload.us_person_count).toBe(150_000);
+    expect(yellow.payload.recipient_entities[0].entity_name).toBe("深度洞察人工智能有限公司");
+    expect(yellow.payload.doj_data_category_by_item).toMatchObject({
+      精确位置轨迹数据: "precise_geolocation_data",
+    });
+  });
+
   it("uses current EO 14117 nested fields", () => {
     for (const testCase of DEV_TEST_CASES.us_14117) {
       const payload = asRecord(testCase.payload);

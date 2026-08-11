@@ -935,23 +935,25 @@ const us14117RestrictedParty = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const cnFlowBasic = {
-  name: "CN-FLOW-1: 基础对华数据流动评估",
-  description: "美国电商平台向中国供应商传输订单数据，审查受限主体和敏感数据类别",
+  name: "CN-FLOW-1: GeneGuard 基因组数据红灯兼容请求",
+  description: "复用 EO 14117 正式红灯案例，验证旧 CN Flow 请求到统一服务的兼容转换",
   jurisdiction: "US" as const,
   formDefaults: {
-    company_name: "GlobalShop Inc.",
-    transfer_purpose: "向中国供应商传输订单信息用于商品生产和物流配送",
-    data_categories: "客户姓名,收货地址,联系电话,商品订单号,SKU信息",
-    sensitive_data_flags: "无敏感信息",
-    us_person_count: 100000,
-    transaction_type: "vendor_agreement",
-    doj_data_category: "covered_personal_identifiers",
-    transfer_chain: "美国总部→AWS美东区→通过加密API→中国供应商ERP系统。传输频率：每日实时",
-    primary_recipient_name: "深圳智能制造有限公司",
+    company_name: "GeneGuard生物科技公司",
+    transfer_purpose: "向中国上海华源生命科学有限公司提供美国志愿者全基因组测序原始数据，用于基因标记与疾病关联联合研究",
+    data_categories: "全基因组测序原始数据",
+    sensitive_data_flags: "",
+    us_person_count: 10000,
+    transaction_type: "cooperative_research",
+    doj_data_category: "human_genomic_data",
+    transfer_chain: "GeneGuard加州精准医疗事业部→华源生命科学有限公司（中国上海）",
+    data_volume_note: "10,000名美国志愿者，超过人类基因组数据批量阈值",
+    necessity_justification: "联合研究用于分析基因标记与疾病关联性",
+    primary_recipient_name: "华源生命科学有限公司",
     primary_recipient_country: "中国",
-    primary_recipient_role: "vendor",
-    primary_recipient_restricted: false,
-    additional_recipients: "广州物流供应链有限公司,中国,processor,no"
+    primary_recipient_role: "affiliate",
+    primary_recipient_restricted: true,
+    additional_recipients: ""
   },
   backendFilePaths: [
     "backend/tests/fixtures/cn/cn_flow_data_inventory.csv",
@@ -960,24 +962,26 @@ const cnFlowBasic = {
 };
 
 const cnFlowRestricted = {
-  name: "CN-FLOW-2: 受限主体+敏感数据",
-  description: "美国半导体公司向中国受限实体传输技术数据，涉及出口管制和高风险数据类别",
+  name: "CN-FLOW-2: GeneGuard 位置数据黄灯兼容请求",
+  description: "复用 EO 14117 正式黄灯案例，验证旧 CN Flow 请求到统一服务的兼容转换",
   jurisdiction: "US" as const,
   formDefaults: {
-    company_name: "Advanced Semiconductor Corp.",
-    transfer_purpose: "向中国合作方提供芯片设计文件用于封装测试，技术数据可能涉及出口管制分类（ECCN 3E001）",
-    data_categories: "芯片设计文件（GDSII格式）,测试规范文档,良率数据报告,工程师联系信息",
-    sensitive_data_flags: "出口管制技术数据,可能涉及ECCN 3E001分类",
-    us_person_count: 1000,
+    company_name: "GeneGuard生物科技公司",
+    transfer_purpose: "通过供应商协议向北京深度洞察人工智能有限公司提供匿名化精确位置轨迹，用于健康预测模型训练",
+    data_categories: "精确位置轨迹数据",
+    sensitive_data_flags: "",
+    us_person_count: 150000,
     transaction_type: "vendor_agreement",
-    doj_data_category: "not_14117_data",
-    transfer_chain: "美国总部安全服务器→通过加密VPN→上海公司内部服务器→（可能）再传输至北京研究所",
-    primary_recipient_name: "上海先进半导体制造有限公司",
+    doj_data_category: "precise_geolocation_data",
+    transfer_chain: "GeneGuard健康地理分析部测试环境→深度洞察人工智能有限公司（中国北京）",
+    data_volume_note: "150,000名美国人，超过精确地理位置数据批量阈值",
+    necessity_justification: "用于优化环境因素与健康影响的 AI 预测模型",
+    primary_recipient_name: "深度洞察人工智能有限公司",
     primary_recipient_country: "中国",
     primary_recipient_role: "vendor",
-    primary_recipient_restricted: false,
-    additional_recipients: "北京微电子研究所,中国,affiliate,yes",
-    internal_access_note: "内部员工访问需要双重认证和项目负责人批准。所有数据访问记录审计日志。中国籍员工可能接触技术数据"
+    primary_recipient_restricted: true,
+    additional_recipients: "",
+    internal_access_note: "中国籍数据科学家张伟、王芳可访问 GeneGuard 测试环境；隔离和全量日志措施尚待落实"
   },
   backendFilePaths: [
     "backend/tests/fixtures/cn/cn_flow_data_inventory.csv",

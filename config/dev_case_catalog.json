@@ -29,7 +29,7 @@
     {"case_id":"review-02","module":"review","classification":"product_extension","source_file":"","source_case":"当前智付通标准合同审查案例缺乏与文档专项审查正式案例的明确对应","change_reason":"已修正附件为标准合同模板；需补充正式来源定位后再升级为 source_exact"},
     {"case_id":"us_14117-01","module":"us_14117","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx","source_case":"测试案例一：GeneGuard 向中国国资控股的华源生命科学提供1万名美国人的全基因组数据（红灯）","change_reason":"公司、接收方、国资控制、数据类别、人数阈值、合作研究和原始数据风险均与正式案例一致"},
     {"case_id":"us_14117-02","module":"us_14117","classification":"source_exact","source_file":"resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx","source_case":"测试案例二：GeneGuard 向北京深度洞察提供15万名美国人的精确位置轨迹（黄灯）","change_reason":"公司、接收方、供应商协议、数据类别、人数阈值、两名中国员工实际访问和待落实安全措施均与正式案例一致；正式案例三英国设备遥测绿灯场景暂未进入前端开发案例"},
-    {"case_id":"cn_flow-01","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"不属于正式资料独立功能；复用 us_14117-01 的 EO 14117 事实","change_reason":"只验证旧 cn_flow 请求适配到 us_14117 后的结果等价性"},
-    {"case_id":"cn_flow-02","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"不属于正式资料独立功能；复用 us_14117-02 的 EO 14117 事实","change_reason":"只验证旧 cn_flow 请求适配到 us_14117 后的结果等价性"}
+    {"case_id":"cn_flow-01","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"复用 us_14117-01 的 GeneGuard→华源生命科学全基因组数据红灯事实","change_reason":"只验证旧 cn_flow 请求可表达的公司、人数、交易类型、DOJ 分类和接收方事实；国资股权、访问人员和措施明细属于旧结构丢失字段"},
+    {"case_id":"cn_flow-02","module":"cn_flow","classification":"compatibility_adapter","source_file":"","source_case":"复用 us_14117-02 的 GeneGuard→深度洞察精确位置轨迹黄灯事实","change_reason":"只验证旧 cn_flow 请求可表达的公司、人数、交易类型、DOJ 分类和接收方事实；国家基金投资、两名访问人员和措施状态属于旧结构丢失字段"}
   ]
 }
