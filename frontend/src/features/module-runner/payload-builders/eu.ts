@@ -3,7 +3,6 @@ import type { BcrFormValues, DpiaFormValues, EuSccFormValues, TiaFormValues } fr
 import {
   basenameFromPath,
   composeBcrFinding,
-  hasText,
   inferDocxPdfFormat,
   requireAllowedValue,
   requireFileExtensions,
@@ -51,6 +50,7 @@ export function buildEuSccPayload(
   requireText(values.transfer_purpose, "transfer_purpose", 2);
   requireText(values.data_categories, "data_categories", 2);
   requireAllowedValue(values.transfer_role, "transfer_role", ["c2c", "c2p", "p2p", "p2c"]);
+  requireAllowedValue(values.declared_module_type, "declared_module_type", ["Module One", "Module Two", "Module Three", "Module Four"]);
   requireAllowedValue(values.scc_version, "scc_version", ["eu_2021", "other"]);
   requireAllowedValue(values.transfer_frequency, "transfer_frequency", ["one_time", "periodic", "continuous"]);
   const purposeContext = [
@@ -80,11 +80,11 @@ export function buildEuSccPayload(
         `Data importer: ${values.importer_name.trim()}, ${values.importer_country.trim()} (${roles.importer})`,
         purposeContext,
       ].join("\n"),
-    declared_module_type: roles.declared,
+    declared_module_type: values.declared_module_type,
     exporter_role: roles.exporter,
     importer_role: roles.importer,
-    has_tia: hasText(values.government_access_response ?? ""),
-    has_supplementary_measures: hasText(values.supplementary_clause_review ?? ""),
+    has_tia: values.has_tia,
+    has_supplementary_measures: values.has_supplementary_measures,
     uploaded_files: [...resolvedFilePaths],
     company_name: values.exporter_name.trim(),
   };

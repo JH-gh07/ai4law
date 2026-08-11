@@ -39,6 +39,7 @@ class SCCAnnexIA(BaseModel):
 
 class SCCAnnexIB(BaseModel):
     """Annex I.B — Description of Transfer."""
+    raw_text: str = ""
     data_subjects: str = ""
     data_categories: str = ""
     special_category_data: list[str] = Field(default_factory=list)

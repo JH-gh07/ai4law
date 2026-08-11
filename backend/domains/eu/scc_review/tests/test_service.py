@@ -426,6 +426,14 @@ def test_case1_c2c_us_aws_tia_missing():
     sp_findings = [f for f in result.findings if "sub_processor" in f.issue_type]
     assert len(sp_findings) > 0
 
+    onward_disclosure = [
+        f for f in result.findings
+        if f.location == "Annex I.B"
+        and f.issue_type == "annex_incomplete"
+        and "United States" in f.risk_analysis
+    ]
+    assert len(onward_disclosure) > 0
+
     # Verify chapters
     assert len(result.chapters) == 4
     assert result.report_path

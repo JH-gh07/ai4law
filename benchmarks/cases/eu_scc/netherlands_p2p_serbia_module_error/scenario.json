@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "case_id": "netherlands_p2p_serbia_module_error",
+  "module": "eu_scc",
+  "classification": "source_exact",
+  "display": {
+    "name": "SCC-3: 荷兰处理者向塞尔维亚子处理者传输（模块选择错误）",
+    "description": "实际为处理者到处理者的Module Three关系，但文档错误声明Module Two，且上游控制者信息不完整",
+    "jurisdiction": "EU"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx",
+    "case": "测试案例三：多方加入与模块选择错误"
+  },
+  "request": {
+    "project_name": "客户支持工单数据向塞尔维亚子处理者传输SCC审查",
+    "scc_text": "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may accede by completing the Annexes and signing Annex I.A.\n\nANNEX I.A - LIST OF PARTIES\nData exporter: Orange Cloud BV, Cloudweg 100, Amsterdam, Netherlands. Role: Processor.\nData importer: Balkan IT Support DOO, Belgrade, Serbia. Role: Sub-processor.\nUpstream controller: Nordic Retail Group. Name and details: See Master Services Agreement. Address: Not specified. Contact details: Not specified.\n\nANNEX I.B - DESCRIPTION OF TRANSFER\nCustomer support ticket data including customer names and issue descriptions. Processing includes storage, access, troubleshooting and service analysis for the duration of the main agreement plus 30 days.",
+    "declared_module_type": "Module Two",
+    "exporter_role": "processor",
+    "importer_role": "processor",
+    "has_tia": false,
+    "has_supplementary_measures": false,
+    "uploaded_files": [],
+    "company_name": "Orange Cloud BV"
+  }
+}

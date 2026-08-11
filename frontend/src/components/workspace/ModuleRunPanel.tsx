@@ -608,7 +608,11 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(values.tom_summary), "请填写技术与组织措施（TOM）摘要。");
     assertInput(hasText(values.rights_and_complaint), "请填写数据主体权利与投诉机制。");
     const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
-    assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份SCC文本或配套附件。");
+    const hasInlineSccText = values.has_scc_draft && hasText(values.scc_text_override ?? "");
+    assertInput(
+      hasInlineSccText || files.length > 0 || presetFilePaths.length > 0,
+      "请填写完整SCC文本，或上传至少1份SCC文本或配套附件。"
+    );
     const uploadedFiles = presetFilePaths.length > 0 ? presetFilePaths : await uploadFiles(files);
     return createEuSccPayload(values, uploadedFiles);
   };

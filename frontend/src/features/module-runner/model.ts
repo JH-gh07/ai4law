@@ -595,6 +595,7 @@ export const EU_SCC_STEPS: EuSccStepConfig[] = [
       { name: "importer_name", label: "数据进口方（第三国）", type: "text" },
       { name: "importer_country", label: "进口方国家/地区", type: "text" },
       { name: "transfer_role", label: "传输角色关系", type: "select", options: ["c2c", "c2p", "p2p", "p2c"] },
+      { name: "declared_module_type", label: "文档声明的SCC模块", type: "select", options: ["Module One", "Module Two", "Module Three", "Module Four"] },
       { name: "scc_version", label: "SCC版本识别", type: "select", options: ["eu_2021", "other"] },
       { name: "has_scc_draft", label: "是否已有完整SCC文本", type: "checkbox" }
     ]
@@ -617,6 +618,8 @@ export const EU_SCC_STEPS: EuSccStepConfig[] = [
       { name: "tom_summary", label: "技术与组织措施（TOM）摘要", type: "textarea" },
       { name: "onward_transfer_control", label: "子处理者/再传输控制", type: "textarea" },
       { name: "rights_and_complaint", label: "数据主体权利与投诉机制", type: "textarea" },
+      { name: "has_tia", label: "已完成传输影响评估（TIA）", type: "checkbox" },
+      { name: "has_supplementary_measures", label: "已落实有效补充措施", type: "checkbox" },
       { name: "government_access_response", label: "政府访问请求应对机制", type: "textarea" },
       { name: "supplementary_clause_review", label: "补充条款冲突检查关注点", type: "textarea" }
     ]
@@ -1442,6 +1445,7 @@ export const createDefaultEuSccValues = (): EuSccFormValues => {
     importer_name: toString(demo.receiver_name, ""),
     importer_country: toString(demo.receiver_country, ""),
     transfer_role: "c2p",
+    declared_module_type: "Module Two",
     scc_version: "eu_2021",
     transfer_purpose: toString(demo.transfer_purpose, ""),
     data_categories: "",
@@ -1453,6 +1457,8 @@ export const createDefaultEuSccValues = (): EuSccFormValues => {
     rights_and_complaint: "",
     government_access_response: "",
     supplementary_clause_review: "",
+    has_tia: false,
+    has_supplementary_measures: false,
     pii_count: toNumber(demo.pii_count, 0),
     spi_count: toNumber(demo.spi_count, 0),
     has_scc_draft: toBoolean(demo.has_scc_draft, true)

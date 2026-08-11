@@ -407,6 +407,32 @@ def review_tia_and_measures(
 
     has_third_country = len(third_country_locations) > 0
 
+    annex_ib_text = _normalize(doc.annex_i_b.raw_text)
+    undisclosed_locations = [
+        location for location in dict.fromkeys(third_country_locations)
+        if _normalize(location) not in annex_ib_text
+    ]
+    if undisclosed_locations:
+        findings.append(SCCFinding(
+            finding_id="EU-SCC-ANNEX-IB-ONWARD-LOCATION-MISSING",
+            location="Annex I.B",
+            clause_ref="Annex I.B",
+            original_text=doc.annex_i_b.raw_text[:300],
+            issue_type="annex_incomplete",
+            severity="HIGH",
+            risk_analysis=(
+                "Annex I.B does not disclose the final processing or storage location(s): "
+                f"{', '.join(undisclosed_locations)}. The complete onward-transfer chain must be "
+                "described so the parties can assess third-country law and safeguards."
+            ),
+            legal_basis="EU 2021/914 Annex I.B; GDPR Article 46; EDPB Recommendations 01/2020",
+            recommendation=(
+                "Add every onward processor and final processing/storage country to Annex I.B, "
+                "including the purpose, nature and duration of that processing."
+            ),
+            suggested_text="",
+        ))
+
     # Check if Clause 14 exists and is intact
     clause_14 = next((c for c in doc.clauses if c.clause_no == 14), None)
     clause_14_weakened = clause_14.has_deviation if clause_14 else False

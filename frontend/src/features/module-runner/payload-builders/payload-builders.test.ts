@@ -75,6 +75,41 @@ describe("EU payload builders", () => {
     expect(payload.scc_text).toBe("MODULE THREE: preserved source text");
   });
 
+  it("keeps the document module separate from the actual transfer roles", () => {
+    const payload = buildEuSccPayload({
+      ...createDefaultEuSccValues(),
+      transfer_role: "p2p",
+      declared_module_type: "Module Two",
+    }, []);
+
+    expect(payload.declared_module_type).toBe("Module Two");
+    expect(payload.exporter_role).toBe("processor");
+    expect(payload.importer_role).toBe("processor");
+  });
+
+  it("does not infer completed TIA or supplementary measures from review notes", () => {
+    const base = createDefaultEuSccValues();
+    const missing = buildEuSccPayload({
+      ...base,
+      government_access_response: "The review must address missing government-access safeguards.",
+      supplementary_clause_review: "The review must identify missing supplementary measures.",
+      has_tia: false,
+      has_supplementary_measures: false,
+    }, []);
+    const completed = buildEuSccPayload({
+      ...base,
+      government_access_response: "",
+      supplementary_clause_review: "",
+      has_tia: true,
+      has_supplementary_measures: true,
+    }, []);
+
+    expect(missing.has_tia).toBe(false);
+    expect(missing.has_supplementary_measures).toBe(false);
+    expect(completed.has_tia).toBe(true);
+    expect(completed.has_supplementary_measures).toBe(true);
+  });
+
   it("rejects missing SCC parties and unsupported transfer roles", () => {
     const input = withPreset<EuSccFormValues>(createDefaultEuSccValues(), "eu_scc");
     expect(() => buildEuSccPayload({ ...input.values, exporter_name: "" }, input.paths))

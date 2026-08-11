@@ -28,6 +28,9 @@ import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
+import franceUkSccScenario from "../../../benchmarks/cases/eu_scc/france_c2c_uk_aws/scenario.json";
+import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2p_india_health/scenario.json";
+import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -64,6 +67,28 @@ type DevTestCaseSeed<Module extends DevCaseModule> =
 const genomicRedRequest = genomicRedScenario.request as ModuleRequestMap["us_14117"];
 const geolocationYellowRequest = geolocationYellowScenario.request as ModuleRequestMap["us_14117"];
 const telemetryGreenRequest = telemetryGreenScenario.request as ModuleRequestMap["us_14117"];
+const franceUkSccRequest = franceUkSccScenario.request as ModuleRequestMap["eu_scc"];
+const germanyIndiaSccRequest = germanyIndiaSccScenario.request as ModuleRequestMap["eu_scc"];
+const netherlandsSerbiaSccRequest = netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"];
+
+function sharedEuSccFormDefaults(
+  request: ModuleRequestMap["eu_scc"],
+  display: Omit<
+    EuSccFormValues,
+    "project_name_override" | "scc_text_override" | "has_scc_draft" | "declared_module_type"
+    | "has_tia" | "has_supplementary_measures"
+  >,
+): EuSccFormValues {
+  return {
+    ...display,
+    project_name_override: request.project_name,
+    scc_text_override: request.scc_text,
+    declared_module_type: request.declared_module_type,
+    has_scc_draft: true,
+    has_tia: request.has_tia ?? false,
+    has_supplementary_measures: request.has_supplementary_measures ?? false,
+  };
+}
 
 function sharedUs14117FormDefaults(request: ModuleRequestMap["us_14117"]): Us14117FormValues {
   const dataItem = request.data_items[0];
@@ -447,67 +472,45 @@ const euSccBasic = {
   name: "EU-SCC-1: 法国电商 C2C→英国关联公司（补充措施缺失）",
   description: "法国电商向英国关联公司传输客户联系和订单数据，英国虽有充分性认定但下游使用美国 AWS，缺少 Schrems II 补充措施",
   jurisdiction: "EU" as const,
-  formDefaults: {
-    exporter_name: "EU Fashion E-commerce SAS",
-    importer_name: "UK Marketing Analytics Ltd",
-    importer_country: "英国",
-    transfer_role: "c2c",
-    scc_version: "eu_2021",
-    transfer_purpose: "市场趋势分析和个性化营销",
-    data_categories: "姓名、邮箱、地址、订单历史",
-    data_subject_categories: "欧盟电商客户",
-    transfer_frequency: "continuous",
-    retention_rule: "服务协议期间加30天",
-    tom_summary: "合同未针对美国 AWS 的政府访问风险配置加密、密钥控制和访问审计补充措施",
-    onward_transfer_control: "英国接收方使用美国 AWS 进行处理，但 SCC 未明确约束美国下游云服务商",
-    rights_and_complaint: "英国关联公司提供基本权利渠道，但未补足美国云服务商下游风险",
-    has_scc_draft: true,
-    has_tia: false,
-    has_supplementary_measures: false,
-    project_name_override: "法国电商客户数据向英国关联公司传输",
-    scc_text_override: "MODULE ONE: Transfer controller to controller\n\nData exporter: EU Fashion E-commerce SAS, Paris, France (controller)\nData importer: UK Marketing Analytics Ltd, London, United Kingdom (controller)\n\nAnnex I.B - Description of transfer\nData subjects: EU e-commerce customers\nPersonal data: Name, email, address, and order history\nPurpose: Market trend analysis and personalised marketing\nFrequency: Continuous\n\nOnward transfer: The UK importer uses Amazon Web Services in the United States for processing and storage.\n\nRisk: The parties have not documented a Schrems II transfer impact assessment or effective supplementary measures for the US onward transfer, including encryption and exporter-held key controls."
-  },
-  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
+  formDefaults: sharedEuSccFormDefaults(franceUkSccRequest, {
+      exporter_name: "EU Fashion E-commerce SAS", importer_name: "UK Marketing Analytics Ltd", importer_country: "英国",
+      transfer_role: "c2c", scc_version: "eu_2021", transfer_purpose: "市场趋势分析和个性化营销",
+      data_categories: "姓名、邮箱、地址、订单历史", data_subject_categories: "欧盟电商客户",
+      transfer_frequency: "continuous", retention_rule: "最后一次客户互动后3年",
+      tom_summary: "TLS、AES-256、最小权限和安全培训；未覆盖美国下游政府访问风险",
+      onward_transfer_control: "英国接收方使用美国 AWS 进行处理和存储",
+      rights_and_complaint: "由英国接收方提供查询与投诉渠道", government_access_response: "",
+      supplementary_clause_review: "", pii_count: 0, spi_count: 0,
+  }),
+  backendFilePaths: franceUkSccRequest.uploaded_files
 };
 
 const euSccHealthIndia = {
   name: "EU-SCC-2: 健康数据→印度 高风险修改",
   description: "德国健康研究公司→印度分析公司，Clause 15被修改，特殊类别数据分类错误，缺少补充措施",
   jurisdiction: "EU" as const,
-  formDefaults: {
-    exporter_name: "Gesundheitsforschung GmbH",
-    importer_name: "Data Insights Solutions Pvt. Ltd.",
-    importer_country: "印度",
-    transfer_role: "c2p",
-    scc_version: "eu_2021",
-    transfer_purpose: "医疗研究数据统计分析",
-    data_categories: "患者研究编号、年龄组、性别、诊断代码、治疗代码、实验室检测结果",
-    data_subject_categories: "医疗研究参与患者",
-    transfer_frequency: "periodic",
-    retention_rule: "研究项目结束后按法规要求保留",
-    tom_summary: "数据传输加密，但Clause 15政府请求通知条款被非法修改为\"as soon as legally permissible\"",
-    onward_transfer_control: "子处理者变更通过邮件通知，15个工作日无异议即可启用",
-    rights_and_complaint: "数据主体权利机制需配套完善",
-    government_access_response: "Clause 15修改削弱了政府访问透明度义务",
-    supplementary_clause_review: "需要重点审查Clause 15修改的有效性、SPI分类错误、以及印度法律环境下的补充措施需求",
-    has_scc_draft: true,
-    has_tia: false,
-    has_supplementary_measures: false,
-    project_name_override: "德国医疗研究数据向印度统计分析传输",
-    scc_text_override: "MODULE TWO: Transfer controller to processor\n\nData exporter: Gesundheitsforschung GmbH, Berlin, Germany (controller)\nData importer: Data Insights Solutions Pvt. Ltd., Bangalore, India (processor)\n\nClause 9: Use of sub-processors\nThe data importer shall submit planned changes to its list of sub-processors by email. If the data exporter does not object in writing within fifteen (15) business days, the data importer may engage the new sub-processor.\n\nClause 14(c) - modified from standard text\nThe data importer shall provide the documented assessment and suitable safeguards only upon a specific, justified request.\n\nClause 15(a) - modified from standard text\nThe data importer shall notify the data exporter as soon as legally permissible after a legally binding public-authority request and may provide relevant information at its discretion.\n\nAnnex I.B - Description of transfer\nCategories of personal data: Patient unique study identifier (pseudonymised), age group, gender, diagnostic codes, treatment codes, and laboratory test results (anonymised).\nSensitive data transferred: Not applicable. The patient health data is anonymised for research purposes and does not constitute special categories of data."
-  },
-  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
+  formDefaults: sharedEuSccFormDefaults(germanyIndiaSccRequest, {
+      exporter_name: "Gesundheitsforschung GmbH", importer_name: "Data Insights Solutions Pvt. Ltd.", importer_country: "印度",
+      transfer_role: "c2p", scc_version: "eu_2021", transfer_purpose: "医疗研究数据统计分析",
+      data_categories: "患者研究编号、年龄组、性别、诊断代码、治疗代码、实验室检测结果",
+      data_subject_categories: "医疗研究参与患者", transfer_frequency: "periodic",
+      retention_rule: "研究项目结束后按法规要求保留", tom_summary: "TLS、AES-256和最小权限控制",
+      onward_transfer_control: "子处理者变更采用15个工作日无异议机制", rights_and_complaint: "需补充数据主体权利机制",
+      government_access_response: "Clause 15通知义务被削弱", supplementary_clause_review: "需核查条款修改和特殊类别数据误分类",
+      pii_count: 0, spi_count: 0,
+  }),
+  backendFilePaths: germanyIndiaSccRequest.uploaded_files
 };
 
 const euSccModuleError = {
   name: "EU-SCC-3: 多方加入 模块选择错误",
   description: "C→P→Sub-P三层关系误选Module Two(C2P)，应为Module Three(P2P)，加入方信息缺失",
   jurisdiction: "EU" as const,
-  formDefaults: {
+  formDefaults: sharedEuSccFormDefaults(netherlandsSerbiaSccRequest, {
     exporter_name: "Orange Cloud BV",
     importer_name: "Balkan IT Support DOO",
     importer_country: "塞尔维亚",
-    transfer_role: "c2p",
+    transfer_role: "p2p",
     scc_version: "eu_2021",
     transfer_purpose: "客户支持工单数据转委托给塞尔维亚子处理者。实际链：控制者(北欧零售集团)→处理者(Orange Cloud)→子处理者(Balkan IT) — 应为Module Three",
     data_categories: "客户姓名、问题描述、联系信息",
@@ -517,12 +520,12 @@ const euSccModuleError = {
     tom_summary: "标准安全措施，但缺少针对子处理者授权的完整合规框架",
     onward_transfer_control: "子处理者授权链不完整，加入方信息仅引用外部文件",
     supplementary_clause_review: "核心缺陷：模块选择根本性错误（应为Module Three而非Module Two）、加入方信息缺失、授权链不完整",
-    has_scc_draft: true,
-    has_tia: false,
-    has_supplementary_measures: false,
-    project_name_override: "客户支持工单子处理",
-    scc_text_override: "MODULE TWO: Transfer controller to processor (ERROR - should be Module Three)\n\nData exporter: Orange Cloud BV (processor acting on behalf of Nordic Retail Group, the controller)\nData importer: Orange Cloud BV (incorrect - double role assignment)\nSub-processor: Balkan IT Support DOO, Belgrade, Serbia\n\nClause 7: Docking clause\nAn entity that is not a Party to these Clauses may, with the agreement of the Parties, accede to these Clauses at any time, either as a data exporter or as a data importer, by completing the Annexes and signing Annex I.A.\n\nAnnex I.A: Nordic Retail Group (controller) details marked as 'See Master Service Agreement' with no address or contact information filled in.\n\nClause 9: Data importer may engage sub-processors after notification. No requirement for specific written authorization from controller."},
-  backendFilePaths: ["backend/tests/fixtures/eu/scc_2021_en.md"]
+    rights_and_complaint: "上游控制者信息不完整，影响权利行使和责任识别",
+    government_access_response: "未提供塞尔维亚第三国法律评估",
+    pii_count: 0,
+    spi_count: 0,
+  }),
+  backendFilePaths: netherlandsSerbiaSccRequest.uploaded_files
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

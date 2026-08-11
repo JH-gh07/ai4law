@@ -28,10 +28,12 @@
     },
     "list_contains": {
       "findings[].issue_type": [
+        "annex_incomplete",
         "tia_missing",
         "supplementary_measures_insufficient"
       ],
       "findings[].location": [
+        "Annex I.B",
         "Clause 14",
         "Annex II"
       ],

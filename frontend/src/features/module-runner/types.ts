@@ -212,6 +212,7 @@ export type EuSccFormValues = {
   importer_name: string;
   importer_country: string;
   transfer_role: "c2c" | "c2p" | "p2p" | "p2c";
+  declared_module_type: "Module One" | "Module Two" | "Module Three" | "Module Four";
   scc_version: "eu_2021" | "other";
   transfer_purpose: string;
   data_categories: string;
@@ -223,6 +224,8 @@ export type EuSccFormValues = {
   rights_and_complaint: string;
   government_access_response: string;
   supplementary_clause_review: string;
+  has_tia: boolean;
+  has_supplementary_measures: boolean;
   pii_count: number;
   spi_count: number;
   has_scc_draft: boolean;

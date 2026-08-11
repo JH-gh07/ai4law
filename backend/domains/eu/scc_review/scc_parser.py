@@ -183,7 +183,7 @@ def _extract_annex_ia(text: str) -> SCCAnnexIA:
 
 def _extract_annex_ib(text: str) -> SCCAnnexIB:
     """Extract Annex I.B — Description of Transfer."""
-    ib = SCCAnnexIB()
+    ib = SCCAnnexIB(raw_text=text)
 
     patterns = {
         "data_subjects": [(r"(?:data\s*)?(?:subjects|categories\s*of\s*data\s*subjects)\s*[:\-]\s*(.+)", re.IGNORECASE)],

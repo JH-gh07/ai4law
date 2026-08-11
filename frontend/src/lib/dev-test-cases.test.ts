@@ -5,6 +5,9 @@ import { DEV_TEST_CASES } from "./dev-test-cases";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
+import franceUkSccScenario from "../../../benchmarks/cases/eu_scc/france_c2c_uk_aws/scenario.json";
+import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2p_india_health/scenario.json";
+import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -30,8 +33,12 @@ describe("developer test case API contracts", () => {
     for (const [module, cases] of Object.entries(DEV_TEST_CASES)) {
       for (const testCase of cases) {
         expect(testCase.formDefaults, `${module}/${testCase.name}`).toBeTypeOf("object");
-        if (fileBackedModules.has(module)) {
+        const allowsInlineScc = module === "eu_scc" && testCase.backendFilePaths?.length === 0;
+        if (fileBackedModules.has(module) && !allowsInlineScc) {
           expect(testCase.backendFilePaths?.length, `${module}/${testCase.name}`).toBeGreaterThan(0);
+        }
+        if (allowsInlineScc) {
+          expect(String(asRecord(testCase.payload).scc_text).length).toBeGreaterThan(100);
         }
       }
     }
@@ -99,29 +106,14 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps the first SCC case aligned with the official France-UK C2C scenario", () => {
-    const testCase = DEV_TEST_CASES.eu_scc[0];
-
-    expect(testCase.payload.declared_module_type).toBe("Module One");
-    expect(testCase.payload.company_name).toBe("EU Fashion E-commerce SAS");
-    expect(testCase.payload.scc_text).toContain("UK Marketing Analytics Ltd");
-    expect(testCase.payload.scc_text).toContain("MODULE ONE");
-    expect(testCase.payload.scc_text).toContain("Amazon Web Services");
-    expect(testCase.payload.scc_text).not.toContain("E-Commerce GmbH");
-    expect(testCase.payload.scc_text).not.toContain("MODULE TWO");
-  });
-
-  it("keeps the second SCC case aligned with the official Germany-India C2P scenario", () => {
-    const testCase = DEV_TEST_CASES.eu_scc[1];
-
-    expect(testCase.payload.declared_module_type).toBe("Module Two");
-    expect(testCase.payload.company_name).toBe("Gesundheitsforschung GmbH");
-    expect(testCase.payload.scc_text).toContain("Berlin, Germany");
-    expect(testCase.payload.scc_text).toContain("Data Insights Solutions Pvt. Ltd.");
-    expect(testCase.payload.scc_text).toContain("patient health data");
-    expect(testCase.payload.scc_text).toContain("as soon as legally permissible");
-    expect(testCase.payload.scc_text).not.toContain("Amsterdam, Netherlands");
-    expect(testCase.payload.scc_text).not.toContain("genetic sequencing data");
+  it("builds the official SCC requests without changing shared facts", () => {
+    const canonicalRequest = (request: ModuleRequestMap["eu_scc"]) => ({
+      ...request,
+      scc_text: request.scc_text.trim(),
+    });
+    expect(DEV_TEST_CASES.eu_scc[0].payload).toEqual(canonicalRequest(franceUkSccScenario.request as ModuleRequestMap["eu_scc"]));
+    expect(DEV_TEST_CASES.eu_scc[1].payload).toEqual(canonicalRequest(germanyIndiaSccScenario.request as ModuleRequestMap["eu_scc"]));
+    expect(DEV_TEST_CASES.eu_scc[2].payload).toEqual(canonicalRequest(netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"]));
   });
 
   it("keeps TIA cases aligned with the official US SaaS and India clinical scenarios", () => {
