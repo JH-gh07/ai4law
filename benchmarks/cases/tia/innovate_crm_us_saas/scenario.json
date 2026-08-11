@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "case_id": "innovate_crm_us_saas",
+  "module": "tia",
+  "classification": "source_exact",
+  "display": {
+    "name": "TIA-1: 德国创新软件→美国 CloudForce SaaS（高风险）",
+    "description": "Innovate Software GmbH 将 CRM 系统迁移至美国 CloudForce Inc. SaaS 平台，评估 FISA 702/CLOUD Act 政府访问风险，依赖出口方密钥管理补充措施后条件放行",
+    "jurisdiction": "EU"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：\"TIA草案生成\"路径描述及测试案例/\"TIA草案生成\"测试案例及预期输出.docx",
+    "case": "测试案例一：欧盟公司使用美国SaaS服务（高风险目的地）"
+  },
+  "request": {
+    "transfer_tool": "scc",
+    "data_exporter_profile": "Innovate Software GmbH（德国柏林）；传输目的：将公司的客户关系管理（CRM）系统完全托管于CloudForce的SaaS平台，用于存储客户信息、管理销售流程并生成业务分析报告，以提升运营效率；数据类别：客户姓名、工作职位、工作邮箱、工作电话、公司名称、合同金额、沟通记录（邮件摘要）；数据主体：客户、潜在客户；频率：continuous",
+    "data_importer_profile": "CloudForce Inc.（美国加利福尼亚州）；国家/地区：美国；敏感数据：不含特殊类别数据",
+    "third_country_assessment": "已完成法律评估；美国法律框架，特别是《外国情报监视法》第702条（FISA 702）和《澄清境外数据合法使用法案》（CLOUD Act），赋予美国政府广泛权力，为国家安全和执法目的，在未通知数据主体且缺乏有效司法救济的情况下，强制要求在美国运营的公司提供其持有的数据，进口方可能无法完全履行SCCs的保密性和按指令处理承诺；补充措施前判断：否，可能无效（鉴于美国法律的广泛数据访问权，SCCs本身可能无法提供充分保障）",
+    "supplementary_measures": "技术措施：传输前加密（AES-256，在数据离开欧盟边界前加密结构化数据，密钥由Innovate Software在欧盟本地管理，CloudForce仅持有加密数据）与假名化（在非必要场景将客户姓名、邮箱替换为唯一标识符）；合同措施：合同承诺（在SCCs附录中要求CloudForce对政府访问请求进行合法性审查、在合法允许范围内立即通知Innovate Software、对明显过宽或非法请求提出异议）与透明度（每年发布政府请求数量和类型报告）；组织措施：独立安全审计、访问控制、密钥管理验证和事件响应流程",
+    "final_conclusion": "在补充措施有效实施的前提下，传输可进行；关键行动：在SCCs附录中加入合同承诺条款，在2024年12月1日前完成历史CRM数据加密迁移，并对内部IT团队进行加密流程培训；DPO意见：有条件同意，前提是加密措施经第三方安全审计确认有效且合同补充条款签署完毕，并每半年审查CloudForce透明度报告和美国法律变化；复审日期：2025-06-01",
+    "attachments": [
+      {
+        "file_role": "other",
+        "file_name": "TIA - Template.docx",
+        "file_format": "docx",
+        "storage_uri": "resources/legal/sources/eu/references/TIA - Template.docx"
+      }
+    ]
+  }
+}
