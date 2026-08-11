@@ -1,7 +1,7 @@
 # DataComplyFlow 前端与 CLI 案例统一及 Trace 可视化改造方案
 
 > 制定日期：2026-08-11
-> 状态：待实施，仅限本地
+> 状态：实施中，仅限本地；阶段 2 的 SCC、TIA、PIPIA、EO 14117 与 cn_flow 前端案例事实已更正，统一 scenario 层尚未建立
 > 继承并修正：`status/todo/DataComplyFlow_案例体系统一与强断言方案_20260806.md`
 > 业务资料依据：
 > - `resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/`
