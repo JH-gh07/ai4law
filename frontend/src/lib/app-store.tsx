@@ -308,6 +308,42 @@ export function mergeModuleRuns(items: ModuleRun[]): ModuleRun[] {
   return dedupeById([...byAsyncTask.values(), ...withoutAsync]);
 }
 
+/**
+ * 清理过期的失败运行记录。
+ *
+ * 当恢复数据中包含成功运行记录时，清理同一 taskSpaceId 下旧的
+ * 失败记录（finishedAt 超过 maxAgeHours 小时）。
+ * 避免历史 FAIL 卡片永久残留。
+ */
+export function pruneStaleFailedRuns(
+  runs: ModuleRun[],
+  recoveredRuns: ModuleRun[],
+  maxAgeHours: number = 24,
+): ModuleRun[] {
+  const recoveredAsyncIds = new Set(
+    recoveredRuns.map((r) => r.asyncTaskId).filter(Boolean),
+  );
+  const now = Date.now();
+  const maxAgeMs = maxAgeHours * 3600000;
+
+  return runs.filter((run) => {
+    // 保留 sync 运行记录（无 asyncTaskId）
+    if (!run.asyncTaskId) return true;
+    // recovery 中存在的 → 保留（后端确认为有效记录）
+    if (recoveredAsyncIds.has(run.asyncTaskId)) return true;
+    // 成功运行 → 保留
+    if (run.success) return true;
+    // 正在运行中 → 保留
+    if (!run.finishedAt) return true;
+    // 失败但未超过 maxAgeHours → 保留
+    const finishedAt = new Date(run.finishedAt).getTime();
+    if (isNaN(finishedAt)) return true;
+    if (now - finishedAt < maxAgeMs) return true;
+    // 过期失败记录 → 清理
+    return false;
+  });
+}
+
 const mergeTaskSpaces = (...groups: TaskSpace[][]): TaskSpace[] => {
   const seen = new Set<string>();
   const result: TaskSpace[] = [];
@@ -745,6 +781,12 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         ...recovered.moduleRuns,
         ...recoveredFromRuns.moduleRuns
       ]);
+      // 清理过期失败记录：recovery 带回成功记录后，删除匹配 taskSpaceId 下的旧 FAIL
+      const prunedModuleRuns = pruneStaleFailedRuns(
+        mergedModuleRuns,
+        recoveredFromRuns.moduleRuns,
+        24,
+      );
       const mergedArtifacts = dedupeArtifacts([
         ...normalizedRemote.artifacts,
         ...localSnapshot.artifacts,
@@ -762,11 +804,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         ...recovered.issues
       ]);
 
-      const alignedTaskSpaces = reconcileRecoveredTaskSpaces(mergedTaskSpaces, mergedModuleRuns);
-      const alignedArtifacts = remapRecoveredArtifacts(mergedArtifacts, mergedModuleRuns);
+      const alignedTaskSpaces = reconcileRecoveredTaskSpaces(mergedTaskSpaces, prunedModuleRuns);
+      const alignedArtifacts = remapRecoveredArtifacts(mergedArtifacts, prunedModuleRuns);
       const mergedState = {
         taskSpaces: alignedTaskSpaces,
-        moduleRuns: mergedModuleRuns,
+        moduleRuns: prunedModuleRuns,
         artifacts: alignedArtifacts,
         evidenceHits: mergedEvidenceHits,
         issues: mergedIssues
