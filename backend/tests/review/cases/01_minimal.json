@@ -1,17 +1,20 @@
 {
   "case_id": "01_minimal",
-  "description": "文档专项审查—最小 DPA 输入，检查跨境传输、安全事件与删除义务缺失条款",
+  "description": "文档专项审查—正式数据安全及保密协议，检查隐含出境、安全事件与删除义务缺失条款",
   "input": {
     "uploaded_files": [
-      "backend/tests/review/fixtures/minimal_data_processing_agreement.md"
+      "backend/tests/fixtures/cn/data_security_agreement.docx"
     ],
     "document_type": "dpa",
-    "review_focus": "个人信息处理目的、跨境传输、安全事件与删除义务",
+    "review_focus": "隐含跨境传输、个人信息处理目的、安全事件时限、删除义务和委托方审计权",
     "scenario_context": {
-      "company_name": "CLI 测试公司",
+      "company_name": "金陵科技学院信息化建设与管理处",
+      "document_title": "数据安全及保密协议",
+      "publisher_entity": "金陵科技学院信息化建设与管理处",
+      "receiver_name": "云途信息技术有限公司",
       "receiver_country": "Singapore",
-      "transfer_purpose": "客户支持",
-      "review_focus": "检查高风险缺失条款"
+      "transfer_purpose": "校园一卡通系统数据分析和运维，乙方平台服务器位于海外",
+      "review_focus": "检查隐含出境、高风险缺失条款和审计权"
     },
     "review_config": {
       "review_depth": "standard",
@@ -40,5 +43,5 @@
       "pdf"
     ]
   },
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/“文档专项智能审查”测试案例及预期输出.docx"
+  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/数据安全及保密协议（模板） (1).docx"
 }
