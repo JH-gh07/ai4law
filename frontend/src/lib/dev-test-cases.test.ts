@@ -200,4 +200,21 @@ describe("developer test case API contracts", () => {
       }
     }
   });
+
+  it("keeps EO 14117 cases aligned with the official red and yellow scenarios", () => {
+    const [red, yellow] = DEV_TEST_CASES.us_14117;
+
+    expect(red.payload.company_name).toBe("GeneGuard生物科技公司");
+    expect(red.payload.recipient_entities[0].entity_name).toBe("华源生命科学有限公司");
+    expect(red.payload.data_items[0].us_person_count).toBe(10_000);
+    expect(red.payload.data_items[0].doj_data_category).toBe("human_genomic_data");
+    expect(red.payload.data_items[0].data_description).toContain("全基因组测序");
+    expect(red.payload.recipient_entities[0].country_of_registration).toContain("中国");
+
+    expect(yellow.payload.company_name).toBe("GeneGuard生物科技公司");
+    expect(yellow.payload.recipient_entities[0].entity_name).toBe("深度洞察人工智能有限公司");
+    expect(yellow.payload.data_items[0].us_person_count).toBe(150_000);
+    expect(yellow.payload.data_items[0].doj_data_category).toBe("precise_geolocation_data");
+    expect(yellow.payload.data_items[0].data_description).toContain("位置轨迹");
+  });
 });

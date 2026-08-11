@@ -848,39 +848,34 @@ const pipiaCertification = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const us14117Basic = {
-  name: "14117-1: 基本数据交易评估",
-  description: "美国公司向中国受限主体传输基因组数据，触发14117行政令风险评估",
+  name: "14117-1: GeneGuard→华源生命科学基因组数据（红灯）",
+  description: "GeneGuard 向中国国资控股的华源生命科学传输1万名美国人的全基因组数据，禁止传输",
   jurisdiction: "US" as const,
   formDefaults: {
-    company_name: "American Genomics Research Institute",
-    project_name: "国际合作基因组研究",
-    transaction_description: "与深圳华大基因研究院合作进行大规模人群基因组研究，美方向中方传输约5万份去标识化基因组测序数据（BAM/FASTQ格式），中方负责生物信息学分析和变异注释",
+    company_name: "GeneGuard生物科技公司",
+    project_name: "与华源生命科学联合研究",
+    transaction_description: "加州精准医疗事业部向中国上海华源生命科学有限公司传输10,000名美国志愿者的全基因组测序数据，用于基因标记与疾病关联研究",
     transaction_type: "cooperative_research",
     data_item_name: "人类全基因组测序数据",
-    data_description: "5万份去标识化基因组测序数据",
+    data_description: "10,000名美国志愿者的全基因组测序原始数据",
     doj_data_category: "human_genomic_data",
-    us_person_count: 50000,
-    entity_name: "深圳华大基因研究院",
+    us_person_count: 10000,
+    entity_name: "华源生命科学有限公司",
     country_of_registration: "中国",
-    government_control: false,
+    government_control: true,
     entity_role: "research_institution" as const,
     onward_transfer: false,
     onward_transfer_description: "",
-    security_measures_summary: "数据最小化、去标识化、合同控制和访问审计",
+    security_measures_summary: "拟传输原始全基因组数据，现有措施不能消除其不可逆敏感性",
     review_focus: "重点核查基因组数据阈值、被覆盖人员和研究合作豁免",
     data_items_override: [
-      { data_item_name: "人类全基因组测序数据", data_description: "5万份人类全基因组测序数据（BAM格式）", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_genomic_data", precision_level: "pseudonymized" },
-      { data_item_name: "人类组学表型数据", data_description: "年龄、性别、BMI、疾病诊断", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 50000, doj_data_category: "human_omic_data", precision_level: "pseudonymized" },
-      { data_item_name: "受试者研究编号", data_description: "去标识化但可关联至原始样本的受试者编号", is_personal_info: true, is_sensitive_personal_info: false, us_person_count: 50000, doj_data_category: "covered_personal_identifiers", precision_level: "pseudonymized" }
+      { data_item_name: "全基因组测序原始数据", data_description: "10,000名美国志愿者的全基因组测序数据", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 10000, doj_data_category: "human_genomic_data", precision_level: "raw" }
     ],
     recipient_entities_override: [
-      { entity_name: "深圳华大基因研究院", country_of_registration: "中国", entity_role: "research_institution" as const, is_covered_person: false },
-      { entity_name: "中国国家基因库", country_of_registration: "中国", entity_role: "government_affiliated" as const, government_control: true, is_covered_person: false }
+      { entity_name: "华源生命科学有限公司", country_of_registration: "中国（上海）", entity_role: "research_institution" as const, government_control: true, is_covered_person: true }
     ],
     security_measures_override: [
-      { measure_name: "数据最小化", category: "data_minimization", status: "implemented", description: "仅传输分析所必需的基因组区间，非全基因组" },
-      { measure_name: "去标识化", category: "de_identification", status: "implemented", description: "移除直接标识符，使用研究编号替代" },
-      { measure_name: "合同控制", category: "contractual_controls", status: "implemented", description: "研究合作协议包含数据安全条款" }
+      { measure_name: "改为聚合分析结果", category: "data_minimization", status: "missing", description: "当前仍计划传输原始全基因组测序数据" }
     ]
   },
   backendFilePaths: [
@@ -890,41 +885,39 @@ const us14117Basic = {
 };
 
 const us14117RestrictedParty = {
-  name: "14117-2: 受限主体传输",
-  description: "美国AI公司向被列入实体清单的中国公司传输训练数据，高风险合规案例",
+  name: "14117-2: GeneGuard→深度洞察位置数据（黄灯）",
+  description: "GeneGuard 向中国深度洞察人工智能有限公司提供15万名美国人的精确位置数据，需采取安全措施",
   jurisdiction: "US" as const,
   formDefaults: {
-    company_name: "VisionAI Corp.",
-    project_name: "AI模型训练数据共享",
-    transaction_description: "与列入BIS实体清单的中国AI公司签订数据许可协议，向其提供用于计算机视觉模型训练的图像数据集（约100万张标注图片，含人脸和GPS坐标）",
+    company_name: "GeneGuard生物科技公司",
+    project_name: "健康地理分析 AI 模型训练",
+    transaction_description: "健康地理分析部通过供应商协议向北京深度洞察人工智能有限公司提供150,000名美国人的匿名化精确位置轨迹，用于健康预测模型训练",
     transaction_type: "vendor_agreement",
-    data_item_name: "人脸图像与精确地理位置数据",
-    data_description: "100万张标注图片，包含人脸和EXIF GPS坐标",
-    doj_data_category: "biometric_identifiers",
-    us_person_count: 1000000,
-    entity_name: "受限AI科技有限公司",
+    data_item_name: "匿名化精确位置轨迹数据",
+    data_description: "150,000名美国人的精确 GPS 位置轨迹数据，用于 AI 预测模型训练",
+    doj_data_category: "precise_geolocation_data",
+    us_person_count: 150000,
+    entity_name: "深度洞察人工智能有限公司",
     country_of_registration: "中国",
     government_control: false,
     entity_role: "vendor" as const,
-    onward_transfer: true,
-    onward_transfer_description: "可能再转移至阿联酋研发中心",
-    security_measures_summary: "基于角色的访问控制和全量访问审计",
-    review_focus: "重点核查被覆盖人员、受限交易和再转移风险",
+    onward_transfer: false,
+    onward_transfer_description: "",
+    security_measures_summary: "隔离工作区、访问控制、日志审计和季度审计尚待落实",
+    review_focus: "重点核查被覆盖人员、限制性供应商协议和两名中国员工的实际访问",
     data_items_override: [
-      { data_item_name: "可识别人脸图像", data_description: "图像中包含可识别个人的面部信息", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "covered_personal_identifiers", precision_level: "raw" },
-      { data_item_name: "精确地理位置", data_description: "图像EXIF数据包含精确GPS坐标", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "precise_geolocation_data", precision_level: "raw" },
-      { data_item_name: "生物识别数据", data_description: "人脸图像可用于面部识别模型训练", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 1000000, doj_data_category: "biometric_identifiers", precision_level: "raw" }
+      { data_item_name: "精确位置轨迹", data_description: "150,000名美国人的实时精确位置轨迹（GPS）数据", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 150000, doj_data_category: "precise_geolocation_data", precision_level: "raw" }
     ],
     recipient_entities_override: [
-      { entity_name: "受限AI科技有限公司", country_of_registration: "中国", entity_role: "vendor" as const, is_covered_person: true },
-      { entity_name: "受限AI科技的美国子公司", country_of_registration: "美国", entity_role: "affiliate" as const, parent_company: "受限AI科技有限公司", is_covered_person: false }
+      { entity_name: "深度洞察人工智能有限公司", country_of_registration: "中国（北京）", entity_role: "vendor" as const, is_covered_person: true }
     ],
     access_persons_override: [
-      { person_name: "待指定数据科学家", nationality: "中国", country_of_residence: "中国", department: "数据科学部", position: "数据科学家", has_actual_access: true, access_type: "direct" }
+      { person_name: "张伟", nationality: "中国", country_of_residence: "中国", department: "算法研发部", position: "高级数据科学家", has_actual_access: true, access_type: "remote" },
+      { person_name: "王芳", nationality: "中国", country_of_residence: "中国", department: "算法研发部", position: "数据科学家", has_actual_access: true, access_type: "remote" }
     ],
     security_measures_override: [
-      { measure_name: "基于角色的访问控制", category: "access_control", status: "implemented", description: "仅授权研究人员可访问" },
-      { measure_name: "访问审计日志", category: "audit_logging", status: "implemented", description: "所有数据访问操作记录审计日志" }
+      { measure_name: "数据隔离工作区", category: "access_control", status: "missing", description: "尚未建立满足限制性交易要求的隔离环境" },
+      { measure_name: "访问审计日志", category: "audit_logging", status: "missing", description: "尚未完成全量日志记录和季度审计机制" }
     ]
   },
   backendFilePaths: [
