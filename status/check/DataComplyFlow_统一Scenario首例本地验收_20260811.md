@@ -1,4 +1,4 @@
-# DataComplyFlow 统一 Scenario 首例本地验收
+# DataComplyFlow 统一 Scenario 阶段验收
 
 > 日期：2026-08-11
 > 对应方案：`status/todo/DataComplyFlow_前端与CLI案例统一及Trace可视化改造方案_20260811.md`
@@ -6,10 +6,13 @@
 
 ## 已完成
 
-首个统一案例已建立：
+目前已建立两条统一案例：
 
 ```text
 benchmarks/cases/us_14117/geneguard_genomic_red/
+  scenario.json
+  expected.json
+benchmarks/cases/us_14117/geneguard_geolocation_yellow/
   scenario.json
   expected.json
 ```
@@ -22,7 +25,7 @@ scenario.request
 └── CLI：scenario_path → 后端 US14117Request → US14117Service
 ```
 
-前端测试要求 builder 生成的完整 payload 与 `scenario.request` 深度相等。CLI 的 `backend/tests/us_14117/cases/01_minimal.json` 已删除内联 `input`，只保留 `scenario_path` 和断言。
+前端测试要求两个 builder 生成的完整 payload 与各自 `scenario.request` 深度相等。CLI 的 `01_minimal` 和 `02_geolocation_yellow` 已删除内联 `input` 和断言，分别只保留 `scenario_path`、`expected_path`。
 
 ## 新增门禁
 
@@ -34,11 +37,13 @@ scenario.request
 ## 验证结果
 
 ```text
-共享红灯 CLI：PASS，22/22 断言
-Traffic light：RED
-llm_calls=0，tokens=0
-Trace：25 个事件，实时输出与落盘保留
-前端共享 payload 测试：18/18 passed
+共享红灯 CLI：PASS，22/22 断言，Traffic light=RED
+共享黄灯 CLI：PASS，22/22 断言，Traffic light=YELLOW
+llm_calls=0，tokens=0；每条案例 Trace=25 个事件
+前端共享 payload 测试：19/19 passed
+前端全量测试：149 passed，2 skipped；build 通过
+后端相关测试：91 passed
+CLI 全量：21 PASS / 0 FAIL，446 leaf checks
 前端 build：通过
 后端 harness 与门禁测试：48 passed
 case parity：通过
@@ -54,15 +59,18 @@ runs/us_14117/20260811_184540_451667_01_minimal
 
 ```text
 b328ce1 feat(cases): share EO 14117 red scenario
+3e8df7d feat(cases): share EO 14117 red expectations
+092daa7 feat(cases): share EO 14117 yellow scenario
+2050324 test(cn-flow): verify shared EO scenario parity
 ```
 
 ## 尚未完成
 
-- 目前只有 EO 14117 红灯案例实现前端与 CLI 事实同源；黄灯、绿灯及其他模块仍未迁移。
-- `expected.json` 已保存正式预期，但 CLI 强断言仍在案例壳中，下一步需让门禁同时校验二者，消除预期重复。
-- `cn_flow` 尚未直接从该 scenario 生成旧请求并与直接 US14117Request 做语义等价验证。
+- 目前只有 EO 14117 红灯、黄灯实现前端与 CLI 事实同源；绿灯及其他模块仍未迁移。
+- 红灯、黄灯的 CLI 强断言已从案例壳迁移到各自 `expected.json`，门禁和 runner 均读取共享预期。
+- `cn_flow` 已完成红灯、黄灯共享 scenario 的核心事实和灯号等价测试，但旧结构丢失字段仍会列入 `lossy_fields`。
 - 本地 HTTP、SSE 和浏览器验收尚未执行。
 
 ## 结论
 
-共享场景方案已经通过一个真实业务案例证明可行，但阶段 3 远未完成。主方案继续保留在 `status/todo/`。
+共享场景方案已经通过两条真实业务案例证明可行，但阶段 3 仍未完成。主方案继续保留在 `status/todo/`。
