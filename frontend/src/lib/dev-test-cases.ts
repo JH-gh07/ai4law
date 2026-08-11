@@ -27,6 +27,7 @@ import type {
 import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
+import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -62,6 +63,7 @@ type DevTestCaseSeed<Module extends DevCaseModule> =
 
 const genomicRedRequest = genomicRedScenario.request as ModuleRequestMap["us_14117"];
 const geolocationYellowRequest = geolocationYellowScenario.request as ModuleRequestMap["us_14117"];
+const telemetryGreenRequest = telemetryGreenScenario.request as ModuleRequestMap["us_14117"];
 
 function sharedUs14117FormDefaults(request: ModuleRequestMap["us_14117"]): Us14117FormValues {
   const dataItem = request.data_items[0];
@@ -898,6 +900,14 @@ const us14117RestrictedParty = {
   backendFilePaths: geolocationYellowRequest.attachments ?? [],
 };
 
+const us14117TelemetryGreen = {
+  name: telemetryGreenScenario.display.name,
+  description: telemetryGreenScenario.display.description,
+  jurisdiction: "US" as const,
+  formDefaults: sharedUs14117FormDefaults(telemetryGreenRequest),
+  backendFilePaths: telemetryGreenRequest.attachments ?? [],
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // CN Flow (中国对华流动评估) — 2 cases
 //   来源测试文档:
@@ -1058,7 +1068,7 @@ export const DEV_TEST_CASES = {
   pipia: defineDevCases("pipia", [pipiaSCCFiling, pipiaCertification]),
   review: defineDevCases("review", [reviewPrivacyPolicy, reviewSccContract]),
   cn_flow: defineDevCases("cn_flow", [cnFlowBasic, cnFlowRestricted]),
-  us_14117: defineDevCases("us_14117", [us14117Basic, us14117RestrictedParty]),
+  us_14117: defineDevCases("us_14117", [us14117Basic, us14117RestrictedParty, us14117TelemetryGreen]),
 } satisfies { [Module in DevCaseModule]: DevTestCase<Module>[] };
 
 export const MODULES_WITH_CASES = Object.keys(DEV_TEST_CASES) as DevCaseModule[];

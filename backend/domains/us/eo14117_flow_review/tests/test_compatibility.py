@@ -101,7 +101,11 @@ def test_legacy_adapter_preserves_canonical_rule_result() -> None:
 
 @pytest.mark.parametrize(
     ("scenario_dir", "expected_light"),
-    [("geneguard_genomic_red", "RED"), ("geneguard_geolocation_yellow", "YELLOW")],
+    [
+        ("geneguard_genomic_red", "RED"),
+        ("geneguard_geolocation_yellow", "YELLOW"),
+        ("geneguard_telemetry_green", "GREEN"),
+    ],
 )
 def test_shared_scenario_preserves_core_facts_and_light_through_legacy_adapter(
     scenario_dir: str, expected_light: str

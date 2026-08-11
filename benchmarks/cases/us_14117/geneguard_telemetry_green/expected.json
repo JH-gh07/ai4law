@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "case_id": "geneguard_telemetry_green",
+  "overall_traffic_light": "GREEN",
+  "is_prohibited": false,
+  "is_restricted": false,
+  "required_findings": ["recipient is not a covered person", "email count is below the 100000 threshold", "city-level location is not precise geolocation"],
+  "legal_basis": ["28 CFR § 202.205", "28 CFR § 202.211"],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "GeneGuard生物科技公司",
+      "overall_traffic_light": "GREEN",
+      "traffic_light_result.is_prohibited": false,
+      "traffic_light_result.is_restricted": false
+    },
+    "min_counts": {"chapters": 4, "risk_matrix": 1, "output_files": 10},
+    "max_counts": {"rule_hits": 0},
+    "output_roles_contains": ["markdown", "docx", "pdf", "xlsx", "zip", "rule_engine_result_json", "facts_json"],
+    "output_formats": ["md", "docx", "pdf", "xlsx", "json", "zip"]
+  }
+}

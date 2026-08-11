@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "case_id": "geneguard_telemetry_green",
+  "module": "us_14117",
+  "classification": "source_exact",
+  "display": {
+    "name": "14117-3: GeneGuard→英国设备遥测数据（绿灯）",
+    "description": "GeneGuard 向英国非受关注公司提供设备遥测、城市级位置和5千名美国人的邮箱，低风险放行",
+    "jurisdiction": "US"
+  },
+  "source": {
+    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx",
+    "case": "测试案例三：向英国公司提供设备运行数据（绿灯场景）"
+  },
+  "request": {
+    "project_name": "基因测序仪预测性维护和产品改进",
+    "transaction_description": "GeneGuard德克萨斯州设备制造事业部向英国剑桥实验室设备有限公司共享基因测序仪运行遥测数据、城市级位置和约5,000名美国人的工作邮箱，用于预测性维护和产品改进",
+    "transaction_type": "vendor_agreement",
+    "data_items": [
+      {
+        "data_item_name": "设备联系人工作邮箱",
+        "data_description": "约5,000名美国设备联系人的工作邮箱，未达到涵盖个人标识符10万人阈值",
+        "business_context": "设备维护通知和客户服务",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": false,
+        "us_person_count": 5000,
+        "data_subject_type": "business_contact",
+        "doj_data_category": "covered_personal_identifiers",
+        "precision_level": "raw",
+        "is_government_related": false,
+        "export_necessity": "联系设备使用方开展预测性维护"
+      },
+      {
+        "data_item_name": "设备城市级位置和运行遥测",
+        "data_description": "仅包含城市级位置，不含精确GPS坐标；同时包含设备运行状态和故障代码",
+        "business_context": "预测性维护和产品改进",
+        "is_personal_info": false,
+        "is_sensitive_personal_info": false,
+        "us_person_count": 5000,
+        "data_subject_type": "business_contact",
+        "doj_data_category": "not_14117_data",
+        "precision_level": "city_level",
+        "is_government_related": false,
+        "export_necessity": "分析设备运行状态并预测故障"
+      }
+    ],
+    "recipient_entities": [
+      {
+        "entity_name": "剑桥实验室设备有限公司",
+        "country_of_registration": "英国（英格兰）",
+        "tax_id": "GB123456789",
+        "ownership_structure": "私人控股，无受关注国家投资",
+        "governing_law": "英格兰和威尔士法律",
+        "government_control": false,
+        "entity_role": "vendor",
+        "is_covered_person": false
+      }
+    ],
+    "access_persons": [],
+    "security_measures": [
+      {"measure_name": "加密传输", "category": "encryption", "status": "implemented", "description": "按公司内部数据安全政策加密传输"},
+      {"measure_name": "禁止向受关注国家再转移", "category": "contractual_controls", "status": "implemented", "description": "合作协议要求接收方不得向受关注国家实体转让数据"}
+    ],
+    "onward_transfer": false,
+    "onward_transfer_description": "",
+    "attachments": ["backend/tests/fixtures/us/us14117_data_inventory.csv", "backend/tests/fixtures/us/us14117_entity_inventory.csv"],
+    "company_name": "GeneGuard生物科技公司"
+  }
+}

@@ -148,9 +148,13 @@
         {
           "case_id": "02_geolocation_yellow",
           "assertions": 22
+        },
+        {
+          "case_id": "03_telemetry_green",
+          "assertions": 22
         }
       ],
-      "frontend_cases": 2
+      "frontend_cases": 3
     }
   }
 }

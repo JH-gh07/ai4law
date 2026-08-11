@@ -4,6 +4,7 @@ import type { ModuleRequestMap } from "../api/api-contract";
 import { DEV_TEST_CASES } from "./dev-test-cases";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
+import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -36,8 +37,8 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps the registry at 26 independently runnable cases", () => {
-    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(26);
+  it("keeps the registry at 27 independently runnable cases", () => {
+    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(27);
   });
 
   it("binds every case payload to its generated module request", () => {
@@ -221,8 +222,8 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps EO 14117 cases aligned with the official red and yellow scenarios", () => {
-    const [red, yellow] = DEV_TEST_CASES.us_14117;
+  it("keeps EO 14117 cases aligned with the official red, yellow and green scenarios", () => {
+    const [red, yellow, green] = DEV_TEST_CASES.us_14117;
 
     expect(red.payload.company_name).toBe("GeneGuard生物科技公司");
     expect(red.payload.recipient_entities[0].entity_name).toBe("华源生命科学有限公司");
@@ -236,6 +237,12 @@ describe("developer test case API contracts", () => {
     expect(yellow.payload.data_items[0].us_person_count).toBe(150_000);
     expect(yellow.payload.data_items[0].doj_data_category).toBe("precise_geolocation_data");
     expect(yellow.payload.data_items[0].data_description).toContain("位置轨迹");
+
+    expect(green.payload.company_name).toBe("GeneGuard生物科技公司");
+    expect(green.payload.recipient_entities[0].entity_name).toBe("剑桥实验室设备有限公司");
+    expect(green.payload.data_items[0].us_person_count).toBe(5_000);
+    expect(green.payload.data_items[1].precision_level).toBe("city_level");
+    expect(green.payload.recipient_entities[0].is_covered_person).toBe(false);
   });
 
   it("compiles the shared EO 14117 red scenario into the exact frontend payload", () => {
@@ -244,5 +251,9 @@ describe("developer test case API contracts", () => {
 
   it("compiles the shared EO 14117 yellow scenario into the exact frontend payload", () => {
     expect(DEV_TEST_CASES.us_14117[1].payload).toEqual(geolocationYellowScenario.request);
+  });
+
+  it("compiles the shared EO 14117 green scenario into the exact frontend payload", () => {
+    expect(DEV_TEST_CASES.us_14117[2].payload).toEqual(telemetryGreenScenario.request);
   });
 });
