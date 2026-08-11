@@ -55,6 +55,17 @@ def test_shared_scenario_rejects_a_second_inline_fact_source(tmp_path: Path, mon
         runner._resolve_case_input({"scenario_path": "scenario.json", "input": {"value": 1}})
 
 
+def test_shared_expected_reads_harness_assertions(tmp_path: Path, monkeypatch) -> None:
+    expected = tmp_path / "benchmarks" / "cases" / "demo" / "expected.json"
+    expected.parent.mkdir(parents=True)
+    expected.write_text(json.dumps({"harness": {"result_not_empty": True}}), encoding="utf-8")
+    monkeypatch.setattr(runner, "REPO_ROOT", tmp_path)
+
+    assert runner._resolve_case_expected(
+        {"expected_path": "benchmarks/cases/demo/expected.json"}
+    ) == {"result_not_empty": True}
+
+
 def test_execute_failure_writes_error_json_and_failed_manifest(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -155,6 +155,19 @@ def test_shared_scenario_is_accepted_as_the_only_input_source(tmp_path: Path, mo
     assert gate.case_violations("demo", case_path) == []
 
 
+def test_shared_expected_is_accepted_as_the_only_assertion_source(tmp_path: Path, monkeypatch) -> None:
+    expected_path = tmp_path / "benchmarks" / "cases" / "demo" / "expected.json"
+    _write(expected_path, {"harness": _sound_case()["expected"]})
+    case = _sound_case()
+    case.pop("expected")
+    case["expected_path"] = "benchmarks/cases/demo/expected.json"
+    case_path = tmp_path / "01_demo.json"
+    _write(case_path, case)
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+
+    assert gate.case_violations("demo", case_path) == []
+
+
 def test_unparseable_case_is_reported(tmp_path: Path) -> None:
     (tmp_path / "01_demo.json").write_text("{not json", encoding="utf-8")
 

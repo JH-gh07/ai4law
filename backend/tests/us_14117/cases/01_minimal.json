@@ -2,37 +2,6 @@
   "case_id": "01_minimal",
   "description": "EO14117正式红灯案例—GeneGuard向中国国资控股公司传输1万名美国人的全基因组数据",
   "scenario_path": "benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json",
-  "expected": {
-    "result_not_empty": true,
-    "fields_equal": {
-      "company_name": "GeneGuard生物科技公司",
-      "overall_traffic_light": "RED",
-      "traffic_light_result.is_prohibited": true,
-      "traffic_light_result.is_restricted": false
-    },
-    "min_counts": {
-      "chapters": 4,
-      "rule_hits": 3,
-      "risk_matrix": 1,
-      "output_files": 10
-    },
-    "output_roles_contains": [
-      "markdown",
-      "docx",
-      "pdf",
-      "xlsx",
-      "zip",
-      "rule_engine_result_json",
-      "facts_json"
-    ],
-    "output_formats": [
-      "md",
-      "docx",
-      "pdf",
-      "xlsx",
-      "json",
-      "zip"
-    ]
-  },
+  "expected_path": "benchmarks/cases/us_14117/geneguard_genomic_red/expected.json",
   "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：“14117行政令合规”路径描述及测试案例/“14117行政令合规”测试案例及预期输出.docx"
 }

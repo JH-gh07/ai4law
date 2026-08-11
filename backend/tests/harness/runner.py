@@ -51,6 +51,22 @@ def _resolve_case_input(case: dict[str, Any]) -> dict[str, Any]:
     return request
 
 
+def _resolve_case_expected(case: dict[str, Any]) -> dict[str, Any]:
+    expected_path = case.get("expected_path")
+    if not expected_path:
+        return case.get("expected", {})
+    if "expected" in case:
+        raise ValueError("case must not define both expected_path and expected")
+    path = (REPO_ROOT / str(expected_path)).resolve()
+    if not path.is_relative_to(REPO_ROOT.resolve()):
+        raise ValueError("expected_path must stay inside the repository")
+    document = json.loads(path.read_text(encoding="utf-8"))
+    expected = document.get("harness") if isinstance(document, dict) else None
+    if not isinstance(expected, dict) or not expected:
+        raise ValueError(f"shared expected must contain a non-empty harness object: {path}")
+    return expected
+
+
 class _DisabledLLM:
     enabled = False
     _enabled = False
@@ -469,6 +485,7 @@ def execute(
     case = json.loads(case_file.read_text(encoding="utf-8"))
     payload = _resolve_case_input(case)
     case["input"] = payload
+    case["expected"] = _resolve_case_expected(case)
     _ensure_database_schema()
     run_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}_{case_id}"
     run_dir = RUNS_DIR / module / run_name

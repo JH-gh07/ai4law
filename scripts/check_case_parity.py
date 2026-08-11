@@ -228,7 +228,28 @@ def case_violations(module: str, path: Path) -> list[str]:
     elif not isinstance(case.get("input"), dict) or not case["input"]:
         violations.append(f"{label}: input must be a non-empty object")
 
-    expected = case.get("expected")
+    expected_path = str(case.get("expected_path", "")).strip()
+    if expected_path and "expected" in case:
+        violations.append(f"{label}: must not define both expected_path and expected")
+    if expected_path:
+        expected_file = (ROOT / expected_path).resolve()
+        if not expected_file.is_relative_to(ROOT.resolve()):
+            violations.append(f"{label}: expected_path must stay inside the repository")
+            expected = {}
+        elif not expected_file.is_file():
+            violations.append(f"{label}: expected_path does not exist: {expected_path}")
+            expected = {}
+        else:
+            try:
+                document = json.loads(expected_file.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                document = None
+            expected = document.get("harness") if isinstance(document, dict) else None
+            if not isinstance(expected, dict) or not expected:
+                violations.append(f"{label}: shared expected harness must be a non-empty object")
+                expected = {}
+    else:
+        expected = case.get("expected")
     if not isinstance(expected, dict) or not expected:
         violations.append(f"{label}: expected must be a non-empty object")
         expected = {}
@@ -273,10 +294,20 @@ def observed_inventory() -> dict[str, Any]:
                 case = json.loads(path.read_text(encoding="utf-8"))
             except ValueError:
                 continue
+            expected = case.get("expected") or {}
+            expected_path = str(case.get("expected_path", "")).strip()
+            if expected_path:
+                expected_file = (ROOT / expected_path).resolve()
+                if expected_file.is_file():
+                    try:
+                        document = json.loads(expected_file.read_text(encoding="utf-8"))
+                    except (OSError, ValueError):
+                        document = {}
+                    expected = document.get("harness", {}) if isinstance(document, dict) else {}
             cases.append(
                 {
                     "case_id": path.stem,
-                    "assertions": count_leaf_checks(case.get("expected") or {}),
+                    "assertions": count_leaf_checks(expected),
                 }
             )
         modules[module] = {
