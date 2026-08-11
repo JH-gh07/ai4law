@@ -121,6 +121,25 @@ describe("developer test case API contracts", () => {
     expect(testCase.payload.scc_text).not.toContain("genetic sequencing data");
   });
 
+  it("keeps TIA cases aligned with the official US SaaS and India clinical scenarios", () => {
+    const [usSaas, indiaClinical] = DEV_TEST_CASES.tia;
+
+    expect(usSaas.payload.data_exporter_profile).toContain("Innovate Software GmbH");
+    expect(usSaas.payload.data_importer_profile).toContain("CloudForce Inc.");
+    expect(usSaas.payload.data_importer_profile).toContain("美国");
+    expect(usSaas.payload.third_country_assessment).toContain("FISA 702");
+    expect(usSaas.payload.third_country_assessment).toContain("CLOUD Act");
+    expect(usSaas.payload.supplementary_measures).toContain("密钥");
+
+    expect(indiaClinical.payload.data_exporter_profile).toContain("Leiden Life Sciences Institute");
+    expect(indiaClinical.payload.data_importer_profile).toContain("New Delhi Clinical Research Pvt. Ltd.");
+    expect(indiaClinical.payload.data_importer_profile).toContain("印度");
+    expect(indiaClinical.payload.data_exporter_profile).toContain("基因组序列片段");
+    expect(indiaClinical.payload.third_country_assessment).toContain("IT Act第69条");
+    expect(indiaClinical.payload.supplementary_measures).toContain("安全飞地");
+    expect(indiaClinical.payload.final_conclusion).toContain("荷兰 AP");
+  });
+
   it("includes current PIPIA company profile fields", () => {
     for (const testCase of DEV_TEST_CASES.pipia) {
       const company = asRecord(testCase.payload.company_profile);
