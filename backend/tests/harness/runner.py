@@ -21,6 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.trace.events import RunEvent
 from backend.common.runtime.run_manifest import (
     summarize_input,
     summarize_output,
@@ -42,7 +43,51 @@ class _DisabledLegalService:
     enabled = False
 
 
-Invoke = Callable[[dict[str, Any], bool, Path], dict[str, Any]]
+TraceSubscriber = Callable[[RunEvent], None]
+Invoke = Callable[
+    [dict[str, Any], bool, Path, TraceSubscriber | None],
+    dict[str, Any],
+]
+
+
+class TerminalTraceSubscriber:
+    """Print a safe, one-line summary for each RunEvent emitted by the harness."""
+
+    _SAFE_SCALAR_KEYS = (
+        "duration_ms",
+        "model",
+        "tool",
+        "result_count",
+        "results",
+        "count",
+        "fallback",
+    )
+
+    def __call__(self, event: RunEvent) -> None:
+        timestamp = event.timestamp[11:19] if len(event.timestamp) >= 19 else event.timestamp
+        suffixes: list[str] = []
+        detail = event.detail if isinstance(event.detail, dict) else {}
+        for key in self._SAFE_SCALAR_KEYS:
+            value = detail.get(key)
+            if isinstance(value, (str, int, float, bool)):
+                label = "duration" if key == "duration_ms" else key
+                unit = "ms" if key == "duration_ms" else ""
+                suffixes.append(f"{label}={value}{unit}")
+        usage = detail.get("usage")
+        if isinstance(usage, dict) and isinstance(usage.get("total_tokens"), int):
+            suffixes.append(f"tokens={usage['total_tokens']}")
+        llm = detail.get("llm")
+        if isinstance(llm, dict):
+            if isinstance(llm.get("model"), str):
+                suffixes.append(f"model={llm['model']}")
+            if isinstance(llm.get("total_tokens"), int):
+                suffixes.append(f"tokens={llm['total_tokens']}")
+        suffix = f" {' '.join(suffixes)}" if suffixes else ""
+        print(
+            f"[trace] {timestamp} #{event.seq:03d} "
+            f"{event.event_type:<12} {event.summary}{suffix}",
+            flush=True,
+        )
 
 
 @dataclass(frozen=True)
@@ -159,7 +204,12 @@ def _serialize_result(result: Any) -> dict[str, Any]:
 def _generic_invoke(
     alias: str, package: str, request_name: str, service_name: str
 ) -> Invoke:
-    def invoke(case: dict[str, Any], no_llm: bool, trace_dir: Path) -> dict[str, Any]:
+    def invoke(
+        case: dict[str, Any],
+        no_llm: bool,
+        trace_dir: Path,
+        trace_subscriber: TraceSubscriber | None,
+    ) -> dict[str, Any]:
         schema_module = importlib.import_module(f"{package}.schema")
         service_module = importlib.import_module(f"{package}.service")
         request_class = getattr(schema_module, request_name)
@@ -167,6 +217,8 @@ def _generic_invoke(
         payload = request_class.model_validate(case["input"])
         service = _make_service(alias, service_class, no_llm)
         recorder = TraceRecorder(trace_dir, task_id=f"harness-{alias}")
+        if trace_subscriber is not None:
+            recorder.subscribe(trace_subscriber)
         result = service.generate_report(payload, trace=recorder)
         recorder.write_manifest()
         return _serialize_result(result)
@@ -175,7 +227,10 @@ def _generic_invoke(
 
 
 def _diagnosis_invoke(
-    case: dict[str, Any], no_llm: bool, trace_dir: Path
+    case: dict[str, Any],
+    no_llm: bool,
+    trace_dir: Path,
+    trace_subscriber: TraceSubscriber | None,
 ) -> dict[str, Any]:
     package = "backend.domains.cn.transfer_diagnosis"
     answers_class = getattr(importlib.import_module(f"{package}.schema"), "DiagnosisAnswers")
@@ -183,13 +238,18 @@ def _diagnosis_invoke(
     answers = answers_class.model_validate(case["input"]["answers"])
     service = service_class(llm_client=_DisabledLLM()) if no_llm else service_class()
     recorder = TraceRecorder(trace_dir, task_id="harness-diagnosis")
+    if trace_subscriber is not None:
+        recorder.subscribe(trace_subscriber)
     result = service.evaluate(answers, trace=recorder)
     recorder.write_manifest()
     return _serialize_result(result)
 
 
 def _review_invoke(
-    case: dict[str, Any], no_llm: bool, trace_dir: Path
+    case: dict[str, Any],
+    no_llm: bool,
+    trace_dir: Path,
+    trace_subscriber: TraceSubscriber | None,
 ) -> dict[str, Any]:
     from backend.common.trace.context import current_trace
     from backend.core.container import AppContainer
@@ -229,6 +289,8 @@ def _review_invoke(
     request_data["uploaded_files"] = copied_files
     payload = ReviewGenerateRequest.model_validate(request_data)
     recorder = TraceRecorder(trace_dir, task_id="harness-review")
+    if trace_subscriber is not None:
+        recorder.subscribe(trace_subscriber)
     recorder.record(
         "status",
         {
@@ -359,8 +421,15 @@ def _check(case: dict[str, Any], actual: dict[str, Any], no_llm: bool):
 
 
 def execute(
-    module: str, case_id: str, *, no_llm: bool = False, quiet: bool = False
+    module: str,
+    case_id: str,
+    *,
+    no_llm: bool = False,
+    quiet: bool = False,
+    verbose_trace: bool = False,
 ) -> dict[str, str]:
+    if quiet and verbose_trace:
+        raise ValueError("--quiet and --verbose-trace are mutually exclusive")
     adapter = MODULE_ADAPTERS.get(module)
     if adapter is None:
         raise SystemExit(f"Unknown module {module!r}: {sorted(MODULE_ADAPTERS)}")
@@ -379,7 +448,8 @@ def execute(
     result: dict[str, Any] | None = None
     error: dict[str, str] | None = None
     try:
-        result = adapter.invoke(case, no_llm, run_dir / "trace")
+        trace_subscriber = TerminalTraceSubscriber() if verbose_trace else None
+        result = adapter.invoke(case, no_llm, run_dir / "trace", trace_subscriber)
     except Exception as exc:  # the harness must persist every production failure
         error = {
             "type": type(exc).__name__,
@@ -445,6 +515,7 @@ def execute_all_modules(
     *,
     no_llm: bool = False,
     quiet: bool = False,
+    verbose_trace: bool = False,
 ) -> list[dict[str, str]]:
     outcomes: list[dict[str, str]] = []
     for module in sorted(MODULE_ADAPTERS):
@@ -466,6 +537,7 @@ def execute_all_modules(
                 case_id,
                 no_llm=no_llm,
                 quiet=quiet,
+                verbose_trace=verbose_trace,
             )
             outcomes.append({**outcome, "module": module, "case_id": case_id})
     return outcomes
@@ -482,10 +554,21 @@ def main() -> int:
     )
     parser.add_argument("--no-llm", action="store_true")
     parser.add_argument("--quiet", "-q", action="store_true")
+    parser.add_argument(
+        "--verbose-trace",
+        action="store_true",
+        help="print each safe Trace event summary as it is recorded",
+    )
     args = parser.parse_args()
+    if args.quiet and args.verbose_trace:
+        parser.error("--quiet and --verbose-trace are mutually exclusive")
 
     if args.module == "all":
-        outcomes = execute_all_modules(no_llm=args.no_llm, quiet=args.quiet)
+        outcomes = execute_all_modules(
+            no_llm=args.no_llm,
+            quiet=args.quiet,
+            verbose_trace=args.verbose_trace,
+        )
         failed = sum(outcome["status"] != "PASS" for outcome in outcomes)
         print(
             f"all modules: {len(outcomes) - failed} PASS, {failed} FAIL "
@@ -508,7 +591,13 @@ def main() -> int:
     else:
         case_ids = [args.case]
     outcomes = [
-        execute(args.module, case_id, no_llm=args.no_llm, quiet=args.quiet)
+        execute(
+            args.module,
+            case_id,
+            no_llm=args.no_llm,
+            quiet=args.quiet,
+            verbose_trace=args.verbose_trace,
+        )
         for case_id in case_ids
     ]
     failed = sum(outcome["status"] != "PASS" for outcome in outcomes)

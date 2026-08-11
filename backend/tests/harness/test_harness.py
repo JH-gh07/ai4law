@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from backend.common.trace.events import RunEvent
+from backend.common.trace.recorder import TraceRecorder
 from backend.tests.harness import runner, viewer
 
 
@@ -38,7 +42,7 @@ def test_execute_failure_writes_error_json_and_failed_manifest(
         json.dumps({"input": {"value": 1}, "expected": {}}), encoding="utf-8"
     )
 
-    def fail(_case, _no_llm, _trace_dir):
+    def fail(_case, _no_llm, _trace_dir, _trace_subscriber):
         raise RuntimeError("deliberate harness failure")
 
     monkeypatch.setattr(runner, "TESTS_DIR", tests_dir)
@@ -109,7 +113,7 @@ def test_viewer_loads_cross_module_success_and_error_runs(
 
 
 def test_execute_all_modules_runs_every_registered_case(tmp_path, monkeypatch) -> None:
-    calls: list[tuple[str, str, bool, bool]] = []
+    calls: list[tuple[str, str, bool, bool, bool]] = []
     adapters = {
         "alpha": object(),
         "beta": object(),
@@ -125,17 +129,86 @@ def test_execute_all_modules_runs_every_registered_case(tmp_path, monkeypatch) -
     monkeypatch.setattr(
         runner,
         "execute",
-        lambda module, case_id, *, no_llm, quiet: (
-            calls.append((module, case_id, no_llm, quiet))
+        lambda module, case_id, *, no_llm, quiet, verbose_trace: (
+            calls.append((module, case_id, no_llm, quiet, verbose_trace))
             or {"status": "PASS", "run_id": f"{module}-{case_id}"}
         ),
     )
 
-    outcomes = runner.execute_all_modules(no_llm=True, quiet=True)
+    outcomes = runner.execute_all_modules(
+        no_llm=True,
+        quiet=True,
+        verbose_trace=False,
+    )
 
     assert len(outcomes) == 3
     assert calls == [
-        ("alpha", "01_a", True, True),
-        ("alpha", "02_b", True, True),
-        ("beta", "01_c", True, True),
+        ("alpha", "01_a", True, True, False),
+        ("alpha", "02_b", True, True, False),
+        ("beta", "01_c", True, True, False),
     ]
+
+
+def test_terminal_trace_subscriber_prints_safe_event_summary(capsys) -> None:
+    subscriber = runner.TerminalTraceSubscriber()
+    subscriber(
+        RunEvent(
+            task_id="task-1",
+            seq=4,
+            event_type="tool_result",
+            timestamp="2026-08-11T11:21:05+00:00",
+            summary="LLM 调用完成",
+            detail={
+                "tool": "llm_chat",
+                "duration_ms": 5800,
+                "usage": {
+                    "prompt_tokens": 1000,
+                    "completion_tokens": 240,
+                    "total_tokens": 1240,
+                },
+                "authorization": "Bearer secret-token",
+                "prompt": "private contract text",
+            },
+        )
+    )
+
+    output = capsys.readouterr().out
+    assert "#004" in output
+    assert "tool_result" in output
+    assert "LLM 调用完成" in output
+    assert "duration=5800ms" in output
+    assert "tokens=1240" in output
+    assert "secret-token" not in output
+    assert "private contract text" not in output
+
+
+def test_verbose_trace_subscriber_observes_same_order_as_persisted_trace(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    recorder = TraceRecorder(tmp_path / "trace", task_id="task-1")
+    recorder.subscribe(runner.TerminalTraceSubscriber())
+
+    recorder.record("status", {"summary": "开始"})
+    recorder.record("warning", {"summary": "需要复核"})
+    recorder.record("final", {"summary": "完成"})
+    recorder.write_manifest()
+
+    output = capsys.readouterr().out
+    assert output.index("#001") < output.index("#002") < output.index("#003")
+    manifest = json.loads(
+        (tmp_path / "trace" / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["event_count"] == 3
+    assert output.count("[trace]") == manifest["event_count"]
+
+
+def test_execute_rejects_quiet_and_verbose_trace_together() -> None:
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        runner.execute(
+            "diagnosis",
+            "01_scc_path",
+            no_llm=True,
+            quiet=True,
+            verbose_trace=True,
+        )
