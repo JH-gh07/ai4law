@@ -7,11 +7,11 @@ Two independent suites exercise the eleven registered modules:
 * the developer cases in ``frontend/src/lib/dev-test-cases.ts``, which are
   submitted over real HTTP by the Developer Case Contract workflow.
 
-Neither suite can see the other, so a module can silently lose coverage on one
-side. ``config/case_inventory.json`` is the committed contract naming what each
-side must carry. This script verifies the CLI side against that contract; the
-frontend side is verified by ``frontend/tests/contract/case-inventory.test.ts``
-reading the same file. A drift on either side fails its own gate.
+Neither suite can execute the other language safely. ``config/case_inventory.json``
+is the committed contract naming what each side must carry. This script verifies
+the CLI side against that contract; the frontend side is verified natively by
+``frontend/tests/contract/case-inventory.test.ts`` reading the same file. A drift
+on either side fails its own gate without parsing source code as text.
 
 Beyond counting, this script enforces the properties that keep assertions
 meaningful:
@@ -44,7 +44,6 @@ from backend.tests.harness.validators import ASSERTION_OPERATORS  # noqa: E402
 INVENTORY_PATH = ROOT / "config" / "case_inventory.json"
 MODULE_REGISTRY_PATH = ROOT / "config" / "module_registry.json"
 TESTS_DIR = ROOT / "backend" / "tests"
-FRONTEND_CASES = ROOT / "frontend" / "src" / "lib" / "dev-test-cases.ts"
 
 SCHEMA_VERSION = "1.0"
 
@@ -179,31 +178,27 @@ def observed_inventory() -> dict[str, Any]:
 
 
 def _frontend_case_counts() -> dict[str, int]:
-    """Count developer cases per module from the exported registry block.
+    """Read frontend declarations from the shared structured contract.
 
-    Deliberately narrow: it reads only the ``DEV_TEST_CASES`` object literal. If
-    that block's shape changes the count comes back wrong or empty and the gate
-    fails, which is the intended outcome — the frontend-side assertion lives in
-    ``case-inventory.test.ts`` where the data can be read natively.
+    The frontend Vitest gate imports ``DEV_TEST_CASES`` as TypeScript and checks
+    these declarations against reality. Python intentionally does not guess the
+    structure of a TypeScript object literal.
     """
-    source = FRONTEND_CASES.read_text(encoding="utf-8")
-    marker = "export const DEV_TEST_CASES"
-    start = source.find(marker)
-    if start == -1:
+    if not INVENTORY_PATH.exists():
         return {}
-    block_start = source.find("{", start)
-    block_end = source.find("\n};", block_start)
-    if block_start == -1 or block_end == -1:
+    try:
+        inventory = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
         return {}
-    counts: dict[str, int] = {}
-    for line in source[block_start + 1 : block_end].splitlines():
-        stripped = line.strip()
-        if ":" not in stripped or "[" not in stripped:
-            continue
-        key = stripped.split(":", 1)[0].strip()
-        entries = stripped[stripped.find("[") + 1 : stripped.rfind("]")]
-        counts[key] = len([item for item in entries.split(",") if item.strip()])
-    return counts
+    modules = inventory.get("modules")
+    if not isinstance(modules, dict):
+        return {}
+    return {
+        str(module): int(entry["frontend_cases"])
+        for module, entry in modules.items()
+        if isinstance(entry, dict)
+        and isinstance(entry.get("frontend_cases"), int)
+    }
 
 
 def coverage_violations(inventory: dict[str, Any]) -> list[str]:
@@ -213,8 +208,7 @@ def coverage_violations(inventory: dict[str, Any]) -> list[str]:
     frontend = _frontend_case_counts()
     if not frontend:
         violations.append(
-            "frontend: could not read the DEV_TEST_CASES registry block; "
-            "check frontend/src/lib/dev-test-cases.ts"
+            "frontend: case counts are absent from config/case_inventory.json"
         )
 
     inventoried = set(inventory.get("modules", {}))
@@ -281,7 +275,7 @@ def inventory_violations(committed: dict[str, Any], observed: dict[str, Any]) ->
         if observed_frontend != committed_frontend:
             violations.append(
                 f"{module}: frontend_cases is {observed_frontend!r} in "
-                f"dev-test-cases.ts, inventory records {committed_frontend!r}"
+                f"the structured contract, inventory records {committed_frontend!r}"
             )
     return violations
 

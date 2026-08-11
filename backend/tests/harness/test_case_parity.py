@@ -56,6 +56,14 @@ def test_committed_tree_passes_the_gate() -> None:
     assert gate.collect_violations() == []
 
 
+def test_python_gate_reads_frontend_counts_from_structured_inventory() -> None:
+    counts = gate._frontend_case_counts()
+
+    assert sum(counts.values()) == 26
+    assert counts["cpra"] == 3
+    assert counts["review"] == 2
+
+
 def test_leaf_check_counter_matches_the_validator() -> None:
     """The inventory's arithmetic must equal what the validator really emits.
 
