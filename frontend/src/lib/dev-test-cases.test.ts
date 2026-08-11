@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import type { ModuleRequestMap } from "../api/api-contract";
 import { DEV_TEST_CASES } from "./dev-test-cases";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
+import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -239,5 +240,9 @@ describe("developer test case API contracts", () => {
 
   it("compiles the shared EO 14117 red scenario into the exact frontend payload", () => {
     expect(DEV_TEST_CASES.us_14117[0].payload).toEqual(genomicRedScenario.request);
+  });
+
+  it("compiles the shared EO 14117 yellow scenario into the exact frontend payload", () => {
+    expect(DEV_TEST_CASES.us_14117[1].payload).toEqual(geolocationYellowScenario.request);
   });
 });

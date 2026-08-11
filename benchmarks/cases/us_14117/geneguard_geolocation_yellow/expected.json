@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "case_id": "geneguard_geolocation_yellow",
+  "overall_traffic_light": "YELLOW",
+  "is_prohibited": false,
+  "is_restricted": true,
+  "required_findings": ["precise_geolocation_data threshold exceeded", "recipient and access persons are covered persons", "security measures required before transfer"],
+  "legal_basis": ["28 CFR § 202.205", "28 CFR § 202.211", "28 CFR § 202.248", "28 CFR § 202.401"],
+  "harness": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "GeneGuard生物科技公司",
+      "overall_traffic_light": "YELLOW",
+      "traffic_light_result.is_prohibited": false,
+      "traffic_light_result.is_restricted": true
+    },
+    "min_counts": {"chapters": 4, "rule_hits": 20, "risk_matrix": 1, "output_files": 10},
+    "output_roles_contains": ["markdown", "docx", "pdf", "xlsx", "zip", "rule_engine_result_json", "facts_json"],
+    "output_formats": ["md", "docx", "pdf", "xlsx", "json", "zip"]
+  }
+}

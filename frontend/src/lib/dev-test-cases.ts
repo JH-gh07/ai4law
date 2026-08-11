@@ -26,6 +26,7 @@ import type {
 } from "../features/module-runner/types";
 import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
+import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -60,6 +61,7 @@ type DevTestCaseSeed<Module extends DevCaseModule> =
   Omit<DevTestCase<Module>, "payload" | "caseId"> & { payload?: never };
 
 const genomicRedRequest = genomicRedScenario.request as ModuleRequestMap["us_14117"];
+const geolocationYellowRequest = geolocationYellowScenario.request as ModuleRequestMap["us_14117"];
 
 function sharedUs14117FormDefaults(request: ModuleRequestMap["us_14117"]): Us14117FormValues {
   const dataItem = request.data_items[0];
@@ -889,45 +891,11 @@ const us14117Basic = {
 };
 
 const us14117RestrictedParty = {
-  name: "14117-2: GeneGuard→深度洞察位置数据（黄灯）",
-  description: "GeneGuard 向中国深度洞察人工智能有限公司提供15万名美国人的精确位置数据，需采取安全措施",
+  name: geolocationYellowScenario.display.name,
+  description: geolocationYellowScenario.display.description,
   jurisdiction: "US" as const,
-  formDefaults: {
-    company_name: "GeneGuard生物科技公司",
-    project_name: "健康地理分析 AI 模型训练",
-    transaction_description: "健康地理分析部通过供应商协议向北京深度洞察人工智能有限公司提供150,000名美国人的匿名化精确位置轨迹，用于健康预测模型训练",
-    transaction_type: "vendor_agreement",
-    data_item_name: "匿名化精确位置轨迹数据",
-    data_description: "150,000名美国人的精确 GPS 位置轨迹数据，用于 AI 预测模型训练",
-    doj_data_category: "precise_geolocation_data",
-    us_person_count: 150000,
-    entity_name: "深度洞察人工智能有限公司",
-    country_of_registration: "中国",
-    government_control: false,
-    entity_role: "vendor" as const,
-    onward_transfer: false,
-    onward_transfer_description: "",
-    security_measures_summary: "隔离工作区、访问控制、日志审计和季度审计尚待落实",
-    review_focus: "重点核查被覆盖人员、限制性供应商协议和两名中国员工的实际访问",
-    data_items_override: [
-      { data_item_name: "精确位置轨迹", data_description: "150,000名美国人的实时精确位置轨迹（GPS）数据", is_personal_info: true, is_sensitive_personal_info: true, us_person_count: 150000, doj_data_category: "precise_geolocation_data", precision_level: "raw" }
-    ],
-    recipient_entities_override: [
-      { entity_name: "深度洞察人工智能有限公司", country_of_registration: "中国（北京）", entity_role: "vendor" as const, is_covered_person: true }
-    ],
-    access_persons_override: [
-      { person_name: "张伟", nationality: "中国", country_of_residence: "中国", department: "算法研发部", position: "高级数据科学家", has_actual_access: true, access_type: "remote" },
-      { person_name: "王芳", nationality: "中国", country_of_residence: "中国", department: "算法研发部", position: "数据科学家", has_actual_access: true, access_type: "remote" }
-    ],
-    security_measures_override: [
-      { measure_name: "数据隔离工作区", category: "access_control", status: "missing", description: "尚未建立满足限制性交易要求的隔离环境" },
-      { measure_name: "访问审计日志", category: "audit_logging", status: "missing", description: "尚未完成全量日志记录和季度审计机制" }
-    ]
-  },
-  backendFilePaths: [
-    "backend/tests/fixtures/us/us14117_data_inventory.csv",
-    "backend/tests/fixtures/us/us14117_entity_inventory.csv",
-  ],
+  formDefaults: sharedUs14117FormDefaults(geolocationYellowRequest),
+  backendFilePaths: geolocationYellowRequest.attachments ?? [],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
