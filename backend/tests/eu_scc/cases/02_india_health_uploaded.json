@@ -3,5 +3,5 @@
   "description": "EU SCC正式案例二—德国健康研究公司C2P向印度处理者传输患者健康数据，Clause 15被削弱、健康数据误分类",
   "scenario_path": "benchmarks/cases/eu_scc/germany_c2p_india_health/scenario.json",
   "expected_path": "benchmarks/cases/eu_scc/germany_c2p_india_health/expected.json",
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx"
+  "source_doc_path": "benchmarks/source-materials/eu/legacy-docx/“SCC审查”测试案例及预期输出.docx"
 }

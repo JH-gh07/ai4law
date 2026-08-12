@@ -10,6 +10,9 @@ import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2
 import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
 import innovateUsTiaScenario from "../../../benchmarks/cases/tia/innovate_crm_us_saas/scenario.json";
 import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinical_india/scenario.json";
+import haitaoPipiaScenario from "../../../benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json";
+import weilanPipiaScenario from "../../../benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json";
+import eurocertPipiaScenario from "../../../benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -156,6 +159,12 @@ describe("developer test case API contracts", () => {
     expect(certification.payload.transfer_context.recipient_name).toBe("EuroCert");
     expect(certification.payload.transfer_context.recipient_country_region).toBe("德国");
     expect(certification.payload.transfer_context.legal_basis).toContain("欧盟认证要求");
+  });
+
+  it("builds every PIPIA request without changing shared facts", () => {
+    expect(DEV_TEST_CASES.pipia[0].payload).toEqual(haitaoPipiaScenario.request);
+    expect(DEV_TEST_CASES.pipia[1].payload).toEqual(weilanPipiaScenario.request);
+    expect(DEV_TEST_CASES.pipia[2].payload).toEqual(eurocertPipiaScenario.request);
   });
 
   it("provides review files to the single-request developer endpoint", () => {

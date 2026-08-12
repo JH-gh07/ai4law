@@ -3,7 +3,7 @@
   "description": "PIPIA真实来源案例一—新加坡营销分析场景，原始资料未提供标准合同，必须阻断备案",
   "scenario_path": "benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json",
   "expected_path": "benchmarks/cases/pipia/haitao_marketing_singapore/expected.json",
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：\"认证标准合同路径\"路径描述及测试案例/\"认证_标准合同路径\"测试案例及预期输出.docx",
+  "source_doc_path": "benchmarks/source-materials/cn/legacy-docx/\"认证_标准合同路径\"测试案例及预期输出.docx",
   "fixture_provenance": {
     "source_case": "案例1：跨境电商企业向新加坡集团公司传输用户行为数据",
     "extraction": "企业、接收方、规模、目的、数据类别、现有措施和缺口来自原文；未提供字段均在输入值中明示，72小时仅为满足当前 Schema 的测试默认值，不作为原文事实",

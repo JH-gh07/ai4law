@@ -1,32 +1,27 @@
 {
   "case_id": "01_minimal",
-  "description": "CN Flow兼容适配检查—中国公司向美国非受限服务商传输，阈值命中但接收方不是covered person，应为绿灯",
+  "description": "CN Flow兼容适配：GeneGuard基因组数据→华源生命科学（红灯），验证旧API表达公司/人数/交易类型/DOJ分类等核心事实，is_covered_person为旧结构丢失字段",
   "input": {
-    "company_name": "云服务科技有限公司",
-    "transfer_purpose": "云服务监控与客服协同",
+    "company_name": "GeneGuard生物科技公司",
+    "transfer_purpose": "向中国上海华源生命科学有限公司提供美国志愿者全基因组测序原始数据，用于基因标记与疾病关联联合研究；必要性：联合研究用于分析基因标记与疾病关联性；规模说明：10,000名美国志愿者，超过人类基因组数据批量阈值",
     "data_categories": [
-      "账户信息",
-      "设备日志"
+      "全基因组测序原始数据"
     ],
-    "sensitive_data_flags": [
-      "biometric"
-    ],
-    "us_person_count": 100000,
-    "transaction_type": "vendor_agreement",
+    "sensitive_data_flags": [],
+    "us_person_count": 10000,
+    "transaction_type": "cooperative_research",
     "doj_data_category_by_item": {
-      "账户信息": "covered_personal_identifiers",
-      "设备日志": "not_14117_data",
-      "biometric": "biometric_identifiers"
+      "全基因组测序原始数据": "human_genomic_data"
     },
     "recipient_entities": [
       {
-        "entity_name": "US ServiceCo",
-        "country_region": "美国",
-        "entity_role": "processor",
-        "is_restricted_party": false
+        "entity_name": "华源生命科学有限公司",
+        "country_region": "中国",
+        "entity_role": "affiliate",
+        "is_restricted_party": true
       }
     ],
-    "transfer_chain": "CN Controller -> US ServiceCo (processor)",
+    "transfer_chain": "GeneGuard加州精准医疗事业部→华源生命科学有限公司（中国上海）",
     "attachments": [
       {
         "file_role": "data_inventory",
@@ -45,8 +40,8 @@
   "expected": {
     "result_not_empty": true,
     "fields_equal": {
-      "company_name": "云服务科技有限公司",
-      "risk_level": "LOW"
+      "company_name": "GeneGuard生物科技公司",
+      "risk_level": "HIGH"
     },
     "min_counts": {
       "chapters": 4,
@@ -69,8 +64,15 @@
       "xlsx",
       "json",
       "zip"
-    ]
+    ],
+    "list_excludes": {
+      "chapters[].content": [
+        "LLM未配置",
+        "占位内容",
+        "{{CIT-",
+        "引用无法映射"
+      ]
+    }
   },
-  "source_doc_path": "resources/templates/us/4.1_cn_flow_compliance_template_v0.docx",
-  "coverage_note": "cn_flow不是正式资料中的独立业务功能；本例只验证旧请求适配到us_14117后，非covered person接收方不会因数据阈值命中被误判为HIGH。"
+  "coverage_note": "cn_flow兼容适配器：adapt_cn_flow_request将CNFlowRequest→US14117Request，is_covered_person(旧restricted_party)映射为None属旧结构丢失字段；完整风险评估需原生us_14117 API。risk_level不由expected固定(兼容层映射差异见lossy_fields记录)"
 }

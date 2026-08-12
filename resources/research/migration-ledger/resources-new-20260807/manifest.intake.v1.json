@@ -1,0 +1,1753 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "Phase 1 - Resource Intake",
+  "base_directory": "resources/new",
+  "total_files": 218,
+  "generated_at": "2026-08-07T10:00:00+0800",
+  "entries": [
+    {
+      "path": "167、数据出境合规实务手册.pdf",
+      "size_bytes": 1777474,
+      "mime_type": "application/pdf",
+      "sha256": "5e332c25f0bb16afcc1a6fe86c725f1b82875820abae1912a24cc1408c7e9d47",
+      "asset_class": "product_manual",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "“合规路径诊断”功能说明与路径描述（标注Reference）.docx",
+      "size_bytes": 30861,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "117a0267344210ccb01995508f79ee74557cd3021f6df9f34cb4fb0f7943da88",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "《数规通（DataComplyFlow）需求说明书》.docx",
+      "size_bytes": 727719,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ebf8791f30603df5134b8082a1c5dc59859a269b5264158c8fa6cab69f5e4f56",
+      "asset_class": "prd",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数据分级分类指南GBT+43697-2024.pdf",
+      "size_bytes": 532354,
+      "mime_type": "application/pdf",
+      "sha256": "56f4253b4ea6bfea3201dfd9fa5942df52fe19bad200ba1452e15ae6a8dfbc94",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数据安全技术敏感个人信息处理安全要求GBT+45574-2025.pdf",
+      "size_bytes": 397992,
+      "mime_type": "application/pdf",
+      "sha256": "4effcc8e5bd50f606916d801716f2d0f8feb7227155a9fb4f29df36ffa45e625",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径Reference库清单.docx",
+      "size_bytes": 7651,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2d391d642f4fef6b9703088664bfee31e84f02c60b4fb2b598bfa2e2fb71ec16",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息保护影响评估报告（模板） (1).docx",
+      "size_bytes": 19289,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "7af1a6a0a6aaf6090ed3a221debdf24d060f8710cbadcd157908fe2961455cc0",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息保护影响评估报告（模板）.docx",
+      "size_bytes": 19289,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "7af1a6a0a6aaf6090ed3a221debdf24d060f8710cbadcd157908fe2961455cc0",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息出境标准合同办法_中央网络安全和信息化委员会办公室.pdf",
+      "size_bytes": 970042,
+      "mime_type": "application/pdf",
+      "sha256": "4718c97f275466d7d5d3495637752c228f313fd95f05f1947d3e15ebe20fadc3",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息出境标准合同备案指南（第二版） (1).docx",
+      "size_bytes": 69615,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ecdeb9e2e35c408866c5d832dbde3bc0e8738ad59222c0d6a5551409819aba5b",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人信息出境认证办法.pdf",
+      "size_bytes": 162614,
+      "mime_type": "application/pdf",
+      "sha256": "d52bae89bdd1c1ccb0a7dec127bb831690a850a030ff46fe0f3251da4e8f776f",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/个人金融信息保护技术规范.pdf",
+      "size_bytes": 418994,
+      "mime_type": "application/pdf",
+      "sha256": "cadf52a12aa2dfda947b5bc5f43499bf8804eb8d0c0fd616ad1a7218f675dc39",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/中华人民共和国个人信息保护法.pdf",
+      "size_bytes": 555513,
+      "mime_type": "application/pdf",
+      "sha256": "6ece2a73fc756795fe8b7858a491ba0ec9e7d6292bfb916c1c7454be977001ec",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/中华人民共和国数据安全法.pdf",
+      "size_bytes": 392521,
+      "mime_type": "application/pdf",
+      "sha256": "6b93cb99f3dda5a5319380d66adec99bb49a9ba30ae01263360101552f835973",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/促进和规范数据跨境流动规定_中央网络安全和信息化委员会办公室.pdf",
+      "size_bytes": 993779,
+      "mime_type": "application/pdf",
+      "sha256": "f7e84df73cac66bfbd9efa2d8b7fe7f73a16fa37584a5b6d37d3d426cb1c82f3",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/信息安全技术 个人信息安全规范.pdf",
+      "size_bytes": 1265496,
+      "mime_type": "application/pdf",
+      "sha256": "035f1e659308cc8d17b5c992fb952b0ecfec21dc6f967f1ba885ba1aea9598b2",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境安全评估办法.pdf",
+      "size_bytes": 356369,
+      "mime_type": "application/pdf",
+      "sha256": "93b8ca9601824b81b102643227b52dc11345fc4bcc437d3c78fa6b81ef4f92e4",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境安全评估申报指南（第三版） (1).docx",
+      "size_bytes": 67052,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2c3045905ff09f85d7f18fcd2933bd0e445ef818829217b345bed6292f57ab4f",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境安全评估申报指南（第三版） (2).docx",
+      "size_bytes": 67052,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2c3045905ff09f85d7f18fcd2933bd0e445ef818829217b345bed6292f57ab4f",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境申报系统使用手册.pdf",
+      "size_bytes": 2425082,
+      "mime_type": "application/pdf",
+      "sha256": "39dc5d9435fce443b3f7a3001ec179d46408397e7a134fd35f8a6764839ccc13",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据出境风险自评估报告（模板）.docx",
+      "size_bytes": 18386,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ad82dbd5a110fc94d989344db5ac3023d87a36c99b3203fb17c29ba6c5ea6281",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据分级分类指南GBT+43697-2024.pdf",
+      "size_bytes": 532354,
+      "mime_type": "application/pdf",
+      "sha256": "56f4253b4ea6bfea3201dfd9fa5942df52fe19bad200ba1452e15ae6a8dfbc94",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/数据安全技术敏感个人信息处理安全要求GBT+45574-2025.pdf",
+      "size_bytes": 397992,
+      "mime_type": "application/pdf",
+      "sha256": "4effcc8e5bd50f606916d801716f2d0f8feb7227155a9fb4f29df36ffa45e625",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/汽车数据安全管理若干规定（试行）_中央网络安全和信息化委员会办公室.pdf",
+      "size_bytes": 1625133,
+      "mime_type": "application/pdf",
+      "sha256": "fe44d579958e04971c26484e1af72634a25288d0c4c433f98d89e12c05fb3088",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/网络安全法.pdf",
+      "size_bytes": 302845,
+      "mime_type": "application/pdf",
+      "sha256": "f8aca83c14a6ee3bf06b9c359eb9785411fcf046b17e7e090c525d1ca6e9e1e4",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/网络数据安全管理条例.pdf",
+      "size_bytes": 192545,
+      "mime_type": "application/pdf",
+      "sha256": "9d489ed9b40eab666a042bf66249022a34d44d8d0e8bddbde72bd7d58348d469",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/中国数据出境路径reference库/中国数据出境路径reference文件库/金融数据安全+数据安全分级指南.pdf",
+      "size_bytes": 1044131,
+      "mime_type": "application/pdf",
+      "sha256": "5247d088cc0039a22b307b307ad42ba8da2cc2077d0e7a608507b077ebf44b9a",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”功能说明与路径描述（标注Reference）.docx",
+      "size_bytes": 30861,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "117a0267344210ccb01995508f79ee74557cd3021f6df9f34cb4fb0f7943da88",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx",
+      "size_bytes": 7987,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "af32f8ebd9774efff3834efd40a0f0333db4b44f99058bef3870a65c9de108ca",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务1：“合规路径诊断”路径描述及测试案例/我国数据出境三条路径的流程描述.docx",
+      "size_bytes": 18466,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "6edf4cd1ad6cbf1cf4788047d63bdc7baa6ff8c3f39c81ea7853694e1d0ab202",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”功能说明与路径描述（标注Reference）.docx",
+      "size_bytes": 764337,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a20c63e63c951ddb601748ad8264d4029b199ed5bc3e0b0c72016c12854f8671",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx",
+      "size_bytes": 163611,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0bb05d756a136552d403f240aabe00f28ffaaeacb3ae726984f49759294d14ac",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”功能说明与路径描述（标注Reference）.docx",
+      "size_bytes": 453242,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "c52826da15d45bbb84bb0fa07d0f01af7854031e0382d8a9308d84f62f54838f",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务3：“认证标准合同路径”路径描述及测试案例/“认证_标准合同路径”测试案例及预期输出.docx",
+      "size_bytes": 11099,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "3f2d7dd0dd842a7e15b17dbb8490517a4c4f71756057c7299f9e22c0e7aeec74",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”功能说明与路径描述.docx",
+      "size_bytes": 532213,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "af7096bd6a214fdbe3a3a7899485223708fdc97a3e0fb0db46527a7e23974dbb",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/“文档专项智能审查”测试案例及预期输出.docx",
+      "size_bytes": 21786,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "09472e09a0034a58d72bf485bbfc19bfe46fc4fb30757dafc779e5021ce847fb",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/个人信息出境标准合同【模板】.docx",
+      "size_bytes": 41383,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "e85d764bf9d7394b2b2f89c7884845af12b66835ee15340f8ccf352b8b635ca5",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/数据处理协议样例.pdf",
+      "size_bytes": 326852,
+      "mime_type": "application/pdf",
+      "sha256": "4d5346337305d6aec500fd79ee7416939967cc08147aa107bb7f449ecb9fef84",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/数据安全及保密协议（模板） (1).docx",
+      "size_bytes": 14853,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "d2d44d2168665e4ffd31487be366a84e5ce70fcf0ec97aedd7d488a29c153cb3",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/隐私政策样例.PNG",
+      "size_bytes": 395280,
+      "mime_type": "image/png",
+      "sha256": "b24a7d5713b7c7b4a89cf8cdfdef4c38c878aac6c9321ebdf98c059108b3da74",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”功能说明与路径描述.docx",
+      "size_bytes": 9608,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a2c298691060dac7901e2e98a4745969a6d2bcaffa079edd0daadcb69d9fdccb",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx",
+      "size_bytes": 13728,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "33258f76485ae50d4211f785ac97ce4c4e7545e902ef63390a94f11fe9ba110c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：“BCR审核”路径描述及测试案例/“BCR审核”功能说明与路径描述.docx",
+      "size_bytes": 108351,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a71c0d31d1bb0a8d5ef937af682088978a9366af8c7337a78284e65857f6ca6e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：“BCR审核”路径描述及测试案例/“BCR审核”测试案例及预期输出.docx",
+      "size_bytes": 14450,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "01859b1d4c7b8056ecfde9d6b0dfb783e2e3b6588df5e34f5c5eb92d4e11ae0f",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：“DPIA草案生成”路径描述及测试案例/“DPIA草案生成”功能说明与路径描述.docx",
+      "size_bytes": 78695,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "c6e96d509549f402acb3fd4acf277a9a5becaf1f40c5be9481202f64e9571438",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务3：“DPIA草案生成”路径描述及测试案例/“DPIA草案生成”测试案例及预期输出.docx",
+      "size_bytes": 14445,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "4c03a04d9926554024e6764f3e69ccc9cc393f7201b9975eaee2f4db0ad8e6c1",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”功能说明与路径描述.docx",
+      "size_bytes": 192272,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0da70922f92c43911ffa95e9c961c9769461625b50495bb627573a5b1e9411d8",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx",
+      "size_bytes": 136318,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "abe1bdd495a37db0fe9dc3803d569adb41bac6c11d9b101adc13a946bd46dc89",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/2.2 ICO_DPIA_Temple (1).docx",
+      "size_bytes": 54532,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "9300f8547c1d5face6266005e2fa238212a40b0f44c9608b73066293e2210554",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32002D0002_EN_TXT.pdf",
+      "size_bytes": 105777,
+      "mime_type": "application/pdf",
+      "sha256": "d6157acc3fadc91a66510c9645980a803b63b35a44e37f5cd146375b17f8ee8c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32003D0490_EN_TXT.pdf",
+      "size_bytes": 109391,
+      "mime_type": "application/pdf",
+      "sha256": "636ccdf6c74f3c6c451d042077173dcc05ef14513e1b6207b072a6e3f7d0b5b0",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32003D0821_EN_TXT.pdf",
+      "size_bytes": 84814,
+      "mime_type": "application/pdf",
+      "sha256": "ac4897f4b88adf8708a03a1aa176f55bbfbec95329c797d20900b36cb32248d1",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32004D0411_EN_TXT.pdf",
+      "size_bytes": 63776,
+      "mime_type": "application/pdf",
+      "sha256": "ad5cd7b758ea02cb245fb05c6def67aa28978b69e8bd3eab27e4914f2b0ba084",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32008D0393_EN_TXT.pdf",
+      "size_bytes": 39755,
+      "mime_type": "application/pdf",
+      "sha256": "6dab862f5e4f082cb74eb7d866ace7011d2876da72c837248eb9f45ec53e7044",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32010D0146_EN_TXT.pdf",
+      "size_bytes": 726662,
+      "mime_type": "application/pdf",
+      "sha256": "6b9d876d197648ff5ed4f83b7e5aaa730d1221367b1127b7d28730a05a3b2f67",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32010D0625_EN_TXT.pdf",
+      "size_bytes": 729028,
+      "mime_type": "application/pdf",
+      "sha256": "70732afd716065c8f7e4b36857218afcf722d1bcb8075f3a2d11f565dc34f1d6",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32011D0061_EN_TXT.pdf",
+      "size_bytes": 734929,
+      "mime_type": "application/pdf",
+      "sha256": "92b6f8a61c27a73569de2d6275553619942177c9157d6f04bf1f868417fc4b78",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32012D0484_EN_TXT.pdf",
+      "size_bytes": 742255,
+      "mime_type": "application/pdf",
+      "sha256": "7e014c5c54882d9a8326c7ce552610e1bc06d9ea8229bd1ecf9966de4aab9362",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32013D0065_EN_TXT.pdf",
+      "size_bytes": 734218,
+      "mime_type": "application/pdf",
+      "sha256": "3271e68742b1dfdc78b1ec5808f3e7779b226bb2412f29cb1f07cca83bfae5c1",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32016R0679_EN_TXT.pdf",
+      "size_bytes": 982296,
+      "mime_type": "application/pdf",
+      "sha256": "bd84e63f5b622b739a83389afc3b30d240f792bb88d8eb03a816c9a82b0c2499",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32019D0419_EN_TXT.pdf",
+      "size_bytes": 1432123,
+      "mime_type": "application/pdf",
+      "sha256": "72eff26cf36cf84bdd9c8b55defbcada627a7ea2a08c18095eb654f8e1037810",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32021D0914_EN_TXT.pdf",
+      "size_bytes": 884814,
+      "mime_type": "application/pdf",
+      "sha256": "e79903f89a984f0414b02a154e164bd6b0cbf24d7f3bfc9b2afa511c84ac8d11",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32021D1772_EN_TXT.pdf",
+      "size_bytes": 1956647,
+      "mime_type": "application/pdf",
+      "sha256": "0288d611a5c07b1343167e2dbd0485ce03b6ddda934f9638117db0888f559f14",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32022D0254_EN_TXT.pdf",
+      "size_bytes": 1836438,
+      "mime_type": "application/pdf",
+      "sha256": "a5147ab82d577c3c23cc6ca74dc953c55aabb078ca8a2050ad84cf567d543bcd",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_32023D1795_EN_TXT.pdf",
+      "size_bytes": 2820560,
+      "mime_type": "application/pdf",
+      "sha256": "a6e80ec7ec8d309c36ab3f7e295ba6a944c3c5f2fc584a39050d1784426185d5",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/CELEX_62018CJ0311_EN_TXT.pdf",
+      "size_bytes": 1749608,
+      "mime_type": "application/pdf",
+      "sha256": "260f56c8011daacd29100d4fa0db3f2dad69bed958245372d60e62d4ffbb25e1",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/EN Standard Contractual Clauses (1).doc",
+      "size_bytes": 122880,
+      "mime_type": "application/msword",
+      "sha256": "29a194e32353edfba0ad5d74fa1cd595e4ea39a22f7a4664cdafa9fd4f3e3f1c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/EPO Adequacy Decision July 2025.pdf",
+      "size_bytes": 343968,
+      "mime_type": "application/pdf",
+      "sha256": "076c80b6e59fb8d09a49c180b1b3571ff31022525bd4f4793c1e8bd0913a865c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/JUST_template_comingsoon_standard_2.pdf",
+      "size_bytes": 512977,
+      "mime_type": "application/pdf",
+      "sha256": "9231b69fca6bc53b01d40588e87fb22142cab58696a550650c8b6de817b6bf6c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/JUST_template_comingsoon_standard_26.pdf",
+      "size_bytes": 404648,
+      "mime_type": "application/pdf",
+      "sha256": "1326540de2499bdb8be5ff4fbc435a5abd90c2b0e55a6114c97a324fe5c55d69",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/JUST_template_comingsoon_standard_27.pdf",
+      "size_bytes": 285020,
+      "mime_type": "application/pdf",
+      "sha256": "8de1e88d62fb1624dd869040950f26e734423371bca468dd21368465e3382bdd",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/TIA - Template (1).docx",
+      "size_bytes": 85635,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2dd3c201edeb7e5f856a093e345740c9da9ec13d0d7ee16e155804766cdb26be",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_guidelines_2_2018_derogations_en.pdf",
+      "size_bytes": 750247,
+      "mime_type": "application/pdf",
+      "sha256": "74882062cdcdb1e003399604524e76d88ad857b6aa1b7a6b4afd459cb55773b6",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_guidelines_3_2018_territorial_scope_after_public_consultation_en_1.pdf",
+      "size_bytes": 542808,
+      "mime_type": "application/pdf",
+      "sha256": "84e142c5fc7ccd14687dac11083e5a1a78c887af9f6278020f571984297e66b4",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_guidelines_codes_conduct_transfers_after_public_consultation_en_1.pdf",
+      "size_bytes": 866859,
+      "mime_type": "application/pdf",
+      "sha256": "7fe8c52088c7ce0abd0d569e6e9702d3769582cc24ab4bb626f3318378d61ffe",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_recommendations_202001vo.2.0_supplementarymeasurestransferstools_en.pdf",
+      "size_bytes": 1374391,
+      "mime_type": "application/pdf",
+      "sha256": "36d34fe340cc140fc38919cdaea2710042c0e6cb48f8d7cecd6819d75de937b4",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/edpb_recommendations_20221_bcr-c_v2_en.pdf",
+      "size_bytes": 631629,
+      "mime_type": "application/pdf",
+      "sha256": "4b6a2ca2bd907883cec4d4ffe45977cdee2c398b016ad04c3a95f1f0473a4bf3",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境reference文件库/recommendations_20221_bcr-c_edpb_en.pdf",
+      "size_bytes": 636052,
+      "mime_type": "application/pdf",
+      "sha256": "c9860ebf50fbaac368f12336181a8309545f9f0d64140188225c580054d4753a",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/欧盟数据出境路径Reference库/欧盟数据出境路径Reference库清单.docx",
+      "size_bytes": 7627,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "6025bb7a932ef588b9d5a7082f7850ea86c6aaccd1adf78075cc57f6cd6db523",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：“14117行政令合规”路径描述及测试案例/“14117行政令合规”功能说明与路径描述.docx",
+      "size_bytes": 189063,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "6b4ceabc46ed40c84a11de9aedb69f271a6c79d3a875c4b4ea23f950515e0f4e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：“14117行政令合规”路径描述及测试案例/“14117行政令合规”测试案例及预期输出.docx",
+      "size_bytes": 291527,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "3c37d6f30f4d00ea0dbde5b96ce359ed161d466b848661858b3d658fee5f6ee7",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：“CPRA合规”路径描述及测试案例/“CPRA合规”功能说明与路径描述（标注Reference）.docx",
+      "size_bytes": 196695,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "522542ff0cd0b56d0159f094d268c50756a6e733bc544be6dae4f91dae8e765b",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务2：“CPRA合规”路径描述及测试案例/“CPRA合规”测试案例及预期输出.docx",
+      "size_bytes": 159339,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "aad281e8a7e1d065f674725f133a911e589f0b8650b59d4d007e37b1230328f5",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径Reference库清单.docx",
+      "size_bytes": 408413,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "67334f699cd0c69190e152982ae63ad5c89684ed57df93a14b7b2b215eae775b",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/19-Digital-Trade.pdf",
+      "size_bytes": 62962,
+      "mime_type": "application/pdf",
+      "sha256": "54889706f34e733a20c18980e00989d11d65fce3cf3eec7455ba7daa46404cd5",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/2012-31341.pdf",
+      "size_bytes": 601171,
+      "mime_type": "application/pdf",
+      "sha256": "8e594b2555c46e5d97fc4cf269789b394511b0abedc132a0a6c1223927a92403",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/2024-04573.pdf",
+      "size_bytes": 200659,
+      "mime_type": "application/pdf",
+      "sha256": "b3b13084fa9fd991251db6fe5c12f8d94ef2d1f5b2c645b497e5af604f000b13",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/217_ecsg_2015-apec-privacy-framework.pdf",
+      "size_bytes": 252632,
+      "mime_type": "application/pdf",
+      "sha256": "f64602b81a7d562b9f64e51ae48d54b7a38476c71ab50d57eea9f7cef5c8e3b7",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/DCPD-202200894.pdf",
+      "size_bytes": 306479,
+      "mime_type": "application/pdf",
+      "sha256": "767c85ba07d16231b287f2c27b76778ce63ed48b421700010db0eeb78b504b5c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/FISA_Section_702_FISA_Resource_Library.pdf",
+      "size_bytes": 157525,
+      "mime_type": "application/pdf",
+      "sha256": "4296ac3a66bd99e6ff580e73095ff473127bfefb5d9b3d54c4c2daad266e805c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/Full Text_EU-U.S. DPF.pdf",
+      "size_bytes": 4898018,
+      "mime_type": "application/pdf",
+      "sha256": "b261cdff30fb64fcaa1c3325c3f18c4b3daa6edfd5371ab3c22331e118c7487b",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/NIST.CSWP.01162020.pdf",
+      "size_bytes": 827885,
+      "mime_type": "application/pdf",
+      "sha256": "58e1f2373e1c8a5782f7ddfce677fa9fc15e2d920ec0ab97ee754697e91bc2f0",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/The California Privacy Rights Act of 2020 (1).pdf",
+      "size_bytes": 1644139,
+      "mime_type": "application/pdf",
+      "sha256": "3a10b2f9b8f8c272643c2199324e5fcff4a408d1e663740fe733f400a51586d8",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/cloud_act.pdf",
+      "size_bytes": 262896,
+      "mime_type": "application/pdf",
+      "sha256": "33fc8e266f329a0a72c9fac573c4e4644b10200f8444ba56997e9f6cfcc7621c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/美国数据出境路径Reference库/美国数据出境路径reference文件库/ftc_act_incorporatingus_safe_web_act.pdf",
+      "size_bytes": 199367,
+      "mime_type": "application/pdf",
+      "sha256": "3afd45354187fbe89986b017a43a9f958a5a3d0667b9819135a1238bbcf4980e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/参考Benchmark/参考Benchmark原文件/LexEval： A Comprehensive Chinese Legal Benchmark for Evaluating Large Language Models.pdf",
+      "size_bytes": 558290,
+      "mime_type": "application/pdf",
+      "sha256": "2ef8320b6cc0f5c0d29f574f17ed015adffcc004a86ce7a7cc4c0d9f22c15984",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/参考Benchmark/参考Benchmark原文件/NeurIPS-2023-legalbench-a-collaboratively-built-benchmark-for-measuring-legal-reasoning-in-large-language-models-Supplemental-Datasets_and_Benchmarks.pdf",
+      "size_bytes": 963489,
+      "mime_type": "application/pdf",
+      "sha256": "08fd7fc66515df8e044a6ed0e11cb8007eeb2a035a119cce6cc6620d123b4fad",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/参考Benchmark/参考Benchmark原文件/PLAWBENCH：ARubric-Based Benchmark for Evaluating LLMs in Real-World Legal Practice.pdf",
+      "size_bytes": 1305138,
+      "mime_type": "application/pdf",
+      "sha256": "c3244ce97fc225859b1a58370ced3db9560ae5e03659f7100421af7213693b1c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/参考Benchmark/参考Benchmark整理.docx",
+      "size_bytes": 491473,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "43d8a084dcf6634807aa4c3b2b6ab03228c425cb516b3e82f04b786916a4c63a",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/数规通黄金标准（v1.0 正式版） .docx",
+      "size_bytes": 433266,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "e2e985ead307791ef50f7a6952c0b6e75fa4733a72b300e2492352a129040b60",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例1_测试结果.docx",
+      "size_bytes": 13422,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a2d7ad9d7b8b042340a46b1116396e5149d8b497157fecd7f9c342f66084042a",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例2_测试结果.docx",
+      "size_bytes": 12878,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "00d951312ae5ce4b8154f43a1ec57b31721d1906f2110dc969fa0ad20a939dcd",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例3_测试结果.docx",
+      "size_bytes": 12678,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "811cb29213a0a0a16a6b805e7e845ca866a4559b284400c6deb448b4c123458e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例4_测试结果.docx",
+      "size_bytes": 12747,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "d30fedb8a68afa3bcf5b10dde04e02c5a6a24fc0c140e30292cc39db7fae0727",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例5_测试结果.docx",
+      "size_bytes": 12963,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "d9e8f60ca803e74cb9478df6657644212a24f23ee4239214c409a7de5bec3513",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例1_测试结果.docx",
+      "size_bytes": 13517,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例2_测试结果.docx",
+      "size_bytes": 13417,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "26fd936667ecd70bc3bed2292d9bfd7a54b5c760725b6819764813983be86826",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例3_测试结果.docx",
+      "size_bytes": 13173,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "9313fdfde83394de58c3b382352a250dfe2ee815cafbc1f457e79858e9f5217a",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例4_测试结果.docx",
+      "size_bytes": 13068,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ada476ff6f621cf48173d45270b88a2b178403985a539e3f7662f6930b171cf1",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例5_测试结果.docx",
+      "size_bytes": 13349,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "73e57b99df5a29517ea5a40f9022916e6e3a27fe2460a2cbd800afab68d38c42",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例1_测试结果.docx",
+      "size_bytes": 12718,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "8a007f91b88cef95973a452380b79c454fe2cbf51ff0cb2f4cbc83776f499967",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例2_测试结果.docx",
+      "size_bytes": 12065,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "28002d4e64162a8adfa1bc740c1f3d04f6322fb7a44c57695cc7b5c8dbce24b0",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例3_测试结果.docx",
+      "size_bytes": 12262,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "090393e789434e16cce3c63b0be96df98c704569e0389117b3849dfb7d05ab12",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例4_测试结果.docx",
+      "size_bytes": 12663,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "3e9adb6b46bdf77b1106b146e41f9230f4d49713232d120790a624d4bd849499",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务3（标准合同路径）种子案例及测试结果/任务3_案例5_测试结果.docx",
+      "size_bytes": 12352,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0a3a78572b28c4244b0c53408c2a21da2c0a98b827c1da11f9fb7fe659f3cc38",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务4（豁免情形诊断）种子案例及测试结果/任务4_案例1_测试结果.docx",
+      "size_bytes": 12026,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "d10badd168f8c968703733934c414d8cf68919b87c393e4c3041d8e48b93d594",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务4（豁免情形诊断）种子案例及测试结果/任务4_案例2_测试结果.docx",
+      "size_bytes": 12016,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "fe8c191ea621a0684c038129a43492a3a90e40018c900108f2a00b987a32d731",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务4（豁免情形诊断）种子案例及测试结果/任务4_案例3_测试结果.docx",
+      "size_bytes": 12048,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "64e033de674edbfadeb82d0a7885c7d2ab5e54c9b985c91e3af49b94773fb0ae",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务4（豁免情形诊断）种子案例及测试结果/任务4_案例4_测试结果.docx",
+      "size_bytes": 11941,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "6bf8da12de901efdd6b2fb1e549c320b944842780bd69ece2fa66c075423976d",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/1.中国法域任务的种子案例及测试结果/任务4（豁免情形诊断）种子案例及测试结果/任务4_案例5_测试结果.docx",
+      "size_bytes": 12005,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "3026600fe0d845c7f1414193068d656426fbb1e7cbce7010b5ab1c80eb27f6aa",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例1_测试结果.docx",
+      "size_bytes": 13270,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "28ed50e0e93fdc253ab0511ba2f9825625ea444fa9c65784969d61e2ed449406",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例2_测试结果.docx",
+      "size_bytes": 13433,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "f2fe8feb8de6c161e01d274328fb95c0300920a3191cea0bc20eda7b7c63d743",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例3_测试结果.docx",
+      "size_bytes": 12421,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "84f0f8e8e8b67513281f06a34b2f858cce1a02b1bfd1c57ad15c000e0c803856",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例4_测试结果.docx",
+      "size_bytes": 13596,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "07badf6e884b8b9252bd2510fbd28456834f810ac61a3f89d066b7f0314f6f12",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例5_测试结果.docx",
+      "size_bytes": 13428,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "3a8fe021a7835f49d11c5da4067db42b766371878e93e076ec4c01f129668587",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例1_测试结果.docx",
+      "size_bytes": 12909,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "41f42061ac5418e2eac7aadea7d4d01f7e29788033303f188478902be406c154",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例2_测试结果.docx",
+      "size_bytes": 13094,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "abf2fb52c5808670b6e179034425b823d6e507ff04423ce44190d0bb0b65ba16",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例3_测试结果.docx",
+      "size_bytes": 13001,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "235a0422cba814b9e68ca599ccab6b490fe7ee60464c9b9a1bd7e010022365ec",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例4_测试结果.docx",
+      "size_bytes": 12912,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0b92c794ab307433c63489444892cf0587d9affba52a406b004c7d602ac40a39",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例5_测试结果.docx",
+      "size_bytes": 13111,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a6214f9b4161bbda5ba87b6023a7a7c51a697a3d10d5fccd016827167978c156",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务7（GDPR 合规诊断）种子案例及测试结果/任务7_案例1_测试结果.docx",
+      "size_bytes": 13306,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "30742bc4ff49cb108decc0a772e7845cfff54658f865070b7f8df3c7483049cb",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务7（GDPR 合规诊断）种子案例及测试结果/任务7_案例2_测试结果.docx",
+      "size_bytes": 13257,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ed740ad118eb8d5429b8b8a208afe6025ef492d40efe516c921ea0eed12e20d4",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务7（GDPR 合规诊断）种子案例及测试结果/任务7_案例3_测试结果.docx",
+      "size_bytes": 13481,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "8a3b68680900e1b61ec5d79dc43aeae2d1cf05b89a48d56f5afc127471072988",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务7（GDPR 合规诊断）种子案例及测试结果/任务7_案例4_测试结果.docx",
+      "size_bytes": 13477,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0669e81fca738318e1f732086f07e291dc55749094ed35a68c0fd6957f43f77c",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务7（GDPR 合规诊断）种子案例及测试结果/任务7_案例5_测试结果.docx",
+      "size_bytes": 13620,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a9debbc208a7569a05af485b96055d380ec15998943e566eb2bc86e2efd275ce",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务8（BD ROD 判断）种子案例及测试结果/任务8_案例1_测试结果.docx",
+      "size_bytes": 12916,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "7d34e0b13c609d14914698807631109aee8649f9f00222d932075422b64976a7",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务8（BD ROD 判断）种子案例及测试结果/任务8_案例2_测试结果.docx",
+      "size_bytes": 12713,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "fcd3de52b4dd7b06046395496896fee94ceb7b24fef7715a51a169ed59a28065",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务8（BD ROD 判断）种子案例及测试结果/任务8_案例3_测试结果.docx",
+      "size_bytes": 12846,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "510426b91ff15a65207c763cbdd20a6fdc23c95c78b6d0efc2cb6c6b466e26cc",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务8（BD ROD 判断）种子案例及测试结果/任务8_案例4_测试结果.docx",
+      "size_bytes": 12902,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "c0bae122ba6028b476c0a6b91b7b91788cc11f07d157da4878e24ef1ed65ec78",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/2.欧盟法域任务的种子案例及测试结果/任务8（BD ROD 判断）种子案例及测试结果/任务8_案例5_测试结果.docx",
+      "size_bytes": 13268,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "9153d213092c7b44301ea599f268634902b2f2aed0901b5bca9b836940c7f5eb",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例1_测试结果.docx",
+      "size_bytes": 14496,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "8a377d1267d2603b28e3103b43b6904e1873a8a275d67314c5a351b91714d927",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例2_测试结果.docx",
+      "size_bytes": 13161,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "0648cdafea3a12f0157d98f19e2e566e7f01a7b5807fed2b047a6097da35a8c5",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例3_测试结果.docx",
+      "size_bytes": 13210,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2c0f470625ad486dd0d46f4572198dafb81841d91585b15f11cba31bc31d8391",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例4_测试结果.docx",
+      "size_bytes": 13489,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "a3d2cc0eff851be0ee61bd8ae8a0829e1261e5015513ca9d51948ad7cd714b20",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例5_测试结果.docx",
+      "size_bytes": 14136,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "cd18b60ca97bc7d3a02a5a51f006dec2a7860da9e049c0725429bd342c3832d8",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例1_测试结果.docx",
+      "size_bytes": 14570,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "1d5cded888f345ef656ba6c915d1620c31746ea3dac0c257ed319a49ff72596e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例2_测试结果.docx",
+      "size_bytes": 12605,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "ccc838ffff96547c7dc53986ad46dac21db08d1db22af2bdc75fd2483a565b9e",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例3_测试结果.docx",
+      "size_bytes": 12381,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "51cf1fb527781617e08e256550ab5f186496d13b1e4f16c51517fcda8423d655",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例4_测试结果.docx",
+      "size_bytes": 12374,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "2d69239fcc78aa8ffb4b05d58ed7688ac4b20f28cf83508f82c060488df0d353",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/3.美国法域任务的种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例5_测试结果.docx",
+      "size_bytes": 12895,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sha256": "1d154fd53b7ab4321d10366ec1230c65bb201e59465bd47e1445a8b2a0769221",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "数规通黄金标准与种子案例/种子案例及测试结果/测试案例及测试分数汇总表.xlsx",
+      "size_bytes": 11934,
+      "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "sha256": "c98e9fe9fe2fb0174e723d698c00c8b74f136a26849d9c3d18efaa41ca610086",
+      "asset_class": "unknown",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/.DS_Store",
+      "size_bytes": 12292,
+      "mime_type": "application/octet-stream",
+      "sha256": "71f1d83a6d9d9771b09bae2f70409a841e59894cfa0981f84b7b7e2b2e1bb057",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/.DS_Store",
+      "size_bytes": 6148,
+      "mime_type": "application/octet-stream",
+      "sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/A01_Personal Data Protection Act 2012_个人数据保护法_现行整合文本_2025-12-05起适用.pdf",
+      "size_bytes": 461395,
+      "mime_type": "application/pdf",
+      "sha256": "0e996ae99839f19e27f97024692e090197cf44a14709f93cd74a7d2efc1476db",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/A02_Personal Data Protection Regulations 2021_个人数据保护条例_含跨境传输规则_现行整合文本.pdf",
+      "size_bytes": 185521,
+      "mime_type": "application/pdf",
+      "sha256": "d55d2b407562b656d9ab92ce16386920e052aa3d7c91fb7d8541af8e86c20ed7",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/A03_Personal Data Protection (Notification of Data Breaches) Regulations 2021_数据泄露通知条例_现行整合文本.pdf",
+      "size_bytes": 122888,
+      "mime_type": "application/pdf",
+      "sha256": "a6d3cde85aa4f6913fa7bcc584ef2a95848b3868f14cf05e8d2cec0fd08a131a",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/A04_Personal Data Protection (Enforcement) Regulations 2021_执法条例_现行整合文本.pdf",
+      "size_bytes": 104171,
+      "mime_type": "application/pdf",
+      "sha256": "e5541a516c3e593fe20c3abf70b1623ce0ddb5b19962878a2d550dc730ad047a",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/B01_Cybersecurity Act 2018_网络安全法_现行整合文本.pdf",
+      "size_bytes": 444813,
+      "mime_type": "application/pdf",
+      "sha256": "61d393108172968b0862eada75c65902c8dd7e2b38868da736809fc3d6ebcb01",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/B02_Cybersecurity (Providers of Essential Service Responsible for Cybersecurity of Third-Party-Owned Critical Information Infrastructure) Regulations 2026_第三方所有关键信息基础设施条例.pdf",
+      "size_bytes": 110520,
+      "mime_type": "application/pdf",
+      "sha256": "3a47cc1531852bbd5bbd22f92d7bbefe51b0cc898f684021fb12b42aca63fe06",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/新加坡相关法规目录.html",
+      "size_bytes": 7557,
+      "mime_type": "text/html",
+      "sha256": "a9d9eb8d7d397525872a13345335a91b6c1e26573641cd1a885ebd17e9332b61",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/新加坡/新加坡相关法规目录.md",
+      "size_bytes": 7557,
+      "mime_type": "application/octet-stream",
+      "sha256": "a9d9eb8d7d397525872a13345335a91b6c1e26573641cd1a885ebd17e9332b61",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/.DS_Store",
+      "size_bytes": 6148,
+      "mime_type": "application/octet-stream",
+      "sha256": "920c3fa14de7396f63f78bf1732a2ed7f30b7f43c0792375c08a26bae1572914",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/.DS_Store",
+      "size_bytes": 6148,
+      "mime_type": "application/octet-stream",
+      "sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A01_个人信息保护法_日本e-Gov官方PDF_现行版.pdf",
+      "size_bytes": 397974,
+      "mime_type": "application/pdf",
+      "sha256": "3b5f1d56abe0d2c43e5297d76b515090153187f7193283e92c9c3e09d472111f",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A02_个人信息保护法施行令_日本e-Gov官方.pdf",
+      "size_bytes": 218947,
+      "mime_type": "application/pdf",
+      "sha256": "d504f69ca68839fac3690f209979b64824406c9163457b5bcd5f311a4f50a056",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A03_个人信息保护法施行规则_日本e-Gov官方.pdf",
+      "size_bytes": 551212,
+      "mime_type": "application/pdf",
+      "sha256": "a43f1d841574f118243219a07c4d2941404a2c185cc91e73c2be25eeb01eedac",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A04_个人信息保护基本方针_日本政府PPC官方PDF.pdf",
+      "size_bytes": 346932,
+      "mime_type": "application/pdf",
+      "sha256": "2fb1bf2a44f42d3ffae5547cee85fe30b8eb58c5b1ce4914fd1185f006225a14",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A05_个人信息保护法指引（通则）_PPC官方PDF_2026-06-14施行.pdf",
+      "size_bytes": 1503962,
+      "mime_type": "application/pdf",
+      "sha256": "0d8b670c90f2e26815b430234e3218a7220819bb7037b0a7116fe61225a76977",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A06_境外第三方提供指引_PPC官方PDF_2025-12修订.pdf",
+      "size_bytes": 445584,
+      "mime_type": "application/pdf",
+      "sha256": "d97bdffaba32f1f72d72316fb1b3ae16a1fe007694aa351b2489ae6bb1ed0d5b",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/A07_欧盟英国充分性接收数据补充规则_PPC官方PDF.pdf",
+      "size_bytes": 151197,
+      "mime_type": "application/pdf",
+      "sha256": "a58ece9db17a29d8df30b2f5fa2edc4c6484d91188de7feadb84a746a1d4bea1",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/B01_1_网络安全基本法_日本e-Gov官方 2026年10月1日失效.pdf",
+      "size_bytes": 168354,
+      "mime_type": "application/pdf",
+      "sha256": "7063ddd881ab54b29c3ce4615a40a205debb485d5c1f0a48956478906996be66",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日本/B01_2_网络安全基本法_日本e-Gov官方 2026年10月1日生效.pdf",
+      "size_bytes": 166297,
+      "mime_type": "application/pdf",
+      "sha256": "276038880859bc5c398182a8068fdb7d9a3fcb1d235ed08a576c4d2009a7b12e",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日韩相关法规目录.html",
+      "size_bytes": 9037,
+      "mime_type": "text/html",
+      "sha256": "d83923365ac2c8361410f9b892743e4adf4ddc34db171dc064442104c3b4e214",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/日韩相关法规目录.md",
+      "size_bytes": 9037,
+      "mime_type": "application/octet-stream",
+      "sha256": "d83923365ac2c8361410f9b892743e4adf4ddc34db171dc064442104c3b4e214",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/.DS_Store",
+      "size_bytes": 6148,
+      "mime_type": "application/octet-stream",
+      "sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A01_个人信息保护法_国家法令信息中心官方PDF_现行版.pdf",
+      "size_bytes": 292548,
+      "mime_type": "application/pdf",
+      "sha256": "b646d5b517fa652a577d0fd68aada5487627b2d8d41be983643fa90ced0d0a1f",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A02_个人信息保护法施行令_国家法令信息中心官方PDF_2026-05-19.pdf",
+      "size_bytes": 313997,
+      "mime_type": "application/pdf",
+      "sha256": "151c0328215aa24590f5699b0923fe5a21434e278173966a7c9f518a658bc0ed",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A03_个人信息跨境转移运行等规定_国家法令信息中心官方.pdf",
+      "size_bytes": 290044,
+      "mime_type": "application/pdf",
+      "sha256": "3904f94e6472b7c5ce4d24c9102e99b16d394dd0d325816b551d54ec0a7b6a95",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A04_1_个人信息安全措施标准_附表_风险降低保护措施示例_PIPC官方附件_2026-07-01.pdf",
+      "size_bytes": 59602,
+      "mime_type": "application/pdf",
+      "sha256": "9a2a191cd6011c26b6efb4d73c91ed4ec3309b01af3c8a495a9d1166cdd70a47",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A04_2_个人信息安全措施标准_正文_PIPC官方附件_2026-07-01.pdf",
+      "size_bytes": 113985,
+      "mime_type": "application/pdf",
+      "sha256": "f1565c46f950087ce5a62c3c1826bd9fb8a655b39c7d8dec9fdae3513212eaca",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/A06_标准个人信息保护指针_PIPC官方PDF_2025-04-11.pdf",
+      "size_bytes": 380607,
+      "mime_type": "application/pdf",
+      "sha256": "b133d05116c32818a9a50c5123c91ee9a5423b419edb2258521d436002256a06",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/日韩/韩国/B01_信息通信基础保护法(法律)(第20068号)_2025-01-24.pdf",
+      "size_bytes": 123757,
+      "mime_type": "application/pdf",
+      "sha256": "8b6f4c6c38b55170b62bdabe076d84e3a1e095ad2f491787cea075a925e01ff2",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/.DS_Store",
+      "size_bytes": 6148,
+      "mime_type": "application/octet-stream",
+      "sha256": "d8c026c94d7fdd394ebfc485a93f5f03eeb8d59d0d4d52390a1cfd1836860b8f",
+      "asset_class": "noise",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/台湾/A01_《个人资料保护法》_官方最新公布文本_含尚未生效条文提示.pdf",
+      "size_bytes": 256861,
+      "mime_type": "application/pdf",
+      "sha256": "850702e5cd61d3f9d83ec885e2b70f23c0c2e8ccf492eb47065353b1965cf286",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/台湾/A02_《个人资料保护法部分条文修正对照表》_2025年11月11日公布_尚未施行.pdf",
+      "size_bytes": 417780,
+      "mime_type": "application/pdf",
+      "sha256": "524565728568c389da647d4598761cac3ea494c3ca2367fe20f4ac2ac229d8e9",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/台湾/A03_《个人资料保护法施行细则》_官方现行版_2016年3月2日修正.pdf",
+      "size_bytes": 192007,
+      "mime_type": "application/pdf",
+      "sha256": "83520269d858f97b5a0c556809c6c836d48064117487d2abf610941162bc1831",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/台湾/B01_《资通安全管理法》_2025年9月24日修正_2025年12月1日施行.pdf",
+      "size_bytes": 204950,
+      "mime_type": "application/pdf",
+      "sha256": "6a03a50537b13cfec2be47e88b6b345ac27a919c345ac3676298868d14da8d82",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/台湾/B02_《资通安全管理法施行细则》_2026年1月5日修正版.pdf",
+      "size_bytes": 182793,
+      "mime_type": "application/pdf",
+      "sha256": "792aa37ae956dbf5a567fec926e7de60f9fb4206c813a8169ea0ca87252ed717",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/港澳台相关法规目录.html",
+      "size_bytes": 19318,
+      "mime_type": "text/html",
+      "sha256": "5de4882759175845f06da7e23e0ff1c98055c358f1a879876c809d197aadc6d7",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/港澳台相关法规目录.md",
+      "size_bytes": 19318,
+      "mime_type": "application/octet-stream",
+      "sha256": "5de4882759175845f06da7e23e0ff1c98055c358f1a879876c809d197aadc6d7",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/澳门/A01_第8-2005号法律《个人资料保护法》_中葡双语官方公报版.pdf",
+      "size_bytes": 315114,
+      "mime_type": "application/pdf",
+      "sha256": "d4d797b1a6a7f15d428b69088d3fd3264a822f35c7d4c9548ac1735df05f125e",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/澳门/A02_《粤港澳大湾区（内地、澳门）个人信息跨境流动标准合同实施指引》_含标准合同附件_2024年9月.pdf",
+      "size_bytes": 628468,
+      "mime_type": "application/pdf",
+      "sha256": "626876cb5466ea0a9f227a7b1b6dc7f439d65735645a73e896e0fedc09130540",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/澳门/B01_第13-2019号法律《网络安全法》_中葡双语官方公报版.pdf",
+      "size_bytes": 953748,
+      "mime_type": "application/pdf",
+      "sha256": "fdb1553c9bc2cc702432caccb4853bbd1443c3715e1245f2438efb531b2626ae",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/A01_《個人資料（私隱）條例》（第486章）_香港电子法例现行数据转制PDF_版本日期2022-10-01.pdf",
+      "size_bytes": 2452809,
+      "mime_type": "application/pdf",
+      "sha256": "a7c6034811706a14e965fdc734ce10275f8ff7069e8a4a1b403c81ca4337cbb7",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/A02_《保障個人資料：跨境資料轉移指引》_2014年12月_监管指引.pdf",
+      "size_bytes": 548424,
+      "mime_type": "application/pdf",
+      "sha256": "e6d46abcddc66afe15e5768947dc9fdf5f5aa433f6853a0deecea3c042cbd4b4",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/A03_《跨境資料轉移指引：建議合約條文範本》_2022年5月_监管指引.pdf",
+      "size_bytes": 573299,
+      "mime_type": "application/pdf",
+      "sha256": "56a3fa07fbfa37f5a4ee2e5861fdbda2e367c48ef15f425b40fd6af66b8b0ae2",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/A04_《粤港澳大湾区（内地、香港）个人信息跨境流动标准合同实施指引》_含标准合同附件_2023年12月.pdf",
+      "size_bytes": 813540,
+      "mime_type": "application/pdf",
+      "sha256": "05b0b8ae31a56c3244885f7079a7b4c4c6b45c40768dc8e32583e189dbc51d22",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/A05_《跨境资料转移指引_粤港澳大湾区（内地、香港）个人信息跨境流动标准合同》_2023年12月_监管指引.pdf",
+      "size_bytes": 743468,
+      "mime_type": "application/pdf",
+      "sha256": "c4fd0dfdbb2934e613de71b43260e5f14572434be7c51bfe4cf91f369035dac6",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/B01_《保护关键基础设施（电脑系统）条例》（第653章）_香港电子法例现行数据转制PDF_2026年1月1日生效.pdf",
+      "size_bytes": 3488042,
+      "mime_type": "application/pdf",
+      "sha256": "06b81c4810571264b46561d364642147752a8ba510af6df838a6a182f211a17e",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/港澳台/香港/B02_第653章《实务守则（通用）》_2026年第1版_限指定营运者适用.pdf",
+      "size_bytes": 1105043,
+      "mime_type": "application/pdf",
+      "sha256": "bd72093c3affa445b28a1d5c41786518d313ad7310dfdcc40b4132f5e157f61f",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/A01_Law on Personal Data Protection 2025_个人数据保护法_91-2025-QH15.pdf",
+      "size_bytes": 1113153,
+      "mime_type": "application/pdf",
+      "sha256": "c3b87f994cedcedb69d38c590dcca2bb7700aab65e518a2a3a5ffbf22048b9ee",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/A02_Decree No. 356-2025-ND-CP_个人数据保护法实施法令.pdf",
+      "size_bytes": 2357540,
+      "mime_type": "application/pdf",
+      "sha256": "5b36a060c22db1df6c32b8c66da63b0c36571a1f7fa01765e719baac215b6c12",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/A03_Law on Data 2024_数据法_60-2024-QH15.pdf",
+      "size_bytes": 373063,
+      "mime_type": "application/pdf",
+      "sha256": "d77fc7c76798697a4ee95c2e72d2c942d473f3a32947d752e51de398237af446",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/A04_Decree No. 165-2025-ND-CP_数据法实施法令.pdf",
+      "size_bytes": 1849028,
+      "mime_type": "application/pdf",
+      "sha256": "bc762ade38f00e52054881d2216e7fea4037e1dade8d16276e7c527693ef5e28",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/A05_Decision No. 20-2025-QD-TTg_重要数据和核心数据目录.pdf",
+      "size_bytes": 380950,
+      "mime_type": "application/pdf",
+      "sha256": "56258777329df0e2950d572f8b7d83c842cc1f01b57e6662e6b3c25968059c43",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/B01_Law on Cybersecurity 2025_网络安全法_116-2025-QH15.pdf",
+      "size_bytes": 17202411,
+      "mime_type": "application/pdf",
+      "sha256": "eded93a3e2820913c6d0801a24977b4588d65c7da1838a952e43faed9af78b08",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/越南相关法规目录.html",
+      "size_bytes": 7421,
+      "mime_type": "text/html",
+      "sha256": "0a969413d6b6222f7177fb702250425cff71ba99cf2f5ec15a6e69490bda2d38",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/越南/越南相关法规目录.md",
+      "size_bytes": 7421,
+      "mime_type": "application/octet-stream",
+      "sha256": "0a969413d6b6222f7177fb702250425cff71ba99cf2f5ec15a6e69490bda2d38",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/A01_Personal Data Protection Act 2010_个人数据保护法_基础法官方文本_2022版.pdf",
+      "size_bytes": 911260,
+      "mime_type": "application/pdf",
+      "sha256": "435547a3a9d9a1e9e264f46cc2a44bf8afa8bf94c234224d8e7710cf74b589c4",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/A02_Personal Data Protection (Amendment) Act 2024_个人数据保护修正法_全条已生效.pdf",
+      "size_bytes": 247482,
+      "mime_type": "application/pdf",
+      "sha256": "31fc86fad3910515a23c68d28bd254454cc4a4ea29dcdc2f49fdefdee90d1e95",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/A03_Personal Data Protection (Amendment) Act 2024_Appointment of Date of Coming into Operation_生效日期公告_PU(B)522.pdf",
+      "size_bytes": 124722,
+      "mime_type": "application/pdf",
+      "sha256": "9da036eb7b5fac89a41fe68e5ef331f4f6e45d65032713c05667820fff86210e",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/A04_Personal Data Protection Regulations 2013_个人数据保护条例_PU(A)335.pdf",
+      "size_bytes": 683960,
+      "mime_type": "application/pdf",
+      "sha256": "65fcaeb57f3c6d64fb3d60d07588a143708b482146aa1700e8de5ab4ddcd72fe",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/A05_Personal Data Protection Standard 2015_个人数据保护标准_现行法定标准.pdf",
+      "size_bytes": 1275190,
+      "mime_type": "application/pdf",
+      "sha256": "6cca1f79170950995a744aeafbd4da114fa1b81d1d981c3e9edf3847ae9df84d",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/B01_Cyber Security Act 2024_网络安全法_Act854.pdf",
+      "size_bytes": 485588,
+      "mime_type": "application/pdf",
+      "sha256": "8e078ceebaa8677ee71659183891844bf2315d01410f13c8c2e928035e3dcfba",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/B02_Cyber Security (Notification of Cyber Security Incident) Regulations 2024_网络安全事件通知条例_PU(A)220.pdf",
+      "size_bytes": 176567,
+      "mime_type": "application/pdf",
+      "sha256": "843b499403aee7a9c4878543f443ff0d8126120ef4e8a48c7b61eb635cdcb012",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/B03_Cyber Security (Period for Cyber Security Risk Assessment and Audit) Regulations 2024_网络安全风险评估和审计期限条例_PU(A)219.pdf",
+      "size_bytes": 412376,
+      "mime_type": "application/pdf",
+      "sha256": "bdc1280f0e9783ff9e51e7905f3b937b0bff7f8c3f708a664080ffb2aa48f923",
+      "asset_class": "legal_source_candidate",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/马来西亚相关法规目录.html",
+      "size_bytes": 8225,
+      "mime_type": "text/html",
+      "sha256": "b5afd6093438830d8c1936b81b9553cf0a9578b57851736d691bb80425d3f8e1",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    },
+    {
+      "path": "知识库补充/马来西亚/马来西亚相关法规目录md.md",
+      "size_bytes": 8225,
+      "mime_type": "application/octet-stream",
+      "sha256": "b5afd6093438830d8c1936b81b9553cf0a9578b57851736d691bb80425d3f8e1",
+      "asset_class": "index_catalog",
+      "disposition": "pending_review"
+    }
+  ]
+}

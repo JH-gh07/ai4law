@@ -40,6 +40,22 @@ class PIPIAEmergencyPlan(BaseModel):
     escalation_path: str = Field(min_length=2)
 
 
+class PIPIAPathEvidence(BaseModel):
+    recipient_notice_complete: bool | None = None
+    sensitive_information_classification_confirmed: bool | None = None
+    consent_evidence_complete: bool | None = None
+    scc_required_clauses_complete: bool | None = None
+    hr_rules_lawfully_adopted: bool | None = None
+    employee_handbook_has_explicit_cross_border_terms: bool | None = None
+    collective_agreement_has_explicit_cross_border_terms: bool | None = None
+    recipient_privacy_policy_provided: bool | None = None
+    certification_body_china_recognized: bool | None = None
+    certification_legal_obligation_citation_provided: bool | None = None
+    contract_governing_law: str = ""
+    contract_exclusive_jurisdiction: str = ""
+    china_data_subject_rights_terms_present: bool | None = None
+
+
 class PIPIAAttachment(BaseModel):
     file_role: Literal["scc_contract", "certification_material", "internal_policy", "supporting_evidence"]
     file_name: str = Field(min_length=1)
@@ -56,6 +72,7 @@ class PIPIARequest(BaseModel):
     personal_info_scope: PIPIAPersonalInfoScope
     rights_protection: PIPIARightsProtection
     emergency_plan: PIPIAEmergencyPlan
+    path_evidence: PIPIAPathEvidence = Field(default_factory=PIPIAPathEvidence)
     attachments: list[PIPIAAttachment] = Field(min_length=1)
 
 
@@ -79,6 +96,7 @@ class PIPIAResult(BaseModel):
     output_files: dict[str, str] = Field(default_factory=dict)
     route_type: str
     risk_level: str
+    legal_basis: list[str] = Field(default_factory=list)
     chapters: list[PIPIAChapter]
     consistency_issues: list[str]
     attachment_notes: list[str] = Field(default_factory=list)

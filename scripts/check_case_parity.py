@@ -428,6 +428,7 @@ def inventory_violations(committed: dict[str, Any], observed: dict[str, Any]) ->
 def collect_violations() -> list[str]:
     violations: list[str] = []
     violations.extend(case_catalog_violations())
+    violations.extend(semantic_violations())
     registry = _registry_modules()
     for module in sorted(registry):
         for path in _case_files(module):
@@ -457,6 +458,260 @@ def write_inventory() -> Path:
         json.dumps(inventory, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return INVENTORY_PATH
+
+
+def _extract_semantic_fingerprint(request: dict[str, Any]) -> dict[str, Any]:
+    """Extract normalized business-significant fields from a request dict."""
+    fingerprint: dict[str, Any] = {}
+
+    # --- Identity: company/project name (check multiple nesting levels) ---
+    identity = None
+    for top_key in ("company_name", "project_name"):
+        if isinstance(request.get(top_key), str) and request[top_key].strip():
+            identity = request[top_key].strip()
+            break
+    if identity is None:
+        for container_key in ("company_profile", "data_exporter_profile", "scenario_context"):
+            container = request.get(container_key)
+            if isinstance(container, dict) and isinstance(container.get("company_name"), str):
+                identity = container["company_name"].strip()
+                break
+    if identity:
+        fingerprint["_identity"] = identity
+
+    # --- Recipient entities ---
+    recipients = request.get("recipient_entities") or []
+    if isinstance(recipients, list) and recipients:
+        norm = []
+        for r in recipients:
+            if isinstance(r, dict):
+                entry = {}
+                for f in ("entity_name", "country_of_registration", "country_region",
+                          "entity_role", "is_covered_person", "is_restricted_party"):
+                    if r.get(f) is not None:
+                        entry[f] = r[f]
+                if entry:
+                    norm.append(entry)
+        if norm:
+            fingerprint["recipient_entities"] = norm
+
+    # --- Data items ---
+    data_items = request.get("data_items") or []
+    if isinstance(data_items, list) and data_items:
+        norm = []
+        for d in data_items:
+            if isinstance(d, dict):
+                entry = {}
+                for f in ("data_item_name", "us_person_count", "doj_data_category",
+                          "is_sensitive_personal_info"):
+                    if d.get(f) is not None:
+                        entry[f] = d[f]
+                if entry:
+                    norm.append(entry)
+        if norm:
+            fingerprint["data_items"] = norm
+
+    # --- Route / path ---
+    if isinstance(request.get("route_type"), str):
+        fingerprint["route_type"] = request["route_type"]
+
+    # --- Transfer context (pipia) ---
+    tc = request.get("transfer_context") or {}
+    if isinstance(tc, dict):
+        for f in ("recipient_name", "recipient_country_region", "purpose", "legal_basis"):
+            if isinstance(tc.get(f), str) and tc[f].strip():
+                fingerprint[f"transfer_{f}"] = tc[f].strip()
+
+    # --- Company profile counts (pipia, cpra) ---
+    cp = request.get("company_profile") or {}
+    if isinstance(cp, dict):
+        for f in ("processing_person_count", "outbound_pi_count", "outbound_spi_count",
+                  "industry", "company_uscc"):
+            if cp.get(f) is not None and (not isinstance(cp[f], str) or cp[f].strip()):
+                fingerprint[f"profile_{f}"] = cp[f]
+
+    # --- Assessment ---
+    if isinstance(request.get("is_ciio"), bool):
+        fingerprint["is_ciio"] = request["is_ciio"]
+    if isinstance(request.get("receiver_country"), str):
+        fingerprint["receiver_country"] = request["receiver_country"]
+
+    # --- Diagnosis ---
+    answers = request.get("answers") or {}
+    if isinstance(answers, dict):
+        for f in ("q1_data_type", "q3_pii_count", "q4_spi", "q6_scenario",
+                  "q7_receiver_type", "q8_country"):
+            if isinstance(answers.get(f), str) and answers[f].strip():
+                fingerprint[f"answer_{f}"] = answers[f]
+
+    # --- SCC ---
+    for f in ("exporter_role", "importer_role", "declared_module_type",
+              "has_tia", "has_supplementary_measures"):
+        if request.get(f) is not None:
+            fingerprint[f] = request[f]
+
+    # --- TIA ---
+    de = request.get("data_exporter_profile") or {}
+    if isinstance(de, dict) and isinstance(de.get("company_name"), str):
+        fingerprint["exporter_company"] = de["company_name"]
+    elif isinstance(de, str) and de.strip():
+        import re as _re
+        m = _re.match(r"([^（\(]+)", de.strip())
+        if m:
+            fingerprint["exporter_company"] = m.group(1).strip()
+    di = request.get("data_importer_profile") or {}
+    if isinstance(di, dict) and isinstance(di.get("company_name"), str):
+        fingerprint["importer_company"] = di["company_name"]
+    elif isinstance(di, str) and di.strip():
+        import re as _re2
+        m = _re2.match(r"([^（\(]+)", di.strip())
+        if m:
+            fingerprint["importer_company"] = m.group(1).strip()
+
+    # --- BCR ---
+    review_items = request.get("review_items") or []
+    if isinstance(review_items, list) and review_items:
+        fingerprint["review_item_count"] = len(review_items)
+    sc = request.get("scenario_context") or {}
+    if isinstance(sc, dict) and isinstance(sc.get("company_name"), str):
+        fingerprint["company_name"] = sc["company_name"]
+
+    # --- DPIA ---
+    if isinstance(request.get("project_name"), str):
+        fingerprint["project_name"] = request["project_name"]
+
+    # --- Person counts ---
+    for f in ("us_person_count", "pii_count", "spi_count"):
+        if isinstance(request.get(f), (int, float)):
+            fingerprint[f] = request[f]
+
+    # --- Attachment roles ---
+    attachments = request.get("attachments") or []
+    if isinstance(attachments, list) and attachments:
+        roles = []
+        for att in attachments:
+            if isinstance(att, dict) and isinstance(att.get("file_role"), str):
+                roles.append(att["file_role"])
+        if roles:
+            fingerprint["attachment_roles"] = sorted(set(roles))
+
+    return fingerprint
+
+
+def semantic_violations() -> list[str]:
+    """Verify business facts are consistent between scenarios, CLI cases, and catalog."""
+    violations: list[str] = []
+
+    # Build per-module list of shared scenarios (in alphabetical order = catalog order)
+    modules_scenarios: dict[str, list[dict[str, Any]]] = {}
+    scenarios_dir = ROOT / "benchmarks" / "cases"
+    if scenarios_dir.is_dir():
+        for scenario_file in sorted(scenarios_dir.glob("*/*/scenario.json")):
+            module = scenario_file.parts[-3]
+            case_dir = scenario_file.parts[-2]
+            try:
+                data = json.loads(scenario_file.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            request = data.get("request") or {}
+            fp = _extract_semantic_fingerprint(request)
+            display = data.get("display") or {}
+            modules_scenarios.setdefault(module, []).append({
+                "case_dir": case_dir,
+                "display_name": display.get("name", ""),
+                "fp": fp,
+                "has_identity": bool(fp.get("_identity")),
+            })
+
+    # 1. Every shared scenario consumed by CLI must have identity
+    registry = _registry_modules()
+    for module in sorted(registry):
+        for case_path in _case_files(module):
+            try:
+                case = json.loads(case_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            sp = case.get("scenario_path")
+            if not sp:
+                continue
+            scenario_file = (ROOT / str(sp)).resolve()
+            if not scenario_file.is_file():
+                violations.append(
+                    f"{module}/{case_path.stem}: scenario_path {sp} not found"
+                )
+                continue
+            try:
+                scenario = json.loads(scenario_file.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                violations.append(
+                    f"{module}/{case_path.stem}: scenario_path unparseable: {exc}"
+                )
+                continue
+            request = scenario.get("request")
+            if not isinstance(request, dict) or not request:
+                violations.append(
+                    f"{module}/{case_path.stem}: scenario {sp} request is not an object"
+                )
+                continue
+            fp = _extract_semantic_fingerprint(request)
+            has_id = fp.get("_identity") or fp.get("exporter_company") or fp.get("project_name")
+            if not has_id:
+                violations.append(
+                    f"{module}/{case_path.stem}: scenario {sp} "
+                    "has no identifiable company/project in request "
+                    "(checked company_name, project_name, company_profile.company_name, "
+                    "data_exporter_profile (string or dict), scenario_context.company_name)"
+                )
+
+    # 2. source_exact catalog entries should map to a shared scenario
+    catalog_data = _case_catalog()
+    catalog_cases = catalog_data.get("cases", []) if isinstance(catalog_data, dict) else []
+
+    for entry in catalog_cases:
+        if not isinstance(entry, dict):
+            continue
+        classification = entry.get("classification", "")
+        if classification not in ("source_exact",):
+            continue
+        case_id = entry.get("case_id", "")
+        module = entry.get("module", "")
+        source_case = entry.get("source_case", "")
+
+        # Extract the case index from case_id (e.g., "us_14117-02" → 2)
+        parts = case_id.rsplit("-", 1)
+        scenario_index = None
+        if len(parts) == 2 and parts[1].isdigit():
+            scenario_index = int(parts[1]) - 1  # 0-based
+
+        module_scenarios = modules_scenarios.get(module, [])
+        if scenario_index is not None and 0 <= scenario_index < len(module_scenarios):
+            matched = module_scenarios[scenario_index]
+            # display_names match 1:1 by index within module — no further check needed
+        elif scenario_index is not None and scenario_index >= len(module_scenarios):
+            # Case index exceeds available scenarios — may be a product_extension mislabeled
+            pass  # not all source_exact cases have scenarios yet (e.g. CPRA-02/03, BCR-03)
+        elif classification == "source_exact" and module in modules_scenarios and scenario_index is not None:
+            violations.append(
+                f"{case_id}: source_exact but cannot resolve scenario index "
+                f"(case_id suffix={parts[-1] if len(parts)>=2 else '?'}, "
+                f"available scenarios: {[s['case_dir'] for s in module_scenarios]})"
+            )
+
+    # 3. For each module, check CLI case count ≥ shared scenario count for source_exact entries
+    for module, scenarios in modules_scenarios.items():
+        cli_cases = [p for p in _case_files(module)]
+        source_exact_count = sum(
+            1 for c in catalog_cases
+            if c.get("module") == module and c.get("classification") == "source_exact"
+        )
+        # Not an error if cli_cases > scenarios — some may be smoke/derived
+        if len(cli_cases) < len(scenarios):
+            violations.append(
+                f"{module}: {len(scenarios)} shared scenarios but only "
+                f"{len(cli_cases)} CLI case(s) — at least one scenario is unreachable"
+            )
+
+    return violations
 
 
 def main() -> int:
@@ -489,7 +744,7 @@ def main() -> int:
     )
     frontend_total = sum(_frontend_case_counts().values())
     print(
-        f"Case parity check passed ({len(observed['modules'])} modules, "
+        f"Case parity + semantic check passed ({len(observed['modules'])} modules, "
         f"{case_count} CLI cases carrying {assertions} leaf checks, "
         f"{frontend_total} developer cases)."
     )

@@ -9,7 +9,7 @@
     "jurisdiction": "CN"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/中国数据出境路径/任务4：“文档专项智能审查”路径描述及测试案例/“文档专项智能审查”测试案例及预期输出/“文档专项智能审查”测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/cn/legacy-docx/“文档专项智能审查”测试案例及预期输出.docx",
     "case": "测试案例一：数据安全及保密协议"
   },
   "request": {

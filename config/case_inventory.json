@@ -36,6 +36,10 @@
         {
           "case_id": "01_minimal",
           "assertions": 19
+        },
+        {
+          "case_id": "02_geolocation_yellow",
+          "assertions": 19
         }
       ],
       "frontend_cases": 2
@@ -45,7 +49,7 @@
       "cli_cases": [
         {
           "case_id": "01_minimal",
-          "assertions": 29
+          "assertions": 28
         }
       ],
       "frontend_cases": 3
@@ -109,7 +113,7 @@
         },
         {
           "case_id": "02_source_case_missing_scc",
-          "assertions": 28
+          "assertions": 33
         },
         {
           "case_id": "03_source_derived_scc_draft",
@@ -117,11 +121,11 @@
         },
         {
           "case_id": "04_hr_exemption",
-          "assertions": 23
+          "assertions": 30
         },
         {
           "case_id": "05_certification_eurocert",
-          "assertions": 23
+          "assertions": 30
         }
       ],
       "frontend_cases": 3

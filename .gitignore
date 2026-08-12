@@ -14,10 +14,12 @@ venv/
 **/node_modules/
 **/dist/
 **/build/
+frontend/public/pdfjs/
 **/.vite/
 **/*.tsbuildinfo
 **/coverage/
 **/playwright-report/
+**/playwright-results/
 **/test-results/
 
 # Local environment and credentials

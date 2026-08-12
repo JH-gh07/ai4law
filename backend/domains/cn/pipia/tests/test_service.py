@@ -7,6 +7,23 @@ from backend.domains.cn.pipia.schema import PIPIARequest
 from backend.domains.cn.pipia.service import PIPIAService
 
 
+def _scenario_payload(case_id: str) -> PIPIARequest:
+    import json
+
+    from pathlib import Path
+
+    scenario_paths = {
+        "scc": Path("benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json"),
+        "hr": Path("benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json"),
+        "certification": Path("benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json"),
+    }
+    document = json.loads(scenario_paths[case_id].read_text(encoding="utf-8"))
+    request = document["request"]
+    for attachment in request["attachments"]:
+        attachment["storage_uri"] = str(Path(attachment["storage_uri"]))
+    return PIPIARequest.model_validate(request)
+
+
 def test_pipia_generate_report(tmp_path: Path) -> None:
     attachment_path = tmp_path / "scc.txt"
     attachment_path.write_text("标准合同条款示例", encoding="utf-8")
@@ -132,3 +149,36 @@ def test_pipia_certification_without_materials_is_blocked(tmp_path: Path) -> Non
     assert any("certification_material" in gap for gap in result.material_gaps)
     assert any(issue["severity"] == "BLOCKER" for issue in result.issues)
     assert any("72 hours" in issue for issue in result.consistency_issues)
+
+
+def test_hr_evidence_drives_exemption_findings() -> None:
+    result = PIPIAService(llm_client=None).generate_report(_scenario_payload("hr"))
+
+    titles = {issue["title"] for issue in result.issues}
+    assert "跨境人力资源管理豁免条件待验证" in titles
+    assert "集体合同和员工手册条款不充分" in titles
+    assert "境外接收方政策不透明" in titles
+    assert "薪酬等敏感信息需特殊保护" in titles
+    assert result.risk_level == "MEDIUM"
+    assert result.legal_basis
+
+
+def test_scc_evidence_drives_source_findings() -> None:
+    result = PIPIAService(llm_client=None).generate_report(_scenario_payload("scc"))
+
+    titles = {issue["title"] for issue in result.issues}
+    assert "告知不充分" in titles
+    assert "敏感信息识别存疑" in titles
+    assert "同意记录不完整" in titles
+
+
+def test_certification_evidence_drives_path_findings() -> None:
+    result = PIPIAService(llm_client=None).generate_report(_scenario_payload("certification"))
+
+    titles = {issue["title"] for issue in result.issues}
+    assert "认证机构资质不符合中国个人信息保护认证要求" in titles
+    assert "合法性基础论证存在法律适用性争议" in titles
+    assert "法律文件管辖条款对中国个人信息主体维权构成障碍" in titles
+    assert result.risk_level == "HIGH"
+    assert result.filing_readiness.status == "blocked"
+    assert result.legal_basis

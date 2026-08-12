@@ -42,12 +42,19 @@
     },
     "list_contains": {
       "issues[].title": [
-        "缺少标准合同备案核心材料"
+        "缺少标准合同备案核心材料",
+        "告知不充分",
+        "敏感信息识别存疑",
+        "同意记录不完整"
       ],
       "material_gaps": [
         "scc_contract"
       ]
     },
+    "legal_basis_contains": [
+      "个人信息保护法",
+      "个人信息出境标准合同办法"
+    ],
     "output_roles_contains": [
       "markdown",
       "docx",

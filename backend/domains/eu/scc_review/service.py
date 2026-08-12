@@ -1,5 +1,14 @@
 """EU SCC service — WorkflowPipeline orchestration for SCC compliance review."""
-
+#文件叫做 service.py是因为它是一个服务层的模块，负责处理与欧盟标准合同条款（EU SCC）相关的业务逻辑和工作流。这个模块主要用于协调不同的组件和流程，以实现对SCC合规性的审查和报告生成。
+#比如，它可能会处理以下任务：
+#1. 接收和解析SCC文档。
+#2. 调用规则引擎进行合规性检查。
+#3. 生成审查报告，包括发现的问题、风险分析和建议。
+#4. 与LLM（大语言模型）交互，以生成更详细的分析和解释。
+#5. 管理异步任务的状态，并提供API接口以查询任务进度和结果。
+#6. 将生成的报告保存到文件系统或云存储中，并生成相关的URL供用户访问。
+#7. 提供API接口以启动和查询SCC审查任务。
+#这个模块可能会使用到其他模块中的类和函数，比如LLMClient、CitationRegistry、FileParser、DocxComment等，以实现其功能。
 from __future__ import annotations
 
 import json

@@ -35,7 +35,7 @@ from pathlib import Path
 from docx import Document
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = ROOT / "resources/new/数规通黄金标准与种子案例/种子案例及测试结果"
+SRC_DIR = ROOT / "benchmarks/datasets/seed-cases-v1/_source"
 OUT_DIR = ROOT / "benchmarks/datasets/seed-cases-v1"
 
 MARK_INPUT = "一、用户输入"

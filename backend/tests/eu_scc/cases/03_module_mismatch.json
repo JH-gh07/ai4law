@@ -3,5 +3,5 @@
   "description": "EU SCC正式案例三—荷兰处理者向塞尔维亚子处理者传输，文档错误选择Module Two且上游控制者信息缺失",
   "scenario_path": "benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json",
   "expected_path": "benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/expected.json",
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx"
+  "source_doc_path": "benchmarks/source-materials/eu/legacy-docx/“SCC审查”测试案例及预期输出.docx"
 }

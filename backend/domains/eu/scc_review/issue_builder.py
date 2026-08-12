@@ -15,7 +15,8 @@ EU_SCC_CHAPTER_KEYS: dict[str, str] = {
 
 
 def _issue(issue_id, title, description, category, severity, fact_refs, rule_refs, recommended_action, affects_outputs) -> IssueItem:
-    if not (recommended_action or "").strip():
+    # Guard: ensure recommended_action is never empty (Pydantic min_length=1 constraint)
+    if not recommended_action or not str(recommended_action).strip():
         recommended_action = (
             "针对发现的问题进行详细评估，根据 SCC 标准条款和适用法规完成合规整改，"
             "并在补充条款中明确双方责任与保障措施。"
@@ -104,5 +105,16 @@ def build_eu_scc_issues(
             "保持季度复审，监控法规更新和子处理者变更。",
             ["overall_rating"],
         ))
+
+    # Defense-in-depth: ensure no issue has empty recommended_action
+    # (protection against stale bytecode or future code paths that
+    #  construct IssueItem without going through _issue())
+    _DEFAULT_ACTION = (
+        "针对发现的问题进行详细评估，根据 SCC 标准条款和适用法规完成合规整改，"
+        "并在补充条款中明确双方责任与保障措施。"
+    )
+    for issue in issues:
+        if not issue.recommended_action or not issue.recommended_action.strip():
+            issue.recommended_action = _DEFAULT_ACTION
 
     return issues

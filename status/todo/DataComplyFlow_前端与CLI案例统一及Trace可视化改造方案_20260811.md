@@ -1,7 +1,7 @@
 # DataComplyFlow 前端与 CLI 案例统一及 Trace 可视化改造方案
 
 > 制定日期：2026-08-11
-> 状态：实施中，仅限本地；阶段 3 已完成 EO 14117 红/黄/绿、EU SCC 三条和 TIA 两条正式案例共享，PIPIA 等其他模块仍在迁移
+> 状态：实施中，仅限本地；共享 Scenario 已覆盖 11 个模块，PIPIA 三条正式场景已完成本地 HTTP/SSE/报告/PDF canvas 链路验收，其他模块和生产模型内容质量仍在验收
 > 继承并修正：`status/todo/DataComplyFlow_案例体系统一与强断言方案_20260806.md`
 > 业务资料依据：
 > - `resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/`
@@ -294,7 +294,9 @@ EU SCC 迁移同时修复了两个不能由案例文件绕过的前端逻辑问�
 
 EU SCC 规则引擎还增加了 Annex I.B 下游位置披露检查：完整传输链识别到非充分性国家，但 Annex I.B 未写明最终处理或存储国家时，必须产生 `annex_incomplete`，不能只在说明性预期中记录。
 
-PIPIA 已完成第一项前置修复：前端不再因为选择标准合同路径就强制把每份附件标成 `scc_contract`。正式案例说明、员工手册、隐私政策等可以诚实以 `supporting_evidence` 或 `internal_policy` 上传；后端据此判断是否实际缺少标准合同或认证材料。当前正式案例覆盖盘点为：案例一已有后端来源案例，案例三已有前端案例但缺 CLI 同源，案例二 HR 豁免尚不在现有路径契约范围内；三者均不能与 smoke 或派生测试混算。
+PIPIA 共享案例阶段已完成：前端不再因为选择标准合同路径就强制把每份附件标成 `scc_contract`；标准合同、HR 豁免和认证三条路径均通过 `PIPIAPathEvidence` 结构化表达，后端输出路径专属风险和备案准备度，前端 builder 可逆重建 `scenario.request`。三条案例均登记为 `source_derived`，并记录正式来源、派生原因、fixture/来源哈希和正式预期。
+
+2026-08-12 本地验收新增并确认：前端必须先完成自身异步轮询和产物回写，再截取报告证据；附件数量、角色、格式和上传文件名后缀均纳入请求语义门禁。原生 iframe PDF 已替换为按需加载的 `pdfjs-dist@5.4.624` canvas 查看器，包含本地 worker、CMap、标准字体资源和分页控件；三条 PIPIA 案例的 HTTP、SSE、正文、PDF canvas 和引用链路通过。详见 `status/check/DataComplyFlow_PIPIA共享案例与浏览器本地验收_20260812.md`。浏览器专用确定性 LLM 仅验证链路，生产模型内容质量仍需独立验收。
 
 ### 阶段 4：重建 CLI 案例和强断言
 

@@ -9,7 +9,7 @@
     "jurisdiction": "EU"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：\"TIA草案生成\"路径描述及测试案例/\"TIA草案生成\"测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/eu/legacy-docx/\"TIA草案生成\"测试案例及预期输出.docx",
     "case": "测试案例一：欧盟公司使用美国SaaS服务（高风险目的地）"
   },
   "request": {
@@ -26,10 +26,18 @@
       "exporter_role": "controller",
       "importer_role": "processor",
       "transfer_purpose": "CRM SaaS hosting, sales process management and business analytics",
-      "data_categories": ["crm_data", "contact_information", "transaction_records", "communication_content"],
+      "data_categories": [
+        "crm_data",
+        "contact_information",
+        "transaction_records",
+        "communication_content"
+      ],
       "has_special_category_data": false,
       "special_category_types": [],
-      "data_subjects": ["customers", "prospective customers"],
+      "data_subjects": [
+        "customers",
+        "prospective customers"
+      ],
       "transfer_frequency": "continuous",
       "transfer_scale": "medium",
       "encryption_before_transfer": true,

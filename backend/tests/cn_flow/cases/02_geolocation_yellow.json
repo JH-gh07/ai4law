@@ -1,0 +1,78 @@
+{
+  "case_id": "02_geolocation_yellow",
+  "description": "CN Flow兼容适配：GeneGuard位置数据→深度洞察（黄灯），验证旧API表达精确地理位置数据与供应商协议场景，is_covered_person为旧结构丢失字段",
+  "input": {
+    "company_name": "GeneGuard生物科技公司",
+    "transfer_purpose": "通过供应商协议向北京深度洞察人工智能有限公司提供匿名化精确位置轨迹，用于健康预测模型训练；必要性：用于优化环境因素与健康影响的AI预测模型；规模说明：150,000名美国人，超过精确地理位置数据批量阈值；内部访问风险：中国籍数据科学家张伟、王芳可访问GeneGuard测试环境；隔离和全量日志措施尚待落实",
+    "data_categories": [
+      "精确位置轨迹数据"
+    ],
+    "sensitive_data_flags": [],
+    "us_person_count": 150000,
+    "transaction_type": "vendor_agreement",
+    "doj_data_category_by_item": {
+      "精确位置轨迹数据": "precise_geolocation_data"
+    },
+    "recipient_entities": [
+      {
+        "entity_name": "深度洞察人工智能有限公司",
+        "country_region": "中国",
+        "entity_role": "vendor",
+        "is_restricted_party": true
+      }
+    ],
+    "transfer_chain": "GeneGuard健康地理分析部测试环境→深度洞察人工智能有限公司（中国北京）",
+    "attachments": [
+      {
+        "file_role": "data_inventory",
+        "file_name": "data_inventory.csv",
+        "file_format": "csv",
+        "storage_uri": "storage/uploads/data_inventory.csv"
+      },
+      {
+        "file_role": "entity_inventory",
+        "file_name": "entity_inventory.csv",
+        "file_format": "csv",
+        "storage_uri": "storage/uploads/entity_inventory.csv"
+      }
+    ]
+  },
+  "expected": {
+    "result_not_empty": true,
+    "fields_equal": {
+      "company_name": "GeneGuard生物科技公司",
+      "risk_level": "MEDIUM"
+    },
+    "min_counts": {
+      "chapters": 4,
+      "risk_items": 1,
+      "output_files": 9
+    },
+    "output_roles_contains": [
+      "markdown",
+      "docx",
+      "pdf",
+      "xlsx",
+      "zip",
+      "facts_json",
+      "evidence_chain_json"
+    ],
+    "output_formats": [
+      "md",
+      "docx",
+      "pdf",
+      "xlsx",
+      "json",
+      "zip"
+    ],
+    "list_excludes": {
+      "chapters[].content": [
+        "LLM未配置",
+        "占位内容",
+        "{{CIT-",
+        "引用无法映射"
+      ]
+    }
+  },
+  "coverage_note": "cn_flow兼容适配器：精确地理位置数据通过供应商协议传输给中国AI公司；access_persons和security_measures属旧结构丢失字段；完整风险评估需原生us_14117 API"
+}

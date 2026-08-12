@@ -9,7 +9,7 @@
     "jurisdiction": "EU"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务2：“BCR审核”路径描述及测试案例/“BCR审核”测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/eu/legacy-docx/“BCR审核”测试案例及预期输出.docx",
     "case": "BCR 控制者场景基础案例"
   },
   "request": {

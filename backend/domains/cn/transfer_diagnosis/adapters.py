@@ -1,3 +1,6 @@
+"""
+本文件用于将前端模块的诊断答案转换为后端的诊断事实模型。
+"""
 from __future__ import annotations
 
 from backend.domains.cn.transfer_diagnosis.models import (

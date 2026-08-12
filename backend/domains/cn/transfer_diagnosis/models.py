@@ -1,3 +1,6 @@
+"""
+本文件用于定义诊断事实相关的数据模型，包括三态枚举、诊断路径枚举、事实来源枚举以及诊断事实模型。
+"""
 from __future__ import annotations
 
 from enum import Enum

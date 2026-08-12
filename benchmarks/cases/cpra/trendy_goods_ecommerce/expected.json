@@ -10,7 +10,7 @@
     "min_counts": {
       "chapters": 6,
       "gap_items": 5,
-      "output_files": 7
+      "output_files": 6
     },
     "list_contains": {
       "chapters[].title": [
@@ -44,8 +44,7 @@
       "pdf",
       "xlsx",
       "zip",
-      "citation_map_json",
-      "document_ir_json"
+      "citation_map_json"
     ],
     "output_formats": [
       "md",

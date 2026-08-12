@@ -9,7 +9,7 @@
     "jurisdiction": "US"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/us/legacy-docx/\"14117行政令合规\"测试案例及预期输出.docx",
     "case": "测试案例三：向英国公司提供设备运行数据（绿灯场景）"
   },
   "request": {
@@ -58,12 +58,25 @@
     ],
     "access_persons": [],
     "security_measures": [
-      {"measure_name": "加密传输", "category": "encryption", "status": "implemented", "description": "按公司内部数据安全政策加密传输"},
-      {"measure_name": "禁止向受关注国家再转移", "category": "contractual_controls", "status": "implemented", "description": "合作协议要求接收方不得向受关注国家实体转让数据"}
+      {
+        "measure_name": "加密传输",
+        "category": "encryption",
+        "status": "implemented",
+        "description": "按公司内部数据安全政策加密传输"
+      },
+      {
+        "measure_name": "禁止向受关注国家再转移",
+        "category": "contractual_controls",
+        "status": "implemented",
+        "description": "合作协议要求接收方不得向受关注国家实体转让数据"
+      }
     ],
     "onward_transfer": false,
     "onward_transfer_description": "",
-    "attachments": ["backend/tests/fixtures/us/us14117_data_inventory.csv", "backend/tests/fixtures/us/us14117_entity_inventory.csv"],
+    "attachments": [
+      "backend/tests/fixtures/us/us14117_data_inventory.csv",
+      "backend/tests/fixtures/us/us14117_entity_inventory.csv"
+    ],
     "company_name": "GeneGuard生物科技公司"
   }
 }

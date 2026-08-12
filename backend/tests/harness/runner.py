@@ -83,44 +83,7 @@ Invoke = Callable[
 ]
 
 
-class TerminalTraceSubscriber:
-    """Print a safe, one-line summary for each RunEvent emitted by the harness."""
-
-    _SAFE_SCALAR_KEYS = (
-        "duration_ms",
-        "model",
-        "tool",
-        "result_count",
-        "results",
-        "count",
-        "fallback",
-    )
-
-    def __call__(self, event: RunEvent) -> None:
-        timestamp = event.timestamp[11:19] if len(event.timestamp) >= 19 else event.timestamp
-        suffixes: list[str] = []
-        detail = event.detail if isinstance(event.detail, dict) else {}
-        for key in self._SAFE_SCALAR_KEYS:
-            value = detail.get(key)
-            if isinstance(value, (str, int, float, bool)):
-                label = "duration" if key == "duration_ms" else key
-                unit = "ms" if key == "duration_ms" else ""
-                suffixes.append(f"{label}={value}{unit}")
-        usage = detail.get("usage")
-        if isinstance(usage, dict) and isinstance(usage.get("total_tokens"), int):
-            suffixes.append(f"tokens={usage['total_tokens']}")
-        llm = detail.get("llm")
-        if isinstance(llm, dict):
-            if isinstance(llm.get("model"), str):
-                suffixes.append(f"model={llm['model']}")
-            if isinstance(llm.get("total_tokens"), int):
-                suffixes.append(f"tokens={llm['total_tokens']}")
-        suffix = f" {' '.join(suffixes)}" if suffixes else ""
-        print(
-            f"[trace] {timestamp} #{event.seq:03d} "
-            f"{event.event_type:<12} {event.summary}{suffix}",
-            flush=True,
-        )
+from backend.tests.harness.terminal_trace import TerminalTraceSubscriber  # noqa: E402, F811
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,310 @@
+{
+  "dataset": "seed-cases-v1",
+  "gold_standard": {
+    "source": "benchmarks/datasets/seed-cases-v1/_source/数规通黄金标准_v1.0.docx",
+    "hash": "e2e985ead307791ef50f7a6952c0b6e75fa4733a72b300e2492352a129040b60",
+    "status": "PENDING (requires rubric extraction)"
+  },
+  "tasks": {
+    "task01": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case1.docx",
+          "hash": "a2d7ad9d7b8b042340a46b1116396e5149d8b497157fecd7f9c342f66084042a",
+          "size_bytes": 13422
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case2.docx",
+          "hash": "00d951312ae5ce4b8154f43a1ec57b31721d1906f2110dc969fa0ad20a939dcd",
+          "size_bytes": 12878
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case3.docx",
+          "hash": "811cb29213a0a0a16a6b805e7e845ca866a4559b284400c6deb448b4c123458e",
+          "size_bytes": 12678
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case4.docx",
+          "hash": "d30fedb8a68afa3bcf5b10dde04e02c5a6a24fc0c140e30292cc39db7fae0727",
+          "size_bytes": 12747
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case5.docx",
+          "hash": "d9e8f60ca803e74cb9478df6657644212a24f23ee4239214c409a7de5bec3513",
+          "size_bytes": 12963
+        }
+      ]
+    },
+    "task02": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case1.docx",
+          "hash": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
+          "size_bytes": 13517
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case2.docx",
+          "hash": "26fd936667ecd70bc3bed2292d9bfd7a54b5c760725b6819764813983be86826",
+          "size_bytes": 13417
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case3.docx",
+          "hash": "9313fdfde83394de58c3b382352a250dfe2ee815cafbc1f457e79858e9f5217a",
+          "size_bytes": 13173
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case4.docx",
+          "hash": "ada476ff6f621cf48173d45270b88a2b178403985a539e3f7662f6930b171cf1",
+          "size_bytes": 13068
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case5.docx",
+          "hash": "73e57b99df5a29517ea5a40f9022916e6e3a27fe2460a2cbd800afab68d38c42",
+          "size_bytes": 13349
+        }
+      ]
+    },
+    "task03": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case1.docx",
+          "hash": "8a007f91b88cef95973a452380b79c454fe2cbf51ff0cb2f4cbc83776f499967",
+          "size_bytes": 12718
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case2.docx",
+          "hash": "28002d4e64162a8adfa1bc740c1f3d04f6322fb7a44c57695cc7b5c8dbce24b0",
+          "size_bytes": 12065
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case3.docx",
+          "hash": "090393e789434e16cce3c63b0be96df98c704569e0389117b3849dfb7d05ab12",
+          "size_bytes": 12262
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case4.docx",
+          "hash": "3e9adb6b46bdf77b1106b146e41f9230f4d49713232d120790a624d4bd849499",
+          "size_bytes": 12663
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case5.docx",
+          "hash": "0a3a78572b28c4244b0c53408c2a21da2c0a98b827c1da11f9fb7fe659f3cc38",
+          "size_bytes": 12352
+        }
+      ]
+    },
+    "task04": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case1.docx",
+          "hash": "d10badd168f8c968703733934c414d8cf68919b87c393e4c3041d8e48b93d594",
+          "size_bytes": 12026
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case2.docx",
+          "hash": "fe8c191ea621a0684c038129a43492a3a90e40018c900108f2a00b987a32d731",
+          "size_bytes": 12016
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case3.docx",
+          "hash": "64e033de674edbfadeb82d0a7885c7d2ab5e54c9b985c91e3af49b94773fb0ae",
+          "size_bytes": 12048
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case4.docx",
+          "hash": "6bf8da12de901efdd6b2fb1e549c320b944842780bd69ece2fa66c075423976d",
+          "size_bytes": 11941
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case5.docx",
+          "hash": "3026600fe0d845c7f1414193068d656426fbb1e7cbce7010b5ab1c80eb27f6aa",
+          "size_bytes": 12005
+        }
+      ]
+    },
+    "task05": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case1.docx",
+          "hash": "28ed50e0e93fdc253ab0511ba2f9825625ea444fa9c65784969d61e2ed449406",
+          "size_bytes": 13270
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case2.docx",
+          "hash": "f2fe8feb8de6c161e01d274328fb95c0300920a3191cea0bc20eda7b7c63d743",
+          "size_bytes": 13433
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case3.docx",
+          "hash": "84f0f8e8e8b67513281f06a34b2f858cce1a02b1bfd1c57ad15c000e0c803856",
+          "size_bytes": 12421
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case4.docx",
+          "hash": "07badf6e884b8b9252bd2510fbd28456834f810ac61a3f89d066b7f0314f6f12",
+          "size_bytes": 13596
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case5.docx",
+          "hash": "3a8fe021a7835f49d11c5da4067db42b766371878e93e076ec4c01f129668587",
+          "size_bytes": 13428
+        }
+      ]
+    },
+    "task06": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case1.docx",
+          "hash": "41f42061ac5418e2eac7aadea7d4d01f7e29788033303f188478902be406c154",
+          "size_bytes": 12909
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case2.docx",
+          "hash": "abf2fb52c5808670b6e179034425b823d6e507ff04423ce44190d0bb0b65ba16",
+          "size_bytes": 13094
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case3.docx",
+          "hash": "235a0422cba814b9e68ca599ccab6b490fe7ee60464c9b9a1bd7e010022365ec",
+          "size_bytes": 13001
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case4.docx",
+          "hash": "0b92c794ab307433c63489444892cf0587d9affba52a406b004c7d602ac40a39",
+          "size_bytes": 12912
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case5.docx",
+          "hash": "a6214f9b4161bbda5ba87b6023a7a7c51a697a3d10d5fccd016827167978c156",
+          "size_bytes": 13111
+        }
+      ]
+    },
+    "task07": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case1.docx",
+          "hash": "30742bc4ff49cb108decc0a772e7845cfff54658f865070b7f8df3c7483049cb",
+          "size_bytes": 13306
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case2.docx",
+          "hash": "ed740ad118eb8d5429b8b8a208afe6025ef492d40efe516c921ea0eed12e20d4",
+          "size_bytes": 13257
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case3.docx",
+          "hash": "8a3b68680900e1b61ec5d79dc43aeae2d1cf05b89a48d56f5afc127471072988",
+          "size_bytes": 13481
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case4.docx",
+          "hash": "0669e81fca738318e1f732086f07e291dc55749094ed35a68c0fd6957f43f77c",
+          "size_bytes": 13477
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case5.docx",
+          "hash": "a9debbc208a7569a05af485b96055d380ec15998943e566eb2bc86e2efd275ce",
+          "size_bytes": 13620
+        }
+      ]
+    },
+    "task08": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case1.docx",
+          "hash": "7d34e0b13c609d14914698807631109aee8649f9f00222d932075422b64976a7",
+          "size_bytes": 12916
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case2.docx",
+          "hash": "fcd3de52b4dd7b06046395496896fee94ceb7b24fef7715a51a169ed59a28065",
+          "size_bytes": 12713
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case3.docx",
+          "hash": "510426b91ff15a65207c763cbdd20a6fdc23c95c78b6d0efc2cb6c6b466e26cc",
+          "size_bytes": 12846
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case4.docx",
+          "hash": "c0bae122ba6028b476c0a6b91b7b91788cc11f07d157da4878e24ef1ed65ec78",
+          "size_bytes": 12902
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case5.docx",
+          "hash": "9153d213092c7b44301ea599f268634902b2f2aed0901b5bca9b836940c7f5eb",
+          "size_bytes": 13268
+        }
+      ]
+    },
+    "task09": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case1.docx",
+          "hash": "1d5cded888f345ef656ba6c915d1620c31746ea3dac0c257ed319a49ff72596e",
+          "size_bytes": 14570
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case2.docx",
+          "hash": "ccc838ffff96547c7dc53986ad46dac21db08d1db22af2bdc75fd2483a565b9e",
+          "size_bytes": 12605
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case3.docx",
+          "hash": "51cf1fb527781617e08e256550ab5f186496d13b1e4f16c51517fcda8423d655",
+          "size_bytes": 12381
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case4.docx",
+          "hash": "2d69239fcc78aa8ffb4b05d58ed7688ac4b20f28cf83508f82c060488df0d353",
+          "size_bytes": 12374
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case5.docx",
+          "hash": "1d154fd53b7ab4321d10366ec1230c65bb201e59465bd47e1445a8b2a0769221",
+          "size_bytes": 12895
+        }
+      ]
+    },
+    "task10": {
+      "case_count": 5,
+      "files": [
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case1.docx",
+          "hash": "8a377d1267d2603b28e3103b43b6904e1873a8a275d67314c5a351b91714d927",
+          "size_bytes": 14496
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case2.docx",
+          "hash": "0648cdafea3a12f0157d98f19e2e566e7f01a7b5807fed2b047a6097da35a8c5",
+          "size_bytes": 13161
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case3.docx",
+          "hash": "2c0f470625ad486dd0d46f4572198dafb81841d91585b15f11cba31bc31d8391",
+          "size_bytes": 13210
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case4.docx",
+          "hash": "a3d2cc0eff851be0ee61bd8ae8a0829e1261e5015513ca9d51948ad7cd714b20",
+          "size_bytes": 13489
+        },
+        {
+          "file": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case5.docx",
+          "hash": "cd18b60ca97bc7d3a02a5a51f006dec2a7860da9e049c0725429bd342c3832d8",
+          "size_bytes": 14136
+        }
+      ]
+    }
+  }
+}

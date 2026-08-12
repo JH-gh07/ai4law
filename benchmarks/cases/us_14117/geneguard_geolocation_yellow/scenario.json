@@ -9,7 +9,7 @@
     "jurisdiction": "US"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/us/legacy-docx/\"14117行政令合规\"测试案例及预期输出.docx",
     "case": "测试案例二：向中国AI公司提供位置数据进行算法训练（黄灯场景）"
   },
   "request": {
@@ -43,12 +43,40 @@
       }
     ],
     "access_persons": [
-      {"person_name": "张伟", "nationality": "中国", "country_of_residence": "中国", "department": "算法研发部", "position": "高级数据科学家", "employer": "深度洞察人工智能有限公司", "has_actual_access": true, "access_type": "remote"},
-      {"person_name": "王芳", "nationality": "中国", "country_of_residence": "中国", "department": "算法研发部", "position": "数据科学家", "employer": "深度洞察人工智能有限公司", "has_actual_access": true, "access_type": "remote"}
+      {
+        "person_name": "张伟",
+        "nationality": "中国",
+        "country_of_residence": "中国",
+        "department": "算法研发部",
+        "position": "高级数据科学家",
+        "employer": "深度洞察人工智能有限公司",
+        "has_actual_access": true,
+        "access_type": "remote"
+      },
+      {
+        "person_name": "王芳",
+        "nationality": "中国",
+        "country_of_residence": "中国",
+        "department": "算法研发部",
+        "position": "数据科学家",
+        "employer": "深度洞察人工智能有限公司",
+        "has_actual_access": true,
+        "access_type": "remote"
+      }
     ],
     "security_measures": [
-      {"measure_name": "数据隔离工作区", "category": "access_control", "status": "missing", "description": "尚未建立满足限制性交易要求的隔离环境"},
-      {"measure_name": "访问审计日志", "category": "audit_logging", "status": "missing", "description": "尚未完成全量日志记录和季度审计机制"}
+      {
+        "measure_name": "数据隔离工作区",
+        "category": "access_control",
+        "status": "missing",
+        "description": "尚未建立满足限制性交易要求的隔离环境"
+      },
+      {
+        "measure_name": "访问审计日志",
+        "category": "audit_logging",
+        "status": "missing",
+        "description": "尚未完成全量日志记录和季度审计机制"
+      }
     ],
     "onward_transfer": false,
     "onward_transfer_description": "",

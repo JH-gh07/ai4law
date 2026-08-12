@@ -36,6 +36,15 @@ import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinica
 import haitaoMarketingScenario from "../../../benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json";
 import weilanHrScenario from "../../../benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json";
 import zhifutongEurocertScenario from "../../../benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json";
+import kuajingYoupinScenario from "../../../benchmarks/cases/diagnosis/kuajing_youpin_ecommerce_sg/scenario.json";
+import qianyanMedicalScenario from "../../../benchmarks/cases/diagnosis/qianyan_medical_research_eu/scenario.json";
+import zhijiaWeilaiScenario from "../../../benchmarks/cases/diagnosis/zhijia_weilai_anonymized_de/scenario.json";
+import dongfangTrustScenario from "../../../benchmarks/cases/assessment/dongfang_capital_trust_hk/scenario.json";
+import youxuanShoppingScenario from "../../../benchmarks/cases/assessment/youxuan_shopping_data_export/scenario.json";
+import dpiaAiRecruitmentScenario from "../../../benchmarks/cases/dpia/ai_recruitment_screening/scenario.json";
+import dpiaSmartCityScenario from "../../../benchmarks/cases/dpia/smart_city_surveillance/scenario.json";
+import trendyGoodsScenario from "../../../benchmarks/cases/cpra/trendy_goods_ecommerce/scenario.json";
+import reviewDataSecurityScenario from "../../../benchmarks/cases/review/data_security_agreement/scenario.json";
 
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
@@ -125,39 +134,56 @@ function sharedTiaFormDefaults(
 function sharedPipiaFormDefaults(
   request: ModuleRequestMap["pipia"],
 ): PipiaFormValues {
+  const parts = (value: string) => value.split("；").map((item) => item.trim()).filter(Boolean);
+  const labeled = (items: string[], label: string) =>
+    items.find((item) => item.startsWith(label))?.slice(label.length).trim() ?? "";
+  const unlabeled = (items: string[], labels: string[]) =>
+    items.filter((item) => !labels.some((label) => item.startsWith(label))).join("；");
+  const evidenceState = (value: boolean | null | undefined): PipiaFormValues["recipient_notice_complete"] =>
+    value === true ? "yes" : value === false ? "no" : "unknown";
   const profile = request.company_profile;
   const transfer = request.transfer_context;
   const scope = request.personal_info_scope;
   const rights = request.rights_protection;
   const emergency = request.emergency_plan;
+  const evidence = request.path_evidence ?? {};
   const attachment = request.attachments[0];
+  const purposeParts = parts(transfer.purpose);
+  const purposeLabels = ["场景：", "频率：", "方式：", "业务概况：", "处理活动："];
+  const legalParts = parts(transfer.legal_basis);
+  const legalLabels = ["合法性论证：", "必要性论证："];
+  const escalationParts = parts(emergency.escalation_path);
+  const escalationLabels = ["链路：", "股权：", "控制人：", "境内外投资：", "组织与个保机构："];
+  const frequency = labeled(purposeParts, "频率：");
   return {
     route_type: request.route_type,
     company_name: profile.company_name,
     company_uscc: profile.company_uscc,
     industry: profile.industry ?? "",
-    shareholding_structure: "资料未提供",
-    actual_controller: "资料未提供",
-    overseas_investment: "资料未提供",
-    org_structure_privacy_team: "资料未提供",
-    business_overview: "",
-    processing_activity_overview: "",
+    shareholding_structure: labeled(escalationParts, "股权："),
+    actual_controller: labeled(escalationParts, "控制人："),
+    overseas_investment: labeled(escalationParts, "境内外投资："),
+    org_structure_privacy_team: labeled(escalationParts, "组织与个保机构："),
+    business_overview: labeled(purposeParts, "业务概况："),
+    processing_activity_overview: labeled(purposeParts, "处理活动："),
     is_ciio: profile.is_ciio ?? false,
     processing_person_count: profile.processing_person_count ?? 0,
     outbound_pi_count: profile.outbound_pi_count ?? 0,
     outbound_spi_count: profile.outbound_spi_count ?? 0,
-    outbound_scenario_name: "",
-    outbound_frequency: "periodic",
-    transfer_method: "",
+    outbound_scenario_name: labeled(purposeParts, "场景："),
+    outbound_frequency: ["one_time", "periodic", "continuous"].includes(frequency)
+      ? frequency as PipiaFormValues["outbound_frequency"]
+      : "periodic",
+    transfer_method: labeled(purposeParts, "方式："),
     domestic_storage: "",
     overseas_storage: "",
-    transfer_link: "",
-    purpose: transfer.purpose,
+    transfer_link: labeled(escalationParts, "链路："),
+    purpose: unlabeled(purposeParts, purposeLabels),
     recipient_name: transfer.recipient_name,
     recipient_country_region: transfer.recipient_country_region,
-    legal_basis: transfer.legal_basis,
-    legality_justification: "",
-    necessity_justification: "",
+    legal_basis: unlabeled(legalParts, legalLabels),
+    legality_justification: labeled(legalParts, "合法性论证："),
+    necessity_justification: labeled(legalParts, "必要性论证："),
     pi_categories: (scope.pi_categories ?? []).join(", "),
     spi_categories: (scope.spi_categories ?? []).join(", "),
     subject_volume: scope.subject_volume ?? 0,
@@ -166,8 +192,21 @@ function sharedPipiaFormDefaults(
     dsar_channel: rights.dsar_channel,
     retention_policy: rights.retention_policy,
     incident_response_sla_hours: emergency.incident_response_sla_hours ?? 24,
-    escalation_path: emergency.escalation_path ?? "",
+    escalation_path: unlabeled(escalationParts, escalationLabels),
     attachment_role: attachment.file_role,
+    recipient_notice_complete: evidenceState(evidence.recipient_notice_complete),
+    sensitive_information_classification_confirmed: evidenceState(evidence.sensitive_information_classification_confirmed),
+    consent_evidence_complete: evidenceState(evidence.consent_evidence_complete),
+    scc_required_clauses_complete: evidenceState(evidence.scc_required_clauses_complete),
+    hr_rules_lawfully_adopted: evidenceState(evidence.hr_rules_lawfully_adopted),
+    employee_handbook_has_explicit_cross_border_terms: evidenceState(evidence.employee_handbook_has_explicit_cross_border_terms),
+    collective_agreement_has_explicit_cross_border_terms: evidenceState(evidence.collective_agreement_has_explicit_cross_border_terms),
+    recipient_privacy_policy_provided: evidenceState(evidence.recipient_privacy_policy_provided),
+    certification_body_china_recognized: evidenceState(evidence.certification_body_china_recognized),
+    certification_legal_obligation_citation_provided: evidenceState(evidence.certification_legal_obligation_citation_provided),
+    contract_governing_law: evidence.contract_governing_law ?? "",
+    contract_exclusive_jurisdiction: evidence.contract_exclusive_jurisdiction ?? "",
+    china_data_subject_rights_terms_present: evidenceState(evidence.china_data_subject_rights_terms_present),
   };
 }
 
@@ -269,13 +308,13 @@ export function defineDevCases<Module extends DevCaseModule>(
 //   来源测试文档:
 //     benchmarks/source-materials/us/legacy-docx/“CPRA合规”测试案例及预期输出.docx
 //     resources/new/…/美国/任务2：“CPRA合规”路径描述及测试案例/“CPRA合规”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务10（CPRA 合规）种子案例及测试结果/任务10_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task10/task10_case1.docx
 //     backend/tests/cpra/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const cpraTrendyGoods = {
-  name: "CPRA-1: TrendyGoods 电商平台",
-  description: "中型电商，年收入30M，缺少opt-out机制，Cookie暗模式，广告合同不合规",
+  name: trendyGoodsScenario.display.name,
+  description: trendyGoodsScenario.display.description,
   jurisdiction: "US" as const,
   formDefaults: {
     company_name: "TrendyGoods Inc.",
@@ -354,13 +393,13 @@ const cpraFitLife = {
 //     benchmarks/source-materials/cn/legacy-docx/“合规路径诊断”测试案例及预期输出.docx
 //     benchmarks/source-materials/shared/测试案例系统输入内容与提示词(3).docx (L2-L31)
 //     resources/new/…/中国/任务1：“合规路径诊断”路径描述及测试案例/“合规路径诊断”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务1（合规路径诊断）种子案例及测试结果/任务1_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task1/task1_case1.docx
 //     backend/tests/diagnosis/cases/01_scc_path.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const diagEcommerce = {
-  name: "诊断-1: 跨境优品 电商（标准合同/认证路径）",
-  description: "中型跨境电商，不涉及重要数据，非CIIO，出境45万一般个人信息→触发标准合同/认证路径",
+  name: kuajingYoupinScenario.display.name,
+  description: kuajingYoupinScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "跨境优品",
@@ -392,8 +431,8 @@ const diagEcommerce = {
 };
 
 const diagMedical = {
-  name: "诊断-2: 前沿生命科技 医疗研究（安全评估路径）",
-  description: "研究机构出境1.5万患者医疗数据（可能涉及重要数据）→触发安全评估路径，测试'不知道'辅助判断",
+  name: qianyanMedicalScenario.display.name,
+  description: qianyanMedicalScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "前沿生命科技研究院",
@@ -427,8 +466,8 @@ const diagMedical = {
 };
 
 const diagAnonymous = {
-  name: "诊断-3: 智驾未来 匿名车辆传感器数据（豁免路径）",
-  description: "自动驾驶公司向德国母公司提供完全匿名化车辆传感器数据，不涉及个人信息，验证豁免路径",
+  name: zhijiaWeilaiScenario.display.name,
+  description: zhijiaWeilaiScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "智驾未来",
@@ -473,13 +512,13 @@ const diagAnonymous = {
 //     benchmarks/source-materials/cn/legacy-docx/“安全评估路径”测试案例及预期输出.docx
 //     benchmarks/source-materials/shared/测试案例系统输入内容与提示词(3).docx (L33-L50)
 //     resources/new/…/中国/任务2：“安全评估路径”路径描述及测试案例/“安全评估路径”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务2（安全评估路径）种子案例及测试结果/任务2_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task2/task2_case1.docx
 //     backend/tests/assessment/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const assessCIO = {
-  name: "评估-1: 东方信托 CIIO金融机构",
-  description: "CIIO信托公司向香港母公司传输交易数据和客户信息，含重要数据风险，法律文件缺失条款",
+  name: dongfangTrustScenario.display.name,
+  description: dongfangTrustScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "东方信托有限责任公司",
@@ -514,8 +553,8 @@ const assessCIO = {
 };
 
 const assessEcommerce = {
-  name: "评估-2: 优选购物 APP（120万用户行为数据）",
-  description: "非CIIO电商平台向开曼母公司及美国下游分析商传输去标识化用户行为日志，出境人数超过100万，触发安全评估",
+  name: youxuanShoppingScenario.display.name,
+  description: youxuanShoppingScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "优选购物",
@@ -564,13 +603,13 @@ const assessEcommerce = {
 //   来源测试文档:
 //     benchmarks/source-materials/eu/legacy-docx/“SCC审查”测试案例及预期输出.docx（含3个case：C2C缺失补充措施、C2P Clause15修改、Module选择错误）
 //     resources/new/…/欧盟/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务5（SCC 审查）种子案例及测试结果/任务5_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task5/task5_case1.docx
 //     backend/tests/eu_scc/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const euSccBasic = {
-  name: "EU-SCC-1: 法国电商 C2C→英国关联公司（补充措施缺失）",
-  description: "法国电商向英国关联公司传输客户联系和订单数据，英国虽有充分性认定但下游使用美国 AWS，缺少 Schrems II 补充措施",
+  name: franceUkSccScenario.display.name,
+  description: franceUkSccScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: sharedEuSccFormDefaults(franceUkSccRequest, {
       exporter_name: "EU Fashion E-commerce SAS", importer_name: "UK Marketing Analytics Ltd", importer_country: "英国",
@@ -586,8 +625,8 @@ const euSccBasic = {
 };
 
 const euSccHealthIndia = {
-  name: "EU-SCC-2: 健康数据→印度 高风险修改",
-  description: "德国健康研究公司→印度分析公司，Clause 15被修改，特殊类别数据分类错误，缺少补充措施",
+  name: germanyIndiaSccScenario.display.name,
+  description: germanyIndiaSccScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: sharedEuSccFormDefaults(germanyIndiaSccRequest, {
       exporter_name: "Gesundheitsforschung GmbH", importer_name: "Data Insights Solutions Pvt. Ltd.", importer_country: "印度",
@@ -603,8 +642,8 @@ const euSccHealthIndia = {
 };
 
 const euSccModuleError = {
-  name: "EU-SCC-3: 多方加入 模块选择错误",
-  description: "C→P→Sub-P三层关系误选Module Two(C2P)，应为Module Three(P2P)，加入方信息缺失",
+  name: netherlandsSerbiaSccScenario.display.name,
+  description: netherlandsSerbiaSccScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: sharedEuSccFormDefaults(netherlandsSerbiaSccRequest, {
     exporter_name: "Orange Cloud BV",
@@ -723,8 +762,8 @@ const bcrStructuralFailure = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const dpiaAIRecruitment = {
-  name: "DPIA-1: AI招聘筛选系统",
-  description: "跨国科技公司AI招聘系统，大规模处理+自动决策+特殊数据推断风险+跨境传输",
+  name: dpiaAiRecruitmentScenario.display.name,
+  description: dpiaAiRecruitmentScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: {
     project_name: "AI招聘筛选与候选人评估系统",
@@ -766,8 +805,8 @@ const dpiaAIRecruitment = {
 };
 
 const dpiaSmartCity = {
-  name: "DPIA-2: 智能城市人群分析系统",
-  description: "城市管理局公共场所人群监控系统，大规模监控+数据关联重识别风险+寒蝉效应",
+  name: dpiaSmartCityScenario.display.name,
+  description: dpiaSmartCityScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: {
     project_name: "市中心商业区人群动态智能分析系统",
@@ -813,21 +852,21 @@ const dpiaSmartCity = {
 //   来源测试文档:
 //     benchmarks/source-materials/eu/legacy-docx/“TIA草案生成”测试案例及预期输出.docx
 //     resources/new/…/欧盟/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务6（TIA 审查）种子案例及测试结果/任务6_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task6/task6_case1.docx
 //     backend/tests/tia/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
 const tiaBasicSCC = {
-  name: "TIA-1: 德国公司→美国 SaaS 高风险评估",
-  description: "德国创新软件公司将 CRM 迁移至美国 SaaS，评估 FISA 702/CLOUD Act 与补充措施",
+  name: innovateUsTiaScenario.display.name,
+  description: innovateUsTiaScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: sharedTiaFormDefaults(innovateUsTiaRequest),
   backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
 };
 
 const tiaChinaBCR = {
-  name: "TIA-2: 荷兰→印度临床试验数据高风险评估",
-  description: "荷兰生命科学研究所向印度临床研究公司传输可重新识别的健康和基因数据",
+  name: leidenIndiaTiaScenario.display.name,
+  description: leidenIndiaTiaScenario.display.description,
   jurisdiction: "EU" as const,
   formDefaults: sharedTiaFormDefaults(leidenIndiaTiaRequest),
   backendFilePaths: ["resources/legal/sources/eu/references/TIA - Template.docx"]
@@ -871,7 +910,7 @@ const pipiaZhifutongEurocert = {
 //   来源测试文档:
 //     benchmarks/source-materials/us/legacy-docx/“14117行政令合规”测试案例及预期输出.docx
 //     resources/new/…/美国/任务1：“14117行政令合规”路径描述及测试案例/“14117行政令合规”测试案例及预期输出.docx
-//     resources/new/…/种子案例及测试结果/任务9（14117 行政令合规）种子案例及测试结果/任务9_案例1_测试结果.docx
+//     benchmarks/datasets/seed-cases-v1/_source/task9/task9_case1.docx
 //     backend/tests/us_14117/cases/01_minimal.json
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -972,8 +1011,8 @@ const cnFlowRestricted = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const reviewPrivacyPolicy = {
-  name: "审查-1: 数据安全及保密协议（隐含出境风险）",
-  description: "审查金陵科技学院与云途信息技术有限公司的数据安全及保密协议，检查隐含出境、敏感数据、事件时限和审计权",
+  name: reviewDataSecurityScenario.display.name,
+  description: reviewDataSecurityScenario.display.description,
   jurisdiction: "CN" as const,
   formDefaults: {
     company_name: "金陵科技学院信息化建设与管理处",

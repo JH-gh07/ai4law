@@ -3,7 +3,7 @@
 ingest_regional_laws.py — P2 regional law ingestion
 
 Adds sources.csv rows + regulation_articles.jsonl entries for all regional laws
-under resources/new/知识库补充/.
+# Regional law PDFs now at resources/legal/sources/<jurisdiction>/references/
 
 Usage:
     python3 scripts/ingest_regional_laws.py [--dry-run]
@@ -23,7 +23,7 @@ from typing import Callable, Optional
 ROOT = Path(__file__).parent.parent
 SOURCES_CSV = ROOT / "resources/legal/catalog/sources.csv"
 ARTICLES_JSONL = ROOT / "resources/legal/registry/regulation_articles.jsonl"
-PDF_BASE = ROOT / "resources/new/知识库补充"
+PDF_BASE = ROOT / "resources/legal/sources"  # migrated from resources/new
 
 # ---------------------------------------------------------------------------
 # Kanji numeral converter (for Japanese laws)

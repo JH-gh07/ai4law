@@ -9,7 +9,7 @@
     "jurisdiction": "EU"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务1：“SCC审查”路径描述及测试案例/“SCC审查”测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/eu/legacy-docx/“SCC审查”测试案例及预期输出.docx",
     "case": "测试案例一：C2C模块 - 缺失补充措施与第三国法律评估"
   },
   "request": {

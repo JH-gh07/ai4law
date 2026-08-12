@@ -9,7 +9,7 @@
     "jurisdiction": "US"
   },
   "source": {
-    "file": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/美国（加州）数据出境路径/任务1：\"14117行政令合规\"路径描述及测试案例/\"14117行政令合规\"测试案例及预期输出.docx",
+    "file": "benchmarks/source-materials/us/legacy-docx/\"14117行政令合规\"测试案例及预期输出.docx",
     "case": "测试案例一：向中国生物公司提供人类基因组数据（红灯场景）"
   },
   "request": {

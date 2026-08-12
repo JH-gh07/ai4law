@@ -30,3 +30,4 @@ def authenticated_client(tmp_path: Path) -> Iterator[TestClient]:
         assert response.status_code == 200
         client.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
         yield client
+        #yield用于暂停函数的执行并返回一个值给调用者，同时保留函数的状态，以便在下一次调用时从暂停的地方继续执行。

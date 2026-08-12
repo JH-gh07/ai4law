@@ -3,5 +3,5 @@
   "description": "TIA正式案例一—德国Innovate Software向美国CloudForce SaaS持续传输CRM数据",
   "scenario_path": "benchmarks/cases/tia/innovate_crm_us_saas/scenario.json",
   "expected_path": "benchmarks/cases/tia/innovate_crm_us_saas/expected.json",
-  "source_doc_path": "resources/new/数规通功能路径描述（含reference）、流程描述、测试案例/欧盟数据出境路径/任务4：“TIA草案生成”路径描述及测试案例/“TIA草案生成”测试案例及预期输出.docx"
+  "source_doc_path": "benchmarks/source-materials/eu/legacy-docx/“TIA草案生成”测试案例及预期输出.docx"
 }
