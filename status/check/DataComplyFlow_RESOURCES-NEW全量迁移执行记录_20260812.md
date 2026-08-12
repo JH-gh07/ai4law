@@ -112,3 +112,31 @@ Case parity + semantic check passed (11 modules, 26 CLI cases, 603 leaf checks, 
 | 前端构建 | 待验证 |
 | RAG 区域检索 | 待重建索引 |
 | Phase 5 退出 | ⬜ |
+
+---
+
+## Phase 5 执行更新（2026-08-12）
+
+### 已执行清理
+
+| 操作 | 数量 | 状态 |
+|---|---|---|
+| 删除同内容重复 MD 目录文件 | 5 | ✅ |
+| DS_Store 清除 | 0（此前已清除） | ✅ |
+| 空目录清理 | 2 | ✅ |
+| phase1 脚本废除 | 2（generate + analyze） | ✅ |
+| PIPIA case 03 storage_uri 残留修复 | 1 | ✅ |
+| 全量 rg 活动代码扫描 | 0 功能性依赖 | ✅ |
+
+### 当前 `resources/new` 状态
+
+- 保留 202 个原始文件作为安全副本
+- 活动代码、配置、测试零功能性依赖
+- `resources/new` 尚未删除（按方案要求：目录为空后才允许删除）
+
+### Git 提交
+
+```
+992ef07 feat(resources): Phase 0-4 — 全量资源分层迁移执行
+d4ca2fe feat(resources): Phase 5 — 旧目录安全清理完成
+```
