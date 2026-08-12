@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "generated_by": "task065 T03 seed module adjudication",
+  "date": "2026-08-13",
+  "gaps": [
+    {
+      "task_no": 7,
+      "declared_task_name": "GDPR 合规诊断",
+      "jurisdiction": "eu",
+      "case_ids": [
+        "task07_case1",
+        "task07_case2",
+        "task07_case3",
+        "task07_case4",
+        "task07_case5"
+      ],
+      "source": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case*.docx",
+      "missing_capability": "GDPR 合规诊断产品能力（七项诊断表单）",
+      "impact": "无法进入默认模块 runner，不得硬塞到 eu.dpia / eu.scc_review / eu.tia / eu.bcr_review",
+      "followup": "待产品定义 GDPR 合规诊断需求后，另行建立 request adapter 与共享 Scenario",
+      "reviewer": "technical-adjudication (2026-08-13)",
+      "status": "gap"
+    },
+    {
+      "task_no": 8,
+      "declared_task_name": "BD ROD 判断",
+      "jurisdiction": "eu",
+      "case_ids": [
+        "task08_case1",
+        "task08_case2",
+        "task08_case3",
+        "task08_case4",
+        "task08_case5"
+      ],
+      "source": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case*.docx",
+      "missing_capability": "GDPR 适用性与数据处理角色判断产品能力（元数据定性 / 匿名化效力 / 控制者-处理者责任）",
+      "impact": "无法进入默认模块 runner，不得硬塞到任何 EU 模块",
+      "followup": "待产品定义后再评估",
+      "reviewer": "technical-adjudication (2026-08-13)",
+      "status": "gap"
+    }
+  ]
+}

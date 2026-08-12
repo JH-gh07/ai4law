@@ -4,7 +4,7 @@
   "declared_task_name": "GDPR 合规诊断",
   "jurisdiction": "eu",
   "module_id": "",
-  "mapping_status": "conflict",
+  "mapping_status": "gap",
   "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task07/task07_case2.docx",
   "source_sha256": "ed740ad118eb8d5429b8b8a208afe6025ef492d40efe516c921ea0eed12e20d4",
   "source_size_bytes": 13257,

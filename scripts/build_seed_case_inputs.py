@@ -48,18 +48,19 @@ MARK_REMARK = "三、备注"
 PLACEHOLDER_TOKENS = ("待补充", "待定", "待专家复核", "待确认", "待填写", "TBD")
 
 # task_no -> (declared folder name, module_id, jurisdiction, mapping_status)
-# mapping_status=conflict where the declared task name disagrees with the
-# approved functional spec / Gold rubric. Content quality is INDEPENDENT of
-# this; conflict cases have full authored output. Adjudication is Q1.
+# mapping_status vocabulary (adjudicated 2026-08-13, see
+# status/check/task065/seed-mapping-adjudication.md):
+#   partial — supported module; the declared task name is a sub-scenario of it
+#   gap     — no product capability exists; must NOT enter the default runner
 TASKS: dict[int, tuple[str, str, str, str]] = {
     1: ("合规路径诊断", "cn.transfer_diagnosis", "cn", "partial"),
     2: ("安全评估路径", "cn.security_assessment", "cn", "partial"),
     3: ("标准合同路径", "cn.pipia", "cn", "partial"),
-    4: ("豁免情形诊断", "", "cn", "conflict"),
+    4: ("豁免情形诊断", "cn.transfer_diagnosis", "cn", "partial"),
     5: ("SCC 审查", "eu.scc_review", "eu", "partial"),
-    6: ("TIA 审查", "", "eu", "conflict"),
-    7: ("GDPR 合规诊断", "", "eu", "conflict"),
-    8: ("BD ROD 判断", "", "eu", "conflict"),
+    6: ("TIA 审查", "eu.tia", "eu", "partial"),
+    7: ("GDPR 合规诊断", "", "eu", "gap"),
+    8: ("BD ROD 判断", "", "eu", "gap"),
     9: ("14117 行政令合规", "us.eo_14117", "us", "partial"),
     10: ("CPRA 合规", "us.cpra", "us", "partial"),
 }

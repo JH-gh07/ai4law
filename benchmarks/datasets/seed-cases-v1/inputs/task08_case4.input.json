@@ -4,7 +4,7 @@
   "declared_task_name": "BD ROD 判断",
   "jurisdiction": "eu",
   "module_id": "",
-  "mapping_status": "conflict",
+  "mapping_status": "gap",
   "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case4.docx",
   "source_sha256": "c0bae122ba6028b476c0a6b91b7b91788cc11f07d157da4878e24ef1ed65ec78",
   "source_size_bytes": 12902,
