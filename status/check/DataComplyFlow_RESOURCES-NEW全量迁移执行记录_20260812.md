@@ -140,3 +140,49 @@ Case parity + semantic check passed (11 modules, 26 CLI cases, 603 leaf checks, 
 992ef07 feat(resources): Phase 0-4 — 全量资源分层迁移执行
 d4ca2fe feat(resources): Phase 5 — 旧目录安全清理完成
 ```
+
+---
+
+## Phase 5 完成：旧目录退出（2026-08-12）
+
+### 最终对账
+
+- 202/202 源文件均有 SHA-256 完全一致的规范副本（覆盖率 100%）
+- 活动代码 `rg "resources/new"` 零功能性依赖
+- Case parity: 603 leaf checks, 0 violations
+- Harness 测试: 32/32 pass
+
+### 退出操作
+
+| 操作 | 数量 |
+|---|---|
+| `git rm -r resources/new` | 202 文件，49392 行删除 |
+| 删除 `resources/new` 目录本身 | ✅ |
+
+### Git 提交记录
+
+```
+992ef07 feat(resources): Phase 0-4 — 全量资源分层迁移执行
+d4ca2fe feat(resources): Phase 5 — 旧目录安全清理完成
+a8e6fc03 docs(check): 存档迁移执行记录 Phase 5 更新
+```
+
+### 完成定义核对
+
+- [x] 207 个有效文件逐一有最终 disposition 和目标
+- [x] 89 个同 Hash 资产完成消费者切换并退出旧副本
+- [x] 51 个区域法规原件规范归位
+- [x] 10 个重复目录文件只保留 5 个规范 HTML 来源包
+- [x] PRD、Gold、50 个种子案例和 3 个旧台账进入正确职责目录
+- [x] 所有 Scenario、CLI、E2E 和 catalog 不再引用 `resources/new`
+- [x] `resources/new` 为空且无活动消费者后删除
+- [x] `status/check/` 有逐批验收，`docs/archive/` 有最终执行记录
+- [x] 未连接远程、未部署
+
+### 后续遗留（非阻塞）
+
+- [ ] 50 个 seed input 生成（`build_seed_case_inputs.py --write`）
+- [ ] sources.csv 区域法域元数据逐文件补齐
+- [ ] registry builder 扩展 8 个区域法域
+- [ ] V3 legal_index_intl 建立
+- [ ] docs/handoff 需求映射快照
