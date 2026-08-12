@@ -1,3 +1,5 @@
+# DEPRECATED — Phase 0 completed 2026-08-12. See status/manifest/resources_new_v2_phase0.json
+# Original source: scripts/phase1_analyze_manifest.py.bak
 #!/usr/bin/env python3
 """Phase 1: Analyze intake manifest for duplicates, anomalies, and security concerns."""
 import json
