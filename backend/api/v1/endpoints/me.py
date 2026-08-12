@@ -10,9 +10,11 @@ from sqlalchemy.orm import Session
 from backend.common.events.manager import get_ssemanager
 from backend.core.dependencies import get_current_user, get_db
 from backend.core.json_utils import dumps, loads
+from backend.models.async_task import AsyncTaskModel
 from backend.models.diagnosis import DiagnosisSessionModel
 from backend.models.report import ReportArtifactModel
 from backend.models.review import ReviewTaskModel, UploadedFileModel
+from backend.models.task import TaskOwnershipModel
 from backend.models.workspace import WorkspaceStateModel
 from backend.repositories.diagnosis_repository import DiagnosisRepository
 from backend.repositories.report_repository import ReportRepository
@@ -176,6 +178,12 @@ def _build_recovered_run(task: MyTaskItem, artifacts: list[MyReportItem]) -> Rec
     terminal_states = {"completed", "succeeded", "failed", "canceled", "cancelled"}
     success_states = {"completed", "succeeded"}
     response = _reconstruct_response(module, task.id, artifacts)
+    if normalized_status in success_states or normalized_status in {"created", "running"}:
+        error = None
+    elif task.error:
+        error = task.error
+    else:
+        error = task.status
     return RecoveredModuleRun(
         id=f"{module}:{task.id}",
         task_space_id=task.id,
@@ -186,7 +194,7 @@ def _build_recovered_run(task: MyTaskItem, artifacts: list[MyReportItem]) -> Rec
         success=normalized_status in success_states,
         request={},
         response=response,
-        error=None if normalized_status in success_states or normalized_status in {"created", "running"} else task.status,
+        error=error,
         async_task_id=task.id,
         async_state=normalized_status,
     )
@@ -222,6 +230,27 @@ def list_my_tasks(
                 created_at=row.created_at,
                 updated_at=row.updated_at,
                 module="review",
+            )
+        )
+
+    # async 模块任务（InMemoryTaskManager）：所有权记录在 task_ownerships，
+    # 当前状态记录在 async_tasks。通过 JOIN 还原用户视角的任务清单，
+    # 使服务重启后仍能返回正确状态，而非 "Task not found"。
+    async_rows = db.execute(
+        select(AsyncTaskModel)
+        .join(TaskOwnershipModel, TaskOwnershipModel.task_id == AsyncTaskModel.id)
+        .where(TaskOwnershipModel.user_id == current_user.id)
+    ).scalars().all()
+    for row in async_rows:
+        items.append(
+            MyTaskItem(
+                id=row.id,
+                source=row.module or "async",
+                status=row.status,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+                module=row.module or None,
+                error=row.error or None,
             )
         )
 
@@ -366,6 +395,22 @@ def delete_project_history(
             )
         )
     )
+    async_task_rows = list(
+        db.scalars(
+            select(AsyncTaskModel).where(
+                AsyncTaskModel.id == task_id,
+                AsyncTaskModel.user_id == current_user.id,
+            )
+        )
+    )
+    ownership_rows = list(
+        db.scalars(
+            select(TaskOwnershipModel).where(
+                TaskOwnershipModel.task_id == task_id,
+                TaskOwnershipModel.user_id == current_user.id,
+            )
+        )
+    )
 
     workspace_row = db.scalars(
         select(WorkspaceStateModel).where(WorkspaceStateModel.user_id == current_user.id)
@@ -417,6 +462,10 @@ def delete_project_history(
     for row in diagnosis_rows:
         db.delete(row)
     for row in review_rows:
+        db.delete(row)
+    for row in async_task_rows:
+        db.delete(row)
+    for row in ownership_rows:
         db.delete(row)
 
     settings = request.app.state.container.settings

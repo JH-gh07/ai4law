@@ -247,7 +247,14 @@ def run_eu_scc():
 
 
 def main():
-    modules = sys.argv[1].split(",") if len(sys.argv) > 1 else ["pipia", "dpia", "us_14117", "cpra"]
+    argv = sys.argv[1:]
+    default_modules = ["pipia", "dpia", "us_14117", "cpra"]
+    if not argv:
+        modules = default_modules
+    elif argv[0] == "--modules":
+        modules = [m for m in argv[1].split(",") if m.strip()] if len(argv) > 1 else default_modules
+    else:
+        modules = [m for m in argv[0].split(",") if m.strip()]
     results = {}
 
     runners = {

@@ -17,6 +17,19 @@ def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ── Optional async-task persistence ────────────────────────────────────────
+# Configured once at app startup (mirrors SSEManager.configure_persistence).
+# When unset, the manager keeps working purely in-memory (used by unit tests).
+
+_session_factory: Any | None = None
+
+
+def configure_task_persistence(session_factory: Any) -> None:
+    """启用 async task 状态持久化（服务启动时调用一次）。"""
+    global _session_factory
+    _session_factory = session_factory
+
+
 @dataclass
 class TaskSnapshot:
     task_id: str
@@ -93,6 +106,7 @@ class InMemoryTaskManager:
         )
         with self._lock:
             self._tasks[task_id] = record
+        self._persist_status(record)
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
@@ -156,6 +170,7 @@ class InMemoryTaskManager:
         with self._lock:
             self._tasks[task_id] = record
         self._persist_manifest(record)
+        self._persist_status(record)
 
         # 必须先发布 CREATED 再启动线程，保证历史事件顺序稳定。
         from backend.common.trace.events import RunEvent
@@ -200,6 +215,7 @@ class InMemoryTaskManager:
             record.result = None
             record.cancel_event.clear()
         self._persist_manifest(record)
+        self._persist_status(record)
         self._executor.submit(self._execute, task_id)
         return self.get_or_raise(task_id)
 
@@ -216,6 +232,7 @@ class InMemoryTaskManager:
             record.cancel_event.set()
             trace_recorder = record.trace_recorder
         self._persist_manifest(record)
+        self._persist_status(record)
         payload = {
             "summary": f"任务已取消 ({self.module})",
             "detail": {"module": self.module, "state": "CANCELED"},
@@ -267,6 +284,7 @@ class InMemoryTaskManager:
                 detail={"module": self.module, "state": "RUNNING"},
             ))
         self._persist_manifest(record)
+        self._persist_status(record)
 
         try:
             cancel_token = current_cancel_event.set(record.cancel_event)
@@ -357,6 +375,7 @@ class InMemoryTaskManager:
             if trace_recorder is not None:
                 trace_recorder.write_manifest()
             self._persist_manifest(current)
+            self._persist_status(current)
         except TaskCancelled:
             return
         except Exception as exc:
@@ -391,6 +410,7 @@ class InMemoryTaskManager:
             if trace_recorder is not None:
                 trace_recorder.write_manifest()
             self._persist_manifest(current)
+            self._persist_status(current)
 
     @staticmethod
     def _persist_manifest(record: _TaskRecord) -> None:
@@ -414,6 +434,44 @@ class InMemoryTaskManager:
             error=record.error,
             trace_recorder=record.trace_recorder,
         )
+
+    @staticmethod
+    def _extract_result_path(result: Any) -> str:
+        """从 result 的 output_files 中提取首个非空产物路径（best-effort）。"""
+        if not isinstance(result, dict):
+            return ""
+        output_files = result.get("output_files")
+        if not isinstance(output_files, dict):
+            return ""
+        for value in output_files.values():
+            if isinstance(value, str) and value.strip():
+                return value
+        return ""
+
+    def _persist_status(self, record: _TaskRecord) -> None:
+        """将任务当前状态同步写入 async_tasks 表（best-effort）。
+
+        持久化失败绝不反噬任务执行本身——它只是服务重启后 workspace-recovery
+        的数据源。未配置 session factory 时（单元测试）直接跳过。
+        """
+        if _session_factory is None:
+            return
+        try:
+            from backend.models.async_task import AsyncTaskModel
+
+            with _session_factory() as db:
+                row = db.get(AsyncTaskModel, record.task_id)
+                if row is None:
+                    row = AsyncTaskModel(id=record.task_id, module=record.module)
+                    db.add(row)
+                row.status = record.state
+                row.error = record.error or ""
+                row.result_path = self._extract_result_path(record.result)
+                row.updated_at = datetime.now(timezone.utc)
+                db.commit()
+        except Exception:
+            # Persistence is a safety net; never let a DB hiccup fail a task.
+            pass
 
     @staticmethod
     def _bind_llm_snapshot(

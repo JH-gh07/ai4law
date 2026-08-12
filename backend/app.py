@@ -28,6 +28,9 @@ async def lifespan(app: FastAPI):
     from backend.common.events.manager import get_ssemanager
 
     get_ssemanager(container.session_factory)
+    from backend.common.tasks.manager import configure_task_persistence
+
+    configure_task_persistence(container.session_factory)
 
     async def _cleanup_loop():
         while True:

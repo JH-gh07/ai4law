@@ -10,6 +10,7 @@ class MyTaskItem(BaseModel):
     created_at: datetime
     updated_at: datetime
     module: str | None = None
+    error: str | None = None
 
 
 class MyTasksResponse(BaseModel):
