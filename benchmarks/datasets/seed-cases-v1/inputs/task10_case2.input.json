@@ -1,0 +1,30 @@
+{
+  "case_id": "task10_case2",
+  "task_no": 10,
+  "declared_task_name": "CPRA 合规",
+  "jurisdiction": "us",
+  "module_id": "us.cpra",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case2.docx",
+  "source_sha256": "0648cdafea3a12f0157d98f19e2e566e7f01a7b5807fed2b047a6097da35a8c5",
+  "source_size_bytes": 13161,
+  "input": {
+    "paragraphs": [
+      "以下内容为模拟数规通系统用户填写的申报信息。",
+      "1. 企业信息",
+      "2. 数据处理活动",
+      "3. 消费者权利响应机制",
+      "4. 技术与管理措施",
+      "用户补充说明：",
+      "这些都是雇佣关系下的正常管理操作，员工用了公司的设备就应该知道会被追踪。我们觉得雇佣关系下员工不适用CPRA，不需要发什么隐私通知。再说了，员工也没人来问我们要隐私政策。"
+    ]
+  },
+  "output_measure": {
+    "chars": 1601,
+    "paragraphs": 21,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

@@ -1,0 +1,48 @@
+{
+  "case_id": "task02_case3",
+  "task_no": 2,
+  "declared_task_name": "安全评估路径",
+  "jurisdiction": "cn",
+  "module_id": "cn.security_assessment",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case3.docx",
+  "source_sha256": "9313fdfde83394de58c3b382352a250dfe2ee815cafbc1f457e79858e9f5217a",
+  "source_size_bytes": 13173,
+  "input": {
+    "paragraphs": [
+      "1. 基础信息",
+      "公司全称：XX网络科技有限公司；统一社会信用代码：91110XXXXXXXXXX；法定代表人：王某；所属行业：互联网信息服务。",
+      "2. 自评估工作信息",
+      "自评估工作时间：2024年7月1日至8月15日。组织情况：由技术安全部牵头，联合产品部和法务部实施。实施方式：内部自评估。",
+      "3. 数据出境场景",
+      "业务描述：社交APP用户人脸识别数据传至美国的人脸识别算法服务商进行比对验证。目的：人脸识别登录和实名认证。频率：按需调用API。起止时间：2022年3月起长期持续。数据已经匿名化处理了，应该没什么风险。",
+      "4. 出境数据清单",
+      "数据项包括：用户人脸特征向量数据（非原始图像）、用户ID、注册时间戳。是否个人信息：是。是否敏感：是（人脸特征向量属于生物识别信息）。出境必要性：实现人脸识别登录和实名认证功能。示例：用户ID=U100234，特征向量[0.123, -0.456, ...]（512维浮点数组）。（注：用户未明确是否就人脸数据出境取得单独同意）",
+      "5. 系统与链路信息",
+      "存储位置：美国服务商服务器（AWS美国区域）。传输技术链路：通过HTTPS API调用传输，数据加密传输。",
+      "6. 安全保障能力",
+      "制度措施：已建立用户数据保护制度。技术措施：HTTPS加密传输、仅传输特征向量而非原始图像、数据加密存储、API访问密钥管理。",
+      "7. 境外接收方信息",
+      "基本情况：XX Face Recognition Inc.（美国），人脸识别技术服务商。处理目的：提供人脸比对API服务。安全能力：通过SOC 2 Type II认证，数据比对后即删除不留存。",
+      "8. 法律文件",
+      "已签订技术服务协议和数据处理协议，约定数据仅用于人脸比对验证、不得留存原始数据、比对完成后立即删除、不得用于其他目的。",
+      "9. 历史合规情况",
+      "2023年因未充分告知用户数据使用情况被网信部门约谈，已完成整改。",
+      "10. 个人信息保护",
+      "用户注册时在隐私政策中告知了人脸识别功能。（注：用户未明确是否就人脸数据出境取得单独同意，仅在隐私政策中概括告知）"
+    ]
+  },
+  "output_measure": {
+    "chars": 2053,
+    "paragraphs": 39,
+    "placeholder_tokens": [
+      "待补充",
+      "待定"
+    ]
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": [
+    "placeholder_in_output:待补充|待定"
+  ]
+}

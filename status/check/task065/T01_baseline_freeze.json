@@ -1,0 +1,17 @@
+{
+  "git_head": "5590843f7d4b4be7cdc8c27cc0707f0fe9a10d93",
+  "branch": "new",
+  "python": "3.11.9",
+  "node": "v23.11.0",
+  "resources_new_exists": false,
+  "seed_file_count": 50,
+  "seed_hash_mismatch_count": 0,
+  "seed_hash_mismatches": [],
+  "gold_standard": {
+    "source": "benchmarks/datasets/seed-cases-v1/_source/数规通黄金标准_v1.0.docx",
+    "manifest_sha": "e2e985ead307791ef50f7a6952c0b6e75fa4733a72b300e2492352a129040b60",
+    "disk_sha": "e2e985ead307791ef50f7a6952c0b6e75fa4733a72b300e2492352a129040b60",
+    "match": true,
+    "exists": true
+  }
+}

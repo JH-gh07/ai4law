@@ -1,0 +1,26 @@
+{
+  "case_id": "task05_case2",
+  "task_no": 5,
+  "declared_task_name": "SCC 审查",
+  "jurisdiction": "eu",
+  "module_id": "eu.scc_review",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task05/task05_case2.docx",
+  "source_sha256": "f2fe8feb8de6c161e01d274328fb95c0300920a3191cea0bc20eda7b7c63d743",
+  "source_size_bytes": 13433,
+  "input": {
+    "paragraphs": [
+      "【数规通系统填写 — SCC文件摘要】",
+      "【上传方陈述】",
+      "这家印度公司规模很大，声称他们自己已经通过了各种国际认证，合规的事情由他们自己负责就行了，我们作为甲方不用操心。我们双方签了一份普通的IT外包服务合同，里面写明了数据保密义务。我觉得这样应该没问题吧，毕竟人家是专业做这个的，印度那边数据保护要求也没欧洲这么严，我们管好自己的门店销售数据就行了。不过最近听说欧盟对跨境数据传输管得越来越严，我们有点拿不准，心里不太踏实。"
+    ]
+  },
+  "output_measure": {
+    "chars": 950,
+    "paragraphs": 30,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

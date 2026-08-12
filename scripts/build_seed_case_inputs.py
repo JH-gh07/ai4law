@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Extract seed-case fixtures from the 50 source DOCX files.
 
+The unique input list is `benchmarks/datasets/seed-cases-v1/manifest.json`
+(tasks -> files). File discovery by glob is FORBIDDEN here: the manifest is the
+authoritative collection, and every file must match its recorded path, size and
+SHA-256 exactly. Any missing/extra/renamed/rehashed file fails with a non-zero
+exit code.
+
 MARKERS (verified 2026-08-07 by dumping every heading-like paragraph in all 50
 files; see the marker diagnostic in the session record):
 
@@ -8,20 +14,14 @@ files; see the marker diagnostic in the session record):
     二、标准答案（即系统输出）   -> output section    (present in 50/50)
     三、备注                     -> remark section    (present in 50/50)
 
-An earlier version of this script searched for `二、输出信息` / `一、诊断结论`.
-Those strings do not occur in any of the 50 files, so the output span was never
-located and the script reported a bogus `no_output_marker_found: 45`.
-
 PLACEHOLDER DETECTION: only multi-character tokens are matched, and only inside
 the output span. The bare character `待` occurs 204 times across the corpus in
-ordinary legal prose (`未主张`, `期待`) and inside the legitimate section
-heading `（四）已知合规差距与待定项`; matching it produced a false
-"all 50 are stubs" reading. Verified ground truth: `待补充` in 10 files
-(task02 + task03), `待定` in the same 10, `待专家复核` in 0.
+ordinary legal prose; matching it produced a false "all 50 are stubs" reading.
 
-This script writes the INPUT side only. It does not write expected.json and it
-does not assert any answer is gold. Promotion of the authored output spans to
-evaluation expectations requires per-jurisdiction Legal sign-off (Q2).
+This script writes the INPUT side only (Level A source-fidelity extraction
+records). It does not write expected.json and it does not assert any answer is
+gold. Promotion of the authored output spans to evaluation expectations
+requires per-jurisdiction Legal sign-off (Q2).
 """
 
 from __future__ import annotations
@@ -30,13 +30,16 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 from docx import Document
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = ROOT / "benchmarks/datasets/seed-cases-v1/_source"
-OUT_DIR = ROOT / "benchmarks/datasets/seed-cases-v1"
+DATASET_DIR = ROOT / "benchmarks/datasets/seed-cases-v1"
+SRC_DIR = DATASET_DIR / "_source"
+MANIFEST_PATH = DATASET_DIR / "manifest.json"
+OUT_DIR = DATASET_DIR
 
 MARK_INPUT = "一、用户输入"
 MARK_OUTPUT = "二、标准答案（即系统输出）"
@@ -60,6 +63,8 @@ TASKS: dict[int, tuple[str, str, str, str]] = {
     9: ("14117 行政令合规", "us.eo_14117", "us", "partial"),
     10: ("CPRA 合规", "us.cpra", "us", "partial"),
 }
+
+_CANONICAL_RE = re.compile(r"^(task\d{2})_(case\d+)$")
 
 
 def sha256_of(path: Path) -> str:
@@ -97,11 +102,125 @@ def slice_sections(paras: list[str]) -> dict[str, list[str]]:
     }
 
 
-def build_record(path: Path) -> dict:
-    m = re.search(r"任务(\d+)_案例(\d+)", path.name)
+def load_manifest_entries() -> list[dict]:
+    """Return the 50 authoritative file entries from manifest.json."""
+    if not MANIFEST_PATH.exists():
+        print(f"ERROR manifest not found: {MANIFEST_PATH}")
+        raise SystemExit(2)
+
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    entries: list[dict] = []
+    for task_key in sorted(manifest.get("tasks", {})):
+        for f in manifest["tasks"][task_key].get("files", []):
+            entries.append(
+                {
+                    "file": f["file"],
+                    "hash": f["hash"],
+                    "size_bytes": f["size_bytes"],
+                    "task_key": task_key,
+                }
+            )
+    return entries
+
+
+def parse_canonical_name(filename: str) -> tuple[int, int]:
+    """Parse `taskNN_caseM.docx` into (task_no, case_no).
+
+    The canonical name is `task{NN}_case{M}.docx`. This parser is used only to
+    CROSS-CHECK the manifest-derived task/case identity; the manifest is the
+    authoritative list and the name must agree with it or the build fails.
+    """
+    stem = filename[:-5] if filename.endswith(".docx") else filename
+    m = re.fullmatch(r"task(\d{2})_case(\d+)", stem)
     if not m:
-        raise ValueError(f"cannot parse task/case from {path.name}")
-    task_no, case_no = int(m.group(1)), int(m.group(2))
+        raise ValueError(f"cannot parse canonical task/case from {filename}")
+    return int(m.group(1)), int(m.group(2))
+
+
+def load_gold_standard_source() -> str | None:
+    """Return the gold-standard DOCX path declared in the manifest, if any."""
+    if not MANIFEST_PATH.exists():
+        return None
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    gs = manifest.get("gold_standard") or {}
+    return gs.get("source")
+
+
+def verify_disk_vs_manifest(entries: list[dict]) -> None:
+    """Fail on any manifest/disk divergence.
+
+    Rejects: manifest has file but disk missing; disk has file but manifest
+    missing; count != 50; task/case parsed from name disagrees with manifest;
+    SHA-256 mismatch; size mismatch. The gold-standard DOCX is a sibling of the
+    50 seed files and is excluded from the case-file count check.
+    """
+    if len(entries) != 50:
+        print(f"ERROR expected 50 manifest entries, got {len(entries)}")
+        raise SystemExit(2)
+
+    gold_source = load_gold_standard_source()
+    disk_docx = {p.relative_to(ROOT).as_posix(): p for p in SRC_DIR.rglob("*.docx")}
+
+    manifest_paths = set()
+    for e in entries:
+        rel = e["file"]
+        manifest_paths.add(rel)
+        if rel not in disk_docx:
+            print(f"ERROR manifest file missing on disk: {rel}")
+            raise SystemExit(2)
+
+        path = disk_docx[rel]
+        actual_sha = sha256_of(path)
+        if actual_sha != e["hash"]:
+            print(f"ERROR hash mismatch: {rel}")
+            print(f"  manifest={e['hash']}")
+            print(f"  disk    ={actual_sha}")
+            raise SystemExit(2)
+
+        actual_size = path.stat().st_size
+        if actual_size != e["size_bytes"]:
+            print(f"ERROR size mismatch: {rel} manifest={e['size_bytes']} disk={actual_size}")
+            raise SystemExit(2)
+
+        # Cross-check task/case identity parsed from the canonical name.
+        try:
+            task_no, case_no = parse_canonical_name(path.name)
+        except ValueError as exc:
+            print(f"ERROR non-canonical filename: {rel} ({exc})")
+            raise SystemExit(2)
+
+        expected_task_key = f"task{task_no:02d}"
+        expected_case_id = f"task{task_no:02d}_case{case_no}"
+        if expected_task_key != e["task_key"]:
+            print(
+                f"ERROR task key mismatch: {rel} parsed={expected_task_key} "
+                f"manifest={e['task_key']}"
+            )
+            raise SystemExit(2)
+        if task_no not in TASKS:
+            print(f"ERROR unknown task_no {task_no} for {rel}")
+            raise SystemExit(2)
+
+    # Reject disk files not declared in the manifest. The gold-standard source
+    # is declared separately at manifest.gold_standard.source, not as a case
+    # file, so it is exempt from the case-file parity check.
+    extra = [p for p in disk_docx if p not in manifest_paths and p != gold_source]
+    if extra:
+        print("ERROR disk files not declared in manifest:")
+        for p in sorted(extra):
+            print(f"  {p}")
+        raise SystemExit(2)
+
+    # Reject a case-file set size other than 50 (defense in depth). The gold
+    # standard DOCX (if present) is not one of the 50 case files.
+    case_files = [p for p in disk_docx if p != gold_source]
+    if len(case_files) != 50:
+        print(f"ERROR expected 50 source case DOCX on disk, got {len(case_files)}")
+        raise SystemExit(2)
+
+
+def build_record(path: Path, entry: dict) -> dict:
+    task_no, case_no = parse_canonical_name(path.name)
     declared, module_id, jurisdiction, mapping_status = TASKS[task_no]
 
     paras = paragraphs_of(path)
@@ -128,7 +247,8 @@ def build_record(path: Path) -> dict:
         "module_id": module_id,
         "mapping_status": mapping_status,
         "source_docx": str(path.relative_to(ROOT)),
-        "source_sha256": sha256_of(path),
+        "source_sha256": entry["hash"],
+        "source_size_bytes": entry["size_bytes"],
         "input": {"paragraphs": sec["input"]},
         "output_measure": {
             "chars": len(out_text),
@@ -149,13 +269,17 @@ def main() -> int:
     ap.add_argument("--write", action="store_true", help="write fixtures to disk")
     args = ap.parse_args()
 
-    files = sorted(SRC_DIR.rglob("任务*_案例*_测试结果.docx"))
-    print(f"source DOCX found: {len(files)}")
-    if len(files) != 50:
-        print("ERROR expected 50 source files")
-        return 2
+    entries = load_manifest_entries()
+    print(f"manifest entries      : {len(entries)}")
 
-    records = [build_record(p) for p in files]
+    verify_disk_vs_manifest(entries)
+    print(f"source DOCX found     : {len(entries)}")
+    print("manifest/disk parity  : OK (paths, task/case, size, SHA-256 all match)")
+
+    records: list[dict] = []
+    for e in entries:
+        path = ROOT / e["file"]
+        records.append(build_record(path, e))
     records.sort(key=lambda r: (r["task_no"], r["case_id"]))
 
     mapping: dict[str, int] = {}
@@ -182,10 +306,7 @@ def main() -> int:
         return 0
 
     in_dir = OUT_DIR / "inputs"
-    exp_dir = OUT_DIR / "expected"
     in_dir.mkdir(parents=True, exist_ok=True)
-    exp_dir.mkdir(parents=True, exist_ok=True)
-    (exp_dir / ".gitkeep").write_text("", encoding="utf-8")
 
     for r in records:
         (in_dir / f"{r['case_id']}.input.json").write_text(
@@ -195,6 +316,7 @@ def main() -> int:
     manifest = {
         "dataset": "seed-cases-v1",
         "generated_by": "scripts/build_seed_case_inputs.py",
+        "source_manifest": str(MANIFEST_PATH.relative_to(ROOT)),
         "source_dir": str(SRC_DIR.relative_to(ROOT)),
         "case_count": len(records),
         "markers": {"input": MARK_INPUT, "output": MARK_OUTPUT, "remark": MARK_REMARK},

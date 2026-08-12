@@ -1,0 +1,37 @@
+{
+  "case_id": "task01_case1",
+  "task_no": 1,
+  "declared_task_name": "合规路径诊断",
+  "jurisdiction": "cn",
+  "module_id": "cn.transfer_diagnosis",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case1.docx",
+  "source_sha256": "a2d7ad9d7b8b042340a46b1116396e5149d8b497157fecd7f9c342f66084042a",
+  "source_size_bytes": 13422,
+  "input": {
+    "paragraphs": [
+      "问题1：是否包含重要数据？",
+      "不知道。我们主要是把用户通信记录、基站位置数据、套餐使用情况传到新加坡母公司做网络优化分析，具体算不算重要数据我们也不太清楚，反正都是自己的业务数据。",
+      "问题2：是否包含个人信息？",
+      "是。",
+      "问题3：是否属于法定豁免情形？",
+      "不清楚。说真的这就是集团内部的数据共享而已，都是自己人看的，应该不算出境吧？",
+      "问题4：是否属于CIIO？",
+      "不确定。我们确实是做电信运营的，但是从来没收到过CIIO的正式认定通知，所以也不太确定自己算不算。",
+      "问题5：累计出境个人信息类型？",
+      "含敏感。通信记录和位置信息应该算敏感的。",
+      "问题6：若仅一般个人信息，累计人数？",
+      "（含敏感个人信息，本题跳过）",
+      "问题7：若含敏感个人信息，累计人数？",
+      "≥1万。粗略算一下大概有200万用户的数据都在传。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2954,
+    "paragraphs": 35,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

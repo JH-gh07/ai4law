@@ -1,0 +1,28 @@
+{
+  "case_id": "task08_case4",
+  "task_no": 8,
+  "declared_task_name": "BD ROD 判断",
+  "jurisdiction": "eu",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case4.docx",
+  "source_sha256": "c0bae122ba6028b476c0a6b91b7b91788cc11f07d157da4878e24ef1ed65ec78",
+  "source_size_bytes": 12902,
+  "input": {
+    "paragraphs": [
+      "【数规通系统填写 — 数据处理项目描述】",
+      "【各方关系陈述】",
+      "我们的信用评分算法是基于客观数据的数学模型，算法是客观的，不存在歧视问题。收入、还款记录这些数据本身就是客观事实。",
+      "贷款审批是贷款机构的商业决策，我们只是提供一个参考分数。最终是否放贷由贷款机构决定，所以自动化决策的合规责任在他们那边。",
+      "我们不想向用户披露算法的具体逻辑，因为这是我们的核心商业机密。用户只需要知道他们的信用评分结果就行了。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2130,
+    "paragraphs": 48,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

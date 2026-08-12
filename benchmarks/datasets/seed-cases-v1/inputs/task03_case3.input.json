@@ -1,0 +1,42 @@
+{
+  "case_id": "task03_case3",
+  "task_no": 3,
+  "declared_task_name": "标准合同路径",
+  "jurisdiction": "cn",
+  "module_id": "cn.pipia",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case3.docx",
+  "source_sha256": "090393e789434e16cce3c63b0be96df98c704569e0389117b3849dfb7d05ab12",
+  "source_size_bytes": 12262,
+  "input": {
+    "paragraphs": [
+      "1. 处理者与出境活动基础信息",
+      "公司信息：XX游戏科技有限公司，互联网娱乐行业，非CIIO。业务概述：移动游戏开发与运营。出境场景描述：玩家游戏数据传至日本发行商用于游戏运营和数据分析。合法性基础：用户同意。必要性论证：海外发行需要将玩家数据传输至当地发行商进行本地化运营。",
+      "2. 出境个人信息清单",
+      "数据字段名：玩家ID、游戏昵称、账号等级、充值记录、登录IP地址、设备信息。业务描述：游戏运营。数据类型：一般个人信息。是否个人信息：是。是否敏感：否。示例数据：玩家ID=P20001，昵称\"战神\"，等级50，充值记录500元，登录IP=114.114.xxx.xxx。所属业务场景：游戏运营和数据分析。累计约50万玩家。",
+      "3. 系统与存储信息",
+      "存储位置：日本发行商服务器（东京区域）。传输链路：通过API加密传输，采用HTTPS协议。",
+      "4. 境外接收方信息",
+      "基本情况：XX Game Japan Co.（日本），游戏发行商。处理用途方式：游戏运营和数据分析。安全保护能力：通过ISO 27001认证。（缺失：接收方数据处理详情不明确，未说明是否转委托第三方、数据留存期限、数据存储位置等）",
+      "5. 法律文件",
+      "已签订游戏发行协议，其中包含数据共享条款。行业惯例都这样，发行商那边也是这么做的。",
+      "6. 合规证据",
+      "已在隐私政策中告知玩家数据可能出境。已建立用户数据保护制度。",
+      "7. 自我评估与整改情况",
+      "未开展正式PIPIA。未对照标准合同办法第五条进行自查。"
+    ]
+  },
+  "output_measure": {
+    "chars": 1439,
+    "paragraphs": 34,
+    "placeholder_tokens": [
+      "待补充",
+      "待定"
+    ]
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": [
+    "placeholder_in_output:待补充|待定"
+  ]
+}

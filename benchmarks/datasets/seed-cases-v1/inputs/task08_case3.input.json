@@ -1,0 +1,28 @@
+{
+  "case_id": "task08_case3",
+  "task_no": 8,
+  "declared_task_name": "BD ROD 判断",
+  "jurisdiction": "eu",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case3.docx",
+  "source_sha256": "510426b91ff15a65207c763cbdd20a6fdc23c95c78b6d0efc2cb6c6b466e26cc",
+  "source_size_bytes": 12846,
+  "input": {
+    "paragraphs": [
+      "【数规通系统填写 — 数据处理项目描述】",
+      "【各方关系陈述】",
+      "我们的服务条款里写了\"为改进服务质量，公司可使用客户数据进行分析和优化\"，服务条款覆盖了，所以用客户数据训练AI模型应该是没问题的。",
+      "客户上传数据是为了使用我们的服务，他们应该理解这包含数据被用于改进产品。而且我们训练的是通用模型，不是针对某个特定客户的数据。",
+      "云训练平台说他们只是提供算力，不接触数据内容，所以数据合规是我们这边的事情，跟他们无关。我们认为只要数据不离开我们的控制就行。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2147,
+    "paragraphs": 45,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

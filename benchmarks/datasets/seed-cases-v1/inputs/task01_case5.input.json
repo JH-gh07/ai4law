@@ -1,0 +1,37 @@
+{
+  "case_id": "task01_case5",
+  "task_no": 1,
+  "declared_task_name": "合规路径诊断",
+  "jurisdiction": "cn",
+  "module_id": "cn.transfer_diagnosis",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case5.docx",
+  "source_sha256": "d9e8f60ca803e74cb9478df6657644212a24f23ee4239214c409a7de5bec3513",
+  "source_size_bytes": 12963,
+  "input": {
+    "paragraphs": [
+      "问题1：是否包含重要数据？",
+      "不知道。我们是一家医疗AI公司，收集了5000人的全基因组测序数据，准备传给新加坡的合作医院做联合研究。基因数据算不算重要数据我们真不清楚，就是科研用的。",
+      "问题2：是否包含个人信息？",
+      "是。",
+      "问题3：是否属于法定豁免情形？",
+      "不清楚。我们觉得脱敏后应该就不算个人信息了吧？反正数据都去掉姓名了。",
+      "问题4：是否属于CIIO？",
+      "否。我们是民营医疗AI公司。",
+      "问题5：累计出境个人信息类型？",
+      "含敏感。基因组数据应该算敏感的。",
+      "问题6：若仅一般个人信息，累计人数？",
+      "（含敏感，本题跳过）",
+      "问题7：若含敏感个人信息，累计人数？",
+      "<1万。5000人的全基因组数据。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2661,
+    "paragraphs": 36,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

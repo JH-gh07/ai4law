@@ -1,0 +1,28 @@
+{
+  "case_id": "task08_case1",
+  "task_no": 8,
+  "declared_task_name": "BD ROD 判断",
+  "jurisdiction": "eu",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case1.docx",
+  "source_sha256": "7d34e0b13c609d14914698807631109aee8649f9f00222d932075422b64976a7",
+  "source_size_bytes": 12916,
+  "input": {
+    "paragraphs": [
+      "【数规通系统填写 — 数据处理项目描述】",
+      "【各方关系陈述】",
+      "我们收集的是通信元数据，已经做了匿名化处理，匿名化了就不受GDPR管了吧？而且通信元数据只是通话时长、时间这些技术数据，不算个人数据。",
+      "AdTech平台说他们负责所有数据合规，我们只管提供数据就行。我们之间的合同里写清楚了，数据一旦传给AdTech平台，合规责任就转移了。",
+      "广告主那边也觉得没问题，因为最终投放广告时用户身份已经被抽象化为画像标签了，不存在个人数据泄露的风险。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2207,
+    "paragraphs": 50,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

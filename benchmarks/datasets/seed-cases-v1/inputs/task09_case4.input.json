@@ -1,0 +1,33 @@
+{
+  "case_id": "task09_case4",
+  "task_no": 9,
+  "declared_task_name": "14117 行政令合规",
+  "jurisdiction": "us",
+  "module_id": "us.eo_14117",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task09/task09_case4.docx",
+  "source_sha256": "2d69239fcc78aa8ffb4b05d58ed7688ac4b20f28cf83508f82c060488df0d353",
+  "source_size_bytes": 12374,
+  "input": {
+    "paragraphs": [
+      "以下内容为模拟数规通系统用户填写的申报信息。",
+      "1. 数据清单",
+      "用户补充说明：",
+      "我们是一家数据经纪商，专门收集和整理消费者位置数据，然后提供给下游的营销和分析客户。我们计划将大约2万名用户的精确地理位置数据（精度在100米左右）出售给委内瑞拉的一家营销公司。这些位置数据很多都是从公开渠道或者APP上收集的，属于公开可获取的信息，应该不受什么限制吧？我们做这种数据交易已经很多年了，一直都没出过问题。所以这笔交易应该也没什么需要注意的吧？",
+      "2. 实体清单",
+      "（1）外部实体清单",
+      "（2）内部员工清单",
+      "• Carlos Mendez | 国籍：委内瑞拉 | 所属部门：销售部 | 岗位：国际客户经理（负责委内瑞拉客户对接）",
+      "• Linda Wang | 国籍：美国 | 所属部门：数据运营部 | 岗位：数据产品经理",
+      "• Robert Brown | 国籍：美国 | 所属部门：法务部 | 岗位：法务总监"
+    ]
+  },
+  "output_measure": {
+    "chars": 914,
+    "paragraphs": 17,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

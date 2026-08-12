@@ -1,0 +1,33 @@
+{
+  "case_id": "task04_case5",
+  "task_no": 4,
+  "declared_task_name": "豁免情形诊断",
+  "jurisdiction": "cn",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case5.docx",
+  "source_sha256": "3026600fe0d845c7f1414193068d656426fbb1e7cbce7010b5ab1c80eb27f6aa",
+  "source_size_bytes": 12005,
+  "input": {
+    "paragraphs": [
+      "问题1：出境数据场景描述",
+      "我们是综合服务公司，业务包括三块：跨境物流（为用户配送跨境包裹）、跨境支付（为用户处理跨境支付结算）和用户行为分析（产品推荐和运营优化）。三块业务的数据都传至海外服务器统一处理。",
+      "问题2：出境目的",
+      "多种目的：物流配送、支付处理、数据分析。全部都传到海外服务器上统一处理比较方便。",
+      "问题3：是否属于法定豁免情形？",
+      "全部都豁免吧？我们做的是跨境服务，用户都是主动用我们平台的。",
+      "问题4：不同业务场景的豁免范围分析",
+      "（缺失：用户未对不同业务场景的出境数据进行分类分析，未区分哪些数据适用豁免、哪些不适用，未评估各业务线的数据传输必要性）",
+      "问题5：累计数据量",
+      "大概50万用户的数据。其中物流和支付相关的约30万用户，行为分析相关的约50万（包含前面30万用户的行为数据）。"
+    ]
+  },
+  "output_measure": {
+    "chars": 1642,
+    "paragraphs": 28,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

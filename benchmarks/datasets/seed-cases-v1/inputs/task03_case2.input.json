@@ -1,0 +1,42 @@
+{
+  "case_id": "task03_case2",
+  "task_no": 3,
+  "declared_task_name": "标准合同路径",
+  "jurisdiction": "cn",
+  "module_id": "cn.pipia",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case2.docx",
+  "source_sha256": "28002d4e64162a8adfa1bc740c1f3d04f6322fb7a44c57695cc7b5c8dbce24b0",
+  "source_size_bytes": 12065,
+  "input": {
+    "paragraphs": [
+      "1. 处理者与出境活动基础信息",
+      "公司信息：XX咨询有限公司，商务服务业，非CIIO。业务概述：提供管理咨询服务。出境场景描述：客户数据传至英国办公室用于全球客户服务协同。合法性基础：履行合同。必要性论证：全球客户服务需要统一客户视图和信息共享。",
+      "2. 出境个人信息清单",
+      "数据字段名：客户姓名、电子邮箱、电话号码、公司名称、职位、咨询记录摘要。业务描述：客户关系管理。数据类型：一般个人信息。是否个人信息：是。是否敏感：否。示例数据：客户李某，lisi@company.com，138XXXX1234，XX科技有限公司，总监。所属业务场景：客户服务。累计约15万客户。",
+      "3. 系统与存储信息",
+      "存储位置：英国办公室本地服务器。传输链路：通过加密邮件和VPN传输。",
+      "4. 境外接收方信息",
+      "基本情况：XX Consulting UK Ltd.（英国），同集团子公司。处理用途方式：客户服务和项目管理。安全保护能力：部署防火墙、加密存储、访问控制。",
+      "5. 法律文件",
+      "已签订集团内部数据共享协议。只是数据共享而已，应该不需要什么特别的合同吧？",
+      "6. 合规证据",
+      "已在服务协议中告知客户数据将共享至全球办公室。已建立客户信息保密制度。",
+      "7. 自我评估与整改情况",
+      "未开展PIPIA。未对照《个人信息出境标准合同办法》第五条进行自查。（缺失：PIPIA未完成，标准合同未签订）"
+    ]
+  },
+  "output_measure": {
+    "chars": 1299,
+    "paragraphs": 33,
+    "placeholder_tokens": [
+      "待补充",
+      "待定"
+    ]
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": [
+    "placeholder_in_output:待补充|待定"
+  ]
+}

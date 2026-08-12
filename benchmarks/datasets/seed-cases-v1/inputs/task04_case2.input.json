@@ -1,0 +1,33 @@
+{
+  "case_id": "task04_case2",
+  "task_no": 4,
+  "declared_task_name": "豁免情形诊断",
+  "jurisdiction": "cn",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case2.docx",
+  "source_sha256": "fe8c191ea621a0684c038129a43492a3a90e40018c900108f2a00b987a32d731",
+  "source_size_bytes": 12016,
+  "input": {
+    "paragraphs": [
+      "问题1：出境数据场景描述",
+      "我们是跨国企业，中国区员工数据需要传到全球HR系统（德国总部）进行统一管理。传输的数据包括员工姓名、工号、职位、薪酬、绩效评估、社保信息等。",
+      "问题2：出境目的",
+      "跨境人力资源管理。全球HR统一管理就行，所有分公司的数据都汇总到总部处理。",
+      "问题3：是否属于法定豁免情形？",
+      "是，属于跨境人力资源管理。",
+      "问题4：是否已依法制定劳动规章制度？",
+      "我们有员工手册，但是里面好像没有专门提到数据出境的内容。具体是不是依法制定的我也不太确定。",
+      "问题5：是否涉及敏感个人信息？",
+      "包含员工的银行卡号用于薪酬发放，还有几个高管的薪酬数据。"
+    ]
+  },
+  "output_measure": {
+    "chars": 1725,
+    "paragraphs": 27,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

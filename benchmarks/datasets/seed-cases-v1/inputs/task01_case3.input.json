@@ -1,0 +1,37 @@
+{
+  "case_id": "task01_case3",
+  "task_no": 1,
+  "declared_task_name": "合规路径诊断",
+  "jurisdiction": "cn",
+  "module_id": "cn.transfer_diagnosis",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task01/task01_case3.docx",
+  "source_sha256": "811cb29213a0a0a16a6b805e7e845ca866a4559b284400c6deb448b4c123458e",
+  "source_size_bytes": 12678,
+  "input": {
+    "paragraphs": [
+      "问题1：是否包含重要数据？",
+      "否。就是员工的门禁指纹数据，没什么重要的。",
+      "问题2：是否包含个人信息？",
+      "是。",
+      "问题3：是否属于法定豁免情形？",
+      "不清楚。量不大应该不用做什么吧？就几千人的指纹数据而已。",
+      "问题4：是否属于CIIO？",
+      "否。我们是德资制造业企业，做汽车零部件的。",
+      "问题5：累计出境个人信息类型？",
+      "不确定。就是指纹门禁数据，传到德国总部做统一门禁系统管理，这个算敏感吗？",
+      "问题6：若仅一般个人信息，累计人数？",
+      "（不确定是否含敏感，暂按含敏感处理）",
+      "问题7：若含敏感个人信息，累计人数？",
+      "<1万。大概6000个员工的指纹数据。"
+    ]
+  },
+  "output_measure": {
+    "chars": 2294,
+    "paragraphs": 34,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

@@ -1,0 +1,31 @@
+{
+  "case_id": "task06_case2",
+  "task_no": 6,
+  "declared_task_name": "TIA 审查",
+  "jurisdiction": "eu",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case2.docx",
+  "source_sha256": "abf2fb52c5808670b6e179034425b823d6e507ff04423ce44190d0bb0b65ba16",
+  "source_size_bytes": 13094,
+  "input": {
+    "paragraphs": [
+      "【数规通系统填写 — TIA审查表单（六项信息）】",
+      "1. 了解您的传输",
+      "2. 识别所用传输工具",
+      "3. 评估目的地法律与实践",
+      "上传方陈述：我们和中国合资公司签了详细的合同，数据保护条款写得很清楚，合同条款足够保护数据了。中国有个人信息保护法，法律体系也很完善，不需要额外搞那么多评估。",
+      "4. 识别补充措施",
+      "5. 实施步骤与意见",
+      "6. 定期复审"
+    ]
+  },
+  "output_measure": {
+    "chars": 1984,
+    "paragraphs": 46,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

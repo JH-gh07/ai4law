@@ -1,0 +1,33 @@
+{
+  "case_id": "task04_case3",
+  "task_no": 4,
+  "declared_task_name": "豁免情形诊断",
+  "jurisdiction": "cn",
+  "module_id": "",
+  "mapping_status": "conflict",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case3.docx",
+  "source_sha256": "64e033de674edbfadeb82d0a7885c7d2ab5e54c9b985c91e3af49b94773fb0ae",
+  "source_size_bytes": 12048,
+  "input": {
+    "paragraphs": [
+      "问题1：出境数据场景描述",
+      "我们是三甲医院，遇到疑难病例时需要把患者数据（病历、检验结果、影像数据、基因检测报告）传给海外专家进行远程会诊。",
+      "问题2：出境目的",
+      "紧急情况下保护患者生命健康。以防万一先传了，毕竟紧急情况嘛，等走流程可能就来不及了。",
+      "问题3：是否属于法定豁免情形？",
+      "是，属于紧急情况保护生命健康财产安全。",
+      "问题4：紧急情况的认定标准与证明",
+      "（缺失：用户未提供紧急情况的认定标准、主治医师的判定记录、紧急情况证明材料、医院伦理委员会意见等）",
+      "问题5：是否在紧急情况消除后履行告知义务",
+      "（缺失：用户未说明是否在紧急情况消除后向患者或其家属告知数据出境情况并补正相关手续）"
+    ]
+  },
+  "output_measure": {
+    "chars": 1789,
+    "paragraphs": 29,
+    "placeholder_tokens": []
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": []
+}

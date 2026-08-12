@@ -1,0 +1,48 @@
+{
+  "case_id": "task02_case1",
+  "task_no": 2,
+  "declared_task_name": "安全评估路径",
+  "jurisdiction": "cn",
+  "module_id": "cn.security_assessment",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case1.docx",
+  "source_sha256": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
+  "source_size_bytes": 13517,
+  "input": {
+    "paragraphs": [
+      "1. 基础信息",
+      "公司全称：XX城商银行股份有限公司；统一社会信用代码：91310XXXXXXXXXX；法定代表人：张某；所属行业：金融业（银行业）。",
+      "2. 自评估工作信息",
+      "自评估工作时间：2024年6月1日至7月15日。组织情况：由信息科技部牵头，联合合规法务部、风险管理部共同实施。实施方式：内部自评估。",
+      "3. 数据出境场景",
+      "业务描述：本行核心银行系统数据迁移至AWS海外云区域进行灾备存储和全球化业务支撑。目的：灾备恢复和海外分支机构业务查询。频率：实时同步。起止时间：2024年8月起长期持续。我们觉得只是把数据存在AWS海外节点上做灾备，这应该不算严格意义上的出境吧？毕竟数据还是我们自己在管理。",
+      "4. 出境数据清单",
+      "数据项包括：客户账户信息（账号、余额、开户日期）、交易记录（流水号、交易金额、交易时间）、信贷数据（贷款合同号、贷款金额、还款记录）、客户身份信息（姓名、证件类型、证件号码、手机号码、联系地址）。是否个人信息：是。是否敏感：是（证件号码、手机号码属敏感个人信息）。出境必要性：支持海外分支机构业务查询和灾备恢复。示例：客户张某，账号6228XXXX1234，余额50000元，身份证号310XXXXXXXXXXXX1234。",
+      "5. 系统与链路信息",
+      "存储位置：AWS海外云区域。传输技术链路：通过专线加密传输，采用SSL/TLS协议。（注：用户未说明AWS海外区域具体所在国家/地区）",
+      "6. 安全保障能力",
+      "制度措施：已建立信息安全管理制度体系，包括《信息安全管理规范》《数据分类分级管理办法》等。技术措施：SSL/TLS加密传输、AES-256静态加密、基于角色的访问控制（RBAC）、全量审计日志。",
+      "7. 境外接收方信息",
+      "基本情况：Amazon Web Services, Inc.，美国企业。处理目的：提供云计算基础设施服务（IaaS）。安全能力：通过ISO 27001、SOC 2 Type II、CSA STAR等认证。",
+      "8. 法律文件",
+      "已与AWS签订数据处理协议（DPA），约定数据处理目的、安全措施、数据主体权利保障、数据泄露通知时限（72小时）、子处理者管理等条款。",
+      "9. 历史合规情况",
+      "近三年无数据安全相关行政处罚记录。2023年通过网络安全等级保护三级测评。",
+      "10. 个人信息保护",
+      "已在隐私政策中告知客户数据可能存储于境外云平台。（注：用户未明确是否已就数据出境取得客户单独同意）"
+    ]
+  },
+  "output_measure": {
+    "chars": 2163,
+    "paragraphs": 39,
+    "placeholder_tokens": [
+      "待补充",
+      "待定"
+    ]
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": [
+    "placeholder_in_output:待补充|待定"
+  ]
+}

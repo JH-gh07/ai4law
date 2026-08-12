@@ -1,0 +1,42 @@
+{
+  "case_id": "task03_case4",
+  "task_no": 3,
+  "declared_task_name": "标准合同路径",
+  "jurisdiction": "cn",
+  "module_id": "cn.pipia",
+  "mapping_status": "partial",
+  "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case4.docx",
+  "source_sha256": "3e9adb6b46bdf77b1106b146e41f9230f4d49713232d120790a624d4bd849499",
+  "source_size_bytes": 12663,
+  "input": {
+    "paragraphs": [
+      "1. 处理者与出境活动基础信息",
+      "公司信息：XX教育科技有限公司，教育培训行业，非CIIO。业务概述：K-12课外教育培训。出境场景描述：学生数据传至海外合作教育机构用于课程开发和教学研究。合法性基础：用户同意。必要性论证：国际合作课程开发需要共享学生学习数据。总出境个人信息约12万（学生8万+家长4万）。",
+      "2. 出境个人信息清单",
+      "数据字段名：学生姓名、年龄、年级、学科成绩、出勤记录、家长联系方式、人脸识别数据（5000条）。业务描述：教育培训管理。数据类型：含敏感个人信息。是否个人信息：是。是否敏感：是（人脸数据属生物识别敏感个人信息；部分学生不满14周岁，其全部个人信息为敏感个人信息）。示例数据：学生张某，12岁，六年级，数学95分，出勤率98%。人脸数据用于校园门禁系统。所属业务场景：教学管理和校园安防。",
+      "3. 系统与存储信息",
+      "存储位置：海外合作机构服务器。传输链路：通过API加密传输，采用HTTPS协议。",
+      "4. 境外接收方信息",
+      "基本情况：XX Education International（海外），教育服务机构。处理用途方式：课程开发和教学研究。安全保护能力：通过ISO 27001认证。",
+      "5. 法律文件",
+      "已签订合作协议，其中包含数据共享条款。",
+      "6. 合规证据",
+      "家长在入学协议中签字同意数据使用。已建立学生信息保护制度。（缺失：未就人脸数据出境取得家长单独同意，入学协议中的概括签字不构成针对敏感个人信息出境的单独同意）",
+      "7. 自我评估与整改情况",
+      "未开展正式PIPIA。未对照标准合同办法第五条进行自查。"
+    ]
+  },
+  "output_measure": {
+    "chars": 1877,
+    "paragraphs": 36,
+    "placeholder_tokens": [
+      "待补充",
+      "待定"
+    ]
+  },
+  "expected_status": "pending_authoring",
+  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
+  "data_quality_flags": [
+    "placeholder_in_output:待补充|待定"
+  ]
+}
