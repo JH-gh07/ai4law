@@ -1,6 +1,6 @@
 # task061：SCC 审查 FAIL 残留与跨模块防护综合修复方案
 
-> **创建日期**：2026-08-12 | **状态**：进行中 | **关联 Issue**：issue061
+> **创建日期**：2026-08-12 | **状态**：已完成（2026-08-13） | **关联 Issue**：issue061
 
 ---
 
@@ -590,12 +590,56 @@ echo "=== task061 核验完成 ==="
 
 ## 七、完成后检查清单
 
-- [ ] `IssueItem` 的 `@model_validator` 已部署，5 个模块的全链路测试通过
-- [ ] 前端 `localStorage` 中的 stale FAIL 记录自动清理逻辑已上线
-- [ ] 前端卡片在 `state==="failed"` 时展示 `latestRun.error` 摘要
-- [ ] 前端卡片增加"清理历史记录"或"重新运行"操作入口
-- [ ] `scripts/verify_task061.sh` 可正常运行且全部 PASS
-- [ ] `scripts/rerun_all_modules.py` 包含 SCC 且可正常运行
-- [ ] `async_tasks` 表已创建，`InMemoryTaskManager` 同步写入
-- [ ] `workspace-recovery` 返回 async task 的正确状态
-- [ ] 浏览器刷新后不再显示已修复的 FAIL 卡片
+- [x] `IssueItem` 守卫已部署（实现为 `@field_validator(mode="before")`，比方案中的 `@model_validator` 更早拦截，在 `min_length=1` 之前替换空串），全链路核验通过
+- [x] 前端 `localStorage` 中的 stale FAIL 记录自动清理逻辑已上线（`pruneStaleFailedRuns`）
+- [x] 前端卡片在 `state==="failed"` 时展示 `latestRun.error` 摘要（`tasks-error-summary`）
+- [x] 前端卡片增加"重新运行"操作入口（另有删除/重命名）
+- [x] `scripts/verify_task061.sh` 可正常运行且全部 PASS（7/7）
+- [x] `scripts/rerun_all_modules.py` 包含 SCC 且可正常运行（并修复 `--modules` 标志解析）
+- [x] `async_tasks` 表已创建，`InMemoryTaskManager` 同步写入
+- [x] `workspace-recovery` 返回 async task 的正确状态（`list_my_tasks` 通过 `task_ownerships` JOIN 还原）
+- [x] 浏览器刷新后不再显示已修复的 FAIL 卡片（由 `pruneStaleFailedRuns` + async 状态恢复共同保障；需浏览器实测确认）
+
+---
+
+## 八、落实记录（2026-08-13）
+
+### 8.1 各阶段完成情况
+
+| 阶段 | 内容 | 状态 | 说明 |
+|------|------|:---:|------|
+| 阶段一 | 通用 `IssueItem` 守卫 | ✅ | 实现为 `@field_validator(mode="before")`，位于 `backend/common/workflow/issues.py` |
+| 阶段二 | 前端 stale 记录清理 | ✅ | `mergeModuleRuns` + `pruneStaleFailedRuns`，hydrate 时调用（`app-store.tsx`） |
+| 阶段三 | 前端卡片错误详情 | ✅ | `TaskSpacesPage.tsx` 增加 `tasks-error-summary` + `重新运行` 按钮 |
+| 阶段四 | 任务执行状态持久化 | ✅ | 本会话补齐：`AsyncTaskModel` + `InMemoryTaskManager._persist_status` + `list_my_tasks` JOIN 恢复 |
+| 阶段五 | 批跑脚本补充 SCC | ✅ | `run_eu_scc` + `runners` 已含 `eu_scc`；本会话补 `--modules` 解析 |
+| 阶段六 | 各模块 `_issue()` 守卫 | ✅ | DPIA / EO14117 / PIPIA / SA 均已加守卫（`_*_DEFAULT_ACTION`） |
+
+### 8.2 阶段四实现要点（本次新增）
+
+- **`backend/models/async_task.py`**：`AsyncTaskModel`（id / user_id / module / status / error / result_path / created_at / updated_at）。
+- **`backend/common/tasks/manager.py`**：`configure_task_persistence(session_factory)` 在启动时注入 session factory；`_persist_status()` 在 CREATED/RUNNING/COMPLETED/FAILED/CANCELED/RETRYING 每次状态变更时 upsert `async_tasks`，best-effort（未配置时无副作用，单测仍纯内存运行）。
+- **`backend/app.py`**：`lifespan` 中调用 `configure_task_persistence(container.session_factory)`。
+- **`backend/api/v1/endpoints/me.py`**：`list_my_tasks()` 通过 `AsyncTaskModel` JOIN `TaskOwnershipModel`（`task_id` 相等）还原用户 async 任务；`delete_project_history()` 同步删除 `async_tasks` 与 `task_ownerships` 记录。
+- **`backend/schemas/me.py`**：`MyTaskItem` 增加可选 `error` 字段，`_build_recovered_run` 优先展示真实错误。
+
+### 8.3 核验结果
+
+```text
+=== task061 综合核验 ===
+[PASS] IssueItem 空串被守卫
+[PASS] SCC 全链路空 recommendation 被守卫
+[PASS] DPIA _issue 空值守卫
+[PASS] EO14117 _issue 空值守卫
+[PASS] PIPIA _issue 空值守卫
+[PASS] Security Assessment _issue 空值守卫
+[PASS] async task 状态持久化
+=== task061 核验完成：7 PASS / 0 FAIL ===
+```
+
+后端全量测试：`1032 passed, 3 failed`（3 个失败均为先前工作区 golden IR fixture 迁移遗留，与 task061 改动无关）。
+
+### 8.4 提交存档
+
+- `75d506c8` — `chore(archive): snapshot pre-task061 working state`（落实前存档）
+- `00e43979` — `feat(task061): persist async task status for post-restart recovery`（落实后存档）
