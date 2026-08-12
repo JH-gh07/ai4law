@@ -569,6 +569,138 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
         </div>
       </section>
 
+      {tab !== "citation" ? (
+        <section className="kc-filter-bar">
+          {tab === "sources" ? (
+            <>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.sourceFilterCategory}</small>
+                <div className="knowledge-chip-row">
+                  {sourceCategoryOptions.map((option) => (
+                    <button key={option} className={`chip-btn ${selectedCategories.includes(option) ? "active" : ""}`}
+                      onClick={() => setSelectedCategories((prev) => toggleValue(prev, option))}>
+                      {option}
+                    </button>
+                  ))}
+                  {sourceCategoryOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                </div>
+                <div className="knowledge-filter-actions">
+                  <button className="ghost-btn" onClick={() => setSelectedCategories(sourceCategoryOptions)}>{copy.selectAll}</button>
+                  <button className="ghost-btn" onClick={() => setSelectedCategories([])}>{copy.clearAll}</button>
+                </div>
+              </div>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.sourceFilterJurisdiction}</small>
+                <div className="knowledge-chip-row">
+                  {sourceJurisdictionOptions.map((option) => (
+                    <button key={option} className={`chip-btn ${selectedSourceJurisdictions.includes(option) ? "active" : ""}`}
+                      onClick={() => setSelectedSourceJurisdictions((prev) => toggleValue(prev, option))}>
+                      {option}
+                    </button>
+                  ))}
+                  {sourceJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                </div>
+                <div className="knowledge-filter-actions">
+                  <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions(sourceJurisdictionOptions)}>{copy.selectAll}</button>
+                  <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions([])}>{copy.clearAll}</button>
+                </div>
+              </div>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.sourceFilterUsage}</small>
+                <div className="knowledge-chip-row">
+                  {sourceUsageOptions.map((option) => (
+                    <button key={option} className={`chip-btn ${selectedUsages.includes(option) ? "active" : ""}`}
+                      onClick={() => setSelectedUsages((prev) => toggleValue(prev, option))}>
+                      {option}
+                    </button>
+                  ))}
+                  {sourceUsageOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                </div>
+                <div className="knowledge-filter-actions">
+                  <button className="ghost-btn" onClick={() => setSelectedUsages(sourceUsageOptions)}>{copy.selectAll}</button>
+                  <button className="ghost-btn" onClick={() => setSelectedUsages([])}>{copy.clearAll}</button>
+                </div>
+              </div>
+            </>
+          ) : tab === "cases" ? (
+            <>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.caseFilterJurisdiction}</small>
+                <div className="knowledge-chip-row">
+                  {caseJurisdictionOptions.map((option) => (
+                    <button key={option} className={`chip-btn ${selectedCaseJurisdictions.includes(option) ? "active" : ""}`}
+                      onClick={() => setSelectedCaseJurisdictions((prev) => toggleValue(prev, option))}>
+                      {option}
+                    </button>
+                  ))}
+                  {caseJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                </div>
+                <div className="knowledge-filter-actions">
+                  <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions(caseJurisdictionOptions)}>{copy.selectAll}</button>
+                  <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions([])}>{copy.clearAll}</button>
+                </div>
+              </div>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.caseFilterScenario}</small>
+                <div className="knowledge-chip-row">
+                  {caseScenarioOptions.map((option) => (
+                    <button key={option} className={`chip-btn ${selectedScenarios.includes(option) ? "active" : ""}`}
+                      onClick={() => setSelectedScenarios((prev) => toggleValue(prev, option))}>
+                      {option}
+                    </button>
+                  ))}
+                  {caseScenarioOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
+                </div>
+                <div className="knowledge-filter-actions">
+                  <button className="ghost-btn" onClick={() => setSelectedScenarios(caseScenarioOptions)}>{copy.selectAll}</button>
+                  <button className="ghost-btn" onClick={() => setSelectedScenarios([])}>{copy.clearAll}</button>
+                </div>
+              </div>
+            </>
+          ) : tab === "articles" ? (
+            <>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.articlesFilterJurisdiction}</small>
+                <div className="knowledge-chip-row">
+                  {["cn", "eu", "us"].map((jur) => (
+                    <button
+                      key={jur}
+                      className={`chip-btn ${articlesJurisdiction === jur ? "active" : ""}`}
+                      onClick={() => setArticlesJurisdiction((prev) => prev === jur ? "" : jur)}
+                    >
+                      {jur.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="knowledge-filter-group kc-filter-group-h">
+                <small>{copy.articlesFilterPath}</small>
+                <div className="knowledge-chip-row">
+                  {ARTICLE_SCENARIO_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`chip-btn ${articlesPath === option.value ? "active" : ""}`}
+                      onClick={() => setArticlesPath((prev) => prev === option.value ? "" : option.value)}
+                    >
+                      {lang === "zh" ? option.zh : option.en}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="knowledge-filter-group kc-filter-group-h" style={{ minWidth: "220px" }}>
+                <small>{copy.articlesPlaceholder}</small>
+                <input
+                  className="resource-search"
+                  placeholder={copy.articlesPlaceholder}
+                  value={articlesQuery}
+                  onChange={(e) => setArticlesQuery(e.target.value)}
+                />
+              </div>
+            </>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="kc-main-grid">
         <aside className="kc-col">
           <header className="kc-col-head">
@@ -578,53 +710,6 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
           <div className="kc-col-body">
             {tab === "sources" ? (
               <>
-                <div className="knowledge-filter-grid">
-                  <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterCategory}</small>
-                    <div className="knowledge-chip-row">
-                      {sourceCategoryOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedCategories.includes(option) ? "active" : ""}`} onClick={() => setSelectedCategories((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {sourceCategoryOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedCategories(sourceCategoryOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedCategories([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterJurisdiction}</small>
-                    <div className="knowledge-chip-row">
-                      {sourceJurisdictionOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedSourceJurisdictions.includes(option) ? "active" : ""}`} onClick={() => setSelectedSourceJurisdictions((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {sourceJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions(sourceJurisdictionOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedSourceJurisdictions([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.sourceFilterUsage}</small>
-                    <div className="knowledge-chip-row">
-                      {sourceUsageOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedUsages.includes(option) ? "active" : ""}`} onClick={() => setSelectedUsages((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {sourceUsageOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedUsages(sourceUsageOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedUsages([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                </div>
                 <div className="evidence-hit-scroll kc-list-scroll">
                   {filteredSources.map((row) => {
                     const sourceId = rowText(row, "source_id");
@@ -643,38 +728,6 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
 
             {tab === "cases" ? (
               <>
-                <div className="knowledge-filter-grid">
-                  <div className="knowledge-filter-group">
-                    <small>{copy.caseFilterJurisdiction}</small>
-                    <div className="knowledge-chip-row">
-                      {caseJurisdictionOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedCaseJurisdictions.includes(option) ? "active" : ""}`} onClick={() => setSelectedCaseJurisdictions((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {caseJurisdictionOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions(caseJurisdictionOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedCaseJurisdictions([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.caseFilterScenario}</small>
-                    <div className="knowledge-chip-row">
-                      {caseScenarioOptions.map((option) => (
-                        <button key={option} className={`chip-btn ${selectedScenarios.includes(option) ? "active" : ""}`} onClick={() => setSelectedScenarios((prev) => toggleValue(prev, option))}>
-                          {option}
-                        </button>
-                      ))}
-                      {caseScenarioOptions.length === 0 ? <span className="chip-empty">{copy.optionsEmpty}</span> : null}
-                    </div>
-                    <div className="knowledge-filter-actions">
-                      <button className="ghost-btn" onClick={() => setSelectedScenarios(caseScenarioOptions)}>{copy.selectAll}</button>
-                      <button className="ghost-btn" onClick={() => setSelectedScenarios([])}>{copy.clearAll}</button>
-                    </div>
-                  </div>
-                </div>
                 <div className="evidence-hit-scroll kc-list-scroll">
                   {filteredCases.map((row) => {
                     const caseId = rowText(row, "case_id");
@@ -693,43 +746,6 @@ export function EvidenceCenterPage() {// 知识库中心页面组件
 
             {tab === "articles" ? (
               <>
-                <div className="knowledge-filter-grid">
-                  <div className="knowledge-filter-group">
-                    <small>{copy.articlesFilterJurisdiction}</small>
-                    <div className="knowledge-chip-row">
-                      {["cn", "eu", "us"].map((jur) => (
-                        <button
-                          key={jur}
-                          className={`chip-btn ${articlesJurisdiction === jur ? "active" : ""}`}
-                          onClick={() => setArticlesJurisdiction((prev) => prev === jur ? "" : jur)}
-                        >
-                          {jur.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="knowledge-filter-group">
-                    <small>{copy.articlesFilterPath}</small>
-                    <div className="knowledge-chip-row">
-                      {ARTICLE_SCENARIO_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          className={`chip-btn ${articlesPath === option.value ? "active" : ""}`}
-                          onClick={() => setArticlesPath((prev) => prev === option.value ? "" : option.value)}
-                        >
-                          {lang === "zh" ? option.zh : option.en}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <label className="field-wrap" style={{ marginTop: "0.5rem" }}>
-                    <input
-                      placeholder={copy.articlesPlaceholder}
-                      value={articlesQuery}
-                      onChange={(e) => setArticlesQuery(e.target.value)}
-                    />
-                  </label>
-                </div>
                 <div className="evidence-hit-scroll kc-list-scroll">
                   {articlesLoading ? <p className="resource-empty">{copy.articlesSearching}</p> : null}
                   {!articlesLoading && articlesQuery.trim() && articlesResults.length === 0 ? (

@@ -1,6 +1,7 @@
 # DataComplyFlow Resources
 
 > **生成时间**: 2026-08-10（由 issue064 深度审计推动的完整文档化）
+> **最后更新**: 2026-08-12（`resources/new` 分层迁移完成后同步）
 >
 > 本目录保存可复用的仓库资源——法规原文、快照、条文注册表、业务规则、报告模板、研究文献及产品设计输入。
 > **不保存**运行生成的索引、Trace、上传件或 Benchmark Gold。
@@ -12,23 +13,21 @@ resources/
 │   ├── README.md
 │   ├── catalog/                          ← 来源编目与策略文件
 │   ├── registry/                         ← 运行时注册表与条文语料
-│   └── sources/                          ← 原始法规原文与采集快照（按法域分）
+│   └── sources/                          ← 原始法规原文与采集快照（按 11 法域分）
 ├── rules/                                ← 确定性业务规则（生产级）
 ├── templates/                            ← 经审核的报告结构与交付模板（生产级）
 ├── standards/                            ← 国标/行标参考 PDF
 ├── manuals/                              ← 实务操作手册
-├── research/                             ← 研究材料（不参与生产运行）
-│   ├── README.md
-│   ├── papers/                           ← 学术论文 PDF
-│   ├── product-design-sources/           ← 早期产品设计输入与统筹文档
-│   ├── module-specs/                     ← 历史模块功能说明与测试案例
-│   └── benchmarks/                       ← 参考 Benchmark 论文
-└── new/                                  ← 待迁移/待处理材料（暂不参与生产）
-    ├── 知识库补充/                        ← 区域法律原始 PDF（8 法域，约 55 个）
-    ├── 数规通功能路径描述…/               ← 需求说明书中的功能路径与测试案例
-    ├── 数规通黄金标准与种子案例/           ← 黄金标准（v1.0）与种子案例
-    └── *.json / *.jsonl                  ← 阶段分析、决策记录、入库清单
+└── research/                             ← 研究材料（不参与生产运行）
+    ├── README.md
+    ├── papers/                           ← 学术论文 PDF
+    ├── product-design-sources/           ← 早期产品设计输入与统筹文档
+    ├── module-specs/                     ← 历史模块功能说明与测试案例
+    ├── benchmarks/                       ← 参考 Benchmark 论文
+    └── migration-ledger/                 ← resources-new 迁移台账（json/jsonl）
 ```
+
+> **迁移说明（2026-08-12）**：原 `resources/new/` 目录已整体删除。其中区域法律 PDF 迁入 `legal/sources/{sg,vn,my,jp,kr,hk,mo,tw}/references/`，黄金标准与种子案例迁入 `benchmarks/datasets/seed-cases-v1/`，需求路径与测试案例迁入 `benchmarks/source-materials/`，PRD 迁入 `research/product-design-sources/`，功能说明迁入 `research/module-specs/`，迁移台账迁入 `research/migration-ledger/`。完整执行记录见 `status/check/DataComplyFlow_RESOURCES-NEW全量迁移执行记录_20260812.md`。
 
 ---
 
@@ -112,7 +111,7 @@ resources/
 
 ### `legal/sources/` — 原始法规原文与采集快照
 
-按法域分三个子目录，每个子目录下有 `references/` 和 `snapshots/`：
+按法域分目录，CN/EU/US 三法域同时有 `references/`（原文）和 `snapshots/`（快照），区域 8 法域只有 `references/`（原文）：
 
 ```
 legal/sources/
@@ -122,15 +121,25 @@ legal/sources/
 ├── eu/
 │   ├── references/        ← 官方 PDF 原件（27 个）
 │   └── snapshots/         ← 文本快照（28 个 .md）
-└── us/
-    ├── references/        ← 官方 PDF 原件（11 个）
-    └── snapshots/         ← 文本快照（11 个 .md）
+├── us/
+│   ├── references/        ← 官方 PDF 原件（11 个）
+│   └── snapshots/         ← 文本快照（11 个 .md）
+├── sg/references/         ← 区域法律 PDF（6 个，2026-08-12 迁入）
+├── vn/references/         ← 区域法律 PDF（6 个，图片型）
+├── my/references/         ← 区域法律 PDF（8 个）
+├── jp/references/         ← 区域法律 PDF（9 个）
+├── kr/references/         ← 区域法律 PDF（7 个）
+├── hk/references/         ← 区域法律 PDF（7 个）
+├── mo/references/         ← 区域法律 PDF（3 个）
+└── tw/references/         ← 区域法律 PDF（5 个）
 ```
 
 | 目录 | 用途 | 格式 | 数量 |
 |------|------|------|------|
-| `references/` | **最 raw 的原始法规文件**——官网 PDF 直接下载或转制，未经过清洗 | `.pdf`（仅有 CN 含 1 个 `.PNG`） | 55 |
-| `snapshots/` | **采集清洗后的文本快照**——从官网抓取的 HTML 或手工整理的 Markdown，作为 `build_regulation_articles.py` 的直接输入 | `.md`（61 个）+ `.html`（4 个，仅 CN 网信办公告页） | 65 |
+| `references/` | **最 raw 的原始法规文件**——官网 PDF 直接下载或转制，未经过清洗 | `.pdf`（CN 另含 `.PNG`/`.docx` 模板，EU 另含 1 个 `.doc`） | **114** |
+| `snapshots/` | **采集清洗后的文本快照**——从官网抓取的 HTML 或手工整理的 Markdown，作为 `build_regulation_articles.py` 的直接输入（仅 CN/EU/US 有） | `.md`（54 个）+ `.html`（21 个） | **75** |
+
+> 区域 8 法域（sg/vn/my/jp/kr/hk/mo/tw）自 2026-08-12 起具备 `references/` 原文（共 51 个 PDF），但仍**无 `snapshots/`**——它们跳过「raw → snapshot」步骤，由 `ingest_regional_laws.py` 直接从 PDF 抽取文本写入 JSONL。
 
 **CN references 示例**: `网络安全法.pdf`、`数据安全法.pdf`、`个人信息保护法.pdf`、`数据出境安全评估办法.pdf`、`个人信息出境标准合同办法.pdf`、`网络数据安全管理条例.pdf`、`促进和规范数据跨境流动规定.pdf`、`个人信息出境认证办法.pdf`、`汽车数据安全管理若干规定.pdf`、`金融数据安全 数据安全分级指南.pdf`、`信息安全技术 个人信息安全规范.pdf`、`个人金融信息保护技术规范.pdf`、`数据出境申报系统使用手册.pdf`、`数据处理协议样例.pdf`、`隐私政策样例.PNG`
 
@@ -144,7 +153,7 @@ legal/sources/
 
 **US snapshots 示例**: `ca_civil_code_cpra_sections.md`、`fr_2025_01_08_eo14117_excerpts.md`
 
-**⚠️ 重要**: 非 CN/EU/US 法域（8 个）的原始 PDF 不在 `legal/sources/` 下，而在 `resources/new/知识库补充/` 中。它们通过独立的 `scripts/ingest_regional_laws.py` 管线处理（pdftotext → 正则提取条文 → 直接写入 JSONL）。
+**区域法域（8 个）的原始 PDF 现位于 `legal/sources/{jurisdiction}/references/`**（2026-08-12 自 `resources/new/知识库补充/` 迁入），通过独立的 `scripts/ingest_regional_laws.py` 管线处理（pdftotext → 正则提取条文 → 直接写入 JSONL）。
 
 ---
 
@@ -173,7 +182,7 @@ snapshots/*.{md,html}（文本快照）
 ### 路径 B：区域法律 PDF → JSONL（非 CN/EU/US，8 法域）
 
 ```
-resources/new/知识库补充/{日韩,港澳台,新加坡,越南,马来西亚}/*.pdf（原始 PDF，约 55 个）
+resources/legal/sources/{sg,vn,my,jp,kr,hk,mo,tw}/references/*.pdf（原始 PDF，51 个）
   → scripts/ingest_regional_laws.py
      ├── extract_pdf_text(): pdftotext -layout
      ├── 法域专用 parser: parse_japanese_articles / parse_chinese_articles /
@@ -184,10 +193,13 @@ resources/new/知识库补充/{日韩,港澳台,新加坡,越南,马来西亚}/*
   → 手动重建 source_registry.v1.json（如已执行）
 ```
 
-**当前阻塞点**: 即使 JSONL 已写入、注册表已手动包含、V2 向量索引 `regulation_index_v2.json` 有数据：
-1. `registry.py:204` 的 `if jurisdiction not in {"cn","eu","us"}: continue` 在 CSV→注册表构建时过滤
-2. V3 多索引管线 `build_multi_index_v3()` 不处理非 CN/EU/US 数据
-3. `search_user_articles()` 仅查询 `legal_index_{cn|eu|us}.vector.json`
+**⚠️ 迁移后回归（2026-08-12）**: 上述管线目前**失效**。脚本 `PDF_BASE` 已改为 `resources/legal/sources`，但内部仍用中文子目录常量（`越南`/`日韩/日本` 等）与 `_PDF_PATH_FIXES` 的中文前缀拼路径，导致 51 个 PDF 全部找不到，重跑产出 0 条文。详见 issue064 §10.5。
+
+**当前状态**:
+1. `registry.py:204` 的 `if jurisdiction not in {"cn","eu","us"}: continue` 已在 CSV→注册表构建时过滤区域法域（历史阻塞点）
+2. V3 多索引管线已新增 `legal_index_intl`，`build_legal_chunks_intl()` 现可索引区域法域（**已部分解决**）
+3. `search_user_articles()` 现已支持区域法域路由到 `legal_index_intl`；无指定法域时查全部 4 个索引（**已部分解决**）
+4. **仍未解决**：区域法域 `module` 字段全空（无法按模块筛选）、`vn` 无条文（图片型 PDF）、前端法域按钮仍硬编码 CN/EU/US
 
 ### 路径 C-E：工作流规则 / 标准条款 / 模板分片（硬编码）
 
@@ -251,7 +263,7 @@ resources/new/知识库补充/{日韩,港澳台,新加坡,越南,马来西亚}/*
 > - 进入法规知识库的材料必须登记到 `resources/legal/catalog/sources.csv`
 > - Benchmark Gold 必须进入 `benchmarks/datasets/`
 
-### `research/papers/` — 学术论文（15 个 PDF）
+### `research/papers/` — 学术论文（12 个 PDF + 2 个清单）
 
 法律 AI / LLM 相关论文，涵盖 LLM 在法律领域的综述、评估方法和多智能体框架：
 
@@ -306,72 +318,30 @@ LexEval、LegalBench、PLAWBENCH 等法律 LLM 评测基准的原始论文。
 
 ---
 
-## VIII. `new/` — 待迁移/待处理材料（暂不参与生产）
+## VIII. `resources/new/` 迁移去向（2026-08-12 已完成）
 
-### `new/知识库补充/` — 区域法律原始 PDF（8 法域）
+> `resources/new/` 目录已于 2026-08-12 整体删除（提交 `5590843f`）。下表记录其各类资产的迁移去向，原目录不再存在。
 
-已入库但前端不可见的区域法律原始 PDF，按法域分目录：
+| 原 `new/` 内容 | 迁移去向 | 说明 |
+|------|------|------|
+| `知识库补充/`（区域法律 PDF，51 个） | `legal/sources/{sg,vn,my,jp,kr,hk,mo,tw}/references/` | 8 法域原文，SHA-256 一致 |
+| `数规通黄金标准与种子案例/` | `benchmarks/datasets/seed-cases-v1/_source/` | 黄金标准 + 50 种子案例 + 分数汇总表 |
+| `数规通功能路径描述…/`（需求路径与测试案例 DOCX） | `benchmarks/source-materials/{cn,eu,us,shared}/` | 27 份 legacy DOCX + 4 个 review fixture |
+| `《数规通需求说明书》` 等 PRD | `research/product-design-sources/00_index/` | 需求说明书 + 统筹开发文档 |
+| `analysis.phase1.json` 等迁移台账 | `research/migration-ledger/resources-new-20260807/` | 阶段分析、决策记录、入库清单 |
 
-| 子目录 | 法域 | PDF 数量 | 说明 |
-|--------|------|---------|------|
-| `日韩/日本/` | JP | 8 | 个人信息保护法、施行令/规则、指引、网络安全法 |
-| `日韩/韩国/` | KR | 6 | 个人信息保护法、施行令、跨境转移规定、安全措施标准 |
-| `港澳台/香港/` | HK | 7 | 私隐条例、跨境转移指引、大湾区标准合同、CISO条例 |
-| `港澳台/澳门/` | MO | 2 | 个人资料保护法、网络安全法 |
-| `港澳台/台湾/` | TW | 5 | 个人资料保护法、施行细则、资通安全管理法 |
-| `新加坡/` | SG | 6 | PDPA 2012、条例（跨境/泄露通知/执法）、网络安全法 |
-| `越南/` | VN | 6 | 数据保护法、数据法、网络安全法及实施法令 |
-| `马来西亚/` | MY | 9 | PDPA 2010、2024 修正法、条例/标准、网络安全法 |
-
-每个子目录同时含 `.html` 和 `.md` 格式的法规目录索引文件。
-
-**处理状态**:
-- ✅ PDF→JSONL 已通过 `scripts/ingest_regional_laws.py` 完成
-- ✅ `sources.csv` 已追加对应行
+**区域法律处理状态（迁移后）**:
+- ✅ 51 个 PDF 已迁入 `legal/sources/`（references 原文）
+- ✅ `sources.csv` 已含对应行（120 行，11 法域）
 - ✅ `source_registry.v1.json` 已手动包含（102 条含 33 条区域法律）
 - ✅ V2 向量索引 `regulation_index_v2.json` 有数据（1,347 条区域法律条文）
-- ❌ `article_id` 字段缺失（写入时未生成）
+- ✅ V3 已新增 `legal_index_intl`（1,035 条区域法律 chunk）
+- ❌ `article_id` 字段缺失（历史 JSONL 写入时未生成）
 - ❌ 元数据残缺（仅 5 字段 vs 标准 15 字段）
-- ❌ V3 多索引不覆盖非 CN/EU/US
-- ❌ 前端法规列表、条文搜索不可用
-
-### `new/数规通功能路径描述（含reference）、流程描述、测试案例/` — 需求规格
-
-三个法域路径的需求描述、测试案例与预期输出（全部为 `.docx` 格式）：
-
-| 子目录 | 模块/任务 | 文件 |
-|--------|----------|------|
-| `中国数据出境路径/` | 1. 合规路径诊断 | 路径描述 + 测试案例 + Reference标注版功能说明 |
-| | 2. 安全评估路径 | 路径描述 + 测试案例 |
-| | 3. 认证标准合同路径 | 路径描述 + 测试案例 |
-| | 4. 文档专项智能审查 | 功能说明 |
-| | Reference库 | Reference库清单 |
-| `欧盟数据出境路径/` | 1. SCC审查 | 路径描述 + 测试案例 |
-| | 2. BCR审核 | 路径描述 + 测试案例 |
-| | 3. DPIA草案生成 | 路径描述 + 测试案例 |
-| | 4. TIA草案生成 | 路径描述 + 测试案例 |
-| | Reference库 | Reference库清单 |
-| `美国（加州）数据出境路径/` | 1. 14117行政令合规 | 路径描述 + 测试案例 |
-| | 2. CPRA合规 | 路径描述 + 测试案例 |
-| | Reference库 | Reference库清单 |
-
-### `new/数规通黄金标准与种子案例/`
-
-| 文件 | 描述 |
-|------|------|
-| `数规通黄金标准（v1.0 正式版）.docx` | 黄金标准定义文件（v1.0） |
-| `参考Benchmark/` | 参考 Benchmark 目录 |
-| `种子案例及测试结果/` | 种子案例与测试结果 |
-
-### `new/` 根目录下的工作总结文件
-
-| 文件 | 描述 |
-|------|------|
-| `《数规通（DataComplyFlow）需求说明书》.docx` | 完整需求规格说明书 |
-| `"合规路径诊断"功能说明与路径描述（标注Reference）.docx` | 诊断模块的独立功能说明 |
-| `analysis.phase1.json` | **第一阶段入库分析结果**。含 `total_files`（文件总数）、`duplicates`（重复文件）、`name_conflicts`（命名冲突）、`mime_mismatches`（MIME 类型不匹配）、`large_files`（大文件） |
-| `decisions.v1.jsonl` | **入库决策记录**（17 条）。含 `decision_id`、`type`、`hash`、`action`（kept/removed）、`kept`（保留的文件）、`removed`（移除的文件）、`reason`（原因） |
-| `manifest.intake.v1.json` | **入库清单**。记录待入库文件的路径、类型、目标模块、目标层级等元数据 |
+- ❌ `legal_index_intl` 的 `module` 字段全空（无法按模块筛选）
+- ❌ `vn` 无条文（6 个 PDF 全图片型，无文本层）
+- ❌ 前端法规列表、条文搜索仍不暴露区域法域（按钮硬编码 CN/EU/US）
+- ❌ `ingest_regional_laws.py` 迁移后路径回归（见 §II 路径 B 与 issue064 §10.5）
 
 ---
 
@@ -379,27 +349,24 @@ LexEval、LegalBench、PLAWBENCH 等法律 LLM 评测基准的原始论文。
 
 | 目录 | 文件数 | 生产读取 | 说明 |
 |------|--------|---------|------|
-| `legal/catalog/` | 5 | ✅ | 来源 CSV + 案例 CSV + 模块策略 + 资产台账 |
+| `legal/catalog/` | 10 | ✅ | 来源 CSV + 案例 CSV + 模块策略 + 资产台账 + 5 个区域 HTML 包 |
 | `legal/registry/` | 4 | ✅ | 注册表 + 条文 JSONL + Schema + 迁移表 |
-| `legal/sources/cn/references/` | 17 | ❌（构建时） | 中国法规原始 PDF |
-| `legal/sources/cn/snapshots/` | 26 | ✅（构建时） | 中国法规文本快照 |
-| `legal/sources/eu/references/` | 27 | ❌（构建时） | 欧盟法规原始 PDF |
-| `legal/sources/eu/snapshots/` | 28 | ✅（构建时） | 欧盟法规文本快照 |
-| `legal/sources/us/references/` | 11 | ❌（构建时） | 美国法规原始 PDF |
-| `legal/sources/us/snapshots/` | 11 | ✅（构建时） | 美国法规文本快照 |
+| `legal/sources/cn/`（references + snapshots） | 56 | 构建时 | 中国法规原文 + 快照 |
+| `legal/sources/eu/`（references + snapshots） | 60 | 构建时 | 欧盟法规原文 + 快照 |
+| `legal/sources/us/`（references + snapshots） | 22 | 构建时 | 美国法规原文 + 快照 |
+| `legal/sources/{sg,vn,my,jp,kr,hk,mo,tw}/references/` | 51 | 构建时 | 区域法律原文（8 法域） |
 | `rules/` | 1 | ✅ | review_rulebook.json |
-| `templates/` | 14 | ✅（构建时） | 报告模板（.json/.md/.docx） |
+| `templates/` | 13 | ✅（构建时） | 报告模板（.json/.md/.docx） |
 | `standards/` | 2 | ❌ | 国标参考 PDF |
 | `manuals/` | 1 | ❌ | 实务手册 PDF |
-| `research/papers/` | 15 | ❌ | 论文 PDF + 清单 |
+| `research/papers/` | 14 | ❌ | 论文 PDF + 清单 |
 | `research/benchmarks/` | 4 | ❌ | Benchmark 论文 |
-| `research/product-design-sources/` | 9 | ❌ | 设计输入文档 |
-| `research/module-specs/` | 21 | ❌ | 历史 spec + test-cases |
-| `new/知识库补充/` | 约 55 | ❌ | 区域法律原始 PDF |
-| `new/功能路径/` | 约 30 | ❌ | 需求路径与测试案例 |
-| `new/黄金标准/` | 2+ | ❌ | 黄金标准 + 种子案例 |
-| `new/` 根目录 | 4 | ❌ | 工作总结 JSON/JSONL + 需求说明书 |
-| **总计** | **约 290** | | |
+| `research/product-design-sources/` | 17 | ❌ | 设计输入文档 |
+| `research/module-specs/` | 26 | ❌ | 历史 spec + test-cases |
+| `research/migration-ledger/` | 3 | ❌ | 迁移台账（json/jsonl） |
+| **总计** | **约 284** | | |
+
+> 上表按当前磁盘实际文件统计（`find resources -type f` = 287，扣除 `.DS_Store` 与 `README.md` 若干后约 284 资产文件）。原 `new/` 的约 89 个文件已按 §VIII 迁移到各目标目录，故不再单独列出。
 
 ---
 
@@ -407,7 +374,7 @@ LexEval、LegalBench、PLAWBENCH 等法律 LLM 评测基准的原始论文。
 
 1. **区域法律元数据残缺**（P0）：`ingest_regional_laws.py` 写入 JSONL 时缺少 `article_id`、`path`、`doc_type` 等 10 个字段 → V2 索引 doc_id 为空 → 前端不可见
 
-2. **V3 多索引不覆盖非 CN/EU/US**（P0）：`builders_v2.py` 的 `build_legal_chunks_*()` 仅处理 CN/EU/US → V3 向量索引无区域法律数据 → `search_user_articles()` 无法检索
+2. **区域法律 `module` 字段全空**（P1）：`build_legal_chunks_intl()` 产出的 `legal_index_intl` 条目 `module=""`，虽可检索但无法按模块筛选；`intl_module` 路由提示仅存于 `structured_payload`（**原「V3 多索引不覆盖非 CN/EU/US」已部分解决**）
 
 3. **注册表白名单过严**（P0）：`registry.py:204` 的 `if jurisdiction not in {"cn","eu","us"}: continue` 阻止 CSV→注册表的自动构建，虽然缓存 JSON 已被手动 patch
 
@@ -415,4 +382,10 @@ LexEval、LegalBench、PLAWBENCH 等法律 LLM 评测基准的原始论文。
 
 5. **构建脚本双轨**（P2）：CN/EU/US 用 `build_regulation_articles.py`（含 15 字段），区域法律用 `ingest_regional_laws.py`（仅 5 字段），两条管线的 schema 不统一
 
-6. **vector index 双轨**（P2）：V2 `regulation_index_v2.json`（3,049 条含区域法律但已弃用）vs V3 多索引（仅 CN/EU/US 但为当前生产使用），两套索引无合并机制
+6. **vector index 双轨**（P2）：V2 `regulation_index_v2.json`（3,049 条含区域法律但已弃用）vs V3 多索引（CN/EU/US + intl 为当前生产使用），两套索引无合并机制
+
+7. **`ingest_regional_laws.py` 迁移后路径回归**（P1，新增）：脚本 `PDF_BASE` 已改 `resources/legal/sources`，但中文子目录常量与 `_PDF_PATH_FIXES` 前缀未同步，重跑产出 0 条文。详见 issue064 §10.5
+
+8. **`vn` 无条文**（P2，新增）：越南 6 个 PDF 全图片型，JSONL 与 `legal_index_intl` 均无 vn 条目，需 OCR 或人工转录
+
+9. **前端法域按钮硬编码**（P2）：`EvidenceCenterPage.tsx` 仍只显示 CN/EU/US，区域法域虽后端可检索但前端无法选择

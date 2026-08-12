@@ -545,7 +545,7 @@ export const PIPIA_STEPS: PipiaStepConfig[] = [
   {
     title: "出境场景与范围",
     fields: [
-      { name: "route_type", label: "路径类型", type: "select", options: ["scc_filing", "certification"] },
+      { name: "route_type", label: "路径类型", type: "select", options: ["scc_filing", "certification", "hr_exemption"] },
       { name: "outbound_scenario_name", label: "出境场景名称", type: "text" },
       {
         name: "outbound_frequency",
@@ -583,6 +583,24 @@ export const PIPIA_STEPS: PipiaStepConfig[] = [
         type: "select",
         options: ["scc_contract", "certification_material", "internal_policy", "supporting_evidence"]
       }
+    ]
+  },
+  {
+    title: "路径证据核验",
+    fields: [
+      { name: "recipient_notice_complete", label: "接收方告知是否完整", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "sensitive_information_classification_confirmed", label: "敏感信息分类是否确认", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "consent_evidence_complete", label: "同意证据是否完整", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "scc_required_clauses_complete", label: "标准合同必要条款是否完整", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "hr_rules_lawfully_adopted", label: "HR制度是否依法制定", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "employee_handbook_has_explicit_cross_border_terms", label: "员工手册是否含明确出境条款", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "collective_agreement_has_explicit_cross_border_terms", label: "集体合同是否含明确出境条款", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "recipient_privacy_policy_provided", label: "接收方隐私政策是否已提供", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "certification_body_china_recognized", label: "认证机构是否获中国认可", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "certification_legal_obligation_citation_provided", label: "认证法定义务条款是否已提供", type: "select", options: ["unknown", "yes", "no"] },
+      { name: "contract_governing_law", label: "合同适用法律", type: "text" },
+      { name: "contract_exclusive_jurisdiction", label: "合同专属管辖", type: "text" },
+      { name: "china_data_subject_rights_terms_present", label: "是否包含中国个人信息主体权利条款", type: "select", options: ["unknown", "yes", "no"] }
     ]
   }
 ];
@@ -905,7 +923,10 @@ const toNumber = (value: unknown, fallback = 0): number =>
 const toBoolean = (value: unknown, fallback = false): boolean => (typeof value === "boolean" ? value : fallback);
 
 const toRouteType = (value: unknown): PipiaRouteType =>
-  value === "certification" ? "certification" : "scc_filing";
+  value === "certification" || value === "hr_exemption" ? value : "scc_filing";
+
+const toEvidenceState = (value: unknown): PipiaFormValues["recipient_notice_complete"] =>
+  value === true ? "yes" : value === false ? "no" : "unknown";
 
 const toAttachmentRole = (value: unknown): PipiaAttachmentRole => {
   if (value === "certification_material") return "certification_material";
@@ -1278,6 +1299,7 @@ export const createDefaultPipiaValues = (): PipiaFormValues => {
   const personalInfoScope = asRecord(demo.personal_info_scope);
   const rightsProtection = asRecord(demo.rights_protection);
   const emergencyPlan = asRecord(demo.emergency_plan);
+  const pathEvidence = asRecord(demo.path_evidence);
   const firstAttachment =
     Array.isArray(demo.attachments) && demo.attachments.length > 0
       ? asRecord(demo.attachments[0])
@@ -1323,7 +1345,20 @@ export const createDefaultPipiaValues = (): PipiaFormValues => {
     retention_policy: toString(rightsProtection.retention_policy, ""),
     incident_response_sla_hours: toNumber(emergencyPlan.incident_response_sla_hours, 24),
     escalation_path: toString(emergencyPlan.escalation_path, ""),
-    attachment_role: toAttachmentRole(firstAttachment.file_role)
+    attachment_role: toAttachmentRole(firstAttachment.file_role),
+    recipient_notice_complete: toEvidenceState(pathEvidence.recipient_notice_complete),
+    sensitive_information_classification_confirmed: toEvidenceState(pathEvidence.sensitive_information_classification_confirmed),
+    consent_evidence_complete: toEvidenceState(pathEvidence.consent_evidence_complete),
+    scc_required_clauses_complete: toEvidenceState(pathEvidence.scc_required_clauses_complete),
+    hr_rules_lawfully_adopted: toEvidenceState(pathEvidence.hr_rules_lawfully_adopted),
+    employee_handbook_has_explicit_cross_border_terms: toEvidenceState(pathEvidence.employee_handbook_has_explicit_cross_border_terms),
+    collective_agreement_has_explicit_cross_border_terms: toEvidenceState(pathEvidence.collective_agreement_has_explicit_cross_border_terms),
+    recipient_privacy_policy_provided: toEvidenceState(pathEvidence.recipient_privacy_policy_provided),
+    certification_body_china_recognized: toEvidenceState(pathEvidence.certification_body_china_recognized),
+    certification_legal_obligation_citation_provided: toEvidenceState(pathEvidence.certification_legal_obligation_citation_provided),
+    contract_governing_law: toString(pathEvidence.contract_governing_law, ""),
+    contract_exclusive_jurisdiction: toString(pathEvidence.contract_exclusive_jurisdiction, ""),
+    china_data_subject_rights_terms_present: toEvidenceState(pathEvidence.china_data_subject_rights_terms_present)
   };
   if (!DEV_ACCEL_ENABLED) return base;
   const preset = getModuleDevPreset("pipia");
@@ -1655,7 +1690,8 @@ const RECOMMENDED_PATH_LABEL: Record<string, { zh: string; en: string }> = {
 
 const ROUTE_TYPE_LABEL: Record<string, { zh: string; en: string }> = {
   scc_filing: { zh: "标准合同备案", en: "SCC Filing" },
-  certification: { zh: "认证路径", en: "Certification Path" }
+  certification: { zh: "认证路径", en: "Certification Path" },
+  hr_exemption: { zh: "人力资源管理豁免评估", en: "HR Management Exemption Assessment" }
 };
 
 export const DOCUMENT_TYPE_LABEL: Record<DocumentReviewFormValues["document_type"], string> = {
@@ -1927,6 +1963,7 @@ const TEXT_EN_BY_ZH: Record<string, string> = {
   continuous: "Continuous",
   scc_filing: "SCC Filing",
   certification: "Certification",
+  hr_exemption: "HR Management Exemption Assessment",
   processor: "Processor",
   controller: "Controller",
   subprocessor: "Subprocessor",

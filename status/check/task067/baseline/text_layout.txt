@@ -1,0 +1,220 @@
+GlobalTech Inc. BCR 审查报告草案
+
+
+BCR-C 合规审查报告
+审查对象：GlobalTech Inc.
+审查范围：BCR Document-Driven Review (BCR-C)
+审查日期：20260813
+
+
+综合评级：高风险
+
+
+关键发现
+Binding nature (internal and external) 表述模糊；EU liable entity designation 覆盖不完整；Onward transfer restrictions
+表述模糊；Termination and exit provisions 覆盖不完整；Security measures 覆盖不完整
+
+
+详细审查结果
+
+检     主题                       风     现状                       整改建议                      法律依据
+查                              险
+项
+
+BCR Binding nature (internal   HIG Binding nature (internal   应补充 Binding nature        GDPR Article 47(1)(a)
+-C-1 and external) 表述模糊        H     and external) 使用了模       (internal and external)   [1]；EDPB
+.1                                   糊表述，未达到具体可 的完整内容。                                  Recommendations
+                                     执行标准. 依据：GDPR                                      1/2022
+                                     Article 47(1)(a)，EDPB
+                                     Recommendations 1/202
+                                     2。证据：仅使用'成员
+                                     同意遵守'等概括性表
+                                     述，未具体说明法律约
+                                     束力的来源和机制
+
+BCR EU liable entity           HIG EU liable entity           应补充 EU liable entity      GDPR Article 47(2)(f)
+-C-1 designation 覆盖不完整         H     designation 部分覆盖但        designation               [1]；EDPB
+.3                                   缺少关键要素.                  的完整内容。                    Recommendations
+                                     依据：GDPR Article                                    1/2022
+                                     47(2)(f)，EDPB
+                                     Recommendations 1/202
+                                     2。证据：章节匹配:
+                                     ['liability']
+检     主题                   风    现状                           整改建议                      法律依据
+查                          险
+项
+
+BCR Onward transfer        HIG Onward transfer               应补充 Onward transfer       GDPR Chapter
+-C-1 restrictions 表述模糊     H    restrictions 使用了模糊           restrictions              V；EDPB
+.8                              表述，未达到具体可执 的完整内容。                                      Recommendations
+                                行标准. 依据：GDPR                                           1/2022
+                                Chapter V，EDPB
+                                Recommendations 1/202
+                                2。证据：使用'substant
+                                ially similar'等笼统表述
+                                定义保护标准，未指向
+                                具体GDPR保护水平或
+                                SCC
+
+BCR Termination and exit   ME   Termination and exit         应补充 Termination and       GDPR Article
+-C-1 provisions 覆盖不完整      DIU provisions 部分覆盖但              exit provisions           47(2)(j)；EDPB
+.12                        M    缺少关键要素.                      的完整内容。                    Recommendations
+                                依据：GDPR Article                                        1/2022
+                                47(2)(j)，EDPB
+                                Recommendations 1/202
+                                2。证据：命中关键词:
+                                ['end']
+
+BCR Security measures      HIG Security measures 部分          应补充 Security              ；GDPR Article 32
+-SH   覆盖不完整                H    覆盖但缺少关键要素.                   measures 的完整内容。
+ARE                             依据：，GDPR Article
+D-1                             32。证据：命中关键词
+                                : ['security', 'measures',
+                                'confidentiality']
+
+BCR Personal data breach   ME   Personal data breach         应补充 Personal data         ；GDPR Article 33, 34
+-SH   notification 覆盖不完整   DIU notification 部分覆盖但            breach notification
+ARE                        M    缺少关键要素.                      的完整内容。
+D-2                             依据：，GDPR Article
+                                33, 34。证据：命中关
+                                键词: ['breach', 'notify',
+                                'without undue delay']
+
+BCR Government access      ME   Government access            应补充 Government            ；EDPB
+-SH   request handling     DIU request handling 部分覆          access request handling   Recommendations
+ARE 覆盖不完整                  M    盖但缺少关键要素.                    的完整内容。                    01/2020, 1/2022
+D-3                             依据：，EDPB
+                                Recommendations
+                                01/2020, 1/2022。证据
+                                ：命中关键词:
+                                ['disclosure', 'request']
+检      主题                      风    现状                  整改建议                       法律依据
+查                              险
+项
+
+BCR TIA 缺少无法缓解风险               ME   TIA 描述未说明当风险        应明确承诺当无法确保 Schrems II [2]；EDPB
+-C-1 时的中止条款                    DIU 无法通过补充措施缓解 实质等同保护水平时， Recommendations
+.9                             M    时，将暂停或中止数据 将暂停相关数据传输                           01/2020
+                                    传输。
+
+BCR 未明确限制向非 BCR                ME   BCR                 应增加明确条款，限制 GDPR Chapter
+-C-1 成员传输                      DIU 文档未明确限制向非            向非 BCR 成员传输数               V；EDPB
+.8                             M    BCR 成员或集团外第         据，除非有合法依据和 Recommendations
+                                    三方的数据传输。            保护措施                       1/2022
+
+BCR 缺少转委托授权机制                  ME   未说明向第三方传输是 建议增加转委托的授权 GDPR Chapter
+-C-1                           DIU 否需要事先书面授权或 机制                                   V；EDPB
+.8                             M    预先批准。                                          Recommendations
+                                                                                   1/2022
+
+BCR Onward Transfer            HIG -                    Replace vague protection   -
+-C-1 protection standard may   H                        commitments with
+.8     be insufficient                                  explicit reference to EU
+                                                        Standard Contractual
+                                                        Clauses (2021/914) or
+                                                        equivalent legal
+                                                        instrument. Require that
+                                                        all onward transfers be
+                                                        subject to SCCs,
+                                                        adequacy decision, or
+                                                        approved certification
+                                                        mechanism.
+
+BCR TIA completeness: partial ME    TIA assessment is   -                          EDPB Recommendations
+-C-1                           DIU incomplete.                                     01/2020 Step 3 [2]
+.9                             M
+
+BCR 转委托处理缺乏书面授 HIG 未要求子处理者转委托 建议要求所有转委托须 GDPR (EU) 2016/679
+-C-1 权机制                       H    须经事先书面授权            经事先书面授权                    第46条 [1]；GDPR
+.1                                                                                 (EU) 2016/679 第47条
+
+BCR TIA 评估方法不够完整               ME   TIA 描述未涵盖EDPB       建议涵盖EDPB六步法                GDPR (EU) 2016/679
+-C-1                           DIU 六步法或周期性审查            、周期性审查、补充措 第46条 [1]；GDPR
+.1                             M                        施和当地法律实践评估 (EU) 2016/679 第47条
+
+BCR 投诉处理时限未明确                  ME   投诉处理条款未明确响 建议明确承诺在一个月 GDPR (EU) 2016/679
+-C-1                           DIU 应和处理时限               内响应和调查投诉                   第46条 [1]；GDPR
+.1                             M                                                   (EU) 2016/679 第47条
+检      主题                          风      现状                           整改建议                       法律依据
+查                                  险
+项
+
+BCR 缺少子处理者变更通知 ME                         未说明子处理者变更时 应明确承诺在子处理者 GDPR (EU) 2016/679
+-C-1 机制                            DIU 是否通知控制者                         变更前通知控制者并给 第46条 [1]；GDPR
+.1                                 M                                   予反对机会                      (EU) 2016/679 第47条
+
+BCR 缺少法律约束力文书具 HIG 未提及集团内协议或其 应说明BCR通过何种法                                                         GDPR (EU) 2016/679
+-C-1 体说明                           H      他具有法律约束力的内 律文书对所有成员产生 第15条 [1]；EDPB
+.2                                        部文书                          约束力                        Recommendations
+                                                                                                  01/2020 第Step 1条
+
+BCR 政府访问披露条款过于 ME                         政府访问条款仅引用'to 建议增加审查访问请求 EDPB Recommendations
+-C-1 宽泛                            DIU the extent permitted by la      合法性、通知数据主体 01/2020 第Step 1条
+.1                                 M      w'，未说明审查请求合                  的义务                        [1]；GDPR (EU)
+                                          法性或通知义务                                                 2016/679 第57条
+
+
+
+高风险项目
+Binding nature (internal and external) 表述模糊；EU liable entity designation 覆盖不完整；Onward transfer restrictions
+表述模糊；Security measures 覆盖不完整；Onward Transfer protection standard may be
+insufficient；转委托处理缺乏书面授权机制；缺少法律约束力文书具体说明
+
+中风险项目
+Termination and exit provisions 覆盖不完整；Personal data breach notification 覆盖不完整；Government access
+request handling 覆盖不完整；TIA 缺少无法缓解风险时的中止条款；未明确限制向非 BCR
+成员传输；缺少转委托授权机制；TIA completeness: partial；TIA
+评估方法不够完整；投诉处理时限未明确；缺少子处理者变更通知机制；政府访问披露条款过于宽泛
+
+低风险项目
+无
+
+
+整改路线图
+高风险项（需立即整改）：
+●    Binding nature (internal and external) 表述模糊
+●    EU liable entity designation 覆盖不完整
+●    Onward transfer restrictions 表述模糊
+●    Security measures 覆盖不完整
+●    Onward Transfer protection standard may be insufficient
+
+可直接采用的建议条款
+● BCR-C-1.1 Binding nature (internal and external) 表述模糊：These Binding Corporate Rules constitute a legally
+     binding instrument that is enforceable by all BCR members against each other and by data subjects as third-party
+     beneficiaries. Each BCR member shall enter into an intra-group agreement that expressly incorporates these Rules and
+     creates binding obligations under the law of [EU Member State].
+● BCR-C-1.3 EU liable entity designation 覆盖不完整：[Company Name], established in [EU Member State], shall act
+    as the EU liable entity and shall: (a) accept responsibility for and guarantee compliance with these Rules by all BCR
+    members; (b) assume the burden of proof that a BCR member has not violated these Rules; (c) maintain sufficient assets
+    within the EU to meet any compensation claims by data subjects.
+● BCR-C-1.8 Onward transfer restrictions 表述模糊：[Insert specific clause addressing the identified requirement in
+    accordance with GDPR Article 47 and EDPB Recommendations]
+● BCR-SHARED-1 Security measures 覆盖不完整：Security of Processing
+1 GlobalTech Inc. and all Group Members shall implement appropriate technical and organisational measures to ensure a
+    level of security appropriate to the risk, including, as appropriate:
+(a) the pseudonymisation and encryption of personal data;
+(b) the ability to ensure the ongoing confidentiality, integrity, availability and resilience of processing systems and services;
+(c) the ability to restore the availability and access to personal data in a timely manner in the event of a physical or technical
+incident;
+(d) a process for regularly testing, assessing and evaluating the effectiveness of technical and organisational measures for
+ensuring the security of the processing.
+1 In assessing the appropriate level of security, account shall be taken in particular of the risks that are presented by
+    processing, in particular from accidental or unlawful destruction, loss, alteration, unauthorised disclosure of, or access to
+    personal data transmitted, stored or otherwise processed.
+2 The specific security measures implemented by each Group Member shall be documented and made available to the
+    lead supervisory authority upon request. Compliance with this chapter shall be subject to regular internal audit as part of
+    the BCR compliance verification process.
+● BCR-C-1.8 Onward Transfer protection standard may be insufficient：[Insert specific clause addressing the identified
+    requirement in accordance with GDPR Article 47 and EDPB Recommendations]
+● BCR-C-1.1 转委托处理缺乏书面授权机制：These Binding Corporate Rules constitute a legally binding instrument
+    that is enforceable by all BCR members against each other and by data subjects as third-party beneficiaries. Each BCR
+    member shall enter into an intra-group agreement that expressly incorporates these Rules and creates binding
+    obligations under the law of [EU Member State].
+● BCR-C-1.2 缺少法律约束力文书具体说明：Intra-Group Binding Instruments. In addition to the intra-group
+    agreement referenced herein, GlobalTech Inc. shall ensure that all Group Members are bound to these BCRs through
+    legally enforceable internal instruments. These instruments shall include, but are not limited to, intra-group data transfer
+    and processing agreements, corporate policies with binding effect, and other contractual or statutory arrangements that
+    impose obligations equivalent to those set forth in these BCRs on all Group Members. A central register of all such
+    binding instruments shall be maintained by GlobalTech Inc. and made available to the lead supervisory authority upon
+    request. The provisions of these BCRs shall prevail in the event of any conflict with other internal instruments.
+

@@ -1,3 +1,6 @@
+"""
+本文件用于定义 FastAPI 应用的创建和生命周期管理，包括数据库初始化、后台任务清理和路由注册。
+"""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI

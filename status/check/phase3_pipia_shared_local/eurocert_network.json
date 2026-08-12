@@ -1,0 +1,94 @@
+[
+  {
+    "path": "/api/v1/auth/register",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/tasks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/reports",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/workspace-recovery",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v0/files/upload",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/generate_async",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/5c1bafc7cfc54703b618f92f3bb02734",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/token",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/5c1bafc7cfc54703b618f92f3bb02734",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/stream",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/5c1bafc7cfc54703b618f92f3bb02734/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/5c1bafc7cfc54703b618f92f3bb02734",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/artifacts/preview",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/citations/reports/5c1bafc7cfc54703b618f92f3bb02734",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/artifacts/file",
+    "status": 200
+  }
+]

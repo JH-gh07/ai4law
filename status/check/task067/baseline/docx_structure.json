@@ -1,0 +1,28 @@
+{
+  "paragraphs": 11,
+  "tables": 0,
+  "headings_h1_3": 0,
+  "styles_defs": 164,
+  "numbering_defs": 9,
+  "header_parts": [],
+  "footer_parts": [],
+  "parts": [
+    "[Content_Types].xml",
+    "_rels/.rels",
+    "docProps/core.xml",
+    "docProps/app.xml",
+    "word/document.xml",
+    "word/_rels/document.xml.rels",
+    "word/styles.xml",
+    "word/stylesWithEffects.xml",
+    "word/settings.xml",
+    "word/webSettings.xml",
+    "word/fontTable.xml",
+    "word/theme/theme1.xml",
+    "customXml/item1.xml",
+    "customXml/_rels/item1.xml.rels",
+    "customXml/itemProps1.xml",
+    "word/numbering.xml",
+    "docProps/thumbnail.jpeg"
+  ]
+}

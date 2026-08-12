@@ -24,6 +24,36 @@ const CN_FLOW_FILE_EXTENSIONS = ["xlsx", "csv", "docx", "pdf"] as const;
 const GENERAL_FILE_EXTENSIONS = ["doc", "docx", "pdf", "txt", "md", "json", "csv"] as const;
 const PIPIA_ROUTE_TYPES = ["certification", "scc_filing", "hr_exemption"] as const;
 
+function pipiaEvidenceValue(value: "yes" | "no" | "unknown"): boolean | null {
+  return value === "yes" ? true : value === "no" ? false : null;
+}
+
+function buildPipiaPathEvidence(values: PipiaFormValues): NonNullable<ModuleRequestMap["pipia"]["path_evidence"]> {
+  if (values.route_type === "scc_filing") {
+    return {
+      recipient_notice_complete: pipiaEvidenceValue(values.recipient_notice_complete),
+      sensitive_information_classification_confirmed: pipiaEvidenceValue(values.sensitive_information_classification_confirmed),
+      consent_evidence_complete: pipiaEvidenceValue(values.consent_evidence_complete),
+      scc_required_clauses_complete: pipiaEvidenceValue(values.scc_required_clauses_complete),
+    };
+  }
+  if (values.route_type === "hr_exemption") {
+    return {
+      hr_rules_lawfully_adopted: pipiaEvidenceValue(values.hr_rules_lawfully_adopted),
+      employee_handbook_has_explicit_cross_border_terms: pipiaEvidenceValue(values.employee_handbook_has_explicit_cross_border_terms),
+      collective_agreement_has_explicit_cross_border_terms: pipiaEvidenceValue(values.collective_agreement_has_explicit_cross_border_terms),
+      recipient_privacy_policy_provided: pipiaEvidenceValue(values.recipient_privacy_policy_provided),
+    };
+  }
+  return {
+    certification_body_china_recognized: pipiaEvidenceValue(values.certification_body_china_recognized),
+    certification_legal_obligation_citation_provided: pipiaEvidenceValue(values.certification_legal_obligation_citation_provided),
+    contract_governing_law: values.contract_governing_law.trim(),
+    contract_exclusive_jurisdiction: values.contract_exclusive_jurisdiction.trim(),
+    china_data_subject_rights_terms_present: pipiaEvidenceValue(values.china_data_subject_rights_terms_present),
+  };
+}
+
 export type CnFlowResolvedFiles = {
   dataInventory: string[];
   entityInventory: string[];
@@ -219,6 +249,7 @@ export function buildPipiaPayload(
       incident_response_sla_hours: Math.max(0, values.incident_response_sla_hours),
       escalation_path: trimOr([values.escalation_path, values.transfer_link ? `链路：${values.transfer_link}` : "", values.shareholding_structure ? `股权：${values.shareholding_structure}` : "", values.actual_controller ? `控制人：${values.actual_controller}` : "", values.overseas_investment ? `境内外投资：${values.overseas_investment}` : "", values.org_structure_privacy_team ? `组织与个保机构：${values.org_structure_privacy_team}` : ""].filter((item) => item.trim()).join("；"), "DPO -> 法务 -> 管理层"),
     },
+    path_evidence: buildPipiaPathEvidence(values),
     attachments: resolvedFilePaths.map((path) => ({
       file_role: values.attachment_role,
       file_name: basenameFromPath(path),

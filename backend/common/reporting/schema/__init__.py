@@ -1,32 +1,81 @@
-"""Pydantic models for the reporting intermediate representation."""
+"""Pydantic models for the reporting intermediate representation (v4)."""
 
 from backend.common.reporting.schema.blocks import (
     Block,
+    CitationNoteBlock,
     ClaimBlock,
+    ClauseGroupBlock,
+    FindingDetailBlock,
+    FindingReferenceBlock,
+    FindingSummaryBlock,
+    KeyValueBlock,
+    KeyValueItem,
     ListBlock,
+    ListItem,
+    PageBreakBlock,
     ParagraphBlock,
     TableBlock,
     VerificationStatus,
     WarningBlock,
 )
-from backend.common.reporting.schema.citations import CitationRecord, CitationRegistry
+from backend.common.reporting.schema.citations import (
+    CitationLocator,
+    CitationRecord,
+    CitationRegistry,
+)
+from backend.common.reporting.schema.diagnostics import (
+    Diagnostic,
+    DiagnosticLocation,
+)
 from backend.common.reporting.schema.document import (
     DocumentIR,
+    Identity,
+    Integrity,
+    Lifecycle,
     Provenance,
     ReportMetadata,
     SectionIR,
 )
+from backend.common.reporting.schema.findings import (
+    ActionRecord,
+    ClauseNode,
+    FindingRecord,
+    NumberingStyle,
+    RiskLevel,
+)
+from backend.common.reporting.schema.rendering import RenderContract
 
 __all__ = [
+    "ActionRecord",
     "Block",
-    "ClaimBlock",
+    "CitationLocator",
+    "CitationNoteBlock",
     "CitationRecord",
     "CitationRegistry",
+    "ClaimBlock",
+    "ClauseGroupBlock",
+    "ClauseNode",
+    "Diagnostic",
+    "DiagnosticLocation",
     "DocumentIR",
+    "FindingDetailBlock",
+    "FindingRecord",
+    "FindingReferenceBlock",
+    "FindingSummaryBlock",
+    "Identity",
+    "Integrity",
+    "KeyValueBlock",
+    "KeyValueItem",
+    "Lifecycle",
     "ListBlock",
+    "ListItem",
+    "NumberingStyle",
+    "PageBreakBlock",
     "ParagraphBlock",
     "Provenance",
+    "RenderContract",
     "ReportMetadata",
+    "RiskLevel",
     "SectionIR",
     "TableBlock",
     "VerificationStatus",

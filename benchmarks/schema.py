@@ -1,3 +1,6 @@
+"""
+本文件用于定义评估用例的 Pydantic 模型，包括检索评估和生成评估的用例结构，以及相关的字段验证和约束。
+"""
 from __future__ import annotations
 
 from typing import Any, Literal

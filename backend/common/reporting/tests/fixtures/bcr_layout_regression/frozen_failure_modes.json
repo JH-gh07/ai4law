@@ -1,0 +1,42 @@
+{
+  "source": "task067 T00 baseline (sample task 4ab0776d9ddc49faba4d7bf89f30cd0a)",
+  "frozen_at": "2026-08-13",
+  "failure_modes": [
+    {
+      "id": "docx_tables_zero",
+      "gate": "docx",
+      "description": "DOCX finding detail is a flat Normal paragraph, no native Word table.",
+      "fingerprint": { "tables": 0, "headings_h1_3": 0, "header_parts": [], "footer_parts": [] }
+    },
+    {
+      "id": "docx_markdown_pipe_residue",
+      "gate": "docx",
+      "description": "Markdown '| --- |' separator leaked into DOCX paragraph text.",
+      "fingerprint": { "contains_pipe_separator": true }
+    },
+    {
+      "id": "pdf_fonts_not_embedded",
+      "gate": "pdf",
+      "description": "Helvetica / STSong-Light / ZapfDingbats embedded=no.",
+      "fingerprint": { "fonts_embedded_total": 0, "fonts_total": 3 }
+    },
+    {
+      "id": "pdf_risk_medium_broken",
+      "gate": "pdf",
+      "description": "MEDIUM split across column rows as ME / DIU / M.",
+      "fingerprint": { "standalone_fragments": ["ME", "DIU"] }
+    },
+    {
+      "id": "pdf_finding_id_broken",
+      "gate": "pdf",
+      "description": "Finding ID BCR-C-1.1 split character-by-character (-C-1 / .1).",
+      "fingerprint": { "standalone_fragments": ["-C-1", ".1"] }
+    },
+    {
+      "id": "markdown_six_column_finding_table",
+      "gate": "markdown",
+      "description": "Finding detail rendered as a 6-column pipe table instead of longitudinal blocks.",
+      "fingerprint": { "six_column_header": true, "pipe_table_rows": 20 }
+    }
+  ]
+}

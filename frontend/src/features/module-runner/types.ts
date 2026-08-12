@@ -105,6 +105,7 @@ export type AssessmentFormValues = {
 export type PipiaRouteType = "scc_filing" | "certification" | "hr_exemption";
 
 export type PipiaAttachmentRole = "scc_contract" | "certification_material" | "internal_policy" | "supporting_evidence";
+export type PipiaEvidenceState = "yes" | "no" | "unknown";
 
 export type PipiaFieldType = "text" | "textarea" | "number" | "checkbox" | "select";
 
@@ -159,6 +160,19 @@ export type PipiaFormValues = {
   incident_response_sla_hours: number;
   escalation_path: string;
   attachment_role: PipiaAttachmentRole;
+  recipient_notice_complete: PipiaEvidenceState;
+  sensitive_information_classification_confirmed: PipiaEvidenceState;
+  consent_evidence_complete: PipiaEvidenceState;
+  scc_required_clauses_complete: PipiaEvidenceState;
+  hr_rules_lawfully_adopted: PipiaEvidenceState;
+  employee_handbook_has_explicit_cross_border_terms: PipiaEvidenceState;
+  collective_agreement_has_explicit_cross_border_terms: PipiaEvidenceState;
+  recipient_privacy_policy_provided: PipiaEvidenceState;
+  certification_body_china_recognized: PipiaEvidenceState;
+  certification_legal_obligation_citation_provided: PipiaEvidenceState;
+  contract_governing_law: string;
+  contract_exclusive_jurisdiction: string;
+  china_data_subject_rights_terms_present: PipiaEvidenceState;
 };
 
 export type DocumentReviewFormValues = {

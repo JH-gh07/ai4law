@@ -80,6 +80,12 @@ test("PIPIA 本地真实上传、生成和引用跳转闭环", async ({ page }) 
   await page.getByLabel("事件响应SLA（小时）").fill("72");
   await page.getByLabel("升级路径").fill("隐私负责人 -> 法务 -> 管理层");
   await page.getByLabel("附件角色").selectOption("scc_contract");
+
+  await page.getByRole("button", { name: /4\. 路径证据核验/ }).click();
+  await page.getByLabel("接收方告知是否完整").selectOption("no");
+  await page.getByLabel("敏感信息分类是否确认").selectOption("no");
+  await page.getByLabel("同意证据是否完整").selectOption("no");
+  await page.getByLabel("标准合同必要条款是否完整").selectOption("no");
   await page.locator(".schema-upload-card input[type=file]").setInputFiles(fixturePath);
   await expect(page.getByText(path.basename(fixturePath), { exact: true })).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "01_pipia_form_and_uploaded_file.png"), fullPage: true });
@@ -123,8 +129,12 @@ test("PIPIA 本地真实上传、生成和引用跳转闭环", async ({ page }) 
     return false;
   }).toBe(true);
   await page.screenshot({ path: path.join(evidenceDir, "02_pipia_report_with_citations.png"), fullPage: true });
+  const knowledgeIndexPromise = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === "/api/v1/knowledge/index" && response.status() < 300,
+  );
   await citationButton.click();
   await expect(page).toHaveURL(/\/evidence\?source=CN-LAW-003/);
+  await knowledgeIndexPromise;
   await expect(page.getByText(/第.*条/, { exact: false }).first()).toBeVisible();
   await page.screenshot({ path: path.join(evidenceDir, "03_pipia_evidence_article.png"), fullPage: true });
   // Verify article content is visible below the global navigation
@@ -146,7 +156,7 @@ test("PIPIA 本地真实上传、生成和引用跳转闭环", async ({ page }) 
       || entry.path.startsWith("/api/v1/knowledge/"),
   );
   expect(relevantNetwork.some((entry) => entry.path.startsWith("/api/v1/citations/") && entry.status < 300)).toBe(true);
-  expect(relevantNetwork.some((entry) => entry.path.startsWith("/api/v1/knowledge/") && entry.status < 300)).toBe(true);
+  expect(relevantNetwork.some((entry) => entry.path === "/api/v1/knowledge/index" && entry.status < 300)).toBe(true);
   expect(consoleMessages.filter((entry) => entry.type === "error")).toEqual([]);
 
   fs.writeFileSync(path.join(evidenceDir, "browser_network_log.json"), `${JSON.stringify(relevantNetwork, null, 2)}\n`);

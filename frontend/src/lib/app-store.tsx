@@ -24,8 +24,16 @@ import {
 } from "../api/me";
 import { findTaskTemplate, getDefaultTaskTemplate } from "./task-templates";
 import { getModuleJurisdiction, getModuleTaskTemplateId } from "./module-registry";
+import {
+  STORAGE_KEY_V1,
+  STORAGE_KEY_V2,
+  parsePersistedSnapshot,
+  persistedToAppState,
+  persistSnapshot,
+  toPersistedState,
+} from "./app-store-persistence";
 
-const STORAGE_KEY = "ai4law_app_state_v1";
+export { clearLocalSnapshot } from "./app-store-persistence";
 
 type AppState = {
   taskSpaces: TaskSpace[];
@@ -534,12 +542,16 @@ function buildRecoveryStateFromRuns(items: RecoveredWorkspaceItem[]) {
   };
 }
 
-function loadState(): AppState {
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return initialState;
+/** 读取旧 v1 快照（原始 AppState），仅在 v2 缺失时用于只读迁移。 */
+function loadLegacyState(): AppState | null {
+  const raw = window.localStorage.getItem(STORAGE_KEY_V1);
+  if (!raw) return null;
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) return initialState;
+    if (!isRecord(parsed)) {
+      window.localStorage.removeItem(STORAGE_KEY_V1);
+      return null;
+    }
     return {
       ...initialState,
       ...parsed,
@@ -552,12 +564,54 @@ function loadState(): AppState {
       onboarding: { ...initialState.onboarding, ...(isRecord(parsed.onboarding) ? parsed.onboarding : {}) }
     } as AppState;
   } catch {
+    return null;
+  }
+}
+
+function loadState(): AppState {
+  // 1. 优先读取 v2 轻量快照（已裁剪、版本化）
+  const v2 = parsePersistedSnapshot(window.localStorage.getItem(STORAGE_KEY_V2));
+  if (v2) {
+    return { ...initialState, ...persistedToAppState(v2) } as AppState;
+  }
+
+  // 2. v2 不存在时，对旧 v1 做只读迁移：裁剪 → 写 v2 → 删 v1
+  const legacy = loadLegacyState();
+  if (!legacy) return initialState;
+
+  try {
+    const persisted = toPersistedState(legacy);
+    const result = persistSnapshot(persisted, window.localStorage);
+    if (result.ok) {
+      window.localStorage.removeItem(STORAGE_KEY_V1);
+    }
+    return { ...initialState, ...persistedToAppState(persisted) } as AppState;
+  } catch {
+    // 迁移失败：安全丢弃旧快照，返回初始状态，不阻塞启动
+    try {
+      window.localStorage.removeItem(STORAGE_KEY_V1);
+    } catch {
+      // ignore
+    }
     return initialState;
   }
 }
 
+/** 受控告警：整个会话最多输出一次脱敏 warning，避免循环刷屏。 */
+let persistWarningIssued = false;
+
 function persistState(state: AppState) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const persisted = toPersistedState(state);
+  const result = persistSnapshot(persisted, window.localStorage, (level) => {
+    if (!persistWarningIssued) {
+      persistWarningIssued = true;
+      console.warn(`[app-store] localStorage 持久化超限，已启用容量降级（level=${level}），运行时状态不受影响`);
+    }
+  });
+  if (!result.ok && !persistWarningIssued) {
+    persistWarningIssued = true;
+    console.warn("[app-store] localStorage 持久化失败，运行时状态不受影响");
+  }
 }
 
 function reducer(state: AppState, action: Action): AppState {

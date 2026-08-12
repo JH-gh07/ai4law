@@ -1,0 +1,56 @@
+{
+  "environment": {
+    "task": "task067",
+    "stage": "T00",
+    "tools": {
+      "uv": {
+        "path": "/Users/oujiazhan/.local/bin/uv",
+        "available": true
+      },
+      "pdftotext": {
+        "path": "/usr/local/bin/pdftotext",
+        "available": true
+      },
+      "pdfinfo": {
+        "path": "/usr/local/bin/pdfinfo",
+        "available": true
+      },
+      "pdffonts": {
+        "path": "/usr/local/bin/pdffonts",
+        "available": true
+      },
+      "pdftoppm": {
+        "path": "/usr/local/bin/pdftoppm",
+        "available": true
+      },
+      "unzip": {
+        "path": "/usr/bin/unzip",
+        "available": true
+      },
+      "zipinfo": {
+        "path": "/usr/bin/zipinfo",
+        "available": true
+      },
+      "libreoffice": {
+        "path": null,
+        "available": false
+      },
+      "soffice": {
+        "path": null,
+        "available": false
+      }
+    },
+    "visual_conversion_available": false,
+    "visual_conversion_status": "BLOCKED_BY_TOOLING",
+    "cjk_font_assets": [],
+    "cjk_font_assets_note": "No dedicated CJK font asset in version control. Latin-only PDF.js Liberation Sans is present but cannot render Chinese headings/body. A redistributable CJK font must be added before the PDF gate can pass."
+  },
+  "gates": [
+    {
+      "name": "docx",
+      "status": "fail",
+      "detail": "not found: /nonexistent.docx",
+      "metrics": {}
+    }
+  ]
+}

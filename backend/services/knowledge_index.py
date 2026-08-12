@@ -132,12 +132,48 @@ def read_text_preview(snapshot_path: str, *, limit: int = 600) -> str:
     path = Path(raw)
     if not path.is_absolute():
         path = (ROOT / path).resolve()
-    try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-    except FileNotFoundError:
+    if not path.exists():
         return ""
+    text = _read_snapshot_text(path)
     preview = _build_preview_text(text)
     return preview[: max(0, limit)]
+
+
+def _read_snapshot_text(path: Path) -> str:
+    """Read a snapshot as text, handling both text snapshots and PDF originals.
+
+    CN/EU/US snapshots are HTML/Markdown text files; regional originals are PDFs.
+    For PDFs we extract the text layer via pypdf (a declared dependency) so the
+    Evidence Center preview and citation detail never surface raw binary bytes.
+    """
+    if path.suffix.lower() == ".pdf":
+        return _extract_pdf_text(path)
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return ""
+
+
+def _extract_pdf_text(path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+    except ImportError:  # pragma: no cover - pypdf is a declared dependency
+        return ""
+
+    try:
+        reader = PdfReader(str(path))
+    except Exception:
+        return ""
+
+    pages: list[str] = []
+    for page in reader.pages:
+        try:
+            text = page.extract_text() or ""
+        except Exception:
+            text = ""
+        if text.strip():
+            pages.append(text.strip())
+    return "\n\n".join(pages)
 
 
 
@@ -197,12 +233,9 @@ def get_article_detail(source_id: str, article_no: str) -> dict | None:
     if not path.is_absolute():
         path = (ROOT / path).resolve()
 
-    try:
-        full_text = path.read_text(encoding="utf-8", errors="ignore")
-    except FileNotFoundError:
+    if not path.exists():
         return None
-
-    full_text = _clean_source_text(full_text)
+    full_text = _clean_source_text(_read_snapshot_text(path))
 
     # Extract articles from the full text using structural markers
     articles = _parse_articles_from_text(full_text)

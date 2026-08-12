@@ -7,7 +7,7 @@ from backend.common.knowledge.paths import (
     regulation_articles_jsonl_path,
     sources_csv_path,
 )
-from backend.common.knowledge.registry import ensure_source_registry
+from backend.common.knowledge.registry import REGIONAL_JURISDICTIONS, ensure_source_registry
 from backend.common.knowledge.v2 import KnowledgeChunkV2
 from backend.core.resource_paths import report_template_path, rule_resource_path
 
@@ -171,8 +171,8 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
                     authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
                     binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
                     allowed_usage=allowed_usage,
-                    can_be_cited=True,
-                    can_enter_external_report=True,
+                    can_be_cited=registry_entry.can_be_cited if registry_entry is not None else True,
+                    can_enter_external_report=registry_entry.can_enter_external_report if registry_entry is not None else True,
                     reference_ids=[],
                     citation_anchor=str(row.get("article_ref") or ""),
                     scenario_tags=[path],
@@ -189,6 +189,83 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
                     },
                 )
             )
+    return chunks
+
+
+def build_legal_chunks_intl() -> list[KnowledgeChunkV2]:
+    """Build the international legal index (`legal_index_intl`).
+
+    Regional rows (jp/my/kr/hk/vn/sg/tw/mo) are kept out of the CN/EU/US module
+    pools (their registry `modules` list is empty), but their normalized articles
+    are still indexable and citable. They live in a dedicated index so a regional
+    query can be answered without ever polluting the default module indexes.
+    """
+    registry = {item.source_id: item for item in ensure_source_registry()}
+    chunks: list[KnowledgeChunkV2] = []
+    if not NORMALIZED_JSONL.exists():
+        return chunks
+
+    all_rows: list[dict] = []
+    with NORMALIZED_JSONL.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            if (row.get("jurisdiction") or "").strip().lower() not in REGIONAL_JURISDICTIONS:
+                continue
+            all_rows.append(row)
+
+    all_rows.sort(key=lambda r: (
+        str(r.get("source_id", "")),
+        str(r.get("article_ref", "")),
+    ))
+
+    from itertools import groupby
+    merged_rows: list[dict] = []
+    for src_id, group in groupby(all_rows, key=lambda r: str(r.get("source_id", ""))):
+        merged_rows.extend(_merge_short_articles(list(group), min_len=120, max_merge=4))
+
+    for row in merged_rows:
+        source_id = str(row.get("source_id") or "")
+        registry_entry = registry.get(source_id)
+        article_ref = str(row.get("article_ref") or "")
+        jurisdiction = (row.get("jurisdiction") or "").strip().lower() or "cn"
+        title = str(row.get("law_name") or (registry_entry.title if registry_entry else ""))
+        meta = registry_entry.metadata if registry_entry is not None else {}
+        chunks.append(
+            KnowledgeChunkV2(
+                chunk_id=f"{source_id}::{article_ref}::intl",
+                source_id=source_id,
+                title=title,
+                content=str(row.get("content") or ""),
+                layer="L1_regulatory_evidence",
+                template_type="none",
+                source_kind=str(registry_entry.source_kind) if registry_entry is not None else "law_article",
+                module="",
+                jurisdiction=jurisdiction,
+                doc_type=str(meta.get("doc_type") or "law"),
+                authority_level=registry_entry.authority_level if registry_entry is not None else _authority_level(title),
+                binding_force=registry_entry.binding_force if registry_entry is not None else _binding_force(title),
+                allowed_usage=list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"],
+                can_be_cited=registry_entry.can_be_cited if registry_entry is not None else True,
+                can_enter_external_report=registry_entry.can_enter_external_report if registry_entry is not None else True,
+                reference_ids=[],
+                citation_anchor=article_ref,
+                scenario_tags=["intl"],
+                chunk_strategy="article_split",
+                article_no=article_ref,
+                path="all",
+                source_url=str(meta.get("external_url") or meta.get("url") or ""),
+                snapshot_path=str(meta.get("snapshot_path") or ""),
+                keywords=[],
+                structured_payload={
+                    "intl_module": str(meta.get("intl_module") or ""),
+                    "publish_date": str(meta.get("publish_date") or ""),
+                    "effective_date": str(meta.get("effective_date") or ""),
+                },
+            )
+        )
     return chunks
 
 

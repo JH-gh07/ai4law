@@ -1,15 +1,36 @@
 {
   "document": {
-    "schema_version": "3.0",
-    "compiler_version": "0.1.0",
-    "prompt_version": "legacy-dpia-adapter-v1",
-    "template_version": "dpia-v0",
-    "model": "test-model",
+    "schema_version": "4.0",
     "document_id": "dpia:task-golden",
     "report_type": "dpia",
+    "identity": null,
+    "lifecycle": null,
+    "findings": [],
+    "actions": [],
+    "citations": [],
+    "render_contract": {
+      "profile_id": "legal-report-a4-v1",
+      "template_id": null,
+      "required_artifacts": [
+        "MARKDOWN",
+        "DOCX",
+        "PDF"
+      ],
+      "optional_artifacts": [],
+      "locale": "zh-CN",
+      "include_toc": false,
+      "include_page_numbers": true,
+      "include_citation_appendix": true,
+      "external_visibility_policy": "ONLY_EXTERNAL_ALLOWED_EVIDENCE"
+    },
+    "integrity": null,
+    "migrated_from_schema": null,
     "metadata": {
       "title": "员工健康评估系统 — DPIA 草案",
+      "short_title": "",
       "company_name": "员工健康评估系统",
+      "jurisdiction": "",
+      "locale": "zh-CN",
       "report_date": "2026-08-08",
       "report_id": "task-golden"
     },
@@ -19,7 +40,9 @@
         "title": "DPIA 必要性判断",
         "level": 2,
         "ordinal": "1",
+        "purpose": null,
         "reuse_policy": "single_use",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "dpia.chapter.1.block.1",
@@ -30,6 +53,7 @@
             ],
             "fact_refs": [],
             "issue_refs": [],
+            "finding_ref": null,
             "verification": "verified",
             "verification_reason": "由 legacy citation marker 迁移"
           }
@@ -40,7 +64,9 @@
         "title": "缓解措施",
         "level": 2,
         "ordinal": "2",
+        "purpose": null,
         "reuse_policy": "single_use",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "dpia.chapter.2.block.1",
@@ -59,8 +85,10 @@
       "issues_version": null,
       "evidence_version": null
     },
-    "input_hash": null,
-    "document_ir_hash": null
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-dpia-adapter-v1",
+    "template_version": "dpia-v0",
+    "model": "test-model"
   },
   "footnote_map": {}
 }

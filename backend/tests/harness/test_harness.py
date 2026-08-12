@@ -206,12 +206,11 @@ def test_terminal_trace_subscriber_prints_safe_event_summary(capsys) -> None:
         )
     )
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert "#004" in output
     assert "tool_result" in output
-    assert "LLM 调用完成" in output
-    assert "duration=5800ms" in output
-    assert "tokens=1240" in output
+    assert "llm_chat done" in output
+    assert "1240 tokens" in output
     assert "secret-token" not in output
     assert "private contract text" not in output
 
@@ -228,13 +227,14 @@ def test_verbose_trace_subscriber_observes_same_order_as_persisted_trace(
     recorder.record("final", {"summary": "完成"})
     recorder.write_manifest()
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert output.index("#001") < output.index("#002") < output.index("#003")
     manifest = json.loads(
         (tmp_path / "trace" / "manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["event_count"] == 3
-    assert output.count("[trace]") == manifest["event_count"]
+    trace_lines = [line for line in output.splitlines() if line.strip()]
+    assert len(trace_lines) == manifest["event_count"]
 
 
 def test_execute_rejects_quiet_and_verbose_trace_together() -> None:

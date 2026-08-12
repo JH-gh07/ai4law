@@ -1,0 +1,94 @@
+[
+  {
+    "path": "/api/v1/auth/register",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/reports",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/tasks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/me/workspace-recovery",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v0/files/upload",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/generate_async",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/813ab67dbeed4c6793919e6eae4a5f5d",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/813ab67dbeed4c6793919e6eae4a5f5d",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/token",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/stream",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/events/task/813ab67dbeed4c6793919e6eae4a5f5d/manifest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/pipia/tasks/813ab67dbeed4c6793919e6eae4a5f5d",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/artifacts/preview",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/workspace-state",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/citations/reports/813ab67dbeed4c6793919e6eae4a5f5d",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/artifacts/file",
+    "status": 200
+  }
+]

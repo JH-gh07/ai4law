@@ -1,3 +1,7 @@
+"""
+本文件用于定义应用容器类 `AppContainer`，该类负责管理应用的核心组件和服务的实例化与依赖注入。
+`AppContainer` 包含数据库引擎、会话工厂、WebSocket 管理器、任务调度器、LLM 客户端、文件服务、报告服务、会话服务、法律 API 服务、诊断服务和文档审查服务等。
+"""
 from backend.common.llm.client import LLMClient
 from backend.core.db import build_engine, build_session_factory
 from backend.core.settings import Settings

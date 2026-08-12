@@ -1,0 +1,74 @@
+{
+  "task": "task067",
+  "stage": "T00",
+  "frozen_at": "2026-08-13",
+  "sample_task_id": "4ab0776d9ddc49faba4d7bf89f30cd0a",
+  "artifact_hashes_sha256": {
+    "markdown": {
+      "path": "outputs/bcr/4ab0776d9ddc49faba4d7bf89f30cd0a/outputs/GlobalTech_Inc._BCR审查报告_草案_20260813.md",
+      "sha256": "34676a4c2ff97c4d986cc86dfbbd6886036cda9a7ffde52cf4dc61f578f65529"
+    },
+    "docx": {
+      "path": "outputs/bcr/4ab0776d9ddc49faba4d7bf89f30cd0a/outputs/GlobalTech_Inc._BCR审查报告_草案_20260813.docx",
+      "sha256": "083854aa9ade8e5364a65adcdff30fa85b5bb61583b9779e64fe21de32554ecb"
+    },
+    "pdf": {
+      "path": "outputs/bcr/4ab0776d9ddc49faba4d7bf89f30cd0a/outputs/GlobalTech_Inc._BCR审查报告_草案_20260813.pdf",
+      "sha256": "0441c815bcf1e1dded16d6373ef8af13f4482a2ddb910af0c788d707388f3d60"
+    },
+    "zip": {
+      "path": "outputs/bcr/4ab0776d9ddc49faba4d7bf89f30cd0a/outputs/GlobalTech_Inc._BCR审查输出包_草案_20260813.zip",
+      "sha256": "aff78f8917aa08eb26434f287fe2f4e7446e4ec1fba542285a7ba976b5e160d2"
+    },
+    "citation_map": {
+      "path": "outputs/bcr/4ab0776d9ddc49faba4d7bf89f30cd0a/outputs/citation_map.json",
+      "sha256": "df239ae9905c35fe0e9acdc177ebc718c7093d252e4ab376fd69bdf7f69a164b"
+    },
+    "input_fixture": {
+      "path": "backend/tests/fixtures/eu/bcr_c_globaltech.docx",
+      "sha256": "84026f9ea838f35032484d435a6a628dc3a3e3d9bed6242523cc2c3cb7c56039"
+    }
+  },
+  "note_document_ir": "The pre-fix sample did not persist document_ir.json to the user outputs directory, so no IR hash is frozen here. The IR is generated in-memory by build_bcr_document_ir() and only serialized when schema_first_bcr_enabled is true.",
+  "docx_structure": {
+    "paragraphs": 11,
+    "tables": 0,
+    "headings_h1_3": 0,
+    "styles_defs": 164,
+    "numbering_defs": 9,
+    "header_parts": [],
+    "footer_parts": []
+  },
+  "pdf_structure": {
+    "pages": 5,
+    "fonts": ["Helvetica (emb=no)", "STSong-Light (emb=no)", "ZapfDingbats (emb=no)"],
+    "fonts_embedded_total": 0,
+    "fonts_embedded_of": 3,
+    "page_size": "595.276 x 841.89 pts (A4)"
+  },
+  "failure_modes_frozen": {
+    "word_tables_0": true,
+    "docx_no_headings": true,
+    "docx_no_header_footer": true,
+    "docx_markdown_pipe_residue": true,
+    "pdf_fonts_not_embedded": true,
+    "pdf_risk_medium_broken_me_diu_m": true,
+    "pdf_finding_id_broken_c_1_dot_1": true,
+    "markdown_six_column_finding_table": true
+  },
+  "tooling": {
+    "present": ["uv", "pdftotext", "pdfinfo", "pdffonts", "pdftoppm", "unzip", "zipinfo"],
+    "missing": ["libreoffice", "soffice"],
+    "docx_visual_conversion": "BLOCKED_BY_TOOLING"
+  },
+  "fonts": {
+    "cjk_font_assets": [],
+    "latin_only_pdfjs_fonts": [
+      "frontend/public/pdfjs/standard_fonts/LiberationSans-Regular.ttf",
+      "frontend/public/pdfjs/standard_fonts/LiberationSans-Bold.ttf",
+      "frontend/public/pdfjs/standard_fonts/LiberationSans-Italic.ttf",
+      "frontend/public/pdfjs/standard_fonts/LiberationSans-BoldItalic.ttf"
+    ],
+    "note": "No redistributable CJK font asset with license/hash exists in version control. The current PDF relies on unembedded system CID fonts (STSong-Light). A licensed CJK font must be added for the PDF gate to pass."
+  }
+}

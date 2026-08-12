@@ -27,7 +27,7 @@ from backend.domains.eu.bcr_review.bcr_checklist_checker import BCRChecklistChec
 from backend.domains.eu.bcr_review.bcr_clause_reviewer import BCRClauseReviewer
 from backend.domains.eu.bcr_review.bcr_document_parser import BCRDocumentParser
 from backend.domains.eu.bcr_review.bcr_legal_retriever import BCRLegalRetriever
-from backend.domains.eu.bcr_review.bcr_report_renderer import BCRReportRenderer
+from backend.domains.eu.bcr_review.bcr_report_renderer import BCRReportRenderer#renderer是指的是渲染器，用于将数据渲染成报告
 from backend.domains.eu.bcr_review.bcr_risk_aggregator import BCRRiskAggregator
 from backend.domains.eu.bcr_review.bcr_rulebook_loader import BCRRulebookLoader
 from backend.domains.eu.bcr_review.bcr_scenario_extractor import BCRScenarioExtractor

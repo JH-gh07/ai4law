@@ -1215,7 +1215,10 @@ def write_articles_jsonl(
     processed = 0
 
     for s in sources:
-        pdf_path = PDF_BASE / s.pdf_subpath
+        # Regional PDFs are laid out as resources/legal/sources/<cc>/references/<file>.
+        # SourceDef.pdf_subpath keeps a historical relative path; the basename is the
+        # durable key and the jurisdiction is the directory, so re-resolve here.
+        pdf_path = PDF_BASE / s.jurisdiction / "references" / Path(s.pdf_subpath).name
         if not pdf_path.exists():
             print(f"  WARN PDF not found, skipping articles: {pdf_path}")
             skipped += 1

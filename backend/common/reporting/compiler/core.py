@@ -1,7 +1,10 @@
-"""Fail-closed compiler gates for the new reporting IR.
+"""Fail-closed compiler gates for the v4 reporting IR.
 
-This is an additive Stage A slice. It validates IR before any legacy renderer
-is used; it does not replace the current report generation path yet.
+The compiler validates a DocumentIR before any renderer may consume it. v4
+adds finding / clause / render-contract gates on top of the v3 ID / citation /
+dedup / structure gates. Existing v3-style documents (no findings, no clauses)
+still compile through the legacy gates unchanged; BCR documents exercise the
+new gates strictly.
 """
 
 from __future__ import annotations
@@ -16,6 +19,9 @@ from backend.common.reporting.schema.diagnostics import Diagnostic, DiagnosticLo
 _RESIDUAL_MARKER_RE = re.compile(r"\{\{(?:CIT-[^}]+|[^}]+)\}\}")
 _BOLD_RE = re.compile(r"\*\*|(?<!\w)__")
 _FOOTNOTE_RE = re.compile(r"(?<!\w)\[(\d+)\]")
+
+MAX_CLAUSE_DEPTH = 4
+KNOWN_PROFILE_IDS = {"legal-report-a4-v1"}
 
 
 @dataclass
@@ -56,6 +62,53 @@ def _result(diagnostics: list[Diagnostic]) -> PassResult:
     return PassResult(status=status, diagnostics=tuple(diagnostics))
 
 
+def _iter_blocks(document: DocumentIR):
+    for section in document.sections:
+        for block in section.blocks:
+            yield section, block
+
+
+def _iter_citation_refs(document: DocumentIR):
+    """Yield citation IDs in display order (sections → blocks → clauses), then
+    finding citation_refs."""
+    for _section, block in _iter_blocks(document):
+        for citation_id in getattr(block, "citation_refs", []):
+            yield citation_id
+        clauses = getattr(block, "clauses", [])
+        for clause in _iter_clause_nodes(clauses):
+            for citation_id in clause.citation_refs:
+                yield citation_id
+    for finding in document.findings:
+        for citation_id in finding.citation_refs:
+            yield citation_id
+
+
+def _iter_clause_nodes(clauses: list):
+    for clause in clauses:
+        yield clause
+        yield from _iter_clause_nodes(clause.children)
+
+
+def _collect_finding_refs(document: DocumentIR) -> dict[str, list[str]]:
+    """Map finding_id → list of block_ids of its *primary* display blocks.
+
+    Only ``FINDING_DETAIL`` counts as the primary display. ``FINDING_REFERENCE``
+    is a secondary cross-reference (e.g. an appendix pointer) and must not
+    inflate ``primary_display_count``.
+    """
+    detail: dict[str, list[str]] = {}
+    for _section, block in _iter_blocks(document):
+        if getattr(block, "type", None) != "finding_detail":
+            continue
+        ref = getattr(block, "finding_ref", None)
+        if ref is not None:
+            detail.setdefault(ref, []).append(block.block_id)
+    return detail
+
+
+# ── v3 passes (preserved) ──────────────────────────────────────────────────
+
+
 class InputValidationPass(CompilerPass):
     def run(self, state: CompilerState) -> PassResult:
         diagnostics: list[Diagnostic] = []
@@ -87,8 +140,7 @@ class CitationValidationPass(CompilerPass):
         diagnostics: list[Diagnostic] = []
         for section in state.document.sections:
             for block in section.blocks:
-                citation_refs = getattr(block, "citation_refs", [])
-                for citation_id in citation_refs:
+                for citation_id in getattr(block, "citation_refs", []):
                     if state.registry.resolve(citation_id) is None:
                         diagnostics.append(Diagnostic(
                             code="CITATION_NOT_REGISTERED",
@@ -101,15 +153,36 @@ class CitationValidationPass(CompilerPass):
                             ),
                             suggestion="将 citation_id 注册到本次 DocumentIR 的 CitationRegistry",
                         ))
+                clauses = getattr(block, "clauses", [])
+                for clause in _iter_clause_nodes(clauses):
+                    for citation_id in clause.citation_refs:
+                        if state.registry.resolve(citation_id) is None:
+                            diagnostics.append(Diagnostic(
+                                code="CITATION_NOT_REGISTERED",
+                                severity="error",
+                                message=f"引用 ID 未注册: {citation_id}",
+                                location=DiagnosticLocation(
+                                    section_id=section.section_id,
+                                    block_id=block.block_id,
+                                    citation_id=citation_id,
+                                ),
+                            ))
+        for finding in state.document.findings:
+            for citation_id in finding.citation_refs:
+                if state.registry.resolve(citation_id) is None:
+                    diagnostics.append(Diagnostic(
+                        code="CITATION_NOT_REGISTERED",
+                        severity="error",
+                        message=f"finding 引用 ID 未注册: {citation_id}",
+                        location=DiagnosticLocation(citation_id=citation_id),
+                    ))
         return _result(diagnostics)
 
 
 class CitationNumberingPass(CompilerPass):
     def run(self, state: CompilerState) -> PassResult:
-        for section in state.document.sections:
-            for block in section.blocks:
-                for citation_id in getattr(block, "citation_refs", []):
-                    state.registry.assign_footnote_number(citation_id)
+        for citation_id in _iter_citation_refs(state.document):
+            state.registry.assign_footnote_number(citation_id)
         return PassResult()
 
 
@@ -173,26 +246,156 @@ class RenderValidationPass(CompilerPass):
         return _result(diagnostics)
 
 
+# ── v4 passes ──────────────────────────────────────────────────────────────
+
+
+class FindingValidationPass(CompilerPass):
+    def run(self, state: CompilerState) -> PassResult:
+        diagnostics: list[Diagnostic] = []
+        findings = state.document.findings
+        detail_refs = _collect_finding_refs(state.document)
+
+        seen_findings: set[str] = set()
+        for finding in findings:
+            if finding.finding_id in seen_findings:
+                diagnostics.append(Diagnostic(
+                    code="FINDING_ID_DUPLICATE",
+                    severity="error",
+                    message=f"重复的 finding_id: {finding.finding_id}",
+                    location=DiagnosticLocation(field="findings"),
+                ))
+            seen_findings.add(finding.finding_id)
+
+        # Every referenced finding must exist; every finding must have exactly
+        # one primary FINDING_DETAIL display. This is a no-op for empty
+        # findings (the v3 legacy modules).
+        for _section, block in _iter_blocks(state.document):
+            ref = getattr(block, "finding_ref", None)
+            if ref is not None and ref not in {f.finding_id for f in findings}:
+                diagnostics.append(Diagnostic(
+                    code="FINDING_REF_NOT_REGISTERED",
+                    severity="error",
+                    message=f"block 引用未注册的 finding: {ref}",
+                    location=DiagnosticLocation(block_id=block.block_id),
+                ))
+            for ref in getattr(block, "finding_refs", []):
+                if ref not in {f.finding_id for f in findings}:
+                    diagnostics.append(Diagnostic(
+                        code="FINDING_REF_NOT_REGISTERED",
+                        severity="error",
+                        message=f"block 引用未注册的 finding: {ref}",
+                        location=DiagnosticLocation(block_id=block.block_id),
+                    ))
+
+        for finding in findings:
+            primary_count = len(detail_refs.get(finding.finding_id, []))
+            finding.primary_display_count = primary_count
+            if primary_count != 1:
+                diagnostics.append(Diagnostic(
+                    code="FINDING_PRIMARY_DISPLAY_COUNT",
+                    severity="error",
+                    message=f"finding {finding.finding_id} 主展示次数为 {primary_count}，必须为 1",
+                    location=DiagnosticLocation(field="findings"),
+                ))
+        return _result(diagnostics)
+
+
+class ClauseStructureValidationPass(CompilerPass):
+    def run(self, state: CompilerState) -> PassResult:
+        diagnostics: list[Diagnostic] = []
+        seen_nodes: set[str] = set()
+
+        def _walk(clauses, depth: int) -> None:
+            for clause in clauses:
+                if clause.node_id in seen_nodes:
+                    diagnostics.append(Diagnostic(
+                        code="CLAUSE_NODE_ID_DUPLICATE",
+                        severity="error",
+                        message=f"重复的 clause node_id: {clause.node_id}",
+                        location=DiagnosticLocation(block_id=clause.node_id),
+                    ))
+                seen_nodes.add(clause.node_id)
+                if depth > MAX_CLAUSE_DEPTH:
+                    diagnostics.append(Diagnostic(
+                        code="CLAUSE_DEPTH_EXCEEDED",
+                        severity="error",
+                        message=f"clause 层级超过 {MAX_CLAUSE_DEPTH}: {clause.node_id}",
+                        location=DiagnosticLocation(block_id=clause.node_id),
+                    ))
+                _walk(clause.children, depth + 1)
+
+        for _section, block in _iter_blocks(state.document):
+            clauses = getattr(block, "clauses", None)
+            if clauses:
+                _walk(clauses, 1)
+        return _result(diagnostics)
+
+
+class ActionValidationPass(CompilerPass):
+    def run(self, state: CompilerState) -> PassResult:
+        diagnostics: list[Diagnostic] = []
+        finding_ids = {f.finding_id for f in state.document.findings}
+        seen_actions: set[str] = set()
+        for action in state.document.actions:
+            if action.action_id in seen_actions:
+                diagnostics.append(Diagnostic(
+                    code="ACTION_ID_DUPLICATE",
+                    severity="error",
+                    message=f"重复的 action_id: {action.action_id}",
+                    location=DiagnosticLocation(field="actions"),
+                ))
+            seen_actions.add(action.action_id)
+            for ref in action.finding_refs:
+                if ref not in finding_ids:
+                    diagnostics.append(Diagnostic(
+                        code="ACTION_FINDING_REF_NOT_REGISTERED",
+                        severity="error",
+                        message=f"action 引用未注册的 finding: {ref}",
+                        location=DiagnosticLocation(field="actions"),
+                    ))
+        return _result(diagnostics)
+
+
+class RenderContractValidationPass(CompilerPass):
+    def run(self, state: CompilerState) -> PassResult:
+        diagnostics: list[Diagnostic] = []
+        profile_id = state.document.render_contract.profile_id
+        if profile_id not in KNOWN_PROFILE_IDS:
+            diagnostics.append(Diagnostic(
+                code="RENDER_PROFILE_UNKNOWN",
+                severity="fatal",
+                message=f"未知 render profile: {profile_id}",
+                location=DiagnosticLocation(field="render_contract"),
+            ))
+        return _result(diagnostics)
+
+
 class DocumentCompiler:
-    """Run the Stage A passes in deterministic order."""
+    """Run the v4 passes in deterministic order."""
 
     def __init__(self, passes: list[CompilerPass] | None = None) -> None:
         self.passes = passes or [
             InputValidationPass(),
+            FindingValidationPass(),
+            ClauseStructureValidationPass(),
+            ActionValidationPass(),
             CitationValidationPass(),
             CitationNumberingPass(),
             DedupValidationPass(),
             StructureValidationPass(),
+            RenderContractValidationPass(),
             RenderValidationPass(),
         ]
 
     def compile(
         self,
         document: DocumentIR,
-        registry: CitationRegistry,
+        registry: CitationRegistry | None = None,
         *,
         rendered_text: str = "",
     ) -> CompileResult:
+        if registry is None:
+            registry = CitationRegistry(document.citations)
         state = CompilerState(document=document, registry=registry, rendered_text=rendered_text)
         for compiler_pass in self.passes:
             result = compiler_pass.run(state)

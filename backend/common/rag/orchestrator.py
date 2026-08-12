@@ -8,6 +8,7 @@ from typing import Iterable
 from backend.common.knowledge.builders_v2 import (
     build_legal_chunks_cn,
     build_legal_chunks_eu,
+    build_legal_chunks_intl,
     build_legal_chunks_us,
     build_standard_clause_chunks_cn,
     build_standard_clause_chunks_eu,
@@ -50,8 +51,9 @@ INDEX_NAMES = (
     "standard_clause_index_us",
     "template_index_us",
     "testcase_index_us",
+    "legal_index_intl",
 )
-LEGAL_INDEX_NAMES = frozenset({"legal_index_cn", "legal_index_eu", "legal_index_us"})
+LEGAL_INDEX_NAMES = frozenset({"legal_index_cn", "legal_index_eu", "legal_index_us", "legal_index_intl"})
 
 
 def legal_source_fingerprint() -> str:
@@ -666,4 +668,5 @@ def build_chunk_sets() -> dict[str, list[KnowledgeChunkV2]]:
         "standard_clause_index_us": build_standard_clause_chunks_us(),
         "template_index_us": build_template_chunks_us(),
         "testcase_index_us": build_testcase_chunks_us(),
+        "legal_index_intl": build_legal_chunks_intl(),
     }

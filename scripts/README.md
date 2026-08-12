@@ -9,8 +9,12 @@
 | 生成法规条款数据 | `uv run --frozen python scripts/build_regulation_articles.py` | 更新法规条款 JSONL |
 | 重建 EO 14117 条文 | `uv run --frozen python scripts/reingest_us_fed_001.py --dry-run` | 从离线快照校验 `US-FED-001` 的 28 CFR Part 202 精确条号；显式加 `--refresh` 才访问 eCFR |
 | 构建本地 RAG 索引 | `uv run --frozen python scripts/build_rag_vector_index.py` | 更新当前配置使用的本地索引 |
+| 区域法域源码对账 | `uv run --frozen python scripts/reconcile_regional_sources.py [--write] [--check]` | 对账 51 个区域法域 PDF 与 sources.csv `snapshot_path`，可选回写 |
 | 构造检索数据集 | `uv run --frozen python scripts/build_rag_retrieval_dataset.py` | 更新 `benchmarks/datasets/rag_retrieval/queries.csv` |
 | 构造困难负例 | `uv run --frozen python scripts/build_rag_hard_negatives.py` | 更新 `benchmarks/datasets/rag_retrieval/hard_negatives.csv` |
+| Seed Level B 请求转换 | `uv run --frozen python scripts/build_seed_case_requests.py [--write]` | 对 50 个 Level A 抽取记录裁决 `gap/rejected/converted`，写入 `benchmarks/datasets/seed-cases-v1/levelb-disposition.v1.json` |
+| JP/KR 来源身份裁决初稿 | `uv run --frozen python scripts/build_jp_kr_adjudication.py [--write] [--check]` | 生成 `status/check/task065/jp_kr_source_adjudication.csv` 人工审核表初稿（保留专家签署列） |
+| JP/KR 来源身份门禁 | `uv run --frozen python scripts/check_regional_source_identity.py [--json]` | 只读检查 JP/KR 来源一对一绑定、孤立 PDF、可抽取文本、隔离执行与处置合法性 |
 | 产品 Smoke Benchmark | `uv run --frozen python scripts/run_smoke_benchmark.py --mode all --target cn` | 输出评测结果 |
 | RAG 检索 Benchmark | `uv run --frozen python scripts/run_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/` |
 | 保存检索回归快照 | `uv run --frozen python scripts/snapshot_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/regression/` |

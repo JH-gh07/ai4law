@@ -1,3 +1,7 @@
+"""
+本文件用于定义会话服务，包括预填上下文和路径转移的构建。
+比如，`build_prefill_context` 方法用于构建预填上下文，`build_assessment_handoff` 方法用于构建安全评估路径的转移信息，`build_pipia_handoff` 方法用于构建认证/标准合同路径的转移信息。
+"""
 class SessionService:
     def build_prefill_context(self, outcome: str, answers: dict) -> dict:
         if outcome == "SECURITY_ASSESSMENT":

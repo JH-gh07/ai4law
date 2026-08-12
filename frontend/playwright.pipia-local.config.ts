@@ -1,22 +1,22 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const evidenceDir = "../status/check/phase3_pipia_firstrun_20260808/browser";
+const transientArtifactDir = "../tmp/verify/pipia-playwright";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: "pipia-local-firstrun.e2e.ts",
-  outputDir: `${evidenceDir}/playwright-results`,
+  testMatch: /pipia.*local.*\.e2e\.ts/,
+  outputDir: `${transientArtifactDir}/results`,
   fullyParallel: false,
   workers: 1,
   retries: 0,
   timeout: 180_000,
   expect: { timeout: 20_000 },
-  reporter: [["list"], ["html", { outputFolder: `${evidenceDir}/playwright-report`, open: "never" }]],
+  reporter: [["list"], ["html", { outputFolder: `${transientArtifactDir}/report`, open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:5197",
     locale: "zh-CN",
     actionTimeout: 15_000,
-    trace: "on",
+    trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },

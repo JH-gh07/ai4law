@@ -1113,6 +1113,59 @@
   background: #ffffff;
 }
 
+.pdf-viewer {
+  min-height: 720px;
+  display: flex;
+  flex-direction: column;
+  background: #eef3f8;
+}
+
+.pdf-viewer-toolbar {
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(106, 141, 191, 0.2);
+  background: #ffffff;
+  color: #35577a;
+  font-size: 0.84rem;
+}
+
+.pdf-viewer-page-button {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(73, 116, 168, 0.28);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #245b94;
+  cursor: pointer;
+}
+
+.pdf-viewer-page-button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.pdf-viewer-page-shell {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.pdf-viewer-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto !important;
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 1px 5px rgba(34, 63, 94, 0.18);
+}
+
 .workspace-report-chapter {
   border: 1px solid rgba(106, 141, 191, 0.22);
   border-radius: 18px;

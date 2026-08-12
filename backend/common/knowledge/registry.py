@@ -17,6 +17,15 @@ REGISTRY_PATH = source_registry_path()
 MODULE_CATALOG_PATH = module_catalog_path()
 SOURCES_CSV = sources_csv_path()
 
+# Regional jurisdictions are carried in the catalog/registry for browse-and-cite
+# and the dedicated international legal index (`legal_index_intl`). They are NOT
+# assigned to any CN/EU/US retrieval module, so regional rows can never pollute
+# the default module pools. The `intl-<cc>` module tag in sources.csv is kept as
+# `metadata.intl_module` (routing hint) and as a raw `metadata.module` value, but
+# it is never promoted into `modules`.
+REGIONAL_JURISDICTIONS = frozenset({"jp", "my", "kr", "hk", "vn", "sg", "tw", "mo"})
+
+
 DEFAULT_MODULE_CATALOG = {
     "version": "v1",
     "modules": {
@@ -157,6 +166,21 @@ def _authority_level_from_row(row: dict[str, str]) -> str:
     return "low"
 
 
+def _citation_policy_for_row(row: dict[str, str]) -> tuple[bool, bool, list[str]]:
+    """Return (can_be_cited, can_enter_external_report, allowed_usage) for a row.
+
+    Sources marked ``metadata_review_required`` are isolated from formal legal
+    conclusions and article-number citation until a legal-domain expert signs off
+    on their identity (see status/check/task065/jp_kr_source_adjudication.csv).
+    They remain browsable in the Evidence Center but are never promoted as a
+    citable or external-report basis.
+    """
+    review_status = (row.get("review_status") or "").strip().lower()
+    if review_status == "metadata_review_required":
+        return (False, False, ["internal_review"])
+    return (True, True, ["legal_grounding", "external_report", "internal_review"])
+
+
 def _modules_for_row(jurisdiction: str, path: str) -> list[str]:
     if path == "reference":
         return []  # reference-only sources stay out of retrieval pools
@@ -201,16 +225,24 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
         reader = csv.DictReader(handle)
         for row in reader:
             jurisdiction = (row.get("jurisdiction") or "").strip().lower()
-            if jurisdiction not in {"cn", "eu", "us"}:
-                continue
             source_id = (row.get("source_id") or "").strip()
             title = (row.get("title") or "").strip()
             if not source_id or not title:
                 continue
             path = (row.get("path") or "all").strip()
             modules = _modules_for_row(jurisdiction, path)
+            # `intl-<cc>` tags are international-index routing hints, not retrieval
+            # modules. Keep them out of `modules` so regional rows never enter the
+            # CN/EU/US module pools, but preserve them for legal_index_intl routing.
+            intl_module = ""
             if row.get("module"):
-                modules = [item.strip().replace("-", "_") for item in row["module"].split("|") if item.strip()]
+                declared = [item.strip().replace("-", "_") for item in row["module"].split("|") if item.strip()]
+                if jurisdiction in REGIONAL_JURISDICTIONS:
+                    intl_module = "|".join(declared)
+                else:
+                    modules = declared
+            can_be_cited, can_enter_external_report, allowed_usage = _citation_policy_for_row(row)
+            review_status = (row.get("review_status") or "published").strip() or "published"
             entries.append(
                 SourceRegistryEntry(
                     source_id=source_id,
@@ -223,13 +255,14 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                     authority_level=_authority_level_from_row(row),
                     binding_force=_binding_force_from_row(row),
                     status=(row.get("status") or "effective").strip() or "effective",
-                    review_status="published",
-                    allowed_usage=["legal_grounding", "external_report", "internal_review"],
-                    can_be_cited=True,
-                    can_enter_external_report=True,
+                    review_status=review_status,
+                    allowed_usage=allowed_usage,
+                    can_be_cited=can_be_cited,
+                    can_enter_external_report=can_enter_external_report,
                     metadata={
                         "path": path,
                         "module": (row.get("module") or "").strip(),
+                        "intl_module": intl_module,
                         "category": (row.get("category") or "").strip(),
                         "doc_type": (row.get("doc_type") or "").strip(),
                         "publisher": (row.get("publisher") or "").strip(),

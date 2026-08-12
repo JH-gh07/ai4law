@@ -1,41 +1,100 @@
-"""Schema-first reporting primitives.
+"""Schema-first reporting primitives (v4).
 
 The package is additive during the migration. Existing Markdown renderers keep
 their current behavior until a compiler feature flag is explicitly enabled.
+v4 adds the finding / clause / render-contract block and record types without
+changing the v3 constructor surface, so existing schema-first adapters compile
+unchanged.
 """
 
-from backend.common.reporting.compiler import DocumentCompiler
+from backend.common.reporting.compiler import (
+    CompileResult,
+    DocumentCompiler,
+    PassResult,
+)
 from backend.common.reporting.compat import (
     extract_citation_refs,
     legacy_item_to_record,
     legacy_registry_to_reporting,
 )
+from backend.common.reporting.migration import migrate_v3_document
 from backend.common.reporting.schema import (
+    ActionRecord,
     Block,
-    ClaimBlock,
+    CitationLocator,
+    CitationNoteBlock,
     CitationRecord,
     CitationRegistry,
+    ClaimBlock,
+    ClauseGroupBlock,
+    ClauseNode,
+    Diagnostic,
+    DiagnosticLocation,
     DocumentIR,
+    FindingDetailBlock,
+    FindingRecord,
+    FindingReferenceBlock,
+    FindingSummaryBlock,
+    Identity,
+    Integrity,
+    KeyValueBlock,
+    KeyValueItem,
+    Lifecycle,
     ListBlock,
+    ListItem,
+    NumberingStyle,
+    PageBreakBlock,
     ParagraphBlock,
+    Provenance,
+    RenderContract,
+    ReportMetadata,
+    RiskLevel,
     SectionIR,
     TableBlock,
+    VerificationStatus,
     WarningBlock,
 )
 
 __all__ = [
+    "ActionRecord",
     "Block",
-    "ClaimBlock",
+    "CitationLocator",
+    "CitationNoteBlock",
     "CitationRecord",
     "CitationRegistry",
+    "ClaimBlock",
+    "ClauseGroupBlock",
+    "ClauseNode",
+    "CompileResult",
+    "Diagnostic",
+    "DiagnosticLocation",
     "DocumentCompiler",
     "DocumentIR",
+    "FindingDetailBlock",
+    "FindingRecord",
+    "FindingReferenceBlock",
+    "FindingSummaryBlock",
+    "Identity",
+    "Integrity",
+    "KeyValueBlock",
+    "KeyValueItem",
+    "Lifecycle",
+    "ListBlock",
+    "ListItem",
+    "NumberingStyle",
+    "PageBreakBlock",
+    "ParagraphBlock",
+    "PassResult",
+    "Provenance",
+    "RenderContract",
+    "ReportMetadata",
+    "RiskLevel",
+    "SectionIR",
+    "TableBlock",
+    "VerificationStatus",
+    "WarningBlock",
     "extract_citation_refs",
     "legacy_item_to_record",
     "legacy_registry_to_reporting",
-    "ListBlock",
-    "ParagraphBlock",
-    "SectionIR",
-    "TableBlock",
-    "WarningBlock",
+    "migrate_v3_document",
 ]

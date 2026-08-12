@@ -7,7 +7,10 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
+    "prepare:pdfjs": "mkdir -p public/pdfjs && cp -R node_modules/pdfjs-dist/cmaps public/pdfjs/ && cp -R node_modules/pdfjs-dist/standard_fonts public/pdfjs/",
+    "predev": "npm run prepare:pdfjs",
     "dev": "vite",
+    "prebuild": "npm run prepare:pdfjs",
     "build": "tsc -b && vite build",
     "generate:api": "bash ../scripts/generate_api_types.sh",
     "test": "vitest run",
@@ -16,6 +19,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "pdfjs-dist": "^5.4.624",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",

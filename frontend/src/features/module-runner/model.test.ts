@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PIPIA_STEPS,
   inferAttachmentFormat,
   inferCnFlowAttachmentFormat,
   inferDpiaAttachmentFormat,
@@ -57,5 +58,11 @@ describe("module runner model helpers", () => {
     expect(isValidUrl("https://example.com/legal")).toBe(true);
     expect(isValidUrl("http://example.com")).toBe(true);
     expect(isValidUrl("example.com")).toBe(false);
+  });
+
+  it("exposes the HR exemption route in the PIPIA form", () => {
+    const routeField = PIPIA_STEPS.flatMap((step) => step.fields)
+      .find((field) => field.name === "route_type");
+    expect(routeField?.options).toContain("hr_exemption");
   });
 });

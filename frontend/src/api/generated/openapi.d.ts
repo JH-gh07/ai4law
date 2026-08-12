@@ -2036,7 +2036,7 @@ export interface components {
          * AssessmentTaskState
          * @enum {string}
          */
-        AssessmentTaskState: "CREATED" | "PARSING" | "RETRIEVING" | "GENERATING" | "VALIDATING" | "RENDERING" | "COMPLETED" | "FAILED";
+        AssessmentTaskState: "CREATED" | "PARSING" | "RETRIEVING" | "GENERATING" | "VALIDATING" | "RENDERING" | "COMPLETED" | "FAILED" | "PATH_MISMATCH";
         /** AuthResponse */
         AuthResponse: {
             /** Access Token */
@@ -4810,6 +4810,41 @@ export interface components {
             /** Transfer Purpose */
             transfer_purpose?: string | null;
         };
+        /** PIPIAPathEvidence */
+        PIPIAPathEvidence: {
+            /** Certification Body China Recognized */
+            certification_body_china_recognized?: boolean | null;
+            /** Certification Legal Obligation Citation Provided */
+            certification_legal_obligation_citation_provided?: boolean | null;
+            /** China Data Subject Rights Terms Present */
+            china_data_subject_rights_terms_present?: boolean | null;
+            /** Collective Agreement Has Explicit Cross Border Terms */
+            collective_agreement_has_explicit_cross_border_terms?: boolean | null;
+            /** Consent Evidence Complete */
+            consent_evidence_complete?: boolean | null;
+            /**
+             * Contract Exclusive Jurisdiction
+             * @default
+             */
+            contract_exclusive_jurisdiction?: string;
+            /**
+             * Contract Governing Law
+             * @default
+             */
+            contract_governing_law?: string;
+            /** Employee Handbook Has Explicit Cross Border Terms */
+            employee_handbook_has_explicit_cross_border_terms?: boolean | null;
+            /** Hr Rules Lawfully Adopted */
+            hr_rules_lawfully_adopted?: boolean | null;
+            /** Recipient Notice Complete */
+            recipient_notice_complete?: boolean | null;
+            /** Recipient Privacy Policy Provided */
+            recipient_privacy_policy_provided?: boolean | null;
+            /** Scc Required Clauses Complete */
+            scc_required_clauses_complete?: boolean | null;
+            /** Sensitive Information Classification Confirmed */
+            sensitive_information_classification_confirmed?: boolean | null;
+        };
         /** PIPIAPersonalInfoScope */
         PIPIAPersonalInfoScope: {
             /** Pi Categories */
@@ -4828,6 +4863,7 @@ export interface components {
             attachments: components["schemas"]["PIPIAAttachment"][];
             company_profile: components["schemas"]["PIPIACompanyProfile"];
             emergency_plan: components["schemas"]["PIPIAEmergencyPlan"];
+            path_evidence?: components["schemas"]["PIPIAPathEvidence"];
             personal_info_scope: components["schemas"]["PIPIAPersonalInfoScope"];
             rights_protection: components["schemas"]["PIPIARightsProtection"];
             /**
@@ -4858,6 +4894,8 @@ export interface components {
             issues?: {
                 [key: string]: unknown;
             }[];
+            /** Legal Basis */
+            legal_basis?: string[];
             /** Material Gaps */
             material_gaps?: string[];
             /** Output Files */
@@ -5909,6 +5947,50 @@ export interface components {
             /** Risk Sources */
             risk_sources?: string[];
         };
+        /**
+         * TIADecision
+         * @description Deterministic transfer decision; model reviews cannot override it.
+         */
+        TIADecision: {
+            /**
+             * Decision Source
+             * @default deterministic_rule
+             * @constant
+             */
+            decision_source?: "deterministic_rule";
+            /**
+             * Evidence Status
+             * @enum {string}
+             */
+            evidence_status: "verified" | "partial" | "missing";
+            /**
+             * Inherent Risk
+             * @enum {string}
+             */
+            inherent_risk: "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
+            /** Mandatory Conditions */
+            mandatory_conditions?: string[];
+            /**
+             * Measure Sufficiency
+             * @default unknown
+             * @enum {string}
+             */
+            measure_sufficiency?: "sufficient" | "conditional" | "highly_conditional" | "insufficient" | "unknown";
+            /** Missing Evidence */
+            missing_evidence?: string[];
+            /** Reasons */
+            reasons?: string[];
+            /**
+             * Residual Risk
+             * @enum {string}
+             */
+            residual_risk: "LOW" | "MEDIUM" | "HIGH" | "VERY_HIGH";
+            /**
+             * Transfer Status
+             * @enum {string}
+             */
+            transfer_status: "proceed" | "proceed_with_conditions" | "suspend";
+        };
         /** TIAMeasureAssessment */
         TIAMeasureAssessment: {
             /**
@@ -5963,6 +6045,7 @@ export interface components {
             /** Consistency Issues */
             consistency_issues: string[];
             country_risk?: components["schemas"]["TIACountryRisk"] | null;
+            decision?: components["schemas"]["TIADecision"] | null;
             /** Measure Assessments */
             measure_assessments?: components["schemas"]["TIAMeasureAssessment"][];
             /** Output Files */
@@ -6478,8 +6561,8 @@ export interface components {
          * US14117TrafficLightResult
          * @description EO 14117 traffic light assessment.
          *
-         *     RED    = Prohibited transaction under §100.2
-         *     YELLOW = Restricted transaction under §100.3 — requires security measures
+         *     RED    = Prohibited transaction under 28 CFR §§ 202.243, 202.301-303
+         *     YELLOW = Restricted transaction under 28 CFR § 202.401 — requires security measures
          *              - yellow_status "blocked": measures missing, must not proceed
          *              - yellow_status "controlled": measures implemented, may proceed under monitoring
          *     GREEN  = No EO 14117 trigger detected
@@ -6687,11 +6770,28 @@ export interface components {
          * @description Lightweight regulation hit (compatible with assessment's RegulationHit).
          */
         backend__domains__eu__dpia__schema__RegulationHit: {
+            /** Allowed Usage */
+            allowed_usage?: string[];
             /**
              * Article
              * @default
              */
             article?: string;
+            /**
+             * Authority Level
+             * @default medium
+             */
+            authority_level?: string;
+            /**
+             * Binding Force
+             * @default recommended
+             */
+            binding_force?: string;
+            /**
+             * Can Enter External Report
+             * @default true
+             */
+            can_enter_external_report?: boolean;
             /**
              * Snippet
              * @default
@@ -6699,6 +6799,16 @@ export interface components {
             snippet?: string;
             /** Source Id */
             source_id: string;
+            /**
+             * Source Kind
+             * @default law_article
+             */
+            source_kind?: string;
+            /**
+             * Source Url
+             * @default
+             */
+            source_url?: string;
             /** Title */
             title: string;
         };

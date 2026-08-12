@@ -1,15 +1,36 @@
 {
   "document": {
-    "schema_version": "3.0",
-    "compiler_version": "0.1.0",
-    "prompt_version": "legacy-document-review-adapter-v1",
-    "template_version": "document-review-v0",
-    "model": "test-model",
+    "schema_version": "4.0",
     "document_id": "review:task-golden",
     "report_type": "review",
+    "identity": null,
+    "lifecycle": null,
+    "findings": [],
+    "actions": [],
+    "citations": [],
+    "render_contract": {
+      "profile_id": "legal-report-a4-v1",
+      "template_id": null,
+      "required_artifacts": [
+        "MARKDOWN",
+        "DOCX",
+        "PDF"
+      ],
+      "optional_artifacts": [],
+      "locale": "zh-CN",
+      "include_toc": false,
+      "include_page_numbers": true,
+      "include_citation_appendix": true,
+      "external_visibility_policy": "ONLY_EXTERNAL_ALLOWED_EVIDENCE"
+    },
+    "integrity": null,
+    "migrated_from_schema": null,
     "metadata": {
       "title": "隐私协议_测试.docx — 智能审查报告",
+      "short_title": "",
       "company_name": "隐私协议_测试.docx",
+      "jurisdiction": "",
+      "locale": "zh-CN",
       "report_date": "2026-08-08",
       "report_id": "task-golden"
     },
@@ -19,7 +40,9 @@
         "title": "一、执行摘要",
         "level": 2,
         "ordinal": "1",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.1.block.1",
@@ -49,7 +72,9 @@
         "title": "二、审查概况与方法",
         "level": 2,
         "ordinal": "2",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.2.block.1",
@@ -114,7 +139,9 @@
         "title": "三、文档画像",
         "level": 2,
         "ordinal": "3",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.3.block.1",
@@ -130,7 +157,9 @@
         "title": "四、整体风险评估",
         "level": 2,
         "ordinal": "4",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.4.block.1",
@@ -181,7 +210,9 @@
         "title": "五、完整性检查结果",
         "level": 2,
         "ordinal": "5",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.5.block.1",
@@ -197,7 +228,9 @@
         "title": "六、逐条问题清单",
         "level": 2,
         "ordinal": "6",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.6.block.1",
@@ -213,7 +246,9 @@
         "title": "七、优先整改路线图",
         "level": 2,
         "ordinal": "7",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.7.block.1",
@@ -236,7 +271,9 @@
         "title": "八、法规依据汇总",
         "level": 2,
         "ordinal": "8",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.8.block.1",
@@ -252,7 +289,9 @@
         "title": "九、审查边界与置信度说明",
         "level": 2,
         "ordinal": "9",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.9.block.1",
@@ -345,7 +384,9 @@
         "title": "九、附录",
         "level": 2,
         "ordinal": "10",
+        "purpose": null,
         "reuse_policy": "summary",
+        "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
             "block_id": "review.section.10.block.1",
@@ -448,8 +489,10 @@
       "issues_version": null,
       "evidence_version": null
     },
-    "input_hash": null,
-    "document_ir_hash": null
+    "compiler_version": "0.1.0",
+    "prompt_version": "legacy-document-review-adapter-v1",
+    "template_version": "document-review-v0",
+    "model": "test-model"
   },
   "footnote_map": {}
 }

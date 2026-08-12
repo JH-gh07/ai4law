@@ -1,0 +1,65 @@
+{
+  "schema_version": "t10.v1",
+  "registry_total_entries": 120,
+  "regional_registry_entries": 51,
+  "regional_registry_jurisdictions": [
+    "hk",
+    "jp",
+    "kr",
+    "mo",
+    "my",
+    "sg",
+    "tw",
+    "vn"
+  ],
+  "regional_with_snapshot_path": 49,
+  "regional_without_snapshot_path": [
+    "JP-LAW-009",
+    "KR-GUIDE-006"
+  ],
+  "regional_modules_empty": true,
+  "regional_intl_module_present": true,
+  "intl_chunk_count": 1035,
+  "intl_chunk_jurisdictions": {
+    "hk": 58,
+    "jp": 265,
+    "kr": 266,
+    "mo": 80,
+    "my": 221,
+    "sg": 23,
+    "tw": 122
+  },
+  "intl_chunks_module_empty": true,
+  "intl_chunks_snapshot_present": true,
+  "index_names": [
+    "legal_index_cn",
+    "workflow_index_cn",
+    "standard_clause_index_cn",
+    "template_index_cn",
+    "testcase_index_cn",
+    "legal_index_eu",
+    "workflow_index_eu",
+    "standard_clause_index_eu",
+    "template_index_eu",
+    "testcase_index_eu",
+    "legal_index_us",
+    "workflow_index_us",
+    "standard_clause_index_us",
+    "template_index_us",
+    "testcase_index_us",
+    "legal_index_intl"
+  ],
+  "legal_index_intl_in_legal_names": true,
+  "user_source_catalog_regional_count": 49,
+  "user_source_catalog_total": 118,
+  "regional_jurisdictions": [
+    "hk",
+    "jp",
+    "kr",
+    "mo",
+    "my",
+    "sg",
+    "tw",
+    "vn"
+  ]
+}

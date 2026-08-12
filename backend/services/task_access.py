@@ -1,3 +1,7 @@
+"""
+本文件用于定义任务访问控制的服务，包括任务所有权的声明和访问权限的验证。
+比如，`claim_task_access` 函数用于声明任务的所有权，`require_task_access` 函数用于验证用户是否有权限访问指定的任务。
+"""
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session

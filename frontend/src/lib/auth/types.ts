@@ -1,3 +1,6 @@
+/** 
+ * Represents an authenticated user in the system.
+ */
 export type AuthUser = {
   id: string;
   username: string;

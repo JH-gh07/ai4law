@@ -1,3 +1,7 @@
+"""
+本文件用于定义BCR（Business Case Review）模块的路由，包括生成报告、提交异步任务、获取任务状态和重试任务等功能。
+比如，`/generate` 路径用于生成 BCR 报告，`/generate_async` 用于提交异步任务，`/tasks/{task_id}` 用于获取异步任务的状态和结果，`/tasks/{task_id}/retry` 用于重试异步任务。
+"""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -13,7 +17,7 @@ from backend.domains.eu.bcr_review.service import BCRService
 router = APIRouter(prefix="/bcr", tags=["bcr"])
 service = BCRService()
 
-
+# 生成 BCR 报告的同步接口
 @router.post("/generate", response_model=BCRResult, dependencies=[Depends(require_healthy_llm)])
 def generate_bcr(
     payload: BCRRequest,
@@ -31,7 +35,7 @@ def generate_bcr(
     )
     return result
 
-
+# async用于定义异步函数，允许在函数内部使用await关键字来等待异步操作的完成，从而实现非阻塞的代码执行。
 @router.post("/generate_async", response_model=BCRAsyncAccepted, dependencies=[Depends(require_healthy_llm)])
 def generate_bcr_async(
     payload: BCRRequest,
@@ -42,7 +46,7 @@ def generate_bcr_async(
     claim_task_access(db, task_id=accepted.task_id, user_id=current_user.id, module="bcr")
     return accepted
 
-
+# 用于获取异步任务的状态和结果。
 @router.get("/tasks/{task_id}", response_model=BCRAsyncStatus)
 def get_bcr_task(
     task_id: str,
@@ -66,7 +70,7 @@ def get_bcr_task(
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-
+# 用于重试异步任务。
 @router.post(
     "/tasks/{task_id}/retry",
     response_model=BCRAsyncStatus,

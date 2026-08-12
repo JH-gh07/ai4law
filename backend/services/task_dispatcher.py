@@ -1,6 +1,12 @@
+"""
+本文件用于定义任务调度器的接口和实现，包括同步和异步任务调度。
+`TaskDispatcher` 是一个抽象基类，定义了 `dispatch` 方法。
+`InlineTaskDispatcher` 实现了同步任务调度，
+`ThreadedTaskDispatcher` 使用线程池实现了异步任务调度。
+`build_task_dispatcher` 函数根据传入的模式创建相应的任务调度器实例。
+"""
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-
 
 class TaskDispatcher:
     def dispatch(self, func: Callable, *args, **kwargs):

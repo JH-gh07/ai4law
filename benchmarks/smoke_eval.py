@@ -1,3 +1,6 @@
+"""
+本文件用于定义烟雾测试评估的核心逻辑，包括检索评估和生成评估的执行函数，以及相关的辅助函数和上下文管理器。
+"""
 from __future__ import annotations
 
 import json

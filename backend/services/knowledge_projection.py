@@ -35,13 +35,14 @@ _JURISDICTION_LABELS = {
     "my": "马来西亚",
     "sg": "新加坡",
     "tw": "中国台湾",
+    "vn": "越南",
 }
 
 # Explicit sort order — CN/EU/US first, then intl jurisdictions alphabetically.
 # Non-standard jurisdiction codes default to 99 and sort after the main three.
 _JURISDICTION_ORDER: dict[str, int] = {
     "cn": 0, "eu": 1, "us": 2,
-    "hk": 3, "jp": 4, "kr": 5, "mo": 6, "my": 7, "sg": 8, "tw": 9,
+    "hk": 3, "jp": 4, "kr": 5, "mo": 6, "my": 7, "sg": 8, "tw": 9, "vn": 10,
 }
 
 _AUTHORITY_LABELS = {
@@ -160,7 +161,12 @@ def _summarize_source(
     scenario_text = "、".join(sorted({_scenario_label(chunk) for chunk in chunks if _scenario_label(chunk)}))
     scenario_text = str(metadata.get("suitable_for") or scenario_text)
     usage_text = "、".join(_usage_labels([str(item) for item in entry.allowed_usage]))
-    usage_text = str(metadata.get("usage") or usage_text)
+    if entry.can_be_cited:
+        usage_text = str(metadata.get("usage") or usage_text)
+    else:
+        # A non-citable (quarantined) source must not surface as a normal use case;
+        # the citation policy is authoritative over any stale CSV `usage` wording.
+        usage_text = "仅供内部参考"
     v3_article_count = sum(1 for chunk in chunks if chunk.article_no)
     template_hint = ""
     if first_chunk and first_chunk.layer == "L4_template":
@@ -226,7 +232,11 @@ def _summarize_source(
         "knowledge_url": f"/evidence?source={entry.source_id}",
         "suitable_for": scenario_text or "通用参考",
         "usage": usage_text or ("可作为正式依据" if entry.can_be_cited else "仅供内部参考"),
-        "report_usage": str(metadata.get("report_usage") or ("可直接用于正式报告" if entry.can_enter_external_report else "不直接写入正式报告")),
+        "report_usage": (
+            "不直接写入正式报告"
+            if not entry.can_enter_external_report
+            else str(metadata.get("report_usage") or "可直接用于正式报告")
+        ),
         "summary": (description or template_hint or entry.title)[:180],
         "highlights": highlights,
         "doc_type": str(metadata.get("doc_type") or ""),
@@ -420,9 +430,13 @@ def search_user_articles(
     settings = get_settings()
     embedder = HashingEmbedder(settings.rag_embedding_dimension)
     candidate_pool = max(top_k * 3, settings.rag_candidate_pool_size)
-    index_names = ["legal_index_cn", "legal_index_eu", "legal_index_us"]
     if jurisdiction in {"cn", "eu", "us"}:
         index_names = [f"legal_index_{jurisdiction}"]
+    elif jurisdiction:
+        # Regional jurisdictions live in the dedicated international index.
+        index_names = ["legal_index_intl"]
+    else:
+        index_names = ["legal_index_cn", "legal_index_eu", "legal_index_us", "legal_index_intl"]
 
     merged_scores: dict[str, float] = {}
     payloads: dict[str, dict] = {}
