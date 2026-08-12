@@ -7,11 +7,24 @@ type ProtectedRouteProps = {
 };
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, authError } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return <div className="auth-page-shell">Loading...</div>;
+  }
+
+  if (authError) {
+    // A transient failure (network/timeout/server error) must not bounce the
+    // user back to login and must not clear their still-valid local token.
+    return (
+      <div className="auth-page-shell">
+        <p className="auth-error-message">{authError}</p>
+        <button className="kc-btn primary" type="button" onClick={() => globalThis.location.reload()}>
+          Retry
+        </button>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

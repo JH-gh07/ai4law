@@ -17,6 +17,8 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
+  /** Non-empty when /auth/me failed for a transient reason (network/timeout/5xx). */
+  authError: string | null;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
@@ -25,14 +27,25 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim().length > 0) return error.message;
+  return "Unable to verify session. Please check your connection and retry.";
+}
+
 // 用于在子组件中访问认证上下文的值，包括当前用户、加载状态、是否已认证以及登录、注册、登出和刷新用户信息的函数。
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const refreshUser = useCallback(async () => {
-    const current = await authService.getCurrentUser();
-    setUser(current);
+    setAuthError(null);
+    try {
+      const current = await authService.getCurrentUser();
+      setUser(current);
+    } catch (error) {
+      setAuthError(errorMessage(error));
+    }
   }, []);
 
   useEffect(() => {
@@ -42,6 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const current = await authService.getCurrentUser();
         if (active) {
           setUser(current);
+        }
+      } catch (error) {
+        if (active) {
+          setAuthError(errorMessage(error));
         }
       } finally {
         if (active) {
@@ -56,16 +73,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (payload: LoginPayload) => {
     const next = await authService.login(payload);
+    setAuthError(null);
     setUser(next);
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
     const next = await authService.register(payload);
+    setAuthError(null);
     setUser(next);
   }, []);
 
   const logout = useCallback(async () => {
     await authService.logout();
+    setAuthError(null);
     setUser(null);
   }, []);
 
@@ -74,12 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isAuthenticated: !!user,
+      authError,
       login,
       register,
       logout,
       refreshUser,
     }),
-    [user, loading, login, register, logout, refreshUser]
+    [user, loading, authError, login, register, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

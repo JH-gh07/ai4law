@@ -5,6 +5,15 @@ export class HttpTimeoutError extends Error {
   }
 }
 
+export class HttpStatusError extends Error {
+  readonly status: number;
+  constructor(status: number, message?: string) {
+    super(message ?? `HTTP ${status}`);
+    this.name = "HttpStatusError";
+    this.status = status;
+  }
+}
+
 export type ApiRequestInit = RequestInit & {
   timeoutMs?: number;
 };

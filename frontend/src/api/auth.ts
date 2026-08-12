@@ -1,5 +1,5 @@
 import type { AuthUser, LoginPayload, RegisterPayload } from "../lib/auth/types";
-import { apiFetch, HttpTimeoutError } from "./client";
+import { apiFetch, HttpStatusError, HttpTimeoutError } from "./client";
 
 type AuthResponse = {
   access_token: string;
@@ -124,7 +124,10 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = normalizeDetailMessage(data?.detail);
-    throw new Error(message ?? (uiLang() === "zh" ? `请求失败（${response.status}）` : `Request failed (${response.status})`));
+    throw new HttpStatusError(
+      response.status,
+      message ?? (uiLang() === "zh" ? `请求失败（${response.status}）` : `Request failed (${response.status})`),
+    );
   }
   return data as T;
 }
@@ -177,9 +180,16 @@ export const authService = {
         },
       });
       return toUser(data.user);
-    } catch {
-      clearToken();
-      return null;
+    } catch (error) {
+      // Only a real 401/403 means the stored credential is no longer valid.
+      // Network timeouts, server unavailability, and other 5xx/transport
+      // failures must NOT silently destroy a possibly-still-valid local token;
+      // re-throw so the caller can surface a transient error instead.
+      if (error instanceof HttpStatusError && (error.status === 401 || error.status === 403)) {
+        clearToken();
+        return null;
+      }
+      throw error;
     }
   },
 };
