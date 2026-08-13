@@ -52,3 +52,7 @@ storage/*
 ~$*
 .DS_Store
 Thumbs.db
+
+# User uploads and scratch artifacts (never commit user-sensitive content)
+tmp/User attachment*.png
+/report.pdf
