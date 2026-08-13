@@ -60,15 +60,18 @@ JP/KR 资料包存在 title↔PDF 系统性错位（非简单 CSV 改名可修�
 | 文件 | 改动 |
 |---|---|
 | `resources/legal/catalog/sources.csv` | 新增 `review_status` 列；10 个错位 source 标记 `metadata_review_required`，其余 110 行 `published` |
-| `backend/common/knowledge/registry.py` | 新增 `_citation_policy_for_row()`；`build_source_registry_from_sources_csv()` 依据 `review_status` 输出 `can_be_cited`/`can_enter_external_report`/`allowed_usage` |
+| `backend/common/knowledge/registry.py` | 新增 `_citation_policy_for_row()`；`build_source_registry_from_sources_csv()` 依据 `review_status` 输出 `can_be_cited`/`can_enter_external_report`/`allowed_usage`；`_source_kind_from_row()` 新增 `policy`/`technical_standard` 到 `SourceKind` 的映射 |
 | `backend/common/knowledge/builders_v2.py` | `build_legal_chunks_intl()`（及 CN builder）由 registry 透传 `can_be_cited`/`can_enter_external_report`，不再硬编码 `True` |
 | `backend/services/knowledge_projection.py` | Evidence Center 投影：隔离源强制 `usage=仅供内部参考`、`report_usage=不直接写入正式报告`，覆盖陈旧 CSV 文本 |
 | `scripts/build_jp_kr_adjudication.py` | 新增：生成人工审核表初稿（保留专家签署列，重跑不覆盖人审列） |
+| `scripts/build_jp_kr_pending_source_proposals.py` | 新增：生成待建 source 提议表（8 份真实 PDF 的 source/版本/附件提议，保留专家签署列） |
 | `scripts/check_regional_source_identity.py` | 新增：JP/KR 来源身份只读门禁（一对一绑定、孤立 PDF、可抽取文本、隔离执行、处置合法性） |
 | `status/check/task065/jp_kr_source_adjudication.csv` | 新增：14 行裁决表初稿（10 隔离 source + 2 元数据复核 + 2 孤立 PDF），含 PDF SHA-256 与首页原文标题 |
+| `status/check/task065/jp_kr_pending_source_proposals.csv` | 新增：8 行待建 source 提议表，含 PDF SHA-256、建议 source_id/title/doc_type 与 relation |
 | `backend/common/knowledge/tests/test_regional_knowledge.py` | 新增 3 条隔离契约测试 |
+| `backend/common/knowledge/tests/test_registry.py` | 新增 `policy`/`technical_standard` 到 `SourceKind` 映射的回归测试 |
 | `backend/services/tests/test_knowledge_projection.py` | 新增 2 条前端投影隔离测试 |
-| `scripts/README.md` | 登记两个新脚本入口 |
+| `scripts/README.md` | 登记三个新脚本入口 |
 
 ## 三、隔离范围（第一阶段）
 
@@ -150,8 +153,11 @@ uv run --frozen python scripts/build_source_registry.py --write   # 120 entries,
 uv run --frozen python scripts/build_source_registry.py --check   # OK in sync
 uv run --frozen python scripts/build_jp_kr_adjudication.py --write  # 14 rows
 uv run --frozen python scripts/build_jp_kr_adjudication.py --check  # OK
+uv run --frozen python scripts/build_jp_kr_pending_source_proposals.py --write  # 8 rows
+uv run --frozen python scripts/build_jp_kr_pending_source_proposals.py --check  # OK
 uv run --frozen python scripts/check_regional_source_identity.py    # EXIT=0
 uv run --frozen pytest backend/common/knowledge/tests/test_regional_knowledge.py -q   # 7 passed
+uv run --frozen pytest backend/common/knowledge/tests/test_registry.py -q             # 6 passed
 uv run --frozen pytest backend/services/tests/test_knowledge_projection.py -q         # 2 passed
 uv run --frozen pytest backend/common/ backend/services/ -q                          # 417 passed
 ```
@@ -168,3 +174,29 @@ uv run --frozen pytest backend/common/ backend/services/ -q                     
 8. **浏览器证据**：JP/KR 引用跳转与下载证据需在重建后补充。
 
 未签署的 source 继续处于隔离态，不参与正式法律报告。
+
+## 八、待建 source 提议表
+
+`status/check/task065/jp_kr_pending_source_proposals.csv` 共 8 行，列出所有「真实存在但当前无正确 source 归属」的 PDF，供专家签署后直接用于第四阶段重建。
+
+| proposal | relation | 建议 source_id | 建议 doc_type | PDF 首页身份 | 建议标题 |
+|---|---|---|---|---|---|
+| P-JP-01 | independent | JP-POLICY-001 | policy | 個人情報の保護に関する基本方針 | 日本个人信息保护基本方针 |
+| P-JP-02 | independent | JP-GUIDE-009 | guideline | Supplementary Rules（EU/UK Adequacy） | 日本基于充分性决定接收欧盟/英国转移个人数据的补充规则 |
+| P-JP-03 | independent | JP-LAW-010 | law | サイバーセキュリティ基本法（生效版） | 日本网络安全基本法（2026-10-01 施行版） |
+| P-JP-04 | version | JP-LAW-010 | law | サイバーセキュリティ基本法（失效版） | 日本网络安全基本法（2026-10-01 失效版） |
+| P-KR-01 | independent | KR-STD-007 | technical_standard | 개인정보의 안전성 확보조치 기준 | 韩国个人信息安全措施标准 |
+| P-KR-02 | annex | KR-STD-007 | technical_standard | 【별표】보호조치 예시（附表） | 韩国个人信息安全措施标准附表 |
+| P-KR-03 | independent | KR-GUIDE-008 | guideline | 표준 개인정보 보호지침 | 韩国标准个人信息保护指针 |
+| P-KR-04 | independent | KR-LAW-008 | law | 정보통신기반 보호법 | 韩国信息通信基础保护法 |
+
+生成命令：
+
+```bash
+uv run --frozen python scripts/build_jp_kr_pending_source_proposals.py --write  # 8 rows
+uv run --frozen python scripts/build_jp_kr_pending_source_proposals.py --check  # OK
+```
+
+**枚举变更（已执行）**：经确认新增两个 `doc_type` 值——`policy`（政府方针）与 `technical_standard`（技术标准）。`backend/common/knowledge/registry.py::_source_kind_from_row` 已将它们映射到稳定的 `SourceKind` 词汇（`policy → official_guide`、`technical_standard → standard_clause`），避免扩 `SourceKind` Literal 牵连检索/引用策略与 Evidence Center 标签。`suggested_source_id` 前缀随之从 `GUIDE` 调整为 `POLICY`（P-JP-01）与 `STD`（P-KR-01/02），具体定名仍待专家确认。
+
+**注意**：`suggested_source_id`、`suggested_title` 等仍为初稿建议；`P-JP-02`（欧盟/英国充分性补充规则）是否仍归 `guideline`、`JP-POLICY-001`/`KR-STD-007` 的前缀命名，同样待专家确认。
