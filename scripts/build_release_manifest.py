@@ -41,13 +41,23 @@ def _source_digest() -> str:
     digest = hashlib.sha256()
     try:
         files = _git("ls-files", "backend", "frontend/src", "scripts").splitlines()
+        if not files or any(not (ROOT / relative).is_file() for relative in files):
+            raise ValueError("Git file list does not describe this release root")
     except (OSError, subprocess.CalledProcessError):
+        files = []
+    except ValueError:
+        files = []
+    if not files:
         files = [
             path.relative_to(ROOT).as_posix()
             for base in (ROOT / "backend", ROOT / "frontend" / "src", ROOT / "scripts")
             for path in base.rglob("*")
             if path.is_file()
+            and "__pycache__" not in path.parts
+            and path.suffix not in {".pyc", ".pyo"}
         ]
+    if not files:
+        raise SystemExit("release source digest cannot be empty")
     for relative in sorted(files):
         path = ROOT / relative
         if not path.is_file():
