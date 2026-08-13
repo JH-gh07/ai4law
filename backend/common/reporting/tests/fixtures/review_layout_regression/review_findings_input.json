@@ -1,0 +1,108 @@
+{
+  "schema": "task068-review-layout-regression-v1",
+  "review": {
+    "overall_rating": "高风险",
+    "overall_risk_score": 72.0,
+    "summary": "合同存在数据出境条款缺失等高风险问题，需整改后方可使用。",
+    "issue_counts": {
+      "HIGH": 2,
+      "MEDIUM": 1,
+      "LOW": 0
+    },
+    "issues": [
+      {
+        "issue_id": "REV-001",
+        "clause_id": "clause-1",
+        "file_id": "file-1",
+        "clause_type": "CROSS_BORDER_TRANSFER",
+        "severity": "HIGH",
+        "title": "数据出境条款缺失",
+        "problem_type": "MISSING_REQUIREMENT",
+        "risk_analysis": "未约定数据出境前须取得单独同意并完成安全评估，无法满足个人信息出境合规要求。",
+        "original_excerpt": "（合成条款：数据可向境外第三方提供。）",
+        "recommendation": "补充数据出境条款，明确单独同意与安全评估。",
+        "citation_sources": [
+          "《个人信息保护法》第38条",
+          "《个人信息保护法》第39条"
+        ],
+        "structured_citations": [
+          {
+            "source_id": "PIPL",
+            "source_title": "个人信息保护法",
+            "article": "第38条",
+            "snippet": "个人信息处理者因业务等需要，确需向中华人民共和国境外提供个人信息的，应当具备下列条件之一。",
+            "relevance_score": 0.9
+          },
+          {
+            "source_id": "PIPL",
+            "source_title": "个人信息保护法",
+            "article": "第39条",
+            "snippet": "个人信息处理者向中华人民共和国境外提供个人信息的，应当向个人告知……并取得个人的单独同意。",
+            "relevance_score": 0.95
+          }
+        ]
+      },
+      {
+        "issue_id": "REV-002",
+        "clause_id": "clause-2",
+        "file_id": "file-1",
+        "clause_type": "SECURITY_MEASURES",
+        "severity": "HIGH",
+        "title": "安全措施表述模糊",
+        "problem_type": "AMBIGUOUS_LANGUAGE",
+        "risk_analysis": "仅使用概括性表述，未指向具体技术与管理措施。",
+        "original_excerpt": "（合成条款：采取适当安全措施。）",
+        "recommendation": "明确加密、访问控制等具体措施。",
+        "citation_sources": [
+          "《个人信息保护法》第51条"
+        ],
+        "structured_citations": [
+          {
+            "source_id": "PIPL",
+            "source_title": "个人信息保护法",
+            "article": "第51条",
+            "snippet": "个人信息处理者应当根据个人信息的处理目的、处理方式……采取相应的安全技术措施。",
+            "relevance_score": 0.9
+          }
+        ]
+      },
+      {
+        "issue_id": "REV-003",
+        "clause_id": "clause-3",
+        "file_id": "file-1",
+        "clause_type": "CONSENT_NOTICE",
+        "severity": "MEDIUM",
+        "title": "同意撤回机制缺失",
+        "problem_type": "MISSING_REQUIREMENT",
+        "risk_analysis": "未约定个人撤回同意的途径与处理时限。",
+        "original_excerpt": "（合成条款：个人可联系客服。）",
+        "recommendation": "补充撤回同意的便捷机制与时限。",
+        "citation_sources": [
+          "《个人信息保护法》第15条"
+        ],
+        "structured_citations": [
+          {
+            "source_id": "PIPL",
+            "source_title": "个人信息保护法",
+            "article": "第15条",
+            "snippet": "基于个人同意处理个人信息的，个人有权撤回其同意。",
+            "relevance_score": 0.85
+          }
+        ]
+      }
+    ],
+    "missing_items": [
+      {
+        "item_id": "MISS-001",
+        "clause_type": "CROSS_BORDER_TRANSFER",
+        "title": "缺少第三方共享与转让条款",
+        "description": "文档中未找到第三方共享与转让相关内容。",
+        "severity": "HIGH",
+        "legal_basis": [
+          "《个人信息保护法》第23条"
+        ],
+        "recommendation": "新增第三方共享与转让条款。"
+      }
+    ]
+  }
+}

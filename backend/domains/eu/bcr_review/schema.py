@@ -100,6 +100,8 @@ class BCRFinding(BaseModel):
     suggested_revision: str | None = None
     facts_uncertain: bool = False
     review_confidence: float = 0.85
+    # Stable citation identities bound to this finding (not display numbers).
+    citation_refs: list[str] = Field(default_factory=list)
 
 
 # ---- request / response ----

@@ -263,8 +263,12 @@ def test_bcr_schema_first_service_exposes_document_ir(tmp_path, monkeypatch) -> 
 
     result = service.generate_report(payload, task_id="schema-first-service")
 
-    assert "document_ir_json" in result.output_files
-    assert Path(result.output_files["document_ir_json"]).exists()
+    # T09 stage A: without the IR-render switch, the canonical IR is a shadow
+    # artifact (parked under shadow_ir/) and is *not* registered as a user output.
+    assert "document_ir_json" not in result.output_files
+    shadow_ir = Path("outputs/bcr") / "schema-first-service" / "shadow_ir"
+    assert (shadow_ir / "document_ir.json").exists()
+    assert (shadow_ir / "render_audit.json").exists()
 
 
 def test_bcr_document_upload_path_exposes_document_ir(tmp_path, monkeypatch) -> None:
@@ -296,8 +300,11 @@ def test_bcr_document_upload_path_exposes_document_ir(tmp_path, monkeypatch) -> 
 
     result = service.generate_report(payload, task_id="document-driven-schema-first")
 
-    assert "document_ir_json" in result.output_files
-    assert Path(result.output_files["document_ir_json"]).exists()
+    # T09 stage A: canonical IR is shadow-rendered, not a registered user output.
+    assert "document_ir_json" not in result.output_files
+    shadow_ir = Path("outputs/bcr") / "document-driven-schema-first" / "shadow_ir"
+    assert (shadow_ir / "document_ir.json").exists()
+    assert (shadow_ir / "render_audit.json").exists()
 
 
 def test_bcr_document_review_accepts_current_onward_transfer_agent_contract(
@@ -387,15 +394,15 @@ def test_bcr_document_review_binds_only_supported_citations(
         item["citation_type"] == "official_guide" for item in footnotes.values()
     )
 
-    document_ir = json.loads(
-        Path(result.output_files["document_ir_json"]).read_text(encoding="utf-8")
-    )
+    # T09 stage A: the canonical IR is a shadow artifact (not a user output).
+    document_ir_path = Path("outputs/bcr") / "bcr-supported-citations" / "shadow_ir" / "document_ir.json"
+    document_ir = json.loads(document_ir_path.read_text(encoding="utf-8"))
+    # v4 stores citation identity on findings + the citations pool, not as
+    # block-level [N] markers.
     ir_citation_ids = {
         citation_id
-        for section in document_ir["sections"]
-        for block in section["blocks"]
-        if block["type"] == "claim"
-        for citation_id in block["citation_refs"]
+        for finding in document_ir["findings"]
+        for citation_id in finding["citation_refs"]
     }
     map_citation_ids = {item["citation_id"] for item in footnotes.values()}
     assert ir_citation_ids == map_citation_ids

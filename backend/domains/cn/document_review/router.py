@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
+from backend.common.workflow.input_manifest import RunInputManifestPublic
 from backend.core.dependencies import get_container, get_current_user, get_db
 from backend.schemas.auth import AuthUser
 from backend.services.runtime_health import require_healthy_llm
@@ -108,6 +109,16 @@ def get_report(
     container=Depends(get_container),
 ):
     return container.review_service.get_report(db, current_user.id, task_id)
+
+
+@router.get("/tasks/{task_id}/input-manifest", response_model=RunInputManifestPublic)
+def get_input_manifest(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+    container=Depends(get_container),
+):
+    return container.review_service.get_input_manifest(db, current_user.id, task_id)
 
 
 @router.websocket("/ws/tasks/{task_id}")

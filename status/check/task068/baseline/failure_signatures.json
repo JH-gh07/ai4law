@@ -1,0 +1,86 @@
+{
+  "task": "task068",
+  "stage": "T00",
+  "frozen_at": "2026-08-14",
+  "purpose": "Pre-fix failure signatures. Each entry MUST fail before the task068 fix and pass after. These are structural assertions only; they never rewrite business conclusions.",
+  "gates": [
+    {
+      "id": "review_finding_structure",
+      "problem_id": "I068-02",
+      "module": "review",
+      "target": "backend/domains/cn/document_review/tests/schema_first_fixtures/review_document_ir.golden.json",
+      "expected_pre_fix": "fail",
+      "assertion": "document.findings is non-empty and equals AggregatedReview.issues count",
+      "pre_fix_metric": {
+        "findings": 0,
+        "sections": 10
+      }
+    },
+    {
+      "id": "review_docx_native_structure",
+      "problem_id": "I068-03",
+      "module": "review",
+      "target": "tmp/review/report.docx",
+      "expected_pre_fix": "fail",
+      "assertion": "native Word tables >= 1, header part, footer part",
+      "pre_fix_metric": {
+        "paragraphs": 609,
+        "tables": 0,
+        "headings": 10,
+        "header": false,
+        "footer": false
+      }
+    },
+    {
+      "id": "review_pdf_fonts_embedded",
+      "problem_id": "I068-09",
+      "module": "review",
+      "target": "tmp/review/pdf.pdf",
+      "expected_pre_fix": "fail",
+      "assertion": "all PDF fonts emb=yes",
+      "pre_fix_metric": {
+        "pages": 45,
+        "fonts_embedded": 0,
+        "fonts_total": 3
+      }
+    },
+    {
+      "id": "cpra_first_screen_json",
+      "problem_id": "I068-16",
+      "module": "cpra",
+      "target": "outputs/cpra/测试企业_CPRA_合规全景报告_草案_20260604.pdf",
+      "expected_pre_fix": "fail",
+      "assertion": "no raw request JSON occupies the first screen",
+      "pre_fix_fingerprint": "{\"business_model\": ...} on page 1 after 输入摘要"
+    },
+    {
+      "id": "eo14117_first_screen_json",
+      "problem_id": "I068-19",
+      "module": "eo14117",
+      "target": "outputs/us_14117/898f2c0e-38bd-487a-8330-b998f6bce217/outputs/GeneGuard生物科技公司_14117_风险评估结论报告_草案_20260812.pdf",
+      "expected_pre_fix": "fail",
+      "assertion": "no nested request JSON (project_name/recipient_entities/security_measures) as first business chapter",
+      "pre_fix_fingerprint": "{\"project_name\": ...} on page 1 after 输入摘要"
+    },
+    {
+      "id": "multi_citation_no_rationale",
+      "problem_id": "I068-22",
+      "module": "review",
+      "target": "tmp/review/pdf.pdf",
+      "expected_pre_fix": "fail",
+      "assertion": "法规依据 is rendered per-citation with 来源/定位/摘录/归因, not '；'.join(labels)",
+      "pre_fix_fingerprint": "法规依据：《个人信息保护法》第19条；《个人信息保护法》第47条 (multiple labels, no per-citation rationale)"
+    }
+  ],
+  "behavioral_gates": [
+    {
+      "id": "input_material_zero",
+      "problem_id": "I068-18",
+      "module": "cpra/eo14117/dpia",
+      "assertion": "RunInputManifest registers dev-preset/scenario/uploaded inputs so the material tree does not show 0",
+      "expected_pre_fix": "fail",
+      "note": "verified by user screenshots User attachment4.png; behavioral, no script gate in T00"
+    }
+  ],
+  "privacy_note": "Screenshots are registered by hash/size/problem_id only; no OCR text or user content is copied into git. tmp/review and outputs/ samples are public test artifacts referenced by hash, not committed content."
+}

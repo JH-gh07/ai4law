@@ -19,7 +19,6 @@ from backend.common.reporting import (
     FindingRecord,
     FindingReferenceBlock,
     FindingSummaryBlock,
-    ParagraphBlock,
     Provenance,
     ReportMetadata,
     RenderContract,

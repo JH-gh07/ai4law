@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from pathlib import Path
 
-import pytest
+from docx import Document as DocxDocument
+from pypdf import PdfReader
 
 from backend.common.citation.models import CitationItem
 from backend.common.citation.output import write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
-from backend.common.reporting import DocumentCompiler
+from backend.common.reporting import DocumentCompiler, MarkdownRenderer, render_docx, render_pdf
 from backend.domains.us.cpra.schema import CPRAChapter
 from backend.domains.us.cpra.schema_first import build_cpra_document_ir
 
@@ -104,7 +106,9 @@ def test_production_form_with_schema_first_generates_document_ir(tmp_path, monke
     assert compile_result.status == "success"
     assert doc_ir.document_id == "cpra:phase3-cpra-prod-new"
     assert doc_ir.report_type == "cpra"
-    assert len(doc_ir.sections) == 7
+    # 7 business chapters + 1 fixed citations appendix (task068 T09).
+    assert len(doc_ir.sections) == 8
+    assert doc_ir.sections[-1].section_id == "cpra.appendix.citations"
 
     ir_data = doc_ir.model_dump(mode="json")
     assert ir_data["diagnostics"] == []
@@ -215,3 +219,88 @@ def test_citation_map_footnote_count_matches_body_references(tmp_path, monkeypat
 
     assert ir_cids == map_cids == reg_cids
     print(f"\n✅ CPRA citation identity: {len(ir_cids)} CIDs across 3 layers")
+
+
+def _forbidden_markers() -> list[str]:
+    """Raw-payload / nested-JSON / absolute-path leakage markers (task068 T09)."""
+    return [
+        "business_model",
+        "storage_uri",
+        "model_dump",
+        "\\u",  # JSON escapes never appear in rendered prose
+        "| 检查项 | 主题 | 风险 |",  # legacy six-column table header
+    ]
+
+
+def test_fixed_section_order_conclusion_basis_remediation_citations_inputs() -> None:
+    doc_ir, rr = build_cpra_document_ir(
+        task_id="phase3-cpra-order",
+        company_name="TechCo Inc.",
+        chapters=_chapters(),
+        citation_registry=_registry(),
+        model="deepseek-v3",
+        input_appendix=[
+            ("企业名称", "TechCo Inc."),
+            ("附件 1", "privacy_policy.pdf（privacy_policy）"),
+        ],
+    )
+    assert [s.section_id for s in doc_ir.sections] == [
+        "cpra.chapter.1",
+        "cpra.chapter.2",
+        "cpra.chapter.3",
+        "cpra.chapter.4",
+        "cpra.chapter.5",
+        "cpra.chapter.6",
+        "cpra.chapter.7",
+        "cpra.appendix.citations",
+        "cpra.appendix.inputs",
+    ]
+    # The citations appendix references every registered citation, ordered by number.
+    citation_section = doc_ir.sections[-2]
+    assert citation_section.title == "引用法规与条文"
+    assert citation_section.blocks[0].type == "citation_note"
+    assert set(citation_section.blocks[0].citation_refs) == {
+        _CID_CPRA_1798_100,
+        _CID_CPRA_1798_105,
+        _CID_CPRA_1798_110,
+    }
+    # The input appendix is typed key-value, never raw JSON.
+    input_section = doc_ir.sections[-1]
+    assert input_section.title == "输入附录"
+    assert input_section.blocks[0].type == "key_value"
+
+
+def test_three_formats_share_ir_and_exclude_forbidden_content() -> None:
+    doc_ir, rr = build_cpra_document_ir(
+        task_id="phase3-cpra-three-format",
+        company_name="TechCo Inc.",
+        chapters=_chapters(),
+        citation_registry=_registry(),
+        model="deepseek-v3",
+        input_appendix=[
+            ("企业名称", "TechCo Inc."),
+            ("附件 1", "privacy_policy.pdf（privacy_policy）"),
+        ],
+    )
+    compile_result = DocumentCompiler().compile(doc_ir, rr)
+    assert compile_result.status == "success"
+
+    markdown = MarkdownRenderer().render(doc_ir, rr)
+    docx_blob = render_docx(doc_ir, rr)
+    pdf_blob = render_pdf(doc_ir, rr)
+
+    docx_text = "\n".join(p.text for p in DocxDocument(BytesIO(docx_blob)).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_blob)).pages)
+
+    for marker in _forbidden_markers():
+        assert marker not in markdown, f"forbidden marker in Markdown: {marker}"
+        assert marker not in docx_text, f"forbidden marker in DOCX: {marker}"
+        assert marker not in pdf_text, f"forbidden marker in PDF: {marker}"
+
+    # All three formats carry the business conclusion and the fixed tail.
+    assert "CPRA 适用范围与数据映射" in markdown
+    assert "引用法规与条文" in markdown
+    assert "输入附录" in markdown
+    assert "TechCo Inc." in markdown
+    assert "CPRA 适用范围与数据映射" in docx_text
+    assert "输入附录" in docx_text

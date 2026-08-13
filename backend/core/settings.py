@@ -37,6 +37,28 @@ class Settings(BaseSettings):
     schema_first_tia_enabled: bool = False
     schema_first_pipia_enabled: bool = False
     schema_first_bcr_enabled: bool = False
+    # Task067 T09 — when True (and schema_first_bcr_enabled), the *formal* BCR
+    # output_files point at the IR renderer (report.md/docx/pdf) + render manifest,
+    # and legacy template files are parked under shadow_legacy/ instead of being
+    # registered as user artifacts. False keeps the legacy template outputs as the
+    # official artifacts while the IR version is shadow-rendered to shadow_ir/.
+    # TEMPORARY shadow switch — REMOVE by 2026-09-01 (task067 §T11). It exists
+    # only until the two environment gates in status/check/task067/task067_验收报告.md
+    # pass: ① licensed+hashed CJK font (pdf_font_embedding) and ② LibreOffice
+    # headless (DOCX visual). On removal: default this flag to True, archive the
+    # legacy templates, and delete the shadow_legacy/shadow_ir directory branches
+    # in service.py.
+    bcr_report_ir_rendering_enabled: bool = False
+    # task068 T11 — two-flag shadow/switch discipline for the vertical modules.
+    # ``schema_first_<module>_enabled`` builds + compiles the DocumentIR (fail-closed);
+    # ``<module>_report_ir_rendering_enabled`` then decides whether the *official*
+    # outputs point at the IR renderer (True) or stay legacy while the IR is
+    # shadow-rendered to ``shadow_ir/`` (False). Keeping both off is the legacy
+    # writer, so rollback is "turn the rendering flag off" — never delete IR artifacts.
+    cpra_report_ir_rendering_enabled: bool = False
+    eo14117_report_ir_rendering_enabled: bool = False
+    dpia_report_ir_rendering_enabled: bool = False
+    review_report_ir_rendering_enabled: bool = False
     schema_first_scc_enabled: bool = False
     schema_first_cpra_enabled: bool = False
     schema_first_eo14117_enabled: bool = False

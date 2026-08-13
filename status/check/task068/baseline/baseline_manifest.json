@@ -1,0 +1,136 @@
+{
+  "task": "task068",
+  "stage": "T00",
+  "frozen_at": "2026-08-14",
+  "git": {
+    "head": "4952ada501bc36907377926c9901ab5bf371bc78",
+    "branch": "new"
+  },
+  "runtime": {
+    "python": "Python 3.11.9",
+    "node": "v23.11.0"
+  },
+  "dependency_locks": {
+    "pyproject.toml": {
+      "size": 687,
+      "sha256": "f684af0b5039087e95c1967fe92a0b92a3d693dde100df29b57a6074d783a59e"
+    },
+    "uv.lock": {
+      "size": 252568,
+      "sha256": "2e02a0d2a8936d3bb98f71d8335ff4b642a2fbae305f237af86253a267fb7e9e"
+    },
+    "frontend/package-lock.json": {
+      "size": 192270,
+      "sha256": "370930320826b89ea35a3bf169b6f19312c4b4ed41de2113265e8e047acbdb91"
+    }
+  },
+  "samples": {
+    "tmp/review/_result.json": {
+      "size": 1113,
+      "sha256": "02b7e8c393bbf20be12eb332a24665ab54225726ed40b86a77b1a88dcd759a7e"
+    },
+    "tmp/review/docx.docx": {
+      "size": 49206,
+      "sha256": "f35b0eb9c8d388d2b3cf28985806fb2ef87d5e62662af9bedab854a656614e87"
+    },
+    "tmp/review/report.docx": {
+      "size": 49206,
+      "sha256": "f35b0eb9c8d388d2b3cf28985806fb2ef87d5e62662af9bedab854a656614e87"
+    },
+    "tmp/review/pdf.pdf": {
+      "size": 92147,
+      "sha256": "e30c61984b0c85c747a16edff97bb201ef64e106b77aefea38e902842df67ff7"
+    }
+  },
+  "screenshots": {
+    "tmp/User attachment.png": {
+      "size": 1605206,
+      "sha256": "609f4ea7c687e02b7816c4a27a269e999c6c68de3a4094b000574a5f9dbd6e5e",
+      "problem_ids": [
+        "I068-01",
+        "I068-02",
+        "I068-03"
+      ]
+    },
+    "tmp/User attachment2.png": {
+      "size": 1134653,
+      "sha256": "cd9fda86284eed17fe3cba57bb9890c0fc7c1c65fe261cfe521a141e4c413f68",
+      "problem_ids": [
+        "I068-16"
+      ]
+    },
+    "tmp/User attachment3.png": {
+      "size": 1521807,
+      "sha256": "08f91cdae5b1c57c2c22594b606bd0f93b0422337e74fe2897a5cf6e1e374f46",
+      "problem_ids": [
+        "I068-19"
+      ]
+    },
+    "tmp/User attachment4.png": {
+      "size": 912168,
+      "sha256": "cb95a0ed65a33e8e91492a0a5c112678002041bfc78a7993244814a7f8f9ca9f",
+      "problem_ids": [
+        "I068-18"
+      ]
+    },
+    "tmp/User attachment5.png": {
+      "size": 1650678,
+      "sha256": "a62634eaa0932ad6f4b8ad96d624edca2abcc133a7e59fab372761fa171511d6",
+      "problem_ids": [
+        "I068-17",
+        "I068-20"
+      ]
+    },
+    "tmp/User attachment6.png": {
+      "size": 1417356,
+      "sha256": "008f09c2cffef1c9f749462b6f685c3674224fe27d17fee4de138911a1df35bf",
+      "problem_ids": [
+        "I068-17",
+        "I068-20"
+      ]
+    }
+  },
+  "module_samples": {
+    "cpra": {
+      "docx": {
+        "path": "outputs/cpra/测试企业_CPRA_合规全景报告_草案_20260604.docx",
+        "size": 37425,
+        "sha256": "06de898d38ebbebb95f0ee775e7f2e3ba94bb35d4ec5b150bd83c1b7d81484dd"
+      },
+      "pdf": {
+        "path": "outputs/cpra/测试企业_CPRA_合规全景报告_草案_20260604.pdf",
+        "size": 16071,
+        "sha256": "52f69906dc2f9274b1fd840f91ee96248dfc1ce8abe207d5c36a3c1ced0e96b1"
+      },
+      "md": {
+        "path": "outputs/cpra/测试企业_CPRA_合规全景报告_草案_20260604.md",
+        "size": 13808,
+        "sha256": "d62f47e2041679a20e1bf5990df6606422e78e2123ab37cdb0b3e27583abb056"
+      }
+    },
+    "eo14117": {
+      "docx": {
+        "path": "outputs/us_14117/898f2c0e-38bd-487a-8330-b998f6bce217/outputs/GeneGuard生物科技公司_14117_风险评估结论报告_草案_20260812.docx",
+        "size": 39817,
+        "sha256": "789300d8fff373e30e87ed1cc32d302f59537f98690505cfcb0e50a6744b3785"
+      },
+      "pdf": {
+        "path": "outputs/us_14117/898f2c0e-38bd-487a-8330-b998f6bce217/outputs/GeneGuard生物科技公司_14117_风险评估结论报告_草案_20260812.pdf",
+        "size": 13626,
+        "sha256": "9211feeed4feba442ce32788eb2070f1a88852be246fb48b0b6e76e81c434f00"
+      },
+      "md": {
+        "path": "outputs/us_14117/898f2c0e-38bd-487a-8330-b998f6bce217/outputs/GeneGuard生物科技公司_14117_风险评估结论报告_草案_20260812.md",
+        "size": 4887,
+        "sha256": "1aeeec1cb499415c7129fa8ee97ece3afd94bbe37706bd8302219306ac477ce5"
+      }
+    },
+    "dpia": {
+      "docx": {
+        "path": "outputs/dpia/EU用户行为分析系统_DPIA_报告_草案_20260416.docx",
+        "size": 37071,
+        "sha256": "a0891db8c86bb312a3625767a2705e3e95ead51d7e42184a81f3f55277f977ad"
+      }
+    }
+  }
+}

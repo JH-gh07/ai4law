@@ -25,7 +25,7 @@ import ast
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 import pytest
 
@@ -106,8 +106,8 @@ def _pipia_case(content: str):
 
 def _bcr_case(content: str):
     from backend.domains.eu.bcr_review.schema import BCRChapter
-    from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
-    return build_bcr_document_ir(
+    from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir_from_chapters
+    return build_bcr_document_ir_from_chapters(
         task_id="t", company_name="TestCo",
         chapters=[BCRChapter(chapter_no=1, title="T", content=content, risk_level="HIGH")],
         citation_registry=_reg_with(CID_SHARED),
@@ -171,7 +171,7 @@ def test_production_footnote_shape_produces_claim_block(
     adapter_id: str, build: Callable, cid: str
 ) -> None:
     """Production content carries [N]; must yield ClaimBlock, not raise."""
-    doc, rep = build(f"法规依据陈述 [1]。")
+    doc, rep = build("法规依据陈述 [1]。")
 
     block = doc.sections[0].blocks[0]
     assert type(block).__name__ == "ClaimBlock", (
@@ -251,9 +251,12 @@ def test_adapter_uses_shared_extraction_not_hand_rolled_regex(path: Path) -> Non
                                 "use extract_citation_refs from backend.common.reporting instead."
                             )
 
-    # Confirm the file imports extract_citation_refs (unless it has no citations at all)
+    # Confirm the file imports extract_citation_refs when it references the
+    # *marker syntax* ({{CIT-...}}). A module may legitimately mint structured
+    # citation IDs like ``CIT-REV-001`` (no braces) without parsing markers —
+    # that path builds ``citation_refs`` directly and must not be flagged.
     imports_extract = "extract_citation_refs" in source
-    has_cit_marker_code = "CIT-" in source
+    has_cit_marker_code = "{{CIT-" in source
     if has_cit_marker_code:
         assert imports_extract, (
             f"{path.relative_to(Path(__file__).parents[3])}: "

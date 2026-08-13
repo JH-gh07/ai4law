@@ -31,6 +31,29 @@ class ClauseNode(BaseModel):
     children: list["ClauseNode"] = Field(default_factory=list)
 
 
+class FindingBasis(BaseModel):
+    """One per-citation legal basis with an *attribution* rationale.
+
+    task068 I068-22: ``legal_basis: list[str]`` can only express a label list,
+    which collapses a finding's multiple citations into a ``；``-joined wall.
+    ``FindingBasis`` upgrades that to ``(citation, label, rationale)`` so the
+    renderer can emit each citation with "why this applies" without inventing
+    legal conclusions.
+
+    ``rationale`` is an *attribution* — the adapter must derive it from an
+    existing business field (``ReviewIssue.risk_analysis`` /
+    ``StructuredCitation.snippet``). Neither the renderer nor the compiler may
+    generate it, and the compiler rejects LLM refusal/placeholder signatures.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    citation_ref: str | None = None
+    label: str = Field(min_length=1)
+    rationale: str = ""
+    is_primary: bool = False
+
+
 class FindingRecord(BaseModel):
     """One structured finding. A finding has exactly one primary display."""
 
@@ -51,6 +74,24 @@ class FindingRecord(BaseModel):
     status: FindingStatus = "OPEN"
     # Compiler derives this; it must equal 1 after validation.
     primary_display_count: int = 0
+    # task068 T01 — structured per-citation basis (I068-22). ``legal_basis`` is
+    # kept as a backward-compatible label shim; renderers must prefer
+    # ``basis_entries`` when non-empty.
+    basis_entries: list[FindingBasis] = Field(default_factory=list)
+    # task068 T01 — Review-specific lossless fields (I068-02). Optional so the
+    # other eight module fixtures remain unchanged.
+    original_excerpt: str | None = None
+    clause_type: str | None = None
+    problem_type: str | None = None
+    # Review source locators / method metadata. Kept typed (not re-flattened into
+    # ``statement``) so no ``ReviewIssue`` field is silently dropped.
+    clause_id: str | None = None
+    file_id: str | None = None
+    source_position: dict | None = None
+    secondary_clause_types: list[str] = Field(default_factory=list)
+    uncertainty_rationale: str | None = None
+    review_method: str | None = None
+    review_depth: str | None = None
 
 
 class ActionRecord(BaseModel):

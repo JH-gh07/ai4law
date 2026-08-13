@@ -12,8 +12,11 @@ from datetime import datetime, timezone
 from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
 from backend.common.llm.postprocess import strip_markdown_inline
 from backend.common.reporting import (
+    CitationNoteBlock,
     ClaimBlock,
     DocumentIR,
+    KeyValueBlock,
+    KeyValueItem,
     ParagraphBlock,
     SectionIR,
     extract_citation_refs,
@@ -49,11 +52,16 @@ def build_dpia_document_ir(
     citation_registry: LegacyCitationRegistry,
     model: str,
     generated_at: datetime | None = None,
+    input_appendix: list[tuple[str, str]] | None = None,
 ) -> tuple[DocumentIR, CitationRegistry]:
     """Translate DPIA chapter output into typed DocumentIR.
 
     Does not render or repair content.  Unknown marker identities survive
-    so that CitationValidationPass can fail closed.
+    so that CitationValidationPass can fail closed.  The adapter appends a
+    citations appendix and an input appendix so the full layout is stable
+    (task068 T09).  ``input_appendix`` must be sanitized by the caller —
+    profile fields / risk matrix / mitigation plan / attachments are surfaced
+    as key-value entries, never nested JSON.
     """
     reporting_registry = legacy_registry_to_reporting(citation_registry)
     sections: list[SectionIR] = []
@@ -106,6 +114,47 @@ def build_dpia_document_ir(
             ordinal=str(chapter.chapter_no),
             blocks=blocks,
         ))
+
+    # Fixed tail: 引用 → 输入附录 (numbering continues after the chapters).
+    appendix_no = len(chapters) + 1
+    ordered_cids = sorted(
+        reporting_registry.footnote_map().keys(),
+        key=lambda cid: reporting_registry.footnote_map()[cid],
+    )
+    if ordered_cids:
+        sections.append(SectionIR(
+            section_id="dpia.appendix.citations",
+            title="引用法规与条文",
+            level=2,
+            ordinal=str(appendix_no),
+            blocks=[
+                CitationNoteBlock(
+                    block_id="dpia.appendix.citations.block",
+                    citation_refs=ordered_cids,
+                )
+            ],
+        ))
+        appendix_no += 1
+
+    if input_appendix:
+        items = [
+            KeyValueItem(label=label, value=value)
+            for label, value in input_appendix
+            if str(value).strip()
+        ]
+        if items:
+            sections.append(SectionIR(
+                section_id="dpia.appendix.inputs",
+                title="输入附录",
+                level=2,
+                ordinal=str(appendix_no),
+                blocks=[
+                    KeyValueBlock(
+                        block_id="dpia.appendix.inputs.block",
+                        items=items,
+                    )
+                ],
+            ))
 
     timestamp = generated_at or datetime.now(timezone.utc)
     document = DocumentIR(

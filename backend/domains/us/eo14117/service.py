@@ -6,7 +6,6 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import Any
 
 from backend.common.citation.output import write_citation_map_json
 from backend.common.citation.registry import CitationRegistry, registry_from_documents
@@ -212,6 +211,44 @@ class US14117Service:
                 })
         return notes
 
+    @staticmethod
+    def _build_input_appendix(payload: US14117Request, rule_result: US14117RuleEngineResult) -> list[tuple[str, str]]:
+        """Sanitized input appendix for the schema-first report body.
+
+        Entities / data categories / security measures / attachments are mapped
+        to key-value entries — never nested JSON — and raw request fields /
+        storage paths never reach report body blocks (task068 T09).
+        """
+        entries: list[tuple[str, str]] = [
+            ("项目名称", _clean_appendix_text(payload.project_name or "未提供")),
+            ("交易类型", _clean_appendix_text(payload.transaction_type or "未提供")),
+            ("总体红黄绿", _clean_appendix_text(str(rule_result.traffic_light.overall_light))),
+        ]
+        for index, item in enumerate(payload.data_items, start=1):
+            category = getattr(item, "doj_data_category", "") or ""
+            value = _clean_appendix_text(item.data_item_name)
+            if category:
+                value += f"（{_clean_appendix_text(str(category))}）"
+            if item.us_person_count:
+                value += f" {item.us_person_count} 人"
+            entries.append((f"数据项 {index}", value))
+        for index, entity in enumerate(payload.recipient_entities, start=1):
+            role = getattr(entity, "entity_role", "") or ""
+            value = _clean_appendix_text(entity.entity_name)
+            value += f"（{_clean_appendix_text(entity.country_of_registration)}"
+            if role:
+                value += f"，{_clean_appendix_text(role)}"
+            value += "）"
+            entries.append((f"接收方实体 {index}", value))
+        for index, measure in enumerate(payload.security_measures, start=1):
+            status = getattr(measure, "status", "") or ""
+            value = _clean_appendix_text(measure.measure_name)
+            value += f"（{_clean_appendix_text(str(getattr(measure, 'category', '')))}：{_clean_appendix_text(str(status))}）"
+            entries.append((f"安全措施 {index}", value))
+        for index, path in enumerate(payload.attachments, start=1):
+            entries.append((f"附件 {index}", _clean_appendix_text(Path(path).name)))
+        return entries
+
     def _build_issues(self, rule_result: US14117RuleEngineResult):
         def _inner(facts, diagnosis: US14117RuleEngineResult, regulations: list[dict], attachment_notes: list[dict[str, str]]):
             return build_us_14117_issues(facts, rule_result, regulations)
@@ -385,12 +422,21 @@ class US14117Service:
         ) -> dict[str, str]:
             citation_registry: CitationRegistry = context_pack.citation_registry
             document_ir_path: Path | None = None
+            _doc = None
+            _rr = None
             if self.schema_first_enabled:
                 from backend.common.reporting import DocumentCompiler
                 from backend.domains.us.eo14117.schema_first import build_eo14117_document_ir
+                # Assign footnote numbers up front so the citations appendix and
+                # citation_map_json stay consistent even when the LLM-disabled
+                # placeholder path skipped apply_citation_pipeline (task068 T09).
+                for _item in citation_registry:
+                    citation_registry.assign_footnote_number(_item.citation_id)
+                input_appendix = self._build_input_appendix(payload, rule_result)
                 _doc, _rr = build_eo14117_document_ir(
                     task_id=task_id, company_name=payload.company_name,
                     chapters=chapters, citation_registry=citation_registry, model='legacy-eo14117',
+                    input_appendix=input_appendix,
                 )
                 _cr = DocumentCompiler().compile(_doc, _rr)
                 if _cr.status != 'success':
@@ -403,6 +449,8 @@ class US14117Service:
                 document_ir_path.write_text(
                     _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
                     encoding='utf-8')
+            # Legacy string sections — kept only for the non-schema-first writers.
+            # When schema-first is enabled the raw payload never enters the body.
             sections: list[tuple[str, str]] = [
                 ("输入摘要", payload.model_dump_json(indent=2)),
                 (
@@ -433,27 +481,36 @@ class US14117Service:
             xlsx_output = output_dir / f"{base}_14117_风险矩阵_草案_{date_stamp}.xlsx"
             zip_output = output_dir / f"{base}_14117_输出包_草案_{date_stamp}.zip"
 
-            # Markdown template rendering
-            mapping = _build_template_mapping(
-                payload,
-                chapters,
-                rule_result,
-                citation_registry=citation_registry,
-            )
-            if TEMPLATE_MD.exists():
-                render_markdown_template(md_output, TEMPLATE_MD, mapping)
+            if self.schema_first_enabled and _doc is not None and _rr is not None:
+                # task068 T09 — render the canonical IR to all three formats
+                # directly; templates are bypassed and raw JSON never leaks.
+                from backend.common.reporting.renderers import render_docx, render_pdf
+                from backend.common.reporting.renderers.markdown import MarkdownRenderer
+                md_output.write_text(MarkdownRenderer().render(_doc, _rr), encoding='utf-8')
+                docx_output.write_bytes(render_docx(_doc, _rr))
+                pdf_output.write_bytes(render_pdf(_doc, _rr))
             else:
-                _render_markdown_fallback(md_output, payload, chapters, rule_result, date_stamp)
-            if TEMPLATE_PATH.exists():
-                render_docx_template(docx_output, TEMPLATE_PATH, mapping)
-            else:
-                render_docx_report(
-                    docx_output,
-                    "EO 14117 风险评估结论报告（草案）",
-                    sections,
+                # Markdown template rendering (legacy path)
+                mapping = _build_template_mapping(
+                    payload,
+                    chapters,
+                    rule_result,
+                    citation_registry=citation_registry,
                 )
+                if TEMPLATE_MD.exists():
+                    render_markdown_template(md_output, TEMPLATE_MD, mapping)
+                else:
+                    _render_markdown_fallback(md_output, payload, chapters, rule_result, date_stamp)
+                if TEMPLATE_PATH.exists():
+                    render_docx_template(docx_output, TEMPLATE_PATH, mapping)
+                else:
+                    render_docx_report(
+                        docx_output,
+                        "EO 14117 风险评估结论报告（草案）",
+                        sections,
+                    )
 
-            render_pdf_report(pdf_output, "EO 14117 风险评估结论报告（草案）", sections)
+                render_pdf_report(pdf_output, "EO 14117 风险评估结论报告（草案）", sections)
 
             # XLSX risk matrix
             matrix_headers = [
@@ -806,6 +863,14 @@ def _render_placeholder_chapter(
         return "\n".join(lines) + basis("202.248", "202.301", "202.302", "202.303", "202.401")
 
     return f"（{title}：占位内容）" + basis("202.1001", "202.1002", "202.1101")
+
+
+_APPENDIX_MARKDOWN_RE = re.compile(r"(?<!\w)[*_`]+|[*_`]+(?!\w)|\[\d+\]|\{\{CIT-[^}]+\}\}")
+
+
+def _clean_appendix_text(value: str) -> str:
+    """Strip Markdown/citation residue so an appendix value is semantic text."""
+    return _APPENDIX_MARKDOWN_RE.sub("", value or "").strip()
 
 
 def _build_template_mapping(

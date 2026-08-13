@@ -3,8 +3,22 @@
     "schema_version": "4.0",
     "document_id": "review:task-golden",
     "report_type": "review",
-    "identity": null,
-    "lifecycle": null,
+    "identity": {
+      "document_id": "review:task-golden",
+      "report_id": "task-golden",
+      "run_id": null,
+      "task_id": null,
+      "module_key": "review",
+      "module_id": null
+    },
+    "lifecycle": {
+      "state": "DRAFT",
+      "report_status": "DRAFT",
+      "is_degraded": false,
+      "degradation_reasons": [],
+      "created_at": "2026-08-08T00:00:00Z",
+      "completed_at": null
+    },
     "findings": [],
     "actions": [],
     "citations": [],
@@ -29,193 +43,162 @@
       "title": "隐私协议_测试.docx — 智能审查报告",
       "short_title": "",
       "company_name": "隐私协议_测试.docx",
-      "jurisdiction": "",
+      "jurisdiction": "CN",
       "locale": "zh-CN",
       "report_date": "2026-08-08",
       "report_id": "task-golden"
     },
     "sections": [
       {
-        "section_id": "review.section.1",
-        "title": "一、执行摘要",
-        "level": 2,
+        "section_id": "review.s1",
+        "title": "执行摘要",
+        "level": 1,
         "ordinal": "1",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.1.block.1",
+            "block_id": "review.s1.summary",
             "type": "paragraph",
             "text": "合同存在数据出境条款缺失等高风险问题，需整改后方可使用。",
             "fact_refs": [],
             "issue_refs": []
           },
           {
-            "block_id": "review.section.1.block.2",
-            "type": "paragraph",
-            "text": "总体合规评级：HIGH",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.1.block.3",
-            "type": "paragraph",
-            "text": "风险评分：72.0/100",
-            "fact_refs": [],
-            "issue_refs": []
+            "block_id": "review.s1.rating",
+            "type": "key_value",
+            "items": [
+              {
+                "label": "总体合规评级",
+                "value": "HIGH"
+              },
+              {
+                "label": "风险评分",
+                "value": "72.0/100"
+              }
+            ],
+            "columns": 2
           }
         ]
       },
       {
-        "section_id": "review.section.2",
-        "title": "二、审查概况与方法",
-        "level": 2,
+        "section_id": "review.s2",
+        "title": "审查概况与方法",
+        "level": 1,
         "ordinal": "2",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.2.block.1",
-            "type": "paragraph",
-            "text": "审查模式：未知",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.2",
-            "type": "paragraph",
-            "text": "文档类型：未识别",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.3",
-            "type": "paragraph",
-            "text": "文档名称：未提供",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.4",
-            "type": "paragraph",
-            "text": "审查条款数：0",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.5",
-            "type": "paragraph",
-            "text": "已分类条款数：0",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.6",
-            "type": "paragraph",
-            "text": "发现问题总数：0",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.7",
-            "type": "paragraph",
-            "text": "全局缺失项数：0",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.2.block.8",
-            "type": "paragraph",
-            "text": "审查方法说明：系统采用条款切分→多标签分类→LLM深度审查+规则兜底→加权风险评估的自动化流程。当LLM不可用时，将降级为基于规则的审查，报告中会标注审查深度和置信度，请人工复核。",
-            "fact_refs": [],
-            "issue_refs": []
+            "block_id": "review.s2.overview",
+            "type": "key_value",
+            "items": [
+              {
+                "label": "审查模式",
+                "value": "未知"
+              },
+              {
+                "label": "文档类型",
+                "value": "未识别"
+              },
+              {
+                "label": "文档名称",
+                "value": "隐私协议_测试.docx"
+              },
+              {
+                "label": "审查条款数",
+                "value": "0"
+              },
+              {
+                "label": "发现问题总数",
+                "value": "0"
+              },
+              {
+                "label": "全局缺失项数",
+                "value": "0"
+              }
+            ],
+            "columns": 2
           }
         ]
       },
       {
-        "section_id": "review.section.3",
-        "title": "三、文档画像",
-        "level": 2,
+        "section_id": "review.s3",
+        "title": "文档画像",
+        "level": 1,
         "ordinal": "3",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.3.block.1",
-            "type": "paragraph",
-            "text": "文档类型：未识别",
-            "fact_refs": [],
-            "issue_refs": []
+            "block_id": "review.s3.profile",
+            "type": "key_value",
+            "items": [
+              {
+                "label": "文档类型",
+                "value": "未识别"
+              }
+            ],
+            "columns": 2
           }
         ]
       },
       {
-        "section_id": "review.section.4",
-        "title": "四、整体风险评估",
-        "level": 2,
+        "section_id": "review.s4",
+        "title": "整体风险评估",
+        "level": 1,
         "ordinal": "4",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.4.block.1",
-            "type": "paragraph",
-            "text": "总体风险等级：HIGH",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.4.block.2",
-            "type": "paragraph",
-            "text": "风险评分：72.0/100",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.4.block.3",
-            "type": "paragraph",
-            "text": "高风险问题：2 项",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.4.block.4",
-            "type": "paragraph",
-            "text": "中风险问题：1 项",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.4.block.5",
-            "type": "paragraph",
-            "text": "低风险问题：0 项",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.4.block.6",
-            "type": "paragraph",
-            "text": "全局缺失项：0 项",
-            "fact_refs": [],
-            "issue_refs": []
+            "block_id": "review.s4.risk",
+            "type": "key_value",
+            "items": [
+              {
+                "label": "总体风险等级",
+                "value": "HIGH"
+              },
+              {
+                "label": "风险评分",
+                "value": "72.0/100"
+              },
+              {
+                "label": "高风险问题",
+                "value": "2"
+              },
+              {
+                "label": "中风险问题",
+                "value": "1"
+              },
+              {
+                "label": "低风险问题",
+                "value": "0"
+              },
+              {
+                "label": "全局缺失项",
+                "value": "0"
+              }
+            ],
+            "columns": 2
           }
         ]
       },
       {
-        "section_id": "review.section.5",
-        "title": "五、完整性检查结果",
-        "level": 2,
+        "section_id": "review.s5",
+        "title": "完整性检查",
+        "level": 1,
         "ordinal": "5",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.5.block.1",
+            "block_id": "review.s5.empty",
             "type": "paragraph",
             "text": "未发现全局缺失项，文档条款覆盖较完整。",
             "fact_refs": [],
@@ -224,16 +207,16 @@
         ]
       },
       {
-        "section_id": "review.section.6",
-        "title": "六、逐条问题清单",
-        "level": 2,
+        "section_id": "review.s6",
+        "title": "问题摘要",
+        "level": 1,
         "ordinal": "6",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.6.block.1",
+            "block_id": "review.s6.empty",
             "type": "paragraph",
             "text": "未发现明显的合规问题。",
             "fact_refs": [],
@@ -242,41 +225,60 @@
         ]
       },
       {
-        "section_id": "review.section.7",
-        "title": "七、优先整改路线图",
-        "level": 2,
+        "section_id": "review.s7",
+        "title": "逐条问题",
+        "level": 1,
         "ordinal": "7",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.7.block.1",
+            "block_id": "review.s7.empty",
             "type": "paragraph",
-            "text": "补充数据出境条款",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.7.block.2",
-            "type": "paragraph",
-            "text": "明确数据处理者义务",
+            "text": "（无逐条问题明细）",
             "fact_refs": [],
             "issue_refs": []
           }
         ]
       },
       {
-        "section_id": "review.section.8",
-        "title": "八、法规依据汇总",
-        "level": 2,
+        "section_id": "review.s8",
+        "title": "优先整改路线图",
+        "level": 1,
         "ordinal": "8",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.8.block.1",
+            "block_id": "review.s8.actions",
+            "type": "list",
+            "ordered": true,
+            "items": [
+              {
+                "text": "补充数据出境条款",
+                "children": []
+              },
+              {
+                "text": "明确数据处理者义务",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "section_id": "review.s9",
+        "title": "法规依据汇总",
+        "level": 1,
+        "ordinal": "9",
+        "purpose": null,
+        "reuse_policy": "single_use",
+        "visibility": "EXTERNAL_AND_INTERNAL",
+        "blocks": [
+          {
+            "block_id": "review.s9.empty",
             "type": "paragraph",
             "text": "未检索到法规依据。",
             "fact_refs": [],
@@ -285,197 +287,18 @@
         ]
       },
       {
-        "section_id": "review.section.9",
-        "title": "九、审查边界与置信度说明",
-        "level": 2,
-        "ordinal": "9",
-        "purpose": null,
-        "reuse_policy": "summary",
-        "visibility": "EXTERNAL_AND_INTERNAL",
-        "blocks": [
-          {
-            "block_id": "review.section.9.block.1",
-            "type": "paragraph",
-            "text": "本报告基于以下方法生成，请阅读以下说明以正确理解报告内容：",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.3",
-            "type": "paragraph",
-            "text": "一、已确认问题（0 项）",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.4",
-            "type": "paragraph",
-            "text": "基于文档原文和法规规则直接识别的合规问题，具有较高置信度。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.5",
-            "type": "paragraph",
-            "text": "这些问题通常有明确的法规条文支撑，可直接作为合规整改依据。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.6",
-            "type": "paragraph",
-            "text": "二、待确认风险（0 项）",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.7",
-            "type": "paragraph",
-            "text": "基于条件性表述、缺失信息或用户补充背景推断的风险。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.8",
-            "type": "paragraph",
-            "text": "需要企业进一步确认相关事实后才能确定性判断。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.9",
-            "type": "paragraph",
-            "text": "三、低置信度问题（0 项）",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.10",
-            "type": "paragraph",
-            "text": "由规则兜底或LLM低置信度生成，建议人工复核后决定是否采纳。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.11",
-            "type": "paragraph",
-            "text": "四、未覆盖范围",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.12",
-            "type": "paragraph",
-            "text": "本报告不替代律师正式法律意见，不对未上传文件作事实认定。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.9.block.13",
-            "type": "paragraph",
-            "text": "审查范围限于已上传文档的文本内容，无法核查事实真伪或未提供的信息。",
-            "fact_refs": [],
-            "issue_refs": []
-          }
-        ]
-      },
-      {
-        "section_id": "review.section.10",
-        "title": "九、附录",
-        "level": 2,
+        "section_id": "review.s10",
+        "title": "审查边界与置信度",
+        "level": 1,
         "ordinal": "10",
         "purpose": null,
-        "reuse_policy": "summary",
+        "reuse_policy": "single_use",
         "visibility": "EXTERNAL_AND_INTERNAL",
         "blocks": [
           {
-            "block_id": "review.section.10.block.1",
+            "block_id": "review.s10.boundary",
             "type": "paragraph",
-            "text": "审查限制说明：",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.2",
-            "type": "paragraph",
-            "text": "1. 本报告由自动化审查系统生成，仅供参考，不构成正式法律意见。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.3",
-            "type": "paragraph",
-            "text": "2. 基于规则检查的发现（标注 review_method=rule）置信度较低，建议人工复核。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.4",
-            "type": "paragraph",
-            "text": "3. 若当前审查未启用LLM深度审查（review_mode=RULE_ONLY），审查结果可能不完整。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.5",
-            "type": "paragraph",
-            "text": "4. 全局缺失项检测基于文档类型检查清单，实际缺失情况可能更复杂。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.6",
-            "type": "paragraph",
-            "text": "5. 自动化审查无法替代律师对具体事实的调查和判断。",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.8",
-            "type": "paragraph",
-            "text": "审查完成时间：未知",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.9",
-            "type": "paragraph",
-            "text": "审查模式：未知",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.10",
-            "type": "paragraph",
-            "text": "建议补充材料：",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.11",
-            "type": "paragraph",
-            "text": "- 数据清单",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.12",
-            "type": "paragraph",
-            "text": "- 隐私政策（如未上传）",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.13",
-            "type": "paragraph",
-            "text": "- 合同/协议正式版",
-            "fact_refs": [],
-            "issue_refs": []
-          },
-          {
-            "block_id": "review.section.10.block.14",
-            "type": "paragraph",
-            "text": "- 安全措施说明",
+            "text": "本报告由自动化审查系统生成，仅供参考，不构成正式法律意见。审查范围限于已上传文档的文本内容，无法核查事实真伪或未提供的信息。",
             "fact_refs": [],
             "issue_refs": []
           }
@@ -490,8 +313,8 @@
       "evidence_version": null
     },
     "compiler_version": "0.1.0",
-    "prompt_version": "legacy-document-review-adapter-v1",
-    "template_version": "document-review-v0",
+    "prompt_version": "review-structured-v4",
+    "template_version": "review-v0",
     "model": "test-model"
   },
   "footnote_map": {}

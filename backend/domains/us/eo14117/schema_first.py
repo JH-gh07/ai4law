@@ -8,8 +8,11 @@ from datetime import datetime, timezone
 from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
 from backend.common.llm.postprocess import strip_markdown_inline
 from backend.common.reporting import (
+    CitationNoteBlock,
     ClaimBlock,
     DocumentIR,
+    KeyValueBlock,
+    KeyValueItem,
     ParagraphBlock,
     SectionIR,
     extract_citation_refs,
@@ -38,8 +41,17 @@ def build_eo14117_document_ir(
     citation_registry: LegacyCitationRegistry,
     model: str,
     generated_at: datetime | None = None,
+    input_appendix: list[tuple[str, str]] | None = None,
 ) -> tuple[DocumentIR, CitationRegistry]:
-    """Translate EO 14117 compliance chapter output into typed DocumentIR."""
+    """Translate EO 14117 compliance chapter output into typed DocumentIR.
+
+    The first business chapter is always the overall conclusion (the chapter
+    generator emits ``总体结论与传输可行性`` first), then risk details, action
+    list, and attachments. The adapter appends a citations appendix and an input
+    appendix so the full layout is stable (task068 T09). ``input_appendix`` must
+    be sanitized by the caller — entities / data categories / security measures /
+    attachments are surfaced as key-value entries, never nested JSON.
+    """
     reporting_registry = legacy_registry_to_reporting(citation_registry)
     sections: list[SectionIR] = []
 
@@ -90,6 +102,47 @@ def build_eo14117_document_ir(
             reuse_policy="reference" if chapter.chapter_no == 4 else "single_use",
             blocks=blocks,
         ))
+
+    # Fixed tail: 引用 → 输入附录 (numbering continues after the chapters).
+    appendix_no = len(chapters) + 1
+    ordered_cids = sorted(
+        reporting_registry.footnote_map().keys(),
+        key=lambda cid: reporting_registry.footnote_map()[cid],
+    )
+    if ordered_cids:
+        sections.append(SectionIR(
+            section_id="eo14117.appendix.citations",
+            title="引用法规与条文",
+            level=2,
+            ordinal=str(appendix_no),
+            blocks=[
+                CitationNoteBlock(
+                    block_id="eo14117.appendix.citations.block",
+                    citation_refs=ordered_cids,
+                )
+            ],
+        ))
+        appendix_no += 1
+
+    if input_appendix:
+        items = [
+            KeyValueItem(label=label, value=value)
+            for label, value in input_appendix
+            if str(value).strip()
+        ]
+        if items:
+            sections.append(SectionIR(
+                section_id="eo14117.appendix.inputs",
+                title="输入附录",
+                level=2,
+                ordinal=str(appendix_no),
+                blocks=[
+                    KeyValueBlock(
+                        block_id="eo14117.appendix.inputs.block",
+                        items=items,
+                    )
+                ],
+            ))
 
     timestamp = generated_at or datetime.now(timezone.utc)
     document = DocumentIR(

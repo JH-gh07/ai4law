@@ -23,7 +23,13 @@ class ReviewReportRenderer:
     """
 
     def build_sections(self, review: AggregatedReview) -> list[tuple[str, list[str]]]:
-        """Build all report sections."""
+        """Build all report sections.
+
+        DEPRECATED (task068 T02): this string-section shim only feeds the legacy
+        string writers. The structured renderer reads the v4 DocumentIR produced
+        by ``schema_first.build_document_review_ir``, never this output. Removed
+        once T05/T06 switch the writers.
+        """
         sections: list[tuple[str, list[str]]] = []
 
         # 一、执行摘要
@@ -161,7 +167,7 @@ class ReviewReportRenderer:
             lines.append(f"修改建议：{issue.recommendation}")
         if issue.suggested_revision and issue.suggested_revision.suggested_text:
             rev = issue.suggested_revision
-            lines.append(f"建议替换：")
+            lines.append("建议替换：")
             lines.append(f"  原文：{rev.original_text[:200]}")
             lines.append(f"  建议改为：{rev.suggested_text[:200]}")
         if issue.facts_uncertain:

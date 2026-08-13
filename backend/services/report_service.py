@@ -30,6 +30,20 @@ class ReportService:
         path.write_text(html, encoding="utf-8")
         return self._persist(db, user_id, owner_type, owner_id, "html", path, preview)
 
+    def create_markdown_report(
+        self,
+        db: Session,
+        user_id: str,
+        owner_type: str,
+        owner_id: str,
+        filename: str,
+        markdown: str,
+        preview: dict,
+    ) -> ReportArtifact:
+        path = self._owner_dir(owner_type, owner_id) / filename
+        path.write_text(markdown, encoding="utf-8")
+        return self._persist(db, user_id, owner_type, owner_id, "markdown", path, preview)
+
     def create_pdf_report(
         self,
         db: Session,
@@ -40,8 +54,37 @@ class ReportService:
         lines: list[str],
         preview: dict,
     ) -> ReportArtifact:
+        """Legacy Markdown-line PDF writer (deprecated).
+
+        Kept for limited backward compatibility only. New callers should use
+        :meth:`create_pdf_report_ir`, which renders from a v4 ``DocumentIR``.
+        """
         path = self._owner_dir(owner_type, owner_id) / filename
         self._write_pdf(path, lines)
+        return self._persist(db, user_id, owner_type, owner_id, "pdf", path, preview)
+
+    def create_pdf_report_ir(
+        self,
+        db: Session,
+        user_id: str,
+        owner_type: str,
+        owner_id: str,
+        filename: str,
+        document_ir,
+        registry,
+        preview: dict,
+    ) -> ReportArtifact:
+        """Render a v4 ``DocumentIR`` to a fixed-layout PDF (task068 T07).
+
+        The renderer consumes the canonical IR directly — never the legacy
+        Markdown lines — and degrades the CJK font to ``STSong-Light`` (emb=no)
+        until a licensed + hashed CJK font asset is tracked. The PDF font gate
+        therefore stays ``BLOCKED_BY_FONT`` on this machine.
+        """
+        from backend.common.reporting.renderers.pdf import render_pdf
+
+        path = self._owner_dir(owner_type, owner_id) / filename
+        path.write_bytes(render_pdf(document_ir, registry))
         return self._persist(db, user_id, owner_type, owner_id, "pdf", path, preview)
 
     def create_docx_report(
@@ -54,6 +97,11 @@ class ReportService:
         sections: list[tuple[str, list[str]]],
         preview: dict,
     ) -> ReportArtifact:
+        """Legacy string-based DOCX writer (deprecated).
+
+        Kept for limited backward compatibility only. New callers should use
+        :meth:`create_docx_report_ir`, which renders from a v4 ``DocumentIR``.
+        """
         path = self._owner_dir(owner_type, owner_id) / filename
         document = Document()
         for heading, paragraphs in sections:
@@ -61,6 +109,29 @@ class ReportService:
             for paragraph in paragraphs:
                 document.add_paragraph(paragraph)
         document.save(path)
+        return self._persist(db, user_id, owner_type, owner_id, "docx", path, preview)
+
+    def create_docx_report_ir(
+        self,
+        db: Session,
+        user_id: str,
+        owner_type: str,
+        owner_id: str,
+        filename: str,
+        document_ir,
+        registry,
+        preview: dict,
+    ) -> ReportArtifact:
+        """Render a v4 ``DocumentIR`` to a native DOCX report (task068 T06).
+
+        The renderer consumes the canonical IR directly — never the legacy
+        ``sections`` string lists — and produces native Word structures
+        (headings/tables/numbering/header/footer/page fields).
+        """
+        from backend.common.reporting.renderers.docx import render_docx
+
+        path = self._owner_dir(owner_type, owner_id) / filename
+        path.write_bytes(render_docx(document_ir, registry))
         return self._persist(db, user_id, owner_type, owner_id, "docx", path, preview)
 
     def get_owner_artifact(

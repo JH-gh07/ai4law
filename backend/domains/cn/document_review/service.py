@@ -27,6 +27,7 @@ from backend.schemas.review import (
     UploadedFileResponse,
 )
 from backend.common.llm.client import LLMClient
+from backend.common.workflow.input_manifest import RunInputManifestPublic
 from backend.services.file_service import FileService
 from backend.integrations.delilegal import DeliLegalService
 from backend.services.report_service import ReportService
@@ -66,6 +67,7 @@ from backend.domains.cn.document_review.specialized_reviewers.dpa_reviewer impor
 from backend.domains.cn.document_review.specialized_reviewers.data_security_agreement_reviewer import (
     DataSecurityAgreementReviewer,
 )
+from backend.domains.cn.document_review import input_manifest as review_input_manifest
 from backend.schemas.review import (
     ReviewScenarioContext,
     ReviewTaskConfig,
@@ -190,6 +192,7 @@ class ReviewService:
         task.status = ReviewTaskStatus.UPLOADED.value
         task.progress = 10
         self.repository.save_task(db, task)
+        self._build_and_persist_manifest(db, task)
         return UploadedFileResponse(
             id=created.id,
             task_id=created.task_id,
@@ -435,16 +438,17 @@ class ReviewService:
 
             # ── Stage 7: RENDERING (92‑100%) ──
             self._update_task(db, task, ReviewTaskStatus.RENDERING, 95)
+            _doc = None
+            _rr = None
+            _ir_hash = None
             if self.schema_first_enabled:
                 from backend.common.citation.registry import CitationRegistry as _LR
-                from backend.common.reporting import DocumentCompiler
+                from backend.common.reporting import DocumentCompiler, MarkdownRenderer
                 from backend.domains.cn.document_review.schema_first import build_document_review_ir
-                _sections_tmp = self.renderer.build_sections(aggregated)
                 _doc, _rr = build_document_review_ir(
                     task_id=task_id,
                     document_title=doc_type or 'document',
                     review=aggregated,
-                    sections=_sections_tmp,
                     citation_registry=_LR(),
                     model='legacy-review',
                 )
@@ -452,14 +456,51 @@ class ReviewService:
                 if _cr.status != 'success':
                     _codes = ', '.join(i.code for i in _cr.diagnostics)
                     raise ValueError(f'Schema-first compiler blocked review output: {_codes}')
+                import hashlib as _hashlib
                 import json as _json
                 from pathlib import Path as _Path
                 _ir_dir = _Path('outputs/review') / task_id / 'outputs'
                 _ir_dir.mkdir(parents=True, exist_ok=True)
-                (_ir_dir / 'document_ir.json').write_text(
-                    _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2),
-                    encoding='utf-8')
-            sections = self.renderer.build_sections(aggregated)
+                _ir_json = _json.dumps(_doc.model_dump(mode='json'), ensure_ascii=False, indent=2)
+                _ir_hash = _hashlib.sha256(_ir_json.encode('utf-8')).hexdigest()
+                # Canonical IR hash (same bytes as document_ir.json) — the T02
+                # traceability anchor later folded into the render manifest.
+                (_ir_dir / 'document_ir.json').write_text(_ir_json, encoding='utf-8')
+                (_ir_dir / 'document_ir.json.sha256').write_text(_ir_hash, encoding='utf-8')
+
+                # T05 — register the canonical IR as a controlled artifact so the
+                # artifact preview API can expose ``report_ir`` for the Web body.
+                self.report_service.register_external_artifact(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "document_ir_json",
+                    str((_ir_dir / 'document_ir.json').resolve()),
+                    preview={"ir_sha256": _ir_hash},
+                )
+
+                # T04 — render the *same* canonical IR to Markdown and register it
+                # as a first-class artifact with its IR + render hash recorded.
+                # The Markdown here is never used to reverse-derive another format.
+                _md_text = MarkdownRenderer().render(_doc, _rr)
+                _render_hash = _hashlib.sha256(_md_text.encode('utf-8')).hexdigest()
+                self.report_service.create_markdown_report(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "review_report.md",
+                    _md_text,
+                    preview={
+                        "ir_sha256": _ir_hash,
+                        "render_sha256": _render_hash,
+                        "finding_ids": [f.finding_id for f in _doc.findings],
+                        "section_ids": [s.section_id for s in _doc.sections],
+                        "citation_ids": [c.citation_id for c in _doc.citations],
+                    },
+                )
+
             report_preview = {
                 "overall_rating": aggregated.overall_rating,
                 "overall_risk_score": aggregated.overall_risk_score,
@@ -467,27 +508,67 @@ class ReviewService:
                 "document_type": doc_type,
                 "review_mode": review_mode,
             }
-            self.report_service.create_docx_report(
-                db,
-                user_id,
-                "review",
-                task_id,
-                "review_report.docx",
-                sections,
-                preview=report_preview,
-            )
-            pdf_lines = [f"# {doc_type} 合同合规审查报告"]
-            for heading, paragraphs in sections:
-                pdf_lines.extend([f"## {heading}", *paragraphs])
-            self.report_service.create_pdf_report(
-                db,
-                user_id,
-                "review",
-                task_id,
-                "review_report.pdf",
-                pdf_lines,
-                preview=report_preview,
-            )
+            # Legacy string sections — still consumed by the PDF writer until T07
+            # and by the legacy DOCX writer when schema-first is disabled.
+            sections = self.renderer.build_sections(aggregated)
+            if self.schema_first_enabled and _doc is not None and _rr is not None:
+                # T06 — render the canonical IR to a native DOCX (task068 T06).
+                self.report_service.create_docx_report_ir(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "review_report.docx",
+                    _doc,
+                    _rr,
+                    preview={
+                        "ir_sha256": _ir_hash,
+                        "finding_ids": [f.finding_id for f in _doc.findings],
+                        "section_ids": [s.section_id for s in _doc.sections],
+                        "citation_ids": [c.citation_id for c in _doc.citations],
+                    },
+                )
+            else:
+                self.report_service.create_docx_report(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "review_report.docx",
+                    sections,
+                    preview=report_preview,
+                )
+            # T07 — render the canonical IR to a fixed-layout PDF when schema-first
+            # is enabled; otherwise keep the legacy Markdown-line writer.
+            if self.schema_first_enabled and _doc is not None and _rr is not None:
+                self.report_service.create_pdf_report_ir(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "review_report.pdf",
+                    _doc,
+                    _rr,
+                    preview={
+                        "ir_sha256": _ir_hash,
+                        "finding_ids": [f.finding_id for f in _doc.findings],
+                        "section_ids": [s.section_id for s in _doc.sections],
+                        "citation_ids": [c.citation_id for c in _doc.citations],
+                    },
+                )
+            else:
+                pdf_lines = [f"# {doc_type} 合同合规审查报告"]
+                for heading, paragraphs in sections:
+                    pdf_lines.extend([f"## {heading}", *paragraphs])
+                self.report_service.create_pdf_report(
+                    db,
+                    user_id,
+                    "review",
+                    task_id,
+                    "review_report.pdf",
+                    pdf_lines,
+                    preview=report_preview,
+                )
 
             # ── Annotated DOCX (source doc with inline comments) ──
             annotated_output_dir = Path("outputs/review") / task_id / "outputs"
@@ -509,6 +590,8 @@ class ReviewService:
             task.summary_json = dumps(aggregated.model_dump())
             self._update_task(db, task, ReviewTaskStatus.COMPLETED, 100, persist=False)
             self.repository.save_task(db, task)
+            # task068 T03 — final manifest reflects bytes consumed by the pipeline.
+            self._build_and_persist_manifest(db, task)
         except Exception as exc:
             task = self._require_task(db, task_id, user_id)
             task.status = ReviewTaskStatus.FAILED.value
@@ -540,7 +623,41 @@ class ReviewService:
         task.status = ReviewTaskStatus.UPLOADED.value
         task.progress = 10
         self.repository.save_task(db, task)
+        self._build_and_persist_manifest(db, task)
         return task
+
+    def _build_and_persist_manifest(self, db: Session, task: ReviewTaskModel) -> None:
+        """Build the run-input manifest from actual file records and persist it.
+
+        Rebuilt at the run boundary (submit/upload/pipeline-complete) so the
+        material tree and integrity hash reflect the bytes actually on disk.
+        """
+        files = self.repository.list_files(db, task.id, task.user_id)
+        request_context = loads(task.request_context_json, {})
+        manifest = review_input_manifest.build_review_input_manifest(
+            task_id=task.id,
+            files=files,
+            request_context=request_context,
+        )
+        task.input_manifest_json = dumps(manifest.model_dump(mode="json"))
+        self.repository.save_task(db, task)
+
+    def get_input_manifest(self, db: Session, user_id: str, task_id: str) -> RunInputManifestPublic:
+        from backend.common.workflow.input_manifest import RunInputManifest, public_manifest
+
+        task = self._require_task(db, task_id, user_id)
+        raw = loads(task.input_manifest_json, {})
+        manifest = RunInputManifest.model_validate(raw) if raw else None
+        if manifest is None:
+            # Fall back to rebuilding for legacy rows created before T03.
+            manifest = review_input_manifest.build_review_input_manifest(
+                task_id=task.id,
+                files=self.repository.list_files(db, task.id, user_id),
+                request_context=loads(task.request_context_json, {}),
+            )
+            task.input_manifest_json = dumps(manifest.model_dump(mode="json"))
+            self.repository.save_task(db, task)
+        return public_manifest(manifest)
 
     @staticmethod
     def _build_request_context(payload: ReviewGenerateRequest) -> dict:
@@ -567,6 +684,16 @@ class ReviewService:
         output_files = {"docx": report.file_path, "report": report.file_path}
         if pdf_report:
             output_files["pdf"] = pdf_report.file_path
+        markdown_report = self.report_service.get_owner_artifact(
+            db, user_id, "review", task.id, "markdown"
+        )
+        if markdown_report:
+            output_files["markdown"] = markdown_report.file_path
+        ir_report = self.report_service.get_owner_artifact(
+            db, user_id, "review", task.id, "document_ir_json"
+        )
+        if ir_report:
+            output_files["document_ir_json"] = ir_report.file_path
         summary = AggregatedReview.model_validate(loads(task.summary_json, {}))
         return ReviewGenerateResponse(
             report_path=report.file_path,

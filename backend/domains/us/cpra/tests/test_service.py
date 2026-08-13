@@ -135,9 +135,18 @@ def test_cpra_real_renderer_generates_valid_pdf_in_bundle() -> None:
         assert "citation_map.json" in bundle.namelist()
     assert Path(outputs["document_ir_json"]).exists()
     markdown = Path(outputs["markdown"]).read_text(encoding="utf-8")
+    # task068 T09 — schema-first renders the canonical IR, so the Markdown uses
+    # the renderer's own numbering ("## 1 执行摘要", no template "## 1. 执行摘要").
     assert "评估日期**：评估日期" not in markdown
-    assert "## 1. 执行摘要" in markdown
-    assert "## 7. 行动清单与优先级" in markdown
+    assert "## 1 执行摘要" in markdown
+    assert "## 2 输入附录" in markdown
+    assert "企业名称" in markdown
+    assert "真实渲染测试企业" in markdown
+    # Raw payload JSON / storage URIs never leak into the body.
+    assert "business_model" not in markdown
+    assert "storage_uri" not in markdown
+    assert "https://example.com/privacy" not in markdown
+    assert "model_dump_json" not in markdown
 
 
 def test_cpra_generate_report_uses_enhanced_attachment_facts(monkeypatch) -> None:

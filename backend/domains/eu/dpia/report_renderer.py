@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from shutil import copy2
 from typing import TYPE_CHECKING
@@ -38,6 +39,13 @@ _RISK_XLSX_HEADERS = [
 _MITIGATION_XLSX_HEADERS = [
     "措施编号", "描述", "目标风险", "状态", "负责方", "残余风险等级",
 ]
+
+_APPENDIX_MARKDOWN_RE = re.compile(r"(?<!\w)[*_`]+|[*_`]+(?!\w)|\[\d+\]|\{\{CIT-[^}]+\}\}")
+
+
+def _clean_appendix_text(value: str) -> str:
+    """Strip Markdown/citation residue so an appendix value is semantic text."""
+    return _APPENDIX_MARKDOWN_RE.sub("", value or "").strip()
 
 
 def _format_trigger_reason(reason: object) -> str:
@@ -303,6 +311,78 @@ class DPIAReportRenderer:
         self.schema_first_enabled = schema_first_enabled
         self.model_name = model_name
 
+    @staticmethod
+    def _build_input_appendix(
+        profile: DPIAProjectProfile,
+        generation_basis_pack: dict | None = None,
+    ) -> list[tuple[str, str]]:
+        """Sanitized input appendix entries for the schema-first report body.
+
+        Surfaces the deterministic-chapter business structure (profile fields,
+        risk matrix, mitigation plan, attachment summaries) as key-value
+        entries. Raw request JSON / storage URIs / nested structures must never
+        reach report body blocks (task068 T09).
+        """
+        entries: list[tuple[str, str]] = [
+            ("项目名称", _clean_appendix_text(profile.project_name or "未提供")),
+            ("项目目标", _clean_appendix_text(profile.project_goal or "未提供")),
+        ]
+        if profile.data_categories:
+            entries.append(("数据类别", _clean_appendix_text("、".join(map(str, profile.data_categories)))))
+        if profile.special_category_types:
+            entries.append(("特殊类别数据", _clean_appendix_text("、".join(map(str, profile.special_category_types)))))
+        if profile.data_subject_categories:
+            entries.append(("数据主体类别", _clean_appendix_text("、".join(map(str, profile.data_subject_categories)))))
+        if profile.lawful_basis:
+            entries.append(("法律基础", _clean_appendix_text("、".join(map(str, profile.lawful_basis)))))
+        if profile.cross_border_transfer:
+            dest = _clean_appendix_text(profile.transfer_destination or "未提供目的地")
+            entries.append(("跨境传输", f"是（{dest}）"))
+
+        flags = [
+            ("自动化决策", profile.automated_decision_making),
+            ("系统性监控", profile.systematic_monitoring),
+            ("大规模处理", profile.large_scale_processing),
+            ("数据比对", profile.data_matching),
+            ("新技术", profile.new_technology),
+            ("弱势数据主体", profile.vulnerable_data_subjects),
+        ]
+        enabled = [label for label, flag in flags if flag]
+        if enabled:
+            entries.append(("高风险触发项", _clean_appendix_text("、".join(enabled))))
+        if profile.dpo_name:
+            entries.append(("DPO 姓名", _clean_appendix_text(profile.dpo_name)))
+
+        basis = generation_basis_pack or {}
+        risk_matrix = basis.get("risk_matrix") or []
+        for index, item in enumerate(risk_matrix, start=1):
+            if not isinstance(item, dict):
+                continue
+            name = item.get("risk_name") or item.get("description") or item.get("risk_id", "")
+            level = item.get("overall_level") or item.get("risk_level", "未评估")
+            entries.append((f"风险项 {index}", _clean_appendix_text(f"{name}（等级：{level}）")))
+
+        mitigation_plan = basis.get("mitigation_plan") or []
+        for index, entry in enumerate(mitigation_plan, start=1):
+            if not isinstance(entry, dict):
+                continue
+            for measure in (entry.get("measures") or [])[:2]:
+                if not isinstance(measure, dict):
+                    continue
+                text = measure.get("measure", "未提供")
+                status = measure.get("status", "未提供")
+                entries.append((f"缓解措施 {index}", _clean_appendix_text(f"{text}（状态：{status}）")))
+
+        attachments = basis.get("attachment_summaries") or profile.attachment_metadata or []
+        for index, item in enumerate(attachments, start=1):
+            if isinstance(item, dict):
+                name = item.get("source_ref") or item.get("filename") or item.get("file_name") or ""
+                entries.append((f"附件 {index}", _clean_appendix_text(str(name))))
+            elif str(item).strip():
+                entries.append((f"附件 {index}", _clean_appendix_text(str(item))))
+
+        return entries
+
     def render(
         self,
         task_id: str,
@@ -325,17 +405,20 @@ class DPIAReportRenderer:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         document_ir = None
+        reporting_registry = None
         if self.schema_first_enabled:
             from backend.common.citation.registry import CitationRegistry as LegacyCitationRegistry
             from backend.common.reporting import DocumentCompiler
             from backend.domains.eu.dpia.schema_first import build_dpia_document_ir
 
+            input_appendix = self._build_input_appendix(profile, generation_basis_pack)
             document_ir, reporting_registry = build_dpia_document_ir(
                 task_id=task_id,
                 project_name=profile.project_name,
                 chapters=chapters,
                 citation_registry=citation_registry or LegacyCitationRegistry(),
                 model=self.model_name,
+                input_appendix=input_appendix,
             )
             compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
             if compile_result.status != "success":
@@ -348,39 +431,56 @@ class DPIAReportRenderer:
         if document_ir is not None:
             result["document_ir_json"] = _write_document_ir_json(document_ir, output_dir)
 
-        # 1. Markdown and DOCX drafts
+        # 1. Markdown, DOCX, and PDF drafts
         md_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.md"
-        result["markdown"] = _render_dpia_markdown(
-            md_path,
-            profile,
-            chapters,
-            date_stamp,
-            need_assessment,
-            citation_registry,
-        )
-
-        from backend.common.render.pdf_renderer import get_pdf_renderer
-
         pdf_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.pdf"
-        get_pdf_renderer().from_markdown(
-            md_path.read_text(encoding="utf-8"),
-            pdf_path,
-            f"{profile.project_name} — DPIA 草案",
-        )
-        result["pdf"] = str(pdf_path)
-
         docx_path = output_dir / f"{safe_name}_DPIA草案_{date_stamp}.docx"
-        docx_sections = [
-            ("项目概况", f"项目目标：{profile.project_goal}"),
-            *[(chapter.title, chapter.content) for chapter in chapters],
-        ]
-        result["docx"] = str(
-            render_docx_report(
-                docx_path,
-                f"{profile.project_name} — DPIA 草案",
-                docx_sections,
+
+        if document_ir is not None and reporting_registry is not None:
+            # Schema-first: all three formats render directly from the canonical
+            # DocumentIR, never from legacy Markdown/template strings (task068 T09).
+            from backend.common.reporting.renderers import render_docx, render_pdf
+            from backend.common.reporting.renderers.markdown import MarkdownRenderer
+
+            md_path.write_text(
+                MarkdownRenderer().render(document_ir, reporting_registry),
+                encoding="utf-8",
             )
-        )
+            result["markdown"] = str(md_path)
+            pdf_path.write_bytes(render_pdf(document_ir, reporting_registry))
+            result["pdf"] = str(pdf_path)
+            docx_path.write_bytes(render_docx(document_ir, reporting_registry))
+            result["docx"] = str(docx_path)
+        else:
+            result["markdown"] = _render_dpia_markdown(
+                md_path,
+                profile,
+                chapters,
+                date_stamp,
+                need_assessment,
+                citation_registry,
+            )
+
+            from backend.common.render.pdf_renderer import get_pdf_renderer
+
+            get_pdf_renderer().from_markdown(
+                md_path.read_text(encoding="utf-8"),
+                pdf_path,
+                f"{profile.project_name} — DPIA 草案",
+            )
+            result["pdf"] = str(pdf_path)
+
+            docx_sections = [
+                ("项目概况", f"项目目标：{profile.project_goal}"),
+                *[(chapter.title, chapter.content) for chapter in chapters],
+            ]
+            result["docx"] = str(
+                render_docx_report(
+                    docx_path,
+                    f"{profile.project_name} — DPIA 草案",
+                    docx_sections,
+                )
+            )
         # 2. Issue list
         if issues:
             result["issue_list_json"] = _write_issue_list_json(issues, output_dir)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 import uuid
 from pathlib import Path
@@ -580,6 +581,25 @@ class CPRAService:
         return notes
 
     @staticmethod
+    def _build_input_appendix(payload: CPRARequest) -> list[tuple[str, str]]:
+        """Sanitized input appendix entries for the schema-first report body.
+
+        Raw request JSON / storage URIs / nested structures must never reach
+        report body blocks (task068 T09). Only scalar identity fields and the
+        attachment role/hash summary are surfaced here.
+        """
+        entries: list[tuple[str, str]] = [("企业名称", _clean_appendix_text(payload.company_name or "未提供"))]
+        if payload.attachments:
+            for index, item in enumerate(payload.attachments, start=1):
+                role = item.file_role or "other"
+                checksum = (item.checksum_sha256 or "")[:12]
+                value = f"{_clean_appendix_text(item.file_name)}（{role}）"
+                if checksum:
+                    value += f" sha256:{checksum}…"
+                entries.append((f"附件 {index}", value))
+        return entries
+
+    @staticmethod
     def _check_consistency(payload: CPRARequest, gaps: list[CPRAGapItem], facts: list[dict]) -> list[str]:
         issues: list[str] = []
         has_policy = any(item.file_role == "privacy_policy" for item in payload.attachments)
@@ -591,12 +611,16 @@ class CPRAService:
 
     def _render(self, task_id: str, payload, chapters, gaps, attachment_notes, citation_registry: CitationRegistry) -> dict[str, str]:
         document_ir_path: Path | None = None
+        _doc = None
+        _rr = None
         if self.schema_first_enabled:
             from backend.common.reporting import DocumentCompiler
             from backend.domains.us.cpra.schema_first import build_cpra_document_ir
+            input_appendix = self._build_input_appendix(payload)
             _doc, _rr = build_cpra_document_ir(
                 task_id=task_id, company_name=payload.company_name,
                 chapters=chapters, citation_registry=citation_registry, model="legacy-cpra",
+                input_appendix=input_appendix,
             )
             _cr = DocumentCompiler().compile(_doc, _rr)
             if _cr.status != "success":
@@ -609,6 +633,9 @@ class CPRAService:
             _ir_path = _ir_dir / "document_ir.json"
             _ir_path.write_text(_json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
             document_ir_path = _ir_path
+        # Legacy string sections — kept only for the non-schema-first PDF writer.
+        # When schema-first is enabled the raw payload never enters the report
+        # body (task068 T09: raw input only lives in the manifest/controlled JSON).
         sections: list[tuple[str, str]] = [
             ("输入摘要", payload.model_dump_json(indent=2)),
             ("差距清单摘要", "\n".join(f"- [{g.risk_level}] {g.domain}: {g.gap}" for g in gaps)),
@@ -627,10 +654,20 @@ class CPRAService:
         zip_out = output_dir / f"{base}_CPRA_输出包_草案_{date_stamp}.zip"
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        mapping = _build_template_mapping(payload, chapters, gaps, date_stamp)
-        render_markdown_template(md_out, TEMPLATE_MD, mapping)
-        render_docx_template(docx_out, TEMPLATE_PATH, mapping)
-        render_pdf_report(pdf_out, "加州CPRA合规全景报告（草案）", sections)
+        if self.schema_first_enabled and _doc is not None and _rr is not None:
+            # task068 T09 — render the canonical IR to all three formats directly.
+            # The IR is the single source; Markdown is never reverse-derived from
+            # templates and the raw payload JSON never reaches the body.
+            from backend.common.reporting.renderers import render_docx, render_pdf
+            from backend.common.reporting.renderers.markdown import MarkdownRenderer
+            md_out.write_text(MarkdownRenderer().render(_doc, _rr), encoding="utf-8")
+            docx_out.write_bytes(render_docx(_doc, _rr))
+            pdf_out.write_bytes(render_pdf(_doc, _rr))
+        else:
+            mapping = _build_template_mapping(payload, chapters, gaps, date_stamp)
+            render_markdown_template(md_out, TEMPLATE_MD, mapping)
+            render_docx_template(docx_out, TEMPLATE_PATH, mapping)
+            render_pdf_report(pdf_out, "加州CPRA合规全景报告（草案）", sections)
         headers = ["domain", "risk_level", "gap", "legal_basis", "recommendation", "phase", "evidence_source"]
         rows = [[g.domain, g.risk_level, g.gap, g.legal_basis, g.recommendation, g.phase, g.evidence_source] for g in gaps]
         render_simple_xlsx(xlsx_out, headers=headers, rows=rows)
@@ -708,6 +745,14 @@ class CPRAService:
     def _snapshot_to_status(s: TaskSnapshot) -> CPRAAsyncStatus:
         result = CPRAResult.model_validate(s.result) if s.result else None
         return CPRAAsyncStatus(task_id=s.task_id, module=s.module, state=s.state, attempts=s.attempts, max_attempts=s.max_attempts, created_at=s.created_at, updated_at=s.updated_at, error=s.error, result=result)
+
+
+_APPENDIX_MARKDOWN_RE = re.compile(r"(?<!\w)[*_`]+|[*_`]+(?!\w)|\[\d+\]|\{\{CIT-[^}]+\}\}")
+
+
+def _clean_appendix_text(value: str) -> str:
+    """Strip Markdown/citation residue so an appendix value is semantic text."""
+    return _APPENDIX_MARKDOWN_RE.sub("", value or "").strip()
 
 
 def _cpra_ref_from_item(item) -> CPRACitationRef:

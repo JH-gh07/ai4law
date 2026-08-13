@@ -488,7 +488,15 @@ def test_output_files_generated_when_docx_template_is_missing(tmp_path, monkeypa
     } >= {"202.205", "202.211", "202.303", "202.401"}
     markdown = Path(result.output_files["markdown"]).read_text(encoding="utf-8")
     assert "【待核验：引用无法映射】" not in markdown
-    assert "[1]" in markdown
+    # task068 T09 — schema-first renders the IR, so citations are a numbered
+    # appendix and the input appendix surfaces sanitized key-value entries
+    # (never the raw payload JSON).
+    assert "引用法规与条文" in markdown
+    assert "输入附录" in markdown
+    assert "项目名称" in markdown
+    assert "接收方实体" in markdown
+    assert "transaction_description" not in markdown
+    assert "storage_uri" not in markdown
     assert result.report_path.endswith(".md")
 
 

@@ -9,14 +9,19 @@ from __future__ import annotations
 
 import json
 import time
+from io import BytesIO
 from pathlib import Path
 
 import pytest
+from docx import Document as DocxDocument
+from pypdf import PdfReader
 
 from backend.common.citation.models import CitationItem
 from backend.common.citation.registry import CitationRegistry
+from backend.common.reporting import DocumentCompiler, MarkdownRenderer, render_docx, render_pdf
 from backend.domains.eu.dpia.report_renderer import DPIAReportRenderer, _render_dpia_markdown
 from backend.domains.eu.dpia.schema import DPIAChapterContent, DPIAProjectProfile
+from backend.domains.eu.dpia.schema_first import build_dpia_document_ir
 
 # ── production-shaped fixtures ───────────────────────────────────────────────
 
@@ -134,7 +139,11 @@ def test_production_form_with_schema_first_generates_document_ir(tmp_path, monke
     assert ir_data["document_id"] == "dpia:phase3-prod-new"
     assert ir_data["report_type"] == "dpia"
     assert ir_data["diagnostics"] == []
-    assert len(ir_data["sections"]) == 7
+    # 7 business chapters + 1 fixed citations appendix + 1 input appendix
+    # (task068 T09).
+    assert len(ir_data["sections"]) == 9
+    assert ir_data["sections"][-2]["section_id"] == "dpia.appendix.citations"
+    assert ir_data["sections"][-1]["section_id"] == "dpia.appendix.inputs"
 
     # ── every [N] captured as ClaimBlock citation_ref ──
     all_refs: list[str] = []
@@ -296,3 +305,90 @@ def test_markdown_renders_structured_trigger_reasons_as_readable_text(tmp_path):
     assert "  - 系统涉及自动化决策" in content
     assert "  - 预计处理大量数据主体" in content
     assert "{'type':" not in content
+
+
+def _forbidden_markers() -> list[str]:
+    """Raw-payload / nested-JSON / absolute-path leakage markers (task068 T09)."""
+    return [
+        "business_model",
+        "storage_uri",
+        "model_dump",
+        "\\u",  # JSON escapes never appear in rendered prose
+        "| 检查项 | 主题 | 风险 |",  # legacy six-column table header
+        "processing_flow_description",
+        "attachment_metadata",
+    ]
+
+
+def test_fixed_section_order_chapters_citations_inputs() -> None:
+    doc_ir, rr = build_dpia_document_ir(
+        task_id="phase3-dpia-order",
+        project_name="员工健康评估系统",
+        chapters=_chapters(),
+        citation_registry=_registry(),
+        model="deepseek-v3",
+        input_appendix=[
+            ("项目名称", "员工健康评估系统"),
+            ("附件 1", "health_data.csv（source_ref）"),
+        ],
+    )
+    assert [s.section_id for s in doc_ir.sections] == [
+        "dpia.chapter.1",
+        "dpia.chapter.2",
+        "dpia.chapter.3",
+        "dpia.chapter.4",
+        "dpia.chapter.5",
+        "dpia.chapter.6",
+        "dpia.chapter.7",
+        "dpia.appendix.citations",
+        "dpia.appendix.inputs",
+    ]
+    # The citations appendix references every registered citation, ordered by number.
+    citation_section = doc_ir.sections[-2]
+    assert citation_section.title == "引用法规与条文"
+    assert citation_section.blocks[0].type == "citation_note"
+    assert set(citation_section.blocks[0].citation_refs) == {
+        _CID_GDPR_35,
+        _CID_GDPR_5,
+        _CID_GDPR_32,
+    }
+    # The input appendix is typed key-value, never raw JSON.
+    input_section = doc_ir.sections[-1]
+    assert input_section.title == "输入附录"
+    assert input_section.blocks[0].type == "key_value"
+
+
+def test_three_formats_share_ir_and_exclude_forbidden_content() -> None:
+    doc_ir, rr = build_dpia_document_ir(
+        task_id="phase3-dpia-three-format",
+        project_name="员工健康评估系统",
+        chapters=_chapters(),
+        citation_registry=_registry(),
+        model="deepseek-v3",
+        input_appendix=[
+            ("项目名称", "员工健康评估系统"),
+            ("附件 1", "health_data.csv（source_ref）"),
+        ],
+    )
+    compile_result = DocumentCompiler().compile(doc_ir, rr)
+    assert compile_result.status == "success"
+
+    markdown = MarkdownRenderer().render(doc_ir, rr)
+    docx_blob = render_docx(doc_ir, rr)
+    pdf_blob = render_pdf(doc_ir, rr)
+
+    docx_text = "\n".join(p.text for p in DocxDocument(BytesIO(docx_blob)).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_blob)).pages)
+
+    for marker in _forbidden_markers():
+        assert marker not in markdown, f"forbidden marker in Markdown: {marker}"
+        assert marker not in docx_text, f"forbidden marker in DOCX: {marker}"
+        assert marker not in pdf_text, f"forbidden marker in PDF: {marker}"
+
+    # All three formats carry the business conclusion and the fixed tail.
+    assert "DPIA 必要性判断" in markdown
+    assert "引用法规与条文" in markdown
+    assert "输入附录" in markdown
+    assert "员工健康评估系统" in markdown
+    assert "DPIA 必要性判断" in docx_text
+    assert "输入附录" in docx_text

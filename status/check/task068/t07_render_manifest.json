@@ -1,0 +1,129 @@
+{
+  "manifest_version": "1.0",
+  "schema_version": "4.0",
+  "compiler_version": "0.1.0",
+  "renderer_version": "1.0",
+  "profile_id": "legal-report-a4-v1",
+  "template_id": null,
+  "document_id": "review:task068-t07",
+  "report_type": "review",
+  "canonical_ir_sha256": "76e851772ae0b861328300ccb8edc6b86e8e3d6e19f7c011f308b2d1053e4bc4",
+  "section_ids": [
+    "review.s1",
+    "review.s2",
+    "review.s3",
+    "review.s4",
+    "review.s5",
+    "review.s6",
+    "review.s7",
+    "review.s8",
+    "review.s9",
+    "review.s10"
+  ],
+  "finding_ids": [
+    "DR-001"
+  ],
+  "clause_identities": [],
+  "citation_ids": [
+    "CIT-REV-001",
+    "CIT-REV-002",
+    "CIT-REV-003"
+  ],
+  "citation_count": 3,
+  "artifacts": [
+    {
+      "format": "DOCUMENT_IR",
+      "path": "document_ir.json",
+      "size": 11943,
+      "sha256": "76e851772ae0b861328300ccb8edc6b86e8e3d6e19f7c011f308b2d1053e4bc4",
+      "mime": "application/json",
+      "status": "rendered"
+    },
+    {
+      "format": "MARKDOWN",
+      "path": "report.md",
+      "size": 1946,
+      "sha256": "7649cf44ccda98f7bcb13b2f9516288c40c42e4ca49451c9a45a4a48577ad6c6",
+      "mime": "text/markdown",
+      "status": "rendered"
+    },
+    {
+      "format": "DOCX",
+      "path": "report.docx",
+      "size": 39457,
+      "sha256": "f31dbf9c0b7be4c8e8d4cd08cf9fee8d589ed30823d6195fc0b5044525e7cc59",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "status": "rendered"
+    },
+    {
+      "format": "PDF",
+      "path": "report.pdf",
+      "size": 33910,
+      "sha256": "316df5042f52e2b779e343c2c62b2e901b85837669ae3ba8a66080e2a2c92d36",
+      "mime": "application/pdf",
+      "status": "rendered"
+    },
+    {
+      "format": "CITATION_MAP",
+      "path": "citation_map.json",
+      "size": 1606,
+      "sha256": "21920ba76aa631d744f5201c954bd25babb816a58626ff57449b6acaa17fd10a",
+      "mime": "application/json",
+      "status": "rendered"
+    }
+  ],
+  "docx_stats": {
+    "paragraph_count": 27,
+    "heading_count": 12,
+    "table_count": 7,
+    "numbering_def_count": 9
+  },
+  "pdf_stats": {
+    "page_count": 3,
+    "fonts": [
+      {
+        "name": "STSong-Light",
+        "embedded": false
+      },
+      {
+        "name": "LiberationSans",
+        "embedded": true
+      }
+    ],
+    "text_extracted": true,
+    "finding_ids_found": [
+      "DR-001"
+    ]
+  },
+  "gates": [
+    {
+      "name": "compile",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "ir_hash_immutable",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "required_artifacts",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "equivalence",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "pdf_font_embedding",
+      "status": "blocked",
+      "diagnostics": [
+        "BLOCKED_BY_FONT: 无可再分发 CJK 字体，CJK 退化为非嵌入 STSong-Light"
+      ]
+    }
+  ],
+  "render_status": "success",
+  "generated_at": "2026-08-13T18:42:51.127977Z"
+}

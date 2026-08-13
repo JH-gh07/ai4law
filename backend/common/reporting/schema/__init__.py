@@ -39,6 +39,7 @@ from backend.common.reporting.schema.document import (
 from backend.common.reporting.schema.findings import (
     ActionRecord,
     ClauseNode,
+    FindingBasis,
     FindingRecord,
     NumberingStyle,
     RiskLevel,
@@ -59,6 +60,7 @@ __all__ = [
     "DiagnosticLocation",
     "DocumentIR",
     "FindingDetailBlock",
+    "FindingBasis",
     "FindingRecord",
     "FindingReferenceBlock",
     "FindingSummaryBlock",

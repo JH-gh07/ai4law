@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from backend.common.citation.models import CitationItem
 from backend.common.citation.output import write_citation_map_json
 from backend.common.citation.registry import CitationRegistry
@@ -99,7 +97,9 @@ def test_production_form_with_schema_first_generates_document_ir(tmp_path, monke
     assert compile_result.status == "success"
     assert doc_ir.document_id == "eo14117:phase3-eo14117-prod-new"
     assert doc_ir.report_type == "eo14117"
-    assert len(doc_ir.sections) == 7
+    # 7 business chapters + 1 fixed citations appendix (task068 T09).
+    assert len(doc_ir.sections) == 8
+    assert doc_ir.sections[-1].section_id == "eo14117.appendix.citations"
 
     ir_data = doc_ir.model_dump(mode="json")
     assert ir_data["diagnostics"] == []

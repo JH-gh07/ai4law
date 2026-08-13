@@ -76,6 +76,24 @@
             "issue_refs": []
           }
         ]
+      },
+      {
+        "section_id": "eo14117.appendix.citations",
+        "title": "引用法规与条文",
+        "level": 2,
+        "ordinal": "3",
+        "purpose": null,
+        "reuse_policy": "single_use",
+        "visibility": "EXTERNAL_AND_INTERNAL",
+        "blocks": [
+          {
+            "block_id": "eo14117.appendix.citations.block",
+            "type": "citation_note",
+            "citation_refs": [
+              "CIT-EU-GDPR-ART35-P01"
+            ]
+          }
+        ]
       }
     ],
     "diagnostics": [],

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime
-import json
 import re
 import uuid
 from pathlib import Path
@@ -128,6 +127,7 @@ class BCRService:
         self.report_renderer = BCRReportRenderer()
         from backend.core.settings import get_settings as _gs
         self.schema_first_enabled = _gs().schema_first_bcr_enabled
+        self.report_ir_rendering_enabled = _gs().bcr_report_ir_rendering_enabled
         self.tia_checker = BCRTiaChecker()
         self.onward_checker = BCROnwardTransferChecker()
         self.liability_checker = BCRLiabilityChecker()
@@ -506,6 +506,9 @@ class BCRService:
             sections,
             metadata,
             citation_registry,
+            type_class=type_class,
+            score=score,
+            missing=missing,
         )
 
         if trace:
@@ -690,35 +693,39 @@ class BCRService:
         attachment_notes,
         citation_registry: CitationRegistry,
     ) -> dict[str, str]:
-        document_ir_path: Path | None = None
+        task_root = Path("outputs/bcr") / task_id
+        official_dir = task_root / "outputs"
+        shadow_ir_dir = task_root / "shadow_ir"
+        shadow_legacy_dir = task_root / "shadow_legacy"
+        # TEMPORARY shadow switch (task067 §T11) — REMOVE by 2026-09-01. See
+        # bcr_report_ir_rendering_enabled in backend/core/settings.py for removal
+        # steps; the shadow_legacy/shadow_ir directory branches collapse once the
+        # CJK-font + LibreOffice environment gates pass.
+        ir_switch = self.schema_first_enabled and self.report_ir_rendering_enabled
+
+        document_ir = None
+        reporting_registry = None
         if self.schema_first_enabled:
             from backend.common.reporting import DocumentCompiler
-            from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
-            _doc, _rr = build_bcr_document_ir(
+            from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir_from_chapters
+            document_ir, reporting_registry = build_bcr_document_ir_from_chapters(
                 task_id=task_id, company_name=payload.company_name,
                 chapters=chapters, citation_registry=citation_registry, model="legacy-bcr",
             )
-            _cr = DocumentCompiler().compile(_doc, _rr)
-            if _cr.status != "success":
-                _codes = ", ".join(i.code for i in _cr.diagnostics)
-                raise ValueError(f"Schema-first compiler blocked BCR output: {_codes}")
-            _ir_dir = Path("outputs/bcr") / task_id / "outputs"
-            _ir_dir.mkdir(parents=True, exist_ok=True)
-            import json as _json
-            document_ir_path = _ir_dir / "document_ir.json"
-            document_ir_path.write_text(
-                _json.dumps(_doc.model_dump(mode="json"), ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        output_dir = Path("outputs/bcr") / task_id / "outputs"
+            compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
+            if compile_result.status != "success":
+                codes = ", ".join(item.code for item in compile_result.diagnostics)
+                raise ValueError(f"Schema-first compiler blocked BCR output: {codes}")
+
+        legacy_dir = shadow_legacy_dir if ir_switch else official_dir
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
-        md_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.md"
-        docx_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.docx"
-        pdf_out = output_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.pdf"
-        zip_out = output_dir / f"{safe_name}_BCR-C_输出包_草案_{date_stamp}.zip"
+        md_out = legacy_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.md"
+        docx_out = legacy_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.docx"
+        pdf_out = legacy_dir / f"{safe_name}_BCR-C_合规审查报告_草案_{date_stamp}.pdf"
+        zip_out = legacy_dir / f"{safe_name}_BCR-C_输出包_草案_{date_stamp}.zip"
         mapping = _build_template_mapping(payload, rating, problems, chapters, date_stamp)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        legacy_dir.mkdir(parents=True, exist_ok=True)
         render_markdown_template(md_out, TEMPLATE_MD, mapping)
         render_docx_template(docx_out, TEMPLATE_PATH, mapping)
         from backend.common.render.pdf_renderer import get_pdf_renderer
@@ -730,7 +737,7 @@ class BCRService:
             mapping,
         )
         citation_map_json = write_citation_map_json(
-            output_dir=output_dir,
+            output_dir=legacy_dir,
             module="eu_bcr",
             task_id=task_id,
             footnote_map={
@@ -744,17 +751,53 @@ class BCRService:
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
             z.write(citation_map_json, arcname=Path(citation_map_json).name)
-            if document_ir_path is not None:
-                z.write(document_ir_path, arcname=document_ir_path.name)
-        result = {
-            "markdown": str(md_out),
-            "docx": str(docx_out),
-            "pdf": str(pdf_out),
-            "zip": str(zip_out),
-            "citation_map_json": citation_map_json,
-        }
-        if document_ir_path is not None:
-            result["document_ir_json"] = str(document_ir_path)
+
+        if ir_switch:
+            from backend.domains.eu.bcr_review.shadow_render import (
+                audit_ir_vs_legacy,
+                render_ir_artifacts,
+                write_audit_json,
+            )
+
+            manifest = render_ir_artifacts(
+                document_ir, reporting_registry, official_dir, module="bcr", task_id=task_id,
+            )
+            if manifest.render_status != "success":
+                raise ValueError(f"IR renderer failed before switch: {manifest.render_status}")
+            result = {
+                "markdown": str(official_dir / "report.md"),
+                "docx": str(official_dir / "report.docx"),
+                "pdf": str(official_dir / "report.pdf"),
+                "citation_map_json": str(official_dir / "citation_map.json"),
+                "document_ir_json": str(official_dir / "document_ir.json"),
+                "render_manifest_json": str(official_dir / "render_manifest.json"),
+            }
+            switch_audit = audit_ir_vs_legacy(manifest, [], rendering_mode="ir", shadow=False)
+            write_audit_json(switch_audit, official_dir / "render_audit.json")
+        else:
+            result = {
+                "markdown": str(md_out),
+                "docx": str(docx_out),
+                "pdf": str(pdf_out),
+                "zip": str(zip_out),
+                "citation_map_json": citation_map_json,
+            }
+
+        # Stage A — shadow render (chapter-content IR has no findings; the audit
+        # still records section/citation identity and stays out of `result`).
+        if self.schema_first_enabled and not ir_switch:
+            from backend.domains.eu.bcr_review.shadow_render import (
+                audit_ir_vs_legacy,
+                render_ir_artifacts,
+                write_audit_json,
+            )
+
+            shadow_manifest = render_ir_artifacts(
+                document_ir, reporting_registry, shadow_ir_dir, module="bcr", task_id=task_id,
+            )
+            audit = audit_ir_vs_legacy(shadow_manifest, [], rendering_mode="legacy", shadow=True)
+            write_audit_json(audit, shadow_ir_dir / "render_audit.json")
+
         return result
 
     # ------------------------------------------------------------------
@@ -771,37 +814,54 @@ class BCRService:
         sections,
         metadata,
         citation_registry: CitationRegistry | None = None,
+        type_class=None,
+        score: float = 0.0,
+        missing: list[str] | None = None,
     ) -> dict[str, str]:
         citation_registry = citation_registry or CitationRegistry()
-        document_ir_path: Path | None = None
+        task_root = Path("outputs/bcr") / task_id
+        official_dir = task_root / "outputs"
+        shadow_ir_dir = task_root / "shadow_ir"
+        shadow_legacy_dir = task_root / "shadow_legacy"
+
+        # The IR switch only takes effect when the schema-first adapter actually
+        # produced a DocumentIR; otherwise the legacy template path stays official.
+        ir_switch = self.schema_first_enabled and self.report_ir_rendering_enabled
+
+        document_ir = None
+        reporting_registry = None
         if self.schema_first_enabled:
             from backend.common.reporting import DocumentCompiler
+            from backend.domains.eu.bcr_review.schema import BCRTypeClassification
             from backend.domains.eu.bcr_review.schema_first import build_bcr_document_ir
 
+            effective_type_class = type_class or BCRTypeClassification()
             document_ir, reporting_registry = build_bcr_document_ir(
                 task_id=task_id,
                 company_name=payload.company_name,
-                chapters=chapters,
+                type_class=effective_type_class,
+                rating=rating,
+                score=score,
+                findings=findings,
+                missing=missing or [],
                 citation_registry=citation_registry,
-                model="legacy-bcr-document-driven",
+                metadata=metadata,
+                model="bcr-document-driven",
             )
             compile_result = DocumentCompiler().compile(document_ir, reporting_registry)
             if compile_result.status != "success":
                 codes = ", ".join(item.code for item in compile_result.diagnostics)
                 raise ValueError(f"Schema-first compiler blocked BCR output: {codes}")
-            document_ir_path = Path("outputs/bcr") / task_id / "outputs" / "document_ir.json"
-            document_ir_path.parent.mkdir(parents=True, exist_ok=True)
-            document_ir_path.write_text(
-                json.dumps(document_ir.model_dump(mode="json"), ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        output_dir = Path("outputs/bcr") / task_id / "outputs"
+
+        # Legacy template artifacts: official when not switched, parked under
+        # shadow_legacy/ when the IR renderer is the official output.
+        legacy_dir = shadow_legacy_dir if ir_switch else official_dir
         date_stamp = format_date_stamp()
         safe_name = safe_filename(payload.company_name)
-        md_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.md"
-        docx_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.docx"
-        pdf_out = output_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.pdf"
-        zip_out = output_dir / f"{safe_name}_BCR审查输出包_草案_{date_stamp}.zip"
+        md_out = legacy_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.md"
+        docx_out = legacy_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.docx"
+        pdf_out = legacy_dir / f"{safe_name}_BCR审查报告_草案_{date_stamp}.pdf"
+        zip_out = legacy_dir / f"{safe_name}_BCR审查输出包_草案_{date_stamp}.zip"
 
         # Build template mapping from sections
         mapping = {
@@ -817,7 +877,7 @@ class BCRService:
             "remediation_roadmap": _build_remediation_roadmap(sections, findings),
         }
 
-        output_dir.mkdir(parents=True, exist_ok=True)
+        legacy_dir.mkdir(parents=True, exist_ok=True)
         render_markdown_template(md_out, TEMPLATE_MD, mapping)
         render_docx_template(docx_out, TEMPLATE_PATH, mapping)
         from backend.common.render.pdf_renderer import get_pdf_renderer
@@ -829,7 +889,7 @@ class BCRService:
             mapping,
         )
         citation_map_json = write_citation_map_json(
-            output_dir=output_dir,
+            output_dir=legacy_dir,
             module="eu_bcr",
             task_id=task_id,
             footnote_map={
@@ -843,17 +903,61 @@ class BCRService:
             z.write(md_out, arcname=md_out.name)
             z.write(pdf_out, arcname=pdf_out.name)
             z.write(citation_map_json, arcname=Path(citation_map_json).name)
-            if document_ir_path is not None:
-                z.write(document_ir_path, arcname=document_ir_path.name)
-        result = {
-            "markdown": str(md_out),
-            "docx": str(docx_out),
-            "pdf": str(pdf_out),
-            "zip": str(zip_out),
-            "citation_map_json": citation_map_json,
-        }
-        if document_ir_path is not None:
-            result["document_ir_json"] = str(document_ir_path)
+
+        # Official outputs.
+        if ir_switch:
+            from backend.domains.eu.bcr_review.shadow_render import (
+                audit_ir_vs_legacy,
+                render_ir_artifacts,
+                write_audit_json,
+            )
+
+            manifest = render_ir_artifacts(
+                document_ir, reporting_registry, official_dir, module="bcr", task_id=task_id,
+            )
+            if manifest.render_status != "success":
+                raise ValueError(f"IR renderer failed before switch: {manifest.render_status}")
+            result = {
+                "markdown": str(official_dir / "report.md"),
+                "docx": str(official_dir / "report.docx"),
+                "pdf": str(official_dir / "report.pdf"),
+                "citation_map_json": str(official_dir / "citation_map.json"),
+                "document_ir_json": str(official_dir / "document_ir.json"),
+                "render_manifest_json": str(official_dir / "render_manifest.json"),
+            }
+            # Make the switch state explicit in the render audit (visible evidence).
+            switch_audit = audit_ir_vs_legacy(
+                manifest, [finding.finding_id for finding in findings],
+                rendering_mode="ir", shadow=False,
+            )
+            write_audit_json(switch_audit, official_dir / "render_audit.json")
+        else:
+            result = {
+                "markdown": str(md_out),
+                "docx": str(docx_out),
+                "pdf": str(pdf_out),
+                "zip": str(zip_out),
+                "citation_map_json": citation_map_json,
+            }
+
+        # Stage A — shadow render the IR version + diff audit into an isolated
+        # directory. Never registered as user artifacts (kept out of `result`).
+        if self.schema_first_enabled and not ir_switch:
+            from backend.domains.eu.bcr_review.shadow_render import (
+                audit_ir_vs_legacy,
+                render_ir_artifacts,
+                write_audit_json,
+            )
+
+            shadow_manifest = render_ir_artifacts(
+                document_ir, reporting_registry, shadow_ir_dir, module="bcr", task_id=task_id,
+            )
+            audit = audit_ir_vs_legacy(
+                shadow_manifest, [finding.finding_id for finding in findings],
+                rendering_mode="legacy", shadow=True,
+            )
+            write_audit_json(audit, shadow_ir_dir / "render_audit.json")
+
         return result
 
     # ------------------------------------------------------------------
@@ -898,7 +1002,13 @@ def _footnote_numbers(text: str) -> list[int]:
 
 
 def _annotate_finding_footnotes(findings: list[BCRFinding], registry: CitationRegistry) -> None:
-    """Bind findings only to the canonical source that supports the requirement."""
+    """Bind findings only to the canonical source that supports the requirement.
+
+    The binding is stored as a stable ``citation_refs`` entry on the finding
+    (never a display ``[N]`` embedded into ``legal_basis`` text) so the v4
+    renderer can emit footnotes from citation identity rather than parsing
+    strings.
+    """
     gdpr_article_47 = next(
         (item for item in registry if item.source_id == "EU-LAW-001"),
         None,
@@ -919,10 +1029,8 @@ def _annotate_finding_footnotes(findings: list[BCRFinding], registry: CitationRe
         number = registry.assign_footnote_number(item.citation_id)
         if number is None:
             continue
-        if finding.legal_basis:
-            finding.legal_basis[0] = f"{finding.legal_basis[0]} [{number}]"
-        else:
-            finding.legal_basis = [f"{item.display_label} [{number}]"]
+        if item.citation_id not in finding.citation_refs:
+            finding.citation_refs.append(item.citation_id)
 
 
 def _normalize_bcr_citation_labels(registry: CitationRegistry) -> None:

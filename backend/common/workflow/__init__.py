@@ -41,6 +41,20 @@ from backend.common.workflow.facts import (
     FactItem,
     FactSourceType,
 )
+from backend.common.workflow.input_manifest import (
+    ParserStatus,
+    RunInputEntry,
+    RunInputEntryPublic,
+    RunInputIntegrity,
+    RunInputManifest,
+    RunInputManifestPublic,
+    SourceKind,
+    compute_manifest_hash,
+    public_entry,
+    public_manifest,
+    seal_manifest,
+    verify_manifest_hash,
+)
 from backend.common.workflow.issues import (
     IssueCategory,
     IssueCertainty,
@@ -67,6 +81,19 @@ __all__ = [
     "IssueCertainty",
     "IssueItem",
     "IssueSeverity",
+    # input manifest (task068 run-input traceability)
+    "ParserStatus",
+    "RunInputEntry",
+    "RunInputEntryPublic",
+    "RunInputIntegrity",
+    "RunInputManifest",
+    "RunInputManifestPublic",
+    "SourceKind",
+    "compute_manifest_hash",
+    "public_entry",
+    "public_manifest",
+    "seal_manifest",
+    "verify_manifest_hash",
     # evidence
     "CitationBinding",
     "DocumentRef",
