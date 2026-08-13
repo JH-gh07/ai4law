@@ -1,0 +1,28 @@
+{
+  "task_id": "bcr_high_risk_health",
+  "module": "bcr",
+  "footnote_map": {
+    "1": {
+      "citation_id": "cit-gdpr-47-1",
+      "number": 1,
+      "title": "GDPR (EU) 2016/679",
+      "source_id": "SRC-cit-gdpr-47-1",
+      "source_type": "regulation",
+      "article": "47(1)",
+      "paragraph": null,
+      "item": null
+    }
+  },
+  "all_items": [
+    {
+      "citation_id": "cit-gdpr-47-1",
+      "number": 1,
+      "title": "GDPR (EU) 2016/679",
+      "source_id": "SRC-cit-gdpr-47-1",
+      "source_type": "regulation",
+      "article": "47(1)",
+      "paragraph": null,
+      "item": null
+    }
+  ]
+}

@@ -39,6 +39,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 STATUS_DIR = ROOT / "status" / "check" / "task067"
 
+# Raw-JSON fingerprints that must never occupy the first business screen of a
+# formal report (task068 I068-16/I068-19). The CPRA/EO legacy writers serialize
+# the request payload into the report body, so a JSON object/array key marker on
+# page one is a stable failure signature.
+_FIRST_SCREEN_JSON_FINGERPRINTS = (
+    re.compile(r"\{\s*[\"'](project_name|attachments|recipient_entities|security_measures|review_items|uploaded_documents|company_name)"),
+    re.compile(r"\[\s*\{\s*[\"']"),
+)
+
 # PDF text-breaking fingerprints observed on the pre-fix baseline.
 #
 # The old renderer lays the finding detail out as a six-column grid, so a
@@ -159,7 +168,6 @@ def _check_docx(path: Path) -> GateResult:
         with zipfile.ZipFile(path) as z:
             names = set(z.namelist())
             doc = z.read("word/document.xml").decode("utf-8", errors="replace")
-            styles = z.read("word/styles.xml").decode("utf-8", errors="replace") if "word/styles.xml" in names else ""
             numbering = z.read("word/numbering.xml").decode("utf-8", errors="replace") if "word/numbering.xml" in names else ""
     except (zipfile.BadZipFile, KeyError) as exc:
         return GateResult("docx", "fail", f"unreadable OOXML: {exc}")
@@ -262,11 +270,55 @@ def _check_md(path: Path) -> GateResult:
     return GateResult("markdown", "pass", "no six-column finding detail table", metrics)
 
 
+def _check_review_ir(path: Path) -> GateResult:
+    """Assert the Review IR carries *structured findings* (task068 I068-02).
+
+    The pre-fix adapter wraps rendered ``sections`` into ParagraphBlocks and
+    leaves ``document.findings`` empty. The fix must produce one FindingRecord
+    per ``AggregatedReview.issue``. This gate fails on the empty-findings
+    baseline and passes only once the structured adapter lands.
+    """
+    if not path.exists():
+        return GateResult("review_ir", "fail", f"not found: {path}")
+    data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    document = data.get("document", data)
+    findings = document.get("findings") or []
+    sections = document.get("sections") or []
+    failures: list[str] = []
+    if not findings:
+        failures.append("document.findings is empty (issues were flattened into paragraphs)")
+    metrics = {"findings": len(findings), "sections": len(sections)}
+    if failures:
+        return GateResult("review_ir", "fail", "; ".join(failures), metrics)
+    return GateResult("review_ir", "pass", "structured findings present", metrics)
+
+
+def _check_first_screen_json(path: Path) -> GateResult:
+    """Assert no raw request JSON occupies the report first screen (task068 I068-16/19)."""
+    if not path.exists():
+        return GateResult("first_screen_json", "fail", f"not found: {path}")
+    text = ""
+    if path.suffix.lower() == ".pdf":
+        proc = _run(["pdftotext", "-f", "1", "-l", "1", str(path), "-"])
+        if proc.returncode != 0:
+            return GateResult("first_screen_json", "fail", f"pdftotext failed: {proc.stderr.strip()}")
+        text = proc.stdout
+    else:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    matches = [p.pattern for p in _FIRST_SCREEN_JSON_FINGERPRINTS if p.search(text)]
+    if matches:
+        return GateResult("first_screen_json", "fail", "raw JSON fingerprint on first screen", {"patterns": matches})
+    return GateResult("first_screen_json", "pass", "no raw JSON on first screen", {})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--task", default="task067", help="task id for output dir and environment label")
     parser.add_argument("--check-docx", type=Path, help="assert DOCX layout contract")
     parser.add_argument("--check-pdf", type=Path, help="assert PDF layout contract")
     parser.add_argument("--check-md", type=Path, help="assert Markdown layout contract")
+    parser.add_argument("--check-review-ir", type=Path, help="assert Review IR carries structured findings")
+    parser.add_argument("--check-first-screen-json", type=Path, help="assert no raw JSON on report first screen")
     parser.add_argument("--write", type=Path, help="write environment JSON to this path")
     args = parser.parse_args()
 
@@ -274,7 +326,7 @@ def main() -> int:
     fonts = _scan_fonts()
 
     environment = {
-        "task": "task067",
+        "task": args.task,
         "stage": "T00",
         "tools": {t.name: {"path": t.path, "available": t.available} for t in tools},
         "visual_conversion_available": visual_available,
@@ -294,6 +346,10 @@ def main() -> int:
         gates.append(_check_pdf(args.check_pdf))
     if args.check_md:
         gates.append(_check_md(args.check_md))
+    if args.check_review_ir:
+        gates.append(_check_review_ir(args.check_review_ir))
+    if args.check_first_screen_json:
+        gates.append(_check_first_screen_json(args.check_first_screen_json))
 
     report = {"environment": environment, "gates": [g.__dict__ for g in gates]}
 
@@ -305,7 +361,8 @@ def main() -> int:
         if gate.status == "fail":
             exit_code = 1 if exit_code == 0 else exit_code
 
-    write_path = args.write or (STATUS_DIR / "environment.json")
+    task_dir = ROOT / "status" / "check" / args.task
+    write_path = args.write or (task_dir / "environment.json")
     write_path.parent.mkdir(parents=True, exist_ok=True)
     write_path.write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"

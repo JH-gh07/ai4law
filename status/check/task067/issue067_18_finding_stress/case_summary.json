@@ -1,0 +1,190 @@
+{
+  "case_id": "issue067_18_finding_stress",
+  "document_id": "bcr:t10-18-finding-stress",
+  "task_id": "issue067_18_finding_stress",
+  "canonical_ir_sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+  "render_status": "success",
+  "finding_count": 18,
+  "section_count": 7,
+  "artifacts": [
+    {
+      "format": "DOCUMENT_IR",
+      "path": "document_ir.json",
+      "size": 24307,
+      "sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+      "mime": "application/json"
+    },
+    {
+      "format": "MARKDOWN",
+      "path": "report.md",
+      "size": 5382,
+      "sha256": "73ca889c550ea542e2bba44e33d87482aaa2f149729962c3d27d9f2efd612f94",
+      "mime": "text/markdown"
+    },
+    {
+      "format": "DOCX",
+      "path": "report.docx",
+      "size": 39827,
+      "sha256": "d8e29c99345f86b2c42d94ba22621529025fddf59f9702ec8266cd56e0bb22a6",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "format": "PDF",
+      "path": "report.pdf",
+      "size": 39201,
+      "sha256": "609efd16f510e218172fd1a1e3514ec0690703444b7d5d8d415ecf5d8dd0b9ff",
+      "mime": "application/pdf"
+    },
+    {
+      "format": "CITATION_MAP",
+      "path": "citation_map.json",
+      "size": 908,
+      "sha256": "75695ba5ba7be3482577cca012ed63830033817aa1fe8d411ccec203db29fee4",
+      "mime": "application/json"
+    }
+  ],
+  "pdf": {
+    "status": "PASS",
+    "page_count": 7,
+    "pages": [
+      "page-1.png",
+      "page-2.png",
+      "page-3.png",
+      "page-4.png",
+      "page-5.png",
+      "page-6.png",
+      "page-7.png"
+    ],
+    "pdfinfo_available": true,
+    "pdffonts_available": true,
+    "pdftotext_available": true,
+    "pdftoppm_available": true,
+    "cjk_font_gate": "blocked",
+    "cjk_font_embedded": "no",
+    "latin_font_embedded": "yes",
+    "fonts": [
+      {
+        "name": "Helvetica",
+        "embedded": false
+      },
+      {
+        "name": "STSong-Light",
+        "embedded": false
+      },
+      {
+        "name": "AAAAAA+LiberationSans",
+        "embedded": true
+      }
+    ],
+    "layout_gates": {
+      "six_column_table": "pass",
+      "broken_fragments": "pass",
+      "markdown_residue": "pass"
+    },
+    "pdf_sha256": "609efd16f510e218172fd1a1e3514ec0690703444b7d5d8d415ecf5d8dd0b9ff"
+  },
+  "docx": {
+    "structure": {
+      "paragraph_count": 150,
+      "heading_count": 25,
+      "headings": [
+        "1 风险与 finding 摘要",
+        "2 详细 finding",
+        "F-1 约束力不足 1",
+        "F-2 约束力不足 2",
+        "F-3 约束力不足 3",
+        "F-4 约束力不足 4",
+        "F-5 约束力不足 5",
+        "F-6 约束力不足 6",
+        "F-7 约束力不足 7",
+        "F-8 约束力不足 8",
+        "F-9 约束力不足 9",
+        "F-10 约束力不足 10",
+        "F-11 约束力不足 11",
+        "F-12 约束力不足 12",
+        "F-13 约束力不足 13",
+        "F-14 约束力不足 14",
+        "F-15 约束力不足 15",
+        "F-16 约束力不足 16",
+        "F-17 约束力不足 17",
+        "F-18 约束力不足 18",
+        "3 审查概览",
+        "4 建议条款",
+        "9 法规与引用",
+        "10 分页与提示",
+        "5 长英文法规名完整性"
+      ],
+      "table_count": 4,
+      "table_column_counts": [
+        2,
+        4,
+        2,
+        2
+      ],
+      "numbering_def_count": 10,
+      "docx_sha256": "d8e29c99345f86b2c42d94ba22621529025fddf59f9702ec8266cd56e0bb22a6"
+    },
+    "visual": {
+      "status": "BLOCKED_BY_TOOLING",
+      "reason": "LibreOffice headless unavailable"
+    }
+  },
+  "web": {
+    "status": "PASS",
+    "case_id": "issue067_18_finding_stress",
+    "html_path": "status/check/task067/issue067_18_finding_stress/report_body.html",
+    "screenshots": {
+      "1440x900": "1440_issue067_18_finding_stress_report.png",
+      "1280x800": "1280_issue067_18_finding_stress_report.png",
+      "390x844": "390_issue067_18_finding_stress_report.png"
+    },
+    "layout_checks": {
+      "1440x900": {
+        "horizontal_scroll": false,
+        "scroll_width": 1440,
+        "client_width": 1440,
+        "section_count": 7,
+        "finding_card_count": 18,
+        "summary_table_count": 1,
+        "clause_node_count": 6,
+        "citation_note_count": 1,
+        "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+        "duplicate_body": []
+      },
+      "1280x800": {
+        "horizontal_scroll": false,
+        "scroll_width": 1280,
+        "client_width": 1280,
+        "section_count": 7,
+        "finding_card_count": 18,
+        "summary_table_count": 1,
+        "clause_node_count": 6,
+        "citation_note_count": 1,
+        "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+        "duplicate_body": []
+      },
+      "390x844": {
+        "horizontal_scroll": false,
+        "scroll_width": 390,
+        "client_width": 390,
+        "section_count": 7,
+        "finding_card_count": 18,
+        "summary_table_count": 1,
+        "clause_node_count": 6,
+        "citation_note_count": 1,
+        "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+        "duplicate_body": []
+      }
+    },
+    "console_messages": [],
+    "console_errors": [],
+    "network_responses": [
+      {
+        "method": "GET",
+        "url": "file:///Users/oujiazhan/Desktop/%E5%AE%9E%E9%AA%8C%E5%AE%A4/%E7%A4%BE%E5%9B%A2/%E4%BB%A3%E7%A0%81/ai4law/status/check/task067/issue067_18_finding_stress/report_body.html",
+        "status": 200
+      }
+    ],
+    "violations": []
+  }
+}

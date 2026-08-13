@@ -1,0 +1,189 @@
+# 1 风险与 finding 摘要
+
+| 编号 | 风险等级 | 标题 | 状态 |
+| --- | --- | --- | --- |
+| BCR-H-01 | MEDIUM | Binding nature | OPEN |
+| BCR-H-02 | LOW | Third-party beneficiary rights | OPEN |
+| BCR-H-03 | HIGH | EU liable entity | OPEN |
+| BCR-H-04 | MEDIUM | Onward transfer safeguards | OPEN |
+| BCR-H-05 | LOW | Training and audit | OPEN |
+| BCR-H-06 | HIGH | Supervisory cooperation | OPEN |
+| BCR-H-07 | MEDIUM | Data protection principles | OPEN |
+| BCR-H-08 | LOW | Third-country law assessment | OPEN |
+| BCR-H-09 | HIGH | Government access | OPEN |
+| BCR-H-10 | MEDIUM | Update mechanism | OPEN |
+| BCR-H-11 | LOW | Member list maintenance | OPEN |
+| BCR-H-12 | HIGH | Terminology clarity | OPEN |
+| BCR-H-13 | MEDIUM | Complaint handling | OPEN |
+| BCR-H-14 | LOW | Enforcement | OPEN |
+| BCR-H-15 | HIGH | Breach notification | OPEN |
+
+
+# 2 详细 finding
+
+## BCR-H-01 Binding nature
+
+现状：健康数据合规缺陷示例陈述 1。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-02 Third-party beneficiary rights
+
+现状：健康数据合规缺陷示例陈述 2。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-03 EU liable entity
+
+现状：健康数据合规缺陷示例陈述 3。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-04 Onward transfer safeguards
+
+现状：健康数据合规缺陷示例陈述 4。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-05 Training and audit
+
+现状：健康数据合规缺陷示例陈述 5。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-06 Supervisory cooperation
+
+现状：健康数据合规缺陷示例陈述 6。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-07 Data protection principles
+
+现状：健康数据合规缺陷示例陈述 7。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-08 Third-country law assessment
+
+现状：健康数据合规缺陷示例陈述 8。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-09 Government access
+
+现状：健康数据合规缺陷示例陈述 9。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-10 Update mechanism
+
+现状：健康数据合规缺陷示例陈述 10。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-11 Member list maintenance
+
+现状：健康数据合规缺陷示例陈述 11。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-12 Terminology clarity
+
+现状：健康数据合规缺陷示例陈述 12。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-13 Complaint handling
+
+现状：健康数据合规缺陷示例陈述 13。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-14 Enforcement
+
+现状：健康数据合规缺陷示例陈述 14。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+## BCR-H-15 Breach notification
+
+现状：健康数据合规缺陷示例陈述 15。
+
+法规依据：GDPR Article 47[1]
+
+整改建议：补齐合规要求。
+
+
+# 3 审查概览
+
+本报告基于约束性公司规则（BCR）合规审查生成，覆盖集团内部约束机制、第三方受益权、欧盟责任实体与第三国传输等核心要求。
+
+| 项目 | 内容 |
+| --- | --- |
+| 审查范围 | BCR-C 控制者场景 |
+| 审查深度 | 深度审查 |
+| 风险等级 | 高风险 |
+
+1. 集团内部约束力
+2. 数据主体第三方受益权
+3. 欧盟责任实体指定
+
+| 检查项 | 结论 |
+| --- | --- |
+| 约束力 | 需整改 |
+| 第三方受益权 | 需整改 |
+| 欧盟责任实体 | 已覆盖 |
+
+> 错误：本报告为草案，整改完成前不得对外发布。
+
+
+# 4 建议条款
+
+建议条款（多级编号）
+
+1. 第一条
+  (a) 第一项
+  (b) 第二项
+    i. 第 1 目
+    ii. 第 2 目
+2. 第二条
+
+
+# 9 法规与引用
+
+1. GDPR (EU) 2016/679 — Article 47(1)
+
+
+# 10 分页与提示
+
+集团内部约束机制必须具有法律约束力。[1]
+
+<!-- page-break: 正文与附录分页 -->

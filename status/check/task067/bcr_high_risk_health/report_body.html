@@ -1,0 +1,247 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>HealthData Alliance — BCR 合规审查报告草案</title><style>/* Structured report document view (task067 T04). */
+
+.report-document {
+  display: grid;
+  gap: 1rem;
+  /* readable measure + left alignment; long CJK/English wraps instead of
+     forcing page-level horizontal scroll */
+  max-width: 62rem;
+  margin: 0 auto;
+  color: #2c4a72;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.report-document-header h3 {
+  margin: 0;
+  color: #15365b;
+}
+
+.report-document-header p {
+  margin: 0.25rem 0 0;
+  color: #587ca5;
+}
+
+.ir-section {
+  border: 1px solid rgba(117, 155, 212, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(253, 255, 255, 0.9);
+}
+
+.ir-section h1,
+.ir-section h2,
+.ir-section h3,
+.ir-section h4,
+.ir-section h5,
+.ir-section h6 {
+  color: #1e4068;
+  margin: 0 0 0.5rem;
+}
+
+.ir-section-body {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ir-paragraph,
+.ir-claim,
+.ir-finding-reference,
+.ir-missing-ref,
+.ir-unknown-block {
+  margin: 0;
+}
+
+.ir-missing-ref,
+.ir-unknown-block {
+  color: #a66a2f;
+}
+
+.ir-list,
+.ir-list-nested {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.ir-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ir-table th,
+.ir-table td {
+  border: 1px solid rgba(117, 155, 212, 0.22);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ir-table th {
+  background: rgba(240, 248, 255, 0.8);
+  color: #1e4068;
+  font-weight: 600;
+}
+
+.ir-warning {
+  display: flex;
+  gap: 0.4rem;
+  border-left: 3px solid #b08b3d;
+  background: rgba(255, 248, 231, 0.7);
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+}
+
+.ir-warning-error,
+.ir-warning-fatal {
+  border-left-color: #b0483d;
+  background: rgba(255, 238, 236, 0.7);
+}
+
+.ir-warning-label {
+  font-weight: 700;
+}
+
+.ir-keyvalue {
+  margin: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ir-keyvalue-row {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.ir-keyvalue-row dt {
+  color: #587ca5;
+  font-weight: 600;
+}
+
+.ir-keyvalue-row dd {
+  margin: 0;
+}
+
+/* finding cards — risk conveyed by text + badge, never color alone */
+.finding-card {
+  border: 1px solid rgba(117, 155, 212, 0.22);
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: rgba(249, 253, 255, 0.9);
+}
+
+.finding-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.finding-title {
+  margin: 0;
+  color: #1e4068;
+  font-size: 1rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.finding-id {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.82rem;
+  color: #587ca5;
+}
+
+.finding-risk {
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  font-size: 0.74rem;
+  border: 1px solid rgba(117, 155, 212, 0.3);
+}
+
+.finding-risk-badge-high {
+  color: #8a2f2a;
+  border-color: rgba(176, 72, 61, 0.4);
+  background: rgba(255, 236, 234, 0.7);
+}
+
+.finding-risk-badge-medium {
+  color: #7a5a1e;
+  border-color: rgba(176, 139, 61, 0.4);
+  background: rgba(255, 247, 224, 0.7);
+}
+
+.finding-risk-badge-low {
+  color: #25603a;
+  border-color: rgba(61, 143, 92, 0.4);
+  background: rgba(234, 248, 238, 0.7);
+}
+
+.finding-fields {
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.finding-field {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.finding-field dt {
+  color: #587ca5;
+  font-weight: 600;
+}
+
+.finding-field dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* clause tree — explicit legal numbering */
+.clause-tree,
+.clause-children {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: none;
+}
+
+.clause-node {
+  margin: 0.15rem 0;
+}
+
+.clause-node-text {
+  color: #355b83;
+}
+
+.ir-citation-note {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.ir-page-break {
+  border: none;
+  border-top: 1px dashed rgba(117, 155, 212, 0.4);
+  margin: 0.25rem 0;
+}
+
+.ir-report-error {
+  border: 1px solid rgba(176, 72, 61, 0.35);
+  border-radius: 10px;
+  padding: 0.6rem;
+  color: #8a2f2a;
+  background: rgba(255, 238, 236, 0.6);
+}
+
+/* mobile: no page-level horizontal scroll; single column fields */
+@media (max-width: 720px) {
+  .ir-keyvalue-row,
+  .finding-field {
+    grid-template-columns: 1fr;
+  }
+}
+</style></head><body><article class="report-document" data-case-id="bcr:t10-high-risk-health"><header class="report-document-header"><h3>HealthData Alliance — BCR 合规审查报告草案</h3><p>HealthData Alliance</p></header><section class="ir-section" data-section-id="s-summary"><h1>1 风险与 finding 摘要</h1><div class="ir-section-body"><table class="ir-table ir-summary-table"><thead><tr><th>编号</th><th>风险等级</th><th>标题</th><th>状态</th></tr></thead><tbody><tr><td>BCR-H-01</td><td>MEDIUM</td><td>Binding nature</td><td>OPEN</td></tr><tr><td>BCR-H-02</td><td>LOW</td><td>Third-party beneficiary rights</td><td>OPEN</td></tr><tr><td>BCR-H-03</td><td>HIGH</td><td>EU liable entity</td><td>OPEN</td></tr><tr><td>BCR-H-04</td><td>MEDIUM</td><td>Onward transfer safeguards</td><td>OPEN</td></tr><tr><td>BCR-H-05</td><td>LOW</td><td>Training and audit</td><td>OPEN</td></tr><tr><td>BCR-H-06</td><td>HIGH</td><td>Supervisory cooperation</td><td>OPEN</td></tr><tr><td>BCR-H-07</td><td>MEDIUM</td><td>Data protection principles</td><td>OPEN</td></tr><tr><td>BCR-H-08</td><td>LOW</td><td>Third-country law assessment</td><td>OPEN</td></tr><tr><td>BCR-H-09</td><td>HIGH</td><td>Government access</td><td>OPEN</td></tr><tr><td>BCR-H-10</td><td>MEDIUM</td><td>Update mechanism</td><td>OPEN</td></tr><tr><td>BCR-H-11</td><td>LOW</td><td>Member list maintenance</td><td>OPEN</td></tr><tr><td>BCR-H-12</td><td>HIGH</td><td>Terminology clarity</td><td>OPEN</td></tr><tr><td>BCR-H-13</td><td>MEDIUM</td><td>Complaint handling</td><td>OPEN</td></tr><tr><td>BCR-H-14</td><td>LOW</td><td>Enforcement</td><td>OPEN</td></tr><tr><td>BCR-H-15</td><td>HIGH</td><td>Breach notification</td><td>OPEN</td></tr></tbody></table></div></section><section class="ir-section" data-section-id="s-detail"><h1>2 详细 finding</h1><div class="ir-section-body"><article class="finding-card finding-risk-medium" data-finding-id="BCR-H-01"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-01</span><span class="finding-title-text">Binding nature</span></h4><span class="finding-risk finding-risk-badge-medium">中风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 1。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-low" data-finding-id="BCR-H-02"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-02</span><span class="finding-title-text">Third-party beneficiary rights</span></h4><span class="finding-risk finding-risk-badge-low">低风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 2。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-high" data-finding-id="BCR-H-03"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-03</span><span class="finding-title-text">EU liable entity</span></h4><span class="finding-risk finding-risk-badge-high">高风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 3。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-medium" data-finding-id="BCR-H-04"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-04</span><span class="finding-title-text">Onward transfer safeguards</span></h4><span class="finding-risk finding-risk-badge-medium">中风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 4。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-low" data-finding-id="BCR-H-05"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-05</span><span class="finding-title-text">Training and audit</span></h4><span class="finding-risk finding-risk-badge-low">低风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 5。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-high" data-finding-id="BCR-H-06"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-06</span><span class="finding-title-text">Supervisory cooperation</span></h4><span class="finding-risk finding-risk-badge-high">高风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 6。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-medium" data-finding-id="BCR-H-07"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-07</span><span class="finding-title-text">Data protection principles</span></h4><span class="finding-risk finding-risk-badge-medium">中风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 7。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-low" data-finding-id="BCR-H-08"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-08</span><span class="finding-title-text">Third-country law assessment</span></h4><span class="finding-risk finding-risk-badge-low">低风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 8。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-high" data-finding-id="BCR-H-09"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-09</span><span class="finding-title-text">Government access</span></h4><span class="finding-risk finding-risk-badge-high">高风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 9。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-medium" data-finding-id="BCR-H-10"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-10</span><span class="finding-title-text">Update mechanism</span></h4><span class="finding-risk finding-risk-badge-medium">中风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 10。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-low" data-finding-id="BCR-H-11"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-11</span><span class="finding-title-text">Member list maintenance</span></h4><span class="finding-risk finding-risk-badge-low">低风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 11。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-high" data-finding-id="BCR-H-12"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-12</span><span class="finding-title-text">Terminology clarity</span></h4><span class="finding-risk finding-risk-badge-high">高风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 12。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-medium" data-finding-id="BCR-H-13"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-13</span><span class="finding-title-text">Complaint handling</span></h4><span class="finding-risk finding-risk-badge-medium">中风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 13。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-low" data-finding-id="BCR-H-14"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-14</span><span class="finding-title-text">Enforcement</span></h4><span class="finding-risk finding-risk-badge-low">低风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 14。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article><article class="finding-card finding-risk-high" data-finding-id="BCR-H-15"><header class="finding-header"><h4 class="finding-title"><span class="finding-id">BCR-H-15</span><span class="finding-title-text">Breach notification</span></h4><span class="finding-risk finding-risk-badge-high">高风险</span></header><dl class="finding-fields"><div class="finding-field"><dt>现状</dt><dd>健康数据合规缺陷示例陈述 15。</dd></div><div class="finding-field"><dt>法规依据</dt><dd>GDPR Article 47</dd></div><div class="finding-field"><dt>整改建议</dt><dd>补齐合规要求。</dd></div></dl></article></div></section><section class="ir-section" data-section-id="s-overview"><h1>3 审查概览</h1><div class="ir-section-body"><p class="ir-paragraph">本报告基于约束性公司规则（BCR）合规审查生成，覆盖集团内部约束机制、第三方受益权、欧盟责任实体与第三国传输等核心要求。</p><dl class="ir-keyvalue"><div class="ir-keyvalue-row"><dt>审查范围</dt><dd>BCR-C 控制者场景</dd></div><div class="ir-keyvalue-row"><dt>审查深度</dt><dd>深度审查</dd></div><div class="ir-keyvalue-row"><dt>风险等级</dt><dd>高风险</dd></div></dl><ol class="ir-list"><li>集团内部约束力</li><li>数据主体第三方受益权</li><li>欧盟责任实体指定</li></ol><table class="ir-table"><thead><tr><th>检查项</th><th>结论</th></tr></thead><tbody><tr><td>约束力</td><td>需整改</td></tr><tr><td>第三方受益权</td><td>需整改</td></tr><tr><td>欧盟责任实体</td><td>已覆盖</td></tr></tbody></table><aside class="ir-warning ir-warning-error"><span class="ir-warning-label">错误</span><span>本报告为草案，整改完成前不得对外发布。</span></aside></div></section><section class="ir-section" data-section-id="s-clause"><h1>4 建议条款</h1><div class="ir-section-body"><section class="ir-clause-group"><h5>建议条款（多级编号）</h5><ol class="clause-tree"><li class="clause-node"><span class="clause-node-text">1. 第一条</span><ol class="clause-children"><li class="clause-node" style="margin-left: 1.25rem"><span class="clause-node-text">(a) 第一项</span></li><li class="clause-node" style="margin-left: 1.25rem"><span class="clause-node-text">(b) 第二项</span><ol class="clause-children"><li class="clause-node" style="margin-left: 2.5rem"><span class="clause-node-text">i. 第 1 目</span></li><li class="clause-node" style="margin-left: 2.5rem"><span class="clause-node-text">ii. 第 2 目</span></li></ol></li></ol></li><li class="clause-node"><span class="clause-node-text">2. 第二条</span></li></ol></section></div></section><section class="ir-section" data-section-id="s-cite"><h1>9 法规与引用</h1><div class="ir-section-body"><ol class="ir-citation-note"><li>cit-gdpr-47-1</li></ol></div></section><section class="ir-section" data-section-id="s-note"><h1>10 分页与提示</h1><div class="ir-section-body"><p class="ir-claim">集团内部约束机制必须具有法律约束力。</p><hr class="ir-page-break" aria-label="正文与附录分页" /></div></section></article></body></html>

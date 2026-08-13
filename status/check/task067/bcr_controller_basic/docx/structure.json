@@ -1,0 +1,22 @@
+{
+  "paragraph_count": 28,
+  "heading_count": 7,
+  "headings": [
+    "1 风险与 finding 摘要",
+    "2 详细 finding",
+    "BCR-C-1.1-01 约束力不足",
+    "BCR-C-1.2-01 第三方受益权缺失",
+    "3 审查概览",
+    "9 法规与引用",
+    "10 分页与提示"
+  ],
+  "table_count": 4,
+  "table_column_counts": [
+    2,
+    4,
+    2,
+    2
+  ],
+  "numbering_def_count": 9,
+  "docx_sha256": "a8f30e7d70f9d11bfaf6438e5b0a142529a2bc5153942e7a2313622d02a17cfd"
+}

@@ -1,0 +1,122 @@
+{
+  "task": "task067",
+  "stage": "T08",
+  "document_id": "bcr:t10-18-finding-stress",
+  "report_type": "bcr",
+  "output_dir": "/tmp/task067_structural_out",
+  "canonical_ir_sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+  "manifest_render_status": "success",
+  "artifacts": [
+    {
+      "path": "document_ir.json",
+      "size": 24307,
+      "sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+      "mime": "application/json"
+    },
+    {
+      "path": "report.md",
+      "size": 5382,
+      "sha256": "73ca889c550ea542e2bba44e33d87482aaa2f149729962c3d27d9f2efd612f94",
+      "mime": "text/markdown"
+    },
+    {
+      "path": "report.docx",
+      "size": 39827,
+      "sha256": "d8e29c99345f86b2c42d94ba22621529025fddf59f9702ec8266cd56e0bb22a6",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "path": "report.pdf",
+      "size": 39201,
+      "sha256": "609efd16f510e218172fd1a1e3514ec0690703444b7d5d8d415ecf5d8dd0b9ff",
+      "mime": "application/pdf"
+    },
+    {
+      "path": "citation_map.json",
+      "size": 907,
+      "sha256": "dbae50e8b685d06144892da1d4fded65a47e7526bf8ec1458834ca0ecb79bf9c",
+      "mime": "application/json"
+    }
+  ],
+  "gates": [
+    {
+      "name": "compile",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "ir_hash_immutable",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "required_artifacts",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "equivalence",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "pdf_font_embedding",
+      "status": "blocked",
+      "diagnostics": [
+        "BLOCKED_BY_FONT: 无可再分发 CJK 字体，CJK 退化为非嵌入 STSong-Light"
+      ]
+    },
+    {
+      "name": "six_column_table/markdown",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "six_column_table/docx",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "six_column_table/pdf",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "broken_fragments/docx",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "broken_fragments/pdf",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "markdown_residue/docx",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "markdown_residue/pdf",
+      "status": "pass",
+      "diagnostics": [],
+      "metrics": {}
+    },
+    {
+      "name": "artifact_hash",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "equivalence",
+      "status": "pass",
+      "diagnostics": []
+    }
+  ]
+}

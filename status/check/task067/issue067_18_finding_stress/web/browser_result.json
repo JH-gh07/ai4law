@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "case_id": "issue067_18_finding_stress",
+  "html_path": "status/check/task067/issue067_18_finding_stress/report_body.html",
+  "screenshots": {
+    "1440x900": "1440_issue067_18_finding_stress_report.png",
+    "1280x800": "1280_issue067_18_finding_stress_report.png",
+    "390x844": "390_issue067_18_finding_stress_report.png"
+  },
+  "layout_checks": {
+    "1440x900": {
+      "horizontal_scroll": false,
+      "scroll_width": 1440,
+      "client_width": 1440,
+      "section_count": 7,
+      "finding_card_count": 18,
+      "summary_table_count": 1,
+      "clause_node_count": 6,
+      "citation_note_count": 1,
+      "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+      "duplicate_body": []
+    },
+    "1280x800": {
+      "horizontal_scroll": false,
+      "scroll_width": 1280,
+      "client_width": 1280,
+      "section_count": 7,
+      "finding_card_count": 18,
+      "summary_table_count": 1,
+      "clause_node_count": 6,
+      "citation_note_count": 1,
+      "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+      "duplicate_body": []
+    },
+    "390x844": {
+      "horizontal_scroll": false,
+      "scroll_width": 390,
+      "client_width": 390,
+      "section_count": 7,
+      "finding_card_count": 18,
+      "summary_table_count": 1,
+      "clause_node_count": 6,
+      "citation_note_count": 1,
+      "title_text": "Layout Stress Group — BCR 排版压力报告草案",
+      "duplicate_body": []
+    }
+  },
+  "console_messages": [],
+  "console_errors": [],
+  "network_responses": [
+    {
+      "method": "GET",
+      "url": "file:///Users/oujiazhan/Desktop/%E5%AE%9E%E9%AA%8C%E5%AE%A4/%E7%A4%BE%E5%9B%A2/%E4%BB%A3%E7%A0%81/ai4law/status/check/task067/issue067_18_finding_stress/report_body.html",
+      "status": 200
+    }
+  ],
+  "violations": []
+}

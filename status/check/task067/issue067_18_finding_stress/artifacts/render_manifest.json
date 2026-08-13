@@ -1,0 +1,189 @@
+{
+  "manifest_version": "1.0",
+  "schema_version": "4.0",
+  "compiler_version": "0.1.0",
+  "renderer_version": "1.0",
+  "profile_id": "legal-report-a4-v1",
+  "template_id": null,
+  "document_id": "bcr:t10-18-finding-stress",
+  "report_type": "bcr",
+  "canonical_ir_sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+  "section_ids": [
+    "s-summary",
+    "s-detail",
+    "s-overview",
+    "s-clause",
+    "s-cite",
+    "s-note",
+    "s-long"
+  ],
+  "finding_ids": [
+    "F-1",
+    "F-2",
+    "F-3",
+    "F-4",
+    "F-5",
+    "F-6",
+    "F-7",
+    "F-8",
+    "F-9",
+    "F-10",
+    "F-11",
+    "F-12",
+    "F-13",
+    "F-14",
+    "F-15",
+    "F-16",
+    "F-17",
+    "F-18"
+  ],
+  "clause_identities": [
+    {
+      "node_id": "c1",
+      "logical_number": "1.",
+      "text": "第一条"
+    },
+    {
+      "node_id": "c1-1",
+      "logical_number": "(a)",
+      "text": "第一项"
+    },
+    {
+      "node_id": "c1-2",
+      "logical_number": "(b)",
+      "text": "第二项"
+    },
+    {
+      "node_id": "c1-2-i",
+      "logical_number": "i.",
+      "text": "第 1 目"
+    },
+    {
+      "node_id": "c1-2-ii",
+      "logical_number": "ii.",
+      "text": "第 2 目"
+    },
+    {
+      "node_id": "c2",
+      "logical_number": "2.",
+      "text": "第二条"
+    }
+  ],
+  "citation_ids": [
+    "cit-ai-act-5"
+  ],
+  "citation_count": 1,
+  "artifacts": [
+    {
+      "format": "DOCUMENT_IR",
+      "path": "document_ir.json",
+      "size": 24307,
+      "sha256": "5ceecffae6481753001aa98eeb91901a81e4238d7737437394efe2cb8225af35",
+      "mime": "application/json",
+      "status": "rendered"
+    },
+    {
+      "format": "MARKDOWN",
+      "path": "report.md",
+      "size": 5382,
+      "sha256": "73ca889c550ea542e2bba44e33d87482aaa2f149729962c3d27d9f2efd612f94",
+      "mime": "text/markdown",
+      "status": "rendered"
+    },
+    {
+      "format": "DOCX",
+      "path": "report.docx",
+      "size": 39827,
+      "sha256": "d8e29c99345f86b2c42d94ba22621529025fddf59f9702ec8266cd56e0bb22a6",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "status": "rendered"
+    },
+    {
+      "format": "PDF",
+      "path": "report.pdf",
+      "size": 39201,
+      "sha256": "609efd16f510e218172fd1a1e3514ec0690703444b7d5d8d415ecf5d8dd0b9ff",
+      "mime": "application/pdf",
+      "status": "rendered"
+    },
+    {
+      "format": "CITATION_MAP",
+      "path": "citation_map.json",
+      "size": 908,
+      "sha256": "75695ba5ba7be3482577cca012ed63830033817aa1fe8d411ccec203db29fee4",
+      "mime": "application/json",
+      "status": "rendered"
+    }
+  ],
+  "docx_stats": {
+    "paragraph_count": 150,
+    "heading_count": 26,
+    "table_count": 4,
+    "numbering_def_count": 10
+  },
+  "pdf_stats": {
+    "page_count": 7,
+    "fonts": [
+      {
+        "name": "STSong-Light",
+        "embedded": false
+      },
+      {
+        "name": "LiberationSans",
+        "embedded": true
+      }
+    ],
+    "text_extracted": true,
+    "finding_ids_found": [
+      "F-1",
+      "F-2",
+      "F-3",
+      "F-4",
+      "F-5",
+      "F-6",
+      "F-7",
+      "F-8",
+      "F-9",
+      "F-10",
+      "F-11",
+      "F-12",
+      "F-13",
+      "F-14",
+      "F-15",
+      "F-16",
+      "F-17",
+      "F-18"
+    ]
+  },
+  "gates": [
+    {
+      "name": "compile",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "ir_hash_immutable",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "required_artifacts",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "equivalence",
+      "status": "pass",
+      "diagnostics": []
+    },
+    {
+      "name": "pdf_font_embedding",
+      "status": "blocked",
+      "diagnostics": [
+        "BLOCKED_BY_FONT: 无可再分发 CJK 字体，CJK 退化为非嵌入 STSong-Light"
+      ]
+    }
+  ],
+  "render_status": "success",
+  "generated_at": "2026-08-13T11:11:46.301031Z"
+}

@@ -1,0 +1,28 @@
+{
+  "task_id": "issue067_18_finding_stress",
+  "module": "bcr",
+  "footnote_map": {
+    "1": {
+      "citation_id": "cit-ai-act-5",
+      "number": 1,
+      "title": "REGULATION (EU) 2024/1689 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL LAYING DOWN HARMONISED RULES ON ARTIFICIAL INTELLIGENCE AND AMENDING REGULATIONS (EC) NO 300/2008",
+      "source_id": "SRC-cit-ai-act-5",
+      "source_type": "regulation",
+      "article": "5",
+      "paragraph": null,
+      "item": null
+    }
+  },
+  "all_items": [
+    {
+      "citation_id": "cit-ai-act-5",
+      "number": 1,
+      "title": "REGULATION (EU) 2024/1689 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL LAYING DOWN HARMONISED RULES ON ARTIFICIAL INTELLIGENCE AND AMENDING REGULATIONS (EC) NO 300/2008",
+      "source_id": "SRC-cit-ai-act-5",
+      "source_type": "regulation",
+      "article": "5",
+      "paragraph": null,
+      "item": null
+    }
+  ]
+}

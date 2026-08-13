@@ -1,0 +1,780 @@
+{
+  "schema_version": "4.0",
+  "document_id": "bcr:t10-high-risk-health",
+  "report_type": "bcr",
+  "identity": null,
+  "lifecycle": null,
+  "findings": [
+    {
+      "finding_id": "BCR-H-01",
+      "requirement_id": "BCR-C-01",
+      "title": "Binding nature",
+      "risk_level": "MEDIUM",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 1。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-02",
+      "requirement_id": "BCR-C-02",
+      "title": "Third-party beneficiary rights",
+      "risk_level": "LOW",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 2。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-03",
+      "requirement_id": "BCR-C-03",
+      "title": "EU liable entity",
+      "risk_level": "HIGH",
+      "risk_score": 60.0,
+      "statement": "健康数据合规缺陷示例陈述 3。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-04",
+      "requirement_id": "BCR-C-04",
+      "title": "Onward transfer safeguards",
+      "risk_level": "MEDIUM",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 4。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-05",
+      "requirement_id": "BCR-C-05",
+      "title": "Training and audit",
+      "risk_level": "LOW",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 5。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-06",
+      "requirement_id": "BCR-C-06",
+      "title": "Supervisory cooperation",
+      "risk_level": "HIGH",
+      "risk_score": 60.0,
+      "statement": "健康数据合规缺陷示例陈述 6。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-07",
+      "requirement_id": "BCR-C-07",
+      "title": "Data protection principles",
+      "risk_level": "MEDIUM",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 7。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-08",
+      "requirement_id": "BCR-C-08",
+      "title": "Third-country law assessment",
+      "risk_level": "LOW",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 8。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-09",
+      "requirement_id": "BCR-C-09",
+      "title": "Government access",
+      "risk_level": "HIGH",
+      "risk_score": 60.0,
+      "statement": "健康数据合规缺陷示例陈述 9。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-10",
+      "requirement_id": "BCR-C-10",
+      "title": "Update mechanism",
+      "risk_level": "MEDIUM",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 10。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-11",
+      "requirement_id": "BCR-C-11",
+      "title": "Member list maintenance",
+      "risk_level": "LOW",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 11。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-12",
+      "requirement_id": "BCR-C-12",
+      "title": "Terminology clarity",
+      "risk_level": "HIGH",
+      "risk_score": 60.0,
+      "statement": "健康数据合规缺陷示例陈述 12。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-13",
+      "requirement_id": "BCR-C-13",
+      "title": "Complaint handling",
+      "risk_level": "MEDIUM",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 13。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-14",
+      "requirement_id": "BCR-C-14",
+      "title": "Enforcement",
+      "risk_level": "LOW",
+      "risk_score": 30.0,
+      "statement": "健康数据合规缺陷示例陈述 14。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    },
+    {
+      "finding_id": "BCR-H-15",
+      "requirement_id": "BCR-C-15",
+      "title": "Breach notification",
+      "risk_level": "HIGH",
+      "risk_score": 60.0,
+      "statement": "健康数据合规缺陷示例陈述 15。",
+      "legal_basis": [
+        "GDPR Article 47"
+      ],
+      "recommendation": "补齐合规要求。",
+      "suggested_revision": null,
+      "facts_uncertain": false,
+      "review_confidence": 0.85,
+      "citation_refs": [
+        "cit-gdpr-47-1"
+      ],
+      "status": "OPEN",
+      "primary_display_count": 1
+    }
+  ],
+  "actions": [],
+  "citations": [
+    {
+      "citation_id": "cit-gdpr-47-1",
+      "source_id": "SRC-cit-gdpr-47-1",
+      "source_type": "regulation",
+      "title": "GDPR (EU) 2016/679",
+      "locator": {
+        "article": "47(1)",
+        "paragraph": null,
+        "item": null
+      },
+      "knowledge_id": null,
+      "evidence_unit_id": null,
+      "authority_level": "high",
+      "binding_force": "mandatory",
+      "can_enter_external_report": true
+    }
+  ],
+  "render_contract": {
+    "profile_id": "legal-report-a4-v1",
+    "template_id": null,
+    "required_artifacts": [
+      "MARKDOWN",
+      "DOCX",
+      "PDF"
+    ],
+    "optional_artifacts": [],
+    "locale": "zh-CN",
+    "include_toc": false,
+    "include_page_numbers": true,
+    "include_citation_appendix": true,
+    "external_visibility_policy": "ONLY_EXTERNAL_ALLOWED_EVIDENCE"
+  },
+  "integrity": null,
+  "migrated_from_schema": null,
+  "metadata": {
+    "title": "HealthData Alliance — BCR 合规审查报告草案",
+    "short_title": "BCR 报告",
+    "company_name": "HealthData Alliance",
+    "jurisdiction": "EU",
+    "locale": "zh-CN",
+    "report_date": "2026-08-10",
+    "report_id": "BCR-2026-002"
+  },
+  "sections": [
+    {
+      "section_id": "s-summary",
+      "title": "风险与 finding 摘要",
+      "level": 1,
+      "ordinal": "1",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "sum",
+          "type": "finding_summary",
+          "finding_refs": [
+            "BCR-H-01",
+            "BCR-H-02",
+            "BCR-H-03",
+            "BCR-H-04",
+            "BCR-H-05",
+            "BCR-H-06",
+            "BCR-H-07",
+            "BCR-H-08",
+            "BCR-H-09",
+            "BCR-H-10",
+            "BCR-H-11",
+            "BCR-H-12",
+            "BCR-H-13",
+            "BCR-H-14",
+            "BCR-H-15"
+          ],
+          "columns": [
+            "finding_id",
+            "risk_level",
+            "title",
+            "status"
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "s-detail",
+      "title": "详细 finding",
+      "level": 1,
+      "ordinal": "2",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "detail-BCR-H-01",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-01",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-02",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-02",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-03",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-03",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-04",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-04",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-05",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-05",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-06",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-06",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-07",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-07",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-08",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-08",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-09",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-09",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-10",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-10",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-11",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-11",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-12",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-12",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-13",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-13",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-14",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-14",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        },
+        {
+          "block_id": "detail-BCR-H-15",
+          "type": "finding_detail",
+          "finding_ref": "BCR-H-15",
+          "field_order": [
+            "statement",
+            "legal_basis",
+            "recommendation",
+            "suggested_revision"
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "s-overview",
+      "title": "审查概览",
+      "level": 1,
+      "ordinal": "3",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "p-overview",
+          "type": "paragraph",
+          "text": "本报告基于约束性公司规则（BCR）合规审查生成，覆盖集团内部约束机制、第三方受益权、欧盟责任实体与第三国传输等核心要求。",
+          "fact_refs": [],
+          "issue_refs": []
+        },
+        {
+          "block_id": "kv-meta",
+          "type": "key_value",
+          "items": [
+            {
+              "label": "审查范围",
+              "value": "BCR-C 控制者场景"
+            },
+            {
+              "label": "审查深度",
+              "value": "深度审查"
+            },
+            {
+              "label": "风险等级",
+              "value": "高风险"
+            }
+          ],
+          "columns": 2
+        },
+        {
+          "block_id": "list-scope",
+          "type": "list",
+          "ordered": true,
+          "items": [
+            {
+              "text": "集团内部约束力",
+              "children": []
+            },
+            {
+              "text": "数据主体第三方受益权",
+              "children": []
+            },
+            {
+              "text": "欧盟责任实体指定",
+              "children": []
+            }
+          ]
+        },
+        {
+          "block_id": "tbl-kpi",
+          "type": "table",
+          "headers": [
+            "检查项",
+            "结论"
+          ],
+          "rows": [
+            [
+              "约束力",
+              "需整改"
+            ],
+            [
+              "第三方受益权",
+              "需整改"
+            ],
+            [
+              "欧盟责任实体",
+              "已覆盖"
+            ]
+          ]
+        },
+        {
+          "block_id": "warn-high",
+          "type": "warning",
+          "text": "本报告为草案，整改完成前不得对外发布。",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "section_id": "s-clause",
+      "title": "建议条款",
+      "level": 1,
+      "ordinal": "4",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "clauses",
+          "type": "clause_group",
+          "title": "建议条款（多级编号）",
+          "clauses": [
+            {
+              "node_id": "c1",
+              "label": null,
+              "text": "第一条",
+              "numbering_style": "decimal",
+              "citation_refs": [],
+              "children": [
+                {
+                  "node_id": "c1-1",
+                  "label": null,
+                  "text": "第一项",
+                  "numbering_style": "lower_alpha",
+                  "citation_refs": [],
+                  "children": []
+                },
+                {
+                  "node_id": "c1-2",
+                  "label": null,
+                  "text": "第二项",
+                  "numbering_style": "lower_alpha",
+                  "citation_refs": [],
+                  "children": [
+                    {
+                      "node_id": "c1-2-i",
+                      "label": null,
+                      "text": "第 1 目",
+                      "numbering_style": "lower_roman",
+                      "citation_refs": [],
+                      "children": []
+                    },
+                    {
+                      "node_id": "c1-2-ii",
+                      "label": null,
+                      "text": "第 2 目",
+                      "numbering_style": "lower_roman",
+                      "citation_refs": [],
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "node_id": "c2",
+              "label": null,
+              "text": "第二条",
+              "numbering_style": "decimal",
+              "citation_refs": [],
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "s-cite",
+      "title": "法规与引用",
+      "level": 1,
+      "ordinal": "9",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "cite",
+          "type": "citation_note",
+          "citation_refs": [
+            "cit-gdpr-47-1"
+          ]
+        }
+      ]
+    },
+    {
+      "section_id": "s-note",
+      "title": "分页与提示",
+      "level": 1,
+      "ordinal": "10",
+      "purpose": null,
+      "reuse_policy": "single_use",
+      "visibility": "EXTERNAL_AND_INTERNAL",
+      "blocks": [
+        {
+          "block_id": "claim-1",
+          "type": "claim",
+          "text": "集团内部约束机制必须具有法律约束力。",
+          "citation_refs": [
+            "cit-gdpr-47-1"
+          ],
+          "fact_refs": [],
+          "issue_refs": [],
+          "finding_ref": null,
+          "verification": "verified",
+          "verification_reason": ""
+        },
+        {
+          "block_id": "pb-1",
+          "type": "page_break",
+          "reason": "正文与附录分页"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "provenance": {
+    "generated_at": "2026-08-10T00:00:00Z",
+    "facts_version": null,
+    "issues_version": null,
+    "evidence_version": null
+  },
+  "compiler_version": "0.1.0",
+  "prompt_version": "t10-visual-acceptance",
+  "template_version": "bcr-v0",
+  "model": "test"
+}
