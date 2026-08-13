@@ -15,14 +15,30 @@ from backend.schemas.common import ArtifactPreviewResponse
 
 router = APIRouter()
 
-def _allowed_roots(container) -> list[Path]:
+
+def _artifact_root_aliases(container) -> list[tuple[Path, Path]]:
+    """Return each configured artifact root as (logical, physical) paths.
+
+    Release deployments symlink ``storage`` and ``outputs`` into shared runtime
+    directories. Database rows retain the logical path while filesystem access
+    must use the resolved physical path, so authorization needs both identities.
+    """
     cwd = Path.cwd().resolve()
-    return [
-        cwd / "outputs",
-        container.settings.storage_dir.resolve(),
-        container.settings.report_dir.resolve(),
-        container.settings.upload_dir.resolve(),
+    logical_roots = [
+        Path("outputs"),
+        container.settings.storage_dir,
+        container.settings.report_dir,
+        container.settings.upload_dir,
     ]
+    aliases: list[tuple[Path, Path]] = []
+    for logical in logical_roots:
+        logical_absolute = logical if logical.is_absolute() else cwd / logical
+        aliases.append((logical, logical_absolute.resolve()))
+    return aliases
+
+
+def _allowed_roots(container) -> list[Path]:
+    return list(dict.fromkeys(physical for _, physical in _artifact_root_aliases(container)))
 
 
 def _resolve_artifact_path(raw_path: str, container) -> Path:
@@ -41,7 +57,14 @@ def _resolve_artifact_path(raw_path: str, container) -> Path:
     raise HTTPException(status_code=403, detail="Artifact path is outside allowed preview scope.")
 
 
-def _candidate_artifact_paths(resolved: Path) -> set[str]:
+def _add_path_variants(candidates: set[str], path: Path) -> None:
+    value = path.as_posix()
+    candidates.update({str(path), value})
+    if not path.is_absolute():
+        candidates.add(f"./{value}")
+
+
+def _candidate_artifact_paths(resolved: Path, container) -> set[str]:
     candidates = {str(resolved), resolved.as_posix()}
     cwd = Path.cwd().resolve()
     try:
@@ -50,14 +73,23 @@ def _candidate_artifact_paths(resolved: Path) -> set[str]:
         relative = None
 
     if relative is not None:
-        relative_posix = relative.as_posix()
-        candidates.update({str(relative), relative_posix, f"./{relative_posix}"})
+        _add_path_variants(candidates, relative)
+
+    for logical_root, physical_root in _artifact_root_aliases(container):
+        try:
+            suffix = resolved.relative_to(physical_root)
+        except ValueError:
+            continue
+        logical_path = logical_root / suffix
+        _add_path_variants(candidates, logical_path)
+        logical_absolute = logical_path if logical_path.is_absolute() else cwd / logical_path
+        _add_path_variants(candidates, logical_absolute)
 
     return {item for item in candidates if item}
 
 
-def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path) -> None:
-    candidate_paths = tuple(_candidate_artifact_paths(resolved))
+def _assert_artifact_access(db: Session, user: AuthUser, resolved: Path, container) -> None:
+    candidate_paths = tuple(_candidate_artifact_paths(resolved, container))
     report_stmt = select(ReportArtifactModel.id).where(
         ReportArtifactModel.user_id == user.id,
         ReportArtifactModel.file_path.in_(candidate_paths),
@@ -80,7 +112,7 @@ def preview_artifact(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved)
+    _assert_artifact_access(db, current_user, resolved, container)
     suffix = resolved.suffix.lower()
     parser = FileParser()
     file_url = f"/api/v1/artifacts/file?path={quote(str(resolved))}"
@@ -134,7 +166,7 @@ def read_artifact_file(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved)
+    _assert_artifact_access(db, current_user, resolved, container)
     return FileResponse(path=resolved, filename=resolved.name)
 
 
@@ -146,5 +178,5 @@ def download_artifact_file(
     container=Depends(get_container),
 ):
     resolved = _resolve_artifact_path(path, container)
-    _assert_artifact_access(db, current_user, resolved)
+    _assert_artifact_access(db, current_user, resolved, container)
     return FileResponse(path=resolved, filename=resolved.name, media_type="application/octet-stream")
