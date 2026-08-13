@@ -12,6 +12,7 @@ from backend.api.v1.endpoints import (
     me,
     reports,
     system_settings,
+    version,
     workspace_state,
 )
 from backend.domains.cn.document_review.router import router as review_router
@@ -50,6 +51,7 @@ v1_router.include_router(
 )
 v1_router.include_router(events.router, prefix="/events", tags=["events"])
 v1_router.include_router(system_settings.router, prefix="/system", tags=["system"])
+v1_router.include_router(version.router, tags=["version"])
 
 # Stateless and task-based business module APIs.
 v1_router.include_router(diagnosis_module_router)

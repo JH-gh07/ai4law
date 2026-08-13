@@ -596,6 +596,13 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/review/tasks/{task_id}/input-manifest",
+    "route_name": "get_input_manifest",
+    "endpoint_module": "backend.domains.cn.document_review.router",
+    "operation_id": "get_input_manifest_api_v1_review_tasks__task_id__input_manifest_get"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/review/tasks/{task_id}/issues",
     "route_name": "get_issues",
     "endpoint_module": "backend.domains.cn.document_review.router",
@@ -698,6 +705,13 @@
     "route_name": "retry_us_14117_task",
     "endpoint_module": "backend.domains.us.eo14117.router",
     "operation_id": "retry_us_14117_task_api_v1_us_14117_tasks__task_id__retry_post"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/version",
+    "route_name": "get_version",
+    "endpoint_module": "backend.api.v1.endpoints.version",
+    "operation_id": "get_version_api_v1_version_get"
   },
   {
     "method": "GET",
