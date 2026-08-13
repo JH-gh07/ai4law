@@ -528,6 +528,7 @@ export const MESSAGES = {
   reportNoEvidenceLabel: { zh: "待补证据", en: "Evidence Pending" },
   reportRunSource: { zh: "来源模块", en: "Source Module" },
   reportOpenHint: { zh: "预览优先，下载为辅", en: "Preview first, download secondary" },
+  reportIrError: { zh: "结构化报告加载失败，已回退到兼容正文", en: "Structured report failed to load; showing fallback" },
   noEvidenceHits: { zh: "暂无证据命中。", en: "No evidence hits." },
 
   onboardingTitle: { zh: "首次引导", en: "Onboarding" },

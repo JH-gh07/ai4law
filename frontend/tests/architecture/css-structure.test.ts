@@ -9,6 +9,7 @@ const EXPECTED_IMPORTS = [
   '@import "./app/pages.css";',
   '@import "./app/workspace.css";',
   '@import "./app/product-pages-and-overrides.css";',
+  '@import "./app/report.css";',
 ];
 
 const STYLE_SEGMENTS = [
@@ -17,6 +18,7 @@ const STYLE_SEGMENTS = [
   "pages.css",
   "workspace.css",
   "product-pages-and-overrides.css",
+  "report.css",
 ];
 
 function readStyle(relativePath: string): string {

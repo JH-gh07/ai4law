@@ -1891,6 +1891,10 @@ export interface components {
             path: string;
             /** Render Mode */
             render_mode: string;
+            /** Report Ir */
+            report_ir?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** AssessmentAsyncAccepted */
         AssessmentAsyncAccepted: {
@@ -2119,6 +2123,8 @@ export interface components {
         };
         /** BCRFinding */
         BCRFinding: {
+            /** Citation Refs */
+            citation_refs?: string[];
             /**
              * Clause Excerpt
              * @default
@@ -4638,6 +4644,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Error */
+            error?: string | null;
             /** Id */
             id: string;
             /** Module */

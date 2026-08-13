@@ -1,6 +1,6 @@
 import type { ModuleRun, OutputArtifact } from "../../lib/domain";
 import { INPUT_CONTAINER_KEYS, INPUT_ROLE_LABELS, USER_INPUT_EXTENSIONS } from "./config";
-import type { InputEntry, InputFileCandidate, ResourceLanguage } from "./contracts";
+import type { InputEntry, InputFileCandidate, InputSourceKind, ResourceLanguage } from "./contracts";
 import { getFileExtension, normalizeResourcePath, prettifyStem, toFileName } from "./file-path";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -114,22 +114,79 @@ export function buildInputEntries(
     return count === 1 ? baseName : `${baseName} (${count})`;
   };
 
+  const pushCandidate = (run: ModuleRun, candidate: InputFileCandidate, sourceKind?: InputSourceKind) => {
+    const identity = normalizeResourcePath(candidate.path);
+    if (seenPaths.has(identity) || outputPaths.has(identity)) return;
+    seenPaths.add(identity);
+    entries.push({
+      id: `input-file-${candidate.path}`,
+      name: pickUniqueName(resolveInputDisplayName(candidate, lang)),
+      kind: "file",
+      sourcePath: candidate.path,
+      createdAt: run.startedAt,
+      ...(sourceKind ? { sourceKind } : {}),
+    });
+  };
+
   [...runs]
     .sort((left, right) => right.startedAt.localeCompare(left.startedAt))
     .forEach((run) => {
-      collectUserInputFiles(run.request).forEach((candidate) => {
-        const identity = normalizeResourcePath(candidate.path);
-        if (seenPaths.has(identity) || outputPaths.has(identity)) return;
-        seenPaths.add(identity);
-        entries.push({
-          id: `input-file-${candidate.path}`,
-          name: pickUniqueName(resolveInputDisplayName(candidate, lang)),
-          kind: "file",
-          sourcePath: candidate.path,
-          createdAt: run.startedAt,
-        });
-      });
+      // task068 T03 — the persisted run-input manifest is the authoritative
+      // source after recovery (request is `{}` on reload). Fall back to the
+      // request scan only when no manifest is present.
+      const manifestCandidates = collectManifestCandidates(run);
+      if (manifestCandidates.length > 0) {
+        manifestCandidates.forEach((candidate) => pushCandidate(run, candidate, candidate.sourceKind));
+        return;
+      }
+      collectUserInputFiles(run.request).forEach((candidate) => pushCandidate(run, candidate));
     });
 
   return entries;
+}
+
+type ManifestEntryCandidate = InputFileCandidate & { sourceKind: InputSourceKind };
+
+const KNOWN_SOURCE_KINDS: ReadonlySet<string> = new Set([
+  "uploaded",
+  "dev_preset",
+  "shared_scenario",
+  "inline",
+]);
+
+/** Extract authoritative input entries from a recovered run's input manifest. */
+export function collectManifestCandidates(run: ModuleRun): ManifestEntryCandidate[] {
+  const response = run.response;
+  if (!isRecord(response)) return [];
+  const manifest = response.input_manifest;
+  if (!isRecord(manifest)) return [];
+
+  const rawEntries = manifest.entries;
+  if (!Array.isArray(rawEntries)) return [];
+
+  const candidates: ManifestEntryCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of rawEntries) {
+    if (!isRecord(raw)) continue;
+    const displayName = typeof raw.display_name === "string" ? raw.display_name.trim() : "";
+    const publicLocator = typeof raw.public_locator === "string" ? raw.public_locator.trim() : "";
+    const path = publicLocator || displayName;
+    if (!path) continue;
+    // Skip inputs that were not actually consumed by the service.
+    if (raw.consumed_by_service === false) continue;
+
+    const sourceKindRaw = typeof raw.source_kind === "string" ? raw.source_kind : "";
+    const sourceKind: InputSourceKind = KNOWN_SOURCE_KINDS.has(sourceKindRaw)
+      ? (sourceKindRaw as InputSourceKind)
+      : "uploaded";
+
+    const identity = normalizeResourcePath(path);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+
+    candidates.push({ path, sourceKind });
+  }
+
+  return candidates;
 }

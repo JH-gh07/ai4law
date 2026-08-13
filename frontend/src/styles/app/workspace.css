@@ -1392,6 +1392,68 @@
   color: #5b7fa9;
 }
 
+.workspace-docx-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
+}
+
+.workspace-docx-meta strong {
+  color: #244468;
+  font-size: 0.88rem;
+}
+
+.workspace-docx-meta-kind {
+  border-radius: 6px;
+  background: rgba(46, 91, 143, 0.1);
+  color: #2e5b8f;
+  padding: 0.08rem 0.42rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.workspace-docx-meta-hint {
+  margin: 0 0 0.55rem;
+  color: #5b7fa9;
+  font-size: 0.79rem;
+}
+
+.workspace-docx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.workspace-docx-actions button {
+  border: 1px solid rgba(106, 141, 191, 0.28);
+  border-radius: 8px;
+  background: rgba(247, 252, 255, 0.92);
+  color: #35689a;
+  padding: 0.36rem 0.7rem;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.workspace-docx-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.workspace-docx-extracted {
+  margin-top: 0.6rem;
+}
+
+.workspace-docx-extracted summary {
+  cursor: pointer;
+  color: #5b7fa9;
+  font-size: 0.79rem;
+  margin-bottom: 0.4rem;
+}
+
 .assistant-copilot-pane {
   background: #ffffff;
 }

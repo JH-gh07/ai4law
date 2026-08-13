@@ -27,6 +27,7 @@ import {
 } from "../../lib/workspace";
 import { AssessmentIntermediatesPanel } from "./AssessmentIntermediatesPanel";
 import { AssistantPanel } from "./AssistantPanel";
+import { DocxArtifactPreview } from "./DocxArtifactPreview";
 import { ResourcePanel, type ResourceOpenTarget } from "./ResourcePanel";
 import { StageSplitView } from "./StageSplitView";
 import { WorkspacePromptModal } from "../common/WorkspacePromptModal";
@@ -38,7 +39,9 @@ import { CitationMarkdownRenderer } from "../citation/CitationMarkdownRenderer";
 import { normalizeFallbackMarkdown } from "../../lib/fallback-markdown";
 import { getRunLifecycleState, isRunInProgress, selectPreferredRun } from "../../lib/run-state";
 import { findPdfCompanion } from "../../lib/artifact-selection";
+import { useReportIr } from "../../lib/use-report-ir";
 import { PdfViewer } from "../common/PdfViewer";
+import { ReportDocumentView } from "../report/ReportDocumentView";
 
 type WorkspaceShellProps = {
   taskSpace: TaskSpace;
@@ -263,6 +266,10 @@ const readPreviewExt = (preview: ArtifactPreview): string => {
   return String(preview.kind || "").toLowerCase();
 };
 
+const isDocxPreview = (preview: ArtifactPreview): boolean => {
+  return readPreviewExt(preview) === "docx";
+};
+
 const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): ReportPreviewSection[] => {
   if (!isRecord(response)) return [];
 
@@ -328,18 +335,6 @@ const buildFallbackPreviewSections = (response: unknown, lang: "zh" | "en"): Rep
   return sections;
 };
 
-const buildSectionsFromArtifactPreview = (preview: ArtifactPreview | null): ReportPreviewSection[] => {
-  if (!preview || preview.render_mode !== "text" || !preview.content.trim()) {
-    return [];
-  }
-  return [
-    {
-      title: preview.file_name || "Report",
-      content: preview.content,
-    },
-  ];
-};
-
 export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
   const { t, lang } = useLang();
   const { state, dispatch } = useAppStore();
@@ -401,6 +396,7 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
     [selectedArtifact, sortedReportArtifacts]
   );
   const responseInsight = useMemo(() => extractInsight(latestRun?.response), [latestRun?.response]);
+  const reportIr = useReportIr(taskSpace.id, taskSpace.module);
   const responseReportMetrics = useMemo(
     () => extractReportMetrics(latestRun?.response),
     [latestRun?.response],
@@ -423,18 +419,11 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
         citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
       };
     }
-    const artifactSections = buildSectionsFromArtifactPreview(artifactPreview);
-    if (artifactSections.length > 0) {
-      return {
-        sections: artifactSections,
-        citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
-      };
-    }
     return {
       sections: [],
       citationTaskId: latestRun?.asyncTaskId ?? taskSpace.id,
     };
-  }, [artifactPreview, lang, latestRun?.asyncTaskId, latestRun?.response, responseChapters, taskSpace.id]);
+  }, [lang, latestRun?.asyncTaskId, latestRun?.response, responseChapters, taskSpace.id]);
   const reportPreviewSections = reconstructedReport.sections;
   const terminalLines = useMemo(() => {
     const lines: string[] = [];
@@ -985,6 +974,21 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
       );
     }
 
+    if (isDocxPreview(preview)) {
+      // DOCX never enters the Markdown renderer (task068 T08). Show artifact
+      // metadata + download/open actions; keep the extracted text collapsed and
+      // explicitly labelled as auxiliary.
+      return (
+        <DocxArtifactPreview
+          preview={preview}
+          lang={lang}
+          downloadBusy={artifactDownloadBusy}
+          onOpen={(path) => void openArtifactByBlob(path)}
+          onDownload={(path) => void downloadArtifact(path)}
+        />
+      );
+    }
+
     return (
       <article className="workspace-report-chapter workspace-report-preview-block">
         <strong>{lang === "zh" ? "文档正文预览" : "Document Preview"}</strong>
@@ -1244,7 +1248,19 @@ export function WorkspaceShell({ taskSpace }: WorkspaceShellProps) {
               {artifactPreviewError ? (
                 <div className="workspace-report-preview-state workspace-report-preview-error">{artifactPreviewError}</div>
               ) : null}
-              {reportPreviewSections.length > 0 ? (
+              {reportIr.status === "ready" ? (
+                <section className="workspace-report-chapters workspace-report-ir">
+                  <ReportDocumentView document={reportIr.document} />
+                </section>
+              ) : reportIr.status === "error" ? (
+                <p className="workspace-report-preview-state workspace-report-preview-error" role="alert">
+                  {t("reportIrError")}：{reportIr.message}
+                </p>
+              ) : reportIr.status === "loading" ? (
+                <div className="workspace-report-preview-state">
+                  {lang === "zh" ? "正在加载报告正文..." : "Loading report body..."}
+                </div>
+              ) : reportPreviewSections.length > 0 ? (
                 <section className="workspace-report-chapters">
                   {reportPreviewSections.map((section, index) => (
                     <article key={`${section.title}-${index}`} className="workspace-report-chapter workspace-report-preview-block">

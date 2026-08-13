@@ -5,9 +5,11 @@ export type ArtifactPreview = {
   path: string;
   file_name: string;
   kind: string;
-  render_mode: "html" | "pdf" | "text" | "download";
+  render_mode: "html" | "pdf" | "text" | "download" | "report_ir";
   content: string;
   file_url?: string | null;
+  // Structured report body; only present when render_mode === "report_ir".
+  report_ir?: Record<string, unknown> | null;
 };
 
 export async function fetchArtifactPreview(path: string): Promise<ArtifactPreview> {

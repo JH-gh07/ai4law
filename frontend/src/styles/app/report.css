@@ -1,0 +1,251 @@
+/* Structured report document view (task067 T04). */
+
+.report-document {
+  display: grid;
+  gap: 1rem;
+  /* readable measure + left alignment; long CJK/English wraps instead of
+     forcing page-level horizontal scroll */
+  max-width: 62rem;
+  margin: 0 auto;
+  color: #2c4a72;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.report-document-header h3 {
+  margin: 0;
+  color: #15365b;
+}
+
+.report-document-header p {
+  margin: 0.25rem 0 0;
+  color: #587ca5;
+}
+
+.ir-section {
+  border: 1px solid rgba(117, 155, 212, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(253, 255, 255, 0.9);
+}
+
+.ir-section h1,
+.ir-section h2,
+.ir-section h3,
+.ir-section h4,
+.ir-section h5,
+.ir-section h6 {
+  color: #1e4068;
+  margin: 0 0 0.5rem;
+}
+
+.ir-section-body {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ir-paragraph,
+.ir-claim,
+.ir-finding-reference,
+.ir-missing-ref,
+.ir-unknown-block {
+  margin: 0;
+}
+
+.ir-missing-ref,
+.ir-unknown-block {
+  color: #a66a2f;
+}
+
+.ir-list,
+.ir-list-nested {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.ir-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ir-table th,
+.ir-table td {
+  border: 1px solid rgba(117, 155, 212, 0.22);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ir-table th {
+  background: rgba(240, 248, 255, 0.8);
+  color: #1e4068;
+  font-weight: 600;
+}
+
+.ir-warning {
+  display: flex;
+  gap: 0.4rem;
+  border-left: 3px solid #b08b3d;
+  background: rgba(255, 248, 231, 0.7);
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+}
+
+.ir-warning-error,
+.ir-warning-fatal {
+  border-left-color: #b0483d;
+  background: rgba(255, 238, 236, 0.7);
+}
+
+.ir-warning-label {
+  font-weight: 700;
+}
+
+.ir-keyvalue {
+  margin: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ir-keyvalue-row {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.ir-keyvalue-row dt {
+  color: #587ca5;
+  font-weight: 600;
+}
+
+.ir-keyvalue-row dd {
+  margin: 0;
+}
+
+/* finding cards — risk conveyed by text + badge, never color alone */
+.finding-card {
+  border: 1px solid rgba(117, 155, 212, 0.22);
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: rgba(249, 253, 255, 0.9);
+}
+
+.finding-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.finding-title {
+  margin: 0;
+  color: #1e4068;
+  font-size: 1rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.finding-id {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.82rem;
+  color: #587ca5;
+}
+
+.finding-risk {
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+  font-size: 0.74rem;
+  border: 1px solid rgba(117, 155, 212, 0.3);
+}
+
+.finding-risk-badge-high {
+  color: #8a2f2a;
+  border-color: rgba(176, 72, 61, 0.4);
+  background: rgba(255, 236, 234, 0.7);
+}
+
+.finding-risk-badge-medium {
+  color: #7a5a1e;
+  border-color: rgba(176, 139, 61, 0.4);
+  background: rgba(255, 247, 224, 0.7);
+}
+
+.finding-risk-badge-low {
+  color: #25603a;
+  border-color: rgba(61, 143, 92, 0.4);
+  background: rgba(234, 248, 238, 0.7);
+}
+
+.finding-fields {
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.finding-field {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.finding-field dt {
+  color: #587ca5;
+  font-weight: 600;
+}
+
+.finding-field dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.finding-basis-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+/* clause tree — explicit legal numbering */
+.clause-tree,
+.clause-children {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: none;
+}
+
+.clause-node {
+  margin: 0.15rem 0;
+}
+
+.clause-node-text {
+  color: #355b83;
+}
+
+.ir-citation-note {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.ir-page-break {
+  border: none;
+  border-top: 1px dashed rgba(117, 155, 212, 0.4);
+  margin: 0.25rem 0;
+}
+
+.ir-report-error {
+  border: 1px solid rgba(176, 72, 61, 0.35);
+  border-radius: 10px;
+  padding: 0.6rem;
+  color: #8a2f2a;
+  background: rgba(255, 238, 236, 0.6);
+}
+
+/* mobile: no page-level horizontal scroll; single column fields */
+@media (max-width: 720px) {
+  .ir-keyvalue-row,
+  .finding-field {
+    grid-template-columns: 1fr;
+  }
+}

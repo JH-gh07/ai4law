@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import type { ResourceOpenTarget, TreeNode } from "../../features/resource-explorer/contracts";
+import type { InputEntry, ResourceOpenTarget, TreeNode } from "../../features/resource-explorer/contracts";
+import { INPUT_SOURCE_KIND_LABELS } from "../../features/resource-explorer/config";
 import { buildInputEntries } from "../../features/resource-explorer/input-resources";
 import { buildOutputEntries } from "../../features/resource-explorer/output-artifacts";
 import { buildPathTree } from "../../features/resource-explorer/path-tree";
@@ -58,6 +59,30 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
     () => buildInputEntries(relatedRuns, outputFiles, lang),
     [lang, outputFiles, relatedRuns]
   );
+
+  const inputGroups = useMemo(() => {
+    const byKind = new Map<string, InputEntry[]>();
+    const unlabeled: InputEntry[] = [];
+    for (const entry of inputEntries) {
+      if (entry.sourceKind) {
+        const list = byKind.get(entry.sourceKind) ?? [];
+        list.push(entry);
+        byKind.set(entry.sourceKind, list);
+      } else {
+        unlabeled.push(entry);
+      }
+    }
+    const groups: { key: string; label: string; entries: InputEntry[] }[] = [];
+    for (const [kind, list] of byKind) {
+      groups.push({
+        key: kind,
+        label: INPUT_SOURCE_KIND_LABELS[kind]?.[lang] ?? kind,
+        entries: list,
+      });
+    }
+    if (unlabeled.length) groups.push({ key: "other", label: "", entries: unlabeled });
+    return groups;
+  }, [inputEntries, lang]);
 
   const outputFileMap = useMemo(
     () => new Map(outputEntries.map((entry) => [entry.virtualPath, entry.artifact])),
@@ -168,19 +193,30 @@ export function ResourcePanel({ taskSpace, onToggleCollapse, onOpenResource, sel
               {expandedFolderIds.has("tree-root-input") ? (
                 inputEntries.length > 0 ? (
                   <ul className="ide-tree-list ide-tree-children">
-                    {inputEntries.map((entry) => (
-                      <li key={entry.id}>
-                        <div
-                          className="ide-tree-row ide-tree-row-file"
-                          style={{ ["--tree-depth" as string]: 1 }}
-                          title={lang === "zh" ? "已记录输入文件；安全预览接口尚未统一，当前仅展示" : "Input recorded; preview is display-only until access control is unified"}
-                        >
-                          <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
-                          <span className="ide-tree-icon">
-                            <FileNodeIcon width="14" height="14" />
-                          </span>
-                          <span className="ide-tree-label">{entry.name}</span>
-                        </div>
+                    {inputGroups.map((group) => (
+                      <li key={group.key}>
+                        {group.label ? (
+                          <div className="ide-tree-row ide-tree-row-group" style={{ ["--tree-depth" as string]: 1 }}>
+                            <span className="ide-tree-label ide-tree-group-label">{group.label}</span>
+                          </div>
+                        ) : null}
+                        <ul className="ide-tree-list">
+                          {group.entries.map((entry) => (
+                            <li key={entry.id}>
+                              <div
+                                className="ide-tree-row ide-tree-row-file"
+                                style={{ ["--tree-depth" as string]: group.label ? 2 : 1 }}
+                                title={lang === "zh" ? "已记录输入文件；安全预览接口尚未统一，当前仅展示" : "Input recorded; preview is display-only until access control is unified"}
+                              >
+                                <span className="ide-tree-caret ide-tree-caret-empty" aria-hidden="true" />
+                                <span className="ide-tree-icon">
+                                  <FileNodeIcon width="14" height="14" />
+                                </span>
+                                <span className="ide-tree-label">{entry.name}</span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
                       </li>
                     ))}
                   </ul>

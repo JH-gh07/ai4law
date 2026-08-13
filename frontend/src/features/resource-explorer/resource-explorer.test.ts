@@ -162,3 +162,30 @@ describe("resource explorer path tree", () => {
     });
   });
 });
+
+describe("resource explorer input manifest (task068 T03)", () => {
+  it("recovers inputs from a persisted manifest when request is empty", () => {
+    const runs = [
+      makeRun({
+        id: "recovered",
+        module: "review",
+        request: {},
+        response: {
+          input_manifest: {
+            entries: [
+              { input_id: "f-1", display_name: "合同.docx", source_kind: "uploaded", public_locator: "合同.docx", consumed_by_service: true },
+              { input_id: "inline-1", display_name: "审查场景（内联）", source_kind: "inline", public_locator: "", consumed_by_service: true },
+              { input_id: "f-2", display_name: "预设案例.pdf", source_kind: "dev_preset", public_locator: "预设案例.pdf", consumed_by_service: false },
+            ],
+          },
+        },
+      }),
+    ];
+
+    const entries = buildInputEntries(runs, [], "zh");
+    expect(entries.map((entry) => ({ name: entry.name, sourceKind: entry.sourceKind }))).toEqual([
+      { name: "合同.docx", sourceKind: "uploaded" },
+      { name: "审查场景（内联）", sourceKind: "inline" },
+    ]);
+  });
+});

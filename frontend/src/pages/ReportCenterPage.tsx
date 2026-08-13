@@ -8,12 +8,14 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { ReportTaskTreeSidebar, type ReportTaskTreeNode } from "../components/report-center/ReportTaskTreeSidebar";
+import { ReportDocumentView } from "../components/report/ReportDocumentView";
 import { useAppStore } from "../lib/app-store";
 import type { ModuleRun, ReportReviewSnapshot } from "../lib/domain";
 import { useLang } from "../lib/language";
 import { fetchMyReports, type MyReportItem } from "../api/me";
 import { fetchReportMetadata } from "../api/reports";
 import { buildReportSnapshots, buildTraceLinks } from "../lib/report-adapter";
+import { useReportIr } from "../lib/use-report-ir";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -140,6 +142,11 @@ export function ReportCenterPage() {
   );
 
   const chapters = useMemo(() => readChapters(selectedRun), [selectedRun]);
+
+  // Structured IR is the primary body source; it is fetched on demand and held
+  // in memory only (never persisted). Response-compat chapters remain the
+  // fallback, and DOCX never enters the body path.
+  const reportIr = useReportIr(selectedSnapshot?.taskSpaceId ?? "", selectedSnapshot?.module ?? "");
   const traceLinks = useMemo(
     () => (selectedSnapshot ? buildTraceLinks(selectedSnapshot, state.moduleRuns, state.issues, state.evidenceHits) : []),
     [selectedSnapshot, state.evidenceHits, state.issues, state.moduleRuns]
@@ -200,13 +207,26 @@ export function ReportCenterPage() {
                 <span>{t("reportRunSource")}: {selectedSnapshot.module.toUpperCase()}</span>
               </div>
               <article className="report-preview-body">
-                {chapters.map((chapter, index) => (
-                  <section key={`${chapter.title}-${index}`} className="report-preview-chapter">
-                    <h4>{chapter.title}</h4>
-                    <p>{chapter.content.slice(0, 520) || "..."}</p>
-                  </section>
-                ))}
-                {chapters.length === 0 ? <p className="resource-empty">{t("previewEmpty")}</p> : null}
+                {reportIr.status === "ready" ? (
+                  <ReportDocumentView document={reportIr.document} />
+                ) : (
+                  <>
+                    {reportIr.status === "error" ? (
+                      <p className="ir-report-error" role="alert">
+                        {t("reportIrError")}：{reportIr.message}
+                      </p>
+                    ) : null}
+                    {chapters.map((chapter, index) => (
+                      <section key={`${chapter.title}-${index}`} className="report-preview-chapter">
+                        <h4>{chapter.title}</h4>
+                        <p>{chapter.content.slice(0, 520) || "..."}</p>
+                      </section>
+                    ))}
+                    {chapters.length === 0 && reportIr.status !== "loading" ? (
+                      <p className="resource-empty">{t("previewEmpty")}</p>
+                    ) : null}
+                  </>
+                )}
               </article>
             </section>
           ) : (

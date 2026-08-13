@@ -64,6 +64,13 @@ export const INTERNAL_ARTIFACT_PATTERNS = [
   "writing_strategy",
 ] as const;
 
+export const INPUT_SOURCE_KIND_LABELS: Record<string, Record<ResourceLanguage, string>> = {
+  uploaded: { zh: "用户上传", en: "User Upload" },
+  dev_preset: { zh: "预置案例", en: "Preset" },
+  shared_scenario: { zh: "共享场景", en: "Shared Scenario" },
+  inline: { zh: "内联输入", en: "Inline Input" },
+};
+
 export const INPUT_ROLE_LABELS: Record<string, Record<ResourceLanguage, string>> = {
   bcr: { zh: "BCR 材料", en: "BCR Material" },
   certification_material: { zh: "认证申请材料", en: "Certification Material" },

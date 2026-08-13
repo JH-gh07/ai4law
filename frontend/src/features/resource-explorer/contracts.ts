@@ -7,12 +7,15 @@ export type InputFileCandidate = {
   labelKey?: string;
 };
 
+export type InputSourceKind = "uploaded" | "dev_preset" | "shared_scenario" | "inline";
+
 export type InputEntry = {
   id: string;
   name: string;
   kind: "file";
   sourcePath: string;
   createdAt: string;
+  sourceKind?: InputSourceKind;
 };
 
 export type OutputTreeEntry = {
