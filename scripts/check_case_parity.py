@@ -40,7 +40,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.tests.harness.validators import ASSERTION_OPERATORS  # noqa: E402
+from backend.harness.validators import ASSERTION_OPERATORS  # noqa: E402
 
 INVENTORY_PATH = ROOT / "config" / "case_inventory.json"
 CASE_CATALOG_PATH = ROOT / "config" / "dev_case_catalog.json"

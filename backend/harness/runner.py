@@ -16,7 +16,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -27,7 +27,7 @@ from backend.common.runtime.run_manifest import (
     summarize_output,
     summarize_trace,
 )
-from backend.tests.harness.validators import validate_expected
+from backend.harness.validators import validate_expected
 
 
 RUNS_DIR = REPO_ROOT / "runs"
@@ -83,7 +83,7 @@ Invoke = Callable[
 ]
 
 
-from backend.tests.harness.terminal_trace import TerminalTraceSubscriber  # noqa: E402, F811
+from backend.harness.terminal_trace import TerminalTraceSubscriber  # noqa: E402, F811
 
 
 @dataclass(frozen=True)

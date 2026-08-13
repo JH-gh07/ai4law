@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-RUNNER = REPO_ROOT / "backend" / "tests" / "harness" / "runner.py"
+RUNNER = REPO_ROOT / "backend" / "harness" / "runner.py"
 
 
 def _run_runner(
@@ -143,7 +143,7 @@ class TestVerboseTraceAcceptance:
     # ── acceptance criterion 6 ──
     def test_sensitive_fields_do_not_appear_in_terminal(self):
         """Sensitive keys (api_key, secret, etc.) must never reach stderr."""
-        from backend.tests.harness.terminal_trace import TerminalTraceSubscriber
+        from backend.harness.terminal_trace import TerminalTraceSubscriber
 
         buf = io.StringIO()
         subscriber = TerminalTraceSubscriber(stream=buf)

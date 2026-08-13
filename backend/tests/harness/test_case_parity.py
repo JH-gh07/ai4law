@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from backend.tests.harness import runner, validators
+from backend.harness import runner, validators
 
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "check_case_parity.py"
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from backend.tests.harness.validators import (
+from backend.harness.validators import (
     ASSERTION_OPERATORS,
     resolve_path,
     unknown_operators,

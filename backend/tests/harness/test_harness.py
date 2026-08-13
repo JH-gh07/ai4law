@@ -7,7 +7,7 @@ import pytest
 
 from backend.common.trace.events import RunEvent
 from backend.common.trace.recorder import TraceRecorder
-from backend.tests.harness import runner, viewer
+from backend.harness import runner, viewer
 
 
 def test_module_adapters_match_authoritative_registry() -> None:
