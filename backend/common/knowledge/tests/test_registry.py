@@ -43,3 +43,16 @@ def test_source_registry_respects_declared_gdpr_binding_force() -> None:
     }
 
     assert entries["EU-LAW-001"].binding_force == "mandatory"
+
+
+def test_source_kind_maps_new_doc_type_enums() -> None:
+    # ``policy`` and ``technical_standard`` are newer doc_type values introduced for
+    # the JP/KR remediation. They must map onto the stable SourceKind vocabulary
+    # (official_guide / standard_clause) so retrieval/citation policy keeps working
+    # without a SourceKind Literal expansion.
+    assert registry_module._source_kind_from_row(
+        {"title": "日本个人信息保护基本方针", "doc_type": "policy", "category": ""}
+    ) == "official_guide"
+    assert registry_module._source_kind_from_row(
+        {"title": "韩国个人信息安全措施标准", "doc_type": "technical_standard", "category": ""}
+    ) == "standard_clause"

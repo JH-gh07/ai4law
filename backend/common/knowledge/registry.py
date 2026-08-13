@@ -127,11 +127,17 @@ def _source_kind_from_row(row: dict[str, str]) -> str:
     title = (row.get("title") or "").replace("《", "").replace("》", "")
     doc_type = (row.get("doc_type") or "").lower()
     category = (row.get("category") or "").lower()
-    if "指南" in title or "指引" in title or doc_type == "guide":
+    # ``doc_type`` is a free-form metadata string; map the newer, finer-grained
+    # values (policy, technical_standard) onto the stable SourceKind vocabulary so
+    # retrieval/citation policy and Evidence Center labels keep working without a
+    # SourceKind Literal expansion. "policy" is an official government statement,
+    # closer to official guidance than to a law article; "technical_standard" is a
+    # standard/annex, i.e. standard_clause.
+    if "指南" in title or "指引" in title or doc_type in {"guide", "policy"}:
         return "official_guide"
     if "模板" in title or "模板" in category:
         return "standard_clause"
-    if "标准合同" in title or "标准" in title or "规范" in title:
+    if "标准合同" in title or "标准" in title or "规范" in title or doc_type == "technical_standard":
         return "standard_clause"
     return "law_article"
 
