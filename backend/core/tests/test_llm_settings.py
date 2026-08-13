@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from backend.common.llm.client import LLMClient
 from backend.core.runtime_settings import (
     apply_runtime_payload,
@@ -115,6 +117,42 @@ def test_runtime_settings_can_apply_siliconflow_provider(tmp_path) -> None:
     assert build_effective_runtime_payload(settings)["llm"]["enabled"] is True
 
 
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        "valid-prefix\nexport TENCENT_API_URL=https://example.com",
+        "valid-prefix\rmalicious",
+        "valid-prefix\x00malicious",
+    ],
+)
+def test_runtime_settings_rejects_shell_contaminated_api_keys(
+    tmp_path,
+    api_key,
+) -> None:
+    settings = Settings(storage_dir=tmp_path, _env_file=None)
+
+    with pytest.raises(ValueError, match="API key contains invalid characters"):
+        apply_runtime_payload(
+            settings,
+            {
+                "llm": {
+                    "active_provider_id": "contaminated",
+                    "providers": [
+                        {
+                            "id": "contaminated",
+                            "name": "Contaminated",
+                            "provider_type": "openai_compatible",
+                            "api_key": api_key,
+                            "api_url": "https://example.com/v1",
+                            "model": "example-model",
+                            "enabled": True,
+                        }
+                    ],
+                }
+            },
+        )
+
+
 def test_settings_use_tencent_defaults_when_tencent_provider_is_active(monkeypatch) -> None:
     _clear_llm_env(monkeypatch)
     monkeypatch.setenv("LLM_PROVIDER", "tencent_hunyuan")
@@ -139,7 +177,11 @@ def test_delilegal_has_no_embedded_competition_credentials(monkeypatch, tmp_path
     assert payload["delilegal"]["enabled"] is False
 
 
-def test_runtime_settings_mask_and_preserve_existing_secrets(tmp_path) -> None:
+def test_runtime_settings_mask_and_preserve_existing_secrets(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    _clear_llm_env(monkeypatch)
     settings = Settings(storage_dir=tmp_path, _env_file=None)
 
     first = apply_runtime_payload(

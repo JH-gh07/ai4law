@@ -701,6 +701,13 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/version",
+    "route_name": "get_version",
+    "endpoint_module": "backend.api.v1.endpoints.version",
+    "operation_id": "get_version_api_v1_version_get"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/workspace-state",
     "route_name": "get_workspace_state",
     "endpoint_module": "backend.api.v1.endpoints.workspace_state",

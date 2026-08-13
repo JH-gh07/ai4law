@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from backend.common.llm.client import LLMClient
 from backend.common.llm.provider_registry import LLMProviderConfig, LLMProviderRegistry, normalize_openai_base_url
@@ -17,6 +18,8 @@ DEFAULT_LLM_MODELS = [
     "Qwen/Qwen2.5-7B-Instruct",
     "Qwen/Qwen2.5-72B-Instruct",
 ]
+
+_RETIRED_PROVIDER_HOSTS = {"api.hunyuan.cloud.tencent.com"}
 
 
 def _builtin_provider_templates(settings) -> list[dict[str, Any]]:
@@ -47,6 +50,9 @@ def _builtin_provider_templates(settings) -> list[dict[str, Any]]:
 def _merge_builtin_providers(settings, providers: list[LLMProviderConfig]) -> list[LLMProviderConfig]:
     merged: dict[str, LLMProviderConfig] = {item.id: item for item in providers}
     for raw in _builtin_provider_templates(settings):
+        host = urlparse(raw["api_url"]).hostname
+        if host and host.lower() in _RETIRED_PROVIDER_HOSTS:
+            continue
         if raw["id"] in merged:
             continue
         merged[raw["id"]] = LLMProviderConfig(
@@ -388,12 +394,25 @@ def _apply_active_provider_to_settings(settings, providers: list[dict[str, Any]]
 
 
 def _normalize_single_provider(item: dict[str, Any]) -> dict[str, Any]:
+    api_key = str(item.get("api_key") or "").strip()
+    if any(ord(character) < 32 or ord(character) == 127 for character in api_key):
+        raise ValueError("API key contains invalid characters")
+    if "export " in api_key.lower():
+        raise ValueError("API key contains invalid characters")
+
+    api_url = normalize_openai_base_url(str(item.get("api_url") or "").strip())
+    parsed_url = urlparse(api_url)
+    if parsed_url.scheme != "https" or not parsed_url.hostname or parsed_url.username:
+        raise ValueError("Provider API URL must be an HTTPS base URL")
+    if parsed_url.hostname.lower() in _RETIRED_PROVIDER_HOSTS:
+        raise ValueError("Provider API URL has been retired")
+
     provider = LLMProviderConfig(
         id=str(item.get("id") or "").strip(),
         name=str(item.get("name") or "").strip() or str(item.get("id") or "").strip(),
         provider_type=str(item.get("provider_type") or "openai_compatible").strip() or "openai_compatible",
-        api_url=normalize_openai_base_url(str(item.get("api_url") or "").strip()),
-        api_key=str(item.get("api_key") or "").strip() or None,
+        api_url=api_url,
+        api_key=api_key or None,
         model=str(item.get("model") or "").strip(),
         enabled=bool(item.get("enabled", True)),
         timeout=_normalize_timeout(item.get("timeout")),
