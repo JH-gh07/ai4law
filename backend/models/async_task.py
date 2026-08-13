@@ -8,7 +8,7 @@ task's terminal state after a restart instead of reporting "Task not found".
 
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.core.db import Base
@@ -24,8 +24,13 @@ class AsyncTaskModel(Base):
     user_id: Mapped[str] = mapped_column(String(36), index=True, default="")
     module: Mapped[str] = mapped_column(String(64), index=True, default="")
     status: Mapped[str] = mapped_column(String(32), default="CREATED")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, default=1)
     error: Mapped[str] = mapped_column(Text, default="")
     result_path: Mapped[str] = mapped_column(Text, default="")
+    result_json: Mapped[str] = mapped_column(Text, default="")
+    provider_snapshot_json: Mapped[str] = mapped_column(Text, default="")
+    manifest_path: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

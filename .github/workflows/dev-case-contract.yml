@@ -149,7 +149,7 @@ jobs:
 
       - name: Assert every harness case offline
         run: >-
-          uv run --frozen python -m backend.tests.harness.runner all
+          uv run --frozen python -m backend.harness.runner all
           --no-llm --quiet
 
       - name: Upload harness run artifacts

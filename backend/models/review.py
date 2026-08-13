@@ -17,6 +17,9 @@ class ReviewTaskModel(Base):
     request_context_json: Mapped[str] = mapped_column(Text, default="{}")
     summary_json: Mapped[str] = mapped_column(Text, default="{}")
     issues_json: Mapped[str] = mapped_column(Text, default="[]")
+    # task068 T03 — persisted run-input manifest (traceability + material tree
+    # recovery). Structured JSON, never user-sensitive body text.
+    input_manifest_json: Mapped[str] = mapped_column(Text, default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

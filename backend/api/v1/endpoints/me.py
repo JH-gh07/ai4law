@@ -172,12 +172,20 @@ def _reconstruct_response(module: str, task_id: str, artifacts: list[MyReportIte
     return response
 
 
-def _build_recovered_run(task: MyTaskItem, artifacts: list[MyReportItem]) -> RecoveredModuleRun:
+def _build_recovered_run(
+    task: MyTaskItem,
+    artifacts: list[MyReportItem],
+    input_manifest: dict | None = None,
+) -> RecoveredModuleRun:
     module = task.module or task.source
     normalized_status = task.status.lower()
     terminal_states = {"completed", "succeeded", "failed", "canceled", "cancelled"}
     success_states = {"completed", "succeeded"}
     response = _reconstruct_response(module, task.id, artifacts)
+    if input_manifest is not None:
+        if response is None:
+            response = {"task_id": task.id, "output_files": {}}
+        response["input_manifest"] = input_manifest
     if normalized_status in success_states or normalized_status in {"created", "running"}:
         error = None
     elif task.error:
@@ -198,6 +206,30 @@ def _build_recovered_run(task: MyTaskItem, artifacts: list[MyReportItem]) -> Rec
         async_task_id=task.id,
         async_state=normalized_status,
     )
+
+
+def _review_input_manifest_map(db: Session, user_id: str) -> dict[str, dict]:
+    """Map review task_id → public input manifest JSON (task068 T03 recovery).
+
+    Only the controlled public view is returned; ``storage_uri`` never leaves
+    the service.
+    """
+    from backend.common.workflow.input_manifest import RunInputManifest, public_manifest
+
+    rows = db.execute(
+        select(ReviewTaskModel).where(ReviewTaskModel.user_id == user_id)
+    ).scalars().all()
+    result: dict[str, dict] = {}
+    for row in rows:
+        raw = loads(row.input_manifest_json, {})
+        if not raw:
+            continue
+        try:
+            manifest = RunInputManifest.model_validate(raw)
+            result[row.id] = public_manifest(manifest).model_dump(mode="json")
+        except Exception:  # noqa: BLE001
+            continue
+    return result
 
 
 @router.get("/tasks", response_model=MyTasksResponse)
@@ -287,6 +319,7 @@ def get_workspace_recovery(
 ):
     tasks = list_my_tasks(db=db, current_user=current_user).items
     reports = list_my_reports(db=db, current_user=current_user).items
+    input_manifests = _review_input_manifest_map(db, current_user.id)
 
     reports_by_owner: dict[tuple[str, str], list[MyReportItem]] = {}
     for report in reports:
@@ -307,7 +340,7 @@ def get_workspace_recovery(
                 status=task.status,
                 created_at=task.created_at,
                 updated_at=task.updated_at,
-                run=_build_recovered_run(task, artifacts),
+                run=_build_recovered_run(task, artifacts, input_manifest=input_manifests.get(task.id)),
                 artifacts=artifacts,
             )
         )

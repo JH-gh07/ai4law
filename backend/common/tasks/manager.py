@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import json
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -24,7 +25,7 @@ def _utc_now_iso() -> str:
 _session_factory: Any | None = None
 
 
-def configure_task_persistence(session_factory: Any) -> None:
+def configure_task_persistence(session_factory: Any | None) -> None:
     """启用 async task 状态持久化（服务启动时调用一次）。"""
     global _session_factory
     _session_factory = session_factory
@@ -188,9 +189,9 @@ class InMemoryTaskManager:
     def get(self, task_id: str) -> TaskSnapshot | None:
         with self._lock:
             record = self._tasks.get(task_id)
-            if record is None:
-                return None
-            return self._snapshot(record)
+            if record is not None:
+                return self._snapshot(record)
+        return self._load_persisted_snapshot(task_id)
 
     def get_or_raise(self, task_id: str) -> TaskSnapshot:
         snapshot = self.get(task_id)
@@ -465,13 +466,74 @@ class InMemoryTaskManager:
                     row = AsyncTaskModel(id=record.task_id, module=record.module)
                     db.add(row)
                 row.status = record.state
+                row.attempts = record.attempts
+                row.max_attempts = record.max_attempts
                 row.error = record.error or ""
                 row.result_path = self._extract_result_path(record.result)
+                row.result_json = self._dump_json(record.result)
+                row.provider_snapshot_json = self._dump_json(
+                    record.provider_snapshot
+                )
+                row.manifest_path = (
+                    str(record.manifest_path) if record.manifest_path else ""
+                )
                 row.updated_at = datetime.now(timezone.utc)
                 db.commit()
         except Exception:
             # Persistence is a safety net; never let a DB hiccup fail a task.
             pass
+
+    def _load_persisted_snapshot(self, task_id: str) -> TaskSnapshot | None:
+        if _session_factory is None:
+            return None
+        try:
+            from backend.models.async_task import AsyncTaskModel
+
+            with _session_factory() as db:
+                row = db.get(AsyncTaskModel, task_id)
+                if row is None or row.module != self.module:
+                    return None
+                return TaskSnapshot(
+                    task_id=row.id,
+                    module=row.module,
+                    state=row.status,
+                    attempts=int(row.attempts or 0),
+                    max_attempts=max(1, int(row.max_attempts or 1)),
+                    created_at=self._datetime_to_iso(row.created_at),
+                    updated_at=self._datetime_to_iso(row.updated_at),
+                    error=row.error or None,
+                    result=self._load_json_object(row.result_json),
+                    provider_snapshot=self._load_json_object(
+                        row.provider_snapshot_json
+                    ),
+                    manifest_path=row.manifest_path or None,
+                )
+        except Exception:
+            return None
+
+    @staticmethod
+    def _dump_json(value: Any) -> str:
+        if value is None:
+            return ""
+        return json.dumps(value, ensure_ascii=False, default=str)
+
+    @staticmethod
+    def _load_json_object(value: str | None) -> dict[str, Any] | None:
+        if not value:
+            return None
+        try:
+            payload = json.loads(value)
+        except (TypeError, ValueError):
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    @staticmethod
+    def _datetime_to_iso(value: Any) -> str:
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
+            return value.isoformat()
+        return str(value or "")
 
     @staticmethod
     def _bind_llm_snapshot(

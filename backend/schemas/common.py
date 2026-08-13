@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -21,3 +22,8 @@ class ArtifactPreviewResponse(BaseModel):
     render_mode: str
     content: str = ""
     file_url: str | None = None
+    # Structured report body. Only populated when a *registered*
+    # ``artifact_type=document_ir_json`` record passes DocumentIR validation.
+    # When set, ``content`` stays empty: structured content must never be
+    # mixed into the raw-text ``content`` field (task067 T04).
+    report_ir: dict[str, Any] | None = None

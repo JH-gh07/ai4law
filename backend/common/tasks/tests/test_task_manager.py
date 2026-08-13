@@ -1,13 +1,17 @@
 import time
 import json
 from dataclasses import dataclass
+from pathlib import Path
 from threading import Event
+
+import pytest
 
 from backend.common.events.manager import get_ssemanager
 from backend.common.llm.context import current_llm_client
-from backend.common.tasks.manager import InMemoryTaskManager
+from backend.common.tasks.manager import InMemoryTaskManager, configure_task_persistence
 from backend.common.tasks.cancellation import is_task_cancelled, raise_if_task_cancelled
 from backend.common.trace.recorder import TraceRecorder
+from backend.core.db import build_engine, build_session_factory, init_db
 
 
 def wait_until_terminal(manager: InMemoryTaskManager, task_id: str, timeout: float = 3.0):
@@ -20,6 +24,19 @@ def wait_until_terminal(manager: InMemoryTaskManager, task_id: str, timeout: flo
     raise TimeoutError("task did not reach terminal state")
 
 
+@pytest.fixture
+def persisted_task_db(tmp_path: Path):
+    engine = build_engine(f"sqlite:///{tmp_path / 'tasks.db'}")
+    init_db(engine)
+    session_factory = build_session_factory(engine)
+    configure_task_persistence(session_factory)
+    try:
+        yield session_factory
+    finally:
+        configure_task_persistence(None)
+        engine.dispose()
+
+
 def test_task_manager_complete() -> None:
     manager = InMemoryTaskManager(module="ut")
     accepted = manager.submit(lambda: {"ok": True})
@@ -27,6 +44,31 @@ def test_task_manager_complete() -> None:
     snapshot = wait_until_terminal(manager, accepted.task_id)
     assert snapshot.state == "COMPLETED"
     assert snapshot.result == {"ok": True}
+
+
+def test_second_manager_reads_completed_task_from_persistence(persisted_task_db) -> None:
+    first_worker = InMemoryTaskManager(module="ut")
+    accepted = first_worker.submit(lambda: {"ok": True, "value": 7})
+    completed = wait_until_terminal(first_worker, accepted.task_id)
+    assert completed.state == "COMPLETED"
+
+    second_worker = InMemoryTaskManager(module="ut")
+    recovered = second_worker.get_or_raise(accepted.task_id)
+
+    assert recovered.state == "COMPLETED"
+    assert recovered.attempts == 1
+    assert recovered.max_attempts == 2
+    assert recovered.result == {"ok": True, "value": 7}
+
+
+def test_persisted_lookup_does_not_cross_module_boundary(persisted_task_db) -> None:
+    first_worker = InMemoryTaskManager(module="ut")
+    accepted = first_worker.submit(lambda: {"ok": True})
+    wait_until_terminal(first_worker, accepted.task_id)
+
+    other_module = InMemoryTaskManager(module="other")
+    with pytest.raises(KeyError, match="Task not found"):
+        other_module.get_or_raise(accepted.task_id)
 
 
 def test_task_manager_retry() -> None:

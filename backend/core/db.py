@@ -31,9 +31,16 @@ def _ensure_legacy_columns(engine) -> None:
     required = {
         "diagnosis_sessions": {"user_id": "TEXT DEFAULT ''"},
         "report_artifacts": {"user_id": "TEXT DEFAULT ''"},
-        "review_tasks": {"user_id": "TEXT DEFAULT ''", "request_context_json": "TEXT DEFAULT '{}'"},
+        "review_tasks": {"user_id": "TEXT DEFAULT ''", "request_context_json": "TEXT DEFAULT '{}'", "input_manifest_json": "TEXT DEFAULT '{}'"},
         "uploaded_files": {"user_id": "TEXT DEFAULT ''"},
         "run_events": {"correlation_id": "TEXT"},
+        "async_tasks": {
+            "attempts": "INTEGER DEFAULT 0",
+            "max_attempts": "INTEGER DEFAULT 1",
+            "result_json": "TEXT DEFAULT ''",
+            "provider_snapshot_json": "TEXT DEFAULT ''",
+            "manifest_path": "TEXT DEFAULT ''",
+        },
     }
     with engine.begin() as conn:
         for table_name, columns in required.items():
