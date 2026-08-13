@@ -15,6 +15,7 @@
 | Seed Level B 请求转换 | `uv run --frozen python scripts/build_seed_case_requests.py [--write]` | 对 50 个 Level A 抽取记录裁决 `gap/rejected/converted`，写入 `benchmarks/datasets/seed-cases-v1/levelb-disposition.v1.json` |
 | JP/KR 来源身份裁决初稿 | `uv run --frozen python scripts/build_jp_kr_adjudication.py [--write] [--check]` | 生成 `status/check/task065/jp_kr_source_adjudication.csv` 人工审核表初稿（保留专家签署列） |
 | JP/KR 来源身份门禁 | `uv run --frozen python scripts/check_regional_source_identity.py [--json]` | 只读检查 JP/KR 来源一对一绑定、孤立 PDF、可抽取文本、隔离执行与处置合法性 |
+| JP/KR 待建 source 提议 | `uv run --frozen python scripts/build_jp_kr_pending_source_proposals.py [--write] [--check]` | 生成 `status/check/task065/jp_kr_pending_source_proposals.csv`（8 份真实 PDF 的待建 source/版本/附件提议，保留专家签署列） |
 | 产品 Smoke Benchmark | `uv run --frozen python scripts/run_smoke_benchmark.py --mode all --target cn` | 输出评测结果 |
 | RAG 检索 Benchmark | `uv run --frozen python scripts/run_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/` |
 | 保存检索回归快照 | `uv run --frozen python scripts/snapshot_rag_retrieval_benchmark.py` | 写入 `outputs/benchmarks/regression/` |

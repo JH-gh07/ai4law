@@ -60,7 +60,7 @@
 | 旧判断 | 当前事实 | 修正结论 |
 |---|---|---|
 | 当前有 12 个业务模块 | `config/module_registry.json` 当前有 11 个模块，`cn.scc_review` 已退役 | 后续矩阵按 11 个模块验收 |
-| CLI 快速测试尚未实现 | `backend/tests/harness/` 已有 runner、viewer、测试和 14 个案例 | 补齐 1 个模块和统一计量，不重建 CLI |
+| CLI 快速测试尚未实现 | `backend/harness/`（runner/viewer/validators/terminal_trace 实现）+ `backend/tests/harness/`（测试）已有 14+ 个案例 | 补齐 1 个模块和统一计量，不重建 CLI |
 | 前端没有 Token、耗时和中间过程 | `RunTranscript`、`TraceRunHeader`、`TraceNodeView`、`AssistantPanel` 已显示相关信息 | 缺口是持久化、汇总和一致口径 |
 | 公共 Markdown/DOCX/PDF 渲染器未落地 | `backend/common/render/` 已存在并有测试 | 缺口是模块接入率和单一语义源 |
 | 表格、引用块等完全未样式化 | 前端已配置标题、表格、引用块、代码和引用角标样式 | 仍缺宽表滚动、嵌套节点保真和移动端交互 |
@@ -116,7 +116,7 @@
 执行：
 
 ```bash
-uv run --frozen python backend/tests/harness/runner.py diagnosis 01_scc_path --no-llm
+uv run --frozen python backend/harness/runner.py diagnosis 01_scc_path --no-llm
 ```
 
 结果：
@@ -866,10 +866,11 @@ ArtifactRecord 至少包括：
 ### 11.1 当前 CLI 结构
 
 ```text
-backend/tests/harness/
+backend/harness/
 ├── runner.py
 ├── viewer.py
-├── cases/
+├── validators.py
+├── terminal_trace.py
 └── tests/
 ```
 
@@ -1080,9 +1081,9 @@ backend/common/
 | `backend/common/trace/recorder.py` | 统一内部 TraceManifest，并支持 OTel 适配导出 |
 | `backend/common/workflow/trace.py` | 合并重复契约，增加 provider/retrieval/artifact 汇总 |
 | `backend/services/runtime_client_refresher.py` | 迁移为不可变 ProviderSnapshot；过渡期刷新全部消费者 |
-| `backend/tests/harness/runner.py` | 统一 manifest、文件输入、全模块和 live 开关 |
-| `backend/tests/harness/viewer.py` | 显示 Token、耗时、RAG、得理、引用和产物校验 |
-| `backend/tests/harness/cases/` | 增加 review 与边界案例 |
+| `backend/harness/runner.py` | 统一 manifest、文件输入、全模块和 live 开关 |
+| `backend/harness/viewer.py` | 显示 Token、耗时、RAG、得理、引用和产物校验 |
+| `backend/tests/*/cases/` | 增加 review 与边界案例 |
 | 设置 API 与前端设置组件 | 得理测试、模型发现、健康状态、管理员权限 |
 | `frontend/src/lib/useTaskEvents.ts` | 对齐持久 manifest 和实时增量 |
 | `frontend/src/components/workspace/RunTranscript.tsx` | 普通/开发双层视图 |
@@ -1191,8 +1192,8 @@ npm --prefix frontend run build
 uv run --frozen python scripts/check_local_new_parity.py
 uv run --frozen python scripts/check_repository_hygiene.py
 uv run --frozen python -m compileall -q backend
-uv run --frozen python backend/tests/harness/runner.py diagnosis 01_scc_path --no-llm
-uv run --frozen python backend/tests/harness/viewer.py <run_id>
+uv run --frozen python backend/harness/runner.py diagnosis 01_scc_path --no-llm
+uv run --frozen python backend/harness/viewer.py <run_id>
 ```
 
 ### 16.2 需要实现后才能运行的目标命令
@@ -1201,10 +1202,10 @@ uv run --frozen python backend/tests/harness/viewer.py <run_id>
 
 ```bash
 # 11 模块离线 smoke
-uv run --frozen python -m backend.tests.harness.runner all --no-llm
+uv run --frozen python -m backend.harness.runner all --no-llm
 
 # 显式真实服务测试，需限制调用预算
-uv run --frozen python backend/tests/harness/runner.py assessment 01_basic --live-llm --live-delilegal
+uv run --frozen python backend/harness/runner.py assessment 01_basic --live-llm --live-delilegal
 
 # 引用—知识库完整性
 uv run --frozen python scripts/check_citation_integrity.py
@@ -1403,7 +1404,7 @@ Run ID / Artifact ID：
 | 任务 | 已落实行为 | 关键提交 | 可核对证据 |
 |---|---|---|---|
 | 文档审查 CLI | 新增 `review/01_minimal` 可编辑 DPA fixture；适配器使用隔离的 AppContainer、SQLite、storage、真实 ReviewService 和报告仓库，先把 fixture 复制到 run upload 目录，再运行同步主业务管线；不是另写一套简化审查逻辑 | `ade5fff` | 首次真实执行失败时，数据库任务实际已 COMPLETED，但同步接口因旧 Session 缓存误判为失败；新增红灯单测并在 `_run_pipeline()` 后 `expire_all()`，修复后该案例约 2.4 秒通过，并生成 DOCX/PDF |
-| 单命令全覆盖 | 新增 `python -m backend.tests.harness.runner all --no-llm`，按权威模块注册表枚举 11 模块及其全部 15 个案例；缺案例或任一失败均计为 FAIL 并返回非零；API 单测固定 `_env_file=None`，no-LLM 不读取本机 Key | `ade5fff` | `all modules: 15 PASS, 0 FAIL across 11 modules`；最新证据 Run 包括 `assessment/20260722_025538_977978_02_structured`、`review/20260722_025542_433996_01_minimal`、`us_14117/20260722_025544_336680_01_minimal`，其余模块同批次位于 `runs/<module>/` |
+| 单命令全覆盖 | 新增 `python -m backend.harness.runner all --no-llm`，按权威模块注册表枚举 11 模块及其全部 15 个案例；缺案例或任一失败均计为 FAIL 并返回非零；API 单测固定 `_env_file=None`，no-LLM 不读取本机 Key | `ade5fff` | `all modules: 15 PASS, 0 FAIL across 11 modules`；最新证据 Run 包括 `assessment/20260722_025538_977978_02_structured`、`review/20260722_025542_433996_01_minimal`、`us_14117/20260722_025544_336680_01_minimal`，其余模块同批次位于 `runs/<module>/` |
 | CLI 可观测与输入输出 | harness manifest 对齐 schema 1.0，增加脱敏 ProviderSnapshot、输入 SHA-256/字段/文件、去重输出产物、事件/LLM 调用/Token/fallback/error 汇总；普通 runner 直接打印计量，viewer `--events` 可查看持久中间事件；字符串 `uploaded_files` 和同路径 report/docx 的遗漏/冗余均由红灯测试捕获 | `ade5fff` | 相关 runtime/harness/review 聚焦 19 项通过；review viewer 能列出 2 个持久事件、0 Token、0 fallback 及 DOCX/PDF 产物 |
 
 **本切片最终门禁**
@@ -1418,7 +1419,7 @@ Run ID / Artifact ID：
 命令：npm --prefix frontend run build
 结果：TypeScript 与 Vite 生产构建成功，342 modules transformed；退出码 0
 
-命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/python -m backend.tests.harness.runner all --no-llm --quiet
+命令：LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 .venv/bin/python -m backend.harness.runner all --no-llm --quiet
 结果：all modules: 15 PASS, 0 FAIL across 11 modules；退出码 0
 ```
 

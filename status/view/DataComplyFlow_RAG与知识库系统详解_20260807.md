@@ -79,7 +79,7 @@ KnowledgeChunkV2 (Pydantic)           ← 运行时检索的"分块"对象（存
 ### 2.2 `KnowledgeChunkV2` — 核心运行时数据模型
 
 ```python
-# v2.py — 所有检索操作统一使用的分块模型
+# /v2.py — 所有检索操作统一使用的分块模型
 class KnowledgeChunkV2(BaseModel):
     chunk_id: str          # 唯一标识 "CN-LAW-002/CH5/AR39"
     source_id: str         # 来源 ID "CN-LAW-003"

@@ -125,7 +125,7 @@ intended_consumers:
 - React 18 + Vite + TypeScript 前端页面、工作台、引用交互和运行观察组件；
 - CN、EU、US 三个法域的 11 个业务模块；
 - LLM Provider 管理、本地多索引 RAG、CitationMap、报告渲染、事件追踪、任务和产物管理；
-- CLI Harness（`backend/tests/harness/`）、Product Smoke、规模化 RAG 评测；
+- CLI Harness（`backend/harness/`）、Product Smoke、规模化 RAG 评测；
 - 环境变量、模块注册表、认证、任务归属和敏感信息保护；
 - 当前测试、构建、路由与知识库，以及带日期的运行产物和历史评测快照。
 
@@ -193,7 +193,7 @@ DataComplyFlow 面向中国、欧盟和美国的数据合规场景，提供路�
 | LLM | OpenAI-compatible Provider | `backend/common/llm/client.py` |
 | 法规检索 | 本地多索引 RAG + 得理 API | `backend/common/rag/`（`orchestrator.py`、`service.py`、`retriever.py`、`fulltext_index.py`） |
 | 报告输出 | 按模块输出 Markdown / HTML / DOCX / PDF / XLSX / ZIP 等不同格式组合 | `backend/common/render/` + 各领域模块渲染代码 |
-| 测试 | pytest / Vitest / CLI Harness | `backend/tests/`、`frontend/src/`（Vitest）、`backend/tests/harness/` |
+| 测试 | pytest / Vitest / CLI Harness | `backend/tests/`、`frontend/src/`（Vitest）、`backend/tests/harness/`（测试）、`backend/harness/`（CLI 实现） |
 | 版本控制 | Git | `.git/`，分支 `new`，远程 `origin/new` |
 
 ### 2.3 快速入口
@@ -205,7 +205,7 @@ DataComplyFlow 面向中国、欧盟和美国的数据合规场景，提供路�
 | `CLI-003` | 后端全量测试 | `uv run --frozen pytest -q` |
 | `CLI-004` | 前端全量测试 | `npm --prefix frontend test -- --run` |
 | `CLI-005` | 前端生产构建 | `npm --prefix frontend run build` |
-| `CLI-006` | 11 模块离线 CLI Smoke | `uv run --frozen python -m backend.tests.harness.runner all --no-llm` |
+| `CLI-006` | 11 模块离线 CLI Smoke | `uv run --frozen python -m backend.harness.runner all --no-llm` |
 | `CLI-007` | 仓库卫生检查 | `uv run --frozen python scripts/check_repository_hygiene.py` |
 | `CLI-008` | Python 编译检查 | `uv run --frozen python -m compileall -q backend` |
 | `CLI-009` | Product Smoke 评测 | `uv run --frozen python scripts/run_smoke_benchmark.py` |
@@ -303,7 +303,7 @@ DataComplyFlow 面向中国、欧盟和美国的数据合规场景，提供路�
 | `backend/services/` | 跨领域应用服务 | `task_access.py`、`runtime_client_refresher.py`、文件/报告/会话等服务 | 活跃 |
 | `backend/repositories/` | 数据访问 | SQLAlchemy repository 模式 | 活跃 |
 | `backend/schemas/` | API Schema 定义 | Pydantic 请求/响应模型 | 活跃 |
-| `backend/tests/harness/` | CLI 测试框架 | `runner.py`、`viewer.py`、`test_harness.py`；案例位于 `backend/tests/*/cases/` | 活跃 |
+| `backend/harness/` | CLI 测试框架实现 | `runner.py`、`viewer.py`、`validators.py`、`terminal_trace.py`；测试在 `backend/tests/harness/`，案例位于 `backend/tests/*/cases/` | 活跃 |
 | `frontend/src/main.tsx` | React SPA 入口 | Vite dev server 入口 | 活跃 |
 | `frontend/src/components/` | UI 组件 | auth、citation、common、landing、modals、onboarding、report-center、workspace | 活跃 |
 | `frontend/src/features/module-runner/` | 模块运行器 | 按模块纵向拆分的表单/payload/case | 活跃 |
@@ -329,8 +329,8 @@ DataComplyFlow 面向中国、欧盟和美国的数据合规场景，提供路�
 | `MOD-100` | FastAPI app | 后端 ASGI 入口 | `backend/main.py:app` |
 | `UI-001` | React SPA | 前端入口 | `frontend/src/main.tsx` |
 | `DATA-002` | 模块注册表 | 11 个业务模块身份唯一权威源 | `config/module_registry.json` |
-| `CLI-006` | CLI Harness Runner | 单案例与全模块执行 | `backend/tests/harness/runner.py` |
-| `CLI-011` | CLI Harness Viewer | 运行汇总和事件查看 | `backend/tests/harness/viewer.py` |
+| `CLI-006` | CLI Harness Runner | 单案例与全模块执行 | `backend/harness/runner.py` |
+| `CLI-011` | CLI Harness Viewer | 运行汇总和事件查看 | `backend/harness/viewer.py` |
 | `CFG-001` | 应用配置 | Settings 类 | `backend/core/settings.py` |
 | `CFG-010` | 运行时配置 | Provider 配置与健康状态 | `storage/runtime_settings.json` |
 
@@ -885,7 +885,7 @@ CLI Harness 使用独立运行契约：失败时另外写入 `runs/{module}/{run
 | `VER-003` | 前端生产构建 | `npm --prefix frontend run build` | 342 modules, 通过 | — |
 | `VER-004` | Python 编译 | `uv run --frozen python -m compileall -q backend` | 退出码 0 | — |
 | `VER-005` | 仓库卫生 | `uv run --frozen python scripts/check_repository_hygiene.py` | 963 个文件通过 | — |
-| `VER-006` | CLI Smoke | `uv run --frozen python -m backend.tests.harness.runner all --no-llm` | 15 PASS / 0 FAIL / 11 modules | ≈2-3 min |
+| `VER-006` | CLI Smoke | `uv run --frozen python -m backend.harness.runner all --no-llm` | 15 PASS / 0 FAIL / 11 modules | ≈2-3 min |
 
 > **边界**：唯一警告为 Starlette TestClient 的 httpx 弃用提示，不影响本轮测试结论；外部 LLM、得理法律 API、浏览器 E2E、生产部署和法律专家 Gold 未完成真实验证，因此 front matter 标记为 `partially_verified`。
 
@@ -990,7 +990,7 @@ P0 已完成：数据隔离、证据真实性（移除机械补引用）、确�
 10. `backend/common/citation/`、`backend/common/render/` —— 引用和产物
 11. `frontend/src/components/workspace/ModuleRunPanel.tsx` —— 前端核心（3,751 行）
 12. `frontend/src/lib/module-registry.ts`、`task-templates.ts`
-13. `backend/tests/harness/` —— CLI 和 Smoke 测试
+13. `backend/harness/` —— CLI 和 Smoke 测试实现
 14. `benchmarks/` 和 `scripts/`
 15. `docs/standards/` → `docs/handoff/` → `docs/archive/`
 
@@ -1075,7 +1075,7 @@ P0 已完成：数据隔离、证据真实性（移除机械补引用）、确�
 | 法律资源 | `resources/legal/` | 69 来源、1,672 条登记 |
 | 规则资源 | `resources/rules/` | `cn/review_rulebook.json` |
 | 报告模板 | `resources/templates/{cn,eu,us}/` | 按法域分 |
-| CLI Harness | `backend/tests/harness/`、`backend/tests/*/cases/` | runner + viewer；15 个案例分布在模块测试目录 |
+| CLI Harness | `backend/harness/`、`backend/tests/*/cases/` | runner + viewer；15 个案例分布在模块测试目录 |
 | Benchmark | `benchmarks/` | datasets + smoke_eval + rag_retrieval_eval |
 | 前端核心组件 | `frontend/src/components/workspace/ModuleRunPanel.tsx` | 3,751 行 |
 | 前端引用组件 | `frontend/src/components/citation/` | InlineCitation/Popover/Drawer |
@@ -1111,11 +1111,11 @@ uv run --frozen python -m compileall -q backend
 uv run --frozen python scripts/check_repository_hygiene.py
 
 # 全模块 CLI Smoke（离线）
-uv run --frozen python -m backend.tests.harness.runner all --no-llm
+uv run --frozen python -m backend.harness.runner all --no-llm
 
 # 查看 CLI 运行结果
-python -m backend.tests.harness.viewer <run_id> --summary
-python -m backend.tests.harness.viewer <run_id> --events
+python -m backend.harness.viewer <run_id> --summary
+python -m backend.harness.viewer <run_id> --events
 
 # Product Smoke 评测
 uv run --frozen python scripts/run_smoke_benchmark.py
