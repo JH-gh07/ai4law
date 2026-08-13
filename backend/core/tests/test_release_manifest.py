@@ -32,3 +32,18 @@ def test_release_manifest_is_deterministic_for_same_tree(monkeypatch) -> None:
 
     assert first == second
     assert json.loads(first)["developer_mode"] is True
+
+
+def test_release_manifest_requires_explicit_commit_without_git_metadata(
+    monkeypatch,
+) -> None:
+    module = _load_script()
+    monkeypatch.setattr(module, "_git", lambda *_args: (_ for _ in ()).throw(OSError()))
+    monkeypatch.delenv("AI4LAW_RELEASE_COMMIT", raising=False)
+
+    try:
+        module.build_manifest(developer_mode=False)
+    except SystemExit as exc:
+        assert "AI4LAW_RELEASE_COMMIT" in str(exc)
+    else:
+        raise AssertionError("release without Git metadata must fail closed")

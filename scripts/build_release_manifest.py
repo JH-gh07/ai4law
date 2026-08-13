@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -12,9 +14,19 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _git(*args: str) -> str:
-    return subprocess.check_output(
-        ["git", *args], cwd=ROOT, text=True
-    ).strip()
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+
+def _git_or_env(env_name: str, *args: str) -> str:
+    configured = os.getenv(env_name, "").strip()
+    if configured:
+        return configured
+    try:
+        return _git(*args)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise SystemExit(
+            f"{env_name} is required when release source has no Git metadata"
+        ) from exc
 
 
 def _sha256(path: Path) -> str:
@@ -27,7 +39,15 @@ def _sha256(path: Path) -> str:
 
 def _source_digest() -> str:
     digest = hashlib.sha256()
-    files = _git("ls-files", "backend", "frontend/src", "scripts").splitlines()
+    try:
+        files = _git("ls-files", "backend", "frontend/src", "scripts").splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        files = [
+            path.relative_to(ROOT).as_posix()
+            for base in (ROOT / "backend", ROOT / "frontend" / "src", ROOT / "scripts")
+            for path in base.rglob("*")
+            if path.is_file()
+        ]
     for relative in sorted(files):
         path = ROOT / relative
         if not path.is_file():
@@ -52,9 +72,10 @@ def build_manifest(*, developer_mode: bool) -> dict[str, object]:
     lock_path = ROOT / "uv.lock"
     return {
         "schema_version": 1,
-        "git_commit": _git("rev-parse", "HEAD"),
-        "git_tree": _git("rev-parse", "HEAD^{tree}"),
-        "built_at": _git("show", "-s", "--format=%cI", "HEAD"),
+        "git_commit": _git_or_env("AI4LAW_RELEASE_COMMIT", "rev-parse", "HEAD"),
+        "git_tree": _git_or_env("AI4LAW_RELEASE_TREE", "rev-parse", "HEAD^{tree}"),
+        "built_at": os.getenv("AI4LAW_RELEASE_BUILT_AT", "").strip()
+        or _git_or_env("AI4LAW_RELEASE_BUILT_AT", "show", "-s", "--format=%cI", "HEAD"),
         "builder": "task070-release",
         "frontend_bundle_sha256": bundle_hash,
         "backend_source_sha256": _source_digest(),
