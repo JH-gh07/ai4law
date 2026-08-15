@@ -193,6 +193,8 @@ DiagnosisResult/AssessmentResult 只追加：`control_decision: LegalControlDeci
 
 必须覆盖 Diagnosis evaluate/report/harness、Assessment sync/async/evidence/citation/consistency/renderer、EU SCC、US14117、CN Flow、common citation、WorkflowPipeline、V0 Task Gateway。重新扫描 HEAD、工作树和所有设计引用，输出 Designed/Implemented/Difference/Reason/Impact 表。
 
+> 已执行（2026-08-15）：全量回归 1295 passed / 9 failed（9 个均为与 task073 无关的历史遗留，见 FACT）；task073 相关子集 341 passed；前端 vitest 200 passed / 2 skipped、`tsc -b` 通过、`git diff --check` 清洁。FACT 刷新与 Designed/Implemented/Difference/Reason/Impact 表见 [`view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`](../view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md)。
+
 ## 5. 验证矩阵（可直接执行）
 
 ### 5.1 Diagnosis
@@ -275,8 +277,8 @@ Evidence:
 
 ## 11. 复核签字栏
 
-- [ ] 开发：已按 T01-T10 提交代码、测试和差异记录
+- [x] 开发：已按 T01-T10 提交代码、测试和差异记录（提交 `9d021b97`、`124e6852`、`464c5b1a`；FACT 见 `view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`）
 - [ ] 后端复核：已核对运行输出、trace、SourceRegistry 和并发隔离
 - [ ] 前端复核：已核对结果状态、复核提示和旧响应兼容
-- [ ] 数据/法律复核：已核对关键事实 provenance、证据和引用资格
+- [ ] 数据/法律复核：已核对关键事实 provenance、证据和引用资格（含 §5 数据治理观察 CN-TPL-019 口径）
 - [ ] 发布复核：已完成灰度、回滚演练和 FACT refresh
