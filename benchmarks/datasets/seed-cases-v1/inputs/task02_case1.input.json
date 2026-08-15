@@ -6,12 +6,12 @@
   "module_id": "cn.security_assessment",
   "mapping_status": "partial",
   "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case1.docx",
-  "source_sha256": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
-  "source_size_bytes": 13517,
+  "source_sha256": "e1736d4039386fc3af0af67fe0ff961f0b4ac5edcb25fd0199c12f61647e3ad7",
+  "source_size_bytes": 12200,
   "input": {
     "paragraphs": [
       "1. 基础信息",
-      "公司全称：XX城商银行股份有限公司；统一社会信用代码：91310XXXXXXXXXX；法定代表人：张某；所属行业：金融业（银行业）。",
+      "公司全称：临江城商银行股份有限公司；统一社会信用代码：91310XXXXXXXXXX；法定代表人：张某；所属行业：金融业（银行业）。",
       "2. 自评估工作信息",
       "自评估工作时间：2024年6月1日至7月15日。组织情况：由信息科技部牵头，联合合规法务部、风险管理部共同实施。实施方式：内部自评估。",
       "3. 数据出境场景",

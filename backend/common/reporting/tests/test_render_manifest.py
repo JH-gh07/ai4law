@@ -189,7 +189,7 @@ def test_docx_and_pdf_stats_recorded(tmp_path: Path) -> None:
     assert manifest.pdf_stats.page_count > 0
     assert manifest.pdf_stats.text_extracted is True
     assert manifest.pdf_stats.finding_ids_found == ["F-1", "F-2"]
-    assert {font.name for font in manifest.pdf_stats.fonts} == {"STSong-Light", "LiberationSans"}
+    assert {font.name for font in manifest.pdf_stats.fonts} == {"ReportCJK", "LiberationSans"}
 
 
 def test_all_equivalence_and_hash_gates_pass(tmp_path: Path) -> None:
@@ -202,17 +202,14 @@ def test_all_equivalence_and_hash_gates_pass(tmp_path: Path) -> None:
     assert "pdf_font_embedding" in gate_names
 
     for gate in manifest.gates:
-        if gate.name == "pdf_font_embedding":
-            assert gate.status == "blocked"  # BLOCKED_BY_FONT (no CJK asset)
-        else:
-            assert gate.status == "pass", (gate.name, gate.diagnostics)
+        assert gate.status == "pass", (gate.name, gate.diagnostics)
 
 
-def test_pdf_font_gate_is_blocked_not_pass_without_cjk_asset(tmp_path: Path) -> None:
+def test_pdf_font_gate_passes_with_cjk_asset(tmp_path: Path) -> None:
     manifest, _ = _build(tmp_path)
     font_gate = next(gate for gate in manifest.gates if gate.name == "pdf_font_embedding")
-    assert font_gate.status == "blocked"
-    assert any("BLOCKED_BY_FONT" in diag for diag in font_gate.diagnostics)
+    assert font_gate.status == "pass"
+    assert not any("BLOCKED_BY_FONT" in diag for diag in font_gate.diagnostics)
 
 
 # ── determinism ──────────────────────────────────────────────────────────────

@@ -529,9 +529,9 @@ def test_review_schema_first_registers_markdown_artifact(tmp_path: Path) -> None
 
         # T07 — the PDF report is rendered from the canonical IR (fixed-layout
         # renderer), not the legacy Markdown-line writer. preview records the IR
-        # hash. The CJK font stays BLOCKED_BY_FONT (STSong-Light emb=no) until a
-        # licensed asset is tracked, so only magic bytes + extractability are
-        # asserted here — not font embedding.
+        # hash. The CJK font now embeds (Noto Sans SC is tracked), but only magic
+        # bytes + extractability are asserted here — font embedding is covered by
+        # the reporting tests.
         from pypdf import PdfReader
 
         with container.session_factory() as db:

@@ -260,8 +260,8 @@ def test_bcr_ir_builds_render_manifest_with_equivalence(tmp_path):
     gate_status = {gate.name: gate.status for gate in manifest.gates}
     assert gate_status["compile"] == "pass"
     assert gate_status["equivalence"] == "pass"
-    # PDF CJK font gate stays blocked (no redistributable CJK asset), never pass.
-    assert gate_status["pdf_font_embedding"] == "blocked"
+    # PDF CJK font gate passes now that a redistributable CJK asset is tracked.
+    assert gate_status["pdf_font_embedding"] == "pass"
 
     # every artifact file exists on disk with a matching manifest entry
     for artifact in manifest.artifacts:

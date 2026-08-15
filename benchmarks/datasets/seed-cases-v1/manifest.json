@@ -46,28 +46,28 @@
       "files": [
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case1.docx",
-          "hash": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
-          "size_bytes": 13517
+          "hash": "e1736d4039386fc3af0af67fe0ff961f0b4ac5edcb25fd0199c12f61647e3ad7",
+          "size_bytes": 12200
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case2.docx",
-          "hash": "26fd936667ecd70bc3bed2292d9bfd7a54b5c760725b6819764813983be86826",
-          "size_bytes": 13417
+          "hash": "f795aba2b799b4db4b248a9fab5ea72bb68191fab79c69dae30f429522f27e00",
+          "size_bytes": 12112
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case3.docx",
-          "hash": "9313fdfde83394de58c3b382352a250dfe2ee815cafbc1f457e79858e9f5217a",
-          "size_bytes": 13173
+          "hash": "94a71564f66502e73e99e5a14ccac5dea5153300d0b198276e4a1e4ebbf46ef2",
+          "size_bytes": 11861
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case4.docx",
-          "hash": "ada476ff6f621cf48173d45270b88a2b178403985a539e3f7662f6930b171cf1",
-          "size_bytes": 13068
+          "hash": "06e1361e9283b3a8e5e81e2416164cea83d947b6c0cda25439d26733933404a0",
+          "size_bytes": 11764
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task02/task02_case5.docx",
-          "hash": "73e57b99df5a29517ea5a40f9022916e6e3a27fe2460a2cbd800afab68d38c42",
-          "size_bytes": 13349
+          "hash": "bcee712df29936919cdfe77351a74702679d874977af82c4f591df9ee8cbc251",
+          "size_bytes": 12046
         }
       ]
     },
@@ -76,28 +76,28 @@
       "files": [
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case1.docx",
-          "hash": "8a007f91b88cef95973a452380b79c454fe2cbf51ff0cb2f4cbc83776f499967",
-          "size_bytes": 12718
+          "hash": "b466eb262ff1a3e604994a291e84ff18554455f474c72df4ddaae32b92e5c701",
+          "size_bytes": 11416
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case2.docx",
-          "hash": "28002d4e64162a8adfa1bc740c1f3d04f6322fb7a44c57695cc7b5c8dbce24b0",
-          "size_bytes": 12065
+          "hash": "4402878730ce12456289d037144eb6f57d7102172af3e87f1d1dc64ca3121910",
+          "size_bytes": 10765
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case3.docx",
-          "hash": "090393e789434e16cce3c63b0be96df98c704569e0389117b3849dfb7d05ab12",
-          "size_bytes": 12262
+          "hash": "4bef22f5a39c0c495b0681ddbdd3f3151e0dbe488b816d9a4785fda021cfe65d",
+          "size_bytes": 10959
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case4.docx",
-          "hash": "3e9adb6b46bdf77b1106b146e41f9230f4d49713232d120790a624d4bd849499",
-          "size_bytes": 12663
+          "hash": "1a20cc6f2a2c3ce4be1ad2ce76a87482629160c4f209a8a2c245df0471f9dd34",
+          "size_bytes": 11359
         },
         {
           "file": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case5.docx",
-          "hash": "0a3a78572b28c4244b0c53408c2a21da2c0a98b827c1da11f9fb7fe659f3cc38",
-          "size_bytes": 12352
+          "hash": "9098744a147f040761649b679fbac412c73ca7066458a10ba86a3d1ee6800e5b",
+          "size_bytes": 11051
         }
       ]
     },

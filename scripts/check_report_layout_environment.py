@@ -131,8 +131,7 @@ def _scan_fonts() -> list[FontAsset]:
     There is no reliable pure-Python way to detect CJK coverage from a TTF
     header alone without a font library, so this scan reports *candidate*
     CJK font assets by filename hint and leaves coverage confirmation to the
-    PDF ``pdffonts emb=yes`` gate. The key contract invariant is that the repo
-    currently has NO dedicated CJK font asset — which the baseline records.
+    PDF ``pdffonts emb=yes`` gate.
     """
     cjk_hints = ("noto", "sourcehan", "sourcehans", "pingfang", "microsoftyahei",
                  "simsun", "simhei", "song", "hei", "kai", "cjk", "wqy", "zen",
@@ -333,7 +332,9 @@ def main() -> int:
         "visual_conversion_status": "AVAILABLE" if visual_available else "BLOCKED_BY_TOOLING",
         "cjk_font_assets": [f.__dict__ for f in fonts],
         "cjk_font_assets_note": (
-            "No dedicated CJK font asset in version control. Latin-only PDF.js "
+            "A redistributable CJK font asset is tracked; the PDF gate can embed CJK."
+            if any(f.covers_cjk for f in fonts)
+            else "No dedicated CJK font asset in version control. Latin-only PDF.js "
             "Liberation Sans is present but cannot render Chinese headings/body. "
             "A redistributable CJK font must be added before the PDF gate can pass."
         ),

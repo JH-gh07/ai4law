@@ -93,8 +93,8 @@ def test_audit_finding_sets_equal_when_ids_match(tmp_path) -> None:
     assert audit.differences == []
     assert audit.shadow is True
     assert audit.render_status == "success"
-    # PDF CJK font gate stays honestly blocked, never pass.
-    assert audit.pdf_font_gate == "blocked"
+    # PDF CJK font gate passes now that a redistributable CJK asset is tracked.
+    assert audit.pdf_font_gate == "pass"
     assert audit.ir_section_ids == manifest.section_ids
 
 

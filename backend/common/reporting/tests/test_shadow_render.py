@@ -93,8 +93,8 @@ def test_audit_records_missing_ids_and_pdf_gate_stays_blocked(tmp_path: Path) ->
     assert audit.missing_in_legacy == []
     assert audit.shadow is True
     assert audit.rendering_mode == "legacy"
-    # PDF CJK font gate is honestly blocked, never fabricated as pass.
-    assert audit.pdf_font_gate == "blocked"
+    # PDF CJK font gate passes now that a redistributable CJK asset is tracked.
+    assert audit.pdf_font_gate == "pass"
 
 
 def test_write_audit_json_round_trips_without_sensitive_content(tmp_path: Path) -> None:

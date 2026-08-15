@@ -230,19 +230,19 @@ def test_rendered_pdf_passes_compiler_render_gate() -> None:
 
 
 def test_cjk_font_embedding_gate() -> None:
-    """The CJK font embeds only when a licensed asset is tracked.
+    """The CJK font embeds (emb=yes) when a licensed asset is tracked.
 
-    Without a CJK asset the renderer degrades to ``STSong-Light`` (emb=no), so
-    the font gate stays ``BLOCKED_BY_FONT``. With an asset (simulated via a
-    fake registered spec), the spec reports ``cjk_embedded=True``.
+    The repo tracks Noto Sans SC (SIL OFL 1.1); the renderer embeds it instead
+    of degrading to the non-embedded ``STSong-Light`` CID font.
     """
     document, registry = _document()
     fonts = PdfRenderer()._register_fonts()
     # Latin body font embeds cleanly (Liberation Sans TTF ships with the repo).
     assert fonts.latin == "LiberationSans"
-    # The current repository has no CJK asset → degraded, non-embedded CID font.
-    assert fonts.cjk_embedded is False
-    assert fonts.cjk_asset is None
+    # A redistributable CJK asset is tracked → embedded (emb=yes), not degraded.
+    assert fonts.cjk_embedded is True
+    assert fonts.cjk_asset is not None
+    assert fonts.cjk_asset.covers_cjk is True
 
     if shutil.which("pdffonts"):
         blob = PdfRenderer().render(document, registry)
@@ -250,9 +250,20 @@ def test_cjk_font_embedding_gate() -> None:
             path = Path(d) / "r.pdf"
             path.write_bytes(blob)
             out = subprocess.run(["pdffonts", str(path)], capture_output=True, text=True).stdout
-            assert "STSong-Light" in out
-            # non-embedded CID font → emb=no, which is exactly the blocked gate.
+            assert "NotoSansSC-Regular" in out
             assert "emb" in out
+
+
+def test_cjk_font_degrades_to_cid_when_no_asset(monkeypatch) -> None:
+    """Without a CJK asset the renderer degrades to STSong-Light (emb=no)."""
+    import backend.common.reporting.renderers.pdf as pdf_module
+
+    renderer = PdfRenderer()
+    monkeypatch.setattr(pdf_module, "get_cjk_font", lambda: None)
+    fonts = renderer._register_fonts()
+    assert fonts.cjk_embedded is False
+    assert fonts.cjk_asset is None
+    assert fonts.body == "STSong-Light"
 
 
 def test_font_spec_flags_embedded_cjk_when_asset_present(monkeypatch) -> None:

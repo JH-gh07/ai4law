@@ -3,8 +3,8 @@
   "generated_by": "scripts/build_seed_case_requests.py",
   "tier": "Level B (extraction record -> module request schema)",
   "counts": {
-    "rejected": 30,
-    "converted": 8,
+    "rejected": 29,
+    "converted": 9,
     "pending_correction": 12
   },
   "gap_ledger": "status/check/task065/seed-gap-ledger.json",
@@ -75,7 +75,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "company_name",
         "pii_count"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
@@ -87,7 +86,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "company_name",
         "pii_count"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
@@ -99,7 +97,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "company_name",
         "pii_count"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
@@ -108,12 +105,10 @@
       "case_id": "task02_case4",
       "task_no": 2,
       "module_id": "cn.security_assessment",
-      "levelb": "rejected",
-      "request_path": null,
-      "blocking_missing_facts": [
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task02_case4.request.json",
+      "blocking_missing_facts": [],
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task02_case5",
@@ -122,7 +117,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "company_name",
         "pii_count"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
@@ -135,9 +129,7 @@
       "request_path": null,
       "blocking_missing_facts": [
         "attachments",
-        "company_profile.company_name",
-        "company_profile.company_uscc",
-        "transfer_context.recipient_name"
+        "company_profile.company_uscc"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },
@@ -149,9 +141,7 @@
       "request_path": null,
       "blocking_missing_facts": [
         "attachments",
-        "company_profile.company_name",
-        "company_profile.company_uscc",
-        "transfer_context.recipient_name"
+        "company_profile.company_uscc"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },
@@ -163,9 +153,7 @@
       "request_path": null,
       "blocking_missing_facts": [
         "attachments",
-        "company_profile.company_name",
-        "company_profile.company_uscc",
-        "transfer_context.recipient_name"
+        "company_profile.company_uscc"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },
@@ -177,10 +165,8 @@
       "request_path": null,
       "blocking_missing_facts": [
         "attachments",
-        "company_profile.company_name",
         "company_profile.company_uscc",
-        "transfer_context.recipient_country_region",
-        "transfer_context.recipient_name"
+        "transfer_context.recipient_country_region"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },
@@ -192,9 +178,7 @@
       "request_path": null,
       "blocking_missing_facts": [
         "attachments",
-        "company_profile.company_name",
-        "company_profile.company_uscc",
-        "transfer_context.recipient_name"
+        "company_profile.company_uscc"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },

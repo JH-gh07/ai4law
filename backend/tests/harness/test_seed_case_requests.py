@@ -100,14 +100,15 @@ def test_supported_cases_are_never_silently_defaulted() -> None:
 def test_frozen_corpus_rejected_or_isolated_not_fabricated() -> None:
     """The raw/anonymized corpus is never silently defaulted.
 
-    v2.0 校正后现状：12 个 pending_correction 隔离，30 个缺关键事实被 rejected，
-    8 个事实完整可 converted（task04/06 附件派生、task07 DPIA、task08 TIA）。
+    v2.0 校正后现状：12 个 pending_correction 隔离，29 个缺关键事实被 rejected，
+    9 个事实完整可 converted（task02_case4 及 task04/06 附件派生、task07 DPIA、
+    task08 TIA）。
     """
     dispositions = _dispositions()
     tally: dict[str, int] = {}
     for d in dispositions:
         tally[d["levelb"]] = tally.get(d["levelb"], 0) + 1
-    assert tally == {"rejected": 30, "pending_correction": 12, "converted": 8}
+    assert tally == {"rejected": 29, "pending_correction": 12, "converted": 9}
     # Document the blocking facts so any future drift is explicit.
     for d in dispositions:
         if d["levelb"] == "rejected":

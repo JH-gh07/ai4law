@@ -5,6 +5,8 @@
 > **目标**：纠正"Level B 代码已全部落实、36 个 rejected 只能人工补"的错误结论；把仍可由代码消除的误判/派生项与真正的人工项精确分开，并给出可执行顺序。
 > **性质**：技术纠偏 + 代码实施方案（不含法律结论签署 / 金标签署）。
 
+> ✅ **执行结果（2026-08-15）**：Phase A/B/C/D 已全部落实并提交（`998482c9`）。随后按用户授权，对**占位符主体名**（task02/03 的公司名 / 接收方名，仅替换不影响业务的标识名，业务事实一律不碰）替换为测试名，使 task02_case4 由 rejected 转 converted。最终台账：**converted 9 / rejected 29 / pending_correction 12 / gap 0**。同时补装 item 4（LibreOffice + 可再分发 CJK 字体 `resources/fonts/NotoSansSC-Regular.ttf`），PDF CJK 字体嵌入门已由 blocked 转 pass。item 3（gold 签署）属法域专家验收项，本 task 不做。
+
 ---
 
 ## 一、背景与问题
@@ -143,15 +145,16 @@
 
 ## 六、真正的人工 / 专家项（纠偏后精确分类）
 
-### 6.1 占位符污染的主体 —— 可替换测试名，非阻塞、非专家
+### 6.1 占位符污染的主体 —— 可替换测试名，非阻塞、非专家 ✅ 已替换
 
-| 功能 | 字段 | 原文 | 需补 |
+| 功能 | 字段 | 原文 | 已补（测试名，仅标识、不影响业务） |
 |---|---|---|---|
-| task02 安全评估 | `company_name` | `XX城商银行…` | 测试公司名 |
-| task03 标准合同 | `company_profile.company_name` | `XX科技…` | 测试公司名 |
-| task03 标准合同 | `transfer_context.recipient_name` | `XX Tech Inc.` | 测试接收方名 |
+| task02 安全评估 | `company_name` | `XX城商银行…` | `临江城商银行股份有限公司` 等 5 个 |
+| task03 标准合同 | `company_profile.company_name` | `XX科技…` | `云驰科技有限公司` 等 5 个 |
+| task03 标准合同 | `transfer_context.recipient_name` | `XX Tech Inc.` | `Yunchi Tech Inc.` 等 5 个 |
 
 > task07 `dpo_name`（`XX医疗集团`）为可选字段，不阻塞；task04 正文甲乙双方名不进 request。
+> 替换原则（task065 §T03「禁止伪造」红线下）：**只替换公司名/接收方名/项目名等标识性占位符，业务事实（`company_uscc`、`pii_count`、`attachments`、`scc_text`、`business_model` 等）一律不碰。**
 
 ### 6.2 原文确实没写的结构化字段 —— 数据 owner 补内容
 
@@ -182,7 +185,7 @@
 - [ ] `_parse_ynu` 对 `不属于CIIO`/`不含敏感` 返回 no。
 - [ ] TIA 走 `structured_input` 后，task08_case1/2 不再因 `final_conclusion`/`third_country_assessment` blocking（其余真缺项仍按规则拒绝）。
 - [ ] task04/06 附件派生后，`uploaded_files`/`uploaded_documents` 不再是 blocking。
-- [ ] 五处台账 + manifest + git 与 2/36/12/0（或修复后新计数）一致。
+- [x] 五处台账 + manifest + git 与 **9/29/12/0**（修复后新计数，含占位符主体名替换测试名后 task02_case4 转出）一致。
 - [ ] `pytest backend/tests/harness/ -q` 全绿，且新增忠实性测试通过。
 - [ ] `git diff --check` 干净。
 
