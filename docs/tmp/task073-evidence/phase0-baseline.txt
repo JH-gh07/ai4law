@@ -22,3 +22,14 @@
   frontend/src/lib/dev-seed-cases.ts、scripts/build_seed_frontend_cases.py、
   status/todo/{task072,task073,设计文档等}
 - 结论: 用户有大量未提交工作树修改（含本 task073 方案本身），Phase 0 不做任何 add/cleanup/rollback。
+
+## 基线测试结果（§1.2 命令）
+命令: ./.venv/bin/pytest -q backend/tests/harness backend/domains/cn/transfer_diagnosis/tests backend/domains/cn/security_assessment/tests
+结果: 3 failed, 189 passed, 1 warning (138.70s)
+
+3 个失败均为 backend/tests/harness/test_case_parity.py（case catalog/inventory 数量漂移，task071/072/074 进行中产物）：
+- test_committed_tree_passes_the_gate
+- test_python_gate_reads_frontend_counts_from_structured_inventory
+- test_case_catalog_has_unique_registered_cases_and_real_sources
+  根因: "case catalog has 28 cases, inventory declares 40 frontend cases"（种子案例 frontend-cases 与 case_inventory.json 漂移）
+结论: 与 task073（Legal Control Plane）无关；作为 pre-existing 基线登记，task073 回归以"不新增失败"为准。

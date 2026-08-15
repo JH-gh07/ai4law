@@ -4,6 +4,7 @@ from typing import Any
 
 from backend.common.citation.id_generator import generate_citation_id, resolve_abbreviation
 from backend.common.citation.models import AuthorityLevel, BindingForce, CitationItem, CitationType
+from backend.common.citation.source_identity import SourceIdentityResolver
 from backend.common.workflow import EvidenceItem, FactItem, IssueItem
 
 
@@ -146,12 +147,18 @@ def build_citations(
     facts: list[FactItem] | None = None,
     evidence_chain: list[EvidenceItem] | None = None,
     case_grounding: dict[str, Any] | None = None,
+    source_identity_resolver: SourceIdentityResolver | None = None,
 ) -> list[CitationItem]:
     """Build CitationItem list from pipeline legal and case grounding data.
 
     Merges both legal_grounding and case_grounding bindings.
     case_grounding items get can_enter_external_report=False.
-    Deduplicates by (title, article_no), keeping the highest confidence_score.
+    Deduplicates by (title, article_no), keeping the highest confidence_score
+    and set-unioning related issue/fact/evidence ids.
+
+    If ``source_identity_resolver`` is provided, each citation's canonical
+    registry identity is resolved (exact membership only) and fail-closed policy
+    is applied; ``registry_source_id`` records the authoritative source id.
     """
     facts = facts or []
     evidence_chain = evidence_chain or []
@@ -184,10 +191,18 @@ def build_citations(
                 key = (citation.title, citation.article_no)
                 if key in candidates:
                     existing = candidates[key]
-                    if citation.confidence_score <= existing.confidence_score:
-                        continue
-                    existing.related_issue_ids.append(issue_id)
-                    existing.confidence_score = citation.confidence_score
+                    existing.related_issue_ids = sorted(
+                        set(existing.related_issue_ids) | set(citation.related_issue_ids)
+                    )
+                    existing.related_fact_ids = sorted(
+                        set(existing.related_fact_ids) | set(citation.related_fact_ids)
+                    )
+                    existing.related_evidence_ids = sorted(
+                        set(existing.related_evidence_ids)
+                        | set(citation.related_evidence_ids)
+                    )
+                    if citation.confidence_score > existing.confidence_score:
+                        existing.confidence_score = citation.confidence_score
                     continue
 
                 candidates[key] = citation
@@ -196,4 +211,40 @@ def build_citations(
     _process_bindings(legal_grounding or {})
     _process_bindings(case_grounding or {})
 
-    return sorted(candidates.values(), key=lambda c: c.confidence_score, reverse=True)
+    citations = sorted(
+        candidates.values(), key=lambda c: c.confidence_score, reverse=True
+    )
+
+    if source_identity_resolver is not None:
+        for citation in citations:
+            _apply_source_identity(citation, source_identity_resolver)
+
+    return citations
+
+
+def _apply_source_identity(
+    citation: CitationItem,
+    resolver: SourceIdentityResolver,
+) -> None:
+    """Resolve canonical registry identity and apply fail-closed citation policy.
+
+    - REGISTERED：``registry_source_id`` = 权威 source_id，并从 Registry 读取
+      ``can_enter_external_report`` / ``allowed_usage`` 权威值。
+    - UNREGISTERED / INELIGIBLE：``can_enter_external_report=False``、
+      ``external_report_allowed=False``、``allowed_usage=["internal_review"]``。
+    """
+    identity = resolver.resolve(citation.source_id)
+    citation.registry_source_id = identity.registry_source_id
+
+    if identity.status == "REGISTERED":
+        if not identity.can_enter_external_report:
+            citation.can_enter_external_report = False
+            citation.external_report_allowed = False
+        if identity.allowed_usage:
+            citation.allowed_usage = list(identity.allowed_usage)
+        return
+
+    # UNREGISTERED / INELIGIBLE：fail-closed，不得作为正式外部报告依据。
+    citation.can_enter_external_report = False
+    citation.external_report_allowed = False
+    citation.allowed_usage = ["internal_review"]

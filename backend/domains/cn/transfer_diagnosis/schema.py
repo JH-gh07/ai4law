@@ -2,6 +2,8 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from backend.common.legal_control.contracts import LegalControlDecision
+
 
 class YesNoUnknown(str, Enum):
     YES = "yes"
@@ -111,6 +113,9 @@ class DiagnosisResult(BaseModel):
     fact_provenance: dict[str, str] = Field(default_factory=dict)
     missing_facts: list[str] = Field(default_factory=list)
     requires_human_review: bool = False
+    # ── Legal Agent Control Plane（task073，additive，opt-in） ──
+    control_decision: LegalControlDecision | None = None
+    clarification_questions: list[str] = Field(default_factory=list)
 
 
 class DiagnosisReportRequest(BaseModel):

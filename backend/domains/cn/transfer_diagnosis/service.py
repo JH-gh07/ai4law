@@ -6,7 +6,13 @@ from backend.common.llm.client import LLMClient
 from backend.common.risk.scoring import risk_level
 from backend.core.settings import get_settings
 from backend.common.trace.recorder import TraceRecorder
+from backend.common.legal_control.contracts import LegalControlGateResult
 from backend.domains.cn.transfer_diagnosis.adapters import facts_from_module
+from backend.domains.cn.transfer_diagnosis.control_adapter import (
+    build_control_decision,
+    build_fact_completeness_gate,
+    build_rule_precedence_gate,
+)
 from backend.domains.cn.transfer_diagnosis.models import DiagnosisFacts, FactSource
 from backend.domains.cn.transfer_diagnosis.rule_engine import DiagnosisRuleEngine, RuleMatch
 from backend.domains.cn.transfer_diagnosis.schema import DiagnosisAnswers, DiagnosisResult
@@ -39,8 +45,19 @@ class DiagnosisService:
         with open(tree_path, "r", encoding="utf-8") as fp:
             return json.load(fp)
 
-    def evaluate(self, answers: DiagnosisAnswers, *, trace: TraceRecorder | None = None) -> DiagnosisResult:
+    def evaluate(
+        self,
+        answers: DiagnosisAnswers,
+        *,
+        trace: TraceRecorder | None = None,
+        control: bool | None = None,
+    ) -> DiagnosisResult:
         answers, provenance, missing_facts = self._resolve_answers(answers)
+
+        # ── Legal Agent Control Plane（task073，opt-in） ──
+        control_enabled = bool(control)
+        clarification_questions: list[str] = []
+        gate_results: list[LegalControlGateResult] = []
 
         if trace:
             trace.record("status", {"summary": "开始路径诊断", "detail": {"module": "diagnosis"}})
@@ -119,12 +136,24 @@ class DiagnosisService:
             missing_facts=missing_facts,
         )
         validation_result = self._validate_fact_consistency(answers)
+        if control_enabled:
+            gate_results.append(
+                build_fact_completeness_gate(
+                    facts=facts,
+                    validation_result=validation_result,
+                    clarification_questions=clarification_questions,
+                )
+            )
         if validation_result is not None:
             result = self._attach_fact_metadata(
                 validation_result,
                 facts,
                 additional_notes=agent_notes,
             )
+            if control_enabled:
+                result = self._attach_control(
+                    result, gate_results, trace, clarification_questions
+                )
             if trace:
                 trace.record(
                     "final",
@@ -137,6 +166,10 @@ class DiagnosisService:
 
         # ── Decision tree ──
         rule_match = self._rule_engine.evaluate(facts)
+        if control_enabled:
+            gate_results.append(
+                build_rule_precedence_gate(rule_match=rule_match, facts=facts)
+            )
         if not rule_match.is_default:
             result = self._build_rule_result(answers, rule_match)
             result = self._attach_fact_metadata(
@@ -145,6 +178,10 @@ class DiagnosisService:
                 rule_match=rule_match,
                 additional_notes=agent_notes,
             )
+            if control_enabled:
+                result = self._attach_control(
+                    result, gate_results, trace, clarification_questions
+                )
             if trace:
                 trace.record(
                     "final",
@@ -168,6 +205,10 @@ class DiagnosisService:
                     facts,
                     additional_notes=agent_notes,
                 )
+                if control_enabled:
+                    inferred = self._attach_control(
+                        inferred, gate_results, trace, clarification_questions
+                    )
                 if trace:
                     trace.record(
                         "final",
@@ -193,6 +234,10 @@ class DiagnosisService:
             uncertainty_notes=agent_notes or None,
         )
         result = self._attach_fact_metadata(result, facts)
+        if control_enabled:
+            result = self._attach_control(
+                result, gate_results, trace, clarification_questions
+            )
         if trace:
             trace.record(
                 "final",
@@ -447,6 +492,21 @@ class DiagnosisService:
             or result.conclusion_source != "rule"
         ):
             result.requires_human_review = True
+        return result
+
+    @staticmethod
+    def _attach_control(
+        result: DiagnosisResult,
+        gate_results: list[LegalControlGateResult],
+        trace: TraceRecorder | None,
+        clarification_questions: list[str],
+    ) -> DiagnosisResult:
+        """G4 — 合并 Gate 结果、写控制 trace，并附加到 DiagnosisResult。"""
+        result.control_decision = build_control_decision(
+            gate_results=gate_results,
+            trace=trace,
+        )
+        result.clarification_questions = list(clarification_questions)
         return result
 
     def _build_rule_result(self, answers: DiagnosisAnswers, rule: RuleMatch) -> DiagnosisResult:

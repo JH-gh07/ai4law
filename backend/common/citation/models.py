@@ -26,6 +26,7 @@ class CitationItem:
 
     citation_id: str
     source_id: str
+    registry_source_id: str | None = None
     jurisdiction: str = ""
     display_label: str = ""
     chunk_id: str = ""
@@ -58,6 +59,7 @@ class CitationItem:
         return {
             "citation_id": self.citation_id,
             "source_id": self.source_id,
+            "registry_source_id": self.registry_source_id,
             "jurisdiction": self.jurisdiction,
             "display_label": self.display_label,
             "chunk_id": self.chunk_id,

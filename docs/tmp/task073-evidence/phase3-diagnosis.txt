@@ -1,0 +1,40 @@
+task073 Phase 3（CN Transfer Diagnosis，T03-T05）验收证据
+时间：2026-08-15
+
+=== 变更文件 ===
+- backend/domains/cn/transfer_diagnosis/control_adapter.py（新增，158 行）
+  G1 build_fact_completeness_gate / G2 build_rule_precedence_gate / G4 build_control_decision
+- backend/domains/cn/transfer_diagnosis/service.py（最小 seam）
+  - evaluate(..., control: bool | None = None)，默认 None（opt-in）
+  - G1 在 facts_from_module + _validate_fact_consistency 后
+  - G2 在 _rule_engine.evaluate 后
+  - G4（_attach_control）在四个返回点前合并并写控制 trace
+- backend/domains/cn/transfer_diagnosis/tests/test_control_adapter.py（新增，177 行）
+- backend/domains/cn/transfer_diagnosis/tests/test_control_service.py（新增，198 行）
+
+=== 设计要点 ===
+- 决定性推断来源集合 = {LLM_INFERENCE, ESTIMATE, DEFAULT}（覆盖 §5.1 decisive inference 三来源）
+- G1 critical missing（facts.missing_facts ∩ {is_ciio, contains_important_data, no_personal_info}）
+  → ESCALATE + details.critical_missing → merge 映射 NEEDS_CLARIFICATION，并生成固定澄清问题
+- G1 既有冲突 → ESCALATE + details.conflicts（无 critical_missing）→ NEEDS_REVIEW
+- G2 non-default → PASS（execution_precedence=true，锁定 path）
+- G2 non-default + decisive inferred → ESCALATE → NEEDS_REVIEW
+- G2 default → CONDITIONAL（execution_precedence=false，不打确定性标签）
+- 关键事实缺失时推荐路径仍由既有 AI/default 保守推测给出，但 control_decision=NEEDS_CLARIFICATION
+  + clarification_questions 非空，前端据此不呈现"无条件最终路径"
+
+=== D1-D6 验收 ===
+D1 完整 non-default：AUTO、path 不变（security_assessment/pii_threshold）✓
+D2 critical missing：NEEDS_CLARIFICATION、问题非空、details.critical_missing=["is_ciio"] ✓
+D3 既有冲突：manual_review + validation 保留 + NEEDS_REVIEW ✓
+D4 decisive inference（LLM_INFERENCE agent / ESTIMATE 估算 / DEFAULT 单测）：NEEDS_REVIEW ✓
+D5 default→AI：CONDITIONAL、execution_precedence=false、conclusion_source!=rule、matched_rule_id=None ✓
+D6 未传 control：control_decision=None、clarification_questions=[] ✓
+
+=== 回归 ===
+- backend/domains/cn/transfer_diagnosis/tests/：43 passed（含新增 18，既有 25 全通过）
+- backend/domains/cn/security_assessment/tests/：68 passed（Assessment 内部 diagnosis 默认调用不变）
+
+=== trace ===
+- test_control_trace_written_and_order_preserved：2 个 control.* 事件（G1+G2），
+  既有 status 仍最先、final 仍最后，事件顺序不变。

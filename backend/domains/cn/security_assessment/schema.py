@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from backend.common.legal_control.contracts import LegalControlDecision
 from backend.domains.cn.security_assessment.task_state import AssessmentTaskState
 
 PathCheckMode = Literal["generate_only", "warn_only", "block_on_mismatch"]
@@ -184,6 +185,9 @@ class AssessmentResult(BaseModel):
     regulations: list[RegulationHit]
     chapters: list[ChapterContent]
     consistency_issues: list[str]
+    # ── Legal Agent Control Plane（task073，additive，opt-in） ──
+    control_decision: LegalControlDecision | None = None
+    clarification_questions: list[str] = Field(default_factory=list)
 
 
 class AssessmentAsyncAccepted(BaseModel):

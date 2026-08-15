@@ -220,6 +220,17 @@ function semanticFromDetail(event: RunEvent, lang: TraceLang): SemanticMapping {
   }
 
   if (rawName) {
+    if (/^control\./.test(rawName)) {
+      const gate = readString(detail.gate);
+      const outcome = readString(detail.outcome);
+      const label = [gate, outcome].filter(Boolean).join(" · ");
+      return {
+        stage: "Review",
+        action: label ? `${t.actions.controlGate} · ${label}` : t.actions.controlGate,
+        icon: "●",
+        badge: outcome === "PASS" ? "CONTROL" : "CONTROL",
+      };
+    }
     if (/per_issue_rag|agent_rag_reformulation/i.test(rawName)) {
       return {
         stage: "RAG",

@@ -54,6 +54,7 @@ export const TRACE_I18N = {
       specializedAnalysis: "生成专项分析结果",
       intermediateArtifact: "生成中间产物",
       retrievalOutput: "输出检索结果",
+      controlGate: "执行控制门判定",
     },
     fields: {
       callTarget: "调用对象：",
@@ -119,6 +120,7 @@ export const TRACE_I18N = {
       specializedAnalysis: "Generate specialized analysis",
       intermediateArtifact: "Generate intermediate artifact",
       retrievalOutput: "Output retrieval results",
+      controlGate: "Run control gate",
     },
     fields: {
       callTarget: "Call target:",
