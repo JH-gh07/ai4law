@@ -36,14 +36,21 @@
         "available": false
       },
       "soffice": {
-        "path": null,
-        "available": false
+        "path": "/usr/local/bin/soffice",
+        "available": true
       }
     },
-    "visual_conversion_available": false,
-    "visual_conversion_status": "BLOCKED_BY_TOOLING",
-    "cjk_font_assets": [],
-    "cjk_font_assets_note": "No dedicated CJK font asset in version control. Latin-only PDF.js Liberation Sans is present but cannot render Chinese headings/body. A redistributable CJK font must be added before the PDF gate can pass."
+    "visual_conversion_available": true,
+    "visual_conversion_status": "AVAILABLE",
+    "cjk_font_assets": [
+      {
+        "path": "resources/fonts/NotoSansSC-Regular.ttf",
+        "sha256": "b21066bd748d341d1a1424490dde49e5f6ed7c043a21cc9d9985f002fc3ac074",
+        "license": null,
+        "covers_cjk": true
+      }
+    ],
+    "cjk_font_assets_note": "A redistributable CJK font asset is tracked; the PDF gate can embed CJK."
   },
   "gates": [
     {
