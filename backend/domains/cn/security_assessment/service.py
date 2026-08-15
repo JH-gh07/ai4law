@@ -10,12 +10,18 @@ from backend.common.tasks.manager import InMemoryTaskManager, TaskSnapshot
 from backend.common.trace.recorder import TraceRecorder
 from backend.common.citation.audit import log_citations_created
 from backend.common.citation.registry import CitationRegistry
+from backend.common.citation.source_identity import SourceIdentityResolver
 from backend.common.knowledge.v2 import RetrievalRequest
+from backend.common.legal_control.contracts import merge_gate_results
+from backend.common.legal_control.trace import record_gate_trace
 from backend.common.workflow import GenerationContextPack, WorkflowPipeline
 from backend.domains.cn.security_assessment.chapter_generator import AssessmentChapterGenerator
 from backend.domains.cn.security_assessment.citation_builder import build_citations
+from backend.domains.cn.security_assessment.citation_validity_gate import run_citation_validity_gate
 from backend.domains.cn.security_assessment.consistency_checker import ConsistencyChecker
+from backend.domains.cn.security_assessment.escalation_gate import run_escalation_gate
 from backend.domains.cn.security_assessment.evidence_builder import build_assessment_evidence
+from backend.domains.cn.security_assessment.evidence_gate import run_evidence_gate
 from backend.domains.cn.security_assessment.fact_builder import build_assessment_facts
 from backend.domains.cn.security_assessment.generation_basis import build_generation_basis_pack
 from backend.domains.cn.security_assessment.issue_builder import build_assessment_issues
@@ -84,14 +90,20 @@ class AssessmentService:
         *,
         task_id: str | None = None,
         trace: TraceRecorder | None = None,
+        control: bool | None = None,
     ) -> AssessmentResult:
         run_task_id = task_id or str(uuid.uuid4())
         active_trace, token = prepare_run(module="assessment", task_id=run_task_id, trace=trace)
+        control_enabled = bool(control)
 
         try:
             if trace:
                 trace.record("status", {"summary": "开始安全自评估", "detail": {"module": "assessment", "company": getattr(payload, 'company_name', '')}})
-            run_result = self._build_pipeline().run(payload=payload, task_id=run_task_id, trace=active_trace)
+            run_result = self._build_pipeline(
+                control=control_enabled, trace=active_trace
+            ).run(payload=payload, task_id=run_task_id, trace=active_trace)
+            if control_enabled:
+                self._run_control_gates(run_result=run_result, trace=active_trace)
         except PathMismatchError as e:
             if trace:
                 trace.record("status", {"summary": "路径不匹配，中断生成", "detail": str(e)})
@@ -110,6 +122,11 @@ class AssessmentService:
             chapters=run_result.chapters,
             llm_enabled=bool(self.llm_client and self.llm_client.enabled),
         )
+        control_decision = None
+        if control_enabled:
+            control_decision = merge_gate_results(
+                list(run_result.context_pack.control_gate_results)
+            )
         return AssessmentResult(
             task_id=run_task_id,
             state=chapter_state,
@@ -119,7 +136,35 @@ class AssessmentService:
             regulations=run_result.regulations,
             chapters=run_result.chapters,
             consistency_issues=run_result.consistency_issues,
+            control_decision=control_decision,
         )
+
+    @staticmethod
+    def _run_control_gates(*, run_result, trace: TraceRecorder | None) -> None:
+        """T08 — repair 后、render 后的 Citation Validity + Escalation 门。
+
+        这里读取的是 pipeline 返回的**最终**（repair 后）章节与 consistency
+        issues；门为纯校验，不修改 registry 或章节。trace 在
+        ``finalize_run`` 前写入，确保落入 manifest。
+        """
+        context_pack = run_result.context_pack
+        citation_gate = run_citation_validity_gate(
+            chapters=run_result.chapters,
+            context_pack=context_pack,
+        )
+        context_pack.control_gate_results.append(citation_gate)
+        record_gate_trace(trace, citation_gate)
+
+        remaining_issues = list(run_result.consistency_issues or [])
+        repair_blocked = any(
+            "REPAIR_BLOCKED:" in issue for issue in remaining_issues
+        )
+        escalation_gate = run_escalation_gate(
+            repair_blocked=repair_blocked,
+            consistency_issues=remaining_issues,
+        )
+        context_pack.control_gate_results.append(escalation_gate)
+        record_gate_trace(trace, escalation_gate)
 
     @staticmethod
     def _check_chapter_quality(chapters: list, llm_enabled: bool) -> AssessmentTaskState:
@@ -141,7 +186,12 @@ class AssessmentService:
             return AssessmentTaskState.COMPLETED
         return AssessmentTaskState.COMPLETED
 
-    def _build_pipeline(self) -> WorkflowPipeline:
+    def _build_pipeline(
+        self,
+        *,
+        control: bool = False,
+        trace: TraceRecorder | None = None,
+    ) -> WorkflowPipeline:
         return WorkflowPipeline(
             extract_profile=self.extractor.extract,
             evaluate_diagnosis=self._evaluate_diagnosis,
@@ -152,7 +202,9 @@ class AssessmentService:
             build_issues=build_assessment_issues,
             build_evidence=build_assessment_evidence,
             retrieve_per_issue=self._retrieve_per_issue,
-            build_context_pack=self._build_context_pack,
+            build_context_pack=lambda **kw: self._build_context_pack(
+                control=control, trace=trace, **kw
+            ),
             generate_chapters=self.generator.generate,
             check_consistency=self.checker.check_with_context,
             check_alignment=self._check_alignment,
@@ -297,6 +349,8 @@ class AssessmentService:
         path_warning: str | None,
         attachment_notes: list[dict[str, str]],
         per_issue_rag: dict[str, dict] | None = None,
+        control: bool = False,
+        trace: TraceRecorder | None = None,
     ) -> GenerationContextPack:
         retrieval_bundle = getattr(self.retriever, "last_bundle", None)
         legal_grounding_context = [
@@ -355,6 +409,9 @@ class AssessmentService:
 
         # Build citation registry from pipeline data
         regulation_dicts = [hit.model_dump() for hit in regulations]
+        # T08 — opt-in 时才做 canonical source identity fail-closed；默认关闭
+        # 保持 legacy 行为不变（未传 control 时 output/事件顺序不变）。
+        source_identity_resolver = SourceIdentityResolver() if control else None
         citation_items = build_citations(
             legal_grounding=legal_grounding,
             regulations=regulation_dicts,
@@ -362,6 +419,7 @@ class AssessmentService:
             facts=facts,
             evidence_chain=evidence_chain,
             case_grounding=case_grounding,
+            source_identity_resolver=source_identity_resolver,
         )
         citation_registry = CitationRegistry()
         for item in citation_items:
@@ -373,7 +431,7 @@ class AssessmentService:
             report_id=task_id,
         )
 
-        return GenerationContextPack(
+        context_pack = GenerationContextPack(
             module_key="assessment",
             request_id=task_id,
             facts=facts,
@@ -400,6 +458,14 @@ class AssessmentService:
             evaluation_context=compliance_reasoning,
             compliance_reasoning=compliance_reasoning,
         )
+
+        # ── Legal Agent Control Plane：Evidence Sufficiency Gate（E1-E5） ──
+        if control:
+            evidence_gate = run_evidence_gate(context_pack)
+            context_pack.control_gate_results.append(evidence_gate)
+            record_gate_trace(trace, evidence_gate)
+
+        return context_pack
 
     @staticmethod
     def _check_alignment(report_content: str, profile) -> list[str]:
