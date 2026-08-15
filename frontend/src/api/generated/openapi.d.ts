@@ -1476,6 +1476,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/tasks/{task_id}/input-manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Input Manifest */
+        get: operations["get_input_manifest_api_v1_review_tasks__task_id__input_manifest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/review/tasks/{task_id}/issues": {
         parameters: {
             query?: never;
@@ -1709,6 +1726,23 @@ export interface paths {
         put?: never;
         /** Retry Us 14117 Task */
         post: operations["retry_us_14117_task_api_v1_us_14117_tasks__task_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version */
+        get: operations["get_version_api_v1_version_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2021,8 +2055,11 @@ export interface components {
         AssessmentResult: {
             /** Chapters */
             chapters: components["schemas"]["ChapterContent"][];
+            /** Clarification Questions */
+            clarification_questions?: string[];
             /** Consistency Issues */
             consistency_issues: string[];
+            control_decision?: components["schemas"]["LegalControlDecision"] | null;
             /** Output Files */
             output_files?: {
                 [key: string]: string;
@@ -4500,6 +4537,57 @@ export interface components {
             providers?: components["schemas"]["RuntimeProviderConfig"][];
         };
         /**
+         * LegalControlDecision
+         * @description 一次运行的最终法律自动化控制结论。
+         *
+         *     ``legal_control_status`` 只表达法律自动化可用程度，与 ``task_status/state``
+         *     （程序执行状态）严格分离，禁止互相映射为失败。
+         */
+        LegalControlDecision: {
+            /** Gate Results */
+            gate_results?: components["schemas"]["LegalControlGateResult"][];
+            /**
+             * Legal Control Status
+             * @default AUTO
+             * @enum {string}
+             */
+            legal_control_status?: "AUTO" | "CONDITIONAL" | "NEEDS_CLARIFICATION" | "NEEDS_REVIEW" | "BLOCKED";
+            /** Reasons */
+            reasons?: string[];
+            /** Required Actions */
+            required_actions?: string[];
+        };
+        /**
+         * LegalControlGateResult
+         * @description 单个控制门（Gate）的判定结果。
+         *
+         *     ``outcome`` 表达该门的内部结论（PASS/CONDITIONAL/ESCALATE/BLOCK）；
+         *     汇总为 ``LegalControlDecision.legal_control_status`` 时使用显式优先级，
+         *     见 :func:`merge_gate_results`。
+         */
+        LegalControlGateResult: {
+            /** Details */
+            details?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Gate
+             * @enum {string}
+             */
+            gate: "FACT_COMPLETENESS" | "RULE_PRECEDENCE" | "EVIDENCE_SUFFICIENCY" | "CITATION_VALIDITY" | "ESCALATION";
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "PASS" | "CONDITIONAL" | "ESCALATE" | "BLOCK";
+            /** Reasons */
+            reasons?: string[];
+            /** Refs */
+            refs?: string[];
+            /** Required Actions */
+            required_actions?: string[];
+        };
+        /**
          * LegalDocumentReview
          * @description Legal document clause coverage review (6 core clauses per Assessment Measures Art.9).
          */
@@ -5465,6 +5553,99 @@ export interface components {
              */
             risk_source?: "processing_activity" | "data_type" | "technology" | "third_party" | "organizational" | "other";
         };
+        /** RunInputEntryPublic */
+        RunInputEntryPublic: {
+            /**
+             * Consumed By Service
+             * @default false
+             */
+            consumed_by_service?: boolean;
+            /** Display Name */
+            display_name: string;
+            /** Input Id */
+            input_id: string;
+            /**
+             * Media Type
+             * @default
+             */
+            media_type?: string;
+            /**
+             * Parser Status
+             * @default pending
+             * @enum {string}
+             */
+            parser_status?: "parsed" | "failed" | "skipped" | "pending";
+            /** Provenance */
+            provenance?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Public Locator
+             * @default
+             */
+            public_locator?: string;
+            /** Role */
+            role: string;
+            /**
+             * Sha256
+             * @default
+             */
+            sha256?: string;
+            /** Size Bytes */
+            size_bytes?: number | null;
+            /**
+             * Source Kind
+             * @enum {string}
+             */
+            source_kind: "uploaded" | "dev_preset" | "shared_scenario" | "inline";
+        };
+        /** RunInputIntegrity */
+        RunInputIntegrity: {
+            /**
+             * Canonicalization
+             * @default JCS-RFC8785
+             */
+            canonicalization?: string;
+            /**
+             * Hash Algorithm
+             * @default SHA-256
+             */
+            hash_algorithm?: string;
+            /**
+             * Manifest Hash
+             * @default
+             */
+            manifest_hash?: string;
+        };
+        /** RunInputManifestPublic */
+        RunInputManifestPublic: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Entries */
+            entries?: components["schemas"]["RunInputEntryPublic"][];
+            integrity?: components["schemas"]["RunInputIntegrity"];
+            /** Module Key */
+            module_key: string;
+            /**
+             * Request Hash
+             * @default
+             */
+            request_hash?: string;
+            /** Run Id */
+            run_id: string;
+            /** Scenario Id */
+            scenario_id?: string | null;
+            /**
+             * Schema Version
+             * @default 1.0
+             */
+            schema_version?: string;
+            /** Task Id */
+            task_id?: string | null;
+        };
         /** RuntimeProviderConfig */
         RuntimeProviderConfig: {
             /**
@@ -6026,18 +6207,33 @@ export interface components {
         /** TIARequest */
         TIARequest: {
             /** Attachments */
-            attachments: components["schemas"]["TIAAttachment"][];
-            /** Data Exporter Profile */
-            data_exporter_profile: string;
-            /** Data Importer Profile */
-            data_importer_profile: string;
-            /** Final Conclusion */
-            final_conclusion: string;
+            attachments?: components["schemas"]["TIAAttachment"][];
+            /**
+             * Data Exporter Profile
+             * @default
+             */
+            data_exporter_profile?: string;
+            /**
+             * Data Importer Profile
+             * @default
+             */
+            data_importer_profile?: string;
+            /**
+             * Final Conclusion
+             * @default
+             */
+            final_conclusion?: string;
             structured_input?: components["schemas"]["TIAStructuredInput"] | null;
-            /** Supplementary Measures */
-            supplementary_measures: string;
-            /** Third Country Assessment */
-            third_country_assessment: string;
+            /**
+             * Supplementary Measures
+             * @default
+             */
+            supplementary_measures?: string;
+            /**
+             * Third Country Assessment
+             * @default
+             */
+            third_country_assessment?: string;
             /**
              * Transfer Tool
              * @enum {string}
@@ -6728,6 +6924,8 @@ export interface components {
         backend__domains__cn__transfer_diagnosis__schema__DiagnosisResult: {
             /** Action Items */
             action_items: string[];
+            /** Clarification Questions */
+            clarification_questions?: string[];
             /**
              * Conclusion Source
              * @default rule
@@ -6738,6 +6936,7 @@ export interface components {
              * @default HIGH
              */
             confidence?: string;
+            control_decision?: components["schemas"]["LegalControlDecision"] | null;
             /** Fact Provenance */
             fact_provenance?: {
                 [key: string]: string;
@@ -9656,6 +9855,39 @@ export interface operations {
             };
         };
     };
+    get_input_manifest_api_v1_review_tasks__task_id__input_manifest_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunInputManifestPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_issues_api_v1_review_tasks__task_id__issues_get: {
         parameters: {
             query?: never;
@@ -10159,6 +10391,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_api_v1_version_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

@@ -1,3 +1,10 @@
+export type UserFacingControlStatus = {
+  status: string;
+  reasons: string[];
+  requiredActions: string[];
+  clarificationQuestions: string[];
+};
+
 export type UserFacingResult = {
   headline: string;
   chips: string[];
@@ -5,6 +12,7 @@ export type UserFacingResult = {
   deliverablePaths: string[];
   highlights: string[];
   nextSteps: string[];
+  control: UserFacingControlStatus | null;
 };
 
 export type AutoExtractResult = {

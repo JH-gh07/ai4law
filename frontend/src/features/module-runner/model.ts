@@ -28,6 +28,7 @@ import type {
   TiaStepConfig,
   Us14117FormValues,
   Us14117StepConfig,
+  UserFacingControlStatus,
   UserFacingResult,
 } from "./types";
 
@@ -2036,6 +2037,7 @@ export const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): Use
       chapterPrefix: "章节生成",
       regPrefix: "法规命中",
       filesPrefix: "交付文件",
+      controlPrefix: "法律控制",
       defaultStep1: "先查看本页“关键结果”，确认路径和风险等级是否符合预期。",
       defaultStep2: "再进入结果面板和报告中心进行内容复核与交付。"
     }
@@ -2049,6 +2051,7 @@ export const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): Use
       chapterPrefix: "Chapters",
       regPrefix: "Regulation Hits",
       filesPrefix: "Deliverables",
+      controlPrefix: "Legal Control",
       defaultStep1: "Review key outcomes on this panel and confirm path/risk alignment.",
       defaultStep2: "Then continue to result panel and report center for final review."
     };
@@ -2056,6 +2059,19 @@ export const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): Use
   const insight = extractInsight(response);
   const responseRecord = asRecord(response);
   const resultRecord = asRecord(responseRecord.result);
+
+  const controlSource = asRecord(resultRecord.control_decision ?? responseRecord.control_decision);
+  const controlStatus = toString(controlSource.legal_control_status);
+  const control: UserFacingControlStatus | null = controlStatus
+    ? {
+        status: controlStatus,
+        reasons: readStringArray(controlSource.reasons),
+        requiredActions: readStringArray(controlSource.required_actions),
+        clarificationQuestions: readStringArray(
+          resultRecord.clarification_questions ?? responseRecord.clarification_questions
+        )
+      }
+    : null;
 
   const recommendedPathRaw = toString(responseRecord.recommended_path) || toString(resultRecord.recommended_path);
   const recommendedPathLabel = recommendedPathRaw
@@ -2096,6 +2112,9 @@ export const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): Use
   if (chapters.length > 0) chips.push(`${copy.chapterPrefix}：${chapters.length}`);
   if (regulations.length > 0) chips.push(`${copy.regPrefix}：${regulations.length}`);
   if (deliverableNames.length > 0) chips.push(`${copy.filesPrefix}：${deliverableNames.length}`);
+  if (control && control.status !== "AUTO") {
+    chips.push(`${copy.controlPrefix}：${control.status}`);
+  }
 
   const highlights: string[] = [];
   if (rationale) highlights.push(rationale);
@@ -2131,7 +2150,8 @@ export const buildUserFacingResult = (response: unknown, lang: "zh" | "en"): Use
       )
     ),
     highlights,
-    nextSteps
+    nextSteps,
+    control
   };
 };
 

@@ -102,12 +102,12 @@ function sharedTiaFormDefaults(
   const parts = (value: string) => value.split("；").map((item) => item.trim()).filter(Boolean);
   const labeled = (items: string[], label: string) =>
     items.find((item) => item.startsWith(label))?.slice(label.length).trim() ?? "";
-  const exporter = parts(request.data_exporter_profile);
-  const importer = parts(request.data_importer_profile);
-  const assessment = parts(request.third_country_assessment);
-  const measures = parts(request.supplementary_measures);
-  const conclusion = parts(request.final_conclusion);
-  const attachment = request.attachments[0];
+  const exporter = parts(request.data_exporter_profile ?? "");
+  const importer = parts(request.data_importer_profile ?? "");
+  const assessment = parts(request.third_country_assessment ?? "");
+  const measures = parts(request.supplementary_measures ?? "");
+  const conclusion = parts(request.final_conclusion ?? "");
+  const attachment = (request.attachments ?? [])[0];
   const frequency = labeled(exporter, "频率：");
   if (!attachment || !["one_time", "periodic", "continuous"].includes(frequency)) {
     throw new Error("TIA shared scenario requires one attachment and a supported transfer frequency");

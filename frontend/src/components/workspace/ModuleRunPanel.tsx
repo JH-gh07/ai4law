@@ -97,6 +97,13 @@ import {
   type Us14117FormValues,
 } from "../../features/module-runner/model";
 
+const CONTROL_STATUS_LABEL: Record<string, { zh: string; en: string }> = {
+  CONDITIONAL: { zh: "条件通过", en: "Conditional" },
+  NEEDS_CLARIFICATION: { zh: "需补充事实", en: "Needs Clarification" },
+  NEEDS_REVIEW: { zh: "需人工复核", en: "Needs Human Review" },
+  BLOCKED: { zh: "已阻断", en: "Blocked" }
+};
+
 export type RunOutput = {
   module: ModuleKey;
   runMode: RunMode;
@@ -2957,6 +2964,49 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
               ))}
             </ul>
           </article>
+
+          {userFacingResult.control && userFacingResult.control.status !== "AUTO" ? (
+            <article className="runner-user-block runner-user-control">
+              <h4>{lang === "zh" ? "法律自动化控制" : "Legal Control"}</h4>
+              <p className="runner-user-control-status">
+                <span>{lang === "zh" ? "状态" : "Status"}</span>
+                <strong>
+                  {CONTROL_STATUS_LABEL[userFacingResult.control.status]?.[lang] ??
+                    userFacingResult.control.status}
+                </strong>
+              </p>
+              {userFacingResult.control.clarificationQuestions.length > 0 ? (
+                <div className="runner-user-control-section">
+                  <div>{lang === "zh" ? "待补充事实" : "Missing Facts"}</div>
+                  <ul>
+                    {userFacingResult.control.clarificationQuestions.map((item, index) => (
+                      <li key={`clarify-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {userFacingResult.control.reasons.length > 0 ? (
+                <div className="runner-user-control-section">
+                  <div>{lang === "zh" ? "控制理由" : "Control Reasons"}</div>
+                  <ul>
+                    {userFacingResult.control.reasons.map((item, index) => (
+                      <li key={`reason-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {userFacingResult.control.requiredActions.length > 0 ? (
+                <div className="runner-user-control-section">
+                  <div>{lang === "zh" ? "必要动作" : "Required Actions"}</div>
+                  <ul>
+                    {userFacingResult.control.requiredActions.map((item, index) => (
+                      <li key={`action-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </article>
+          ) : null}
         </section>
       ) : (
         <div className="runner-empty-card">{t("runResultPlaceholder")}</div>

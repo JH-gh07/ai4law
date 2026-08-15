@@ -3071,6 +3071,47 @@
   margin: 0;
 }
 
+.runner-user-control {
+  border: 1px solid rgba(198, 138, 50, 0.34);
+  background: linear-gradient(180deg, rgba(255, 247, 231, 0.96), rgba(255, 253, 246, 0.96));
+}
+
+.runner-user-control h4 {
+  color: #7a5314;
+}
+
+.runner-user-control-status {
+  display: flex;
+  gap: 0.42rem;
+  align-items: center;
+  margin: 0;
+  color: #8a5f1d;
+  font-size: 0.84rem;
+}
+
+.runner-user-control-status strong {
+  color: #9c5f0a;
+  border: 1px solid rgba(198, 138, 50, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.06rem 0.5rem;
+}
+
+.runner-user-control-section {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.runner-user-control-section > div {
+  color: #7a5314;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.runner-user-control-section ul {
+  color: #6d4e18;
+}
+
 .runner-raw-details {
   border: 1px dashed rgba(97, 132, 184, 0.3);
   border-radius: 12px;
