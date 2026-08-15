@@ -3,8 +3,9 @@
   "generated_by": "scripts/build_seed_case_requests.py",
   "tier": "Level B (extraction record -> module request schema)",
   "counts": {
-    "rejected": 40,
-    "gap": 10
+    "rejected": 30,
+    "converted": 8,
+    "pending_correction": 12
   },
   "gap_ledger": "status/check/task065/seed-gap-ledger.json",
   "dispositions": [
@@ -27,7 +28,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "answers.q1_is_ciio",
         "answers.q4_spi_count",
         "company_name"
       ],
@@ -40,8 +40,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
         "answers.q4_spi_count",
         "company_name"
       ],
@@ -54,8 +52,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
         "answers.q4_spi_count",
         "company_name"
       ],
@@ -68,7 +64,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "answers.q1_is_ciio",
         "company_name"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
@@ -206,72 +201,47 @@
     {
       "case_id": "task04_case1",
       "task_no": 4,
-      "module_id": "cn.transfer_diagnosis",
-      "levelb": "rejected",
-      "request_path": null,
-      "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
-        "answers.q3_pii_count",
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "module_id": "cn.document_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task04_case1.request.json",
+      "blocking_missing_facts": [],
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task04_case2",
       "task_no": 4,
-      "module_id": "cn.transfer_diagnosis",
-      "levelb": "rejected",
-      "request_path": null,
-      "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
-        "answers.q4_spi_count",
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "module_id": "cn.document_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task04_case2.request.json",
+      "blocking_missing_facts": [],
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task04_case3",
       "task_no": 4,
-      "module_id": "cn.transfer_diagnosis",
-      "levelb": "rejected",
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
-        "answers.q3_pii_count",
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task04_case4",
       "task_no": 4,
-      "module_id": "cn.transfer_diagnosis",
-      "levelb": "rejected",
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
-        "answers.q4_spi_count",
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task04_case5",
       "task_no": 4,
-      "module_id": "cn.transfer_diagnosis",
-      "levelb": "rejected",
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "answers.q1_is_ciio",
-        "answers.q2_has_important_data",
-        "answers.q3_pii_count",
-        "company_name"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task05_case1",
@@ -341,185 +311,137 @@
     {
       "case_id": "task06_case1",
       "task_no": 6,
-      "module_id": "eu.tia",
-      "levelb": "rejected",
-      "request_path": null,
-      "blocking_missing_facts": [
-        "attachments",
-        "data_exporter_profile",
-        "data_importer_profile",
-        "final_conclusion",
-        "supplementary_measures",
-        "third_country_assessment",
-        "transfer_tool"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "module_id": "eu.bcr_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task06_case1.request.json",
+      "blocking_missing_facts": [],
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task06_case2",
       "task_no": 6,
-      "module_id": "eu.tia",
-      "levelb": "rejected",
-      "request_path": null,
-      "blocking_missing_facts": [
-        "attachments",
-        "data_exporter_profile",
-        "data_importer_profile",
-        "final_conclusion",
-        "supplementary_measures",
-        "third_country_assessment",
-        "transfer_tool"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "module_id": "eu.bcr_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task06_case2.request.json",
+      "blocking_missing_facts": [],
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task06_case3",
       "task_no": 6,
-      "module_id": "eu.tia",
-      "levelb": "rejected",
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "attachments",
-        "data_exporter_profile",
-        "data_importer_profile",
-        "final_conclusion",
-        "supplementary_measures",
-        "third_country_assessment"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task06_case4",
       "task_no": 6,
-      "module_id": "eu.tia",
-      "levelb": "rejected",
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "attachments",
-        "data_exporter_profile",
-        "data_importer_profile",
-        "final_conclusion",
-        "supplementary_measures",
-        "third_country_assessment",
-        "transfer_tool"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task06_case5",
       "task_no": 6,
-      "module_id": "eu.tia",
-      "levelb": "rejected",
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
       "request_path": null,
-      "blocking_missing_facts": [
-        "attachments",
-        "data_exporter_profile",
-        "data_importer_profile",
-        "final_conclusion",
-        "supplementary_measures",
-        "third_country_assessment"
-      ],
-      "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task07_case1",
       "task_no": 7,
-      "module_id": null,
-      "levelb": "gap",
-      "request_path": null,
+      "module_id": "eu.dpia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task07_case1.request.json",
       "blocking_missing_facts": [],
-      "note": "no product capability (GDPR 合规诊断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task07_case2",
       "task_no": 7,
-      "module_id": null,
-      "levelb": "gap",
-      "request_path": null,
+      "module_id": "eu.dpia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task07_case2.request.json",
       "blocking_missing_facts": [],
-      "note": "no product capability (GDPR 合规诊断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task07_case3",
       "task_no": 7,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (GDPR 合规诊断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task07_case4",
       "task_no": 7,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (GDPR 合规诊断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task07_case5",
       "task_no": 7,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (GDPR 合规诊断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task08_case1",
       "task_no": 8,
-      "module_id": null,
-      "levelb": "gap",
-      "request_path": null,
+      "module_id": "eu.tia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task08_case1.request.json",
       "blocking_missing_facts": [],
-      "note": "no product capability (BD ROD 判断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task08_case2",
       "task_no": 8,
-      "module_id": null,
-      "levelb": "gap",
-      "request_path": null,
+      "module_id": "eu.tia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests/task08_case2.request.json",
       "blocking_missing_facts": [],
-      "note": "no product capability (BD ROD 判断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "all key facts present and schema-valid"
     },
     {
       "case_id": "task08_case3",
       "task_no": 8,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (BD ROD 判断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task08_case4",
       "task_no": 8,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (BD ROD 判断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task08_case5",
       "task_no": 8,
-      "module_id": null,
-      "levelb": "gap",
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
       "request_path": null,
       "blocking_missing_facts": [],
-      "note": "no product capability (BD ROD 判断)",
-      "gap_ledger": "status/check/task065/seed-gap-ledger.json"
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
     },
     {
       "case_id": "task09_case1",
@@ -529,8 +451,7 @@
       "request_path": null,
       "blocking_missing_facts": [
         "project_name",
-        "recipient_entities",
-        "transaction_description"
+        "recipient_entities"
       ],
       "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults"
     },
@@ -565,7 +486,6 @@
       "levelb": "rejected",
       "request_path": null,
       "blocking_missing_facts": [
-        "data_items",
         "project_name",
         "recipient_entities"
       ],

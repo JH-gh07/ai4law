@@ -19,12 +19,5 @@
       "我们在隐私政策里详细说明了收集这些数据的目的和用途，用户下载APP时就默认同意了隐私政策。位置信息嘛，就是普通的设备数据，应该不算什么敏感数据。我们没有专门弹窗让用户同意收集这些数据，觉得在隐私政策里写清楚就够了。"
     ]
   },
-  "output_measure": {
-    "chars": 1827,
-    "paragraphs": 21,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

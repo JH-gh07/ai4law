@@ -15,12 +15,5 @@
       "我们和巴西公司签了标准合同，里面有数据保护条款，标准合同应该够了吧？巴西也有自己的数据保护法（LGPD），和GDPR差不多，所以我们觉得风险不大。患者数据传过去做分析是很正常的业务需求，不需要搞那么多复杂的技术措施吧。我们时间紧迫，希望能尽快确认合规。"
     ]
   },
-  "output_measure": {
-    "chars": 1010,
-    "paragraphs": 31,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

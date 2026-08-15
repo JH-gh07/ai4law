@@ -148,39 +148,38 @@ def test_build_record_preserves_source_hash_and_quality_flags() -> None:
     assert record["source_sha256"] == first["hash"]
     assert record["source_size_bytes"] == first["size_bytes"]
     assert record["source_docx"] == first["file"]
-    assert record["expected_status"] == "pending_authoring"
     assert isinstance(record["data_quality_flags"], list)
     assert "input" in record
     assert "paragraphs" in record["input"]
+    # input-only 契约：不产出任何 output / gold 字段。
+    for forbidden in ("expected_status", "expected_note", "output_measure", "output"):
+        assert forbidden not in record
 
 
-def test_missing_marker_produces_flag_not_silent_backfill() -> None:
-    """A missing section marker yields an explicit quality flag."""
+def test_missing_marker_falls_back_to_full_body_not_silent_empty() -> None:
+    """无任何标记时，slice_input 回退到整段正文，而不是静默抽空。"""
     paras = ["标题", "这是正文但没有标准小节标记。", "继续正文"]
-    sec = builder.slice_sections(paras)
-    assert sec["_found"] == {"input": False, "output": False, "remark": False}
-    assert sec["input"] == []
-    assert sec["output"] == []
-    assert sec["remark"] == []
+    sec = builder.slice_input(paras)
+    assert sec["_has_input_marker"] is False
+    assert sec["_has_output_marker"] is False
+    assert sec["input"] == paras
 
 
-def test_slice_sections_extracts_only_declared_spans() -> None:
+def test_slice_input_extracts_only_input_span() -> None:
     paras = [
         "任务1 案例1：标题",
-        builder.MARK_INPUT,
+        builder.INPUT_MARKERS[0],   # 一、用户输入
         "问题1：是否包含重要数据？",
         "不知道。",
-        builder.MARK_OUTPUT,
+        builder.OUTPUT_MARKERS[0],  # 二、标准答案（即系统输出）
         "核心结论",
         "本场景适用安全评估路径。",
-        builder.MARK_REMARK,
-        "备注：需人工复核。",
     ]
-    sec = builder.slice_sections(paras)
-    assert sec["_found"] == {"input": True, "output": True, "remark": True}
+    sec = builder.slice_input(paras)
+    assert sec["_has_input_marker"] is True
+    assert sec["_has_output_marker"] is True
+    # 输入段 = 输入标记之后 → 输出标记之前；输出文本不抽取。
     assert sec["input"] == ["问题1：是否包含重要数据？", "不知道。"]
-    assert sec["output"] == ["核心结论", "本场景适用安全评估路径。"]
-    assert sec["remark"] == ["备注：需人工复核。"]
 
 
 def test_gold_standard_source_is_exempt_from_case_parity() -> None:

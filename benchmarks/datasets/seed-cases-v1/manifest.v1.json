@@ -4,31 +4,21 @@
   "source_manifest": "benchmarks/datasets/seed-cases-v1/manifest.json",
   "source_dir": "benchmarks/datasets/seed-cases-v1/_source",
   "case_count": 50,
-  "markers": {
-    "input": "一、用户输入",
-    "output": "二、标准答案（即系统输出）",
-    "remark": "三、备注"
-  },
-  "placeholder_tokens": [
-    "待补充",
-    "待定",
-    "待专家复核",
-    "待确认",
-    "待填写",
-    "TBD"
+  "input_markers": [
+    "一、用户输入",
+    "用户输入",
+    "待审查的BCR条款原文"
   ],
-  "expected_status": "0 published / 50 pending_authoring",
-  "scope_note": "INPUT side only. No expected.json is produced. No case is asserted to be gold. Not wired into any test runner; config/case_inventory.json is unchanged.",
+  "output_markers_note": "Output markers are used only to bound the input span; output text is never extracted or emitted.",
+  "scope_note": "INPUT side only. Only input.paragraphs is produced. No output, no expected.json, no gold assertion. Not wired into any test runner; config/case_inventory.json is unchanged.",
   "summary": {
     "mapping_status": {
-      "partial": 40,
-      "gap": 10
+      "partial": 50
     },
-    "with_placeholder": 10,
-    "clean": 40,
-    "min_output_chars": 824,
+    "input_present": 50,
+    "empty_input": 0,
     "quality_flags": {
-      "placeholder_in_output": 10
+      "pending_correction": 12
     }
   },
   "cases": [
@@ -39,7 +29,7 @@
       "module_id": "cn.transfer_diagnosis",
       "mapping_status": "partial",
       "source_sha256": "a2d7ad9d7b8b042340a46b1116396e5149d8b497157fecd7f9c342f66084042a",
-      "output_chars": 2954,
+      "input_paragraphs": 14,
       "data_quality_flags": []
     },
     {
@@ -49,7 +39,7 @@
       "module_id": "cn.transfer_diagnosis",
       "mapping_status": "partial",
       "source_sha256": "00d951312ae5ce4b8154f43a1ec57b31721d1906f2110dc969fa0ad20a939dcd",
-      "output_chars": 2502,
+      "input_paragraphs": 14,
       "data_quality_flags": []
     },
     {
@@ -59,7 +49,7 @@
       "module_id": "cn.transfer_diagnosis",
       "mapping_status": "partial",
       "source_sha256": "811cb29213a0a0a16a6b805e7e845ca866a4559b284400c6deb448b4c123458e",
-      "output_chars": 2294,
+      "input_paragraphs": 14,
       "data_quality_flags": []
     },
     {
@@ -69,7 +59,7 @@
       "module_id": "cn.transfer_diagnosis",
       "mapping_status": "partial",
       "source_sha256": "d30fedb8a68afa3bcf5b10dde04e02c5a6a24fc0c140e30292cc39db7fae0727",
-      "output_chars": 2397,
+      "input_paragraphs": 14,
       "data_quality_flags": []
     },
     {
@@ -79,7 +69,7 @@
       "module_id": "cn.transfer_diagnosis",
       "mapping_status": "partial",
       "source_sha256": "d9e8f60ca803e74cb9478df6657644212a24f23ee4239214c409a7de5bec3513",
-      "output_chars": 2661,
+      "input_paragraphs": 14,
       "data_quality_flags": []
     },
     {
@@ -89,10 +79,8 @@
       "module_id": "cn.security_assessment",
       "mapping_status": "partial",
       "source_sha256": "71d033242b4be96c18134f6071f6099401cbd1bfb778daf849f23748b0a2cc6c",
-      "output_chars": 2163,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 20,
+      "data_quality_flags": []
     },
     {
       "case_id": "task02_case2",
@@ -101,10 +89,8 @@
       "module_id": "cn.security_assessment",
       "mapping_status": "partial",
       "source_sha256": "26fd936667ecd70bc3bed2292d9bfd7a54b5c760725b6819764813983be86826",
-      "output_chars": 2247,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 20,
+      "data_quality_flags": []
     },
     {
       "case_id": "task02_case3",
@@ -113,10 +99,8 @@
       "module_id": "cn.security_assessment",
       "mapping_status": "partial",
       "source_sha256": "9313fdfde83394de58c3b382352a250dfe2ee815cafbc1f457e79858e9f5217a",
-      "output_chars": 2053,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 20,
+      "data_quality_flags": []
     },
     {
       "case_id": "task02_case4",
@@ -125,10 +109,8 @@
       "module_id": "cn.security_assessment",
       "mapping_status": "partial",
       "source_sha256": "ada476ff6f621cf48173d45270b88a2b178403985a539e3f7662f6930b171cf1",
-      "output_chars": 2207,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 20,
+      "data_quality_flags": []
     },
     {
       "case_id": "task02_case5",
@@ -137,10 +119,8 @@
       "module_id": "cn.security_assessment",
       "mapping_status": "partial",
       "source_sha256": "73e57b99df5a29517ea5a40f9022916e6e3a27fe2460a2cbd800afab68d38c42",
-      "output_chars": 2152,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 20,
+      "data_quality_flags": []
     },
     {
       "case_id": "task03_case1",
@@ -149,10 +129,8 @@
       "module_id": "cn.pipia",
       "mapping_status": "partial",
       "source_sha256": "8a007f91b88cef95973a452380b79c454fe2cbf51ff0cb2f4cbc83776f499967",
-      "output_chars": 1758,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 14,
+      "data_quality_flags": []
     },
     {
       "case_id": "task03_case2",
@@ -161,10 +139,8 @@
       "module_id": "cn.pipia",
       "mapping_status": "partial",
       "source_sha256": "28002d4e64162a8adfa1bc740c1f3d04f6322fb7a44c57695cc7b5c8dbce24b0",
-      "output_chars": 1299,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 14,
+      "data_quality_flags": []
     },
     {
       "case_id": "task03_case3",
@@ -173,10 +149,8 @@
       "module_id": "cn.pipia",
       "mapping_status": "partial",
       "source_sha256": "090393e789434e16cce3c63b0be96df98c704569e0389117b3849dfb7d05ab12",
-      "output_chars": 1439,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 14,
+      "data_quality_flags": []
     },
     {
       "case_id": "task03_case4",
@@ -185,10 +159,8 @@
       "module_id": "cn.pipia",
       "mapping_status": "partial",
       "source_sha256": "3e9adb6b46bdf77b1106b146e41f9230f4d49713232d120790a624d4bd849499",
-      "output_chars": 1877,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 14,
+      "data_quality_flags": []
     },
     {
       "case_id": "task03_case5",
@@ -197,60 +169,64 @@
       "module_id": "cn.pipia",
       "mapping_status": "partial",
       "source_sha256": "0a3a78572b28c4244b0c53408c2a21da2c0a98b827c1da11f9fb7fe659f3cc38",
-      "output_chars": 1617,
-      "data_quality_flags": [
-        "placeholder_in_output:待补充|待定"
-      ]
+      "input_paragraphs": 14,
+      "data_quality_flags": []
     },
     {
       "case_id": "task04_case1",
       "task_no": 4,
       "jurisdiction": "cn",
-      "module_id": "cn.transfer_diagnosis",
+      "module_id": "cn.document_review",
       "mapping_status": "partial",
-      "source_sha256": "d10badd168f8c968703733934c414d8cf68919b87c393e4c3041d8e48b93d594",
-      "output_chars": 1599,
+      "source_sha256": "3bb623f332bb883c2cf22a3e9b8c47d16061b630dc67527eccf291d09fa7e779",
+      "input_paragraphs": 27,
       "data_quality_flags": []
     },
     {
       "case_id": "task04_case2",
       "task_no": 4,
       "jurisdiction": "cn",
-      "module_id": "cn.transfer_diagnosis",
+      "module_id": "cn.document_review",
       "mapping_status": "partial",
-      "source_sha256": "fe8c191ea621a0684c038129a43492a3a90e40018c900108f2a00b987a32d731",
-      "output_chars": 1725,
+      "source_sha256": "c5240cc0745040af288f8b48678cf18af5e6aa2917b24205159d90e9c4fab991",
+      "input_paragraphs": 9,
       "data_quality_flags": []
     },
     {
       "case_id": "task04_case3",
       "task_no": 4,
       "jurisdiction": "cn",
-      "module_id": "cn.transfer_diagnosis",
+      "module_id": "cn.document_review",
       "mapping_status": "partial",
       "source_sha256": "64e033de674edbfadeb82d0a7885c7d2ab5e54c9b985c91e3af49b94773fb0ae",
-      "output_chars": 1789,
-      "data_quality_flags": []
+      "input_paragraphs": 10,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task04_case4",
       "task_no": 4,
       "jurisdiction": "cn",
-      "module_id": "cn.transfer_diagnosis",
+      "module_id": "cn.document_review",
       "mapping_status": "partial",
       "source_sha256": "6bf8da12de901efdd6b2fb1e549c320b944842780bd69ece2fa66c075423976d",
-      "output_chars": 1539,
-      "data_quality_flags": []
+      "input_paragraphs": 10,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task04_case5",
       "task_no": 4,
       "jurisdiction": "cn",
-      "module_id": "cn.transfer_diagnosis",
+      "module_id": "cn.document_review",
       "mapping_status": "partial",
       "source_sha256": "3026600fe0d845c7f1414193068d656426fbb1e7cbce7010b5ab1c80eb27f6aa",
-      "output_chars": 1642,
-      "data_quality_flags": []
+      "input_paragraphs": 10,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task05_case1",
@@ -259,7 +235,7 @@
       "module_id": "eu.scc_review",
       "mapping_status": "partial",
       "source_sha256": "28ed50e0e93fdc253ab0511ba2f9825625ea444fa9c65784969d61e2ed449406",
-      "output_chars": 991,
+      "input_paragraphs": 3,
       "data_quality_flags": []
     },
     {
@@ -269,7 +245,7 @@
       "module_id": "eu.scc_review",
       "mapping_status": "partial",
       "source_sha256": "f2fe8feb8de6c161e01d274328fb95c0300920a3191cea0bc20eda7b7c63d743",
-      "output_chars": 950,
+      "input_paragraphs": 3,
       "data_quality_flags": []
     },
     {
@@ -279,7 +255,7 @@
       "module_id": "eu.scc_review",
       "mapping_status": "partial",
       "source_sha256": "84f0f8e8e8b67513281f06a34b2f858cce1a02b1bfd1c57ad15c000e0c803856",
-      "output_chars": 824,
+      "input_paragraphs": 3,
       "data_quality_flags": []
     },
     {
@@ -289,7 +265,7 @@
       "module_id": "eu.scc_review",
       "mapping_status": "partial",
       "source_sha256": "07badf6e884b8b9252bd2510fbd28456834f810ac61a3f89d066b7f0314f6f12",
-      "output_chars": 1112,
+      "input_paragraphs": 3,
       "data_quality_flags": []
     },
     {
@@ -299,158 +275,176 @@
       "module_id": "eu.scc_review",
       "mapping_status": "partial",
       "source_sha256": "3a8fe021a7835f49d11c5da4067db42b766371878e93e076ec4c01f129668587",
-      "output_chars": 1010,
+      "input_paragraphs": 3,
       "data_quality_flags": []
     },
     {
       "case_id": "task06_case1",
       "task_no": 6,
       "jurisdiction": "eu",
-      "module_id": "eu.tia",
+      "module_id": "eu.bcr_review",
       "mapping_status": "partial",
-      "source_sha256": "41f42061ac5418e2eac7aadea7d4d01f7e29788033303f188478902be406c154",
-      "output_chars": 1743,
+      "source_sha256": "5644cd14327b3038359fd7c3c560042524f1476a8e143b9eec69f472c8859823",
+      "input_paragraphs": 41,
       "data_quality_flags": []
     },
     {
       "case_id": "task06_case2",
       "task_no": 6,
       "jurisdiction": "eu",
-      "module_id": "eu.tia",
+      "module_id": "eu.bcr_review",
       "mapping_status": "partial",
-      "source_sha256": "abf2fb52c5808670b6e179034425b823d6e507ff04423ce44190d0bb0b65ba16",
-      "output_chars": 1984,
+      "source_sha256": "9b4c611ce638ba3472e9a5293fa9df9c024db5c22589ec7c003e16c7eeb316c1",
+      "input_paragraphs": 48,
       "data_quality_flags": []
     },
     {
       "case_id": "task06_case3",
       "task_no": 6,
       "jurisdiction": "eu",
-      "module_id": "eu.tia",
+      "module_id": "eu.bcr_review",
       "mapping_status": "partial",
       "source_sha256": "235a0422cba814b9e68ca599ccab6b490fe7ee60464c9b9a1bd7e010022365ec",
-      "output_chars": 2055,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task06_case4",
       "task_no": 6,
       "jurisdiction": "eu",
-      "module_id": "eu.tia",
+      "module_id": "eu.bcr_review",
       "mapping_status": "partial",
       "source_sha256": "0b92c794ab307433c63489444892cf0587d9affba52a406b004c7d602ac40a39",
-      "output_chars": 1907,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task06_case5",
       "task_no": 6,
       "jurisdiction": "eu",
-      "module_id": "eu.tia",
+      "module_id": "eu.bcr_review",
       "mapping_status": "partial",
       "source_sha256": "a6214f9b4161bbda5ba87b6023a7a7c51a697a3d10d5fccd016827167978c156",
-      "output_chars": 2047,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task07_case1",
       "task_no": 7,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
-      "source_sha256": "30742bc4ff49cb108decc0a772e7845cfff54658f865070b7f8df3c7483049cb",
-      "output_chars": 1559,
+      "module_id": "eu.dpia",
+      "mapping_status": "partial",
+      "source_sha256": "b1935cbcbfdfc92e4ca0f5b4df7939c4d6db90577c72c09a484d4a9d7e5a17d1",
+      "input_paragraphs": 47,
       "data_quality_flags": []
     },
     {
       "case_id": "task07_case2",
       "task_no": 7,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
-      "source_sha256": "ed740ad118eb8d5429b8b8a208afe6025ef492d40efe516c921ea0eed12e20d4",
-      "output_chars": 1442,
+      "module_id": "eu.dpia",
+      "mapping_status": "partial",
+      "source_sha256": "dcfbce289a965b74bad85b7ca51a6bc638229bd4e3e176ae181fca031174fa8f",
+      "input_paragraphs": 43,
       "data_quality_flags": []
     },
     {
       "case_id": "task07_case3",
       "task_no": 7,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.dpia",
+      "mapping_status": "partial",
       "source_sha256": "8a3b68680900e1b61ec5d79dc43aeae2d1cf05b89a48d56f5afc127471072988",
-      "output_chars": 1730,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task07_case4",
       "task_no": 7,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.dpia",
+      "mapping_status": "partial",
       "source_sha256": "0669e81fca738318e1f732086f07e291dc55749094ed35a68c0fd6957f43f77c",
-      "output_chars": 1625,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task07_case5",
       "task_no": 7,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.dpia",
+      "mapping_status": "partial",
       "source_sha256": "a9debbc208a7569a05af485b96055d380ec15998943e566eb2bc86e2efd275ce",
-      "output_chars": 1960,
-      "data_quality_flags": []
+      "input_paragraphs": 8,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task08_case1",
       "task_no": 8,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
-      "source_sha256": "7d34e0b13c609d14914698807631109aee8649f9f00222d932075422b64976a7",
-      "output_chars": 2207,
+      "module_id": "eu.tia",
+      "mapping_status": "partial",
+      "source_sha256": "0d2a6e43f2cca5465b9e90058abae501e4f0694e9bf9e5ba63238d64cb9c9bf1",
+      "input_paragraphs": 46,
       "data_quality_flags": []
     },
     {
       "case_id": "task08_case2",
       "task_no": 8,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
-      "source_sha256": "fcd3de52b4dd7b06046395496896fee94ceb7b24fef7715a51a169ed59a28065",
-      "output_chars": 1968,
+      "module_id": "eu.tia",
+      "mapping_status": "partial",
+      "source_sha256": "87d8f2cbe3d9cabe2bd2187e615daa3df23af9368a118452254a053d72bf28ae",
+      "input_paragraphs": 43,
       "data_quality_flags": []
     },
     {
       "case_id": "task08_case3",
       "task_no": 8,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.tia",
+      "mapping_status": "partial",
       "source_sha256": "510426b91ff15a65207c763cbdd20a6fdc23c95c78b6d0efc2cb6c6b466e26cc",
-      "output_chars": 2147,
-      "data_quality_flags": []
+      "input_paragraphs": 5,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task08_case4",
       "task_no": 8,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.tia",
+      "mapping_status": "partial",
       "source_sha256": "c0bae122ba6028b476c0a6b91b7b91788cc11f07d157da4878e24ef1ed65ec78",
-      "output_chars": 2130,
-      "data_quality_flags": []
+      "input_paragraphs": 5,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task08_case5",
       "task_no": 8,
       "jurisdiction": "eu",
-      "module_id": "",
-      "mapping_status": "gap",
+      "module_id": "eu.tia",
+      "mapping_status": "partial",
       "source_sha256": "9153d213092c7b44301ea599f268634902b2f2aed0901b5bca9b836940c7f5eb",
-      "output_chars": 2758,
-      "data_quality_flags": []
+      "input_paragraphs": 5,
+      "data_quality_flags": [
+        "pending_correction:v2.0_需修正/待修正_内容未改回"
+      ]
     },
     {
       "case_id": "task09_case1",
@@ -459,7 +453,7 @@
       "module_id": "us.eo_14117",
       "mapping_status": "partial",
       "source_sha256": "1d5cded888f345ef656ba6c915d1620c31746ea3dac0c257ed319a49ff72596e",
-      "output_chars": 1060,
+      "input_paragraphs": 10,
       "data_quality_flags": []
     },
     {
@@ -469,7 +463,7 @@
       "module_id": "us.eo_14117",
       "mapping_status": "partial",
       "source_sha256": "ccc838ffff96547c7dc53986ad46dac21db08d1db22af2bdc75fd2483a565b9e",
-      "output_chars": 934,
+      "input_paragraphs": 10,
       "data_quality_flags": []
     },
     {
@@ -479,7 +473,7 @@
       "module_id": "us.eo_14117",
       "mapping_status": "partial",
       "source_sha256": "51cf1fb527781617e08e256550ab5f186496d13b1e4f16c51517fcda8423d655",
-      "output_chars": 851,
+      "input_paragraphs": 10,
       "data_quality_flags": []
     },
     {
@@ -489,7 +483,7 @@
       "module_id": "us.eo_14117",
       "mapping_status": "partial",
       "source_sha256": "2d69239fcc78aa8ffb4b05d58ed7688ac4b20f28cf83508f82c060488df0d353",
-      "output_chars": 914,
+      "input_paragraphs": 10,
       "data_quality_flags": []
     },
     {
@@ -499,7 +493,7 @@
       "module_id": "us.eo_14117",
       "mapping_status": "partial",
       "source_sha256": "1d154fd53b7ab4321d10366ec1230c65bb201e59465bd47e1445a8b2a0769221",
-      "output_chars": 1135,
+      "input_paragraphs": 10,
       "data_quality_flags": []
     },
     {
@@ -509,7 +503,7 @@
       "module_id": "us.cpra",
       "mapping_status": "partial",
       "source_sha256": "8a377d1267d2603b28e3103b43b6904e1873a8a275d67314c5a351b91714d927",
-      "output_chars": 1325,
+      "input_paragraphs": 7,
       "data_quality_flags": []
     },
     {
@@ -519,7 +513,7 @@
       "module_id": "us.cpra",
       "mapping_status": "partial",
       "source_sha256": "0648cdafea3a12f0157d98f19e2e566e7f01a7b5807fed2b047a6097da35a8c5",
-      "output_chars": 1601,
+      "input_paragraphs": 7,
       "data_quality_flags": []
     },
     {
@@ -529,7 +523,7 @@
       "module_id": "us.cpra",
       "mapping_status": "partial",
       "source_sha256": "2c0f470625ad486dd0d46f4572198dafb81841d91585b15f11cba31bc31d8391",
-      "output_chars": 1568,
+      "input_paragraphs": 7,
       "data_quality_flags": []
     },
     {
@@ -539,7 +533,7 @@
       "module_id": "us.cpra",
       "mapping_status": "partial",
       "source_sha256": "a3d2cc0eff851be0ee61bd8ae8a0829e1261e5015513ca9d51948ad7cd714b20",
-      "output_chars": 1827,
+      "input_paragraphs": 7,
       "data_quality_flags": []
     },
     {
@@ -549,7 +543,7 @@
       "module_id": "us.cpra",
       "mapping_status": "partial",
       "source_sha256": "cd18b60ca97bc7d3a02a5a51f006dec2a7860da9e049c0725429bd342c3832d8",
-      "output_chars": 2070,
+      "input_paragraphs": 7,
       "data_quality_flags": []
     }
   ]

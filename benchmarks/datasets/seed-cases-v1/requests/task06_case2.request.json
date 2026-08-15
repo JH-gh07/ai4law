@@ -1,0 +1,18 @@
+{
+  "company_name": "BetaCloud Services Group",
+  "review_items": [],
+  "attachments": [],
+  "uploaded_files": [],
+  "uploaded_documents": [
+    {
+      "file_id": "seed_task06_case2_9b4c611c",
+      "file_name": "task06_case2_9b4c611c.docx",
+      "file_type": "docx",
+      "file_path": "storage/uploads/seed-cases-v1/task06_case2_9b4c611c.docx",
+      "document_role": "main_bcr_document",
+      "auto_detected_role": false
+    }
+  ],
+  "scenario_context": null,
+  "review_config": null
+}

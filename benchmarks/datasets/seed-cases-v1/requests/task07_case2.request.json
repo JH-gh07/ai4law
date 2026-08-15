@@ -1,0 +1,48 @@
+{
+  "project_name": "FacePass Pro",
+  "project_goal": "楼宇出入安全管理",
+  "dpia_trigger_reasons": [],
+  "processing_flow_description": "人脸识别门禁——员工和访客通过刷脸进出大楼",
+  "data_categories": [
+    "面部图像（注册时拍摄的正面照片）",
+    "面部特征模板（由算法提取的数学特征向量）",
+    "通行记录（进出时间、出入口编号）",
+    "员工基本信息（姓名、工号、所属公司、手机号）"
+  ],
+  "special_category_data": false,
+  "special_category_types": [],
+  "data_subject_categories": [
+    "写字楼内的企业员工",
+    "访客",
+    "快递员",
+    "清洁工"
+  ],
+  "data_subject_count": "约20000名注册用户，每天约15000次通行记录",
+  "retention_period": "通行记录保留90天后自动删除；面部图像在注册完成后即从系统中删除（仅保留特征模板）",
+  "cross_border_transfer": true,
+  "transfer_destination": "中国深圳",
+  "automated_decision_making": false,
+  "systematic_monitoring": false,
+  "large_scale_processing": false,
+  "data_matching": false,
+  "new_technology": false,
+  "vulnerable_data_subjects": false,
+  "consulted_internal_departments": [],
+  "external_experts": [],
+  "data_subject_consultation_plan": "",
+  "lawful_basis": [
+    "第6条第1款(f)项：正当利益——物业管理的正当利益（保障楼宇安全）",
+    "第9条：声称人脸识别不涉及特殊类别数据（因为仅提取面部特征模板，不存储原始面部图像）",
+    "第22条：不涉及自动化决策，门禁仅验证身份，不做其他判断"
+  ],
+  "necessity_statement": "",
+  "proportionality_statement": "",
+  "transparency_information": "",
+  "identified_risks": [],
+  "mitigation_measures": [],
+  "dpia_owner": "",
+  "dpo_name": "",
+  "dpo_opinion": "",
+  "review_date": "",
+  "uploaded_files": []
+}

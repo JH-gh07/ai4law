@@ -15,12 +15,5 @@
       "我们和中国子公司之间有合同保护，合同里明确写了数据保密和义务条款，应该足够了吧？毕竟是我们自己的子公司，又不是外包给第三方。中国那么大，法律体系也很完善，有合同保护就够了，不需要搞那么多复杂的评估。不过最近听说中国出了新的数据法律，我们有点担心会不会有影响。"
     ]
   },
-  "output_measure": {
-    "chars": 1112,
-    "paragraphs": 32,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

@@ -26,12 +26,5 @@
       "<1万。实名认证的敏感数据大概8000人左右。"
     ]
   },
-  "output_measure": {
-    "chars": 2502,
-    "paragraphs": 33,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

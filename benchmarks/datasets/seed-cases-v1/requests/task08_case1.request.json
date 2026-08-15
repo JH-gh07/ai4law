@@ -1,0 +1,38 @@
+{
+  "transfer_tool": "scc",
+  "data_exporter_profile": "",
+  "data_importer_profile": "",
+  "third_country_assessment": "",
+  "supplementary_measures": "",
+  "final_conclusion": "",
+  "attachments": [],
+  "structured_input": {
+    "exporter_country": "Germany",
+    "importer_country": "India",
+    "destination_country": "India",
+    "exporter_role": "controller",
+    "importer_role": "processor",
+    "transfer_purpose": "IT运维支持：印度团队负责7×24小时监控系统运行，需访问系统日志；HR后台处理：工资单处理、考勤统计、绩效数据录入；德语→英语文件翻译服务",
+    "data_categories": [
+      "employee_data",
+      "hr_records",
+      "other",
+      "health_data"
+    ],
+    "has_special_category_data": true,
+    "special_category_types": [
+      "健康检查报告",
+      "工会会员身份"
+    ],
+    "data_subjects": [
+      "员工"
+    ],
+    "transfer_frequency": "实时（VPN连接记录）+ 每日批量同步（HR数据）",
+    "transfer_scale": "约3200名员工（全部为FinServe德国总部员工）",
+    "encryption_before_transfer": true,
+    "key_managed_in_eu": false,
+    "has_end_to_end_encryption": false,
+    "has_secure_enclave": false,
+    "has_key_separation": false
+  }
+}

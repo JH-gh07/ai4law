@@ -19,12 +19,5 @@
       "紧急求助！我们最近收到了大量消费者发来的删除请求，有些是通过我们网站提交的，有些是通过授权代理人发来的。数量太多了，我们根本来不及逐一核实。我们现在打算直接把所有匹配到的数据全部删掉，这样最省事，也最安全。但有几个客户（下游数据购买方）打电话来抱怨说我们删了太多数据，影响了他们的业务。这些删除请求我们都直接处理了，也没有做什么身份验证，这样没问题吧？"
     ]
   },
-  "output_measure": {
-    "chars": 2070,
-    "paragraphs": 23,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

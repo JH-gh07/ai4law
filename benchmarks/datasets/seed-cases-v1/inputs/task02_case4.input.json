@@ -32,17 +32,5 @@
       "用户称电网运行数据不涉及个人信息。（注：需确认是否包含用户用电数据等个人信息，如含用户用电行为数据则可能涉及个人信息）"
     ]
   },
-  "output_measure": {
-    "chars": 2207,
-    "paragraphs": 40,
-    "placeholder_tokens": [
-      "待补充",
-      "待定"
-    ]
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
-  "data_quality_flags": [
-    "placeholder_in_output:待补充|待定"
-  ]
+  "data_quality_flags": []
 }

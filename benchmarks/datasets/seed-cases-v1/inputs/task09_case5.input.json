@@ -22,12 +22,5 @@
       "• 刘洋 | 国籍：中国 | 所属部门：数据部 | 岗位：数据工程师（负责数据传输技术实施）"
     ]
   },
-  "output_measure": {
-    "chars": 1135,
-    "paragraphs": 19,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

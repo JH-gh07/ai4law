@@ -1,0 +1,18 @@
+{
+  "company_name": "AlphaTech Group",
+  "review_items": [],
+  "attachments": [],
+  "uploaded_files": [],
+  "uploaded_documents": [
+    {
+      "file_id": "seed_task06_case1_5644cd14",
+      "file_name": "task06_case1_5644cd14.docx",
+      "file_type": "docx",
+      "file_path": "storage/uploads/seed-cases-v1/task06_case1_5644cd14.docx",
+      "document_role": "main_bcr_document",
+      "auto_detected_role": false
+    }
+  ],
+  "scenario_context": null,
+  "review_config": null
+}

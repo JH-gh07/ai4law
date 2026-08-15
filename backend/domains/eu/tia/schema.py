@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from backend.domains.us.cpra.schema import CPRACitationRef
 
@@ -108,16 +108,39 @@ class TIADecision(BaseModel):
 # ── Request (backward compat) ──────────────────────────────────────────
 
 class TIARequest(BaseModel):
-    # Original form fields
+    # Original form fields（structured_input 存在时可空，见下方 validator）
     transfer_tool: Literal["scc", "bcr", "derogation"]
-    data_exporter_profile: str = Field(min_length=2)
-    data_importer_profile: str = Field(min_length=2)
-    third_country_assessment: str = Field(min_length=2)
-    supplementary_measures: str = Field(min_length=2)
-    final_conclusion: str = Field(min_length=2)
-    attachments: list[TIAAttachment] = Field(min_length=1)
+    data_exporter_profile: str = Field(default="")
+    data_importer_profile: str = Field(default="")
+    third_country_assessment: str = Field(default="")
+    supplementary_measures: str = Field(default="")
+    final_conclusion: str = Field(default="")
+    attachments: list[TIAAttachment] = Field(default_factory=list)
     # NEW structured fields (all Optional)
     structured_input: TIAStructuredInput | None = None
+
+    @model_validator(mode="after")
+    def _legacy_fields_required_without_structured_input(self) -> "TIARequest":
+        if self.structured_input is None:
+            missing = [
+                name
+                for name in (
+                    "data_exporter_profile",
+                    "data_importer_profile",
+                    "third_country_assessment",
+                    "supplementary_measures",
+                    "final_conclusion",
+                )
+                if not getattr(self, name).strip()
+            ]
+            if not self.attachments:
+                missing.append("attachments")
+            if missing:
+                raise ValueError(
+                    "TIA legacy form fields required when structured_input is absent: "
+                    + ", ".join(missing)
+                )
+        return self
 
 
 # ── Output ─────────────────────────────────────────────────────────────

@@ -1,0 +1,47 @@
+{
+  "project_name": "MediAssist Pro（MAP）",
+  "project_goal": "辅助放射科医生进行疾病诊断，提高诊断准确率和效率",
+  "dpia_trigger_reasons": [],
+  "processing_flow_description": "利用深度学习算法分析医学影像（X光片、CT扫描、MRI），辅助放射科医生识别异常病变",
+  "data_categories": [
+    "患者身份信息：姓名、出生日期、病历号、医保号",
+    "健康数据：医学影像（X光片、CT扫描、MRI）、放射科报告、病理报告、既往病史",
+    "基因数据：部分癌症患者的基因测序结果（用于AI模型的个性化诊断）",
+    "特殊类别数据：种族/民族信息（用于评估AI模型在不同人群中的偏差）"
+  ],
+  "special_category_data": true,
+  "special_category_types": [
+    "种族/民族信息"
+  ],
+  "data_subject_categories": [
+    "患者（包括成年人和未成年人）"
+  ],
+  "data_subject_count": "预计每年处理约50万份影像数据",
+  "retention_period": "系统日志记录所有访问行为，保留12个月；影像数据根据德国法律要求保留10年；AI分析结果（标记、置信度分数等）保留5年；模型训练数据保留至项目结束后3年",
+  "cross_border_transfer": true,
+  "transfer_destination": "以色列",
+  "automated_decision_making": false,
+  "systematic_monitoring": false,
+  "large_scale_processing": false,
+  "data_matching": false,
+  "new_technology": false,
+  "vulnerable_data_subjects": true,
+  "consulted_internal_departments": [],
+  "external_experts": [],
+  "data_subject_consultation_plan": "",
+  "lawful_basis": [
+    "第6条：为提供医疗服务所必需（第6条第1款(b)项）；为公共利益领域的科学研究所必需（第6条第1款(e)项）",
+    "第9条：为提供健康护理所必需（第9条第2款(h)项）；为公共卫生领域的公共利益所必需（第9条第2款(i)项）",
+    "第22条：AI系统仅提供辅助建议，最终诊断由放射科医生做出，不构成完全自动化决策"
+  ],
+  "necessity_statement": "",
+  "proportionality_statement": "",
+  "transparency_information": "",
+  "identified_risks": [],
+  "mitigation_measures": [],
+  "dpia_owner": "",
+  "dpo_name": "",
+  "dpo_opinion": "",
+  "review_date": "",
+  "uploaded_files": []
+}

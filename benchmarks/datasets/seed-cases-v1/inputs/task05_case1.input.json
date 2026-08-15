@@ -15,12 +15,5 @@
       "我们和AWS签了标准的商业服务协议，里面有数据保密条款。我认为这套安排已经完全符合GDPR的要求了，毕竟AWS是全球最大的云服务商，GDPR本身就覆盖了这种跨境数据处理场景，不需要额外再签什么合同吧？我们的法务团队很小，实在搞不清楚还有什么遗漏的地方。请帮我们确认一下现在的合规状态。"
     ]
   },
-  "output_measure": {
-    "chars": 991,
-    "paragraphs": 30,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

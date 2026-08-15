@@ -19,12 +19,5 @@
       "我们不出售用户数据给任何第三方，所以我们认为不需要提供什么退出机制。广告网络只是帮我们做精准投放而已，用户在我们的网站上浏览商品是正常商业行为。我们觉得\"共享\"这个词跟我们没关系，我们又没把数据\"给\"别人。"
     ]
   },
-  "output_measure": {
-    "chars": 1325,
-    "paragraphs": 18,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

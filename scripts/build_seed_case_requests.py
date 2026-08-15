@@ -11,7 +11,10 @@ script performs the second conversion tier required by task065 §3.2:
 
 For every seed case the script records exactly one Level B disposition:
 
-    gap       — no product capability (task 7/8). Referenced to
+    pending_correction — v2.0 marks the case 需修正/待修正 (task4/6/7/8
+                case3/4/5); its body is still v1.0 legacy content and must be
+                isolated before any request conversion.
+    gap       — no product capability. Referenced to
                 `status/check/task065/seed-gap-ledger.json`, never given a request.
     rejected  — a supported module exists, but one or more key facts are missing
                 or placeholder-tainted. The adapter MUST NOT fabricate a default
@@ -44,12 +47,26 @@ from pathlib import Path
 from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[1]
+# Make `backend.*` importable when this script is run directly as
+# `python3 scripts/build_seed_case_requests.py` (sys.path[0] is scripts/, not ROOT).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 DATASET_DIR = ROOT / "benchmarks/datasets/seed-cases-v1"
 INPUTS_DIR = DATASET_DIR / "inputs"
 REQUESTS_DIR = DATASET_DIR / "requests"
 GAP_LEDGER_PATH = ROOT / "status/check/task065/seed-gap-ledger.json"
+# Input-only attachment derivation (task074 B3): task04/06 carry a real source
+# DOCX whose body is the document-to-review / BCR text. We copy it into storage
+# so the module's upload-driven request has a genuine file reference — never a
+# fabricated id/path.
+STORAGE_UPLOADS_DIR = ROOT / "storage" / "uploads"
+SEED_ATTACHMENT_DIR = STORAGE_UPLOADS_DIR / "seed-cases-v1"
 
-GAP_TASKS: dict[int, str] = {7: "GDPR 合规诊断", 8: "BD ROD 判断"}
+# v2.0 校正后 gap 归零：task4/6/7/8 已改对（文档审查 / BCR 审查 / DPIA 草案生成 /
+# TIA 草案生成），10 个 task 均有对应产品模块。保留空表仅作防御，gap 分支不再有
+# 实际命中（Level A 的 mapping_status 已全为 partial）。
+GAP_TASKS: dict[int, str] = {}
 
 # Placeholder / anonymization tokens. Any key fact that is empty or carries one
 # of these is treated as MISSING.
@@ -71,33 +88,68 @@ def _is_missing(value: Any) -> bool:
     return bool(_PLACEHOLDER_RE.search(text))
 
 
+def _derive_seed_attachment(source_docx: str, source_sha256: str = "") -> str:
+    """Copy a seed source DOCX into storage and return its storage-relative URI.
+
+    Returns ``""`` when no real source DOCX exists (the adapter must then keep
+    blocking instead of inventing a file reference).
+    """
+    if not source_docx:
+        return ""
+    src = ROOT / source_docx
+    if not src.exists() or not src.is_file():
+        return ""
+    SEED_ATTACHMENT_DIR.mkdir(parents=True, exist_ok=True)
+    short = (source_sha256 or src.name)[:8]
+    dest = SEED_ATTACHMENT_DIR / f"{src.stem}_{short}{src.suffix}"
+    if not dest.exists():
+        dest.write_bytes(src.read_bytes())
+    return dest.relative_to(ROOT).as_posix()
+
+
 def _parse_ynu(text: str) -> str | None:
     if not text:
         return None
     if any(t in text for t in ("不确定", "不知道", "不清楚", "暂按")):
         return "unknown"
-    if re.search(r"^是[。，；;]?$|属于|包含敏感|含敏感|不属于", text):
-        return "yes"
-    if re.search(r"^否[。，；;]?$|不含|不包含|不涉及", text):
+    # 否定必须先于肯定匹配，否则「不属于 / 不包含 / 不含」会被「属于 / 包含敏感 /
+    # 含敏感」的子串先命中（如「不包含敏感信息」里含「包含敏感」）。
+    if re.search(r"^否[。，；;]|不属于|不包含|不含|不涉及|不是", text):
         return "no"
+    if re.search(r"^是[。，；;]|属于|包含敏感|含敏感", text):
+        return "yes"
     return None
 
 
 def _parse_count(text: str) -> int | None:
-    """Parse an explicit integer count; reject fuzzy ranges / placeholders."""
+    """Parse an explicit integer count; reject fuzzy ranges / placeholders.
+
+    A candidate is rejected only when it is *directly* tied to a fuzzy/range
+    marker; an unrelated later number may still be explicit
+    (e.g. ``"<1万。5000人的全基因组数据。"`` -> 5000).
+    """
     if _is_missing(text):
         return None
-    if any(t in text for t in ("约", "大概", "左右", "≥", "≤", "-", "至", "几")):
-        return None
-    m = re.search(r"(\d+)\s*(万|千)?", text)
-    if not m:
-        return None
-    value = int(m.group(1))
-    if m.group(2) == "万":
-        value *= 10000
-    elif m.group(2) == "千":
-        value *= 1000
-    return value
+    for m in re.finditer(r"(\d+)\s*(万|千)?", text):
+        start, end = m.start(), m.end()
+        # 只看当前数字所在小句（最近一个强分隔符之后）的前缀是否含模糊标记。
+        seg = text[:start]
+        cut = max(seg.rfind("。"), seg.rfind("；"), seg.rfind(";"),
+                  seg.rfind("，"), seg.rfind(","), seg.rfind("\n"))
+        window = seg[cut + 1:].strip()
+        if any(t in window for t in ("约", "大概", "大约", "近", "≥", "≤", "<",
+                                     ">", "至", "到", "~", "—", "几", "余", "多", "-")):
+            continue
+        suffix = text[end:end + 3]
+        if any(t in suffix for t in ("左右", "以上", "以下", "余", "-", "~", "—", "至", "到")):
+            continue
+        value = int(m.group(1))
+        if m.group(2) == "万":
+            value *= 10000
+        elif m.group(2) == "千":
+            value *= 1000
+        return value
+    return None
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -354,43 +406,176 @@ def _adapter_scc_review(paras: list[str]) -> tuple[dict | None, list[str]]:
     return request.model_dump(), []
 
 
+_TIA_COUNTRY_EN = {
+    "德国": "Germany", "荷兰": "Netherlands", "印度": "India", "美国": "United States",
+    "中国": "China", "新加坡": "Singapore", "日本": "Japan", "韩国": "South Korea",
+    "英国": "United Kingdom", "法国": "France", "奥地利": "Austria", "以色列": "Israel",
+    "瑞士": "Switzerland", "加拿大": "Canada", "澳大利亚": "Australia", "巴西": "Brazil",
+    "俄罗斯": "Russia", "马来西亚": "Malaysia", "泰国": "Thailand", "越南": "Vietnam",
+    "印尼": "Indonesia", "菲律宾": "Philippines",
+}
+
+_TIA_CAT_RULES: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"健康|体检|医疗|诊断|病历"), "health_data"),
+    (re.compile(r"基因|基因组"), "genetic_data"),
+    (re.compile(r"生物识别|面部|指纹|虹膜|人脸|声纹"), "biometric_data"),
+    (re.compile(r"儿童|未成年"), "children_data"),
+    (re.compile(r"位置|定位|轨迹|IP地址|经纬度|地理"), "location_data"),
+    (re.compile(r"行为|浏览|点击|偏好|页面访问|停留"), "behavioral_data"),
+    (re.compile(r"通信内容|邮件内容|聊天记录|消息内容"), "communication_content"),
+    (re.compile(r"客户细分|客户标签|CRM|会员等级"), "crm_data"),
+    (re.compile(r"交易|购买|订单|金额|支付|消费"), "transaction_records"),
+    (re.compile(r"员工|工号|职位|薪资|人力|雇员"), "employee_data"),
+    (re.compile(r"考勤|绩效|培训|晋升|HR|人事"), "hr_records"),
+    (re.compile(r"财务|银行|IBAN|税号|薪资级别|账"), "financial_data"),
+    (re.compile(r"政治"), "political_opinion"),
+    (re.compile(r"宗教|工会|信仰"), "religious_belief"),
+    (re.compile(r"临床"), "clinical_trial_data"),
+    (re.compile(r"姓名|邮箱|邮寄地址|联系地址|家庭地址|住址|电话|联系方式|手机"), "contact_information"),
+]
+
+
+def _tia_country_en(raw: str) -> str:
+    for cn, en in _TIA_COUNTRY_EN.items():
+        if cn in raw:
+            return en
+    return raw.strip()
+
+
+def _tia_match_category(item: str) -> str:
+    for rule, cat in _TIA_CAT_RULES:
+        if rule.search(item):
+            return cat
+    return "other"
+
+
 def _adapter_tia(paras: list[str]) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
 
+    def dash_items(block: str) -> list[str]:
+        items: list[str] = []
+        for chunk in re.split(r"\n(?=\s*-)", block.strip()):
+            chunk = re.sub(r"^\s*-\s*", "", chunk.strip())
+            chunk = re.sub(r"\s*\n\s*", "", chunk)
+            if chunk:
+                items.append(chunk)
+        return items
+
+    def section(title_re: str) -> str:
+        m = re.search(title_re + r"(.*?)(?=【|$)", text, re.S)
+        return m.group(1) if m else ""
+
+    def field_in(section_text: str, label: str) -> str:
+        m = re.search(label + r"[：:]\s*([^，,；;。\n]+)", section_text)
+        return m.group(1).strip() if m else ""
+
+    # transfer_tool（无默认，必须识别）
     tool = None
-    if "SCC" in text or "标准合同" in text:
+    if "SCC" in text or "标准合同" in text or "标准合同条款" in text:
         tool = "scc"
-    elif "BCR" in text:
+    elif "BCR" in text or "约束性公司规则" in text:
         tool = "bcr"
+    elif "克减" in text or "减损" in text or "derogation" in text.lower():
+        tool = "derogation"
     if tool is None:
         missing.append("transfer_tool")
 
-    # The six-item TIA form is sparse; profiles/assessment/measures/conclusion
-    # and attachments are all missing in the seed corpus.
-    for field in (
-        "data_exporter_profile",
-        "data_importer_profile",
-        "third_country_assessment",
-        "supplementary_measures",
-        "final_conclusion",
-        "attachments",
-    ):
-        missing.append(field)
+    exporter_section = section(r"【传输方信息】")
+    importer_section = section(r"【(?:境外)?接收方信息】")
+
+    exporter_country = _tia_country_en(field_in(exporter_section, "所在地"))
+    importer_country = _tia_country_en(field_in(importer_section, "所在地"))
+    if not exporter_country:
+        missing.append("exporter_country")
+    if not importer_country:
+        missing.append("importer_country")
+
+    # transfer_purpose
+    purpose_block = section(r"【传输目的】")
+    transfer_purpose = "；".join(dash_items(purpose_block))
+    if _is_missing(transfer_purpose):
+        missing.append("transfer_purpose")
+
+    # data_categories（至少一个，否则无法评估）
+    m = re.search(r"数据类型[：:]\s*(.*?)(?=数据量|传输频率|传输方式|【)", text, re.S)
+    data_block = m.group(1) if m else ""
+    data_categories: list[str] = []
+    for item in dash_items(data_block):
+        cat = _tia_match_category(item)
+        if cat not in data_categories:
+            data_categories.append(cat)
+    if not data_categories:
+        missing.append("data_categories")
+
+    # roles
+    exporter_role = "joint_controller" if re.search(r"共同控制者|joint.?controller", text, re.I) else "controller"
+    importer_role = "unknown"
+    if re.search(r"次处理者|分处理者|sub.?processor", text, re.I):
+        importer_role = "subprocessor"
+    elif re.search(r"共同控制者|joint.?controller", text, re.I):
+        importer_role = "joint_controller"
+    elif re.search(r"控制者.{0,4}控制者|controller.{0,4}controller", text, re.I):
+        importer_role = "controller"
+    elif re.search(r"处理者|processor", text, re.I):
+        importer_role = "processor"
+
+    # frequency / scale / subjects
+    transfer_frequency = field_in(text, "传输频率")
+    transfer_scale = field_in(text, "数据量")
+    data_subjects: list[str] = []
+    for kw in ("员工", "客户", "用户", "患者", "消费者", "访客", "会员", "学生", "市民", "公民", "个人", "自然人"):
+        if kw in transfer_scale and kw not in data_subjects:
+            data_subjects.append(kw)
+
+    # special categories
+    has_special_category_data = bool(re.search(r"特殊类别数据[：:]\s*[^不无]", text))
+    special_category_types: list[str] = []
+    m = re.search(r"特殊类别数据[：:]\s*([^；;。\n]+)", text)
+    if m and not re.match(r"^\s*(无|不|否)", m.group(1)):
+        for s in re.split(r"[、，,]", m.group(1)):
+            s = re.sub(r"[（(].*?[）)]", "", s).strip()
+            if s:
+                special_category_types.append(s)
+
+    # technical controls（只在原文明确描述时才置 true）
+    encryption_before_transfer = bool(re.search(r"传输加密|加密VPN|TLS|传输.*加密|加密.*传输", text))
+    key_managed_in_eu = bool(re.search(
+        r"密钥.{0,6}(?:欧盟|我方|本地|境内|EU|自持)|(?:欧盟|我方|本地|境内).{0,6}密钥", text,
+    ))
+    has_end_to_end_encryption = bool(re.search(r"端到端加密|end.?to.?end", text, re.I)) and not re.search(
+        r"未.{0,8}端到端|没有端到端|未实施端到端", text,
+    )
+    has_secure_enclave = bool(re.search(r"安全飞地|可信执行环境|secure.?enclave|TEE", text, re.I))
+    has_key_separation = bool(re.search(r"密钥分离|密钥.{0,4}分离|key.?separation", text, re.I))
 
     if missing:
         return None, missing
 
-    from backend.domains.eu.tia.schema import TIARequest
+    from backend.domains.eu.tia.schema import TIARequest, TIAStructuredInput
 
+    structured_input = TIAStructuredInput(
+        exporter_country=exporter_country,
+        importer_country=importer_country,
+        destination_country=importer_country,
+        exporter_role=exporter_role,
+        importer_role=importer_role,
+        transfer_purpose=transfer_purpose,
+        data_categories=data_categories,
+        has_special_category_data=has_special_category_data,
+        special_category_types=special_category_types,
+        data_subjects=data_subjects,
+        transfer_frequency=transfer_frequency,
+        transfer_scale=transfer_scale,
+        encryption_before_transfer=encryption_before_transfer,
+        key_managed_in_eu=key_managed_in_eu,
+        has_end_to_end_encryption=has_end_to_end_encryption,
+        has_secure_enclave=has_secure_enclave,
+        has_key_separation=has_key_separation,
+    )
     request = TIARequest(
         transfer_tool=tool,
-        data_exporter_profile="",
-        data_importer_profile="",
-        third_country_assessment="",
-        supplementary_measures="",
-        final_conclusion="",
-        attachments=[],
+        structured_input=structured_input,
     )
     return request.model_dump(), []
 
@@ -406,14 +591,19 @@ def _adapter_us14117(paras: list[str]) -> tuple[dict | None, list[str]]:
     if _is_missing(project_name):
         missing.append("project_name")
 
-    transaction_description = text[:300]
-    if _is_missing(transaction_description):
+    # transaction_description is free-text; a fuzzy count token like 几万 inside
+    # the description must not mark the whole field missing. Only a blank body
+    # is missing.
+    transaction_description = text[:300].strip()
+    if not transaction_description:
         missing.append("transaction_description")
 
+    # 用可匹配常见变体的子串，避免"精确地理位置数据" vs "精确地理位置信息"
+    # 之类同义写法被误判为缺失。
     data_item_names = [
         name for name in (
-            "精确地理位置信息", "面部生物识别特征模板", "姓名", "邮箱",
-            "电话号码", "基因组测序数据", "生物识别数据",
+            "精确地理位置", "面部生物识别", "姓名", "邮箱",
+            "电话号码", "基因组测序", "生物识别",
         ) if name in text
     ]
     if not data_item_names:
@@ -452,11 +642,204 @@ def _adapter_cpra(paras: list[str]) -> tuple[dict | None, list[str]]:
     return None, missing
 
 
+def _adapter_document_review(
+    paras: list[str], source_docx: str | None = None, source_sha256: str = "",
+) -> tuple[dict | None, list[str]]:
+    # ReviewGenerateRequest requires uploaded_files (min_length=1). The seed
+    # record carries a real source DOCX whose body is the document to review;
+    # task074 B3 derives an input-only copy into storage rather than fabricating
+    # an id/path. Without a real source file, keep blocking.
+    storage_uri = _derive_seed_attachment(source_docx or "", source_sha256)
+    if not storage_uri:
+        return None, ["uploaded_files"]
+
+    from backend.schemas.review import ReviewGenerateRequest
+
+    request = ReviewGenerateRequest(uploaded_files=[storage_uri])
+    return request.model_dump(), []
+
+
+def _adapter_bcr_review(
+    paras: list[str], source_docx: str | None = None, source_sha256: str = "",
+) -> tuple[dict | None, list[str]]:
+    text = "\n".join(paras)
+    missing: list[str] = []
+
+    # company_name (min_length=2) is the one hard form field. The BCR title is
+    # "<Group> Binding Corporate Rules for Data Controllers/Processors".
+    company_name = ""
+    m = re.search(
+        r"([A-Za-z][A-Za-z0-9&. \-]{1,50}?)\s+Binding Corporate Rules",
+        text,
+    )
+    if m:
+        company_name = m.group(1).strip()
+    if _is_missing(company_name):
+        missing.append("company_name")
+
+    storage_uri = _derive_seed_attachment(source_docx or "", source_sha256)
+    if not storage_uri:
+        missing.append("uploaded_documents")
+
+    if missing:
+        return None, missing
+
+    from backend.domains.eu.bcr_review.schema import BCRRequest, BCRUploadedDocument
+
+    uploaded_documents = [
+        BCRUploadedDocument(
+            file_id=f"seed_{Path(storage_uri).stem}",
+            file_name=Path(storage_uri).name,
+            file_type="docx",
+            file_path=storage_uri,
+            document_role="main_bcr_document",
+            auto_detected_role=False,
+        )
+    ]
+    request = BCRRequest(company_name=company_name, uploaded_documents=uploaded_documents)
+    return request.model_dump(), []
+
+
+def _adapter_dpia(paras: list[str]) -> tuple[dict | None, list[str]]:
+    text = "\n".join(paras)
+    missing: list[str] = []
+
+    def dash_items(block: str) -> list[str]:
+        """Extract ``- item`` bullets, joining wrapped continuation lines."""
+        items: list[str] = []
+        for chunk in re.split(r"\n(?=\s*-)", block.strip()):
+            chunk = re.sub(r"^\s*-\s*", "", chunk.strip())
+            chunk = re.sub(r"\s*\n\s*", "", chunk)
+            if chunk:
+                items.append(chunk)
+        return items
+
+    def block_after(label: str, stop: str) -> str:
+        m = re.search(label + r"[：:]\s*(.*?)(?=" + stop + r")", text, re.S)
+        return m.group(1) if m else ""
+
+    # ── 1. Identify need (schema min_length 硬必填) ──
+    project_name = ""
+    m = re.search(r"系统名称[：:]\s*(.{2,60}?)(?:[；;。\n]|$)", text)
+    if m:
+        project_name = m.group(1).strip()
+    if _is_missing(project_name):
+        missing.append("project_name")
+
+    project_goal = ""
+    m = re.search(r"处理目的[：:]\s*(.{2,80}?)(?:[；;。\n]|$)", text)
+    if m:
+        project_goal = m.group(1).strip()
+    if _is_missing(project_goal):
+        missing.append("project_goal")
+
+    processing_flow = ""
+    m = re.search(r"系统功能[：:]\s*(.{2,120}?)(?:[；;。\n]|$)", text)
+    if m:
+        processing_flow = m.group(1).strip()
+    if _is_missing(processing_flow):
+        missing.append("processing_flow_description")
+
+    # ── 2. Describe processing（忠实提取；缺失不阻塞，但绝不反向 false）──
+    data_categories = dash_items(block_after("处理的数据类别", "处理目的|数据主体"))
+
+    special_category_data = False
+    special_category_types: list[str] = []
+    m = re.search(r"特殊类别数据[：:]\s*([^；;。\n]+)", text)
+    if m and "不涉及" not in m.group(1) and m.group(1).strip() not in ("无", "无。", "无；"):
+        special_category_data = True
+        v = re.sub(r"[（(].*?[）)]", "", m.group(1)).strip()
+        if v:
+            special_category_types.append(v)
+    elif re.search(r"不涉及特殊类别|无特殊类别|声称[^。\n]*不涉及特殊类别", text):
+        special_category_data = False
+
+    data_subject_categories: list[str] = []
+    m = re.search(r"数据主体[：:]\s*([^；;。\n]+)", text)
+    if m:
+        for s in re.split(r"[、，,]", m.group(1)):
+            s = s.strip().rstrip("等").strip()
+            if s:
+                data_subject_categories.append(s)
+
+    data_subject_count = ""
+    m = re.search(r"数据量[：:]\s*([^\n]+)", text)
+    if m:
+        data_subject_count = m.group(1).strip()
+
+    retention_period = "；".join(
+        re.sub(r"^\s*-\s*", "", ln).strip()
+        for ln in paras
+        if ln.strip().startswith("-") and "保留" in ln
+    )
+
+    lawful_basis: list[str] = []
+    m = re.search(r"【[^】]*法律基础[^】]*】\s*(.*?)(?=【|$)", text, re.S)
+    if m:
+        lawful_basis = dash_items(m.group(1))
+
+    # 只有原文确实描述出境活动时才置 true；否则不伪造"无跨境"。
+    cross_border_transfer = False
+    transfer_destination = ""
+    m = re.search(r"【跨境传输】(.*?)(?=【|$)", text, re.S)
+    if m:
+        section = m.group(1)
+        if re.search(r"传[至到]|传输至|远程访问|VPN|境外|出境", section):
+            cross_border_transfer = True
+            dests: list[str] = []
+            for mm in re.finditer(r"至\s*([^；;。\n（(]+?)(?:供应商|公司|$)", section):
+                dests.append(mm.group(1).strip())
+            for mm in re.finditer(
+                r"[（(]([^）)]*(?:中国|美国|新加坡|欧盟|日本|韩国|以色列|印度|英国|法国|德国|奥地利|瑞士|澳大利亚|加拿大|俄罗斯|巴西|马来西亚|泰国|越南|印尼|菲律宾|台湾|香港|澳门)[^）)]*)[）)]",
+                section,
+            ):
+                dests.append(mm.group(1).strip())
+            transfer_destination = "；".join(dict.fromkeys(dests))
+
+    automated_decision_making = False
+    if re.search(r"不构成.{0,6}自动化决策|不涉及自动化决策|不涉及自动化", text):
+        automated_decision_making = False
+    elif re.search(r"自动化决策", text):
+        automated_decision_making = True
+
+    vulnerable_data_subjects = False
+    if re.search(r"未成年|儿童", text) and not re.search(
+        r"无未成年|不涉及未成年|不含未成年|无儿童|不涉及儿童", text
+    ):
+        vulnerable_data_subjects = True
+
+    if missing:
+        return None, missing
+
+    from backend.domains.eu.dpia.schema import DPIARequest
+
+    request = DPIARequest(
+        project_name=project_name,
+        project_goal=project_goal,
+        processing_flow_description=processing_flow,
+        data_categories=data_categories,
+        special_category_data=special_category_data,
+        special_category_types=special_category_types,
+        data_subject_categories=data_subject_categories,
+        data_subject_count=data_subject_count,
+        retention_period=retention_period,
+        cross_border_transfer=cross_border_transfer,
+        transfer_destination=transfer_destination,
+        automated_decision_making=automated_decision_making,
+        vulnerable_data_subjects=vulnerable_data_subjects,
+        lawful_basis=lawful_basis,
+    )
+    return request.model_dump(), []
+
+
 ADAPTERS: dict[str, Callable[[list[str]], tuple[dict | None, list[str]]]] = {
     "cn.transfer_diagnosis": _adapter_transfer_diagnosis,
     "cn.security_assessment": _adapter_security_assessment,
     "cn.pipia": _adapter_pipia,
+    "cn.document_review": _adapter_document_review,
     "eu.scc_review": _adapter_scc_review,
+    "eu.bcr_review": _adapter_bcr_review,
+    "eu.dpia": _adapter_dpia,
     "eu.tia": _adapter_tia,
     "us.eo_14117": _adapter_us14117,
     "us.cpra": _adapter_cpra,
@@ -474,8 +857,14 @@ def _schema_for(module_id: str) -> Any:
                 from backend.domains.cn.security_assessment.schema import AssessmentRequest as M
             elif module_id == "cn.pipia":
                 from backend.domains.cn.pipia.schema import PIPIARequest as M
+            elif module_id == "cn.document_review":
+                from backend.schemas.review import ReviewGenerateRequest as M
             elif module_id == "eu.scc_review":
                 from backend.domains.eu.scc_review.schema import SCCReviewRequest as M
+            elif module_id == "eu.bcr_review":
+                from backend.domains.eu.bcr_review.schema import BCRRequest as M
+            elif module_id == "eu.dpia":
+                from backend.domains.eu.dpia.schema import DPIARequest as M
             elif module_id == "eu.tia":
                 from backend.domains.eu.tia.schema import TIARequest as M
             elif module_id == "us.eo_14117":
@@ -496,6 +885,19 @@ def adjudicate(record: dict) -> dict:
     module_id = record.get("module_id") or ""
     mapping_status = record.get("mapping_status") or ""
 
+    # v2.0 隔离：正文仍为 v1.0 旧内容的 12 个 case3/4/5 不得进入 request 路径。
+    flags = record.get("data_quality_flags", [])
+    if any(str(f).startswith("pending_correction") for f in flags):
+        return {
+            "case_id": case_id,
+            "task_no": task_no,
+            "module_id": module_id or None,
+            "levelb": "pending_correction",
+            "request_path": None,
+            "blocking_missing_facts": [],
+            "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离",
+        }
+
     if mapping_status == "gap" or module_id == "":
         return {
             "case_id": case_id,
@@ -513,7 +915,14 @@ def adjudicate(record: dict) -> dict:
         raise ValueError(f"no adapter for supported module {module_id} ({case_id})")
 
     paras = record.get("input", {}).get("paragraphs", [])
-    request_dict, missing = adapter(paras)
+    if module_id in ("cn.document_review", "eu.bcr_review"):
+        request_dict, missing = adapter(
+            paras,
+            source_docx=record.get("source_docx") or "",
+            source_sha256=record.get("source_sha256") or "",
+        )
+    else:
+        request_dict, missing = adapter(paras)
     missing = sorted(set(missing))
 
     if missing:
@@ -595,7 +1004,15 @@ def main() -> int:
         if d["levelb"] == "converted":
             rec = next(r for r in records if r["case_id"] == d["case_id"])
             adapter = ADAPTERS[d["module_id"]]
-            request_dict, _ = adapter(rec.get("input", {}).get("paragraphs", []))
+            paras = rec.get("input", {}).get("paragraphs", [])
+            if d["module_id"] in ("cn.document_review", "eu.bcr_review"):
+                request_dict, _ = adapter(
+                    paras,
+                    source_docx=rec.get("source_docx") or "",
+                    source_sha256=rec.get("source_sha256") or "",
+                )
+            else:
+                request_dict, _ = adapter(paras)
             out = REQUESTS_DIR / f"{d['case_id']}.request.json"
             out.write_text(
                 json.dumps(request_dict, ensure_ascii=False, indent=2, default=str) + "\n",

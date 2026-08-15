@@ -22,12 +22,5 @@
       "• Jennifer Liu | 国籍：美国 | 所属部门：法务部 | 岗位：合规顾问"
     ]
   },
-  "output_measure": {
-    "chars": 851,
-    "paragraphs": 17,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

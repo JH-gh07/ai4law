@@ -15,12 +15,5 @@
       "我们荷兰总部和英国子公司之间的数据共享一直都很顺畅，毕竟英国还是欧盟的一部分嘛，数据在欧盟内部流通不需要特别处理。我们签了集团内部的数据共享协议，应该就够了。最近听说英国脱欧的事情，但我们觉得影响不大，毕竟英国的法律体系和欧洲差不多。请帮忙看看有没有问题。"
     ]
   },
-  "output_measure": {
-    "chars": 824,
-    "paragraphs": 23,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
   "data_quality_flags": []
 }

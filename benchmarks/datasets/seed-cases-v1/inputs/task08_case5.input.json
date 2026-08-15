@@ -1,10 +1,10 @@
 {
   "case_id": "task08_case5",
   "task_no": 8,
-  "declared_task_name": "BD ROD 判断",
+  "declared_task_name": "TIA 草案生成",
   "jurisdiction": "eu",
-  "module_id": "",
-  "mapping_status": "gap",
+  "module_id": "eu.tia",
+  "mapping_status": "partial",
   "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case5.docx",
   "source_sha256": "9153d213092c7b44301ea599f268634902b2f2aed0901b5bca9b836940c7f5eb",
   "source_size_bytes": 13268,
@@ -17,12 +17,7 @@
       "基因数据虽然敏感，但我们只是用来做统计分析，不用于个体识别或临床决策。而且伦理委员会都批准了，数据保护方面应该也没什么问题。"
     ]
   },
-  "output_measure": {
-    "chars": 2758,
-    "paragraphs": 57,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
-  "data_quality_flags": []
+  "data_quality_flags": [
+    "pending_correction:v2.0_需修正/待修正_内容未改回"
+  ]
 }

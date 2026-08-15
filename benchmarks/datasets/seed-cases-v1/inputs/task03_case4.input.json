@@ -26,17 +26,5 @@
       "未开展正式PIPIA。未对照标准合同办法第五条进行自查。"
     ]
   },
-  "output_measure": {
-    "chars": 1877,
-    "paragraphs": 36,
-    "placeholder_tokens": [
-      "待补充",
-      "待定"
-    ]
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
-  "data_quality_flags": [
-    "placeholder_in_output:待补充|待定"
-  ]
+  "data_quality_flags": []
 }

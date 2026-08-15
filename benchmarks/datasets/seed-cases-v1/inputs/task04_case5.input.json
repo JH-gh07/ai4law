@@ -1,9 +1,9 @@
 {
   "case_id": "task04_case5",
   "task_no": 4,
-  "declared_task_name": "豁免情形诊断",
+  "declared_task_name": "文档审查",
   "jurisdiction": "cn",
-  "module_id": "cn.transfer_diagnosis",
+  "module_id": "cn.document_review",
   "mapping_status": "partial",
   "source_docx": "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case5.docx",
   "source_sha256": "3026600fe0d845c7f1414193068d656426fbb1e7cbce7010b5ab1c80eb27f6aa",
@@ -22,12 +22,7 @@
       "大概50万用户的数据。其中物流和支付相关的约30万用户，行为分析相关的约50万（包含前面30万用户的行为数据）。"
     ]
   },
-  "output_measure": {
-    "chars": 1642,
-    "paragraphs": 28,
-    "placeholder_tokens": []
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
-  "data_quality_flags": []
+  "data_quality_flags": [
+    "pending_correction:v2.0_需修正/待修正_内容未改回"
+  ]
 }

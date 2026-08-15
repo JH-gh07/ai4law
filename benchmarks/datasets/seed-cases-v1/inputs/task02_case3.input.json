@@ -32,17 +32,5 @@
       "用户注册时在隐私政策中告知了人脸识别功能。（注：用户未明确是否就人脸数据出境取得单独同意，仅在隐私政策中概括告知）"
     ]
   },
-  "output_measure": {
-    "chars": 2053,
-    "paragraphs": 39,
-    "placeholder_tokens": [
-      "待补充",
-      "待定"
-    ]
-  },
-  "expected_status": "pending_authoring",
-  "expected_note": "Output span exists in the source DOCX but is NOT promoted here. expected.json requires per-jurisdiction Legal sign-off (Q2).",
-  "data_quality_flags": [
-    "placeholder_in_output:待补充|待定"
-  ]
+  "data_quality_flags": []
 }
