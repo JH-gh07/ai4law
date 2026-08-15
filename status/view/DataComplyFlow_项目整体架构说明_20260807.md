@@ -1,6 +1,7 @@
 # DataComplyFlow 项目整体架构说明
 
 > 生成日期：2026-08-07 · 基于 `new` 分支 HEAD 状态
+> 最近更新：2026-08-13 · 同步 task061–task069 落地后的最新代码事实（harness 迁出 tests、统一三格式渲染、JP/KR 来源隔离、11 模块口径、全量测试数）
 
 ---
 
@@ -14,20 +15,23 @@
 - **LLM 接入**：类 OpenAI 兼容 API（通过 provider_registry 支持多模型路由）
 - **RAG 检索引擎**：自研混合检索引擎（语义向量 + BM25 全文 + 重排序 + 多索引编排）
 
-**当前支持法域与模块（10 个业务模块）：**
+**当前支持法域与模块（11 个业务模块，以 `config/module_registry.json` 为准）：**
 
 | 法域 | 模块 key | 功能 |
 |------|----------|------|
 | 🇨🇳 中国 | `diagnosis` | 合规路径诊断（安全评估 / 标准合同 / 认证） |
 | 🇨🇳 中国 | `assessment` | 数据出境安全评估报告（8 章外评 + 3 节官方） |
+| 🇨🇳 中国 | `review` | 文档智能审查（SQLite 持久化专项流水线） |
 | 🇨🇳 中国 | `pipia` | 个人信息保护影响评估（PIPIA） |
-| 🇨🇳 中国 | `transfer_diagnosis` | 数据出境路径诊断 |
+| 🇨🇳 中国 | `cn_flow` | 中国数据出境流程审查（EO 14117 流量向映射，包位于 `us/`） |
+| 🇪🇺 欧盟 | `eu_scc` | 欧盟标准合同条款（SCC）审核 |
 | 🇪🇺 欧盟 | `bcr` | 有约束力的公司规则（BCR）审核 |
 | 🇪🇺 欧盟 | `dpia` | 数据保护影响评估（DPIA） |
 | 🇪🇺 欧盟 | `tia` | 传输影响评估（TIA） |
-| 🇪🇺 欧盟 | `eu_scc` | 欧盟标准合同条款（SCC）审核 |
+| 🇺🇸 美国 | `us_14117` | EO 14117 数据安全审查 |
 | 🇺🇸 美国 | `cpra` | 加州隐私权法案（CPRA）合规 |
-| 🇺🇸 美国 | `us_14117` / `eo14117_flow_review` | EO 14117 数据安全审查 |
+
+> 注：`cn.scc_review` 已退役，不再计入；模块口径以 `config/module_registry.json`（11 个）与 `case_inventory.json`（26 CLI 案例 / 603 断言 / 28 前端案例）为准。
 
 ---
 
@@ -38,7 +42,7 @@
 │                    浏览器前端 (React 18 + TS)                  │
 │  ┌───────┐ ┌─────────────┐ ┌──────────┐ ┌───────────────┐  │
 │  │ Pages │ │ Components  │ │ Features │ │ Lib (state,   │  │
-│  │ 8页   │ │ 7组件目录    │ │ runner   │ │  auth, domain)│  │
+│  │ 12页  │ │ 9组件目录    │ │ 2 feature │ │  auth, domain)│  │
 │  └───────┘ └─────────────┘ └──────────┘ └───────────────┘  │
 └──────────────────────┬──────────────────────────────────────┘
                        │ HTTP/REST + WebSocket (SSE)
@@ -57,15 +61,15 @@
 │  └──────────────────────┬───────────────────────────────┘   │
 │                         │                                     │
 │  ┌──────────┐  ┌────────┴───────┐  ┌──────────────────┐    │
-│  │ domains/ │  │   modules/     │  │   services/       │    │
-│  │ (业务域) │  │ (模块运行器)    │  │   (跨域服务)      │    │
+│  │ domains/ │  │   harness/     │  │   services/       │    │
+│  │ (业务域) │  │ (CLI 白盒执行器)│  │   (跨域服务)      │    │
 │  └──────────┘  └────────────────┘  └──────────────────┘    │
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                  common/ (公共基础设施)                 │   │
 │  │  citation │ events │ knowledge │ llm │ rag │ render  │   │
-│  │  quality  │ risk   │ runtime   │ schema │ storage    │   │
-│  │  tasks    │ trace  │ workflow  │ observability       │   │
+│  │  reporting│ quality│ risk      │ runtime│ schema   │   │
+│  │  storage  │ tasks  │ trace     │ workflow │ obs    │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                               │
 │  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
@@ -96,17 +100,21 @@
 | `settings.py` | 配置类 `Settings`，从环境变量 / `.env` 读取全部配置项（DB URL、LLM API key、上传目录等） |
 | `container.py` | `AppContainer` — 手工 DI 容器，初始化 Engine、SessionFactory、LLMClient、FileService、ReportService、WebSocketManager、TaskDispatcher 等全部单例 |
 | `db.py` | `init_db()` — SQLAlchemy `Base.metadata.create_all()`，启动建表 |
-| `resource_paths.py` | 资源路径解析（模板文件、法律数据文件等） |
+| `dependencies.py` | FastAPI 依赖注入（`get_db` / `get_container` / 当前用户解析等） |
+| `resource_paths.py` | 仓库资源与基准数据集的规范路径解析（模板、法律数据、`benchmarks/datasets` 等） |
 | `runtime_settings.py` | 运行时动态覆写 Settings（不重启服务即可切换 LLM provider 等） |
-| `security.py` | JWT 令牌生成与验证、密码哈希 |
-| `websocket_manager.py` | WebSocket 连接管理 |
+| `release_info.py` | 版本/发布信息 |
+| `json_utils.py` | JSON 序列化工具（Pydantic/枚举安全序列化等） |
+| `time.py` | 显式 UTC 时区时间戳工具 |
+
+> 说明：JWT 令牌生成/验证与密码哈希已移到 `backend/services/auth_service.py`，WebSocket 连接管理在 `backend/services/websocket_manager.py`（两者均不在 `core/`）。
 
 ### 3.3 HTTP API 层 — `backend/api/`
 
 **v0（兼容层）：**
 - `v0/router.py` + `v0/task_gateway/`：旧版任务网关，按 `module_key` 分发到对应模块运行器
 
-**v1（主 API）：12 个端点模块 + 10 个业务模块路由**
+**v1（主 API）：13 个端点文件 + 11 个业务模块路由**
 
 | 端点 | 文件 | 功能 |
 |------|------|------|
@@ -122,12 +130,13 @@
 | `/knowledge/review/*` | `endpoints/knowledge_review.py` | 知识审核 |
 | `/events/*` | `endpoints/events.py` | SSE 事件流（模块运行进度推送） |
 | `/system/*` | `endpoints/system_settings.py` | 系统设置 |
+| `/version/*` | `endpoints/version.py` | 版本信息 |
 
 **业务模块路由：** 每个 `domains/` 下的业务模块通过自己的 `router.py` 暴露 `/run`、`/run/async` 等端点，由 `v1/router.py` 统一挂载。
 
 ### 3.4 公共基础设施 — `backend/common/`
 
-这是项目最核心的复用层，共 14 个子包：
+这是项目最核心的复用层，共 16 个子包（`citation` / `events` / `knowledge` / `llm` / `observability` / `quality` / `rag` / `render` / `reporting` / `risk` / `runtime` / `schema` / `storage` / `tasks` / `trace` / `workflow`）：
 
 #### 3.4.1 `common/citation/` — 引用系统（本次 P0 治理的核心）
 
@@ -200,7 +209,23 @@
 | `pdf_renderer.py` | PDF 渲染器（基于 markdown → HTML → PDF 管道） |
 | `artifacts.py` | 产物打包器 — 将报告、证据、问题清单打包为 ZIP |
 
-#### 3.4.6 其它 common 子包
+#### 3.4.6 `common/reporting/` — 统一三格式同源渲染（task067 / task068 新增）
+
+> 这是 2026-08 中旬引入的统一渲染层，解决各模块 Markdown/DOCX/PDF 三格式"各自渲染、排版失真"的问题。与 `common/render/` 的关系：`render/` 提供底层渲染原语（markdown/docx/pdf 转换器 + 模板），`reporting/` 提供**统一 IR → 三格式**的上层编排（render manifest + render profile + renderer registry）。
+
+| 文件/目录 | 作用 |
+|------|------|
+| `render_manifest.py` | 渲染清单（RenderManifest）——声明式描述"哪个模块 / 哪个产物 / 用哪个 profile / 输出哪三种格式"，单源驱动渲染 |
+| `render_profiles/` | 渲染画像——按模块（bcr / 文档审查 / 多模块）区分的排版规则、字段映射与格式参数 |
+| `renderers/` | 渲染器注册表——markdown / docx / pdf 渲染器实现，统一入口 |
+| `schema/` | 渲染 IR 的 Pydantic schema |
+| `compiler/` | IR 编译器——把各模块中间结果编译为统一 Document IR |
+| `shadow_render.py` | 影子渲染——新旧渲染链路对拍，用于回归验证 |
+| `layout_gate.py` | 排版门禁——校验三格式输出的版式合规性 |
+| `migration.py` / `compat.py` | 旧渲染 API 的迁移与兼容层 |
+| `tests/` | 渲染器测试（markdown/docx/pdf/manifest/migration） |
+
+#### 3.4.7 其它 common 子包
 
 | 子包 | 核心文件 | 功能 |
 |------|---------|------|
@@ -248,22 +273,25 @@ domains/{jurisdiction}/{module}/
 | `chapter_generator.py` | ~500 | **章节生成器**：**P0-2** `_resolve_risk_level()` 从 context_pack.risk_summary 单源解析风险等级；**P0-6** 移除全局 HIGH/BLOCKER 回退 |
 | `agents/` | ~10 文件 | LLM Agent 的 system prompt 模板（field_analyst、risk_assessor、remediation_advisor 等） |
 
-### 3.6 模块运行器 — `backend/modules/`
+### 3.6 CLI 白盒执行器 — `backend/harness/`（原 `backend/tests/harness/` 实现迁出）
 
-`modules/` 层是 **LLM 驱动的模块执行引擎**，每个子目录对应一个业务模块的运行器实现：
+> `backend/modules/` 层已退役并移除（模块执行逻辑早已并入 `backend/domains/*/service.py`）。当前的"模块 CLI 运行"统一收敛到 `backend/harness/`：
 
 ```
-modules/{module_key}/
+backend/harness/
 ├── __init__.py
-├── runner.py            # 模块执行器（接收 payload → prompt → LLM → postprocess）
-├── agents/              # LLM Agent 系统提示词模板
-└── tests/
+├── runner.py            # 白盒执行器：进程内 import 各模块 service+schema，直接调用主方法
+├── validators.py        # 声明式断言器（11 个操作符，校验 expected.json）
+├── viewer.py            # 运行汇总与事件查看 CLI
+├── terminal_trace.py    # 逐事件 trace 终端订阅器
+└── README.md            # CLI 输入/输出详解
 ```
 
-**关键设计：**
-- 每个 module runner 实现统一的 `run(payload)` 接口
-- `v0_task_gateway/` 是旧版任务网关分发器，按 `module_key` 路由到对应 runner
-- v1 路由通过 domains 层直接暴露端点，不再经过 v0 gateway
+**关键设计（2026-08-13 task069 迁出）：**
+- 实现代码从 `backend/tests/harness/` 迁出到 `backend/harness/`，`backend/tests/harness/` 只保留 `test_*.py` 测试。
+- 生产门禁 `scripts/check_case_parity.py` 由 `from backend.tests.harness.validators import ...` 改为 `from backend.harness.validators import ...`，不再反向依赖 `tests/`。
+- 入口命令：`python -m backend.harness.runner <module> [case_id] [--no-llm] [--quiet] [--verbose-trace]`（CI 已同步）。
+- `v0_task_gateway/` 是旧版任务网关分发器（`backend/api/v0/task_gateway/`），按 `module_key` 分发；v1 路由通过 domains 层直接暴露端点，不再经过 v0 gateway。
 
 ### 3.7 数据层 — `backend/models/` + `backend/repositories/` + `backend/schemas/`
 
@@ -287,18 +315,26 @@ modules/{module_key}/
 | `task_dispatcher.py` | 异步任务分发器（线程池 / 后台执行） |
 | `runtime_client_refresher.py` | 运行时 LLM Client 热刷新 |
 | `review_service/` | 文档审核子服务（含 `agents/` 和 `specialized_reviewers/`） |
+| `auth_service.py` | JWT 令牌生成/验证、密码哈希（原 `core/security.py` 迁移至此） |
+| `websocket_manager.py` | WebSocket 连接管理（原 `core/websocket_manager.py` 迁移至此） |
+| `artifact_registry.py` | 产物注册表 |
+| `knowledge_index.py` | 知识索引服务 |
+| `knowledge_projection.py` | 知识投影（Evidence Center 前端展示投影，含来源隔离/引用策略） |
+| `runtime_health.py` | 运行时健康检查 |
+| `task_access.py` | 任务访问控制 |
 
 ### 3.9 外部集成 — `backend/integrations/`
 
 | 文件 | 作用 |
 |------|------|
 | `delilegal.py` | DeliLegal 法律数据 API 客户端 — 查询法规条文、案例、政策问答 |
+| `tests/` | 集成层测试 |
 
 ---
 
 ## 四、前端分层详解
 
-### 4.1 页面层 — `frontend/src/pages/`（8 页）
+### 4.1 页面层 — `frontend/src/pages/`（12 页）
 
 | 页面 | 文件 | 路由 | 功能 |
 |------|------|------|------|
@@ -350,6 +386,7 @@ modules/{module_key}/
 | `modals/` | CreateWorkspaceModal、ModeSelectModal、QuickStartModal 等模态框 |
 | `onboarding/` | 新手引导覆盖层 |
 | `report-center/` | 报告中心卡片/列表 |
+| `report/` | **统一三格式报告渲染组件（task068 新增）**：`ReportDocumentView.tsx`（报告文档视图）、`ClauseTree.tsx`（条款树）、`FindingView.tsx`（发现视图） |
 
 ### 4.3 功能模块 — `frontend/src/features/`
 
@@ -357,6 +394,7 @@ modules/{module_key}/
 |------|------|
 | `module-runner/` | 模块执行器——触发后端 LLM 生成任务、监听 SSE 进度事件、管理运行状态 |
 | `module-runner/payload-builders/` | 按模块类型构建不同的 API 请求载荷（assessment / diagnosis / dpia 等各有 builder） |
+| `resource-explorer/` | 资源浏览器——输入资源/输出产物的路径树、配置与契约（`path-tree.ts` / `input-resources.ts` / `output-artifacts.ts` 等） |
 
 ### 4.4 状态与基础设施 — `frontend/src/lib/`
 
@@ -410,7 +448,7 @@ modules/{module_key}/
                        │
       ▼
 ┌─────────────────────────────────────────────────┐
-│ 3. LLM Agent 流水线 (modules/assessment/)        │
+│ 3. LLM Agent 流水线 (domains/cn/security_assessment/agents/) │
 │    └─ field_analyst_agent: 分析事实              │
 │    └─ risk_assessor_agent: 评估风险              │
 │    └─ remediation_advisor_agent: 生成建议         │
@@ -477,22 +515,25 @@ Pydantic 模型，作为 LLM Agent 流水线各阶段的数据传输对象。包
 风险等级由 `context_pack.risk_summary["risk_level"]` 单一来源决定，`_resolve_risk_level()` 方法统一读取，消除了三处相互竞争的 fallback 逻辑。
 
 ### 6.5 模块插件化
-新增法域/模块只需：
-1. `backend/domains/{jurisdiction}/{module}/` 创建域模块（router + schema + service + renderer）
-2. `backend/modules/{module_key}/` 创建运行器（runner + agents）
+新增法域/模块只需（`backend/modules/` 已退役，运行器并入 domains）：
+1. `backend/domains/{jurisdiction}/{module}/` 创建域模块（router + schema + service + renderer + agents）
+2. `backend/harness/runner.py` 的 `_ADAPTER_DEFINITIONS` 登记模块别名 → 包/请求类/服务类映射（供 CLI 白盒执行器使用）
 3. `backend/api/v1/router.py` 注册路由
 4. `frontend/src/features/module-runner/payload-builders/` 添加载荷构建器
 
 ### 6.6 测试分层
 
-| 测试层级 | 位置 | 数量 | 工具 |
+| 测试层级 | 位置 | 数量（2026-08-13） | 工具 |
 |---------|------|------|------|
-| 单元测试 | `common/*/tests/` | ~40 | pytest |
-| 契约测试 | `domains/*/tests/` | ~30 | pytest |
-| 集成测试 | `api/*/tests/` | ~15 | pytest + httpx |
-| 模块端到端 | `backend/tests/{module}/cases/` | ~30（每个模块 1-3 个 dev case） | pytest + JSON fixture |
-| 前端测试 | `frontend/src/**/*.test.tsx` | ~10 | vitest |
+| 单元测试 | `common/*/tests/` | 见全量回归 | pytest |
+| 契约测试 | `domains/*/tests/` | 见全量回归 | pytest |
+| 集成测试 | `api/*/tests/` | 见全量回归 | pytest + httpx |
+| 模块端到端 | `backend/tests/{module}/cases/` | 26 CLI 案例（11 模块） | pytest + JSON fixture |
+| Harness 测试 | `backend/tests/harness/` | 88 | pytest |
+| 前端测试 | `frontend/src/**/*.test.tsx` | 见前端 vitest | vitest |
 | 浏览器 E2E | `benchmarks/` | 11 模块浏览器契约 | Playwright |
+
+**全量后端回归（2026-08-13）：** `pytest backend/` = **1092 passed / 4 failed**。4 个失败均不涉及 harness，集中在 `pipia`（2 个，整改在途：`test_scc_evidence_drives_source_findings`、`test_certification_evidence_drives_path_findings`）、`reporting`（1 个，task068 新增 `test_docx_renderer.py::test_render_is_hash_stable`）与 `scc_review`（1 个，`test_uploaded_scc_document_drives_core_review`）。
 
 ---
 
@@ -508,7 +549,8 @@ Pydantic 模型，作为 LLM Agent 流水线各阶段的数据传输对象。包
 | P0-6 | 移除全局 HIGH/BLOCKER 回退 | `chapter_generator.py` | ✅ |
 | P0-7 | 引用策略正则修复（允许跨越逗号） | `postprocess.py` | ✅ |
 
-**测试矩阵：** 68 passed / 0 failed / 3 skipped
+**测试矩阵（P0 当时）：** 68 passed / 0 failed / 3 skipped
+**最新全量（2026-08-13）：** 1092 passed / 4 failed（见 §6.6）
 
 ---
 
@@ -524,6 +566,24 @@ Pydantic 模型，作为 LLM Agent 流水线各阶段的数据传输对象。包
 | 6 | 复制引用按钮（一键复制法条原文） | 前端 |
 | 7 | 新规标签（标注 2024+ 新发布/修订的法规） | 数据层+前端 |
 
+### 8.1 最新进度（2026-08-13，task061–task069 落地）
+
+P0/P1 之后，项目按 `status/todo/` 的 task 序号持续推进。截至 2026-08-13 的关键落地：
+
+| Task | 主题 | 状态 |
+|------|------|------|
+| task061 | SCC 失败展示根因修复 | ✅ 已落地 |
+| task062 | Trace 前端显示修复 | ✅ 已落地 |
+| task063 | 工作台目录/文件显示点击修复 | ✅ 已落地 |
+| task064 | Evidence Center 重构 | ✅ 已落地 |
+| task065 | 全模块本地闭环与生产报告质量整改（含 JP/KR 来源身份隔离与裁决） | 🔶 代码门禁已落地，第三/四阶段待法律专家签署 |
+| task066 | 前端本地状态持久化超限与恢复治理 | ✅ 已落地 |
+| task067 | BCR 三格式专业排版与统一 IR 渲染 | 🔶 渲染层已落地，回归中 |
+| task068 | 文档审查及多模块三格式同源渲染与输入追溯 | 🔶 渲染层已落地，回归中（reporting 4 个失败之一待收敛） |
+| task069 | harness 实现代码迁出 `backend/tests/`（`backend/harness/` 实现 + `backend/tests/harness/` 测试） | ✅ 已落地（88 passed，生产门禁 EXIT=0） |
+
+> 说明：JP/KR 来源隔离（task065）的 10 个 source 已标记 `metadata_review_required` 并从正式法律结论/条文号引用中隔离；最终裁决与统一重建按方案待法律专家签署，签署前不推进重建。pipia 的 2 个回归失败与 reporting 的 1 个失败属于整改在途，非 harness 迁移引入。
+
 ---
 
 ## 九、仓库目录总览
@@ -532,14 +592,15 @@ Pydantic 模型，作为 LLM Agent 流水线各阶段的数据传输对象。包
 ai4law/
 ├── backend/                  # Python FastAPI 后端
 │   ├── api/                  # HTTP API (v0/v1)
-│   ├── common/               # 公共基础设施（14 子包）
+│   ├── common/               # 公共基础设施（16 子包）
 │   │   ├── citation/         # 引用系统 ⭐
 │   │   ├── events/           # SSE 事件
 │   │   ├── knowledge/        # 知识库
 │   │   ├── llm/              # LLM 客户端与后处理 ⭐
 │   │   ├── quality/          # 质量门（markdown_lint）
 │   │   ├── rag/              # 混合检索引擎
-│   │   ├── render/           # 报告渲染
+│   │   ├── render/           # 报告渲染（底层转换器 + 模板）
+│   │   ├── reporting/        # 统一三格式同源渲染（task067/068）⭐
 │   │   ├── risk/             # 风险评估
 │   │   ├── runtime/          # 运行时配置
 │   │   ├── schema/           # 共享 Schema
@@ -548,23 +609,24 @@ ai4law/
 │   │   ├── trace/            # 链路追踪
 │   │   └── workflow/         # 工作流上下文 ⭐
 │   ├── core/                 # 核心配置与容器
-│   ├── domains/              # 业务域（cn/eu/us × 10 模块）
+│   ├── domains/              # 业务域（cn/eu/us × 11 模块）
+│   ├── harness/              # CLI 白盒执行器（runner/viewer/validators/terminal_trace）⭐
 │   ├── integrations/         # 外部 API
 │   ├── models/               # ORM 模型
-│   ├── modules/              # LLM 模块运行器
 │   ├── repositories/         # 数据访问层
 │   ├── schemas/              # API Schema
 │   ├── services/             # 跨域服务
-│   └── tests/                # 模块级 E2E 测试
+│   └── tests/                # 测试（harness/ 仅放测试，案例在 tests/<module>/cases/）
 ├── frontend/                 # React 18 + TypeScript 前端
 │   └── src/
 │       ├── api/              # API 客户端
-│       ├── components/       # UI 组件
+│       ├── components/       # UI 组件（auth/citation/common/landing/modals/onboarding/report/report-center/workspace）
 │       │   ├── citation/     # 引用组件 ⭐
+│       │   ├── report/       # 统一三格式报告渲染组件 ⭐
 │       │   └── workspace/    # 工作区组件 ⭐
-│       ├── features/         # 功能模块（module-runner）
+│       ├── features/         # 功能模块（module-runner + resource-explorer）
 │       ├── lib/              # 状态管理 & 基础设施
-│       └── pages/            # 页面
+│       └── pages/            # 页面（12 页）
 ├── resources/                # 模板与静态资源
 ├── scripts/                  # 运维与开发脚本
 ├── benchmarks/               # 浏览器 E2E 测试
@@ -582,4 +644,4 @@ ai4law/
 
 ---
 
-> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成，覆盖 200+ Python 文件和 50+ TypeScript 文件。
+> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成，覆盖 200+ Python 文件和 50+ TypeScript 文件；2026-08-13 已同步 task061–task069 落地后的结构变化（新增 `backend/harness/`、`backend/common/reporting/`，模块口径 10→11）。

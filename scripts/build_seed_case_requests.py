@@ -34,7 +34,12 @@ Key-fact policy (task065 §T03 requirement 3, verbatim intent):
 the adapter must reject missing key facts and must NOT substitute a default
 company, country, count, receiver or attachment. Every adapter therefore
 returns ``None`` (no request) whenever any required field is absent or carries a
-placeholder token; it never emits a request with a fabricated value.
+placeholder token in the default ``--mode source`` path.
+
+The opt-in ``--mode synthetic`` path is separately authorized and applies the
+audited ``synthetic-supplements.v1.json`` overlay. It writes to a separate
+request directory and ledger, labels the result ``synthetic_only``, and never
+changes the source records or claims owner confirmation.
 """
 
 from __future__ import annotations
@@ -55,6 +60,9 @@ if str(ROOT) not in sys.path:
 DATASET_DIR = ROOT / "benchmarks/datasets/seed-cases-v1"
 INPUTS_DIR = DATASET_DIR / "inputs"
 REQUESTS_DIR = DATASET_DIR / "requests"
+SYNTHETIC_REQUESTS_DIR = DATASET_DIR / "requests-synthetic"
+SYNTHETIC_SUPPLEMENTS_PATH = DATASET_DIR / "synthetic-supplements.v1.json"
+SYNTHETIC_LEDGER_PATH = DATASET_DIR / "levelb-disposition.synthetic.v1.json"
 GAP_LEDGER_PATH = ROOT / "status/check/task065/seed-gap-ledger.json"
 # Input-only attachment derivation (task074 B3): task04/06 carry a real source
 # DOCX whose body is the document-to-review / BCR text. We copy it into storage
@@ -105,6 +113,87 @@ def _derive_seed_attachment(source_docx: str, source_sha256: str = "") -> str:
     if not dest.exists():
         dest.write_bytes(src.read_bytes())
     return dest.relative_to(ROOT).as_posix()
+
+
+def _load_synthetic_supplements() -> dict[str, dict[str, Any]]:
+    """Load the opt-in synthetic overlay and validate its audit metadata."""
+    payload = json.loads(SYNTHETIC_SUPPLEMENTS_PATH.read_text(encoding="utf-8"))
+    if payload.get("provenance") != "synthetic_fixture" or payload.get("owner_confirmed") is not False:
+        raise ValueError("synthetic supplement provenance contract is invalid")
+    entries = payload.get("entries")
+    if not isinstance(entries, dict):
+        raise ValueError("synthetic supplement entries must be an object")
+    for case_id, entry in entries.items():
+        fields = entry.get("fields") if isinstance(entry, dict) else None
+        if not isinstance(fields, dict) or not fields:
+            raise ValueError(f"synthetic supplement fields missing: {case_id}")
+        for field_name, metadata in fields.items():
+            if not isinstance(metadata, dict) or not all(
+                key in metadata for key in ("value", "basis_type", "source_hint", "reason")
+            ):
+                raise ValueError(f"incomplete synthetic metadata: {case_id}.{field_name}")
+            if field_name == "attachments":
+                for spec in metadata["value"]:
+                    source = spec.get("source", "") if isinstance(spec, dict) else ""
+                    if not source or not (ROOT / source).is_file():
+                        raise ValueError(f"synthetic attachment missing: {case_id}.{source}")
+    return entries
+
+
+def _supplement_values(entry: dict[str, Any] | None) -> dict[str, Any]:
+    if not entry:
+        return {}
+    return {key: metadata["value"] for key, metadata in entry.get("fields", {}).items()}
+
+
+def _synthetic_scc_text(values: dict[str, Any]) -> str:
+    """Build an auditable SCC-shaped fixture from the per-case overlay.
+
+    This is deliberately marked as synthetic and is not represented as the
+    European Commission's executed standard text or as an owner-supplied SCC.
+    """
+    exporter = values["exporter_name"]
+    importer = values["importer_name"]
+    module = values["declared_module_type"]
+    transfer = values["transfer_description"]
+    return f"""[SYNTHETIC TEST FIXTURE - NOT AN EXECUTED AGREEMENT]
+EU Standard Contractual Clauses review fixture
+Selected module: {module}
+
+Clause 1 Purpose and scope. The parties use this fixture to test safeguards for the transfer described in Annex I.
+Clause 2 Effect and invariability. This fixture does not modify the mandatory clauses and cannot be used as an executed legal instrument.
+Clause 3 Third-party beneficiary rights. Data subjects may invoke applicable safeguards against the exporter and importer.
+Clause 4 Interpretation. GDPR terms retain their GDPR meanings.
+Clause 5 Hierarchy. The safeguards prevail over conflicting commercial terms for the covered transfer.
+Clause 6 Description of transfer. See Annex I.
+Clause 7 Docking clause. An eligible entity may accede only after completing the required annex information.
+Clause 8 Data protection safeguards. The parties apply purpose limitation, data minimisation, accuracy, storage limitation, security, transparency and data-subject-rights assistance.
+Clause 9 Sub-processors. Prior authorisation, equivalent safeguards and an up-to-date sub-processor list are required where applicable.
+Clause 10 Data subject rights. Requests are logged, authenticated proportionately and answered within applicable deadlines.
+Clause 11 Redress. Complaints are handled without charge and escalation routes are communicated.
+Clause 12 Liability. Each party remains responsible for damage caused by its breach under the applicable module.
+Clause 13 Supervision. The competent supervisory authority retains its powers.
+Clause 14 Local laws and practices. The parties assess destination-country laws and document any supplementary measures.
+Clause 15 Public-authority access. The importer reviews, challenges where appropriate and records legally binding requests.
+Clause 16 Non-compliance and termination. Transfers are suspended where safeguards cannot be maintained.
+Clause 17 Governing law. The selected EU Member State law permits third-party beneficiary rights.
+Clause 18 Choice of forum and jurisdiction. Disputes are submitted to a competent EU Member State court.
+
+Annex I.A - Parties
+Data exporter: {exporter}. Role is determined by {module}.
+Data importer: {importer}. Role is determined by {module}.
+
+Annex I.B - Description of transfer
+Purpose and processing: {transfer}.
+Frequency: recurring as required for the stated service.
+Retention: no longer than necessary for the stated purpose and contractual/legal retention duties.
+
+Annex II - Technical and organisational measures
+Encryption in transit and at rest; role-based access control; multi-factor authentication; audit logging; incident response; deletion verification; sub-processor governance; periodic access review.
+
+Annex III - Sub-processors
+No sub-processor is deemed approved by this fixture; the executed agreement must enumerate authorised sub-processors.
+"""
 
 
 def _parse_ynu(text: str) -> str | None:
@@ -158,14 +247,19 @@ def _parse_count(text: str) -> int | None:
 # ────────────────────────────────────────────────────────────────────────────
 
 
-def _adapter_transfer_diagnosis(paras: list[str]) -> tuple[dict | None, list[str]]:
+def _adapter_transfer_diagnosis(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
+    synthetic = _supplement_values(supplement)
 
     company_name = ""
     m = re.search(r"(?:公司全称|公司名称|企业名称|公司信息)[：:]\s*(.{2,40}?)(?:[；;。\n]|$)", text)
     if m:
         company_name = m.group(1).strip()
+    if _is_missing(company_name) and synthetic.get("company_name"):
+        company_name = str(synthetic["company_name"])
     if _is_missing(company_name):
         missing.append("company_name")
 
@@ -200,6 +294,8 @@ def _adapter_transfer_diagnosis(paras: list[str]) -> tuple[dict | None, list[str
     has_spi = "敏感" in text or "含敏感" in text
     if has_spi:
         spi = _parse_count(q7)
+        if spi is None and synthetic.get("answers.q4_spi_count") is not None:
+            spi = int(synthetic["answers.q4_spi_count"])
         if spi is None:
             missing.append("answers.q4_spi_count")
         pii_count = 0
@@ -245,9 +341,12 @@ def _adapter_transfer_diagnosis(paras: list[str]) -> tuple[dict | None, list[str
     return request.model_dump(), []
 
 
-def _adapter_security_assessment(paras: list[str]) -> tuple[dict | None, list[str]]:
+def _adapter_security_assessment(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
+    synthetic = _supplement_values(supplement)
 
     company_name = ""
     industry = ""
@@ -279,6 +378,8 @@ def _adapter_security_assessment(paras: list[str]) -> tuple[dict | None, list[st
     # must not invent a number, so a missing count blocks the request.
     m = re.search(r"(?:累计|出境).{0,12}?(\d+(?:\s*[万千])?)\s*(?:人|名|用户)", text)
     pii_count = _parse_count(m.group(0)) if m else None
+    if pii_count is None and synthetic.get("pii_count") is not None:
+        pii_count = int(synthetic["pii_count"])
     if pii_count is None and "不涉及个人信息" not in text:
         missing.append("pii_count")
 
@@ -300,9 +401,12 @@ def _adapter_security_assessment(paras: list[str]) -> tuple[dict | None, list[st
     return request.model_dump(), []
 
 
-def _adapter_pipia(paras: list[str]) -> tuple[dict | None, list[str]]:
+def _adapter_pipia(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
+    synthetic = _supplement_values(supplement)
 
     company_name = ""
     uscc = ""
@@ -312,6 +416,8 @@ def _adapter_pipia(paras: list[str]) -> tuple[dict | None, list[str]]:
     m = re.search(r"统一社会信用代码[：:]\s*(\w{8,18})", text)
     if m:
         uscc = m.group(1).strip()
+    if _is_missing(uscc) and synthetic.get("company_profile.company_uscc"):
+        uscc = str(synthetic["company_profile.company_uscc"])
     if _is_missing(company_name):
         missing.append("company_profile.company_name")
     if _is_missing(uscc):
@@ -329,18 +435,21 @@ def _adapter_pipia(paras: list[str]) -> tuple[dict | None, list[str]]:
         if c in text:
             country = c
             break
+    if _is_missing(country) and synthetic.get("transfer_context.recipient_country_region"):
+        country = str(synthetic["transfer_context.recipient_country_region"])
     if _is_missing(country):
         missing.append("transfer_context.recipient_country_region")
 
     pi_categories: list[str] = []
-    m = re.search(r"数据字段名[：:]\s*(.+)", text)
+    m = re.search(r"数据字段名[：:]\s*(.+?)(?:。业务描述|业务描述[：:]|$)", text)
     if m:
         pi_categories = [x.strip() for x in m.group(1).split("、") if x.strip()][:10]
     if not pi_categories:
         missing.append("personal_info_scope.pi_categories")
 
-    # attachments(min_length=1) is a hard key fact; seed pipia cases have none.
-    missing.append("attachments")
+    attachment_specs = synthetic.get("attachments") or []
+    if not attachment_specs:
+        missing.append("attachments")
 
     if missing:
         return None, missing
@@ -348,6 +457,7 @@ def _adapter_pipia(paras: list[str]) -> tuple[dict | None, list[str]]:
     from backend.domains.cn.pipia.schema import (
         PIPIACompanyProfile,
         PIPIAEmergencyPlan,
+        PIPIAAttachment,
         PIPIAPersonalInfoScope,
         PIPIARightsProtection,
         PIPIARequest,
@@ -372,26 +482,42 @@ def _adapter_pipia(paras: list[str]) -> tuple[dict | None, list[str]]:
             retention_policy="见隐私政策",
         ),
         emergency_plan=PIPIAEmergencyPlan(incident_response_sla_hours=72, escalation_path="上报负责人"),
-        attachments=[],
+        attachments=[
+            PIPIAAttachment(
+                file_role=spec["file_role"],
+                file_name=Path(spec["source"]).name,
+                file_format=Path(spec["source"]).suffix.lstrip(".").lower(),
+                storage_uri=spec["source"],
+                size_bytes=(ROOT / spec["source"]).stat().st_size,
+            )
+            for spec in attachment_specs
+        ],
     )
     return request.model_dump(), []
 
 
-def _adapter_scc_review(paras: list[str]) -> tuple[dict | None, list[str]]:
+def _adapter_scc_review(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
+    synthetic = _supplement_values(supplement)
 
     project_name = ""
     m = re.search(r"项目名称[：:]\s*(.{2,40}?)(?:[；;。]|$)", text)
     if m:
         project_name = m.group(1).strip()
+    if _is_missing(project_name) and synthetic.get("project_name"):
+        project_name = str(synthetic["project_name"])
     if _is_missing(project_name):
         missing.append("project_name")
 
-    # Seed SCC cases carry only an uploader statement, never an actual clause
-    # text or a declared module. Both are key facts and cannot be fabricated.
-    missing.append("scc_text")
-    missing.append("declared_module_type")
+    scc_text = _synthetic_scc_text(synthetic) if synthetic.get("declared_module_type") else ""
+    declared_module_type = synthetic.get("declared_module_type")
+    if not scc_text:
+        missing.append("scc_text")
+    if not declared_module_type:
+        missing.append("declared_module_type")
 
     if missing:
         return None, missing
@@ -400,8 +526,9 @@ def _adapter_scc_review(paras: list[str]) -> tuple[dict | None, list[str]]:
 
     request = SCCReviewRequest(
         project_name=project_name,
-        scc_text=text,
-        declared_module_type="Module Two",
+        scc_text=scc_text,
+        declared_module_type=declared_module_type,
+        company_name=str(synthetic["company_name"]),
     )
     return request.model_dump(), []
 
@@ -580,14 +707,19 @@ def _adapter_tia(paras: list[str]) -> tuple[dict | None, list[str]]:
     return request.model_dump(), []
 
 
-def _adapter_us14117(paras: list[str]) -> tuple[dict | None, list[str]]:
+def _adapter_us14117(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
     text = "\n".join(paras)
     missing: list[str] = []
+    synthetic = _supplement_values(supplement)
 
     project_name = ""
     m = re.search(r"项目名称[：:]\s*(.{2,40}?)(?:[；;。]|$)", text)
     if m:
         project_name = m.group(1).strip()
+    if _is_missing(project_name) and synthetic.get("project_name"):
+        project_name = str(synthetic["project_name"])
     if _is_missing(project_name):
         missing.append("project_name")
 
@@ -609,37 +741,96 @@ def _adapter_us14117(paras: list[str]) -> tuple[dict | None, list[str]]:
     if not data_item_names:
         missing.append("data_items")
 
-    # The seed 外部实体清单 is empty (only 内部员工清单 is filled), so no
-    # recipient entity can be sourced; this blocks the request.
-    missing.append("recipient_entities")
+    recipient_entities = synthetic.get("recipient_entities") or []
+    if not recipient_entities:
+        missing.append("recipient_entities")
 
     if missing:
         return None, missing
 
     from backend.domains.us.eo14117.schema import US14117DataItem, US14117Entity, US14117Request
 
+    count = int(synthetic.get("us_person_count") or 0)
+    category_by_name = {
+        "精确地理位置": "precise_geolocation_data",
+        "面部生物识别": "biometric_identifiers",
+        "生物识别": "biometric_identifiers",
+        "基因组测序": "human_genomic_data",
+        "姓名": "covered_personal_identifiers",
+        "邮箱": "covered_personal_identifiers",
+        "电话号码": "covered_personal_identifiers",
+    }
+    transaction_type = (
+        "data_brokerage" if "数据经纪" in text or "出售" in text
+        else "cooperative_research" if "研究" in text
+        else "cloud_remote_access" if "服务器" in text or "云" in text
+        else "vendor_agreement"
+    )
+
     request = US14117Request(
         project_name=project_name,
         transaction_description=transaction_description,
-        data_items=[US14117DataItem(data_item_name=n) for n in data_item_names],
-        recipient_entities=[US14117Entity(entity_name="", country_of_registration="")],
+        transaction_type=transaction_type,
+        data_items=[
+            US14117DataItem(
+                data_item_name=n,
+                is_personal_info=True,
+                is_sensitive_personal_info=category_by_name[n] != "covered_personal_identifiers",
+                us_person_count=count,
+                data_subject_type="consumer",
+                doj_data_category=category_by_name[n],
+            )
+            for n in data_item_names
+        ],
+        recipient_entities=[US14117Entity(**entity) for entity in recipient_entities],
+        company_name=str(synthetic["company_name"]),
     )
     return request.model_dump(), []
 
 
-def _adapter_cpra(paras: list[str]) -> tuple[dict | None, list[str]]:
-    # CPRA seed records fill only a free-text 补充说明; the four structured
-    # sections are empty. All required free-text fields and the attachment are
-    # blocked, never defaulted.
-    missing = [
+def _adapter_cpra(
+    paras: list[str], *, supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
+    synthetic = _supplement_values(supplement)
+    required = (
         "business_model",
         "data_lifecycle",
         "notice_and_consent",
         "consumer_rights_process",
         "opt_out_and_sale_sharing",
         "attachments",
-    ]
-    return None, missing
+    )
+    missing = [field for field in required if _is_missing(synthetic.get(field))]
+    if missing:
+        return None, missing
+
+    from backend.domains.us.cpra.schema import CPRAAttachment, CPRARequest
+
+    attachments = []
+    for spec in synthetic["attachments"]:
+        source = ROOT / spec["source"]
+        if not source.is_file():
+            return None, ["attachments"]
+        attachments.append(
+            CPRAAttachment(
+                file_role=spec["file_role"],
+                file_name=source.name,
+                file_format=source.suffix.lstrip(".").lower(),
+                storage_uri=spec["source"],
+                size_bytes=source.stat().st_size,
+            )
+        )
+
+    request = CPRARequest(
+        company_name=str(synthetic["company_name"]),
+        business_model=str(synthetic["business_model"]),
+        data_lifecycle=str(synthetic["data_lifecycle"]),
+        notice_and_consent=str(synthetic["notice_and_consent"]),
+        consumer_rights_process=str(synthetic["consumer_rights_process"]),
+        opt_out_and_sale_sharing=str(synthetic["opt_out_and_sale_sharing"]),
+        attachments=attachments,
+    )
+    return request.model_dump(), []
 
 
 def _adapter_document_review(
@@ -832,7 +1023,7 @@ def _adapter_dpia(paras: list[str]) -> tuple[dict | None, list[str]]:
     return request.model_dump(), []
 
 
-ADAPTERS: dict[str, Callable[[list[str]], tuple[dict | None, list[str]]]] = {
+ADAPTERS: dict[str, Callable[..., tuple[dict | None, list[str]]]] = {
     "cn.transfer_diagnosis": _adapter_transfer_diagnosis,
     "cn.security_assessment": _adapter_security_assessment,
     "cn.pipia": _adapter_pipia,
@@ -878,7 +1069,34 @@ def _schema_for(module_id: str) -> Any:
     return _SCHEMA_LOADERS[module_id]()
 
 
-def adjudicate(record: dict) -> dict:
+_SYNTHETIC_ADAPTERS = {
+    "cn.transfer_diagnosis", "cn.security_assessment", "cn.pipia",
+    "eu.scc_review", "us.eo_14117", "us.cpra",
+}
+
+
+def _call_adapter(
+    record: dict[str, Any],
+    adapter: Callable[..., tuple[dict | None, list[str]]],
+    supplement: dict[str, Any] | None = None,
+) -> tuple[dict | None, list[str]]:
+    paras = record.get("input", {}).get("paragraphs", [])
+    module_id = record.get("module_id") or ""
+    if module_id in ("cn.document_review", "eu.bcr_review"):
+        return adapter(
+            paras,
+            source_docx=record.get("source_docx") or "",
+            source_sha256=record.get("source_sha256") or "",
+        )
+    if module_id in _SYNTHETIC_ADAPTERS:
+        return adapter(paras, supplement=supplement)
+    return adapter(paras)
+
+
+def adjudicate(
+    record: dict, *, allow_synthetic: bool = False,
+    synthetic_entries: dict[str, dict[str, Any]] | None = None,
+) -> dict:
     """Return a Level B disposition dict for one Level A record."""
     case_id = record["case_id"]
     task_no = record["task_no"]
@@ -914,15 +1132,13 @@ def adjudicate(record: dict) -> dict:
     if adapter is None:
         raise ValueError(f"no adapter for supported module {module_id} ({case_id})")
 
-    paras = record.get("input", {}).get("paragraphs", [])
-    if module_id in ("cn.document_review", "eu.bcr_review"):
-        request_dict, missing = adapter(
-            paras,
-            source_docx=record.get("source_docx") or "",
-            source_sha256=record.get("source_sha256") or "",
-        )
-    else:
-        request_dict, missing = adapter(paras)
+    supplement = None
+    if allow_synthetic:
+        entries = synthetic_entries if synthetic_entries is not None else _load_synthetic_supplements()
+        supplement = entries.get(case_id)
+        if supplement and supplement.get("module_id") != module_id:
+            raise ValueError(f"synthetic module mismatch: {case_id}")
+    request_dict, missing = _call_adapter(record, adapter, supplement)
     missing = sorted(set(missing))
 
     if missing:
@@ -933,7 +1149,9 @@ def adjudicate(record: dict) -> dict:
             "levelb": "rejected",
             "request_path": None,
             "blocking_missing_facts": missing,
-            "note": "key facts missing or placeholder-tainted; adapter refuses to fabricate defaults",
+            "fixture_status": "none",
+            "source_faithfulness": "unresolved",
+            "note": "key facts missing or placeholder-tainted; source mode refuses defaults",
         }
 
     schema = _schema_for(module_id)
@@ -951,15 +1169,26 @@ def adjudicate(record: dict) -> dict:
             "note": "request failed module schema validation",
         }
 
-    return {
+    request_dir_name = "requests-synthetic" if allow_synthetic else "requests"
+    disposition = {
         "case_id": case_id,
         "task_no": task_no,
         "module_id": module_id,
         "levelb": "converted",
-        "request_path": f"benchmarks/datasets/seed-cases-v1/requests/{case_id}.request.json",
+        "request_path": f"benchmarks/datasets/seed-cases-v1/{request_dir_name}/{case_id}.request.json",
         "blocking_missing_facts": [],
-        "note": "all key facts present and schema-valid",
+        "fixture_status": "synthetic_ready" if supplement else "source_ready",
+        "source_faithfulness": "synthetic_only" if supplement else "faithful",
+        "note": (
+            "schema-valid synthetic request; values are not owner-confirmed source facts"
+            if supplement else "all key facts present and schema-valid"
+        ),
     }
+    if supplement:
+        disposition["supplement_path"] = str(SYNTHETIC_SUPPLEMENTS_PATH.relative_to(ROOT))
+        disposition["supplemented_fields"] = sorted(supplement["fields"])
+        disposition["owner_confirmed"] = False
+    return disposition
 
 
 def load_records() -> list[dict]:
@@ -978,10 +1207,19 @@ def load_records() -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="write converted requests + ledger to disk")
+    ap.add_argument(
+        "--mode", choices=("source", "synthetic"), default="source",
+        help="source is strict; synthetic applies the audited opt-in supplement overlay",
+    )
     args = ap.parse_args()
 
     records = load_records()
-    dispositions = [adjudicate(r) for r in records]
+    allow_synthetic = args.mode == "synthetic"
+    synthetic_entries = _load_synthetic_supplements() if allow_synthetic else None
+    dispositions = [
+        adjudicate(r, allow_synthetic=allow_synthetic, synthetic_entries=synthetic_entries)
+        for r in records
+    ]
 
     tally: dict[str, int] = {}
     for d in dispositions:
@@ -998,22 +1236,17 @@ def main() -> int:
         print("DRY-RUN (pass --write to emit requests + ledger)")
         return 0
 
-    REQUESTS_DIR.mkdir(parents=True, exist_ok=True)
+    requests_dir = SYNTHETIC_REQUESTS_DIR if allow_synthetic else REQUESTS_DIR
+    ledger_path = SYNTHETIC_LEDGER_PATH if allow_synthetic else DATASET_DIR / "levelb-disposition.v1.json"
+    requests_dir.mkdir(parents=True, exist_ok=True)
     written = 0
     for d in dispositions:
         if d["levelb"] == "converted":
             rec = next(r for r in records if r["case_id"] == d["case_id"])
             adapter = ADAPTERS[d["module_id"]]
-            paras = rec.get("input", {}).get("paragraphs", [])
-            if d["module_id"] in ("cn.document_review", "eu.bcr_review"):
-                request_dict, _ = adapter(
-                    paras,
-                    source_docx=rec.get("source_docx") or "",
-                    source_sha256=rec.get("source_sha256") or "",
-                )
-            else:
-                request_dict, _ = adapter(paras)
-            out = REQUESTS_DIR / f"{d['case_id']}.request.json"
+            supplement = synthetic_entries.get(d["case_id"]) if synthetic_entries else None
+            request_dict, _ = _call_adapter(rec, adapter, supplement)
+            out = requests_dir / f"{d['case_id']}.request.json"
             out.write_text(
                 json.dumps(request_dict, ensure_ascii=False, indent=2, default=str) + "\n",
                 encoding="utf-8",
@@ -1024,14 +1257,18 @@ def main() -> int:
         "schema_version": "1.0",
         "generated_by": "scripts/build_seed_case_requests.py",
         "tier": "Level B (extraction record -> module request schema)",
+        "mode": args.mode,
+        "source_faithfulness": "mixed_with_explicit_synthetic" if allow_synthetic else "strict_source",
+        "synthetic_supplements": (
+            str(SYNTHETIC_SUPPLEMENTS_PATH.relative_to(ROOT)) if allow_synthetic else None
+        ),
         "counts": tally,
         "gap_ledger": str(GAP_LEDGER_PATH.relative_to(ROOT)),
         "dispositions": dispositions,
     }
-    ledger_path = DATASET_DIR / "levelb-disposition.v1.json"
     ledger_path.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    print(f"WROTE {written} requests -> {REQUESTS_DIR.relative_to(ROOT)}")
+    print(f"WROTE {written} requests -> {requests_dir.relative_to(ROOT)}")
     print(f"WROTE ledger         -> {ledger_path.relative_to(ROOT)}")
     return 0
 

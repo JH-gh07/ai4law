@@ -1,6 +1,7 @@
 # DataComplyFlow RAG 与知识库系统详解
 
 > 生成日期：2026-08-07 · 基于 `new` 分支 HEAD 状态
+> 最近更新：2026-08-13 · 同步 task065（JP/KR 来源隔离 + `legal_index_intl`）落地后的最新实现：索引 15→16、路径 `resources/knowledge/`→`resources/legal/`、SourceRegistry 新增 `review_status`/`can_be_cited`/`can_enter_external_report`
 
 ---
 
@@ -33,29 +34,30 @@
 
 | 层级 | 文件路径 | 行数 | 核心职责 |
 |------|---------|------|---------|
-| **检索引擎** | `backend/common/rag/service.py` | 304 | 统一检索门面，三后端路由（multi/single/compat） |
-| | `backend/common/rag/orchestrator.py` | 587 | 多索引编排器，15 索引 × 3 法域 × 按 stage 路由 |
-| | `backend/common/rag/retriever.py` | 542 | 单索引检索器（v1），含 DeliLegal 外部回退 |
-| | `backend/common/rag/hybrid_retriever.py` | 169 | 增强混合检索（向量+FTS5+RRF 融合） |
-| | `backend/common/rag/vector_store.py` | 89 | 本地 JSON 向量存储，余弦相似度搜索 |
-| | `backend/common/rag/embedding.py` | 72 | 确定性哈希嵌入器（SHA-256 → 稀疏向量） |
-| | `backend/common/rag/reranker.py` | 68 | 启发式重排序器，短语/关键词/元数据加权 |
-| | `backend/common/rag/fulltext_index.py` | 108 | SQLite FTS5 全文索引 |
-| | `backend/common/rag/ingest.py` | 140 | 索引构建：单索引 + 多索引 v3 |
-| | `backend/common/rag/constants.py` | 2 | 版本常量 |
-| **知识模型** | `backend/common/knowledge/v2.py` | 143 | 核心 Pydantic 模型：KnowledgeChunkV2、RetrievalBundle 等 |
-| | `backend/common/knowledge/models.py` | 75 | SQLAlchemy ORM：KnowledgeDocument/IngestedFile/KnowledgeChunk |
-| **知识构建** | `backend/common/knowledge/builders_v2.py` | 1322 | 15 个 chunk builder 函数，全法域 × 全类型 |
-| | `backend/common/knowledge/registry.py` | 271 | SourceRegistry + ModuleCatalog 管理 |
-| **知识摄入** | `backend/common/knowledge/ingestion_pipeline.py` | 126 | 文档摄入管道：保存→解析→分块→入库 |
-| | `backend/common/knowledge/document_parser.py` | 126 | PDF/DOCX 解析器 |
-| | `backend/common/knowledge/chunker.py` | 171 | 中国法律结构感知分块器 |
-| | `backend/common/knowledge/chinese_legal_patterns.py` | 99 | 法律文书正则模式库 |
-| **知识存储** | `backend/common/knowledge/storage_manager.py` | 94 | 文件哈希去重 + 目录组织 |
-| | `backend/common/knowledge/paths.py` | 35 | 知识库文件路径解析 |
-| **使用策略** | `backend/common/knowledge/usage_policy.py` | 97 | UsagePolicyFilter：按用途/环境/法域过滤 |
-| **API 端点** | `backend/api/v1/endpoints/knowledge.py` | 193 | 知识库 REST API（检索/详情/同步） |
-| **测试** | `backend/common/rag/tests/` | 3 文件 | 多索引编排器、服务层、单索引检索器测试 |
+| **检索引擎** | `backend/common/rag/service.py` | 303 | 统一检索门面，三后端路由（multi/single/compat） |
+| | `backend/common/rag/orchestrator.py` | 672 | 多索引编排器，16 索引 × 法域 × 按 stage 路由；`INDEX_NAMES` 与 `build_chunk_sets()` 在此定义 |
+| | `backend/common/rag/retriever.py` | 543 | 单索引检索器（v1），含 DeliLegal 外部回退 |
+| | `backend/common/rag/hybrid_retriever.py` | 168 | 增强混合检索（向量+FTS5+RRF 融合） |
+| | `backend/common/rag/vector_store.py` | 104 | 本地 JSON 向量存储，余弦相似度搜索 |
+| | `backend/common/rag/embedding.py` | 71 | 确定性哈希嵌入器（SHA-256 → 稀疏向量） |
+| | `backend/common/rag/reranker.py` | 67 | 启发式重排序器，短语/关键词/元数据加权 |
+| | `backend/common/rag/fulltext_index.py` | 107 | SQLite FTS5 全文索引 |
+| | `backend/common/rag/ingest.py` | 148 | 索引构建：单索引 + 多索引 v3 |
+| | `backend/common/rag/constants.py` | 2 | 版本常量（`MULTI_INDEX_SCHEMA_VERSION = "v3.2"`） |
+| **知识模型** | `backend/common/knowledge/v2.py` | 162 | 核心 Pydantic 模型：KnowledgeChunkV2、SourceRegistryEntry、SourceKind 等 |
+| | `backend/common/knowledge/models.py` | 74 | SQLAlchemy ORM：KnowledgeDocument/IngestedFile/KnowledgeChunk |
+| **知识构建** | `backend/common/knowledge/builders_v2.py` | 1473 | 16 个 chunk builder 函数（含 `build_legal_chunks_intl()`），全法域 × 全类型 |
+| | `backend/common/knowledge/registry.py` | 320 | SourceRegistry + ModuleCatalog 管理，含 `_citation_policy_for_row()` 引用策略 |
+| **知识摄入** | `backend/common/knowledge/ingestion_pipeline.py` | 125 | 文档摄入管道：保存→解析→分块→入库 |
+| | `backend/common/knowledge/document_parser.py` | 125 | PDF/DOCX 解析器 |
+| | `backend/common/knowledge/chunker.py` | 170 | 中国法律结构感知分块器 |
+| | `backend/common/knowledge/chinese_legal_patterns.py` | 98 | 法律文书正则模式库 |
+| **知识存储** | `backend/common/knowledge/storage_manager.py` | 93 | 文件哈希去重 + 目录组织 |
+| | `backend/common/knowledge/paths.py` | 33 | 知识库文件路径解析（`sources_csv_path()` 等） |
+| **使用策略** | `backend/common/knowledge/usage_policy.py` | 96 | UsagePolicyFilter：按用途/环境/法域过滤 |
+| **API 端点** | `backend/api/v1/endpoints/knowledge.py` | 192 | 知识库 REST API（检索/详情/同步） |
+| **测试** | `backend/common/rag/tests/` | 5 文件 | 多索引编排器、服务层、单索引检索器、模块检索基准 |
+| | `backend/common/knowledge/tests/` | 7 文件 | chunker、regional knowledge、registry、reingest、usage_policy |
 
 ---
 
@@ -86,9 +88,10 @@ class KnowledgeChunkV2(BaseModel):
     title: str             # 法规标题 "中华人民共和国个人信息保护法"
     content: str           # 分块正文（条文原文）
     layer: LayerType       # L1_法规证据 / L2_业务规则 / L3_测试案例 / L4_模板
-    source_kind: SourceKind # law_article / workflow_rule / standard_clause / testcase / template_slot
+    source_kind: SourceKind # 8 值 Literal：law_article / official_guide / workflow_rule / testcase / standard_clause / template_slot / regulation / case_reference
     module: str            # 所属模块 "cn_assessment"
-    jurisdiction: str      # 法域 "cn" / "eu" / "us"
+    jurisdiction: str      # 法域 "cn" / "eu" / "us" / "intl"
+    doc_type: str          # 自由文本来源类型（policy / technical_standard 等，映射到 SourceKind）
     authority_level: str   # 权威等级 high / medium / low
     binding_force: str     # 效力等级 mandatory / recommended / reference
     allowed_usage: list    # 允许的使用场景 [legal_grounding, external_report]
@@ -111,14 +114,18 @@ class KnowledgeChunkV2(BaseModel):
 | **L3** | 测试案例层 | `testcase` | LLM 评估用的测试用例（Few-shot / Evaluator） | ❌ |
 | **L4** | 模板层 | `template_slot` | 官方报告模板的章节结构 | ❌（结构控制用） |
 
+> **说明：** 上表只列出各层最常见的 `source_kind`。实际 `SourceKind` 是一个 8 值 `Literal`：`law_article` / `official_guide` / `workflow_rule` / `testcase` / `standard_clause` / `template_slot` / `regulation` / `case_reference`。其中 `regulation`、`case_reference`、`official_guide` 主要服务于国际法域（`legal_index_intl`）及 JP/KR 等区域来源；`sources.csv` 里的自由文本 `doc_type`（如 `policy`、`technical_standard`）会由 `registry._source_kind_from_row()` 映射到稳定枚举（`policy`→`official_guide`，`technical_standard`→`standard_clause`）。
+
 ### 2.4 SourceRegistry — 法规来源登记
 
-**数据来源：** `resources/knowledge/catalog/sources.csv`
+**数据来源：** `resources/legal/catalog/sources.csv`（`KNOWLEDGE_ROOT = PROJECT_ROOT / "resources" / "legal"`，见 `backend/core/resource_paths.py`）
 
-CSV 字段：
+CSV 字段（当前为 27 列，121 行）：
 ```
-source_id,title,jurisdiction,path,category,doc_type,authority,status,
-publisher,publish_date,effective_date,url,snapshot_path,module,usage
+source_id,layer,jurisdiction,path,doc_type,title,source_org,authority_level,
+publish_date,effective_date,status,url,snapshot_path,usage_priority,notes,
+module,category,usage,binding_force,authority,publisher,suitable_for,
+report_usage,summary,knowledge_url,origin_path,review_status
 ```
 
 **注册流程：**
@@ -140,42 +147,60 @@ ensure_source_registry()             ← 所有 Builder 调用入口
 list[SourceRegistryEntry]            → builders_v2.py 使用
 ```
 
-**SourceRegistryEntry 核心字段：**
+**SourceRegistryEntry 核心字段（定义在 `v2.py`）：**
 ```python
-class SourceRegistryEntry:
-    source_id: str           # "CN-LAW-003"
-    title: str               # "个人信息保护法"
-    jurisdiction: str        # "cn"
-    modules: list[str]       # ["cn_diagnosis", "cn_assessment"]
+class SourceRegistryEntry(BaseModel):
+    source_id: str            # "CN-LAW-003"
+    title: str                # "个人信息保护法"
+    aliases: list[str]        # 别名
+    jurisdiction: str         # "cn" / "eu" / "us" / "intl"
+    modules: list[str]        # ["cn_diagnosis", "cn_assessment"]
     layer: LayerType
-    source_kind: str         # "law_article" / "official_guide"
-    authority_level: str     # 从 CSV 字段或标题推断（含"法"→high）
-    binding_force: str       # mandatory / recommended / reference
+    source_kind: SourceKind | str   # "law_article" / "official_guide" / ...
+    authority_level: str      # 从 CSV authority/authority_level 推断
+    binding_force: str        # mandatory / recommended / reference
+    status: str               # effective / repealed 等
+    is_current_version: bool
+    supersedes: list[str]     # 替代的历史 source_id（版本链）
+    superseded_by: list[str]
+    review_status: str        # "published" / "metadata_review_required"
     allowed_usage: list[str]
-    can_be_cited: bool
+    can_be_cited: bool        # 由 _citation_policy_for_row() 计算
     can_enter_external_report: bool
+    metadata: dict            # 扩展字段
 ```
+
+**引用策略（`registry._citation_policy_for_row()`）：** 对 `review_status == "metadata_review_required"` 的来源行，返回 `can_be_cited=False`、`can_enter_external_report=False`、`allowed_usage=["internal_review"]`，即隔离区（quarantine）语义——未通过元数据审核的来源不进外部报告、不进入可引用路径。
 
 **Module Catalog（模块目录）：**
 
-`module_catalog.v1.json` — 记录每个模块的生产启用状态、所需索引、支持的 stage：
+`module_catalog.v1.json` — 记录每个模块的生产启用状态、所需索引、支持的 stage、默认用途范围与模板策略：
 
 ```json
 {
-  "cn_assessment": {
-    "indexes": ["workflow_index_cn", "legal_index_cn", "template_index_cn", "testcase_index_cn"],
-    "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
-    "production_enabled": true
+  "version": "v1",
+  "modules": {
+    "cn_assessment": {
+      "indexes": ["workflow_index_cn", "legal_index_cn", "template_index_cn", "testcase_index_cn"],
+      "stages": ["issue_discovery", "legal_grounding", "report_generation", "evaluation"],
+      "default_usage_scopes": ["internal_review", "legal_grounding", "structure_control"],
+      "jurisdiction": "cn",
+      "production_enabled": true,
+      "requires_standard_clause_index": false,
+      "template_policy": "official_only"
+    }
   }
 }
 ```
 
+> 各模块的实际字段包括 `version`、`modules` 包装、`default_usage_scopes`、`jurisdiction`、`requires_standard_clause_index`、`template_policy`。注意：`legal_index_intl` 是纯法规索引，**不**绑定任何生产模块，因此不出现在 `module_catalog.v1.json` 的 `indexes` 里。
+
 ### 2.5 Chunk Builders — 知识数据的"生产线"
 
-**总览：** `builders_v2.py` 的 `build_chunk_sets()` 函数返回 15 个索引的全部数据：
+**总览：** `build_chunk_sets()` 函数定义在 `backend/common/rag/orchestrator.py:654`（**不是** builders_v2.py），返回 16 个索引的全部数据。16 个 `build_*` 函数本体仍在 `builders_v2.py`：
 
 ```
-build_chunk_sets() → {
+build_chunk_sets() → {                                            # orchestrator.py:654
     "legal_index_cn":        build_legal_chunks_cn(),        ← 从 regulation_articles.jsonl 解析
     "workflow_index_cn":     build_workflow_chunks_cn(),     ← 硬编码的业务规则
     "standard_clause_index_cn": build_standard_clause_chunks_cn(), ← 审查规则库
@@ -187,14 +212,18 @@ build_chunk_sets() → {
     ─── 美国 × 5 ───
     "legal_index_us":        build_legal_chunks_us(),
     ...
+    ─── 国际法域 × 1 ───
+    "legal_index_intl":      build_legal_chunks_intl(),      ← JP/KR/MY/HK/VN/SG/TW/MO 区域来源
 }
 ```
+
+> `INDEX_NAMES`（16 项）与 `LEGAL_INDEX_NAMES = frozenset({"legal_index_cn", "legal_index_eu", "legal_index_us", "legal_index_intl"})` 都定义在 `orchestrator.py`。`build_legal_chunks_intl()` 定义在 `builders_v2.py:195`，专门承载国际法域（regional jp/my/kr/hk/vn/sg/tw/mo）法规来源，与 CN/EU/US 三大法域隔离。
 
 **各 Builder 详解：**
 
 #### 2.5.1 `build_legal_chunks_cn()` — 法规条文构建
 
-**数据来源：** `resources/knowledge/registry/regulation_articles.jsonl`
+**数据来源：** `resources/legal/registry/regulation_articles.jsonl`
 
 每条 JSONL 行包含：
 ```json
@@ -254,7 +283,7 @@ WF-CN-REVIEW-DPA: 委托处理协议高风险核查框架
 
 #### 2.5.3 `build_standard_clause_chunks_cn()` — 标准合同条款构建
 
-**数据来源：** `resources/knowledge/rules/cn/review_rulebook.json` + 硬编码条款
+**数据来源：** `resources/rules/cn/review_rulebook.json`（经 `resource_paths.rule_resource_path("cn", "review_rulebook.json")` 解析，`RULE_ROOT = PROJECT_ROOT / "resources" / "rules"`）+ 硬编码条款
 
 每个标准条款包含：
 - `clause_type`：条款类型（CROSS_BORDER_TRANSFER / RIGHTS_REQUEST / LIABILITY / RETENTION_DELETION 等）
@@ -457,7 +486,7 @@ filtered = UsagePolicyFilter.filter(
 
 | 后端 | 适用场景 | 索引数量 | 检索策略 |
 |------|---------|---------|---------|
-| `multi_index` | **默认首选**，生产环境 | 15 个专用索引 | Vector + Lexical RRF 融合 × module/stage 路由 |
+| `multi_index` | **默认首选**，生产环境 | 16 个专用索引 | Vector + Lexical RRF 融合 × module/stage 路由 |
 | `single_index` | 降级/兼容 | 1 个合并索引 | Vector + Lexical 加权 7:3 |
 | `enriched_compatibility` | 最后回退 | 1 个合并索引 | 同上 + DeliLegal 外部 API 补充 |
 
@@ -480,15 +509,17 @@ multi_index (首选)
 
 **代码位置：** `backend/common/rag/orchestrator.py`
 
-**15 个索引矩阵：**
+**16 个索引矩阵：**
 
-| 索引名 | 内容 | cn | eu | us |
-|--------|------|:--:|:--:|:--:|
-| `legal_index_*` | 法律条文原文 | ✅ | ✅ | ✅ |
-| `workflow_index_*` | 业务规则 | ✅ | ✅ | ✅ |
-| `standard_clause_index_*` | 标准合同条款 | ✅ | ✅ | ✅ |
-| `template_index_*` | 报告模板结构 | ✅ | ✅ | ✅ |
-| `testcase_index_*` | 测试案例 | ✅ | ✅ | ✅ |
+| 索引名 | 内容 | cn | eu | us | intl |
+|--------|------|:--:|:--:|:--:|:--:|
+| `legal_index_*` | 法律条文原文 | ✅ | ✅ | ✅ | ✅ |
+| `workflow_index_*` | 业务规则 | ✅ | ✅ | ✅ | ❌ |
+| `standard_clause_index_*` | 标准合同条款 | ✅ | ✅ | ✅ | ❌ |
+| `template_index_*` | 报告模板结构 | ✅ | ✅ | ✅ | ❌ |
+| `testcase_index_*` | 测试案例 | ✅ | ✅ | ✅ | ❌ |
+
+> 国际法域（`intl`）只有一个 `legal_index_intl`，承载 JP/KR/MY/HK/VN/SG/TW/MO 等区域法规来源，暂不单独拆分 workflow/standard_clause/template/testcase 四类子索引。
 
 **按模块 × 阶段路由：**
 
@@ -792,14 +823,14 @@ for hit in remote_hits:
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ① regulation_articles.jsonl  ─── 预处理的法规条文（JSONL）     │
-│     │  路径: resources/knowledge/registry/                    │
+│     │  路径: resources/legal/registry/                        │
 │     │  更新: 手动维护 / 脚本生成                               │
 │     │  内容: 逐条法规原文 + 元数据                              │
 │     │                                                        │
 │  ② sources.csv  ─── 法规来源目录（CSV）                        │
-│     │  路径: resources/knowledge/catalog/                     │
+│     │  路径: resources/legal/catalog/                         │
 │     │  更新: 手动编辑 CSV                                      │
-│     │  内容: 法规名称/法域/路径/类型/发布日期/URL 等            │
+│     │  内容: 法规名称/法域/路径/类型/发布日期/URL/review_status 等 │
 │     │                                                        │
 │  ③ 硬编码业务规则  ─── builders_v2.py 内                      │
 │     │  workflow_chunks: 合规判断逻辑规则                        │
@@ -851,19 +882,19 @@ ingest.py: build_regulation_index()
     ├─ 每行 → payload {id, title, article, content, jurisdiction, path, ...}
     ├─ build_search_text(row) → 拼接 law_name + article_ref + content + keywords
     ├─ embedder.embed(search_text) → 稀疏向量
-    └─ store.save(entries, metadata) → 写入 rag_index.json
+    └─ store.save(entries, metadata) → 写入 regulation_index_v2.json
 ```
 
-**输出：** `storage/rag_index.json`（单文件，包含所有法域）
+**输出：** `storage/rag/regulation_index_v2.json`（单文件，包含所有法域；`settings.rag_index_path`）
 
 #### 4.2.2 多索引 v3（生产默认）
 
-**触发方式：** Orchestrator 首次检索时自动检查 15 个索引文件的版本兼容性
+**触发方式：** Orchestrator 首次检索时自动检查 16 个索引文件的版本兼容性
 
 ```python
 # orchestrator.py
 def _ensure_multi_indexes(self):
-    for name in INDEX_NAMES:  # 15 个索引
+    for name in INDEX_NAMES:  # 16 个索引
         if not self._is_index_current(name):
             build_multi_index_v3(self.settings)  # → ingest.py
             break
@@ -874,14 +905,14 @@ def _ensure_multi_indexes(self):
 1. 索引文件存在？
 2. schema_version == "v3.2"？
 3. embedding_version == "sha256-v1"？
-4. embedding_dimension 匹配？
+4. embedding_dimension 匹配（settings.rag_embedding_dimension = 384）？
 
-→ 任一不满足 → 重建全部 15 个索引
+→ 任一不满足 → 重建全部 16 个索引
 ```
 
 **构建流程：**
 ```
-build_chunk_sets() → 15 个 chunk 列表
+build_chunk_sets() → 16 个 chunk 列表     (orchestrator.py:654)
     │
     ▼
 ingest.py: build_multi_index_v3()
@@ -890,7 +921,7 @@ ingest.py: build_multi_index_v3()
     │   ├─ store.save(vector_path) → {index_name}.vector.json
     │   └─ jsonl_path → {index_name}.jsonl (备份)
     │
-    └─ 输出: storage/rag/v3/*.vector.json + *.jsonl (30 个文件)
+    └─ 输出: storage/rag/v3/*.vector.json + *.jsonl (32 个文件)
 ```
 
 **输出目录结构：**
@@ -904,7 +935,8 @@ storage/rag/v3/
 ├── ...
 ├── legal_index_eu.vector.json
 ├── ...
-└── testcase_index_us.vector.json   # 共 30 个文件
+├── testcase_index_us.vector.json
+└── legal_index_intl.vector.json    # 共 32 个文件
 ```
 
 ### 4.3 更新机制的完整矩阵
@@ -1014,9 +1046,9 @@ LLM Agent 使用这些 chunk 内容填充 prompt:
 
 **结论：** 对于法律条文的条文标题+条号+关键词这种高度结构化内容的检索，哈希嵌入的召回精度足够（法律条文天然具备精确匹配特性），而零成本和无外部依赖的优势很关键。
 
-### 6.2 为什么分 15 个索引而不是 1 个？
+### 6.2 为什么分 16 个索引而不是 1 个？
 
-1. **法域隔离**：中国、欧盟、美国法规不可能交叉引用，分开避免噪音
+1. **法域隔离**：中国、欧盟、美国、国际法域（JP/KR/MY/HK/VN/SG/TW/MO）法规不可能交叉引用，分开避免噪音——尤其 `legal_index_intl` 把区域来源与 CN/EU/US 主法域彻底隔离，避免 JP/KR 来源"整体错位"污染三大法域检索
 2. **类型隔离**：法律条文、业务规则、模板的检索语义完全不同
 3. **阶段路由**：`issue_discovery` 阶段需要 workflow + legal，`report_generation` 阶段需要 template，按需加载
 4. **relevance 提升**：在 50 条规则中搜比在 500 条混合数据中搜更精确
@@ -1056,14 +1088,14 @@ LLM Agent 使用这些 chunk 内容填充 prompt:
 
 | 数据文件 | 路径 |
 |---------|------|
-| 法规条文数据 | `resources/knowledge/registry/regulation_articles.jsonl` |
-| 来源目录 | `resources/knowledge/catalog/sources.csv` |
-| 模块目录 | `resources/knowledge/catalog/module_catalog.v1.json` |
-| 来源注册表缓存 | `resources/knowledge/registry/source_registry.v1.json` |
-| 审查规则库 | `resources/knowledge/rules/cn/review_rulebook.json` |
+| 法规条文数据 | `resources/legal/registry/regulation_articles.jsonl` |
+| 来源目录 | `resources/legal/catalog/sources.csv` |
+| 模块目录 | `resources/legal/catalog/module_catalog.v1.json` |
+| 来源注册表缓存 | `resources/legal/registry/source_registry.v1.json` |
+| 审查规则库 | `resources/rules/cn/review_rulebook.json` |
 | 官方模板结构 | `resources/templates/cn/official_template_schema.json` |
-| 向量索引 (v3) | `storage/rag/v3/{index_name}.vector.json` |
-| 向量索引 (v1) | `storage/rag_index.json` |
+| 向量索引 (v3) | `storage/rag/v3/{index_name}.vector.json` + `.jsonl`（16 索引 × 2 = 32 文件） |
+| 向量索引 (v1) | `storage/rag/regulation_index_v2.json` |
 | 知识库文件存储 | `storage/knowledge/raw/{jurisdiction}/{doc_type}/` |
 
-> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成。
+> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成，并于 2026-08-13 按 task065（JP/KR 来源隔离 + `legal_index_intl`）落地后的最新代码逐节复核修订。

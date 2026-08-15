@@ -1,0 +1,86 @@
+{
+  "caseId": "task09_case2",
+  "moduleKey": "us_14117",
+  "name": "task09_case2 · 模拟 · 未签署",
+  "description": "14117 行政令合规；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "US",
+  "formDefaults": {
+    "data_items_override": [
+      {
+        "data_item_name": "姓名",
+        "data_description": "",
+        "business_context": "",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": false,
+        "us_person_count": 15000,
+        "data_subject_type": "consumer",
+        "doj_data_category": "covered_personal_identifiers",
+        "precision_level": "",
+        "is_government_related": false,
+        "export_necessity": ""
+      },
+      {
+        "data_item_name": "邮箱",
+        "data_description": "",
+        "business_context": "",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": false,
+        "us_person_count": 15000,
+        "data_subject_type": "consumer",
+        "doj_data_category": "covered_personal_identifiers",
+        "precision_level": "",
+        "is_government_related": false,
+        "export_necessity": ""
+      },
+      {
+        "data_item_name": "电话号码",
+        "data_description": "",
+        "business_context": "",
+        "is_personal_info": true,
+        "is_sensitive_personal_info": false,
+        "us_person_count": 15000,
+        "data_subject_type": "consumer",
+        "doj_data_category": "covered_personal_identifiers",
+        "precision_level": "",
+        "is_government_related": false,
+        "export_necessity": ""
+      }
+    ],
+    "recipient_entities_override": [
+      {
+        "entity_name": "Volga Cloud Systems LLC",
+        "country_of_registration": "Russia",
+        "tax_id": "",
+        "ownership_structure": "俄罗斯投资方持股55%，运维团队位于俄罗斯",
+        "governing_law": "",
+        "government_control": false,
+        "government_investment": "",
+        "parent_company": "",
+        "entity_role": "vendor",
+        "is_covered_person": null
+      }
+    ],
+    "access_persons_override": [],
+    "security_measures_override": [],
+    "company_name": "Nova Social Media, Inc.",
+    "project_name": "俄罗斯控股云服务器迁移项目",
+    "transaction_description": "以下内容为模拟数规通系统用户填写的申报信息。\n1. 数据清单\n用户补充说明：\n我们开发了一款社交媒体APP，主要面向美国年轻用户。为了节省成本，我们打算把用户数据存到海外服务器。服务器是由一家俄罗斯公司控股的，他们持有55%的股份，运维团队也在俄罗斯那边。要迁移的数据大概是1.5万名用户的姓名、邮箱和电话号码。用户注册时都同意了我们的隐私政策，点了同意按钮，所以数据迁移应该没问题。这些都是普通的联系信息，又不是什么基因数据或位置信息，应该不受什么特别限制吧？我们也没细想这个俄罗斯控股的事，觉得就是个普通供应商。\n2. 实体清单\n（1）外部实体清单\n（2）内部员工清单\n• Alex Petrov",
+    "transaction_type": "cloud_remote_access",
+    "data_item_name": "姓名",
+    "data_description": "",
+    "doj_data_category": "covered_personal_identifiers",
+    "us_person_count": 15000,
+    "entity_name": "Volga Cloud Systems LLC",
+    "country_of_registration": "Russia",
+    "government_control": false,
+    "entity_role": "vendor",
+    "onward_transfer": false,
+    "onward_transfer_description": "",
+    "security_measures_summary": "",
+    "review_focus": "核查EO 14117数据类别、阈值、接收实体和交易类型"
+  },
+  "backendFilePaths": [],
+  "sourceKind": "synthetic_fixture",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case2.request.json"
+}

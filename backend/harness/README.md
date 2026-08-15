@@ -1,6 +1,6 @@
 # CLI 输入 / 输出详解（harness runner）
 
-> 本文档解释 `python -m backend.tests.harness.runner ...` 这条命令**吃了什么、吐了什么、落盘在哪里**。
+> 本文档解释 `python -m backend.harness.runner ...` 这条命令**吃了什么、吐了什么、落盘在哪里**。
 > 配套阅读：`status/view/20260813_各模块CLI功能代码流程逻辑原理与数据运行真实情况.md`（讲「流程逻辑」），本文只讲「输入输出」。
 
 ---
@@ -31,7 +31,7 @@
 ### 1.1 命令行参数（argv）
 
 ```bash
-python -m backend.tests.harness.runner <module> [case_id] [--no-llm] [--quiet] [--verbose-trace]
+python -m backend.harness.runner <module> [case_id] [--no-llm] [--quiet] [--verbose-trace]
 ```
 
 | 参数 | 必填 | 含义 |

@@ -1,0 +1,41 @@
+{
+  "project_name": "中国母公司面部识别模型训练项目",
+  "transaction_description": "以下内容为模拟数规通系统用户填写的申报信息。\n1. 数据清单\n用户补充说明：\n我们是一家注册在美国特拉华州的科技公司，为美国企业提供员工考勤和门禁管理服务，使用面部识别技术。我们打算把约1.2万名美国用户的生物识别数据（面部特征模板）传回中国总部，用于集中训练和优化算法模型。我们是美国注册的公司，适用美国法律，母公司虽然在中国持有我们60%的股份，但这是正常的集团内部业务操作。美国公司给中国母公司传数据应该不受什么限制吧？毕竟我们主体在美国，合规标准都是按美国来的。\n2. 实体清单\n（1）外部实体清单\n（2）内部员工清单\n• 陈刚 | 国籍：中国 | 所属部门：研发部 | 岗位：技术副总裁（中",
+  "transaction_type": "vendor_agreement",
+  "data_items": [
+    {
+      "data_item_name": "生物识别",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 12000,
+      "data_subject_type": "consumer",
+      "doj_data_category": "biometric_identifiers",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    }
+  ],
+  "recipient_entities": [
+    {
+      "entity_name": "华算智能科技（上海）有限公司",
+      "country_of_registration": "China",
+      "tax_id": "",
+      "ownership_structure": "中国母公司持有美国申报主体60%股份",
+      "governing_law": "",
+      "government_control": false,
+      "government_investment": "",
+      "parent_company": "",
+      "entity_role": "affiliate",
+      "is_covered_person": null
+    }
+  ],
+  "access_persons": [],
+  "security_measures": [],
+  "onward_transfer": false,
+  "onward_transfer_description": "",
+  "attachments": [],
+  "company_name": "GateVision Workforce, Inc.",
+  "override_thresholds": null
+}

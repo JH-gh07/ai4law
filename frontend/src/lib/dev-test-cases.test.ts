@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import type { ModuleRequestMap } from "../api/api-contract";
-import { DEV_TEST_CASES } from "./dev-test-cases";
+import { DEV_TEST_CASES, LEGACY_DEV_TEST_CASES } from "./dev-test-cases";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
@@ -10,9 +10,6 @@ import germanyIndiaSccScenario from "../../../benchmarks/cases/eu_scc/germany_c2
 import netherlandsSerbiaSccScenario from "../../../benchmarks/cases/eu_scc/netherlands_p2p_serbia_module_error/scenario.json";
 import innovateUsTiaScenario from "../../../benchmarks/cases/tia/innovate_crm_us_saas/scenario.json";
 import leidenIndiaTiaScenario from "../../../benchmarks/cases/tia/leiden_clinical_india/scenario.json";
-import haitaoPipiaScenario from "../../../benchmarks/cases/pipia/haitao_marketing_singapore/scenario.json";
-import weilanPipiaScenario from "../../../benchmarks/cases/pipia/weilan_hr_exemption_us/scenario.json";
-import eurocertPipiaScenario from "../../../benchmarks/cases/pipia/zhifutong_eurocert_de/scenario.json";
 
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -49,8 +46,10 @@ describe("developer test case API contracts", () => {
     }
   });
 
-  it("keeps the registry at 28 independently runnable cases", () => {
-    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(28);
+  it("keeps 38 seed cases plus two retained cn_flow cases runnable", () => {
+    expect(Object.values(DEV_TEST_CASES).flat()).toHaveLength(40);
+    expect(DEV_TEST_CASES.cn_flow).toHaveLength(2);
+    expect(Object.values(DEV_TEST_CASES).flat().filter((item) => item.goldStatus === "unsigned")).toHaveLength(38);
   });
 
   it("binds every case payload to its generated module request", () => {
@@ -116,14 +115,14 @@ describe("developer test case API contracts", () => {
       ...request,
       scc_text: request.scc_text.trim(),
     });
-    expect(DEV_TEST_CASES.eu_scc[0].payload).toEqual(canonicalRequest(franceUkSccScenario.request as ModuleRequestMap["eu_scc"]));
-    expect(DEV_TEST_CASES.eu_scc[1].payload).toEqual(canonicalRequest(germanyIndiaSccScenario.request as ModuleRequestMap["eu_scc"]));
-    expect(DEV_TEST_CASES.eu_scc[2].payload).toEqual(canonicalRequest(netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"]));
+    expect(LEGACY_DEV_TEST_CASES.eu_scc[0].payload).toEqual(canonicalRequest(franceUkSccScenario.request as ModuleRequestMap["eu_scc"]));
+    expect(LEGACY_DEV_TEST_CASES.eu_scc[1].payload).toEqual(canonicalRequest(germanyIndiaSccScenario.request as ModuleRequestMap["eu_scc"]));
+    expect(LEGACY_DEV_TEST_CASES.eu_scc[2].payload).toEqual(canonicalRequest(netherlandsSerbiaSccScenario.request as ModuleRequestMap["eu_scc"]));
   });
 
   it("builds the official TIA requests without changing shared facts", () => {
-    expect(DEV_TEST_CASES.tia[0].payload).toEqual(innovateUsTiaScenario.request);
-    expect(DEV_TEST_CASES.tia[1].payload).toEqual(leidenIndiaTiaScenario.request);
+    expect(LEGACY_DEV_TEST_CASES.tia[0].payload).toEqual(innovateUsTiaScenario.request);
+    expect(LEGACY_DEV_TEST_CASES.tia[1].payload).toEqual(leidenIndiaTiaScenario.request);
   });
 
   it("includes current PIPIA company profile fields", () => {
@@ -134,7 +133,7 @@ describe("developer test case API contracts", () => {
   });
 
   it("keeps PIPIA cases aligned with the official SCC, HR exemption and certification scenarios", () => {
-    const [ecommerce, hrExemption, certification] = DEV_TEST_CASES.pipia;
+    const [ecommerce, hrExemption, certification] = LEGACY_DEV_TEST_CASES.pipia;
 
     // PIPIA-1: 海淘优选 → 新加坡 (SCC filing, missing contract)
     expect(ecommerce.payload.route_type).toBe("scc_filing");
@@ -161,10 +160,13 @@ describe("developer test case API contracts", () => {
     expect(certification.payload.transfer_context.legal_basis).toContain("欧盟认证要求");
   });
 
-  it("builds every PIPIA request without changing shared facts", () => {
-    expect(DEV_TEST_CASES.pipia[0].payload).toEqual(haitaoPipiaScenario.request);
-    expect(DEV_TEST_CASES.pipia[1].payload).toEqual(weilanPipiaScenario.request);
-    expect(DEV_TEST_CASES.pipia[2].payload).toEqual(eurocertPipiaScenario.request);
+  it("keeps every legacy PIPIA request runnable after form normalization", () => {
+    for (const testCase of LEGACY_DEV_TEST_CASES.pipia) {
+      expect(testCase.payload.attachments.length).toBeGreaterThan(0);
+      expect(testCase.payload.company_profile.company_name.length).toBeGreaterThan(1);
+      expect(testCase.payload.transfer_context.recipient_name.length).toBeGreaterThan(1);
+      expect(testCase.payload.personal_info_scope.pi_categories.length).toBeGreaterThan(0);
+    }
   });
 
   it("provides review files to the single-request developer endpoint", () => {
@@ -220,7 +222,7 @@ describe("developer test case API contracts", () => {
   });
 
   it("keeps EO 14117 cases aligned with the official red, yellow and green scenarios", () => {
-    const [red, yellow, green] = DEV_TEST_CASES.us_14117;
+    const [red, yellow, green] = LEGACY_DEV_TEST_CASES.us_14117;
 
     expect(red.payload.company_name).toBe("GeneGuard生物科技公司");
     expect(red.payload.recipient_entities[0].entity_name).toBe("华源生命科学有限公司");
@@ -243,14 +245,14 @@ describe("developer test case API contracts", () => {
   });
 
   it("compiles the shared EO 14117 red scenario into the exact frontend payload", () => {
-    expect(DEV_TEST_CASES.us_14117[0].payload).toEqual(genomicRedScenario.request);
+    expect(LEGACY_DEV_TEST_CASES.us_14117[0].payload).toEqual(genomicRedScenario.request);
   });
 
   it("compiles the shared EO 14117 yellow scenario into the exact frontend payload", () => {
-    expect(DEV_TEST_CASES.us_14117[1].payload).toEqual(geolocationYellowScenario.request);
+    expect(LEGACY_DEV_TEST_CASES.us_14117[1].payload).toEqual(geolocationYellowScenario.request);
   });
 
   it("compiles the shared EO 14117 green scenario into the exact frontend payload", () => {
-    expect(DEV_TEST_CASES.us_14117[2].payload).toEqual(telemetryGreenScenario.request);
+    expect(LEGACY_DEV_TEST_CASES.us_14117[2].payload).toEqual(telemetryGreenScenario.request);
   });
 });

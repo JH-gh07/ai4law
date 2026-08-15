@@ -1,0 +1,36 @@
+{
+  "transfer_tool": "scc",
+  "data_exporter_profile": "",
+  "data_importer_profile": "",
+  "third_country_assessment": "",
+  "supplementary_measures": "",
+  "final_conclusion": "",
+  "attachments": [],
+  "structured_input": {
+    "exporter_country": "Netherlands",
+    "importer_country": "United States",
+    "destination_country": "United States",
+    "exporter_role": "controller",
+    "importer_role": "controller",
+    "transfer_purpose": "邮件营销自动化（购物车 abandonment、订单确认、个性化推荐）；客户行为分析和细分；A/B测试优化营销内容；广告投放效果追踪",
+    "data_categories": [
+      "contact_information",
+      "transaction_records",
+      "behavioral_data",
+      "location_data",
+      "crm_data"
+    ],
+    "has_special_category_data": false,
+    "special_category_types": [],
+    "data_subjects": [
+      "客户"
+    ],
+    "transfer_frequency": "实时（网站行为追踪）+ 每日批量（订单数据）",
+    "transfer_scale": "约50万客户",
+    "encryption_before_transfer": true,
+    "key_managed_in_eu": false,
+    "has_end_to_end_encryption": false,
+    "has_secure_enclave": false,
+    "has_key_separation": false
+  }
+}

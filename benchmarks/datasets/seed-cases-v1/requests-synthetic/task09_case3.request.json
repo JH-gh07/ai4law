@@ -1,0 +1,41 @@
+{
+  "project_name": "美国基因组数据伊朗合作研究项目",
+  "transaction_description": "以下内容为模拟数规通系统用户填写的申报信息。\n1. 数据清单\n用户补充说明：\n我们是一家美国的基因检测公司，为消费者提供个人基因组测序和健康风险评估服务。我们正在与伊朗的一家学术研究机构合作，计划将约300名客户的基因组测序数据传输给对方用于群体遗传学研究。这是纯学术研究用途，应该可以享受研究豁免吧？我们跟伊朗那边签了合作协议，对方承诺只用于学术目的，不会用于其他用途。300个人的数据量不算大吧？而且都是学术用途，我们觉得应该没什么问题。\n2. 实体清单\n（1）外部实体清单\n（2）内部员工清单\n• Dr. Emily Carter | 国籍：美国 | 所属部门：研究部 | 岗位：首席科学家（负",
+  "transaction_type": "cooperative_research",
+  "data_items": [
+    {
+      "data_item_name": "基因组测序",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 300,
+      "data_subject_type": "consumer",
+      "doj_data_category": "human_genomic_data",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    }
+  ],
+  "recipient_entities": [
+    {
+      "entity_name": "Tehran Genomics Research Institute",
+      "country_of_registration": "Iran",
+      "tax_id": "",
+      "ownership_structure": "独立学术研究机构",
+      "governing_law": "",
+      "government_control": false,
+      "government_investment": "",
+      "parent_company": "",
+      "entity_role": "controller",
+      "is_covered_person": null
+    }
+  ],
+  "access_persons": [],
+  "security_measures": [],
+  "onward_transfer": false,
+  "onward_transfer_description": "",
+  "attachments": [],
+  "company_name": "Helix Genomics, Inc.",
+  "override_thresholds": null
+}

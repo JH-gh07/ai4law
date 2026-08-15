@@ -1,0 +1,22 @@
+{
+  "company_name": "鼎新电力集团有限公司",
+  "industry": "电力供应",
+  "is_ciio": false,
+  "contains_important_data": false,
+  "pii_count": 0,
+  "spi_count": 0,
+  "transfer_purpose": "全球电网运营协同和调度优化",
+  "receiver_country": "瑞士",
+  "force_override_path": false,
+  "uploaded_files": [],
+  "path_check_mode": "warn_only",
+  "self_assessment_info": null,
+  "data_inventory_items": [],
+  "recipient_info": null,
+  "downstream_processors": [],
+  "legal_document_review": null,
+  "security_capability": null,
+  "compliance_history": null,
+  "personal_info_protection": null,
+  "system_link": null
+}

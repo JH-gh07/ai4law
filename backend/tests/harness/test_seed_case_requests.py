@@ -27,6 +27,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 _SCRIPT = ROOT / "scripts" / "build_seed_case_requests.py"
 INPUTS_DIR = ROOT / "benchmarks/datasets/seed-cases-v1/inputs"
+SYNTHETIC_SUPPLEMENTS_PATH = (
+    ROOT / "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json"
+)
 
 
 def _load_adapter():
@@ -50,6 +53,14 @@ def _real_records() -> list[dict]:
 
 def _dispositions() -> list[dict]:
     return [adapter.adjudicate(r) for r in _real_records()]
+
+
+def _synthetic_dispositions() -> list[dict]:
+    entries = adapter._load_synthetic_supplements()
+    return [
+        adapter.adjudicate(r, allow_synthetic=True, synthetic_entries=entries)
+        for r in _real_records()
+    ]
 
 
 # ── frozen corpus properties ────────────────────────────────────────────────
@@ -115,6 +126,102 @@ def test_frozen_corpus_rejected_or_isolated_not_fabricated() -> None:
             assert d["blocking_missing_facts"], d["case_id"]
         elif d["levelb"] == "converted":
             assert d["blocking_missing_facts"] == [], d["case_id"]
+
+
+def test_synthetic_overlay_covers_exactly_the_source_rejections() -> None:
+    overlay = json.loads(SYNTHETIC_SUPPLEMENTS_PATH.read_text(encoding="utf-8"))
+    rejected_ids = {d["case_id"] for d in _dispositions() if d["levelb"] == "rejected"}
+    assert set(overlay["entries"]) == rejected_ids
+    assert overlay["provenance"] == "synthetic_fixture"
+    assert overlay["owner_confirmed"] is False
+    for case_id, entry in overlay["entries"].items():
+        assert entry["fields"], case_id
+        for field_name, metadata in entry["fields"].items():
+            assert set(metadata) == {"value", "basis_type", "source_hint", "reason"}, (
+                case_id, field_name
+            )
+            assert metadata["reason"]
+
+
+def test_synthetic_mode_is_separate_and_converts_all_non_pending_cases() -> None:
+    dispositions = _synthetic_dispositions()
+    tally: dict[str, int] = {}
+    for d in dispositions:
+        tally[d["levelb"]] = tally.get(d["levelb"], 0) + 1
+    assert tally == {"converted": 38, "pending_correction": 12}
+
+    source_rejected = {d["case_id"] for d in _dispositions() if d["levelb"] == "rejected"}
+    for d in dispositions:
+        if d["case_id"] in source_rejected:
+            assert d["fixture_status"] == "synthetic_ready"
+            assert d["source_faithfulness"] == "synthetic_only"
+            assert d["owner_confirmed"] is False
+            assert d["supplemented_fields"]
+            assert "/requests-synthetic/" in d["request_path"]
+
+
+def test_range_concretizations_use_documented_values() -> None:
+    entries = adapter._load_synthetic_supplements()
+    expected = {
+        "task01_case1": 2_000_000,
+        "task01_case2": 8_000,
+        "task01_case3": 6_000,
+        "task01_case4": 200,
+        "task09_case1": 30_000,
+        "task09_case2": 15_000,
+        "task09_case3": 300,
+        "task09_case4": 20_000,
+        "task09_case5": 12_000,
+    }
+    for case_id, value in expected.items():
+        field = "answers.q4_spi_count" if case_id.startswith("task01") else "us_person_count"
+        assert entries[case_id]["fields"][field]["value"] == value
+
+
+def test_synthetic_module_specific_requests_preserve_audit_boundaries() -> None:
+    records = {r["case_id"]: r for r in _real_records()}
+    entries = adapter._load_synthetic_supplements()
+
+    scc, missing = adapter._call_adapter(
+        records["task05_case3"], adapter.ADAPTERS["eu.scc_review"], entries["task05_case3"]
+    )
+    assert not missing
+    assert scc["declared_module_type"] == "Module One"
+    assert scc["scc_text"].startswith("[SYNTHETIC TEST FIXTURE")
+    assert "Oranje Group UK Ltd." in scc["scc_text"]
+
+    eo, missing = adapter._call_adapter(
+        records["task09_case2"], adapter.ADAPTERS["us.eo_14117"], entries["task09_case2"]
+    )
+    assert not missing
+    assert eo["recipient_entities"][0]["country_of_registration"] == "Russia"
+    assert {item["us_person_count"] for item in eo["data_items"]} == {15_000}
+
+    cpra, missing = adapter._call_adapter(
+        records["task10_case5"], adapter.ADAPTERS["us.cpra"], entries["task10_case5"]
+    )
+    assert not missing
+    assert cpra["company_name"] == "Westline Data Brokerage, Inc."
+    assert cpra["attachments"][0]["file_role"] == "rights_sop"
+    assert (adapter.ROOT / cpra["attachments"][0]["storage_uri"]).is_file()
+
+
+def test_synthetic_requests_do_not_leak_schema_defaults_or_masked_examples() -> None:
+    records = _real_records()
+    entries = adapter._load_synthetic_supplements()
+    for record in records:
+        disposition = adapter.adjudicate(
+            record, allow_synthetic=True, synthetic_entries=entries
+        )
+        if disposition["levelb"] != "converted":
+            continue
+        request, missing = adapter._call_adapter(
+            record, adapter.ADAPTERS[record["module_id"]], entries.get(record["case_id"])
+        )
+        assert not missing
+        blob = json.dumps(request, ensure_ascii=False)
+        assert "示例企业" not in blob, record["case_id"]
+        assert "XXXX" not in blob, record["case_id"]
 
 
 # ── adapter refuses placeholders in key facts ───────────────────────────────

@@ -1,0 +1,22 @@
+{
+  "company_name": "临江城商银行股份有限公司",
+  "industry": "金融业（银行业）",
+  "is_ciio": false,
+  "contains_important_data": false,
+  "pii_count": 1200000,
+  "spi_count": 0,
+  "transfer_purpose": "灾备恢复和海外分支机构业务查询",
+  "receiver_country": "美国",
+  "force_override_path": false,
+  "uploaded_files": [],
+  "path_check_mode": "warn_only",
+  "self_assessment_info": null,
+  "data_inventory_items": [],
+  "recipient_info": null,
+  "downstream_processors": [],
+  "legal_document_review": null,
+  "security_capability": null,
+  "compliance_history": null,
+  "personal_info_protection": null,
+  "system_link": null
+}

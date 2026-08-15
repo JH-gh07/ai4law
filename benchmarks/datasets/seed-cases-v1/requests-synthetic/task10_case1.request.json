@@ -1,0 +1,24 @@
+{
+  "business_model": "面向加州消费者的电商平台，通过商品销售和跨情境行为广告获利。",
+  "data_lifecycle": "收集账户、订单、设备标识和浏览行为；用于履约、分析和广告投放；向广告网络共享行为数据；订单数据保留7年，广告标识保留13个月。",
+  "notice_and_consent": "注册和结账时展示隐私通知；广告Cookie仅提供接受按钮，拒绝入口位于二级设置页。",
+  "consumer_rights_process": "网站提供访问、更正和删除申请表，客服邮箱受理请求，核验后45日内答复。",
+  "opt_out_and_sale_sharing": "未在首页提供Do Not Sell or Share链接，当前仅可在Cookie设置页关闭部分广告标识。",
+  "vendor_management": "",
+  "attachments": [
+    {
+      "file_role": "other",
+      "file_name": "task10_case1.docx",
+      "file_format": "docx",
+      "storage_uri": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case1.docx",
+      "size_bytes": 14496,
+      "checksum_sha256": null
+    }
+  ],
+  "company_name": "Pacific Retail Media, Inc.",
+  "applicability": null,
+  "data_items": [],
+  "dsr_mechanism": null,
+  "vendors": [],
+  "consent_ui": null
+}

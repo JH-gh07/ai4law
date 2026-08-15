@@ -7,6 +7,8 @@
 
 > ✅ **执行结果（2026-08-15）**：Phase A/B/C/D 已全部落实并提交（`998482c9`）。随后按用户授权，对**占位符主体名**（task02/03 的公司名 / 接收方名，仅替换不影响业务的标识名，业务事实一律不碰）替换为测试名，使 task02_case4 由 rejected 转 converted。最终台账：**converted 9 / rejected 29 / pending_correction 12 / gap 0**。同时补装 item 4（LibreOffice + 可再分发 CJK 字体 `resources/fonts/NotoSansSC-Regular.ttf`），PDF CJK 字体嵌入门已由 blocked 转 pass。item 3（gold 签署）属法域专家验收项，本 task 不做。
 
+> ✅ **授权模拟补充结果（2026-08-16）**：在不覆盖原始 DOCX、Level A 输入、严格请求目录和严格台账的前提下，为 29 个 rejected 建立独立 `synthetic_fixture` overlay。synthetic 口径为 **converted 38 / pending_correction 12 / rejected 0 / gap 0**；严格 source 口径仍保持 **converted 9 / rejected 29 / pending_correction 12 / gap 0**。模拟值不冒充原文事实或 owner-confirmed 数据。
+
 ---
 
 ## 一、背景与问题
@@ -199,3 +201,123 @@ Phase A（解析 bug） → Phase B（adapter 忠实化 + 附件派生 + TIA str
                     → 重跑 Level B 得到新计数
                     → Phase C（台账/provenance 同步到新计数）
 ```
+
+---
+
+## 九、2026-08-16 授权模拟补充实施记录
+
+### 9.1 双口径与文件隔离
+
+用户明确授权：业务事实也可基于原文范围和合理业务假设生成模拟值。为避免该授权破坏本 task 原有“忠实转换”语义，实施采用 opt-in 双模式：
+
+| 口径 | 命令 | 请求目录 | 台账 | 结果 |
+|---|---|---|---|---|
+| 严格 source | `./.venv/bin/python scripts/build_seed_case_requests.py --mode source` | `benchmarks/datasets/seed-cases-v1/requests/` | `levelb-disposition.v1.json` | 9 converted / 29 rejected / 12 pending |
+| 授权 synthetic | `./.venv/bin/python scripts/build_seed_case_requests.py --mode synthetic --write` | `benchmarks/datasets/seed-cases-v1/requests-synthetic/` | `levelb-disposition.synthetic.v1.json` | 38 converted / 12 pending |
+
+逐字段机器可读依据：`benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json`。每个字段固定记录 `value`、`basis_type`、`source_hint`、`reason`；总 provenance 为 `synthetic_fixture`，`owner_confirmed=false`。
+
+### 9.2 task01 诊断：主体名与敏感个人信息人数
+
+| 案例 | 补充值 | 依据与选择原因 |
+|---|---|---|
+| case1 | `海岳通信科技股份有限公司`；`q4_spi_count=2,000,000` | 原文为电信运营商并写“≥1万、粗略约200万”；名称按行业模拟，人数采用原文约数中心值且满足下限。 |
+| case2 | `澜桥跨境电子商务有限公司`；`q4_spi_count=8,000` | 原文写“<1万、大概8000”；直接采用8000。 |
+| case3 | `莱茵智造汽车零部件有限公司`；`q4_spi_count=6,000` | 原文写“<1万、大概6000个员工”；直接采用6000。 |
+| case4 | `薪云软件科技有限公司`；`q4_spi_count=200` | 原文明确200名员工，且薪酬/银行账号使适配器进入敏感事实分支；用原文人数，不另造数值。 |
+| case5 | `新衡医疗人工智能有限公司` | q4 已由原文“5000人的全基因组数据”解析；只补业务一致的主体名。 |
+
+### 9.3 task02 安全评估：累计出境人数
+
+原文完全未给精确人数，因此均为 `business_simulation`，不是 range/source concretization：
+
+| 案例 | `pii_count` | 选择原因 |
+|---|---:|---|
+| case1 银行核心系统/AWS灾备 | 1,200,000 | 城商银行持续实时同步客户数据，采用百万级规模以覆盖法定高阈值路径。 |
+| case2 新能源汽车/德国研发 | 180,000 | 持续量产车辆实时上传，采用18万活跃车辆/车主的中型车队规模。 |
+| case3 社交APP/美国人脸服务 | 350,000 | 长期按需实名认证，采用35万实名用户体现规模化生物识别调用。 |
+| case5 互联网医院/日本AI | 80,000 | 采用8万年度活跃患者，符合互联网医院中等规模且不无依据放大到百万级。 |
+
+### 9.4 task03 标准合同/PIPIA：信用代码、国家和附件
+
+| 案例 | 补充值 | 选择原因 |
+|---|---|---|
+| case1 | `91310115MA1K4A2X7Q` | 18位测试格式信用代码；只验证字段和链路，不声称为真实登记号。 |
+| case2 | `91310106MA1FY8C62R` | 同上，保持案例间唯一。 |
+| case3 | `91110108MA01X7G84P` | 同上，保持案例间唯一。 |
+| case4 | `91110105MA02B6H31N`；接收国 `新加坡` | 原文只称“海外合作教育机构”；新加坡与国际教育合作/区域数据中心场景一致，且不与其他事实冲突。 |
+| case5 | `91310000MA1H9R5M2C` | 18位唯一测试格式信用代码。 |
+
+五案附件均引用各自 `_source/task03/task03_caseN.docx`，角色为 `supporting_evidence`。理由：文件真实存在、路径和大小可验核，可用于上传链路测试；但其内容是案例材料，不冒充已签署标准合同。
+
+### 9.5 task05 SCC 审查：项目、Module 与 SCC fixture
+
+| 案例 | 项目/双方 | Module | 原因 |
+|---|---|---|---|
+| case1 | EU客户数据AWS托管；Northstar Digital Europe GmbH → AWS | Module Two | 客户企业决定处理目的，AWS作为处理服务商，按 controller-to-processor。 |
+| case2 | 印度IT外包；EuroRetail Operations S.A. → Bharat IT Services | Module Two | 欧盟甲方控制目的，印度外包商代为处理。 |
+| case3 | 荷兰总部至英国子公司共享；Oranje Group N.V. → Oranje Group UK Ltd. | Module One | 测试设定双方共同决定共享用途，按 controller-to-controller。 |
+| case4 | 欧盟母公司至中国子公司处理；Alpine Consumer Products AG → 上海子公司 | Module Two | 测试设定中国子公司提供集团处理服务。 |
+| case5 | 欧盟患者数据巴西分析；MediNova Europe S.A. → Saude Analytics Brasil | Module Two | 医疗机构决定目的，巴西分析商作为处理者。 |
+
+`scc_text` 由代码按每案实体、Module 和处理目的生成，首行强制为 `[SYNTHETIC TEST FIXTURE - NOT AN EXECUTED AGREEMENT]`，包含 Clause 1-18 及 Annex I-III 的测试结构。理由：满足完整解析/审查链路所需结构，同时明确不是欧委会正式文本、已签署合同或 owner-supplied SCC。
+
+### 9.6 task09 EO 14117：项目、人数与境外接收实体
+
+| 案例 | 人数 | 模拟接收实体 | 依据与原因 |
+|---|---:|---|---|
+| case1 | 30,000 | 云析科技（深圳）有限公司 / China | 原文“几万人、传至中国关联公司”；取3万作为“几万”代表值。 |
+| case2 | 15,000 | Volga Cloud Systems LLC / Russia | 原文“约1.5万、俄罗斯公司控股55%”；人数直接确定化，保留55%控股描述。 |
+| case3 | 300 | Tehran Genomics Research Institute / Iran | 原文“约300名、伊朗学术机构”；人数直接采用，名称仅作测试标识。 |
+| case4 | 20,000 | Caracas Audience Analytics C.A. / Venezuela | 原文“约2万、委内瑞拉营销公司”；交易类型同步识别为 `data_brokerage`。 |
+| case5 | 12,000 | 华算智能科技（上海）有限公司 / China | 原文“约1.2万、中国母公司持股60%”；人数确定化并保留60%关系。 |
+
+生成器同时把人数写入每个 `US14117DataItem.us_person_count`，并按精确位置、生物识别、基因或身份标识映射 DOJ 数据类别，避免仅补实体却继续保留默认人数0。
+五案申报主体分别补为 `Atlas Cloud Storage, Inc.`、`Nova Social Media, Inc.`、`Helix Genomics, Inc.`、`Meridian Data Brokerage, Inc.`、`GateVision Workforce, Inc.`，原因是消除 Schema 的 `示例企业` 默认值并保持与各案业务一致。
+
+### 9.7 task10 CPRA：五段业务事实与附件
+
+| 案例 | 模拟业务模型 | 关键补充理由 |
+|---|---|---|
+| case1 | 电商销售 + 跨情境行为广告 | 原文明示广告网络和“无需退出”的错误认识；补入订单/广告生命周期、45日DSR流程及缺失首页退出链接。 |
+| case2 | 员工设备管理和生产率分析SaaS | 原文明示员工追踪且未发通知；补入24个月日志、HR请求渠道和不完整SOP，不虚构已经合规。 |
+| case3 | 在线订阅平台 + 公有云托管 | 原文明示只有云厂商通用条款；补入账户/支付/工单生命周期和标准DSR，同时保留服务提供商合同限制未确认。 |
+| case4 | 位置推荐APP + 订阅/位置广告 | 原文明示精确位置仅写入隐私政策、无单独弹窗；补入位置保留期、APP权利入口和缺少敏感信息限制链接。 |
+| case5 | 数据经纪和数据许可 | 原文明示大量删除、授权代理、未核验和下游买方；补入5年画像生命周期、核验缺口及下游同步不完整。 |
+
+五案的 `business_model/data_lifecycle/notice_and_consent/consumer_rights_process/opt_out_and_sale_sharing` 完整原文及逐字段理由均在 overlay。附件引用各自 `_source/task10/task10_caseN.docx`，按案例分别标记 `other/other/vendor_list/privacy_policy/rights_sop`，均是 synthetic 输入角色，不声称为真实政策或SOP。
+
+### 9.8 代码修改与验证证据
+
+| 文件 | 修改 |
+|---|---|
+| `scripts/build_seed_case_requests.py` | 新增 overlay 校验、`--mode source|synthetic`、六模块显式 supplement 消费、SCC fixture builder、独立请求/台账输出。 |
+| `backend/tests/harness/test_seed_case_requests.py` | 新增 overlay覆盖、双口径、范围值、SCC/EO/CPRA与附件验证。 |
+| `synthetic-supplements.v1.json` | 29案逐字段值、依据和原因。 |
+| `requests-synthetic/*.request.json` | 38份经真实模块Schema验证的synthetic运行请求。 |
+| `levelb-disposition.synthetic.v1.json` | 独立synthetic处置台账。 |
+
+已执行：
+
+```text
+./.venv/bin/pytest -q backend/tests/harness/test_seed_case_requests.py
+25 passed
+
+./.venv/bin/python scripts/build_seed_case_requests.py --mode source
+9 converted / 29 rejected / 12 pending_correction
+
+./.venv/bin/python scripts/build_seed_case_requests.py --mode synthetic --write
+38 converted / 12 pending_correction
+
+逐份调用 _schema_for(module_id).model_validate_json(...)
+validated_requests=38
+```
+
+扩大运行六个相关 domain 测试目录的结果为 `207 passed / 3 failed`。失败为现有 PIPIA finding 标题断言两项和 SCC citation display label 断言一项，均不经过本轮修改的 seed builder/overlay；本轮不改无关业务逻辑，失败详情保留在交付说明中，不能将该宽回归表述为全绿。
+
+### 9.9 仍不改变的边界
+
+1. `inputs/*.input.json` 和 `_source/*.docx` 未因本轮模拟补充被改写。
+2. `requests/` 与 `levelb-disposition.v1.json` 继续表达严格 source 口径。
+3. synthetic request 不得作为 gold、owner-confirmed 事实、正式合同或正式法律申报材料。
+4. 12 个 `pending_correction` 仍被隔离；本轮授权只覆盖当前29个 rejected，不越过正文版本隔离门。

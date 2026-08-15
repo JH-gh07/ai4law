@@ -1,0 +1,24 @@
+{
+  "business_model": "面向消费者提供本地生活与出行推荐APP，通过订阅和位置相关广告获利。",
+  "data_lifecycle": "持续采集设备标识和精确位置，用于附近推荐、路线分析和广告归因；位置明细保留12个月，聚合统计保留36个月。",
+  "notice_and_consent": "下载时仅要求接受统一隐私政策，精确位置采集没有独立弹窗或分层告知。",
+  "consumer_rights_process": "APP设置页提供访问和删除入口，其他请求通过privacy邮箱提交，核验后45日内处理。",
+  "opt_out_and_sale_sharing": "设置页可关闭个性化广告，但未提供Limit the Use of My Sensitive Personal Information链接。",
+  "vendor_management": "",
+  "attachments": [
+    {
+      "file_role": "privacy_policy",
+      "file_name": "task10_case4.docx",
+      "file_format": "docx",
+      "storage_uri": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case4.docx",
+      "size_bytes": 13489,
+      "checksum_sha256": null
+    }
+  ],
+  "company_name": "Coastline Mobility App, Inc.",
+  "applicability": null,
+  "data_items": [],
+  "dsr_mechanism": null,
+  "vendors": [],
+  "consent_ui": null
+}

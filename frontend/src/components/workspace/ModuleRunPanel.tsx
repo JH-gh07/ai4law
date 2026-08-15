@@ -954,141 +954,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     await runWithPayload(requestPayload);
   };
 
-  const runAssessmentDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isAssessmentModule || loading) return;
-    const preset = getAssessmentDevPreset();
-    const nextValues: AssessmentFormValues = {
-      ...assessmentValues,
-      ...(preset.formDefaults as Partial<AssessmentFormValues>)
-    };
-    setAssessmentValues(nextValues);
-    setAssessmentFiles([]);
-    setAssessmentDevFilePaths(preset.backendFilePaths);
-    setAssessmentStepIndex(ASSESSMENT_STEPS.length - 1);
-    const payload = await buildAssessmentPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runPipiaDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isPipiaModule || loading) return;
-    const preset = getModuleDevPreset("pipia");
-    const nextValues: PipiaFormValues = { ...pipiaValues, ...(preset.formDefaults as Partial<PipiaFormValues>) };
-    setPipiaValues(nextValues);
-    setPipiaFiles([]);
-    setPipiaDevFilePaths(preset.backendFilePaths);
-    setPipiaStepIndex(PIPIA_STEPS.length - 1);
-    const payload = await buildPipiaPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runEuSccDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isEuSccTask || loading) return;
-    const preset = getModuleDevPreset("eu_scc");
-    const nextValues: EuSccFormValues = { ...euSccValues, ...(preset.formDefaults as Partial<EuSccFormValues>) };
-    setEuSccValues(nextValues);
-    setEuSccFiles([]);
-    setEuSccDevFilePaths(preset.backendFilePaths);
-    setEuSccStepIndex(EU_SCC_STEPS.length - 1);
-    const payload = await buildEuSccPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runBcrDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isBcrModule || loading) return;
-    const preset = getModuleDevPreset("bcr");
-    const nextValues: BcrFormValues = { ...bcrValues, ...(preset.formDefaults as Partial<BcrFormValues>) };
-    setBcrValues(nextValues);
-    setBcrFiles([]);
-    setBcrDevFilePaths(preset.backendFilePaths);
-    setBcrStepIndex(BCR_STEPS.length - 1);
-    const payload = await buildBcrPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runDpiaDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isDpiaModule || loading) return;
-    const preset = getModuleDevPreset("dpia");
-    const nextValues: DpiaFormValues = { ...dpiaValues, ...(preset.formDefaults as Partial<DpiaFormValues>) };
-    setDpiaValues(nextValues);
-    setDpiaFiles([]);
-    setDpiaDevFilePaths(preset.backendFilePaths);
-    setDpiaStepIndex(DPIA_STEPS.length - 1);
-    const payload = await buildDpiaPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runTiaDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isTiaModule || loading) return;
-    const preset = getModuleDevPreset("tia");
-    const nextValues: TiaFormValues = { ...tiaValues, ...(preset.formDefaults as Partial<TiaFormValues>) };
-    setTiaValues(nextValues);
-    setTiaFiles([]);
-    setTiaDevFilePaths(preset.backendFilePaths);
-    setTiaStepIndex(TIA_STEPS.length - 1);
-    const payload = await buildTiaPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runDiagnosisDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isDiagnosisModule || loading) return;
-    const preset = getModuleDevPreset("diagnosis");
-    const nextValues: DiagnosisFormValues = {
-      ...diagnosisValues,
-      ...(preset.formDefaults as Partial<DiagnosisFormValues>)
-    };
-    setDiagnosisValues(nextValues);
-    setDiagnosisStepIndex(DIAGNOSIS_STEPS.length - 1);
-    const payload = buildDiagnosisPayloadFrom(nextValues);
-    await runWithPayload(payload);
-  };
-
-  const runDocumentReviewDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isDocumentReviewTask || loading) return;
-    const preset = getModuleDevPreset("document_review");
-    const nextValues: DocumentReviewFormValues = {
-      ...documentReviewValues,
-      ...(preset.formDefaults as Partial<DocumentReviewFormValues>)
-    };
-    setDocumentReviewValues(nextValues);
-    setDocumentReviewFiles([]);
-    setDocumentReviewDevFilePaths(preset.backendFilePaths);
-    const payload = await buildDocumentReviewPayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runUs14117DevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isUs14117Module || loading) return;
-    const preset = getModuleDevPreset("us_14117");
-    const nextValues: Us14117FormValues = { ...us14117Values, ...(preset.formDefaults as Partial<Us14117FormValues>) };
-    setUs14117Values(nextValues);
-    setUs14117Files([]);
-    setUs14117DevFilePaths(preset.backendFilePaths);
-    setUs14117StepIndex(US14117_STEPS.length - 1);
-    const payload = await buildUs14117PayloadFrom(nextValues, [], preset.backendFilePaths);
-    await runWithPayload(payload);
-  };
-
-  const runCpraDevPreset = async () => {
-    if (!DEV_ACCEL_ENABLED || !isCpraModule || loading) return;
-    const preset = getModuleDevPreset("cpra");
-    const nextValues: CpraFormValues = { ...cpraValues, ...(preset.formDefaults as Partial<CpraFormValues>) };
-    setCpraValues(nextValues);
-    setCpraPrivacyPolicyFiles([]);
-    setCpraRightsSopFiles([]);
-    setCpraDataMapFiles([]);
-    setCpraVendorListFiles([]);
-    setCpraOtherFiles([]);
-    setCpraStepIndex(CPRA_STEPS.length - 1);
-    const payload = await buildCpraPayloadFrom(nextValues, {
-      privacyPolicy: [],
-      rightsSop: [],
-      dataMap: [],
-      vendorList: [],
-      other: [],
-    });
-    await runWithPayload(payload);
-  };
-
   const currentAssessmentStep = ASSESSMENT_STEPS[assessmentStepIndex];
   const assessmentProgress = Math.round(((assessmentStepIndex + 1) / ASSESSMENT_STEPS.length) * 100);
   const currentDiagnosisStep = DIAGNOSIS_STEPS[diagnosisStepIndex];
@@ -1556,17 +1421,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
                     {selectedDocumentReviewFile ? selectedDocumentReviewExtractMeta.label : "等待选择文件"}
                   </span>
                   <div className="schema-actions-row doc-review-actions-row">
-                    {DEV_ACCEL_ENABLED ? (
-                      <button
-                        className="pill-btn"
-                        type="button"
-                        onClick={runDocumentReviewDevPreset}
-                        disabled={loading}
-                        title="开发期一键注入文档审查预设并运行真实后端流程"
-                      >
-                        一键体验
-                      </button>
-                    ) : null}
                     <button className="pill-btn-primary" onClick={execute} disabled={loading}>
                       {loading ? t("runningNow") : "执行审查"}
                     </button>
@@ -1738,17 +1592,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runEuSccDevPreset}
-                disabled={loading}
-                title="开发期一键注入SCC预设并运行真实后端流程"
-              >
-                一键体验SCC
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -1923,17 +1766,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           </div>
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runDiagnosisDevPreset}
-                disabled={loading}
-                title="开发期一键注入诊断问卷预设并运行真实后端流程"
-              >
-                一键体验诊断
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2097,17 +1929,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runAssessmentDevPreset}
-                disabled={loading}
-                title="开发期一键注入预设数据并运行真实Assessment流程"
-              >
-                一键体验主流程
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2257,17 +2078,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runPipiaDevPreset}
-                disabled={loading}
-                title="开发期一键注入PIPIA预设并运行真实后端流程"
-              >
-                一键体验PIPIA
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2380,17 +2190,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runBcrDevPreset}
-                disabled={loading}
-                title="开发期一键注入BCR预设并运行真实后端流程"
-              >
-                一键体验BCR
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2515,17 +2314,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runDpiaDevPreset}
-                disabled={loading}
-                title="开发期一键注入DPIA预设并运行真实后端流程"
-              >
-                一键体验DPIA
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2650,17 +2438,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
           ) : null}
 
           <div className="schema-actions-row">
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runTiaDevPreset}
-                disabled={loading}
-                title="开发期一键注入TIA预设并运行真实后端流程"
-              >
-                一键体验TIA
-              </button>
-            ) : null}
             <button
               className="pill-btn"
               type="button"
@@ -2924,18 +2701,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.max(0, prev - 1))} disabled={us14117StepIndex === 0}>上一步</button>
             <button className="pill-btn" type="button" onClick={() => setUs14117StepIndex((prev) => Math.min(US14117_STEPS.length - 1, prev + 1))} disabled={us14117StepIndex === US14117_STEPS.length - 1}>下一步</button>
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>{loading ? t("runningNow") : "运行 EO 14117 评估"}</button>
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runUs14117DevPreset}
-                disabled={loading}
-                title="开发期一键注入预设数据并运行真实14117评估流程"
-              >
-                一键运行
-              </button>
-            ) : null}
-            {DEV_ACCEL_ENABLED && devTestCases.length > 0 ? (<button type="button" className="pill-btn" onClick={() => setShowCasePicker(true)} style={{ marginLeft: 8 }}>🧪 测试案例</button>) : null}
           </div>
         </section>
       ) : isCpraModule ? (
@@ -3116,17 +2881,6 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
             <button className="pill-btn-primary" onClick={execute} disabled={loading}>
               {loading ? t("runningNow") : "生成CPRA合规全景报告"}
             </button>
-            {DEV_ACCEL_ENABLED ? (
-              <button
-                className="pill-btn"
-                type="button"
-                onClick={runCpraDevPreset}
-                disabled={loading}
-                title="开发期一键注入预设数据并运行真实CPRA评估流程"
-              >
-                一键运行
-              </button>
-            ) : null}
           </div>
         </section>
       ) : (

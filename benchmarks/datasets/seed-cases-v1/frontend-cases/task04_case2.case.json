@@ -1,0 +1,40 @@
+{
+  "caseId": "task04_case2",
+  "moduleKey": "review",
+  "name": "task04_case2 · 源数据 · 未签署",
+  "description": "文档审查；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "CN",
+  "formDefaults": {
+    "company_name": "种子案例提交方",
+    "publisher_entity": "种子案例提交方",
+    "document_title": "待审查材料",
+    "document_version": "synthetic-v1",
+    "effective_date": "",
+    "applicable_products": "见附件",
+    "applicable_scope": "见附件",
+    "is_live_version": false,
+    "document_type": "other",
+    "receiver_name": "待从附件提取",
+    "receiver_country": "待从附件提取",
+    "transfer_purpose": "文档专项审查",
+    "processor_identity_disclosed": false,
+    "scope_disclosed": false,
+    "collection_purpose_disclosed": false,
+    "processing_method_disclosed": false,
+    "category_disclosed": false,
+    "sensitive_pi_disclosed": false,
+    "crossborder_rule_disclosed": false,
+    "rights_channel_disclosed": false,
+    "contact_channel": "待审查",
+    "pii_count": 0,
+    "spi_count": 0,
+    "has_scc_draft": false,
+    "review_focus": "识别条款缺口、风险和整改建议"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task04/task04_case2.docx"
+  ],
+  "sourceKind": "source_faithful",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task04_case2.request.json"
+}

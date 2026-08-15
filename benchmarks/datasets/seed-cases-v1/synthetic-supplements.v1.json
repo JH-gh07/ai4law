@@ -1,0 +1,264 @@
+{
+  "schema_version": "1.0",
+  "dataset": "seed-cases-v1",
+  "purpose": "Authorized synthetic completion for runnable Level B fixtures; never rewrites or claims fidelity to the source DOCX.",
+  "authorization_date": "2026-08-16",
+  "provenance": "synthetic_fixture",
+  "owner_confirmed": false,
+  "entries": {
+    "task01_case1": {
+      "module_id": "cn.transfer_diagnosis",
+      "fields": {
+        "company_name": {"value": "海岳通信科技股份有限公司", "basis_type": "business_simulation", "source_hint": "原文描述电信运营企业但未给名称", "reason": "采用不含占位符的电信行业测试主体名，不改变路径判断"},
+        "answers.q4_spi_count": {"value": 2000000, "basis_type": "range_concretization", "source_hint": "原文：≥1万；粗略算约200万用户", "reason": "采用原文给出的约数中心值200万，满足≥1万且不另造量级"}
+      }
+    },
+    "task01_case2": {
+      "module_id": "cn.transfer_diagnosis",
+      "fields": {
+        "company_name": {"value": "澜桥跨境电子商务有限公司", "basis_type": "business_simulation", "source_hint": "原文描述跨境电商平台", "reason": "使用行业一致的测试主体名"},
+        "answers.q4_spi_count": {"value": 8000, "basis_type": "range_concretization", "source_hint": "原文：<1万；大概8000人", "reason": "采用原文明确提到的8000，落在<1万范围内"}
+      }
+    },
+    "task01_case3": {
+      "module_id": "cn.transfer_diagnosis",
+      "fields": {
+        "company_name": {"value": "莱茵智造汽车零部件有限公司", "basis_type": "business_simulation", "source_hint": "原文描述德资汽车零部件制造企业", "reason": "使用行业与集团背景一致的测试主体名"},
+        "answers.q4_spi_count": {"value": 6000, "basis_type": "range_concretization", "source_hint": "原文：<1万；大概6000个员工", "reason": "采用原文约数6000，落在<1万范围内"}
+      }
+    },
+    "task01_case4": {
+      "module_id": "cn.transfer_diagnosis",
+      "fields": {
+        "company_name": {"value": "薪云软件科技有限公司", "basis_type": "business_simulation", "source_hint": "原文描述SaaS创业公司", "reason": "使用HR SaaS业务一致的测试主体名"},
+        "answers.q4_spi_count": {"value": 200, "basis_type": "source_concretization", "source_hint": "原文：200个员工；包含薪酬和银行账号", "reason": "适配器按敏感信息分支取q4，人数直接采用原文200名员工"}
+      }
+    },
+    "task01_case5": {
+      "module_id": "cn.transfer_diagnosis",
+      "fields": {
+        "company_name": {"value": "新衡医疗人工智能有限公司", "basis_type": "business_simulation", "source_hint": "原文描述民营医疗AI公司", "reason": "唯一缺项是标识名；使用业务一致的测试主体名，人数5000由原文解析"}
+      }
+    },
+    "task02_case1": {
+      "module_id": "cn.security_assessment",
+      "fields": {
+        "pii_count": {"value": 1200000, "basis_type": "business_simulation", "source_hint": "银行核心系统持续实时同步，原文未给累计人数", "reason": "城商银行客户规模通常为百万级；取120万用于触发大规模出境阈值测试"}
+      }
+    },
+    "task02_case2": {
+      "module_id": "cn.security_assessment",
+      "fields": {
+        "pii_count": {"value": 180000, "basis_type": "business_simulation", "source_hint": "新能源汽车车辆数据自2023年持续实时上传", "reason": "采用18万活跃车辆/车主的中等规模测试值，与持续量产车队场景一致"}
+      }
+    },
+    "task02_case3": {
+      "module_id": "cn.security_assessment",
+      "fields": {
+        "pii_count": {"value": 350000, "basis_type": "business_simulation", "source_hint": "社交APP长期按需进行人脸认证", "reason": "采用35万实名用户，体现生物识别服务的规模化调用且不虚构为原文事实"}
+      }
+    },
+    "task02_case5": {
+      "module_id": "cn.security_assessment",
+      "fields": {
+        "pii_count": {"value": 80000, "basis_type": "business_simulation", "source_hint": "互联网医院自2023年实时传输患者诊疗记录", "reason": "采用8万年度活跃患者作为医疗服务测试规模，避免无依据扩大到百万级"}
+      }
+    },
+    "task03_case1": {
+      "module_id": "cn.pipia",
+      "fields": {
+        "company_profile.company_uscc": {"value": "91310115MA1K4A2X7Q", "basis_type": "business_simulation", "source_hint": "原文未给信用代码", "reason": "提供18位测试格式标识，仅用于Schema与链路验证"},
+        "attachments": {"value": [{"file_role": "supporting_evidence", "source": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case1.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "使用本案例DOCX生成测试附件引用", "reason": "保留真实文件路径与hash可验核，但明确其角色是synthetic supporting evidence而非正式SCC"}
+      }
+    },
+    "task03_case2": {
+      "module_id": "cn.pipia",
+      "fields": {
+        "company_profile.company_uscc": {"value": "91310106MA1FY8C62R", "basis_type": "business_simulation", "source_hint": "原文未给信用代码", "reason": "提供18位测试格式标识"},
+        "attachments": {"value": [{"file_role": "supporting_evidence", "source": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case2.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "使用本案例DOCX", "reason": "作为可追溯的测试支撑材料，不冒充正式合同"}
+      }
+    },
+    "task03_case3": {
+      "module_id": "cn.pipia",
+      "fields": {
+        "company_profile.company_uscc": {"value": "91110108MA01X7G84P", "basis_type": "business_simulation", "source_hint": "原文未给信用代码", "reason": "提供18位测试格式标识"},
+        "attachments": {"value": [{"file_role": "supporting_evidence", "source": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case3.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "使用本案例DOCX", "reason": "作为可追溯的测试支撑材料"}
+      }
+    },
+    "task03_case4": {
+      "module_id": "cn.pipia",
+      "fields": {
+        "company_profile.company_uscc": {"value": "91110105MA02B6H31N", "basis_type": "business_simulation", "source_hint": "原文未给信用代码", "reason": "提供18位测试格式标识"},
+        "transfer_context.recipient_country_region": {"value": "新加坡", "basis_type": "business_simulation", "source_hint": "原文仅称海外合作教育机构", "reason": "选取具备国际教育合作和区域数据中心场景的新加坡，避免与原文其他事实冲突"},
+        "attachments": {"value": [{"file_role": "supporting_evidence", "source": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case4.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "使用本案例DOCX", "reason": "作为可追溯的测试支撑材料"}
+      }
+    },
+    "task03_case5": {
+      "module_id": "cn.pipia",
+      "fields": {
+        "company_profile.company_uscc": {"value": "91310000MA1H9R5M2C", "basis_type": "business_simulation", "source_hint": "原文未给信用代码", "reason": "提供18位测试格式标识"},
+        "attachments": {"value": [{"file_role": "supporting_evidence", "source": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case5.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "使用本案例DOCX", "reason": "作为可追溯的测试支撑材料"}
+      }
+    },
+    "task05_case1": {
+      "module_id": "eu.scc_review",
+      "fields": {
+        "company_name": {"value": "Northstar Digital Europe GmbH", "basis_type": "business_simulation", "source_hint": "原文未给申报主体名称", "reason": "与模拟数据输出方保持同一主体，消除Schema默认示例企业"},
+        "project_name": {"value": "EU客户数据AWS托管审查项目", "basis_type": "business_simulation", "source_hint": "原文：与AWS签商业服务协议", "reason": "项目名直接描述交易目的"},
+        "declared_module_type": {"value": "Module Two", "basis_type": "legal_role_simulation", "source_hint": "客户企业为controller，AWS提供处理服务", "reason": "controller-to-processor对应Module Two"},
+        "exporter_name": {"value": "Northstar Digital Europe GmbH", "basis_type": "business_simulation", "source_hint": "原文未给输出方名称", "reason": "模拟欧盟数据控制者"},
+        "importer_name": {"value": "Amazon Web Services, Inc.", "basis_type": "source_concretization", "source_hint": "原文明确AWS", "reason": "采用原文实体"},
+        "transfer_description": {"value": "欧盟客户账户与服务日志托管及技术支持", "basis_type": "business_simulation", "source_hint": "商业云服务协议场景", "reason": "补足Annex I处理目的"}
+      }
+    },
+    "task05_case2": {
+      "module_id": "eu.scc_review",
+      "fields": {
+        "company_name": {"value": "EuroRetail Operations S.A.", "basis_type": "business_simulation", "source_hint": "原文未给欧盟甲方名称", "reason": "与模拟数据输出方保持同一主体"},
+        "project_name": {"value": "印度IT外包数据处理审查项目", "basis_type": "business_simulation", "source_hint": "原文：印度公司提供IT外包", "reason": "项目名对应外包处理链"},
+        "declared_module_type": {"value": "Module Two", "basis_type": "legal_role_simulation", "source_hint": "欧盟甲方决定目的，印度外包商代为处理", "reason": "controller-to-processor对应Module Two"},
+        "exporter_name": {"value": "EuroRetail Operations S.A.", "basis_type": "business_simulation", "source_hint": "原文提到门店销售数据", "reason": "模拟欧盟零售控制者"},
+        "importer_name": {"value": "Bharat IT Services Pvt. Ltd.", "basis_type": "business_simulation", "source_hint": "原文仅称印度公司", "reason": "模拟印度IT处理商"},
+        "transfer_description": {"value": "门店销售记录、客户支持数据和系统运维日志的外包处理", "basis_type": "business_simulation", "source_hint": "IT外包与门店销售数据", "reason": "补足处理范围并保持行业一致"}
+      }
+    },
+    "task05_case3": {
+      "module_id": "eu.scc_review",
+      "fields": {
+        "company_name": {"value": "Oranje Group N.V.", "basis_type": "business_simulation", "source_hint": "原文未给荷兰总部名称", "reason": "与模拟数据输出方保持同一主体"},
+        "project_name": {"value": "荷兰总部至英国子公司数据共享审查项目", "basis_type": "source_concretization", "source_hint": "原文明确荷兰总部和英国子公司", "reason": "直接采用交易链命名"},
+        "declared_module_type": {"value": "Module One", "basis_type": "legal_role_simulation", "source_hint": "集团双方共同决定共享用途", "reason": "按controller-to-controller测试场景采用Module One"},
+        "exporter_name": {"value": "Oranje Group N.V.", "basis_type": "business_simulation", "source_hint": "原文未给荷兰总部名称", "reason": "模拟荷兰控制者"},
+        "importer_name": {"value": "Oranje Group UK Ltd.", "basis_type": "business_simulation", "source_hint": "原文未给英国子公司名称", "reason": "模拟英国关联控制者"},
+        "transfer_description": {"value": "集团客户、员工和财务协同数据共享", "basis_type": "business_simulation", "source_hint": "集团内部数据共享", "reason": "形成可审查的Annex I范围"}
+      }
+    },
+    "task05_case4": {
+      "module_id": "eu.scc_review",
+      "fields": {
+        "company_name": {"value": "Alpine Consumer Products AG", "basis_type": "business_simulation", "source_hint": "原文未给欧盟母公司名称", "reason": "与模拟数据输出方保持同一主体"},
+        "project_name": {"value": "欧盟母公司至中国子公司数据处理审查项目", "basis_type": "source_concretization", "source_hint": "原文明确中国子公司", "reason": "直接描述交易链"},
+        "declared_module_type": {"value": "Module Two", "basis_type": "legal_role_simulation", "source_hint": "欧盟母公司决定目的，中国子公司提供集团处理服务", "reason": "按controller-to-processor测试场景采用Module Two"},
+        "exporter_name": {"value": "Alpine Consumer Products AG", "basis_type": "business_simulation", "source_hint": "原文未给母公司名称", "reason": "模拟欧盟控制者"},
+        "importer_name": {"value": "艾尔品信息技术（上海）有限公司", "basis_type": "business_simulation", "source_hint": "原文仅称中国子公司", "reason": "模拟中国关联处理者"},
+        "transfer_description": {"value": "集团客户服务、订单分析与信息系统运维数据处理", "basis_type": "business_simulation", "source_hint": "集团内部合同场景", "reason": "补足处理目的"}
+      }
+    },
+    "task05_case5": {
+      "module_id": "eu.scc_review",
+      "fields": {
+        "company_name": {"value": "MediNova Europe S.A.", "basis_type": "business_simulation", "source_hint": "原文未给欧盟医疗机构名称", "reason": "与模拟数据输出方保持同一主体"},
+        "project_name": {"value": "欧盟患者数据巴西分析服务审查项目", "basis_type": "source_concretization", "source_hint": "原文明确巴西公司处理患者数据", "reason": "直接描述交易事实"},
+        "declared_module_type": {"value": "Module Two", "basis_type": "legal_role_simulation", "source_hint": "医疗机构决定目的，巴西公司提供分析", "reason": "controller-to-processor对应Module Two"},
+        "exporter_name": {"value": "MediNova Europe S.A.", "basis_type": "business_simulation", "source_hint": "原文未给输出方名称", "reason": "模拟欧盟医疗控制者"},
+        "importer_name": {"value": "Saude Analytics Brasil Ltda.", "basis_type": "business_simulation", "source_hint": "原文仅称巴西公司", "reason": "模拟巴西分析处理商"},
+        "transfer_description": {"value": "去标识化患者诊疗数据的统计分析和研究支持", "basis_type": "business_simulation", "source_hint": "患者数据分析用途", "reason": "补足Annex I处理范围，同时不声称已匿名化"}
+      }
+    },
+    "task09_case1": {
+      "module_id": "us.eo_14117",
+      "fields": {
+        "company_name": {"value": "Atlas Cloud Storage, Inc.", "basis_type": "business_simulation", "source_hint": "原文仅称美国云存储服务商", "reason": "提供可审计的美国申报主体测试名"},
+        "project_name": {"value": "中国关联公司推荐算法数据传输项目", "basis_type": "source_concretization", "source_hint": "原文：传至中国关联公司优化推荐算法", "reason": "直接按交易目的命名"},
+        "us_person_count": {"value": 30000, "basis_type": "range_concretization", "source_hint": "原文：几万人", "reason": "取3万作为“几万”区间的保守代表值"},
+        "recipient_entities": {"value": [{"entity_name": "云析科技（深圳）有限公司", "country_of_registration": "China", "ownership_structure": "美国申报主体的中国关联公司", "entity_role": "affiliate"}], "basis_type": "business_simulation", "source_hint": "原文仅给中国关联公司", "reason": "补足可供covered-person筛查的实体名称、注册国和关系"}
+      }
+    },
+    "task09_case2": {
+      "module_id": "us.eo_14117",
+      "fields": {
+        "company_name": {"value": "Nova Social Media, Inc.", "basis_type": "business_simulation", "source_hint": "原文仅称社交媒体APP开发商", "reason": "提供与业务一致的申报主体测试名"},
+        "project_name": {"value": "俄罗斯控股云服务器迁移项目", "basis_type": "source_concretization", "source_hint": "原文：俄罗斯公司控股55%", "reason": "直接体现交易风险特征"},
+        "us_person_count": {"value": 15000, "basis_type": "source_concretization", "source_hint": "原文：大概1.5万名用户", "reason": "将1.5万确定为15000"},
+        "recipient_entities": {"value": [{"entity_name": "Volga Cloud Systems LLC", "country_of_registration": "Russia", "ownership_structure": "俄罗斯投资方持股55%，运维团队位于俄罗斯", "entity_role": "vendor"}], "basis_type": "business_simulation", "source_hint": "原文未给服务器公司名称", "reason": "保留原文55%控股与俄罗斯运维事实，名称仅为测试标识"}
+      }
+    },
+    "task09_case3": {
+      "module_id": "us.eo_14117",
+      "fields": {
+        "company_name": {"value": "Helix Genomics, Inc.", "basis_type": "business_simulation", "source_hint": "原文仅称美国基因检测公司", "reason": "提供与基因检测业务一致的测试名"},
+        "project_name": {"value": "美国基因组数据伊朗合作研究项目", "basis_type": "source_concretization", "source_hint": "原文：与伊朗学术机构开展群体遗传学研究", "reason": "直接按研究活动命名"},
+        "us_person_count": {"value": 300, "basis_type": "source_concretization", "source_hint": "原文：约300名客户", "reason": "采用原文约数300"},
+        "recipient_entities": {"value": [{"entity_name": "Tehran Genomics Research Institute", "country_of_registration": "Iran", "ownership_structure": "独立学术研究机构", "entity_role": "controller"}], "basis_type": "business_simulation", "source_hint": "原文未给伊朗机构名称", "reason": "模拟研究接收方名称，注册国和角色来自原文场景"}
+      }
+    },
+    "task09_case4": {
+      "module_id": "us.eo_14117",
+      "fields": {
+        "company_name": {"value": "Meridian Data Brokerage, Inc.", "basis_type": "business_simulation", "source_hint": "原文仅称数据经纪商", "reason": "提供与交易类型一致的测试名"},
+        "project_name": {"value": "委内瑞拉精准位置数据经纪交易项目", "basis_type": "source_concretization", "source_hint": "原文：向委内瑞拉营销公司出售位置数据", "reason": "直接反映data brokerage交易类型"},
+        "us_person_count": {"value": 20000, "basis_type": "source_concretization", "source_hint": "原文：大约2万名用户", "reason": "采用原文约数2万"},
+        "recipient_entities": {"value": [{"entity_name": "Caracas Audience Analytics C.A.", "country_of_registration": "Venezuela", "ownership_structure": "独立营销分析客户", "entity_role": "controller"}], "basis_type": "business_simulation", "source_hint": "原文未给营销公司名称", "reason": "补足可筛查实体，国家和业务角色来自原文"}
+      }
+    },
+    "task09_case5": {
+      "module_id": "us.eo_14117",
+      "fields": {
+        "company_name": {"value": "GateVision Workforce, Inc.", "basis_type": "business_simulation", "source_hint": "原文仅称美国门禁管理科技公司", "reason": "提供与面部识别门禁业务一致的测试名"},
+        "project_name": {"value": "中国母公司面部识别模型训练项目", "basis_type": "source_concretization", "source_hint": "原文：传回中国总部训练算法", "reason": "直接按交易目的命名"},
+        "us_person_count": {"value": 12000, "basis_type": "source_concretization", "source_hint": "原文：约1.2万名美国用户", "reason": "将1.2万确定为12000"},
+        "recipient_entities": {"value": [{"entity_name": "华算智能科技（上海）有限公司", "country_of_registration": "China", "ownership_structure": "中国母公司持有美国申报主体60%股份", "entity_role": "affiliate"}], "basis_type": "business_simulation", "source_hint": "原文未给中国母公司名称", "reason": "保留60%持股和中国母公司事实，名称仅为测试标识"}
+      }
+    },
+    "task10_case1": {
+      "module_id": "us.cpra",
+      "fields": {
+        "company_name": {"value": "Pacific Retail Media, Inc.", "basis_type": "business_simulation", "source_hint": "电商精准广告场景", "reason": "模拟加州线上零售主体"},
+        "business_model": {"value": "面向加州消费者的电商平台，通过商品销售和跨情境行为广告获利。", "basis_type": "business_simulation", "source_hint": "原文提到网站浏览、商品和广告网络", "reason": "把原文碎片整理成可审查业务模式"},
+        "data_lifecycle": {"value": "收集账户、订单、设备标识和浏览行为；用于履约、分析和广告投放；向广告网络共享行为数据；订单数据保留7年，广告标识保留13个月。", "basis_type": "business_simulation", "source_hint": "原文仅明确浏览和广告共享", "reason": "补齐收集—使用—共享—保留链路并保留广告风险"},
+        "notice_and_consent": {"value": "注册和结账时展示隐私通知；广告Cookie仅提供接受按钮，拒绝入口位于二级设置页。", "basis_type": "business_simulation", "source_hint": "原文错误认为广告网络不属于共享", "reason": "构造可审查的告知与暗黑模式风险"},
+        "consumer_rights_process": {"value": "网站提供访问、更正和删除申请表，客服邮箱受理请求，核验后45日内答复。", "basis_type": "business_simulation", "source_hint": "原文未给权利流程", "reason": "采用CPRA常见DSR流程作为测试事实"},
+        "opt_out_and_sale_sharing": {"value": "未在首页提供Do Not Sell or Share链接，当前仅可在Cookie设置页关闭部分广告标识。", "basis_type": "business_simulation", "source_hint": "原文明示认为无需退出机制", "reason": "忠于原文立场并形成明确审查缺口"},
+        "attachments": {"value": [{"file_role": "other", "source": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case1.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "本案例DOCX", "reason": "作为synthetic data-map输入文件，非真实隐私政策"}
+      }
+    },
+    "task10_case2": {
+      "module_id": "us.cpra",
+      "fields": {
+        "company_name": {"value": "Golden State Workforce Systems, Inc.", "basis_type": "business_simulation", "source_hint": "员工监控场景", "reason": "模拟加州雇主主体"},
+        "business_model": {"value": "向企业客户提供员工设备管理和生产率分析SaaS，同时作为雇主处理本公司员工数据。", "basis_type": "business_simulation", "source_hint": "原文提到雇佣关系和公司设备追踪", "reason": "补齐SaaS与雇主双重业务角色"},
+        "data_lifecycle": {"value": "采集员工设备标识、登录记录、应用使用和位置日志；用于安全和绩效分析；日志保留24个月并由云服务商托管。", "basis_type": "business_simulation", "source_hint": "原文只说明追踪", "reason": "形成可审查的数据生命周期"},
+        "notice_and_consent": {"value": "员工入职材料仅有通用IT使用条款，未提供独立的加州员工隐私通知。", "basis_type": "source_concretization", "source_hint": "原文认为不需要隐私通知", "reason": "将原文立场结构化，不虚构已通知"},
+        "consumer_rights_process": {"value": "员工可通过HR邮箱提出访问、更正或删除请求，但尚无身份核验、登记和时限跟踪SOP。", "basis_type": "business_simulation", "source_hint": "原文未给流程", "reason": "设置部分存在但不完整的现实测试状态"},
+        "opt_out_and_sale_sharing": {"value": "不出售员工数据；分析服务商仅按指令处理，但尚未建立员工数据共享清单和退出适用性评估。", "basis_type": "business_simulation", "source_hint": "员工管理场景", "reason": "避免无依据声称出售，同时保留共享治理缺口"},
+        "attachments": {"value": [{"file_role": "other", "source": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case2.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "本案例DOCX", "reason": "作为synthetic员工数据清单"}
+      }
+    },
+    "task10_case3": {
+      "module_id": "us.cpra",
+      "fields": {
+        "company_name": {"value": "Sierra Subscription Services, Inc.", "basis_type": "business_simulation", "source_hint": "云服务商合同场景", "reason": "模拟加州订阅服务企业"},
+        "business_model": {"value": "提供在线订阅管理平台，依赖公有云存储消费者账户、支付和客服数据。", "basis_type": "business_simulation", "source_hint": "原文提到云服务商存储数据", "reason": "补齐服务形态"},
+        "data_lifecycle": {"value": "从网站和客服收集账户、订阅、支付令牌和工单记录；存储于美国云区域；账户数据在终止后保留24个月。", "basis_type": "business_simulation", "source_hint": "原文未给完整生命周期", "reason": "构造与云托管一致的处理链"},
+        "notice_and_consent": {"value": "注册页链接隐私政策，必要Cookie默认启用；非必要分析Cookie通过横幅征求同意。", "basis_type": "business_simulation", "source_hint": "原文未给告知流程", "reason": "提供可审查的常见实现"},
+        "consumer_rights_process": {"value": "隐私中心受理访问、删除、更正和知情请求；邮件验证后由隐私团队在45日内处理。", "basis_type": "business_simulation", "source_hint": "原文未给权利流程", "reason": "采用标准DSR处理流程"},
+        "opt_out_and_sale_sharing": {"value": "不出售消费者信息；分析Cookie支持退出，但尚未确认云服务合同是否包含CPRA服务提供商限制。", "basis_type": "source_concretization", "source_hint": "原文明示云合同只有通用条款", "reason": "保留合同治理缺口"},
+        "attachments": {"value": [{"file_role": "vendor_list", "source": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case3.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "本案例DOCX", "reason": "作为synthetic供应商资料输入"}
+      }
+    },
+    "task10_case4": {
+      "module_id": "us.cpra",
+      "fields": {
+        "company_name": {"value": "Coastline Mobility App, Inc.", "basis_type": "business_simulation", "source_hint": "移动APP精确位置场景", "reason": "模拟加州移动服务主体"},
+        "business_model": {"value": "面向消费者提供本地生活与出行推荐APP，通过订阅和位置相关广告获利。", "basis_type": "business_simulation", "source_hint": "原文提到APP和位置用途", "reason": "补齐商业模式并体现位置广告风险"},
+        "data_lifecycle": {"value": "持续采集设备标识和精确位置，用于附近推荐、路线分析和广告归因；位置明细保留12个月，聚合统计保留36个月。", "basis_type": "business_simulation", "source_hint": "原文明确收集位置但未给保留", "reason": "形成完整生命周期"},
+        "notice_and_consent": {"value": "下载时仅要求接受统一隐私政策，精确位置采集没有独立弹窗或分层告知。", "basis_type": "source_concretization", "source_hint": "原文明示默认同意且无专门弹窗", "reason": "直接结构化原文缺口"},
+        "consumer_rights_process": {"value": "APP设置页提供访问和删除入口，其他请求通过privacy邮箱提交，核验后45日内处理。", "basis_type": "business_simulation", "source_hint": "原文未给权利流程", "reason": "提供可运行的部分完备流程"},
+        "opt_out_and_sale_sharing": {"value": "设置页可关闭个性化广告，但未提供Limit the Use of My Sensitive Personal Information链接。", "basis_type": "business_simulation", "source_hint": "精确位置属于敏感个人信息场景", "reason": "构造与原文错误分类相对应的治理缺口"},
+        "attachments": {"value": [{"file_role": "privacy_policy", "source": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case4.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "本案例DOCX", "reason": "作为synthetic隐私政策输入，非真实线上政策"}
+      }
+    },
+    "task10_case5": {
+      "module_id": "us.cpra",
+      "fields": {
+        "company_name": {"value": "Westline Data Brokerage, Inc.", "basis_type": "business_simulation", "source_hint": "原文提到下游数据购买方", "reason": "模拟数据经纪业务主体"},
+        "business_model": {"value": "收集、整理并向营销和风控客户出售消费者画像数据，收入主要来自数据许可。", "basis_type": "source_concretization", "source_hint": "原文明确下游数据购买方", "reason": "补齐与删除冲突直接相关的业务模式"},
+        "data_lifecycle": {"value": "从公开记录、合作方和网站采集身份与行为数据，形成画像后提供给购买方；原始数据和画像通常保留5年。", "basis_type": "business_simulation", "source_hint": "原文未给完整生命周期", "reason": "形成删除传播和保留审查所需事实"},
+        "notice_and_consent": {"value": "网站隐私政策披露数据收集和出售，但线下来源的数据主体不一定直接收到通知。", "basis_type": "business_simulation", "source_hint": "数据经纪业务", "reason": "提供典型但有缺口的通知状态"},
+        "consumer_rights_process": {"value": "网站和授权代理人均可提交删除请求；当前直接按姓名和邮箱匹配后删除，未执行分级身份验证，也未完整记录拒绝理由。", "basis_type": "source_concretization", "source_hint": "原文明示大量请求、授权代理人和未核验即删除", "reason": "直接结构化现行错误流程"},
+        "opt_out_and_sale_sharing": {"value": "首页提供退出出售链接，但退出记录与下游购买方同步不完整；部分删除未通知下游接收方。", "basis_type": "business_simulation", "source_hint": "原文显示下游客户受删除影响", "reason": "形成下游传播义务的测试缺口"},
+        "attachments": {"value": [{"file_role": "rights_sop", "source": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case5.docx"}], "basis_type": "derived_synthetic_attachment", "source_hint": "本案例DOCX", "reason": "作为synthetic权利请求SOP输入"}
+      }
+    }
+  }
+}

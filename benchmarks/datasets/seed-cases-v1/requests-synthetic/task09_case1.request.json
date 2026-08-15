@@ -1,0 +1,67 @@
+{
+  "project_name": "中国关联公司推荐算法数据传输项目",
+  "transaction_description": "以下内容为模拟数规通系统用户填写的申报信息。\n1. 数据清单\n用户补充说明：\n您好，我们是总部位于美国的云存储服务提供商，为全球企业客户提供云端数据存储与大数据分析服务。目前计划将一批用户数据传输至中国的关联公司，用于优化推荐算法和用户画像分析。涉及的数据主要包括上述精确地理位置信息和面部生物识别特征模板。涉及的美国用户规模大概有几万人（具体精确数量我们这边还没统计确认，反正是\"几万\"级别）。我们已经对所有传输数据实施了AES-256端到端加密，所以传输过程是绝对安全的——加密了就不存在什么合规风险了吧？我们觉得安全措施已经很到位了，应该不需要再做什么了吧？\n2. 实体清单\n（1）外部实体清单",
+  "transaction_type": "cloud_remote_access",
+  "data_items": [
+    {
+      "data_item_name": "精确地理位置",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 30000,
+      "data_subject_type": "consumer",
+      "doj_data_category": "precise_geolocation_data",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    },
+    {
+      "data_item_name": "面部生物识别",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 30000,
+      "data_subject_type": "consumer",
+      "doj_data_category": "biometric_identifiers",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    },
+    {
+      "data_item_name": "生物识别",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 30000,
+      "data_subject_type": "consumer",
+      "doj_data_category": "biometric_identifiers",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    }
+  ],
+  "recipient_entities": [
+    {
+      "entity_name": "云析科技（深圳）有限公司",
+      "country_of_registration": "China",
+      "tax_id": "",
+      "ownership_structure": "美国申报主体的中国关联公司",
+      "governing_law": "",
+      "government_control": false,
+      "government_investment": "",
+      "parent_company": "",
+      "entity_role": "affiliate",
+      "is_covered_person": null
+    }
+  ],
+  "access_persons": [],
+  "security_measures": [],
+  "onward_transfer": false,
+  "onward_transfer_description": "",
+  "attachments": [],
+  "company_name": "Atlas Cloud Storage, Inc.",
+  "override_thresholds": null
+}

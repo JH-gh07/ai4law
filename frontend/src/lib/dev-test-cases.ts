@@ -25,6 +25,7 @@ import type {
   Us14117FormValues,
 } from "../features/module-runner/types";
 import type { DevCaseModule, ModuleRequestMap } from "../api/api-contract";
+import { getSeedDevCases } from "./dev-seed-cases";
 import genomicRedScenario from "../../../benchmarks/cases/us_14117/geneguard_genomic_red/scenario.json";
 import geolocationYellowScenario from "../../../benchmarks/cases/us_14117/geneguard_geolocation_yellow/scenario.json";
 import telemetryGreenScenario from "../../../benchmarks/cases/us_14117/geneguard_telemetry_green/scenario.json";
@@ -49,7 +50,7 @@ import reviewDataSecurityScenario from "../../../benchmarks/cases/review/data_se
 /**
  * 开发者模式 — 由表单场景输入编译请求 payload。
  *
- * 每个案例源自 benchmarks/source-materials/ 中保留的历史测试材料。
+ * 十个模块运行 seed-cases-v1 的 Level C 目录；cn_flow 保留历史兼容案例。
  * formDefaults 和 backendFilePaths 是唯一场景输入；defineDevCases 通过纯 builder
  * 生成可直接 POST 的 payload，配合 SSE 事件流实时观察执行。
  *
@@ -71,12 +72,17 @@ export type DevTestCase<Module extends DevCaseModule = DevCaseModule> = {
   formDefaults?: Record<string, unknown>;
   /** 可选：开发模式下直接传给后端的测试文件路径 */
   backendFilePaths?: string[];
+  /** Seed provenance; absent only for retained legacy cn_flow cases. */
+  sourceKind?: "synthetic_fixture" | "source_faithful" | "legacy_scenario";
+  /** Seed cases have no signed expected.json oracle. */
+  goldStatus?: "unsigned" | "signed";
+  sourceRequestPath?: string;
   /** 该案例的完整 JSON payload，可直接 POST */
   payload: ModuleRequestMap[Module];
 };
 
 type DevTestCaseSeed<Module extends DevCaseModule> =
-  Omit<DevTestCase<Module>, "payload" | "caseId"> & { payload?: never };
+  Omit<DevTestCase<Module>, "payload" | "caseId"> & { payload?: never; caseId?: string };
 
 const genomicRedRequest = genomicRedScenario.request as ModuleRequestMap["us_14117"];
 const geolocationYellowRequest = geolocationYellowScenario.request as ModuleRequestMap["us_14117"];
@@ -298,7 +304,7 @@ export function defineDevCases<Module extends DevCaseModule>(
 ): DevTestCase<Module>[] {
   return cases.map((testCase, index) => ({
     ...testCase,
-    caseId: `${module}-${String(index + 1).padStart(2, "0")}`,
+    caseId: testCase.caseId ?? `${module}-${String(index + 1).padStart(2, "0")}`,
     payload: buildCasePayload(module, testCase),
   }));
 }
@@ -1087,7 +1093,7 @@ const reviewSccContract = {
 // Exported registry
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const DEV_TEST_CASES = {
+export const LEGACY_DEV_TEST_CASES = {
   cpra: defineDevCases("cpra", [cpraTrendyGoods, cpraDataFlow, cpraFitLife]),
   diagnosis: defineDevCases("diagnosis", [diagEcommerce, diagMedical, diagAnonymous]),
   assessment: defineDevCases("assessment", [assessCIO, assessEcommerce]),
@@ -1099,6 +1105,23 @@ export const DEV_TEST_CASES = {
   review: defineDevCases("review", [reviewPrivacyPolicy, reviewSccContract]),
   cn_flow: defineDevCases("cn_flow", [cnFlowBasic, cnFlowRestricted]),
   us_14117: defineDevCases("us_14117", [us14117Basic, us14117RestrictedParty, us14117TelemetryGreen]),
+} satisfies { [Module in DevCaseModule]: DevTestCase<Module>[] };
+
+const seedCases = <Module extends Exclude<DevCaseModule, "cn_flow">>(module: Module) =>
+  getSeedDevCases(module) as DevTestCaseSeed<Module>[];
+
+export const DEV_TEST_CASES = {
+  cpra: defineDevCases("cpra", seedCases("cpra")),
+  diagnosis: defineDevCases("diagnosis", seedCases("diagnosis")),
+  assessment: defineDevCases("assessment", seedCases("assessment")),
+  eu_scc: defineDevCases("eu_scc", seedCases("eu_scc")),
+  bcr: defineDevCases("bcr", seedCases("bcr")),
+  dpia: defineDevCases("dpia", seedCases("dpia")),
+  tia: defineDevCases("tia", seedCases("tia")),
+  pipia: defineDevCases("pipia", seedCases("pipia")),
+  review: defineDevCases("review", seedCases("review")),
+  cn_flow: LEGACY_DEV_TEST_CASES.cn_flow.map((testCase) => ({ ...testCase, sourceKind: "legacy_scenario" as const })),
+  us_14117: defineDevCases("us_14117", seedCases("us_14117")),
 } satisfies { [Module in DevCaseModule]: DevTestCase<Module>[] };
 
 export const MODULES_WITH_CASES = Object.keys(DEV_TEST_CASES) as DevCaseModule[];

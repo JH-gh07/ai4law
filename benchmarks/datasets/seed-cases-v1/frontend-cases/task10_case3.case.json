@@ -1,0 +1,31 @@
+{
+  "caseId": "task10_case3",
+  "moduleKey": "cpra",
+  "name": "task10_case3 · 模拟 · 未签署",
+  "description": "CPRA 合规；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "US",
+  "formDefaults": {
+    "company_name": "Sierra Subscription Services, Inc.",
+    "dba_name": "",
+    "cpra_applicability_selfcheck": "授权模拟案例，适用性待系统判断",
+    "business_model": "提供在线订阅管理平台，依赖公有云存储消费者账户、支付和客服数据。",
+    "data_lifecycle": "从网站和客服收集账户、订阅、支付令牌和工单记录；存储于美国云区域；账户数据在终止后保留24个月。",
+    "data_categories": "见数据生命周期",
+    "notice_and_consent": "注册页链接隐私政策，必要Cookie默认启用；非必要分析Cookie通过横幅征求同意。",
+    "privacy_policy_url": "",
+    "consumer_rights_process": "隐私中心受理访问、删除、更正和知情请求；邮件验证后由隐私团队在45日内处理。",
+    "identity_verification_method": "见权利流程",
+    "rights_sla": "45日或依法延长",
+    "opt_out_and_sale_sharing": "不出售消费者信息；分析Cookie支持退出，但尚未确认云服务合同是否包含CPRA服务提供商限制。",
+    "spi_usage_summary": "见案例原文",
+    "vendor_management": "",
+    "ui_dark_pattern_check": "待审查",
+    "review_focus": "核查通知、权利、退出和供应商治理"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case3.docx"
+  ],
+  "sourceKind": "synthetic_fixture",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case3.request.json"
+}

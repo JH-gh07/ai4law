@@ -1,6 +1,14 @@
 {
   "schema_version": "1.0",
   "assertion_floor": 8,
+  "frontend_catalog": {
+    "seed_source": "benchmarks/datasets/seed-cases-v1/frontend-cases/index.json",
+    "seed_cases": 38,
+    "seed_modules": 10,
+    "legacy_source": "frontend/src/lib/dev-test-cases.ts#LEGACY_DEV_TEST_CASES.cn_flow",
+    "legacy_cases": 2,
+    "gold_status": "unsigned"
+  },
   "modules": {
     "assessment": {
       "module_id": "cn.security_assessment",
@@ -14,7 +22,7 @@
           "assertions": 18
         }
       ],
-      "frontend_cases": 2
+      "frontend_cases": 5
     },
     "bcr": {
       "module_id": "eu.bcr_review",
@@ -28,7 +36,7 @@
           "assertions": 32
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 2
     },
     "cn_flow": {
       "module_id": "us.eo_14117_flow_review",
@@ -52,7 +60,7 @@
           "assertions": 28
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 5
     },
     "diagnosis": {
       "module_id": "cn.transfer_diagnosis",
@@ -70,7 +78,7 @@
           "assertions": 11
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 5
     },
     "dpia": {
       "module_id": "eu.dpia",
@@ -102,7 +110,7 @@
           "assertions": 23
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 5
     },
     "pipia": {
       "module_id": "cn.pipia",
@@ -128,7 +136,7 @@
           "assertions": 30
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 5
     },
     "review": {
       "module_id": "cn.document_review",
@@ -170,7 +178,7 @@
           "assertions": 22
         }
       ],
-      "frontend_cases": 3
+      "frontend_cases": 5
     }
   }
 }

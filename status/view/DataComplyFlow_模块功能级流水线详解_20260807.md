@@ -1,6 +1,7 @@
 # DataComplyFlow 全栈模块功能级流水线详解
 
 > 审计日期：2026-08-07  
+> 最近更新：2026-08-13（同步 task061–task069 后的结构变化：`backend/harness/` 独立、`backend/common/reporting/` 统一三格式渲染、11 模块口径、pipia 新增案例）
 > 审计分支：`new`  
 > 覆盖范围：前端（React/TypeScript/Vite）+ 后端（Python/FastAPI）+ 配置层  
 > 结论口径：本文描述代码真实实现，非规划或期望
@@ -30,11 +31,13 @@
 │   │   ├── llm/               ← LLMClient + module_generator
 │   │   ├── rag/               ← RegulationRAGService
 │   │   ├── citation/          ← CitationRegistry
+│   │   ├── reporting/         ← 统一三格式同源渲染（render_manifest/renderers/render_profiles）
 │   │   └── trace/             ← TraceRecorder
 │   ├── domains/               ← 业务模块
 │   │   ├── cn/                ← 中国（diagnosis/assessment/pipia/review）
 │   │   ├── eu/                ← 欧盟（scc/bcr/dpia/tia）
 │   │   └── us/                ← 美国（eo14117/cn_flow/cpra）
+│   ├── harness/               ← CLI 白盒执行器（runner/viewer/validators/terminal_trace，2026-08 迁出自 tests/）
 │   └── integrations/          ← 外部集成
 └── config/
     └── module_registry.json   ← 前后端共享的模块注册表
@@ -1077,9 +1080,9 @@ CPRAService.generate_report(payload, task_id, trace)
 | 前端 moduleKey | 前端表单组件 | Payload Builder | 后端 Service | 后端 Pipeline | 后端 Agent 数 |
 |:---|:---|:---|:---|---:|:---:|
 | diagnosis | 5 步 wizard | `buildDiagnosisPayload` | `DiagnosisService` | ❌ 专用规则树 | 4 |
-| assessment | 整合表单 | `buildAssessmentPayload` | `AssessmentService` | ✅ WorkflowPipeline | 9 |
+| assessment | 整合表单 | `buildAssessmentPayload` | `AssessmentService` | ✅ WorkflowPipeline | 0（15 Callable） |
 | pipia | 整合表单 | `buildPipiaPayload` | `PIPIAService` | ❌ 专用 | 0 (规则式) |
-| review | 文件+表单 | `buildDocumentReviewPayload` | `ReviewService` | ❌ 8阶段专用 | 9 |
+| review | 文件+表单 | `buildDocumentReviewPayload` | `ReviewService` | ❌ 8阶段专用 | 0（4 专用审查器） |
 | eu_scc | 整合表单 | `buildEuSccPayload` | `EU_SCCService` | ✅ WorkflowPipeline | 6 |
 | bcr | 整合表单 | `buildBcrPayload` | `BCRService` | ❌ 双模式专用 | 10 |
 | dpia | 整合表单 | `buildDpiaPayload` | `DPIAService` | ❌ 9 Agent链 | 9 |
@@ -1145,8 +1148,38 @@ CPRAService.generate_report(payload, task_id, trace)
 | **L4 — 专用链，双模式** | bcr | 文档驱动/表单驱动双线 + 10 Agent |
 | | tia | 确定性评估 + 3 Agent + 静态 riskbook |
 | **L5 — 独立体系** | diagnosis | 9 规则决策树 + 4 Agent + 5 步 wizard |
-| | review | 8 阶段独立链 + SQLite 持久化 + WebSocket + 9 专用 Agent |
+| | review | 8 阶段独立链 + SQLite 持久化 + WebSocket + 4 专用审查器 |
 
 ---
 
-> **文档维护**：本文覆盖前后端全部 11 个模块的完整交互链路。与 `CURRENT_AI4Law_项目事实基线与真实系统理解.md`（基线条目化）和 `CURRENT_DataComplyFlow_全功能运行验证与问题汇报_20260805.md`（功能状态与问题）形成互补。
+## 第八部分：最新进度（2026-08-13 补充）
+
+自 2026-08-07 审计以来，流水线层面的关键结构变化：
+
+### 8.1 新增 `backend/harness/`（task069）
+
+- **迁移**：CLI 白盒执行器的实现代码从 `backend/tests/harness/` 迁出到 `backend/harness/`（`runner.py` / `viewer.py` / `validators.py` / `terminal_trace.py`），`backend/tests/harness/` 只保留 `test_*.py` 测试。
+- **倒置依赖已摆正**：生产门禁 `scripts/check_case_parity.py` 由 `from backend.tests.harness.validators import ...` 改为 `from backend.harness.validators import ...`，不再反向依赖 `tests/`。
+- **入口变更**：`python -m backend.tests.harness.runner` → `python -m backend.harness.runner`（CI 已同步）。
+- **验证**：`pytest backend/tests/harness/ -q` = 88 passed；`scripts/check_case_parity.py` EXIT=0；`python -m backend.harness.runner all --no-llm` = 24 PASS / 2 FAIL（2 失败为 pipia 整改在途，见 8.3）。
+
+### 8.2 新增 `backend/common/reporting/`（task067 / task068）
+
+- 统一三格式（Markdown/DOCX/PDF）同源渲染层：`render_manifest.py`（声明式渲染清单）+ `render_profiles/`（模块画像）+ `renderers/`（渲染器注册表）+ `schema/`（Document IR）+ `shadow_render.py`（新旧对拍）+ `layout_gate.py`（排版门禁）。
+- 解决各模块三格式"各自渲染、排版失真"的问题，与 `common/render/` 形成"底层原语 + 上层编排"的分工。
+
+### 8.3 模块与案例口径（最新实测）
+
+- **模块口径**：`config/module_registry.json` 为 **11 个模块**（`cn.scc_review` 已退役），与本文第六/七部分一致。
+- **CLI 案例**：`config/case_inventory.json` = **26 CLI 案例 / 603 断言 / 28 前端案例**。
+- **pipia 新增案例**：`04_hr_exemption`、`05_certification_eurocert` 已加入，当前 `pipia` 全量 CLI = 3 PASS / 2 FAIL（`02_source_case_missing_scc`、`05_certification_eurocert` 失败，为 pipia 整改在途，非 harness 迁移引入）。
+- **全量后端回归**：`pytest backend/` = 1092 passed / 4 failed（4 失败分布见 `DataComplyFlow_项目整体架构说明` §6.6）。
+
+### 8.4 JP/KR 来源隔离（task065）
+
+- 10 个 JP/KR source 标记 `metadata_review_required`，从正式法律结论与条文号引用中隔离（registry / `legal_index_intl` / Evidence Center 三处透传 `can_be_cited=False`）。
+- 裁决表 `status/check/task065/jp_kr_source_adjudication.csv`（14 行）与待建 source 提议表（8 行）待法律专家签署后执行第四阶段统一重建；签署前隔离态持续生效。
+
+---
+
+> **文档维护**：本文覆盖前后端全部 11 个模块的完整交互链路。与 `CURRENT_AI4Law_项目事实基线与真实系统理解.md`（基线条目化）和 `CURRENT_DataComplyFlow_全功能运行验证与问题汇报_20260805.md`（功能状态与问题）形成互补；2026-08-13 已同步 task061–task069 后的结构变化（新增第八部分）。

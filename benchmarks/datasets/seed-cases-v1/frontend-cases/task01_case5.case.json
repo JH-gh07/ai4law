@@ -1,0 +1,40 @@
+{
+  "caseId": "task01_case5",
+  "moduleKey": "diagnosis",
+  "name": "task01_case5 · 模拟 · 未签署",
+  "description": "合规路径诊断；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "CN",
+  "formDefaults": {
+    "company_name": "新衡医疗人工智能有限公司",
+    "m1_industry": "",
+    "m1_business_channels": [],
+    "m1_service_targets": "个人用户或员工",
+    "m1_company_size": "中型（51-200人）",
+    "m2_core_needs": [
+      "识别业务合规风险点"
+    ],
+    "m2_core_needs_other": "问题1：是否包含重要数据？\n不知道。我们是一家医疗AI公司，收集了5000人的全基因组测序数据，准备传给新加坡的合作医院做联合研究。基因数据算不算重要数据我们真不清楚，就是科研用的。\n问题2：是否包含个人信息？\n是。\n问题3：是否属于法定豁免情形？\n不清楚。我们觉得脱敏后应该就不算个人信息了吧？反正数据都去掉姓名了。\n问题4：是否属于CIIO？\n否。我们是民营医疗AI公司。\n问题5：累计出境个人信",
+    "m2_had_compliance_issue": "no",
+    "m2_deadline": "一般需求（1-3个月）",
+    "m3_processes_personal_info": "yes",
+    "m3_personal_info_types": [
+      "健康/基因/生物识别等敏感个人信息"
+    ],
+    "m3_processes_important_data": "",
+    "m3_important_data_types": [],
+    "m3_data_sources": [
+      "业务系统"
+    ],
+    "m3_processing_activities": [
+      "跨境传输"
+    ],
+    "m3_data_volume_range": "10万条以下",
+    "m4_share_to_third_party": "yes",
+    "m4_cross_border_transfer": "yes",
+    "m4_cross_border_regions": "见案例原文"
+  },
+  "backendFilePaths": [],
+  "sourceKind": "synthetic_fixture",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case5.request.json"
+}

@@ -1,0 +1,31 @@
+{
+  "caseId": "task10_case2",
+  "moduleKey": "cpra",
+  "name": "task10_case2 · 模拟 · 未签署",
+  "description": "CPRA 合规；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "US",
+  "formDefaults": {
+    "company_name": "Golden State Workforce Systems, Inc.",
+    "dba_name": "",
+    "cpra_applicability_selfcheck": "授权模拟案例，适用性待系统判断",
+    "business_model": "向企业客户提供员工设备管理和生产率分析SaaS，同时作为雇主处理本公司员工数据。",
+    "data_lifecycle": "采集员工设备标识、登录记录、应用使用和位置日志；用于安全和绩效分析；日志保留24个月并由云服务商托管。",
+    "data_categories": "见数据生命周期",
+    "notice_and_consent": "员工入职材料仅有通用IT使用条款，未提供独立的加州员工隐私通知。",
+    "privacy_policy_url": "",
+    "consumer_rights_process": "员工可通过HR邮箱提出访问、更正或删除请求，但尚无身份核验、登记和时限跟踪SOP。",
+    "identity_verification_method": "见权利流程",
+    "rights_sla": "45日或依法延长",
+    "opt_out_and_sale_sharing": "不出售员工数据；分析服务商仅按指令处理，但尚未建立员工数据共享清单和退出适用性评估。",
+    "spi_usage_summary": "见案例原文",
+    "vendor_management": "",
+    "ui_dark_pattern_check": "待审查",
+    "review_focus": "核查通知、权利、退出和供应商治理"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case2.docx"
+  ],
+  "sourceKind": "synthetic_fixture",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case2.request.json"
+}

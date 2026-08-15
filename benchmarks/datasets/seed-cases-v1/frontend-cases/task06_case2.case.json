@@ -1,0 +1,32 @@
+{
+  "caseId": "task06_case2",
+  "moduleKey": "bcr",
+  "name": "task06_case2 · 源数据 · 未签署",
+  "description": "BCR 审查；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "EU",
+  "formDefaults": {
+    "company_name": "BetaCloud Services Group",
+    "group_structure": "见上传BCR",
+    "applicant_entity": "BetaCloud Services Group",
+    "data_flow_scope": "见上传BCR正文",
+    "lead_sa_rationale": "待从上传BCR正文抽取并审查",
+    "binding_mechanism": "待从上传BCR正文抽取并审查",
+    "third_party_beneficiary": "待从上传BCR正文抽取并审查",
+    "liability_compensation": "待从上传BCR正文抽取并审查",
+    "transparency_notice": "待从上传BCR正文抽取并审查",
+    "training_audit": "待从上传BCR正文抽取并审查",
+    "cooperation_with_sa": "待从上传BCR正文抽取并审查",
+    "dp_safeguards": "待从上传BCR正文抽取并审查",
+    "third_country_assessment": "待从上传BCR正文抽取并审查",
+    "government_access_process": "待从上传BCR正文抽取并审查",
+    "update_mechanism": "待从上传BCR正文抽取并审查",
+    "definitions_quality": "待从上传BCR正文抽取并审查",
+    "review_focus": "按EDPB BCR要素逐项审查上传正文"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task06/task06_case2.docx"
+  ],
+  "sourceKind": "source_faithful",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task06_case2.request.json"
+}

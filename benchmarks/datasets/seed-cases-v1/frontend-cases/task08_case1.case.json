@@ -1,0 +1,64 @@
+{
+  "caseId": "task08_case1",
+  "moduleKey": "tia",
+  "name": "task08_case1 · 源数据 · 未签署",
+  "description": "TIA 草案生成；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "EU",
+  "formDefaults": {
+    "structured_input_override": {
+      "exporter_country": "Germany",
+      "importer_country": "India",
+      "destination_country": "India",
+      "exporter_role": "controller",
+      "importer_role": "processor",
+      "transfer_purpose": "IT运维支持：印度团队负责7×24小时监控系统运行，需访问系统日志；HR后台处理：工资单处理、考勤统计、绩效数据录入；德语→英语文件翻译服务",
+      "data_categories": [
+        "employee_data",
+        "hr_records",
+        "other",
+        "health_data"
+      ],
+      "has_special_category_data": true,
+      "special_category_types": [
+        "健康检查报告",
+        "工会会员身份"
+      ],
+      "data_subjects": [
+        "员工"
+      ],
+      "transfer_frequency": "实时（VPN连接记录）+ 每日批量同步（HR数据）",
+      "transfer_scale": "约3200名员工（全部为FinServe德国总部员工）",
+      "encryption_before_transfer": true,
+      "key_managed_in_eu": false,
+      "has_end_to_end_encryption": false,
+      "has_secure_enclave": false,
+      "has_key_separation": false
+    },
+    "data_exporter_name": "Seed Exporter",
+    "data_importer_name": "Seed Importer",
+    "importer_country_region": "India",
+    "transfer_purpose": "IT运维支持：印度团队负责7×24小时监控系统运行，需访问系统日志；HR后台处理：工资单处理、考勤统计、绩效数据录入；德语→英语文件翻译服务",
+    "data_categories": "employee_data, hr_records, other, health_data",
+    "sensitive_data_description": "健康检查报告, 工会会员身份",
+    "data_subject_categories": "员工",
+    "transfer_frequency": "continuous",
+    "transfer_tool": "scc",
+    "law_assessed": false,
+    "law_findings": "待评估",
+    "pre_effectiveness": "待评估",
+    "supplementary_technical": "见案例原文",
+    "supplementary_contractual": "待评估",
+    "supplementary_organizational": "待评估",
+    "post_effectiveness": "待评估",
+    "key_actions": "完成人工复核",
+    "dpo_opinion": "未签署",
+    "review_date": "",
+    "attachment_role": "other"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case1.docx"
+  ],
+  "sourceKind": "source_faithful",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task08_case1.request.json"
+}

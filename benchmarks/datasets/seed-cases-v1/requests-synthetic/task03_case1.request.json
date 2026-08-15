@@ -1,0 +1,66 @@
+{
+  "route_type": "scc_filing",
+  "company_profile": {
+    "company_name": "云驰科技有限公司",
+    "company_uscc": "91310115MA1K4A2X7Q",
+    "is_ciio": false,
+    "processing_person_count": 0,
+    "outbound_pi_count": 0,
+    "outbound_spi_count": 0,
+    "industry": ""
+  },
+  "transfer_context": {
+    "purpose": "用户行为分析",
+    "recipient_name": "Yunchi Tech Inc.（美国）",
+    "recipient_country_region": "美国",
+    "legal_basis": "用户同意"
+  },
+  "personal_info_scope": {
+    "pi_categories": [
+      "用户ID",
+      "浏览记录",
+      "点击行为数据",
+      "使用时长",
+      "设备信息（IP地址",
+      "设备型号",
+      "操作系统版本）"
+    ],
+    "spi_categories": [],
+    "subject_volume": 0
+  },
+  "rights_protection": {
+    "notice_mechanism": "隐私政策告知",
+    "consent_mechanism": "用户同意",
+    "dsar_channel": "在线客服",
+    "retention_policy": "见隐私政策"
+  },
+  "emergency_plan": {
+    "incident_response_sla_hours": 72,
+    "escalation_path": "上报负责人"
+  },
+  "path_evidence": {
+    "recipient_notice_complete": null,
+    "sensitive_information_classification_confirmed": null,
+    "consent_evidence_complete": null,
+    "scc_required_clauses_complete": null,
+    "hr_rules_lawfully_adopted": null,
+    "employee_handbook_has_explicit_cross_border_terms": null,
+    "collective_agreement_has_explicit_cross_border_terms": null,
+    "recipient_privacy_policy_provided": null,
+    "certification_body_china_recognized": null,
+    "certification_legal_obligation_citation_provided": null,
+    "contract_governing_law": "",
+    "contract_exclusive_jurisdiction": "",
+    "china_data_subject_rights_terms_present": null
+  },
+  "attachments": [
+    {
+      "file_role": "supporting_evidence",
+      "file_name": "task03_case1.docx",
+      "file_format": "docx",
+      "storage_uri": "benchmarks/datasets/seed-cases-v1/_source/task03/task03_case1.docx",
+      "size_bytes": 11416,
+      "checksum_sha256": null
+    }
+  ]
+}

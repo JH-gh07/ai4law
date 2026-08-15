@@ -1,0 +1,62 @@
+{
+  "caseId": "task08_case2",
+  "moduleKey": "tia",
+  "name": "task08_case2 · 源数据 · 未签署",
+  "description": "TIA 草案生成；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "EU",
+  "formDefaults": {
+    "structured_input_override": {
+      "exporter_country": "Netherlands",
+      "importer_country": "United States",
+      "destination_country": "United States",
+      "exporter_role": "controller",
+      "importer_role": "controller",
+      "transfer_purpose": "邮件营销自动化（购物车 abandonment、订单确认、个性化推荐）；客户行为分析和细分；A/B测试优化营销内容；广告投放效果追踪",
+      "data_categories": [
+        "contact_information",
+        "transaction_records",
+        "behavioral_data",
+        "location_data",
+        "crm_data"
+      ],
+      "has_special_category_data": false,
+      "special_category_types": [],
+      "data_subjects": [
+        "客户"
+      ],
+      "transfer_frequency": "实时（网站行为追踪）+ 每日批量（订单数据）",
+      "transfer_scale": "约50万客户",
+      "encryption_before_transfer": true,
+      "key_managed_in_eu": false,
+      "has_end_to_end_encryption": false,
+      "has_secure_enclave": false,
+      "has_key_separation": false
+    },
+    "data_exporter_name": "Seed Exporter",
+    "data_importer_name": "Seed Importer",
+    "importer_country_region": "United States",
+    "transfer_purpose": "邮件营销自动化（购物车 abandonment、订单确认、个性化推荐）；客户行为分析和细分；A/B测试优化营销内容；广告投放效果追踪",
+    "data_categories": "contact_information, transaction_records, behavioral_data, location_data, crm_data",
+    "sensitive_data_description": "",
+    "data_subject_categories": "客户",
+    "transfer_frequency": "continuous",
+    "transfer_tool": "scc",
+    "law_assessed": false,
+    "law_findings": "待评估",
+    "pre_effectiveness": "待评估",
+    "supplementary_technical": "见案例原文",
+    "supplementary_contractual": "待评估",
+    "supplementary_organizational": "待评估",
+    "post_effectiveness": "待评估",
+    "key_actions": "完成人工复核",
+    "dpo_opinion": "未签署",
+    "review_date": "",
+    "attachment_role": "other"
+  },
+  "backendFilePaths": [
+    "benchmarks/datasets/seed-cases-v1/_source/task08/task08_case2.docx"
+  ],
+  "sourceKind": "source_faithful",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task08_case2.request.json"
+}

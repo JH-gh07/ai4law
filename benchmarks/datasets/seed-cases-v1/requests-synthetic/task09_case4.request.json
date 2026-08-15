@@ -1,0 +1,41 @@
+{
+  "project_name": "委内瑞拉精准位置数据经纪交易项目",
+  "transaction_description": "以下内容为模拟数规通系统用户填写的申报信息。\n1. 数据清单\n用户补充说明：\n我们是一家数据经纪商，专门收集和整理消费者位置数据，然后提供给下游的营销和分析客户。我们计划将大约2万名用户的精确地理位置数据（精度在100米左右）出售给委内瑞拉的一家营销公司。这些位置数据很多都是从公开渠道或者APP上收集的，属于公开可获取的信息，应该不受什么限制吧？我们做这种数据交易已经很多年了，一直都没出过问题。所以这笔交易应该也没什么需要注意的吧？\n2. 实体清单\n（1）外部实体清单\n（2）内部员工清单\n• Carlos Mendez | 国籍：委内瑞拉 | 所属部门：销售部 | 岗位：国际客户经理（负责委内",
+  "transaction_type": "data_brokerage",
+  "data_items": [
+    {
+      "data_item_name": "精确地理位置",
+      "data_description": "",
+      "business_context": "",
+      "is_personal_info": true,
+      "is_sensitive_personal_info": true,
+      "us_person_count": 20000,
+      "data_subject_type": "consumer",
+      "doj_data_category": "precise_geolocation_data",
+      "precision_level": "",
+      "is_government_related": false,
+      "export_necessity": ""
+    }
+  ],
+  "recipient_entities": [
+    {
+      "entity_name": "Caracas Audience Analytics C.A.",
+      "country_of_registration": "Venezuela",
+      "tax_id": "",
+      "ownership_structure": "独立营销分析客户",
+      "governing_law": "",
+      "government_control": false,
+      "government_investment": "",
+      "parent_company": "",
+      "entity_role": "controller",
+      "is_covered_person": null
+    }
+  ],
+  "access_persons": [],
+  "security_measures": [],
+  "onward_transfer": false,
+  "onward_transfer_description": "",
+  "attachments": [],
+  "company_name": "Meridian Data Brokerage, Inc.",
+  "override_thresholds": null
+}

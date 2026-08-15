@@ -1,0 +1,766 @@
+{
+  "schema_version": "1.0",
+  "generated_by": "scripts/build_seed_case_requests.py",
+  "tier": "Level B (extraction record -> module request schema)",
+  "mode": "synthetic",
+  "source_faithfulness": "mixed_with_explicit_synthetic",
+  "synthetic_supplements": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+  "counts": {
+    "converted": 38,
+    "pending_correction": 12
+  },
+  "gap_ledger": "status/check/task065/seed-gap-ledger.json",
+  "dispositions": [
+    {
+      "case_id": "task01_case1",
+      "task_no": 1,
+      "module_id": "cn.transfer_diagnosis",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "answers.q4_spi_count",
+        "company_name"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task01_case2",
+      "task_no": 1,
+      "module_id": "cn.transfer_diagnosis",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "answers.q4_spi_count",
+        "company_name"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task01_case3",
+      "task_no": 1,
+      "module_id": "cn.transfer_diagnosis",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "answers.q4_spi_count",
+        "company_name"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task01_case4",
+      "task_no": 1,
+      "module_id": "cn.transfer_diagnosis",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "answers.q4_spi_count",
+        "company_name"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task01_case5",
+      "task_no": 1,
+      "module_id": "cn.transfer_diagnosis",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task02_case1",
+      "task_no": 2,
+      "module_id": "cn.security_assessment",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task02_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "pii_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task02_case2",
+      "task_no": 2,
+      "module_id": "cn.security_assessment",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task02_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "pii_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task02_case3",
+      "task_no": 2,
+      "module_id": "cn.security_assessment",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task02_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "pii_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task02_case4",
+      "task_no": 2,
+      "module_id": "cn.security_assessment",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task02_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task02_case5",
+      "task_no": 2,
+      "module_id": "cn.security_assessment",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task02_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "pii_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task03_case1",
+      "task_no": 3,
+      "module_id": "cn.pipia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task03_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "company_profile.company_uscc"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task03_case2",
+      "task_no": 3,
+      "module_id": "cn.pipia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task03_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "company_profile.company_uscc"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task03_case3",
+      "task_no": 3,
+      "module_id": "cn.pipia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task03_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "company_profile.company_uscc"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task03_case4",
+      "task_no": 3,
+      "module_id": "cn.pipia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task03_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "company_profile.company_uscc",
+        "transfer_context.recipient_country_region"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task03_case5",
+      "task_no": 3,
+      "module_id": "cn.pipia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task03_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "company_profile.company_uscc"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task04_case1",
+      "task_no": 4,
+      "module_id": "cn.document_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task04_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task04_case2",
+      "task_no": 4,
+      "module_id": "cn.document_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task04_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task04_case3",
+      "task_no": 4,
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task04_case4",
+      "task_no": 4,
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task04_case5",
+      "task_no": 4,
+      "module_id": "cn.document_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task05_case1",
+      "task_no": 5,
+      "module_id": "eu.scc_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task05_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "declared_module_type",
+        "exporter_name",
+        "importer_name",
+        "project_name",
+        "transfer_description"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task05_case2",
+      "task_no": 5,
+      "module_id": "eu.scc_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task05_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "declared_module_type",
+        "exporter_name",
+        "importer_name",
+        "project_name",
+        "transfer_description"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task05_case3",
+      "task_no": 5,
+      "module_id": "eu.scc_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task05_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "declared_module_type",
+        "exporter_name",
+        "importer_name",
+        "project_name",
+        "transfer_description"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task05_case4",
+      "task_no": 5,
+      "module_id": "eu.scc_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task05_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "declared_module_type",
+        "exporter_name",
+        "importer_name",
+        "project_name",
+        "transfer_description"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task05_case5",
+      "task_no": 5,
+      "module_id": "eu.scc_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task05_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "declared_module_type",
+        "exporter_name",
+        "importer_name",
+        "project_name",
+        "transfer_description"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task06_case1",
+      "task_no": 6,
+      "module_id": "eu.bcr_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task06_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task06_case2",
+      "task_no": 6,
+      "module_id": "eu.bcr_review",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task06_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task06_case3",
+      "task_no": 6,
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task06_case4",
+      "task_no": 6,
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task06_case5",
+      "task_no": 6,
+      "module_id": "eu.bcr_review",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task07_case1",
+      "task_no": 7,
+      "module_id": "eu.dpia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task07_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task07_case2",
+      "task_no": 7,
+      "module_id": "eu.dpia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task07_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task07_case3",
+      "task_no": 7,
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task07_case4",
+      "task_no": 7,
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task07_case5",
+      "task_no": 7,
+      "module_id": "eu.dpia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task08_case1",
+      "task_no": 8,
+      "module_id": "eu.tia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task08_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task08_case2",
+      "task_no": 8,
+      "module_id": "eu.tia",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task08_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "source_ready",
+      "source_faithfulness": "faithful",
+      "note": "all key facts present and schema-valid"
+    },
+    {
+      "case_id": "task08_case3",
+      "task_no": 8,
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task08_case4",
+      "task_no": 8,
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task08_case5",
+      "task_no": 8,
+      "module_id": "eu.tia",
+      "levelb": "pending_correction",
+      "request_path": null,
+      "blocking_missing_facts": [],
+      "note": "v2.0 需修正/待修正：正文仍为 v1.0 旧内容，Level B 前隔离"
+    },
+    {
+      "case_id": "task09_case1",
+      "task_no": 9,
+      "module_id": "us.eo_14117",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "project_name",
+        "recipient_entities",
+        "us_person_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task09_case2",
+      "task_no": 9,
+      "module_id": "us.eo_14117",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "project_name",
+        "recipient_entities",
+        "us_person_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task09_case3",
+      "task_no": 9,
+      "module_id": "us.eo_14117",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "project_name",
+        "recipient_entities",
+        "us_person_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task09_case4",
+      "task_no": 9,
+      "module_id": "us.eo_14117",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "project_name",
+        "recipient_entities",
+        "us_person_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task09_case5",
+      "task_no": 9,
+      "module_id": "us.eo_14117",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task09_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "company_name",
+        "project_name",
+        "recipient_entities",
+        "us_person_count"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task10_case1",
+      "task_no": 10,
+      "module_id": "us.cpra",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case1.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "business_model",
+        "company_name",
+        "consumer_rights_process",
+        "data_lifecycle",
+        "notice_and_consent",
+        "opt_out_and_sale_sharing"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task10_case2",
+      "task_no": 10,
+      "module_id": "us.cpra",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case2.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "business_model",
+        "company_name",
+        "consumer_rights_process",
+        "data_lifecycle",
+        "notice_and_consent",
+        "opt_out_and_sale_sharing"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task10_case3",
+      "task_no": 10,
+      "module_id": "us.cpra",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case3.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "business_model",
+        "company_name",
+        "consumer_rights_process",
+        "data_lifecycle",
+        "notice_and_consent",
+        "opt_out_and_sale_sharing"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task10_case4",
+      "task_no": 10,
+      "module_id": "us.cpra",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case4.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "business_model",
+        "company_name",
+        "consumer_rights_process",
+        "data_lifecycle",
+        "notice_and_consent",
+        "opt_out_and_sale_sharing"
+      ],
+      "owner_confirmed": false
+    },
+    {
+      "case_id": "task10_case5",
+      "task_no": 10,
+      "module_id": "us.cpra",
+      "levelb": "converted",
+      "request_path": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task10_case5.request.json",
+      "blocking_missing_facts": [],
+      "fixture_status": "synthetic_ready",
+      "source_faithfulness": "synthetic_only",
+      "note": "schema-valid synthetic request; values are not owner-confirmed source facts",
+      "supplement_path": "benchmarks/datasets/seed-cases-v1/synthetic-supplements.v1.json",
+      "supplemented_fields": [
+        "attachments",
+        "business_model",
+        "company_name",
+        "consumer_rights_process",
+        "data_lifecycle",
+        "notice_and_consent",
+        "opt_out_and_sale_sharing"
+      ],
+      "owner_confirmed": false
+    }
+  ]
+}

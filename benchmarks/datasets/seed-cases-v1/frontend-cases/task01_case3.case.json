@@ -1,0 +1,40 @@
+{
+  "caseId": "task01_case3",
+  "moduleKey": "diagnosis",
+  "name": "task01_case3 · 模拟 · 未签署",
+  "description": "合规路径诊断；无expected.json，仅验证回填、请求构建与Schema。",
+  "jurisdiction": "CN",
+  "formDefaults": {
+    "company_name": "莱茵智造汽车零部件有限公司",
+    "m1_industry": "",
+    "m1_business_channels": [],
+    "m1_service_targets": "个人用户或员工",
+    "m1_company_size": "中型（51-200人）",
+    "m2_core_needs": [
+      "识别业务合规风险点"
+    ],
+    "m2_core_needs_other": "问题1：是否包含重要数据？\n否。就是员工的门禁指纹数据，没什么重要的。\n问题2：是否包含个人信息？\n是。\n问题3：是否属于法定豁免情形？\n不清楚。量不大应该不用做什么吧？就几千人的指纹数据而已。\n问题4：是否属于CIIO？\n否。我们是德资制造业企业，做汽车零部件的。\n问题5：累计出境个人信息类型？\n不确定。就是指纹门禁数据，传到德国总部做统一门禁系统管理，这个算敏感吗？\n问题6：若仅一般个人信息，",
+    "m2_had_compliance_issue": "no",
+    "m2_deadline": "一般需求（1-3个月）",
+    "m3_processes_personal_info": "yes",
+    "m3_personal_info_types": [
+      "健康/基因/生物识别等敏感个人信息"
+    ],
+    "m3_processes_important_data": "no",
+    "m3_important_data_types": [],
+    "m3_data_sources": [
+      "业务系统"
+    ],
+    "m3_processing_activities": [
+      "跨境传输"
+    ],
+    "m3_data_volume_range": "10万条以下",
+    "m4_share_to_third_party": "yes",
+    "m4_cross_border_transfer": "yes",
+    "m4_cross_border_regions": "见案例原文"
+  },
+  "backendFilePaths": [],
+  "sourceKind": "synthetic_fixture",
+  "goldStatus": "unsigned",
+  "sourceRequestPath": "benchmarks/datasets/seed-cases-v1/requests-synthetic/task01_case3.request.json"
+}

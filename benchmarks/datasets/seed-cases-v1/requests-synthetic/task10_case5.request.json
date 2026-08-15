@@ -1,0 +1,24 @@
+{
+  "business_model": "收集、整理并向营销和风控客户出售消费者画像数据，收入主要来自数据许可。",
+  "data_lifecycle": "从公开记录、合作方和网站采集身份与行为数据，形成画像后提供给购买方；原始数据和画像通常保留5年。",
+  "notice_and_consent": "网站隐私政策披露数据收集和出售，但线下来源的数据主体不一定直接收到通知。",
+  "consumer_rights_process": "网站和授权代理人均可提交删除请求；当前直接按姓名和邮箱匹配后删除，未执行分级身份验证，也未完整记录拒绝理由。",
+  "opt_out_and_sale_sharing": "首页提供退出出售链接，但退出记录与下游购买方同步不完整；部分删除未通知下游接收方。",
+  "vendor_management": "",
+  "attachments": [
+    {
+      "file_role": "rights_sop",
+      "file_name": "task10_case5.docx",
+      "file_format": "docx",
+      "storage_uri": "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case5.docx",
+      "size_bytes": 14136,
+      "checksum_sha256": null
+    }
+  ],
+  "company_name": "Westline Data Brokerage, Inc.",
+  "applicability": null,
+  "data_items": [],
+  "dsr_mechanism": null,
+  "vendors": [],
+  "consent_ui": null
+}
