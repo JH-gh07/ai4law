@@ -45,6 +45,20 @@ def test_source_registry_respects_declared_gdpr_binding_force() -> None:
     assert entries["EU-LAW-001"].binding_force == "mandatory"
 
 
+def test_template_assets_are_structure_only_not_legal_authority() -> None:
+    entries = registry_module.build_source_registry_from_sources_csv()
+    templates = [
+        entry for entry in entries
+        if (entry.metadata or {}).get("doc_type") == "template"
+    ]
+
+    assert templates
+    for entry in templates:
+        assert entry.can_be_cited is False, entry.source_id
+        assert entry.can_enter_external_report is False, entry.source_id
+        assert list(entry.allowed_usage) == ["structure_control", "internal_review"], entry.source_id
+
+
 def test_source_kind_maps_new_doc_type_enums() -> None:
     # ``policy`` and ``technical_standard`` are newer doc_type values introduced for
     # the JP/KR remediation. They must map onto the stable SourceKind vocabulary
