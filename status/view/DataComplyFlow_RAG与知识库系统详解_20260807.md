@@ -1,7 +1,6 @@
 # DataComplyFlow RAG 与知识库系统详解
 
-> 生成日期：2026-08-07 · 基于 `new` 分支 HEAD 状态
-> 最近更新：2026-08-13 · 同步 task065（JP/KR 来源隔离 + `legal_index_intl`）落地后的最新实现：索引 15→16、路径 `resources/knowledge/`→`resources/legal/`、SourceRegistry 新增 `review_status`/`can_be_cited`/`can_enter_external_report`
+> 生成日期：2026-08-16 · 基于 `new` 分支当前代码事实：16 索引、schema `v3.2`、`sources.csv` 120 条来源记录、模板引用策略收敛、Legal Control 来源身份门禁。
 
 ---
 
@@ -171,6 +170,15 @@ class SourceRegistryEntry(BaseModel):
 ```
 
 **引用策略（`registry._citation_policy_for_row()`）：** 对 `review_status == "metadata_review_required"` 的来源行，返回 `can_be_cited=False`、`can_enter_external_report=False`、`allowed_usage=["internal_review"]`，即隔离区（quarantine）语义——未通过元数据审核的来源不进外部报告、不进入可引用路径。
+
+**模板来源策略：** `doc_type=template` 的来源统一得到 `can_be_cited=false`、`can_enter_external_report=false`、`allowed_usage=["structure_control", "internal_review"]`。因此 `CN-TPL-019` 这类模板来源能为报告结构提供控制依据，但不能被 Citation Gate 当作实体法条引用；策略实现与回归测试分别在 `registry.py` 与 `backend/common/knowledge/tests/test_registry.py`。
+
+**当前规模与漂移检查：** `sources.csv` 当前为 121 行（含表头，即 120 条数据记录），缓存文件为 `resources/legal/registry/source_registry.v1.json`。生成/漂移检查：
+
+```bash
+./.venv/bin/python scripts/build_source_registry.py --check
+# sources.csv: 120 entries; cached entries: 120; field deltas: 0
+```
 
 **Module Catalog（模块目录）：**
 
@@ -1059,6 +1067,10 @@ LLM Agent 使用这些 chunk 内容填充 prompt:
 - 不进 `build_chunk_sets()` → 不进 v3 向量索引
 - 原因：用户文档未审核，不应直接进入 LLM 外部报告生成的知识库；但可通过 FTS5 全文检索供内部参考
 
+### 6.4 Control Plane 如何收紧 RAG 引用
+
+CN Security Assessment 在 `control=true` 时为 Citation 构建注入 `backend/common/citation/source_identity.py` 的 `SourceIdentityResolver`。Resolver 只负责两件事：通过 exact membership 判断 `source_id` 是否在 SourceRegistry 注册，并读取 Registry 权威字段判断 Eligibility；未注册或不具备引用资格的来源不会被提升为正式 citation。Traceability 不由 Resolver 判断，而由 `backend/domains/cn/security_assessment/citation_validity_gate.py` 的 C3 检查完成：它核对 Citation 的 `related_issue_ids`、`related_fact_ids`、`related_evidence_ids` 是否能回指本次 ContextPack。控制平面目前只贯通 CN Transfer Diagnosis 与 CN Security Assessment，其余 9 个模块仍走原有检索路径——因此 RAG 返回命中不等于法律结论，`allowed_usage`、`can_be_cited` 和模块 stage 仍需由上层 workflow/citation gate 解释。
+
 ---
 
 ## 七、文件路径速查表
@@ -1098,4 +1110,4 @@ LLM Agent 使用这些 chunk 内容填充 prompt:
 | 向量索引 (v1) | `storage/rag/regulation_index_v2.json` |
 | 知识库文件存储 | `storage/knowledge/raw/{jurisdiction}/{doc_type}/` |
 
-> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成，并于 2026-08-13 按 task065（JP/KR 来源隔离 + `legal_index_intl`）落地后的最新代码逐节复核修订。
+> 本文档于 2026-08-16 基于 `new` 分支当前代码事实重新生成，已同步 task065（JP/KR 来源隔离 + `legal_index_intl`）与 task073（Legal Control 来源身份门禁）；来源真相以 `sources.csv`、Registry 和对应 snapshot 为准，改动后须重新生成并执行 `scripts/build_source_registry.py --check`。

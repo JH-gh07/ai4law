@@ -1,7 +1,8 @@
 # DataComplyFlow 项目整体架构说明
 
-> 生成日期：2026-08-07 · 基于 `new` 分支 HEAD 状态
-> 最近更新：2026-08-13 · 同步 task061–task069 落地后的最新代码事实（harness 迁出 tests、统一三格式渲染、JP/KR 来源隔离、11 模块口径、全量测试数）
+> 生成日期：2026-08-16 · 基于 `new` 分支 HEAD `2df778bf`（另审计当前未提交工作树）
+> 文档性质：重新生成的独立架构说明，代码事实优先于历史快照
+> 覆盖版本变化：2026-08-07 初版 → 2026-08-13 同步 task061–task069 → 2026-08-16 同步 task073 控制平面、RAG/Registry 纠偏、DocumentIR v4 与最新回归
 
 ---
 
@@ -67,9 +68,9 @@
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │                  common/ (公共基础设施)                 │   │
-│  │  citation │ events │ knowledge │ llm │ rag │ render  │   │
-│  │  reporting│ quality│ risk      │ runtime│ schema   │   │
-│  │  storage  │ tasks  │ trace     │ workflow │ obs    │   │
+│  │  citation │ events │ knowledge │ legal_control │ llm │   │
+│  │  rag │ render │ reporting │ quality │ risk │ runtime │   │
+│  │  schema │ storage │ tasks │ trace │ workflow │ obs   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                               │
 │  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
@@ -136,7 +137,7 @@
 
 ### 3.4 公共基础设施 — `backend/common/`
 
-这是项目最核心的复用层，共 16 个子包（`citation` / `events` / `knowledge` / `llm` / `observability` / `quality` / `rag` / `render` / `reporting` / `risk` / `runtime` / `schema` / `storage` / `tasks` / `trace` / `workflow`）：
+这是项目最核心的复用层，共 17 个子包（`citation` / `events` / `knowledge` / `legal_control` / `llm` / `observability` / `quality` / `rag` / `render` / `reporting` / `risk` / `runtime` / `schema` / `storage` / `tasks` / `trace` / `workflow`）：
 
 #### 3.4.1 `common/citation/` — 引用系统（本次 P0 治理的核心）
 
@@ -175,7 +176,7 @@
 | `chinese_legal_patterns.py` | 中国法律文书的正则模式库（"第X条""第X章"等） |
 | `ingestion_pipeline.py` | 文档摄入管道：解析 → 分块 → 向量化 → 入库 |
 | `storage_manager.py` | 知识库文件存储管理（支持 S3 / 本地） |
-| `registry.py` | 知识库注册表 — 记录已摄入文档的元数据 |
+| `registry.py` | SourceRegistry 管理 — 当前 `resources/legal/catalog/sources.csv` 120 条来源记录，`scripts/build_source_registry.py --check` 保持 0 drift；`doc_type=template` 的来源统一 `can_be_cited=false`、`can_enter_external_report=false`、`allowed_usage=["structure_control","internal_review"]` |
 | `paths.py` | 知识库文件路径解析 |
 | `builders_v2.py` | 知识库索引构建器 v2 |
 | `v2.py` | 知识库 API v2 入口 |
@@ -185,8 +186,8 @@
 
 | 文件 | 作用 |
 |------|------|
-| `embedding.py` | 文本向量化（调用 embedding API） |
-| `vector_store.py` | 向量存储（内存 / ChromaDB） |
+| `embedding.py` | `HashingEmbedder`——384 维确定性稀疏哈希嵌入，不调用外部 embedding API |
+| `vector_store.py` | `LocalVectorStore`——本地 JSON 向量索引与余弦检索，不依赖 ChromaDB |
 | `fulltext_index.py` | BM25 全文索引 |
 | `retriever.py` | 单索引检索器 — 语义向量检索 |
 | `hybrid_retriever.py` | 混合检索器 — 向量 + BM25 加权融合 |
@@ -206,12 +207,14 @@
 | `summary.py` | 摘要生成：`summarize_for_slot()` / `dedup_if_same()` / `attach_citations()` |
 | `markdown_renderer.py` | Markdown 渲染器 — 章节内容 → 格式化 Markdown |
 | `content_adapter.py` | 内容适配器 — 章节列表 → 统一文档模型 |
-| `pdf_renderer.py` | PDF 渲染器（基于 markdown → HTML → PDF 管道） |
+| `pdf_renderer.py` | PDF 渲染入口——Markdown/章节内容直接交给 ReportLab 渲染，不经过 HTML 中间层 |
 | `artifacts.py` | 产物打包器 — 将报告、证据、问题清单打包为 ZIP |
 
 #### 3.4.6 `common/reporting/` — 统一三格式同源渲染（task067 / task068 新增）
 
 > 这是 2026-08 中旬引入的统一渲染层，解决各模块 Markdown/DOCX/PDF 三格式"各自渲染、排版失真"的问题。与 `common/render/` 的关系：`render/` 提供底层渲染原语（markdown/docx/pdf 转换器 + 模板），`reporting/` 提供**统一 IR → 三格式**的上层编排（render manifest + render profile + renderer registry）。
+>
+> 当前 `DocumentIR` schema 为 `4.0`（`backend/common/reporting/schema/document.py:99`）。在 `common/reporting` 子系统内部，DOCX/PDF/Markdown 三种 renderer 直接消费 IR，PDF 使用 ReportLab 固定布局，DOCX 使用原生 Word heading/table/numbering XML；未知 block/profile fail-closed。该能力不等于所有业务模块都已切换正式输出：各模块仍受 `schema_first_*` 与 `*_report_ir_rendering_enabled` 开关约束；CN Security Assessment 的 schema-first 默认关闭，开启时当前也只构建/编译并登记 DocumentIR，正式 DOCX/PDF 仍走原有模板与 `common/render` 链。
 
 | 文件/目录 | 作用 |
 |------|------|
@@ -225,7 +228,22 @@
 | `migration.py` / `compat.py` | 旧渲染 API 的迁移与兼容层 |
 | `tests/` | 渲染器测试（markdown/docx/pdf/manifest/migration） |
 
-#### 3.4.7 其它 common 子包
+#### 3.4.7 `common/legal_control/` — Legal Agent 控制平面（task073 新增）
+
+独立命名空间，不复用 `render_manifest.GateResult`，避免与渲染门语义污染。当前只贯通两个 Pilot（CN Transfer Diagnosis、CN Security Assessment），其余 9 个模块默认不启用。
+
+| 文件 | 作用 |
+|------|------|
+| `contracts.py` | `LegalControlGateResult`、`LegalControlDecision`、`merge_gate_results()`（显式优先级合并），以及五类 Gate 名与 `AUTO/CONDITIONAL/NEEDS_CLARIFICATION/NEEDS_REVIEW/BLOCKED` 状态常量 |
+| `trace.py` | `record_gate_trace()` — 以 `raw_name=control.*` 复用既有 TraceRecorder，不新增 SSE event union |
+
+五类 Gate：`FACT_COMPLETENESS`、`RULE_PRECEDENCE`、`EVIDENCE_SUFFICIENCY`、`CITATION_VALIDITY`、`ESCALATION`。状态优先级为 `BLOCKED > NEEDS_REVIEW > NEEDS_CLARIFICATION > CONDITIONAL > AUTO`，`FACT_COMPLETENESS + ESCALATE + critical_missing` 是 V1 中 `NEEDS_CLARIFICATION` 的唯一来源。
+
+`legal_control_status` 与 `task_status/state` 严格分离：合法组合 `task_status=COMPLETED + legal_control_status=NEEDS_REVIEW` 表示“程序完成、结果仍需人工复核”，禁止映射为运行时失败。
+
+相关实现：Diagnosis 门在 `backend/domains/cn/transfer_diagnosis/control_adapter.py`；Assessment 门在 `backend/domains/cn/security_assessment/{evidence_gate,citation_validity_gate,escalation_gate}.py`；canonical source identity 在 `backend/common/citation/source_identity.py`。
+
+#### 3.4.8 其它 common 子包
 
 | 子包 | 核心文件 | 功能 |
 |------|---------|------|
@@ -239,7 +257,6 @@
 | `common/tasks/` | 任务调度 | 异步任务执行框架 |
 | `common/trace/` | 链路追踪 | 请求追踪与日志关联 |
 | `common/observability/` | 可观测性 | 日志/指标/健康检查 |
-| `common/templates/` | Jinja2 模板 | 报告模板文件 |
 
 ### 3.5 业务域 — `backend/domains/`
 
@@ -400,7 +417,7 @@ backend/harness/
 
 | 文件 | 功能 |
 |------|------|
-| `app-store.tsx` | **全局状态管理**（React Context + useReducer）——管理 taskSpaces、moduleRuns、artifacts、evidenceHits、issues；启动时从后端 `/me/workspace` 拉取远程状态并与本地 localStorage 合并 |
+| `app-store.tsx` | **全局状态管理**（React Context + useReducer）——管理 taskSpaces、moduleRuns、artifacts、evidenceHits、issues；启动时从后端 `/me/workspace` 拉取远程状态并与本地 localStorage 合并。本地快照当前优先 `ai4law_app_state_v2`，仅在 v2 缺失时读取旧 `v1` 并裁剪迁移 |
 | `auth/AuthContext.tsx` | JWT 认证上下文 |
 | `domain.ts` | 法域/模块类型定义（Jurisdiction、LaunchMode 等枚举） |
 | `language.ts` | 多语言（中/英）切换 |
@@ -479,10 +496,16 @@ backend/harness/
                        │
       ▼
 ┌─────────────────────────────────────────────────┐
+│ 5.5 控制平面（task073，仅 Assessment pilot opt-in）│
+│    └─ repair 后执行 Citation Validity + Escalation │
+│       └─ WorkflowPipeline.before_render seam       │
+│          → 写 manifest → render                    │
 │ 6. 多格式导出                                    │
 │    ├─ Markdown（官方外评 + 内部审核两份）          │
-│    ├─ DOCX（Jinja2 + python-docx）               │
-│    ├─ PDF（Markdown → HTML → PDF）               │
+│    ├─ DOCX（当前正式链：Jinja2 + python-docx 模板） │
+│    ├─ PDF（当前正式链：Markdown/章节 → ReportLab）  │
+│    ├─ DocumentIR JSON（schema-first opt-in 时生成； │
+│    │   不代表正式 DOCX/PDF 已切换到 IR renderer）   │
 │    ├─ XLSX（问题清单 + 证据链 + 材料清单）          │
 │    └─ ZIP（全部产物打包）                          │
 └──────────────────────┬──────────────────────────┘
@@ -533,7 +556,19 @@ Pydantic 模型，作为 LLM Agent 流水线各阶段的数据传输对象。包
 | 前端测试 | `frontend/src/**/*.test.tsx` | 见前端 vitest | vitest |
 | 浏览器 E2E | `benchmarks/` | 11 模块浏览器契约 | Playwright |
 
-**全量后端回归（2026-08-13）：** `pytest backend/` = **1092 passed / 4 failed**。4 个失败均不涉及 harness，集中在 `pipia`（2 个，整改在途：`test_scc_evidence_drives_source_findings`、`test_certification_evidence_drives_path_findings`）、`reporting`（1 个，task068 新增 `test_docx_renderer.py::test_render_is_hash_stable`）与 `scc_review`（1 个，`test_uploaded_scc_document_drives_core_review`）。
+**回归口径（2026-08-16 重新生成）：**
+
+- 相关组合回归（task073 + citation + knowledge + 两个 Pilot + workflow）：
+  ```bash
+  .venv/bin/python -m pytest -q \
+    backend/common/legal_control backend/common/citation backend/common/knowledge/tests \
+    backend/domains/cn/security_assessment backend/domains/cn/transfer_diagnosis backend/common/workflow
+  # 378 passed（warning 为 Starlette/httpx 兼容性弃用提示）
+  ```
+- 前端：`vitest run` = **206 passed / 2 skipped**（`chunk load failed` 堆栈来自 LazyRouteErrorBoundary 预期错误边界用例，命令 exit 0）。
+- 类型/一致性：`tsc -b`、`scripts/build_source_registry.py --check`（120/120、0 drift）、`git diff --check` 均通过。
+
+历史全量基线（2026-08-13）为 `pytest backend/` = 1092 passed / 4 failed，且 2026-08-16 本轮未重跑全仓全量；该历史数字不能当作当前全仓绿灯声明，详见 `status/view/20260816_task073_DataComplyFlow_LegalAgent控制平面落实情况与最终验收报告.md`。
 
 ---
 
@@ -592,15 +627,17 @@ P0/P1 之后，项目按 `status/todo/` 的 task 序号持续推进。截至 202
 ai4law/
 ├── backend/                  # Python FastAPI 后端
 │   ├── api/                  # HTTP API (v0/v1)
-│   ├── common/               # 公共基础设施（16 子包）
-│   │   ├── citation/         # 引用系统 ⭐
+│   ├── common/               # 公共基础设施（17 子包）
+│   │   ├── citation/         # 引用系统 + canonical source identity ⭐
 │   │   ├── events/           # SSE 事件
 │   │   ├── knowledge/        # 知识库
+│   │   ├── legal_control/    # Legal Agent 控制平面（task073）⭐
 │   │   ├── llm/              # LLM 客户端与后处理 ⭐
+│   │   ├── observability/    # 日志、指标与健康检查
 │   │   ├── quality/          # 质量门（markdown_lint）
 │   │   ├── rag/              # 混合检索引擎
 │   │   ├── render/           # 报告渲染（底层转换器 + 模板）
-│   │   ├── reporting/        # 统一三格式同源渲染（task067/068）⭐
+│   │   ├── reporting/        # 统一三格式同源渲染（task067/068，DocumentIR v4）⭐
 │   │   ├── risk/             # 风险评估
 │   │   ├── runtime/          # 运行时配置
 │   │   ├── schema/           # 共享 Schema
@@ -644,4 +681,4 @@ ai4law/
 
 ---
 
-> 本文档由 Claude Code 基于 2026-08-07 `new` 分支代码库自动生成，覆盖 200+ Python 文件和 50+ TypeScript 文件；2026-08-13 已同步 task061–task069 落地后的结构变化（新增 `backend/harness/`、`backend/common/reporting/`，模块口径 10→11）。
+> 本文档由 Claude Code 基于 `new` 分支代码库生成，覆盖 200+ Python 文件和 50+ TypeScript 文件。2026-08-16 已重新生成：在 2026-08-07 初版与 2026-08-13（task061–task069）基础上，将 task073 控制平面（`backend/common/legal_control/`、17 子包）、RAG/Registry 纠偏（120 条来源、模板 fail-closed）、DocumentIR v4 与最新回归数字直接写入正文，移除尾部“历史快照 + 刷新章节”的双层结构。当前 HEAD `2df778bf`，另含未提交收尾工作树；相关技术验收边界与发布闭环状态见 `status/view/20260816_task073_DataComplyFlow_LegalAgent控制平面落实情况与最终验收报告.md`。

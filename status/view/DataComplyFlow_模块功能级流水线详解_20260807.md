@@ -1,9 +1,8 @@
 # DataComplyFlow 全栈模块功能级流水线详解
 
-> 审计日期：2026-08-07  
-> 最近更新：2026-08-13（同步 task061–task069 后的结构变化：`backend/harness/` 独立、`backend/common/reporting/` 统一三格式渲染、11 模块口径、pipia 新增案例）
-> 审计分支：`new`  
-> 覆盖范围：前端（React/TypeScript/Vite）+ 后端（Python/FastAPI）+ 配置层  
+> 审计日期：2026-08-16 · 基于 `new` 分支 HEAD `2df778bf`（另审计当前未提交工作树）
+> 文档性质：重新生成的独立流水线详解，代码事实优先于历史快照
+> 覆盖范围：前端（React/TypeScript/Vite）+ 后端（Python/FastAPI）+ 配置层
 > 结论口径：本文描述代码真实实现，非规划或期望
 
 ---
@@ -177,7 +176,7 @@ AppState = {
 | 面板 | `set_panel_state` | 用户拖拽/折叠 |
 | 引导 | `set_onboarding` | 引导完成 |
 
-**持久化**：每次 dispatch 后自动保存到 `localStorage[ai4law_app_state_v1]`。同时支持从后端 `/api/me/state` 远程恢复。
+**持久化**：每次 dispatch 后自动保存到本地快照。当前优先使用 `localStorage[ai4law_app_state_v2]`，仅在 v2 缺失时读取旧 `v1` 并裁剪迁移（`app-store.tsx:547-613`、`app-store-persistence.ts`）。同时支持从后端 `/api/me/state` 远程恢复；本地快照不是完整运行结果数据库。
 
 ### 2.3 API 层
 
@@ -579,11 +578,11 @@ async def get_task_status(task_id: str): ...
 
 ## 第五部分：公共基础设施层（后端）
 
-### 5.1 WorkflowPipeline — 18 步报告生成流水线
+### 5.1 WorkflowPipeline — 报告生成流水线（含 before_render 控制门 seam）
 
 **位置**：`backend/common/workflow/pipeline.py`
 
-使用 dependency injection 模式，由模块注入 15 个 Callable 函数来定制行为。
+使用 dependency injection 模式，由模块注入 Callable 函数来定制行为。当前共有 16 个注入点（含可选 `repair_chapters` 与 `before_render`）。
 
 ```
 Step  1: trace.record(request, payload)
@@ -601,22 +600,24 @@ Step 12: chapters = generate_chapters(profile, regs, pack)← 模块注入
 Step 13: consistency_issues = check_consistency()        ← 模块注入
 Step 14: alignment_issues = check_alignment()            ← 模块注入
 Step 15: [可选] chapters, issues, blocked = repair_chapters()
-Step 16: manifest = trace.write_manifest()
-Step 17: outputs = render_artifacts(...)
-Step 18: return WorkflowRunResult
+Step 16: [可选] before_render(chapters, issues, pack, trace)  ← task073 控制门 seam
+Step 17: manifest = trace.write_manifest()
+Step 18: outputs = render_artifacts(...)
+Step 19: return WorkflowRunResult
 ```
 
 **关键细节**：
-- 每一步都有 `trace.record()` 形成完整事件链
+- 请求、profile、diagnosis、path、facts、retrieval、issues、evidence、ContextPack、章节、一致性、对齐和 repair 等主要阶段通过 `trace.record()` 留痕；`attachment_notes` 没有独立事件，`before_render` 由回调按需记录控制门，最终 `return` 也不是 Trace 事件
 - Step 15 repair 只执行一次，非迭代至收敛
 - `repair_blocked` 标记后仍继续执行 `render_artifacts()`
 - `per_issue_rag` 可选注入，用于高风险 issue 的二次检索
+- Step 16 `before_render` 是 task073 新增的默认关闭 seam（`pipeline.py:42,173-183`），只在 Assessment pilot 显式注入；用于在 repair 后、render 前执行 Citation Validity 与 Escalation 控制门，使最终门看到 repair 后正文，并在写 manifest / 生成制品前落控制结论。`before_render=None` 保持公共 Pipeline 原默认行为，EU SCC / US14117 / CN Flow 不受影响。
 
 **使用者**（4 个模块）：
 
 | 模块 | 完整度 | 差异 |
 |------|:---:|------|
-| assessment | ✅ | 注入 repair + per_issue_rag(DeliLegal) |
+| assessment | ✅ | 注入 repair + per_issue_rag(DeliLegal) + before_render（仅 control 开启时） |
 | eo14117 | ✅ | 注入 per_issue_rag(5 Agent) |
 | eu_scc | ✅ | 部分函数依赖外部 rule_result |
 | cn_flow | ⚠️ | `_build_context_pack()` 参数断链 |
@@ -665,17 +666,19 @@ RegulationRAGService.retrieve(query, jurisdiction, path, filters, top_k) → Lis
 6. [可选] 远程补充  → DeliLegal search_laws()（本地结果不足时）
 ```
 
-**索引架构 (v3.1)**：
+**索引架构 (v3.2，16 个索引)**：
 ```
 storage/rag/v3/
-├── cn/legal/     → 中国法规
-├── cn/workflow/  → 中国工作流
-├── eu/legal/     → 欧盟法规
-├── eu/workflow/
-├── us/legal/     → 美国法规
-├── us/workflow/
-└── testcase/     → L3 层（production 禁止使用）
+├── legal_index_cn.vector.json       → 中国法律条文
+├── workflow_index_cn.vector.json    → 中国业务规则
+├── standard_clause_index_cn.vector.json → 中国标准合同条款
+├── template_index_cn.vector.json    → 中国模板结构
+├── testcase_index_cn.vector.json    → 中国测试案例
+├── （eu / us 各 5 个同构索引）
+└── legal_index_intl.vector.json     → JP/KR/MY/HK/VN/SG/TW/MO 区域法规（仅法规）
 ```
+
+`schema_version = "v3.2"`（`backend/common/rag/constants.py`），`build_chunk_sets()` 返回 16 个索引（`orchestrator.py:654`）。
 
 **当前弱点**：
 - 中文离题查询拦截不足
@@ -699,35 +702,51 @@ storage/rag/v3/
   7. build_external_citation_map_section() → 外部视图（过滤低置信引用）
 ```
 
-**CitationItem 关键字段**：`source`, `article_id`, `quote`, `source_url`, `confidence`(HIGH/MEDIUM/LOW), `purpose`(legal_evidence/supporting/template), `associated_issue_ids`, `associated_fact_ids`
+**CitationItem 关键字段**：`citation_id`、`source_id`、`registry_source_id`、`citation_type`、`title`、`article_no`、`quote_text`、`related_issue_ids`、`related_fact_ids`、`related_evidence_ids`、`confidence_score`、`authority_level`、`binding_force`、`allowed_usage`、`can_enter_external_report`、`source_url` 等。
 
-**引用跳转**：`can_jump=true` 需 `article_id` 精确匹配 AND `source_url` 非空。当前安全评估 precision 约 14.3%。
+**引用跳转**：`can_jump` 不是 `CitationItem` 本体字段，而是 `backend/common/citation/output.py` 规范化脚注/API 输出时产生的派生字段；只有解析结果达到 `resolution_type == "exact_article"` 才为 `true`，否则同时输出失败原因。不得把 RAG 原始 `article_id`、CitationItem 的 `article_no` 和 API 输出层的 `can_jump` 混成同一契约。
 
 ### 5.5 中间结构 (Fact → Issue → Evidence → ContextPack)
 
+> 以下字段以 `backend/common/workflow/{facts,issues,evidence,context_pack}.py` 的真实 Pydantic 模型为准。设计文档明确禁止引用 `EvidenceItem.citation_refs / status / strength` 等**不存在**的字段。
+
 ```
 FactItem (facts.py)
-  ├── field_path, value, provenance(USER_INPUT/RULE_DERIVED/LLM_INFERENCE)
-  ├── confidence(HIGH/MEDIUM/LOW), evidence_status(CONFIRMED/UNVERIFIED/DISPUTED)
-  └── legal_implication
+  ├── fact_id, source_type(FactSourceType), source_ref, field_path
+  ├── value, normalized_value
+  ├── confidence(float), evidence_status(EvidenceStatus)
+  ├── supporting_material_refs[]
+  ├── can_support_external_positive_claim(bool)
+  ├── requires_user_confirmation(bool), notes
+  └── jurisdiction
 
 IssueItem (issues.py)
-  ├── issue_id, category, severity(BLOCKER/HIGH/MEDIUM/LOW)
-  ├── certainty(CONFIRMED/LIKELY/POSSIBLE)
-  ├── fact_refs[], regulation_refs[]
-  └── description, finding, recommendation, action_items[]
+  ├── issue_id, title, description, category(IssueCategory)
+  ├── severity(IssueSeverity: BLOCKER/HIGH/MEDIUM/LOW)
+  ├── issue_certainty(IssueCertainty)
+  ├── fact_refs[], rule_refs[], evidence_refs[]
+  ├── recommended_action, affects_outputs[], missing_materials[]
+  ├── internal_review_required, external_report_strategy_required
+  └── can_enter_external_report
 
 EvidenceItem (evidence.py)
-  ├── evidence_id, claim, conclusion
-  ├── fact_refs[], rule_refs[], citation_refs[]
-  ├── document_refs[], strength(STRONG/MODERATE/WEAK)
-  └── status(VERIFIED/UNVERIFIED)
+  ├── evidence_id, claim, conclusion, confidence(float)
+  ├── fact_refs[], rule_refs[], issue_refs[]
+  ├── legal_basis[](list[CitationBinding])
+  ├── supporting_basis[](list[CitationBinding])
+  ├── discarded_basis[](list[dict])
+  ├── document_refs[](list[DocumentRef])  ← 正常链中通常为空，仅记 DOCUMENT_TRACE_GAP
+  ├── rag_query_used, rag_hits_count
+  └── usage_constraint, used_by[]
 
 GenerationContextPack (context_pack.py)
-  ├── task_id, facts[], regulations[], issues[], evidence_chain[]
-  ├── diagnosis, path_warning, attachment_notes[]
-  ├── per_issue_rag (dict)
-  └── citation_registry
+  ├── module_key, request_id, facts[], regulations[], issues[], evidence_chain[]
+  ├── diagnosis_result, path_warning, attachment_notes[]
+  ├── legal_grounding, case_grounding, writing_strategy
+  ├── generation_basis_pack, citation_registry
+  ├── legal_grounding_context[], workflow_rule_context[], template_context[]
+  ├── evaluation_context[], compliance_reasoning[]
+  └── control_gate_results[]  ← task073 additive：未启用控制时为空列表
 ```
 
 **模块复用程度**：
@@ -807,14 +826,23 @@ DiagnosisFormValues → buildDiagnosisPayload()
 
 **后端**：
 ```
-DiagnosisService.evaluate(answers, trace)
-  ├── 4 Agent (important_data → pi_classify → exemption → clarification)
-  ├── 9 规则决策树 (decision_tree.json)
+DiagnosisService.evaluate(answers, trace, control=None)
+  ├── _resolve_answers() → provenance / missing_facts
+  ├── 3 个主链 Agent (important_data → pi_classify → exemption)
+  │     (clarification 已注册但 V1 主链未调用；澄清走预定义问题模板)
+  ├── facts_from_module() → DiagnosisFacts
+  ├── _validate_fact_consistency() → 冲突转人工复核
+  ├── [control=true] Fact Completeness Gate
+  ├── 9 规则决策树 (decision_tree.json) → RuleMatch
   │     Rule 0-4: 豁免规则 (无PI/合同/HR/紧急/法定义务)
   │     Rule 5-8: 强制规则 (CIIO/重要数据/100万PI/1万SPI)
-  │     default:  SCC 或认证
-  └── → DiagnosisResult {recommended_path, risk_level, confidence, ...}
+  │     default:  SCC 或认证 / AI 推测
+  ├── [control=true] Rule Precedence Gate（读取 RuleMatch）
+  └── → DiagnosisResult {recommended_path, risk_level, confidence,
+                          control_decision?, clarification_questions?}
 ```
+
+**控制平面（task073）**：`control` 默认 `None`（关闭）；`DiagnosisReportRequest.control: bool = false` 由 `router.py` 透传给 `service.evaluate(..., control=...)`。前端 `buildDiagnosisPayload()` 显式发送 `control: true`。`legal_control_status` 与 `task state` 分离，critical missing → `NEEDS_CLARIFICATION`，决定性推断/冲突 → `NEEDS_REVIEW`。
 
 ### 6.3 assessment — 安全自评估
 
@@ -828,17 +856,21 @@ AssessmentFormValues → buildAssessmentPayload()
 
 **后端**：
 ```
-AssessmentService.generate_report(payload, task_id, trace)
+AssessmentService.generate_report(payload, task_id, trace, control=None)
   ├── payload → 拆解为 DiagnosisAnswers → 调 DiagnosisService 做路径诊断
-  ├── 构造 WorkflowPipeline(15 Callable)
+  ├── 构造 WorkflowPipeline(16 注入点)
   │     ├── retrieve_regulations → RAG 中国数据出境法规
   │     ├── retrieve_per_issue → HIGH/BLOCKER issue 调 DeliLegal
+  │     ├── _build_context_pack → [control=true] Evidence Sufficiency Gate（E1-E5）
   │     ├── generate_chapters → 8 章 (公司概况→数据链路→法律分析→
   │     │    风险评估→安全措施→权利保护→应急响应→结论)
   │     ├── check_consistency(+alignment) → 一致性检查
-  │     └── repair_chapters → 修复一次
+  │     ├── repair_chapters → 修复一次
+  │     └── before_render → [control=true] Citation Validity + Escalation 门
   └── render → 23 项产物 (MD/DOCX/PDF/XLSX/JSON/ZIP + internal/official 双视图)
 ```
+
+**控制平面（task073）**：`control` 默认 `None`，`AssessmentRequest.control: bool = false` 由 service 读取 `payload.control`，异步任务保存完整 payload 自然继承开关。Evidence Gate 在 ContextPack 构造后、generate 前；Citation Validity + Escalation 在 repair 后、manifest/render 前（`WorkflowPipeline.before_render` seam）。未注册/ineligible 来源 fail-closed，`legal_control_status` 与 `task state` 分离。
 
 ### 6.4 pipia — 个人信息保护影响评估
 
@@ -1079,8 +1111,8 @@ CPRAService.generate_report(payload, task_id, trace)
 
 | 前端 moduleKey | 前端表单组件 | Payload Builder | 后端 Service | 后端 Pipeline | 后端 Agent 数 |
 |:---|:---|:---|:---|---:|:---:|
-| diagnosis | 5 步 wizard | `buildDiagnosisPayload` | `DiagnosisService` | ❌ 专用规则树 | 4 |
-| assessment | 整合表单 | `buildAssessmentPayload` | `AssessmentService` | ✅ WorkflowPipeline | 0（15 Callable） |
+| diagnosis | 5 步 wizard | `buildDiagnosisPayload` | `DiagnosisService` | ❌ 专用规则树 | 3（主链，+1 注册未调用） |
+| assessment | 整合表单 | `buildAssessmentPayload` | `AssessmentService` | ✅ WorkflowPipeline | 0（16 注入点） |
 | pipia | 整合表单 | `buildPipiaPayload` | `PIPIAService` | ❌ 专用 | 0 (规则式) |
 | review | 文件+表单 | `buildDocumentReviewPayload` | `ReviewService` | ❌ 8阶段专用 | 0（4 专用审查器） |
 | eu_scc | 整合表单 | `buildEuSccPayload` | `EU_SCCService` | ✅ WorkflowPipeline | 6 |
@@ -1138,7 +1170,7 @@ CPRAService.generate_report(payload, task_id, trace)
 
 | 层级 | 模块 | 特征 |
 |------|------|------|
-| **L1 — 公共 Pipeline 贯穿** | assessment | 15 Callable 全注入 + repair + per_issue_rag(DeliLegal) + 23 产物 + 双视图 |
+| **L1 — 公共 Pipeline 贯穿** | assessment | 16 个注入点 + repair + per_issue_rag(DeliLegal) + before_render（control opt-in）+ 23 产物 + 双视图 |
 | | eo14117 | 1100行规则引擎 + 红黄绿灯 + 5 Agent per_issue + 10+ 产物 |
 | **L2 — 公共 Pipeline 有伤** | eu_scc | 6 Agent + uuid 断链 |
 | | cn_flow | context_pack 参数断链 + system prompt 法域污染 |
@@ -1147,12 +1179,12 @@ CPRAService.generate_report(payload, task_id, trace)
 | | pipia | 独立 service + 附件证据 + 备案准备度 |
 | **L4 — 专用链，双模式** | bcr | 文档驱动/表单驱动双线 + 10 Agent |
 | | tia | 确定性评估 + 3 Agent + 静态 riskbook |
-| **L5 — 独立体系** | diagnosis | 9 规则决策树 + 4 Agent + 5 步 wizard |
+| **L5 — 独立体系** | diagnosis | 9 规则决策树 + 3 个主链 Agent（另有 1 个 clarification Agent 已注册但 V1 未调用）+ 5 步 wizard |
 | | review | 8 阶段独立链 + SQLite 持久化 + WebSocket + 4 专用审查器 |
 
 ---
 
-## 第八部分：最新进度（2026-08-13 补充）
+## 第八部分：近期落地进度（2026-08-13 → 2026-08-16）
 
 自 2026-08-07 审计以来，流水线层面的关键结构变化：
 
@@ -1173,13 +1205,23 @@ CPRAService.generate_report(payload, task_id, trace)
 - **模块口径**：`config/module_registry.json` 为 **11 个模块**（`cn.scc_review` 已退役），与本文第六/七部分一致。
 - **CLI 案例**：`config/case_inventory.json` = **26 CLI 案例 / 603 断言 / 28 前端案例**。
 - **pipia 新增案例**：`04_hr_exemption`、`05_certification_eurocert` 已加入，当前 `pipia` 全量 CLI = 3 PASS / 2 FAIL（`02_source_case_missing_scc`、`05_certification_eurocert` 失败，为 pipia 整改在途，非 harness 迁移引入）。
-- **全量后端回归**：`pytest backend/` = 1092 passed / 4 failed（4 失败分布见 `DataComplyFlow_项目整体架构说明` §6.6）。
+- **全量后端回归（2026-08-13 历史基线）**：`pytest backend/` = 1092 passed / 4 failed。2026-08-16 本轮未重跑全仓全量；相关组合回归（task073 + citation + knowledge + 两个 Pilot + workflow）为 **378 passed**，前端 **206 passed / 2 skipped**，`tsc -b`、Registry `--check`、`git diff --check` 通过。
 
 ### 8.4 JP/KR 来源隔离（task065）
 
 - 10 个 JP/KR source 标记 `metadata_review_required`，从正式法律结论与条文号引用中隔离（registry / `legal_index_intl` / Evidence Center 三处透传 `can_be_cited=False`）。
 - 裁决表 `status/check/task065/jp_kr_source_adjudication.csv`（14 行）与待建 source 提议表（8 行）待法律专家签署后执行第四阶段统一重建；签署前隔离态持续生效。
 
+### 8.5 Legal Agent 控制平面（task073，2026-08-16）
+
+- 新增 `backend/common/legal_control/`（`contracts.py` + `trace.py`），五类 Gate 与 `legal_control_status` 状态聚合，`task state` 严格分离。
+- Diagnosis pilot：`control` opt-in + Fact Completeness / Rule Precedence / Escalation，见 §6.2。
+- Assessment pilot：Evidence Sufficiency（ContextPack 后）+ Citation Validity + Escalation（repair 后、render 前，经 `before_render` seam），见 §6.3。
+- 模板来源治理纠偏：`doc_type=template` → `can_be_cited=false`、`can_enter_external_report=false`、`allowed_usage=["structure_control","internal_review"]`。
+- 报告 IR 链路：`DocumentIR` schema `4.0`；`common/reporting` 的 DOCX/PDF/Markdown renderer 可直接消费 IR（PDF 用 ReportLab 固定布局，DOCX 用原生 Word XML，未知 block/profile fail-closed）。业务模块是否把 IR renderer 作为正式输出由 feature flag 控制；CN Security Assessment 当前 schema-first 默认关闭，开启时也仍由旧模板/`common/render` 生成正式 DOCX/PDF，不能写成全平台已经完成正式切换。
+- 前端本地快照：优先 `ai4law_app_state_v2`，旧 `v1` 只读迁移。
+- 当前只贯通两个 Pilot，其余 9 个模块默认不启用；生产灰度、数据/法律签字、回滚演练仍未完成，详见 `status/view/20260816_task073_DataComplyFlow_LegalAgent控制平面落实情况与最终验收报告.md`。
+
 ---
 
-> **文档维护**：本文覆盖前后端全部 11 个模块的完整交互链路。与 `CURRENT_AI4Law_项目事实基线与真实系统理解.md`（基线条目化）和 `CURRENT_DataComplyFlow_全功能运行验证与问题汇报_20260805.md`（功能状态与问题）形成互补；2026-08-13 已同步 task061–task069 后的结构变化（新增第八部分）。
+> **文档维护**：本文覆盖前后端全部 11 个模块的完整交互链路。与 `CURRENT_AI4Law_项目事实基线与真实系统理解.md`（基线条目化）和 `CURRENT_DataComplyFlow_全功能运行验证与问题汇报_20260805.md`（功能状态与问题）形成互补。2026-08-13 已同步 task061–task069 的结构变化（新增第八部分）；2026-08-16 已同步 task065/task067/task068/task073 的事实（JP/KR 来源隔离、统一报告渲染层、Legal Agent 控制平面），并织入第六、八部分正文。
