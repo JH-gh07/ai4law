@@ -10,8 +10,8 @@
 ## 0. 一句话结论
 
 控制平面以**加性（additive）、opt-in**方式落地于两个 pilot 模块——CN Transfer Diagnosis 与 CN Security Assessment，
-未修改公共 `WorkflowPipeline` 默认行为；契约、trace、canonical identity、三个 Assessment 门、前端 UI 均已实现并有测试/运行证据。
-后端全量回归 1295 passed / 9 failed（9 个失败均为与 task073 无关的历史遗留，见 §7）；task073 相关子集 341 passed；前端 vitest 200 passed / 2 skipped，`tsc -b` 通过，`git diff --check` 清洁。
+公共 `WorkflowPipeline` 新增默认关闭的 `before_render` 生命周期钩子，只有 Assessment pilot 启用；契约、trace、canonical identity、三个 Assessment 门、API opt-in 与前端 UI 均已实现并有测试/运行证据。
+2026-08-16 收尾复验：task073 与知识治理组合子集 378 passed；前端 vitest 205 passed / 2 skipped，`tsc -b` 通过，Registry 缓存零漂移，`git diff --check` 清洁。此前全量基线 1295 passed / 9 failed 仅作为历史记录保留，未在本轮重跑。
 
 ---
 
@@ -23,10 +23,11 @@
 | `9d021b97` | Phase 1-4：契约/聚合 + trace + CN Transfer Diagnosis 控制适配器 + Assessment canonical identity |
 | `124e6852` | Phase 5-6：Assessment Evidence + Citation Validity + Escalation 门 |
 | `464c5b1a` | Phase 7：前端呈现 Legal Agent 控制状态（T09） |
+| `2df778bf` | Phase 8：FACT 刷新与设计-实现差异记录（T10） |
 
-最终 HEAD：`464c5b1ac6bf54c8df02dda82d52fd412f393ae0`
+2026-08-16 收尾复验基准 HEAD：`2df778bf`。API opt-in、render 前门禁、模板引用策略及本次文档刷新当前位于工作树，尚未提交；不得把这些改动写成已进入 HEAD。
 
-变更规模（`c444d081..HEAD`）：34 文件，+3097 / -29。
+原 Phase 1-8 提交范围以 `c444d081..2df778bf` 为准；本轮收尾范围以当前 `git diff` 为准。
 
 ---
 
@@ -70,12 +71,12 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 
 ---
 
-## 4. opt-in 机制（不修改共享 Pipeline 默认行为）
+## 4. opt-in 机制与 render 前门禁
 
-- **Diagnosis**：`DiagnosisService.evaluate(..., control=True)` 显式 opt-in；`control_adapter.py` 为纯函数，由 service 在 result 完成后调用并写回 `result.control_decision`/`result.clarification_questions`。
-- **Assessment**：`AssessmentService.generate_report(..., control: bool | None = None)`；`_build_pipeline` 通过**闭包**把 `control` 传入 `_build_context_pack`，**不存储在 singleton service 上**，避免跨请求串状态。
+- **Diagnosis**：`DiagnosisReportRequest.control` 默认 `false`，报告 API 将其传给 `DiagnosisService.evaluate`；前端 pilot builder 显式发送 `true`。服务层仍支持 `evaluate(..., control=True)`，且不保存请求状态。
+- **Assessment**：`AssessmentRequest.control` 默认 `false`；`generate_report` 在未显式覆盖时读取请求值，异步提交因保存完整 payload 而自然继承开关；前端 pilot builder 显式发送 `true`。
 - `control=False/None` 时：`control_gate_results` 保持空列表，`control_decision=None`，输出与事件顺序与基线一致（`test_control_service.py`、`test_schema_additive_compat.py` 覆盖）。
-- 公共 `WorkflowPipeline` 默认签名/事件顺序**未改**；EU SCC / US14117 的 `render_artifacts` 使用 `**kw` 吸收多余 kwargs（Phase 1 已核验）。
+- `WorkflowPipeline.before_render` 是 optional/default `None`；Assessment 在 repair 后调用 Citation Validity 与 Escalation，再写 manifest、再 render。其他调用者不传该钩子，默认事件与输出行为不变。
 
 ---
 
@@ -86,10 +87,9 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 - fail-closed：`review_status=metadata_review_required` 或 `can_be_cited=False`→`INELIGIBLE`；未命中→`UNREGISTERED`，**绝不 fuzzy 提升**；权威值只来自 `SourceRegistryEntry`，不从 chunk 复制第二真相源。
 - `_build_context_pack` 中 `source_identity_resolver = SourceIdentityResolver() if control else None`，传给 `build_citations(..., source_identity_resolver=...)`。
 
-> ⚠️ 数据治理观察（待法律/数据复核，记录不修）：SourceRegistry 中 `CN-TPL-019` 结构化字段为
-> `can_be_cited=true`、`can_enter_external_report=true`、`allowed_usage=["legal_grounding","external_report","internal_review"]`，
-> 但 `metadata.usage="结构参照"`、`metadata.report_usage="用于结构参照，不直接作为法律依据"`。
-> 两者与方案"不得提升为实体法依据"的意图存在口径差异；本实现**忠实按结构化字段**判定（fail-closed 边界在 metadata 层未收敛）。此项为数据侧待办，不影响本阶段代码验收结论。
+> 2026-08-16 已完成数据口径纠偏：Registry 生成器识别 `doc_type=template`，统一输出
+> `can_be_cited=false`、`can_enter_external_report=false`、`allowed_usage=["structure_control","internal_review"]`。
+> `CN-TPL-019` 及同类模板因此仍可参与结构控制，但不能作为实体法律依据；`scripts/build_source_registry.py --check` 显示 120 条、0 field delta。最终法律责任人签字仍保留。
 
 ---
 
@@ -122,8 +122,8 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 
 | 范围 | 命令 | 结果 |
 |---|---|---|
-| task073 相关子集 | `.venv/bin/python -m pytest -q backend/common/legal_control backend/common/citation backend/domains/cn/security_assessment backend/domains/cn/transfer_diagnosis backend/common/workflow` | **341 passed** |
-| 全量 | `.venv/bin/python -m pytest -q`（testpaths=backend+benchmarks） | **1295 passed / 9 failed** |
+| 2026-08-16 组合复验 | `.venv/bin/python -m pytest -q backend/common/legal_control backend/common/citation backend/common/knowledge/tests backend/domains/cn/security_assessment backend/domains/cn/transfer_diagnosis backend/common/workflow` | **378 passed** |
+| 历史全量基线（2026-08-15，未在本轮重跑） | `.venv/bin/python -m pytest -q`（testpaths=backend+benchmarks） | **1295 passed / 9 failed** |
 
 9 个失败均为**与 task073 无关的历史遗留**，逐一核验不在 `c444d081..HEAD` 变更集内：
 
@@ -140,7 +140,7 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 | 项 | 结果 |
 |---|---|
 | `npx tsc -b` | 通过（无类型错误） |
-| `npx vitest run` | **200 passed / 2 skipped**（32 files passed / 1 skipped） |
+| `npx vitest run` | **205 passed / 2 skipped**（32 files passed / 1 skipped） |
 | `git diff --check` | 清洁（exit 0） |
 
 ---
@@ -159,7 +159,8 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 |---|---|---|---|---|---|
 | 试点范围 | 5 门通用控制平面，覆盖多模块 | 5 门仅落地 2 个 pilot（CN Transfer Diagnosis + CN Security Assessment） | 未做 11 模块迁移 | 方案明确"非目标：11 模块迁移"；先 pilot 验证 | 无跨模块回归风险 |
 | FACT/RULE 门归属 | 通用 gate | Diagnosis 专用 `control_adapter.py` 纯函数 | 未上收为通用 Pipeline 门 | 保持 Domain Workflow 自治（P3） | Diagnosis 独立 opt-in |
-| Evidence/Citation/Escalation 门归属 | 插入 Pipeline 阶段 | Assessment-specific adapter 显式调用；Citation Validity 在 `pipeline.run()` **之后**读最终章节做只读校验 | 未改公共 Pipeline 阶段顺序 | 避免修改共享 Pipeline 默认行为；fail-closing 在 `_build_context_pack` 前已完成 | 公共 Pipeline 零回归 |
+| Evidence/Citation/Escalation 门归属 | Citation final gate 位于 repair 后、render 前 | `WorkflowPipeline` 新增默认空 `before_render` 钩子，Assessment-specific adapter 启用 | 相比初版实现由 run 后移入明确生命周期 seam | run 后校验无法约束制品且不在既有 manifest 内；默认空钩子保持其他模块不变 | D08 顺序恢复，组合回归 378 passed |
+| Pilot API 可达性 | opt-in 且默认关闭 | 两个 Request 增 default-false `control`；前端两个 builder 发 `true` | 初版仅 service 测试可启用，现已贯通 sync/async API | 没有请求契约时生产入口永远返回 `control_decision=null` | 旧客户端兼容，当前前端启用 pilot |
 | BLOCK/BLOCKED | 保留契约 | 契约保留，pilot 不主动触发 BLOCK | 无 pilot 触发 BLOCK 的路径 | `BLOCKED` 保留契约供后续 fail-closed 硬阻断 | 无 |
 | canonical identity | 需建立 | `SourceIdentityResolver` exact membership + fail-closed | 无 fuzzy 提升 | Eligibility 只能 exact（升级触发器） | C2 可精确回查 |
 | Trace | 复用 trace | 复用 `TraceRecorder.record`，`control.*` raw_name，不扩展 SSE union | 无新 event type | 前端 trace 面板与 SSE 契约稳定 | 旧事件顺序不变 |
@@ -171,4 +172,4 @@ Gate outcome（4）：`PASS`、`CONDITIONAL`、`ESCALATE`、`BLOCK`。
 
 - T01-T10 出口条件均有测试/运行证据（关键路径正负 fixture 齐备：`test_contracts.py`、`test_trace.py`、`test_control_adapter.py`、`test_evidence_gate.py`、`test_citation_validity_gate.py`、`test_escalation_gate.py`、`test_control_service.py` ×2、`test_schema_additive_compat.py`、`test_source_identity.py`、`test_citation_identity.py`）。
 - 默认关闭回归：未传 `control` 时结果与 trace 与基线一致（`test_control_off_has_no_control_decision` + 全量子集无新增失败）。
-- 剩余数据治理待办（§5 注）与 9 个历史遗留失败不在本 task073 收口范围内，已如实记录，不写成"已完成"。
+- 技术实现和代码验收已完成；剩余项是数据/法律责任人签字及生产灰度、回滚演练，不能由单元测试代签。

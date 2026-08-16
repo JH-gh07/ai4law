@@ -1564,11 +1564,13 @@ IMPLEMENTED
 VALIDATED
 ```
 
+2026-08-16 状态：两个 pilot 已达到 `IMPLEMENTED / TECHNICALLY_VALIDATED`。实际实现补充了 default-false 请求开关、前端显式 opt-in，以及 `WorkflowPipeline.before_render` 可选 seam，从而满足 `repair → Citation Validity → Escalation → render`。组合后端回归 378 passed，前端 205 passed / 2 skipped，`tsc -b` 与 Registry 零漂移检查通过。生产发布、数据/法律签字和回滚演练仍未完成。
+
 ---
 
 # 18. Final Development Verdict
 
-> **V0.3 已吸收开发事实审查的所有重大实现级修订，可以作为首轮开发实施合同。**
+> **V0.3 首轮两个 pilot 已完成技术实现与代码验收；当前可进入数据/法律签字和受控灰度，不代表已经生产发布。**
 
 实施过程中如果某个 Gate 需要大规模改造现有业务链才能落地：
 

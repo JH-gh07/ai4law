@@ -1,284 +1,349 @@
-# task073：DataComplyFlow Legal Agent 控制平面实施与验收方案
+# task073：DataComplyFlow Legal Agent 控制平面落实情况与剩余验收方案（重生成版）
 
-日期：2026-08-15  
-依据：`status/todo/DataComplyFlow_LegalAgent架构升级_设计依据与架构决策_最终版.md`（V0.3）、`status/todo/DataComplyFlow_LegalAgent架构升级_实施设计与开发说明_最终版.md`（V0.3）、`docs/tmp/DataComplyFlow_LegalAgent架构升级_开发事实与可行性审查_V0.1.md`。  
-状态：待实施；本文件是开发合同、证据清单、验收标准和回滚预案，不等同于已完成实现。
+重生成日期：2026-08-16
 
-## 0. 目标与不可变约束
+原任务日期：2026-08-15
 
-本任务在现有 Domain Workflow 上叠加轻量 Legal Agent Control Plane，首轮只实现两个 pilot：CN Transfer Diagnosis 和 CN Security Assessment。目标链路为：
+核对基准：提交 `2df778bf` + 2026-08-16 当前未提交工作树
+
+设计依据：
+
+- `status/todo/DataComplyFlow_LegalAgent架构升级_设计依据与架构决策_最终版.md`（V0.3）
+- `status/todo/DataComplyFlow_LegalAgent架构升级_实施设计与开发说明_最终版.md`（V0.3）
+- `status/view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`
+
+文档定位：本文件是基于代码、测试、提交记录和当前工作树重新生成的独立落实报告与收尾验收合同。它替代 task073 原稿作为当前执行口径，不把“代码存在”“测试通过”“已提交”“业务验收”“生产发布”混写成一个“完成”。
+
+## 0. 结论先行
+
+当前准确裁决为：
+
+> **IMPLEMENTED_IN_WORKTREE / TECHNICALLY_VALIDATED / NOT_COMMITTED / ACCEPTANCE_PENDING / NOT_RELEASED**
+
+换成中文：两个 pilot 的核心控制平面已经在当前工作树中实现，针对性技术验证通过；但关键收尾修复尚未提交，数据/法律责任人尚未签字，生产灰度和回滚演练尚无证据，因此 task073 不能标记为“全部完成”或“已发布”。
+
+| 维度 | 当前状态 | 判定依据 |
+|---|---|---|
+| 架构设计 | `FINAL` | V0.3 已冻结 D01-D18 和两个 pilot 边界 |
+| 核心门禁代码 | `COMMITTED` | `9d021b97`、`124e6852` |
+| 前端控制状态展示 | `COMMITTED` | `464c5b1a` |
+| 产品入口显式 opt-in | `IMPLEMENTED_IN_WORKTREE` | Diagnosis/Assessment 请求 `control=false` 默认值及前端 `control:true` 尚未提交 |
+| Citation/升级门正确生命周期 | `IMPLEMENTED_IN_WORKTREE` | `WorkflowPipeline.before_render` 和 Assessment 接入尚未提交 |
+| 技术验证 | `PASSED_WITH_KNOWN_BASELINE_FAILURES` | task073 组合回归 378 passed；另有 EU SCC 1 个、Harness 3 个既有失败 |
+| 数据/法律验收 | `PENDING` | 无责任人签字记录 |
+| 灰度与回滚 | `PENDING` | 无生产灰度记录和回滚演练证据 |
+| 生产状态 | `NOT_RELEASED` | 不得以本地测试代替发布证据 |
+
+### 0.1 已经真正落实的内容
+
+1. 已建立独立 Legal Control 契约、状态优先级和 `required_actions`，没有复用 Reporting 同名 `GateResult`。
+2. CN Transfer Diagnosis 已接入事实完整性、确定性规则优先级和控制决策聚合。
+3. CN Security Assessment 已接入 Evidence Sufficiency、Citation Validity 和 Escalation。
+4. Citation 已使用 exact `SourceRegistry` identity，未注册或不合格来源 fail-closed，不使用 title fuzzy join 作为治理身份。
+5. `legal_control_status` 与程序 `state/task_status` 分离，允许 `COMPLETED + NEEDS_REVIEW`。
+6. Trace 使用 `control.*` raw name，未扩展既有 SSE event type；前端可显示复核、补充事实和条件结论。
+7. 当前工作树已补齐两个 pilot 的请求开关、前端显式启用以及 repair 后、render 前门禁时序。
+
+### 0.2 尚未落实或尚未闭环的内容
+
+1. 2026-08-16 的关键收尾代码仍在未提交工作树，HEAD `2df778bf` 本身不是完整可发布实现。
+2. `POST /diagnosis/report` 已有 `control` 请求字段，但 `POST /diagnosis/evaluate` 仍接收裸 `DiagnosisAnswers`，没有 API 级 opt-in；必须明确“只支持报告入口”或补齐该端点。
+3. Assessment 虽会随完整 payload 继承 async `control`，但尚缺一条 `control=true` 的异步端到端断言。
+4. 当前未重新执行全仓测试；历史全量结果 `1295 passed / 9 failed` 只能作为历史基线，不能冒充本轮结果。
+5. EU SCC 仍有 1 个历史引用标签失败，Harness 仍有 3 个案例清单/前端库存漂移失败；虽非 task073 引入，但发布验收必须有修复或书面豁免。
+6. 数据/法律签字、灰度观察、回滚演练和最终发布签字均未完成。
+
+## 1. 范围与验收边界
+
+本轮只验收两个 pilot：
+
+- Pilot A：CN Transfer Diagnosis
+- Pilot B：CN Security Assessment
+
+本轮不包含 11 模块全面迁移、Unified Runtime、完整 Evidence Graph、语义 entailment verifier、LLM Citation Judge、完整 HITL pause/resume runtime 或 Reporting 重写。未做这些事项不算 task073 缺陷；把未列入范围的能力宣传成已具备则属于验收失败。
+
+必须持续满足以下硬边界：
+
+1. `control` 默认关闭；旧调用方不传控制字段时保持原行为。
+2. 所有共享模型变更 additive/default-safe。
+3. per-run `ControlDecision` 不进入 singleton service 状态。
+4. non-default RuleMatch 才能锁定 deterministic path；default 分支保留 AI inference 语义。
+5. Evidence Gate 位于 ContextPack 完成后、生成前。
+6. Citation Validity 和 Escalation 位于 repair 后、manifest/render 前。
+7. Citation eligibility 只认 exact SourceRegistry lookup。
+8. `NEEDS_REVIEW`、`NEEDS_CLARIFICATION` 不得映射为程序 `FAILED`。
+
+## 2. T01-T10 落实矩阵
+
+状态含义：`DONE` 表示已提交且有证据；`DONE_IN_WORKTREE` 表示当前代码已实现并验证但尚未提交；`PARTIAL` 表示主链成立但验收面仍有缺口；`PENDING` 表示尚无完成证据。
+
+| Task | 原定目标 | 实际落实 | 状态 | 剩余动作 |
+|---|---|---|---|---|
+| T01 Core Contract | GateResult、ControlDecision、状态与动作 | `backend/common/legal_control/contracts.py` 已实现独立契约、显式优先级和兼容默认值 | `DONE` | 无 |
+| T02 Trace | `control.*`，不新增 SSE type | `backend/common/legal_control/trace.py`、前端 trace adapter 已接入；PASS/CONDITIONAL→intermediate，ESCALATE/BLOCK→warning | `DONE` | 收尾 trace 测试随工作树提交 |
+| T03 Diagnosis Fact | Agents→facts→validation 后执行 G1 | `control_adapter.py` + `service.py` 已处理 critical missing、冲突和固定澄清问题 | `DONE` | 无 |
+| T04 Rule Precedence | non-default 锁定；default 保留 AI | 已区分 `execution_precedence`，推断/估算/默认决定性事实至少 NEEDS_REVIEW | `DONE` | 无 |
+| T05 Diagnosis API | 形成 Pilot A API 闭环 | service/result 契约已提交；`/report` 请求开关在工作树；`/evaluate` 无请求级开关 | `PARTIAL` | 决定并补齐 `/evaluate`，或书面限定 report-only |
+| T06 Canonical Identity | exact Registry、关系 union、fallback fail-closed | resolver、`registry_source_id`、三类关系 union 已提交；模板用途纠偏在工作树 | `DONE_IN_WORKTREE` | 提交 Registry 生成逻辑、测试与缓存 |
+| T07 Evidence Gate | ContextPack 后、generation 前执行 E1-E5 | `evidence_gate.py` 已按真实字段运行；`document_refs=[]` 仅记 limitation | `DONE` | 无 |
+| T08 Citation + Escalation | repair 后、render 前形成 Pilot B | 门本体已提交；正确 `before_render` 生命周期和请求开关在工作树 | `DONE_IN_WORKTREE` | 提交 seam；补 async control=true 验收 |
+| T09 Frontend | 状态、澄清、复核、trace 可见 | UI 展示已提交；两个 pilot builder 的 `control:true` 在工作树 | `DONE_IN_WORKTREE` | 分离无关前端改动后提交 |
+| T10 Regression + FACT | 全链回归、差异登记、发布前收口 | FACT 已有；本轮组合验证完成，但全仓未重跑且存在已知基线失败 | `PARTIAL` | 完成收尾提交、失败豁免/修复、灰度和回滚证据 |
+
+## 3. 当前真实运行链
+
+### 3.1 Pilot A：CN Transfer Diagnosis
 
 ```text
-Existing Domain Workflow
-  + Module Adapter
-  + Fact / Rule / Evidence-Citation / Escalation Gates
-  -> GateResult[] -> ControlDecision -> Domain Result / Trace / UI
+POST /diagnosis/report { control: true }
+  → DiagnosisService.evaluate(..., control=True)
+  → _resolve_answers
+  → ImportantData / PIClassify / Exemption Agents
+  → facts_from_module + provenance + missing_facts
+  → existing fact conflict validation
+  → FACT_COMPLETENESS
+  → DiagnosisRuleEngine.evaluate
+  → RULE_PRECEDENCE
+  → existing rule/default/AI result
+  → merge LegalControlDecision
+  → control.* trace
+  → report result / frontend control panel
 ```
 
-不可变约束：
+控制关闭时 `control_decision=None`、`clarification_questions=[]`。Assessment 内部复用 Diagnosis 时仍不传 control，因此不会把 Pilot A 门禁隐式扩散到 Assessment 内部诊断。
 
-1. 所有控制逻辑 opt-in；未传 `control` 时，当前输出、事件顺序和异常语义保持不变。
-2. 使用 `Reuse > Extend > Adapter > Insert > Replace`；不新建 Unified Runtime、Agent Graph、Central Workflow 或全量重写。
-3. `task_status/state` 只表达程序执行；`legal_control_status` 只表达法律自动化可用程度，禁止互相映射为失败。
-4. 所有新增 API 字段 optional/default-safe；不得给共享构造器增加 required 参数。
-5. singleton service 不保存任何 per-run `ControlDecision`；状态只存在调用栈、返回对象或 trace。
-6. Citation 资格必须 exact `SourceRegistry` lookup；title fuzzy matching、synthetic provider ID 均不得作为治理依据。
-7. V1 不引入 LLM Judge、完整 Evidence Graph、semantic entailment 或新的前端 SSE event type。
+已知入口差距：`POST /diagnosis/evaluate` 当前直接调用 `service.evaluate(answers)`，没有传递 `control`。这不是代码门禁缺失，而是 API 可达面未完全统一。
 
-## 1. 事实基线与证据登记
+### 3.2 Pilot B：CN Security Assessment
 
-### 1.1 代码事实（可复核地址）
+```text
+AssessmentRequest { control: true }
+  → profile / diagnosis / facts / issues / evidence
+  → _build_context_pack
+  → exact SourceRegistry identity + CitationRegistry
+  → EVIDENCE_SUFFICIENCY
+  → chapter generation
+  → consistency / alignment / repair
+  → WorkflowPipeline.before_render
+       → CITATION_VALIDITY
+       → ESCALATION
+  → trace manifest
+  → render artifacts
+  → merge LegalControlDecision
+  → result / frontend control panel
+```
 
-| 事实 | 证据地址 | 当前行为/风险 |
+`before_render` 默认 `None`，只有 Assessment 在 `control=true` 时传入 `_run_control_gates`。EU SCC、US EO 14117 等其他 WorkflowPipeline 调用方不会自动执行 Legal Control 门。
+
+## 4. 代码与证据登记
+
+| 能力 | 真实位置 | 证据边界 |
 |---|---|---|
-| Diagnosis 真实入口和 seam | `backend/domains/cn/transfer_diagnosis/service.py:42`、`:121`、`:138`、`:163` | `_resolve_answers`→Agents→`facts_from_module`→冲突校验→Rule Engine；default 分支仍可能进入 AI inference。 |
-| Assessment 入口 | `backend/domains/cn/security_assessment/service.py:81` | `generate_report` 调用 `WorkflowPipeline.run`，结果由 `AssessmentResult` 返回。 |
-| Assessment context pack | `backend/domains/cn/security_assessment/service.py:288` | ContextPack 内才同时有 facts/issues/evidence/legal grounding/CitationRegistry；Gate 过早插入会缺输入。 |
-| Assessment final repair | `backend/domains/cn/security_assessment/service.py:398` 附近 | repair 可能改变最终章节，Citation final gate 必须在 repair 后、render 前。 |
-| Citation 去重 | `backend/domains/cn/security_assessment/citation_builder.py:141-202` | 以 `(title, article_no)` 去重；当前只追加 issue 关系，fact/evidence union 不完整。 |
-| 现有同名 GateResult | `backend/common/reporting/render_manifest.py:115-121` | 字段为 `name/status/diagnostics`，与 Legal Control 契约不同，禁止直接复用。 |
-| Trace 可扩展 raw name | `backend/common/trace/recorder.py:145-181` | 未知名称落到标准 event type，并保留 `detail.raw_name`；可写 `control.*`，无需新 SSE union。 |
-| Pipeline 共享调用者 | `backend/common/workflow/pipeline.py:24-188`；`backend/domains/eu/scc_review/service.py:302`；`backend/domains/us/eo14117/service.py:153` | 公共 hook 若改变默认签名/事件顺序会跨模块回归；首轮优先 Assessment-specific adapter。 |
+| Control contracts | `backend/common/legal_control/contracts.py` | 独立于 `render_manifest.GateResult` |
+| Gate trace | `backend/common/legal_control/trace.py` | 只记录摘要和稳定 refs，不应写敏感正文 |
+| Diagnosis adapter | `backend/domains/cn/transfer_diagnosis/control_adapter.py` | G1/G2 和决策聚合 |
+| Diagnosis service seam | `backend/domains/cn/transfer_diagnosis/service.py` | `control` 为 per-call 参数 |
+| Diagnosis report opt-in | `backend/domains/cn/transfer_diagnosis/schema.py`、`router.py` | 当前仅 report 请求闭环 |
+| Source identity | `backend/common/citation/source_identity.py` | exact membership；无 fuzzy 提升 |
+| Citation relation union | `backend/domains/cn/security_assessment/citation_builder.py` | issue/fact/evidence 关系集合合并 |
+| Evidence Gate | `backend/domains/cn/security_assessment/evidence_gate.py` | ContextPack 后、generation 前 |
+| Citation Gate | `backend/domains/cn/security_assessment/citation_validity_gate.py` | C1/C2/C3，只校验最终章节 |
+| Escalation Gate | `backend/domains/cn/security_assessment/escalation_gate.py` | repair blocked 和剩余 blocking signal |
+| Render 前 seam | `backend/common/workflow/pipeline.py` | 当前工作树新增，默认 `None` |
+| Assessment orchestration | `backend/domains/cn/security_assessment/service.py` | `control=true` 才启用 resolver、三门和决策 |
+| Request contract | `backend/domains/cn/security_assessment/schema.py` | `control: bool = False` |
+| UI result mapping | `frontend/src/features/module-runner/model.ts` | 不复用 task state |
+| Pilot request builders | `frontend/src/features/module-runner/payload-builders/cn.ts` | 当前工作树显式发送 `control:true` |
+| Control UI | `frontend/src/components/workspace/ModuleRunPanel.tsx` | 显示 clarification/review/conditional |
+| Registry policy | `backend/common/knowledge/registry.py`、`resources/legal/registry/source_registry.v1.json` | template 仅 `structure_control/internal_review` |
 
-模板证据不是抽象说明，按以下地址核验：
+提交链：
 
-| 模板层 | 实际地址 | 使用链/边界 |
+| 提交 | 已提交内容 |
+|---|---|
+| `c444d081` | 实施前存档快照 |
+| `9d021b97` | T01-T06-A：契约、trace、Diagnosis、canonical identity |
+| `124e6852` | T06-B/T07/T08：Assessment 三门 |
+| `464c5b1a` | T09：前端控制状态展示 |
+| `2df778bf` | T10 初版 FACT 刷新 |
+
+必须注意：API opt-in、render 前 seam、模板 Registry 纠偏及相应测试位于 `2df778bf` 之后的当前工作树，不能写成已经进入上述提交链。
+
+## 5. 2026-08-16 实测记录
+
+以下均为本次重新生成文档时实际执行的结果。
+
+| 验证范围 | 命令摘要 | 实际结果 |
 |---|---|---|
-| 官方自评估结构文本 | `resources/templates/cn/official_risk_self_assessment_template.md` | `backend/common/knowledge/builders_v2.py:17` 建索引，`backend/domains/cn/security_assessment/external_report_generator.py:25` 与 `report_renderer.py:44` 读取；仅作为结构依据。 |
-| 报告渲染模板 | `resources/templates/cn/2.2_risk_assessment_template_v0.docx`、同名 `.md` | `backend/domains/cn/security_assessment/report_renderer.py:40-41`；用于渲染/章节结构，不是法律依据。 |
-| 法律资料快照 | `resources/legal/sources/cn/snapshots/cn-tpl-019_数据出境风险自评估报告模板_48ec6e2b.md` | Registry 中 canonical `source_id=CN-TPL-019`；资格与用途以 Registry 为准。 |
-| 来源治理记录 | `resources/legal/registry/source_registry.v1.json:976`、`resources/legal/catalog/sources.csv:24` | 明示 `doc_type=template`、`allowed_usage/用途=结构参照`；不得提升为实体法依据。 |
-| 模板检索入口 | `backend/domains/cn/security_assessment/service.py:309-326` | `module=cn_assessment/task_stage=report_generation/path=assessment`；Gate 应验证来源身份和允许用途。 |
+| task073 + knowledge 组合后端 | `pytest backend/common/legal_control backend/common/citation backend/common/knowledge/tests backend/domains/cn/security_assessment backend/domains/cn/transfer_diagnosis backend/common/workflow` | **378 passed，1 warning，249.59s** |
+| US EO 14117 + CN Flow | `pytest backend/domains/us/eo14117/tests backend/domains/us/eo14117_flow_review/tests` | **42 passed，1 warning** |
+| V0 Task Gateway | `pytest backend/api/v0/tests/test_task_gateway.py` | **7 passed，1 warning** |
+| EU SCC | `pytest backend/domains/eu/scc_review/tests` | **25 passed / 1 failed** |
+| Harness | `pytest backend/tests/harness` | **96 passed / 3 failed** |
+| Frontend unit/component | `npx vitest run` | **206 passed / 2 skipped；33 files passed / 1 skipped** |
+| Frontend types | `npx tsc -b` | **通过** |
+| Registry drift | `python scripts/build_source_registry.py --check` | **120 entries；0 missing；0 field delta** |
+| Patch hygiene | `git diff --check` | **通过** |
 
-模板验核命令：
+测试告警为 Starlette `TestClient`/httpx2 弃用提示，不是 task073 失败。
 
-```bash
-test -f resources/templates/cn/official_risk_self_assessment_template.md
-test -f resources/templates/cn/2.2_risk_assessment_template_v0.docx
-rg -n 'CN-TPL-019|allowed_usage|can_enter_external_report' resources/legal/registry resources/legal/catalog
-./.venv/bin/pytest -q backend/core/tests/test_resource_paths.py backend/domains/cn/security_assessment/tests/test_generation_basis.py
-```
+### 5.1 已知失败的准确归属
 
-### 1.2 运行数据与现状样例
-
-基线命令（必须在 `.venv` 中运行，系统 pytest 可能因 site-package 编码启动错误失败）：
-
-```bash
-./.venv/bin/pytest -q backend/tests/harness
-./.venv/bin/pytest -q backend/domains/cn/transfer_diagnosis/tests backend/domains/cn/security_assessment/tests
-git diff --check
-```
-
-当前工作树审查记录：Level A 输入 50/50 非空；Level B 转换 `converted=2`、`rejected=36`、`pending_correction=12`、`gap=0`；定向 harness 28 passed；backend/tests/harness 合计 89 passed（以执行时输出为准，提交前必须重新运行并把完整输出写入交付记录）。
-
-事实保真反例（必须作为 Gate fixture）：
-
-源文件 `benchmarks/datasets/seed-cases-v1/inputs/task07_case1.input.json` 明确包含健康、基因、特殊类别数据、未成年人、50 万影像/年、10 年留存和 GDPR 第 6/9/22 条依据；当前派生 `benchmarks/datasets/seed-cases-v1/requests/task07_case1.request.json` 却为 `data_categories: []`、`special_category_data: false`、`lawful_basis: []`、`retention_period: ""`。这证明“schema-valid ≠ source-faithful”，G1 必须能识别空值/默认值掩盖的关键事实缺失，不能只做 JSON Schema 校验。
-
-另一个可复核问题：`scripts/build_seed_case_requests.py` 的 `_parse_count()` 在 `<1万` 前缀存在时可能拒绝同段落中的精确 `5000`；`_parse_ynu()` 先做正向子串匹配，`不属于CIIO`、`不含敏感信息` 可能被误判为肯定。以上解析器证据不能被 Gate 当作用户确认事实，必须记录 provenance 并进入 clarification/review。
-
-### 1.3 证据登记规则
-
-每项实现证据登记四元组：`事实/断言`、`代码或运行输出地址`、`复现命令`、`结论边界`。禁止只引用模板文字而无运行证据；禁止把工作树未提交修改写成基线。所有路径在交付前由 `test -f` 或 `rg` 复核。
-
-## 2. 根因链路（问题→机制→修复点→验证）
-
-| 问题 | 根因机制 | 修复点 | 验证 |
+| 失败 | 本次结果 | 归属判断 | task073 处置 |
 |---|---|---|---|
-| 关键事实被默认值吞掉 | 解析/适配器只抽取少数字段；schema 默认值与“未知”语义混同 | G1 使用 `missing_facts`、`field_provenance`、源字段覆盖率和冲突结果 | 缺失、LLM/estimate/default、冲突三类 fixture 均得到预期状态 |
-| 确定性路径可能被概率性说明改写 | Rule Engine 结果与 explanation 没有统一 precedence contract | non-default `RuleMatch` 锁定 canonical path；explanation 只读 | 断言 `recommended_path == expected_path`，注入改写尝试仍保持原路径 |
-| Evidence Gate 放错生命周期 | ContextPack 前缺 legal grounding/CitationRegistry，无法判断支持关系 | `_build_context_pack` 完成后、generation 前执行 E1-E5 | Gate details 可列 issue 支持状态，旧 pipeline 默认不触发 |
-| Citation 看似存在但来源不可治理 | fallback/synthetic ID 无 Registry 身份；fuzzy title 不是稳定 join | `registry_source_id` additive + exact Registry lookup + fail-closed | unregistered、`can_be_cited=false`、外部不可用来源均不得 PASS |
-| 去重导致 trace 关系丢失 | `(title, article_no)` first/highest-confidence merge 只合并 issue | citation builder 对 issue/fact/evidence 做集合 union | 重复 binding fixture 断言三类关系不丢 |
-| 法律需复核被错误当作程序失败 | 只有 `state` 的旧模型承载两种语义 | Domain Result 增 `ControlDecision`，保留 `task_status=COMPLETED` | NEEDS_REVIEW + COMPLETED 组合测试 |
-| 前端无法解释控制原因 | trace 仅按标准 event type 显示，未知 raw name 默认 Task | 保留 `intermediate/warning`，增加 `control.*` raw-name 映射和结果状态读取 | Transcript/UI fixture 检查四类 Gate 可见 |
-| 方案/代码/种子证据漂移 | manifest、gap ledger、任务文档未同步 | FACT refresh、provenance lint、文档交叉引用检查 | 交付前扫描差异并记录 Designed/Implemented/Difference/Reason |
+| EU SCC `test_uploaded_scc_document_drives_core_review` | citation display label 未包含 `2021/914` | 历史全量基线已有，task073 未修改该测试链 | 发布前修复或形成书面豁免 |
+| Harness `test_committed_tree_passes_the_gate` | case catalog 28 vs frontend inventory 40 | Phase 0 已存在 | 由案例治理任务修复或豁免 |
+| Harness `test_python_gate_reads_frontend_counts_from_structured_inventory` | 期望 28，实际 40 | Phase 0 已存在 | 同上 |
+| Harness `test_case_catalog_has_unique_registered_cases_and_real_sources` | inventory 数量漂移 | Phase 0 已存在 | 同上 |
 
-## 3. 目标契约（先冻结再编码）
+“不是 task073 引入”只说明回归归因，不等于“发布时可以忽略”。最终发布门必须记录 owner、修复提交或豁免人。
 
-### 3.1 独立命名空间，解决同名冲突
+### 5.2 本次没有执行的验证
 
-新增建议文件：`backend/common/legal_control/contracts.py`（或等价模块）。名称必须带 Legal Control 语义，例如 `LegalControlGateResult`、`LegalControlDecision`；不得从 `render_manifest.GateResult` 直接导入。若最终选择别名，必须有类型测试证明序列化字段互不污染。
+- 没有重新执行全仓 `.venv/bin/python -m pytest -q`。
+- 没有执行真实生产环境外部服务联调。
+- 没有执行生产灰度。
+- 没有执行真实回滚演练。
+- 没有取得数据或法律责任人签字。
 
-```python
-class LegalControlGateResult(BaseModel):
-    gate: Literal["FACT_COMPLETENESS", "RULE_PRECEDENCE", "EVIDENCE_SUFFICIENCY", "CITATION_VALIDITY", "ESCALATION"]
-    outcome: Literal["PASS", "CONDITIONAL", "ESCALATE", "BLOCK"]
-    reasons: list[str] = Field(default_factory=list)
-    refs: list[str] = Field(default_factory=list)
-    required_actions: list[str] = Field(default_factory=list)
-    details: dict[str, Any] = Field(default_factory=dict)
+历史 `1295 passed / 9 failed` 仅为 2026-08-15 基线，不作为本次实测结果。
 
-class LegalControlDecision(BaseModel):
-    legal_control_status: Literal["AUTO", "CONDITIONAL", "NEEDS_CLARIFICATION", "NEEDS_REVIEW", "BLOCKED"] = "AUTO"
-    gate_results: list[LegalControlGateResult] = Field(default_factory=list)
-    reasons: list[str] = Field(default_factory=list)
-    required_actions: list[str] = Field(default_factory=list)
-```
+## 6. 设计—实现差异与影响
 
-### 3.2 优先级与状态合并
+| 项 | 设计 | 当前实现 | 差异原因 | 影响与结论 |
+|---|---|---|---|---|
+| Pipeline 改动 | 优先 Assessment-specific adapter，不改共享 Pipeline | 新增默认空 `before_render` seam，仅 Assessment control 模式启用 | run 返回后校验发生在 render 之后，无法满足 D08 | 差异合理且默认安全，但必须随收尾提交并保留共享调用方回归 |
+| API opt-in | 两个 pilot 显式 opt-in | Assessment 和 Diagnosis report 已实现；Diagnosis evaluate 未实现 | 原前端主链走 report builder | 产品主链可用，但 API 契约不完整，需作明确决策 |
+| Citation 时序 | repair 后、render 前 | 初版在 render 后；当前工作树已移到 before_render | 初版生命周期 seam 不足 | 当前实现符合 D08，HEAD 单独检出仍不符合 |
+| Template 身份 | 模板只用于结构控制 | 当前工作树把 template 统一为不可引用、不可进外部报告、仅 structure/internal | 原 Registry 结构化字段与 metadata 口径冲突 | 数据口径已技术纠偏，仍需法律/数据签字 |
+| BLOCK/BLOCKED | 契约保留，pilot 不要求触发 | 无主动 BLOCK 路径 | V1 采用警告/人工复核而非硬阻断 | 符合 D14，不得宣传为完整硬阻断运行时 |
+| 模块范围 | 两个 pilot | 未迁移其余模块 | 遵守非目标和 Pilot Isolation | 符合设计 |
 
-Gate 状态合并采用显式优先级：`BLOCKED > NEEDS_REVIEW > NEEDS_CLARIFICATION > CONDITIONAL > AUTO`；但 G1 critical missing 固定映射 `NEEDS_CLARIFICATION`，既有冲突和决定性推断固定至少 `NEEDS_REVIEW`。不得用字典迭代顺序或最后写入值决定状态。
+## 7. 剩余工作包
 
-### 3.3 API 与 trace
+### P0-1：形成可审查的收尾提交
 
-DiagnosisResult/AssessmentResult 只追加：`control_decision: LegalControlDecision | None = None`、必要时 `clarification_questions: list[...] = []`。control 未启用时序列化可省略或为 `null`，旧 consumer 仍可解析。Trace 写入 `control.fact_completeness`、`control.rule_precedence`、`control.evidence_sufficiency`、`control.citation_validity`、`control.escalation`；正常/pass 用 `intermediate`，review/limitation 用 `warning`，保持原 event union。
+目标：把 task073 相关工作从当前混合工作树中分离，形成可复核提交；不得把 task075、CPRA、运行产物清理等无关修改混入。
 
-## 4. 分阶段实施（含文件、动作、出口条件）
+至少包含：
 
-### Phase 0：工作树、基线和契约冻结
+- `backend/common/workflow/pipeline.py`
+- `backend/domains/cn/security_assessment/{schema.py,service.py,tests/test_control_service.py}`
+- `backend/domains/cn/transfer_diagnosis/{schema.py,router.py,tests/test_api.py}`
+- `backend/common/knowledge/{registry.py,tests/test_registry.py}`
+- `resources/legal/registry/source_registry.v1.json`
+- `frontend/src/features/module-runner/payload-builders/cn.ts` 及其测试
+- task073 的 OpenAPI、model、trace 相关测试增量
+- 本文与最终 FACT
 
-动作：记录 `git rev-parse HEAD`、`git status --short`、Python/pytest 版本；运行第 1.2 节命令；建立 `docs/tmp/task073-evidence/`（如项目约定允许）保存 stdout、JSON fixture 和 trace 样本。不要清理或回滚用户未提交修改。
+出口条件：提交 diff 只包含 task073 相关 hunk；从该提交新检出后可重复第 5 节验证。
 
-出口：基线测试可重复；所有引用文件存在；`GateResult` 同名冲突已登记；默认关闭行为快照完成。
+### P0-2：关闭 API 可达性缺口
 
-### Phase 1：Core Contract + aggregation（T01）
+二选一并记录决策：
 
-动作：实现独立契约、状态优先级、`required_actions` 常量；为 DiagnosisResult/AssessmentResult 增加 additive 字段；编写空决策、单 Gate、多 Gate 合并及旧 JSON 反序列化测试。
+1. 为 `/diagnosis/evaluate` 增加带 `control: bool = false` 的兼容请求契约；或
+2. 明确 V1 Control Plane 只对 `/diagnosis/report` 和前端报告主链提供，`/evaluate` 保持 legacy endpoint。
 
-出口：契约单测通过；未启用 control 的旧 fixture 字节/字段兼容；`render_manifest.GateResult` 测试无变化。
+出口条件：API 测试覆盖默认关闭和显式开启，OpenAPI 与前端类型同步。
 
-### Phase 2：Trace integration（T02）
+### P0-3：补齐异步控制验收
 
-动作：复用 `TraceRecorder.record`，新增 raw names；适配 `frontend/src/lib/trace-adapter.ts` 语义标签。不得扩展 SSE event union；为每个控制事件写 `gate/outcome/reasons/refs` 摘要，不写敏感正文。
+新增 Assessment `control=true` async 测试，至少断言：
 
-出口：同步/异步 trace 均有 seq、task_id、raw_name；既有 status/intermediate/warning 顺序不变；未知控制事件仍可回放。
+- submit 后最终状态可完成；
+- result 存在 `control_decision`；
+- 三个 Assessment gate 均存在；
+- Citation/Escalation 在 render 前执行；
+- `NEEDS_REVIEW` 不把 task state 改为 FAILED。
 
-### Phase 3：CN Transfer Diagnosis（T03-T05）
+### P0-4：数据/法律签字
 
-动作：
+责任人应核对：
 
-1. `DiagnosisService.evaluate(..., control=None)` 保持 Assessment 现有调用不传参数。
-2. Agents 与 `facts_from_module` 后执行 G1；critical missing 生成固定 clarification question；冲突保留既有 manual-review result 并附 G1。
-3. Rule Engine 后执行 G2：non-default 锁定 path；default 保留 AI inference，不打 deterministic 标签。
-4. 在返回前执行 G4，按固定优先级合并；每次结果写控制 trace。
-5. 记录 field provenance：用户输入、确定性规则、`LLM_INFERENCE`、`ESTIMATE`、`DEFAULT`，禁止把模型输出伪装为 user fact。
+- critical fact 与 provenance 范围；
+- exact Registry identity 和 eligibility；
+- template 仅用于 `structure_control/internal_review`；
+- Citation/Evidence 不足时的文案、人工复核动作和对外报告限制；
+- `BLOCKED` 在 V1 不主动触发的产品含义。
 
-建议文件：`backend/domains/cn/transfer_diagnosis/control_adapter.py`、`service.py`（最小 seam）、`schema.py`、对应 tests；如公共契约放 elsewhere，更新 API schema/OpenAPI。
+出口条件：签字人、日期、意见和例外项写入第 9 节，不接受口头“看过”。
 
-出口：D1-D6 全部通过；Assessment 内部 diagnosis 默认行为回归通过；控制开关关闭时结果和 trace 与基线一致。
+### P0-5：基线失败处置
 
-### Phase 4：Assessment canonical identity（T06-A，最高风险前置）
+为 EU SCC 1 个失败和 Harness 3 个失败分别记录：owner、关联 issue、计划修复时间、是否阻断 task073 发布。若不修复，必须由发布责任人书面接受风险。
 
-动作：
+### P0-6：灰度与回滚演练
 
-1. 核对 `SourceRegistryEntry`、`KnowledgeChunkV2`、`CitationItem` 的 source_id 链；必要时给 CitationItem 增 `registry_source_id: str | None = None`。
-2. 实现 exact membership 查询；未注册 fallback/DeliLegal 返回 `UNREGISTERED`，不得 fuzzy 提升。
-3. 修改 `build_citations` 的 duplicate merge，对 `related_issue_ids/fact_ids/evidence_ids` 做 set-union，并保持最高置信度字段策略可解释。
-4. 对 `review_status`、`can_be_cited`、`can_enter_external_report`、`allowed_usage` 采用 fail-closed；从 Registry 读取权威值，不复制到 chunk 形成第二真相源。
+灰度顺序：
 
-出口：local registered、unregistered、ineligible 三类 fixture；重复 citation 关系 union 测试；EU SCC/US14117/CN Flow 公共链无行为变化。
+1. 后端 schema/契约上线但保持 `control=false`；
+2. 仅对白名单 pilot 请求开启；
+3. 观察 AUTO/CONDITIONAL/NEEDS_CLARIFICATION/NEEDS_REVIEW 分布及错误率；
+4. 前端开启控制面板；
+5. 扩大白名单前复核 trace 和人工处理量。
 
-### Phase 5：Assessment Evidence Gate（T06-B/T07）
+回滚动作：前端停止发送 `control:true` 即可恢复默认关闭；如需代码回滚，再撤销 Assessment `before_render` 接入，公共 Pipeline 的默认 `None` 不要求其他模块迁移。
 
-插入：`_build_context_pack` 返回后、`generate_chapters` 前；首轮以 Assessment-specific adapter 传递 gate，公共 `WorkflowPipeline` 不改默认行为。
+出口条件：保存灰度批次、样本 task_id、指标、异常、回滚步骤、演练结果和责任人。
 
-实现 E1-E5：核心 Issue 的 fact/rule/evidence 引用完整性、法律依据存在性、外部积极事实可支持性、单一低置信支持、既有 consistency dangling refs。`document_refs=[]` 只生成 `DOCUMENT_TRACE_GAP` limitation，不直接 BLOCK。
+## 8. 最终验收门
 
-出口：supported→PASS、core partial→CONDITIONAL、core unsupported→ESCALATE；Gate details 列出 issue 支持矩阵和 refs。
+### 8.1 技术实现门
 
-### Phase 6：Citation Validity + Assessment Escalation（T08）
+- [x] 独立 Legal Control contracts 和显式状态优先级
+- [x] Diagnosis G1/G2 与 per-run decision
+- [x] Assessment Evidence/Citation/Escalation
+- [x] exact SourceRegistry identity 和 citation relation union
+- [x] legal control status 与 task state 分离
+- [x] Trace/UI 可解释控制状态
+- [x] 当前组合回归、前端测试、类型检查和 Registry 零漂移通过
+- [ ] task073 收尾改动已形成独立提交
+- [ ] `/diagnosis/evaluate` 的 V1 边界已决定并测试
+- [ ] Assessment async `control=true` 已有端到端测试
 
-插入：`generate → consistency → alignment → repair → Citation Validity → Escalation → render`。C1 精确解析最终 marker；C2 exact Registry eligibility；C3 issue/fact/evidence traceability。只有核心全部满足才 AUTO；非核心 limitation 可 CONDITIONAL；核心不满足 NEEDS_REVIEW。`BLOCKED` 保留契约，pilot 不主动触发。
+### 8.2 业务与法律门
 
-出口：render 前 gate 可阻止“正式已核验”标签，但不把 `task_status` 改为 FAILED；内部报告可输出但 UI 必须显示复核提示。
+- [ ] 数据责任人核对 critical fact、provenance 和 Registry 数据
+- [ ] 法律责任人核对 Gate policy、引用资格和对外文案
+- [ ] 人工复核动作有明确 owner、SLA 和处理入口
+- [ ] 已知基线失败已有修复或书面豁免
 
-### Phase 7：Frontend 与 API（T09）
+### 8.3 发布门
 
-动作：在 `ModuleRunPanel` 保留现有未提交修改基础上，读取 `legal_control_status/control_reasons/required_actions/clarification_questions`；`NEEDS_CLARIFICATION` 显示缺失事实，`NEEDS_REVIEW` 显示人工复核提示，Assessment `CONDITIONAL` 显示条件结论。更新生成 types/OpenAPI，不复用 `state/asyncState`。
+- [ ] 从收尾提交的新检出环境复跑验收命令
+- [ ] 白名单灰度完成并记录样本
+- [ ] 回滚演练成功
+- [ ] FACT 更新为最终提交哈希和实际发布状态
+- [ ] 发布责任人签字
 
-出口：桌面和窄屏 UI 无重复入口；结果和 trace 均能看到控制状态；旧 response 无控制字段时不崩溃。
-
-### Phase 8：全量回归、FACT refresh 和发布（T10）
-
-必须覆盖 Diagnosis evaluate/report/harness、Assessment sync/async/evidence/citation/consistency/renderer、EU SCC、US14117、CN Flow、common citation、WorkflowPipeline、V0 Task Gateway。重新扫描 HEAD、工作树和所有设计引用，输出 Designed/Implemented/Difference/Reason/Impact 表。
-
-> 已执行（2026-08-15）：全量回归 1295 passed / 9 failed（9 个均为与 task073 无关的历史遗留，见 FACT）；task073 相关子集 341 passed；前端 vitest 200 passed / 2 skipped、`tsc -b` 通过、`git diff --check` 清洁。FACT 刷新与 Designed/Implemented/Difference/Reason/Impact 表见 [`view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`](../view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md)。
-
-## 5. 验证矩阵（可直接执行）
-
-### 5.1 Diagnosis
-
-| 场景 | 输入/fixture | 预期 |
-|---|---|---|
-| 完整 non-default | `backend/domains/cn/transfer_diagnosis/tests/test_rule_engine.py` + service fixture | task 成功、AUTO、path 不变 |
-| critical missing | q2/q5 等 unknown 且 Agent 未补齐 | NEEDS_CLARIFICATION、问题非空、不输出无条件最终路径 |
-| 既有冲突 | `_validate_fact_consistency` 冲突 fixture | 原 manual-review 保留 + NEEDS_REVIEW |
-| decisive inference | provenance 为 LLM_INFERENCE/ESTIMATE/DEFAULT | 至少 NEEDS_REVIEW |
-| default→AI | `_needs_ai_inference` 为真 | execution_precedence=false、不得标 deterministic |
-| Assessment reuse | `backend/domains/cn/security_assessment/tests` | 未传 control 时结果/trace 不变 |
-
-### 5.2 Assessment
-
-| 场景 | 证据 | 预期 |
-|---|---|---|
-| context seam | `service.py:288` | Evidence Gate 在 pack 完成后运行 |
-| source exact match | local SourceRegistry fixture | C2 PASS |
-| fallback/unregistered | synthetic/DeliLegal fixture | UNREGISTERED，核心依赖 NEEDS_REVIEW |
-| ineligible | `can_be_cited=false` 或 external=false | 不得作为正式通过 citation |
-| duplicate merge | `test_citation_builder.py` duplicate fixture | issue/fact/evidence 三类集合 union |
-| final marker missing | final chapter marker 无 registry item | C1 MISSING，render 前 NEEDS_REVIEW |
-| repair changed citation | repair fixture | gate 看到 repair 后最终章节 |
-| legal/runtime 分离 | 正常生成但控制不足 | `task_status=COMPLETED` + `NEEDS_REVIEW` |
-
-### 5.3 Trace/UI/API
-
-断言每个 `control.*` 事件具备 `task_id/seq/raw_name/gate/outcome`；旧事件顺序和 event type 不变；旧 JSON response 可被新模型读取；控制字段缺失时前端采用默认隐藏而非报错。
-
-## 6. 安全、数据和可观测性控制
-
-- trace 只记录事实键、状态和证据 ID，不记录患者/员工原文、完整健康数据或模型提示词。
-- `refs` 只能引用稳定 ID/路径，不接受未经清洗的任意文件路径或用户可执行内容。
-- Gate 失败原因需可审计但不可泄露敏感 payload；日志使用 task_id/correlation_id。
-- 控制开关必须配置白名单（pilot/module），默认关闭；禁止全局 singleton flag。
-- 同一 run 的 GateResult 不得跨请求复用；并发测试验证互不串状态。
-
-## 7. 发布、回滚与故障处理
-
-发布顺序：契约和 trace（无业务行为）→ Diagnosis pilot 灰度→ Assessment identity/evidence/citation 灰度→ UI 展示。每阶段保留开关和旧路径。
-
-回滚条件：默认路径测试失败、跨模块 trace 顺序改变、出现未授权正式 citation、控制状态串请求、任何 PII 泄露。回滚只关闭 pilot flag/adapter，不删除历史 trace，不回滚用户未提交文件。
-
-故障降级：Gate adapter 异常时记录 `control.escalation` 和 `NEEDS_REVIEW`，不得静默 PASS；若控制模块不可用且 opt-in 请求明确要求 fail-closed，则返回可审计错误，但仍保持 `task_status` 与法律状态分离。
-
-## 8. 交付物与“设计—实现差异”记录
-
-每个 T01-T10 交付：文件/类/方法、复用点、新增点、测试命令及输出、回归范围、设计差异。差异模板：
+只有三组门全部完成后，状态才允许从：
 
 ```text
-Designed:
-Implemented:
-Difference:
-Reason:
-Architecture impact:
-Evidence:
+IMPLEMENTED_IN_WORKTREE
+TECHNICALLY_VALIDATED
+ACCEPTANCE_PENDING
+NOT_RELEASED
 ```
 
-不得以“schema 通过”替代源事实保真；不得以“报告成功渲染”替代 Citation Gate 通过。
+更新为：
 
-## 9. 最终验收门槛
+```text
+IMPLEMENTED
+VALIDATED
+ACCEPTED
+RELEASED
+```
 
-只有同时满足以下条件才可将 task073 标记完成：
+## 9. 签字与最终记录
 
-1. T01-T10 的出口条件均有测试或运行证据；关键路径至少一正一负 fixture。
-2. Diagnosis 六项验收、Assessment 十项验收全部通过。
-3. 默认关闭回归证明 Assessment、EU SCC、US14117、CN Flow、V0 Gateway 无行为变化。
-4. 同名 `GateResult` 契约隔离已由类型/序列化测试证明。
-5. SourceRegistry exact lookup、fallback fail-closed、citation relation union 均有测试。
-6. UI/API/Trace 可解释 `AUTO/CONDITIONAL/NEEDS_CLARIFICATION/NEEDS_REVIEW`，且不混用 task state。
-7. 重新生成 FACT，更新所有受影响文档和证据地址；`git diff --check` 清洁。
-8. 未声明的漏洞、未复现的运行数字或无路径证据的结论不得写成“已完成”。
+| 角色 | 当前结论 | 姓名/日期 | 备注 |
+|---|---|---|---|
+| 开发 | 技术实现已在工作树完成并验证；待独立提交 | 待填 | 378 backend + 206 frontend passed |
+| 后端复核 | 待收尾提交后复核 | 待填 | 重点核对 before_render、async、默认关闭 |
+| 前端复核 | 待收尾提交后复核 | 待填 | 重点核对请求 opt-in、旧响应兼容和提示文案 |
+| 数据责任人 | 未验收 | 待填 | Registry/template/provenance |
+| 法律责任人 | 未验收 | 待填 | Gate policy、引用资格、对外限制 |
+| 发布责任人 | 未验收 | 待填 | 灰度、已知失败豁免、回滚 |
 
-## 10. 明确非目标与升级触发器
-
-非目标：11 模块迁移、Unified Runtime、完整 Evidence Closure、语义 Citation Judge、完整 HITL pause/resume、框架迁移、benchmark 重设计。
-
-以下任一情况必须暂停编码并进行架构复审：无法保持 Diagnosis opt-in；必须修改公共 WorkflowPipeline 默认行为；无法建立 canonical source identity；Eligibility 只能 fuzzy；必须引入 LLM Judge；必须把 legal status 写入 task state；出现跨模块不可隔离回归；或发现源事实保真要求超出当前适配器能力。
-
-## 11. 复核签字栏
-
-- [x] 开发：已按 T01-T10 提交代码、测试和差异记录（提交 `9d021b97`、`124e6852`、`464c5b1a`；FACT 见 `view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`）
-- [ ] 后端复核：已核对运行输出、trace、SourceRegistry 和并发隔离
-- [ ] 前端复核：已核对结果状态、复核提示和旧响应兼容
-- [ ] 数据/法律复核：已核对关键事实 provenance、证据和引用资格（含 §5 数据治理观察 CN-TPL-019 口径）
-- [ ] 发布复核：已完成灰度、回滚演练和 FACT refresh
+最终判定：task073 的“代码建设”已基本落实，“可发布收口”尚未落实。下一步不是继续扩写设计文档，而是完成收尾提交、API/async 两个验收缺口、责任人签字和灰度回滚证据。

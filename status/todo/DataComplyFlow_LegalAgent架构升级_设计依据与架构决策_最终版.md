@@ -85,11 +85,11 @@ V0.3 之后：
 
 - Control Plane 架构：`DESIGNED / FINAL`
 - Gate Contract：`DESIGNED / FINAL`
-- Diagnosis Pilot：`READY_FOR_IMPLEMENTATION`
-- Assessment Pilot：`READY_FOR_IMPLEMENTATION`
+- Diagnosis Pilot：`IMPLEMENTED / TECHNICALLY_VALIDATED`
+- Assessment Pilot：`IMPLEMENTED / TECHNICALLY_VALIDATED`
 - 其他模块：`NOT_MIGRATED`
 
-代码实现完成并经新 FACT 验证前，不得把任何 Gate 描述为 `IMPLEMENTED`。
+实现与验收依据：`status/view/20260815_LegalAgent控制平面实施FACT刷新与差异记录.md`（2026-08-16 收尾复验）。生产状态仍为 `NOT_RELEASED`，数据/法律签字与灰度不由技术验收替代。
 
 ---
 
@@ -871,11 +871,11 @@ Trace
 
 V0.3 已完成这些实现级修订。
 
-因此当前裁决更新为：
+因此设计阶段裁决为：
 
-> **READY_FOR_IMPLEMENTATION**
+> **IMPLEMENTED / TECHNICALLY_VALIDATED / NOT_RELEASED**
 
-核心架构不再进入探索阶段。
+核心架构不再进入探索阶段。实现为满足 D08 增加了默认关闭的 `WorkflowPipeline.before_render` seam，仅 Assessment pilot 启用；该差异及回归证据已登记在 FACT。
 
 后续允许调整：
 
