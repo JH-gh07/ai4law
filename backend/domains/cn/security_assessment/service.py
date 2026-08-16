@@ -94,7 +94,7 @@ class AssessmentService:
     ) -> AssessmentResult:
         run_task_id = task_id or str(uuid.uuid4())
         active_trace, token = prepare_run(module="assessment", task_id=run_task_id, trace=trace)
-        control_enabled = bool(control)
+        control_enabled = payload.control if control is None else bool(control)
 
         try:
             if trace:
@@ -102,8 +102,6 @@ class AssessmentService:
             run_result = self._build_pipeline(
                 control=control_enabled, trace=active_trace
             ).run(payload=payload, task_id=run_task_id, trace=active_trace)
-            if control_enabled:
-                self._run_control_gates(run_result=run_result, trace=active_trace)
         except PathMismatchError as e:
             if trace:
                 trace.record("status", {"summary": "路径不匹配，中断生成", "detail": str(e)})
@@ -140,22 +138,22 @@ class AssessmentService:
         )
 
     @staticmethod
-    def _run_control_gates(*, run_result, trace: TraceRecorder | None) -> None:
-        """T08 — repair 后、render 后的 Citation Validity + Escalation 门。
-
-        这里读取的是 pipeline 返回的**最终**（repair 后）章节与 consistency
-        issues；门为纯校验，不修改 registry 或章节。trace 在
-        ``finalize_run`` 前写入，确保落入 manifest。
-        """
-        context_pack = run_result.context_pack
+    def _run_control_gates(
+        *,
+        chapters,
+        consistency_issues: list[str],
+        context_pack: GenerationContextPack,
+        trace: TraceRecorder | None,
+    ) -> None:
+        """Run final control gates after repair and before artifact rendering."""
         citation_gate = run_citation_validity_gate(
-            chapters=run_result.chapters,
+            chapters=chapters,
             context_pack=context_pack,
         )
         context_pack.control_gate_results.append(citation_gate)
         record_gate_trace(trace, citation_gate)
 
-        remaining_issues = list(run_result.consistency_issues or [])
+        remaining_issues = list(consistency_issues or [])
         repair_blocked = any(
             "REPAIR_BLOCKED:" in issue for issue in remaining_issues
         )
@@ -209,6 +207,7 @@ class AssessmentService:
             check_consistency=self.checker.check_with_context,
             check_alignment=self._check_alignment,
             repair_chapters=self._repair_chapters,
+            before_render=(self._run_control_gates if control else None),
             render_artifacts=self._render_outputs,
         )
 

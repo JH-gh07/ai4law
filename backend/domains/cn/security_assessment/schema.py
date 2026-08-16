@@ -124,6 +124,7 @@ class AssessmentRequest(BaseModel):
     force_override_path: bool = False
     uploaded_files: list[str] = Field(default_factory=list)
     path_check_mode: PathCheckMode = "warn_only"
+    control: bool = False
 
     # ── New structured fields — official template aligned ──
     self_assessment_info: SelfAssessmentInfo | None = None

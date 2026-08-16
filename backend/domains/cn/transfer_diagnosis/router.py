@@ -37,7 +37,10 @@ def generate_report(
     container=Depends(get_container),
 ) -> DiagnosisReportResponse:
     try:
-        result = trace_sync("diagnosis", lambda: service.evaluate(payload.answers))
+        result = trace_sync(
+            "diagnosis",
+            lambda: service.evaluate(payload.answers, control=payload.control),
+        )
         outputs = renderer.render(payload.company_name, payload.answers, result)
         register_module_result_artifacts(
             db=db,

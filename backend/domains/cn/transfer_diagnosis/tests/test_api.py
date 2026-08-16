@@ -44,6 +44,7 @@ def test_diagnosis_report_outputs_html_pdf(tmp_path: Path) -> None:
             "/api/v1/diagnosis/report",
             json={
                 "company_name": "DiagApiCo",
+                "control": True,
                 "answers": {
                     "q1_is_ciio": "no",
                     "q2_has_important_data": "no",
@@ -70,3 +71,22 @@ def test_diagnosis_report_outputs_html_pdf(tmp_path: Path) -> None:
         assert Path(pdf_path).exists()
         assert "html" in payload["output_files"]
         assert "pdf" in payload["output_files"]
+        assert payload["result"]["control_decision"] is not None
+
+
+def test_diagnosis_report_control_defaults_off() -> None:
+    from backend.domains.cn.transfer_diagnosis.schema import DiagnosisReportRequest
+
+    request = DiagnosisReportRequest.model_validate(
+        {
+            "company_name": "DiagApiCo",
+            "answers": {
+                "q1_is_ciio": "no",
+                "q2_has_important_data": "no",
+                "q3_pii_count": 1,
+                "q4_spi_count": 0,
+            },
+        }
+    )
+
+    assert request.control is False

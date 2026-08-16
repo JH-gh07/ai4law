@@ -39,6 +39,7 @@ class WorkflowPipeline:
         check_consistency: Callable[[Any, list[Any], GenerationContextPack], list[str]],
         check_alignment: Callable[[str, Any], list[str]],
         repair_chapters: Callable[..., tuple[list[Any], list[str], bool]] | None = None,
+        before_render: Callable[..., None] | None = None,
         render_artifacts: Callable[..., dict[str, str]],
         request_event_name: str = "assessment_request",
         consistency_check_labels: list[str] | None = None,
@@ -57,6 +58,7 @@ class WorkflowPipeline:
         self.check_consistency = check_consistency
         self.check_alignment = check_alignment
         self.repair_chapters = repair_chapters
+        self.before_render = before_render
         self.render_artifacts = render_artifacts
         self.request_event_name = request_event_name
         self.consistency_check_labels = consistency_check_labels or [
@@ -167,6 +169,14 @@ class WorkflowPipeline:
 
         if path_warning and path_warning not in consistency_issues:
             consistency_issues.append(path_warning)
+
+        if self.before_render is not None:
+            self.before_render(
+                chapters=chapters,
+                consistency_issues=consistency_issues,
+                context_pack=context_pack,
+                trace=trace,
+            )
 
         manifest = trace.write_manifest()
         alignment_warning = "；".join(alignment_issues) if alignment_issues else None

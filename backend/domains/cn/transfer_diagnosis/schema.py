@@ -121,6 +121,7 @@ class DiagnosisResult(BaseModel):
 class DiagnosisReportRequest(BaseModel):
     company_name: str = Field(min_length=2)
     answers: DiagnosisAnswers
+    control: bool = False
 
 
 class DiagnosisReportResponse(BaseModel):

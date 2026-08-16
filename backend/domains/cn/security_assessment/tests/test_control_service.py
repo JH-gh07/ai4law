@@ -110,3 +110,34 @@ def test_control_off_has_no_control_decision(monkeypatch, tmp_path):
     result = service.generate_report(_payload())
 
     assert result.control_decision is None
+
+
+def test_request_control_opt_in_runs_gates_before_render(monkeypatch, tmp_path):
+    _disable_external_services(monkeypatch)
+    _install_test_templates(monkeypatch, tmp_path)
+    service = _build_service()
+    order: list[str] = []
+
+    original_gates = service._run_control_gates
+    original_render = service._render_outputs
+
+    def record_gates(*args, **kwargs):
+        order.append("control_gates")
+        return original_gates(*args, **kwargs)
+
+    def record_render(*args, **kwargs):
+        order.append("render")
+        return original_render(*args, **kwargs)
+
+    monkeypatch.setattr(service, "_run_control_gates", record_gates)
+    monkeypatch.setattr(service, "_render_outputs", record_render)
+
+    payload = _payload().model_copy(update={"control": True})
+    result = service.generate_report(payload)
+
+    assert result.control_decision is not None
+    assert order == ["control_gates", "render"]
+
+
+def test_request_control_defaults_off():
+    assert _payload().control is False
