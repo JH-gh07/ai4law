@@ -168,6 +168,26 @@ describe("EU payload builders", () => {
       .toThrow(/extension/);
   });
 
+  it("turns empty user risk and mitigation inputs into empty arrays", () => {
+    const values: DpiaFormValues = {
+      ...createDefaultDpiaValues(),
+      project_name: "AI招聘筛选系统",
+      project_goal: "自动化筛选候选人",
+      processing_description: "简历与视频面试分析",
+      purpose_and_necessity: "提高招聘效率",
+      lawful_basis: "同意与合同履行",
+      risk_assessment: "",
+      mitigation_measures: "",
+      residual_risk: "",
+    };
+
+    const payload = buildDpiaPayload(values, ["flow.docx"]);
+
+    expect(payload.identified_risks).toEqual([]);
+    expect(payload.mitigation_measures).toEqual([]);
+    expect(payload.uploaded_files).toEqual(["flow.docx"]);
+  });
+
   it("builds TIA assessment text and attachment metadata", () => {
     const input = withPreset<TiaFormValues>(createDefaultTiaValues(), "tia");
 
@@ -332,6 +352,7 @@ describe("diagnosis payload builder", () => {
 
     expect(payload.company_name.length).toBeGreaterThanOrEqual(2);
     expect(payload.answers).toHaveProperty("q6_scenario", "other");
+    expect(payload.control).toBe(true);
   });
 
   it("preserves the existing fallback for a missing company name", () => {
@@ -355,6 +376,7 @@ describe("assessment payload builder", () => {
     const payload = buildAssessmentPayload(input.values, input.paths);
     expect(payload.uploaded_files).toEqual(input.paths);
     expect(payload.pii_count).toBeGreaterThanOrEqual(0);
+    expect(payload.control).toBe(true);
   });
 
   it("rejects a missing company USCC", () => {
@@ -411,6 +433,20 @@ describe("CPRA payload builder", () => {
   it("builds a URL attachment without uploaded files", () => {
     const payload = buildCpraPayload(values, files);
     expect(payload.attachments[0]?.file_format).toBe("url");
+  });
+
+  it("builds a privacy_policy docx attachment from a development case path", () => {
+    const docxPath = "benchmarks/datasets/seed-cases-v1/_source/task10/task10_case1.docx";
+    const payload = buildCpraPayload(
+      { ...values, privacy_policy_url: "" },
+      { ...files, privacyPolicy: [docxPath] },
+    );
+
+    expect(payload.attachments[0]).toMatchObject({
+      file_role: "privacy_policy",
+      file_format: "docx",
+      storage_uri: docxPath,
+    });
   });
 
   it("rejects a missing business model", () => {

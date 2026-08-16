@@ -202,6 +202,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const [cpraDataMapFiles, setCpraDataMapFiles] = useState<File[]>([]);
   const [cpraVendorListFiles, setCpraVendorListFiles] = useState<File[]>([]);
   const [cpraOtherFiles, setCpraOtherFiles] = useState<File[]>([]);
+  const [cpraDevPrivacyPolicyPaths, setCpraDevPrivacyPolicyPaths] = useState<string[]>([]);
 
   const taskTemplate = findTaskTemplate(taskSpace.taskTemplateId);
   const templateModule = useMemo(
@@ -307,6 +308,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
       setCpraDataMapFiles([]);
       setCpraVendorListFiles([]);
       setCpraOtherFiles([]);
+      setCpraDevPrivacyPolicyPaths([]);
     }
   }, [moduleKey, taskTemplate?.id]);
 
@@ -333,7 +335,15 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     const caseFilePaths = DEV_ACCEL_ENABLED
       ? (tc.backendFilePaths?.filter((item) => item.trim().length > 0) ?? [])
       : [];
-    if (isCpraModule) setCpraValues((prev) => ({ ...prev, ...fd } as CpraFormValues));
+    if (isCpraModule) {
+      setCpraValues((prev) => ({ ...prev, ...fd } as CpraFormValues));
+      setCpraPrivacyPolicyFiles([]);
+      setCpraRightsSopFiles([]);
+      setCpraDataMapFiles([]);
+      setCpraVendorListFiles([]);
+      setCpraOtherFiles([]);
+      setCpraDevPrivacyPolicyPaths(caseFilePaths);
+    }
     else if (isDiagnosisModule) setDiagnosisValues((prev) => ({ ...prev, ...fd } as DiagnosisFormValues));
     else if (isAssessmentModule) setAssessmentValues((prev) => ({ ...prev, ...fd } as AssessmentFormValues));
     else if (isPipiaModule) setPipiaValues((prev) => ({ ...prev, ...fd } as PipiaFormValues));
@@ -651,12 +661,10 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     devPresetPaths: string[]
   ): Promise<unknown> => {
     assertInput(hasText(values.project_name), "请填写项目名称。");
+    assertInput(hasText(values.project_goal), "请填写项目目标。");
     assertInput(hasText(values.processing_description), "请填写处理活动描述。");
     assertInput(hasText(values.purpose_and_necessity), "请填写目的与必要性说明。");
     assertInput(hasText(values.lawful_basis), "请填写合法性基础。");
-    assertInput(hasText(values.risk_assessment), "请填写风险评估。");
-    assertInput(hasText(values.mitigation_measures), "请填写缓解措施。");
-    assertInput(hasText(values.residual_risk), "请填写剩余风险结论。");
     const presetFilePaths = DEV_ACCEL_ENABLED ? devPresetPaths.filter((item) => item.trim().length > 0) : [];
     assertInput(files.length > 0 || presetFilePaths.length > 0, "请上传至少1份DPIA附件（流程图/制度/合同等）。");
 
@@ -747,6 +755,7 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   const buildCpraPayloadFrom = async (
     values: CpraFormValues,
     files: Record<keyof CpraResolvedFiles, File[]>,
+    devPrivacyPolicyPaths: string[],
   ): Promise<unknown> => {
     assertInput(hasText(values.company_name), "请填写企业名称。");
     assertInput(hasText(values.business_model), "请填写业务模型。");
@@ -754,24 +763,33 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
     assertInput(hasText(values.notice_and_consent), "请填写告知与同意机制。");
     assertInput(hasText(values.consumer_rights_process), "请填写消费者权利响应机制。");
     assertInput(hasText(values.opt_out_and_sale_sharing), "请填写出售/共享与Opt-out机制。");
+
+    const presetPrivacyPaths = DEV_ACCEL_ENABLED
+      ? devPrivacyPolicyPaths.filter((item) => item.trim().length > 0)
+      : [];
+
     assertInput(
-      hasText(values.privacy_policy_url) || files.privacyPolicy.length > 0,
+      hasText(values.privacy_policy_url)
+        || files.privacyPolicy.length > 0
+        || presetPrivacyPaths.length > 0,
       "请提供隐私政策URL或上传隐私政策文件。"
     );
 
     const [
-      privacyPaths,
       rightsPaths,
       dataMapPaths,
       vendorPaths,
       otherPaths
     ] = await Promise.all([
-      uploadFiles(files.privacyPolicy),
       uploadFiles(files.rightsSop),
       uploadFiles(files.dataMap),
       uploadFiles(files.vendorList),
       uploadFiles(files.other)
     ]);
+
+    const privacyPaths = presetPrivacyPaths.length > 0
+      ? presetPrivacyPaths
+      : await uploadFiles(files.privacyPolicy);
 
     const validatePaths = (paths: string[], label: string) => {
       paths.forEach((path) => {
@@ -800,13 +818,17 @@ export function ModuleRunPanel({ onRunDone, taskSpace, onTaskCreated }: ModuleRu
   };
 
   const buildCpraPayload = async (): Promise<unknown> =>
-    buildCpraPayloadFrom(cpraValues, {
-      privacyPolicy: cpraPrivacyPolicyFiles,
-      rightsSop: cpraRightsSopFiles,
-      dataMap: cpraDataMapFiles,
-      vendorList: cpraVendorListFiles,
-      other: cpraOtherFiles,
-    });
+    buildCpraPayloadFrom(
+      cpraValues,
+      {
+        privacyPolicy: cpraPrivacyPolicyFiles,
+        rightsSop: cpraRightsSopFiles,
+        dataMap: cpraDataMapFiles,
+        vendorList: cpraVendorListFiles,
+        other: cpraOtherFiles,
+      },
+      cpraDevPrivacyPolicyPaths,
+    );
 
   const buildUs14117PayloadFrom = async (
     values: Us14117FormValues,

@@ -2003,6 +2003,11 @@ export interface components {
              * @default false
              */
             contains_important_data?: boolean;
+            /**
+             * Control
+             * @default false
+             */
+            control?: boolean;
             /** Data Inventory Items */
             data_inventory_items?: components["schemas"]["DataInventoryItem"][];
             /** Downstream Processors */
@@ -4231,6 +4236,11 @@ export interface components {
             answers: components["schemas"]["DiagnosisAnswers"];
             /** Company Name */
             company_name: string;
+            /**
+             * Control
+             * @default false
+             */
+            control?: boolean;
         };
         /** DiagnosisSessionCreateResponse */
         DiagnosisSessionCreateResponse: {

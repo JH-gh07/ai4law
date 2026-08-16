@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildUserFacingResult,
   PIPIA_STEPS,
   inferAttachmentFormat,
   inferCnFlowAttachmentFormat,
@@ -64,5 +65,32 @@ describe("module runner model helpers", () => {
     const routeField = PIPIA_STEPS.flatMap((step) => step.fields)
       .find((field) => field.name === "route_type");
     expect(routeField?.options).toContain("hr_exemption");
+  });
+
+  it("maps a clarification control decision without mixing it with task state", () => {
+    const result = buildUserFacingResult(
+      {
+        state: "COMPLETED",
+        control_decision: {
+          legal_control_status: "NEEDS_CLARIFICATION",
+          reasons: ["关键事实缺失"],
+          required_actions: ["补充事实"],
+        },
+        clarification_questions: ["是否属于关键信息基础设施运营者？"],
+      },
+      "zh",
+    );
+
+    expect(result.control).toEqual({
+      status: "NEEDS_CLARIFICATION",
+      reasons: ["关键事实缺失"],
+      requiredActions: ["补充事实"],
+      clarificationQuestions: ["是否属于关键信息基础设施运营者？"],
+    });
+    expect(result.chips).toContain("法律控制：NEEDS_CLARIFICATION");
+  });
+
+  it("keeps legacy responses without control fields compatible", () => {
+    expect(buildUserFacingResult({ state: "COMPLETED" }, "zh").control).toBeNull();
   });
 });

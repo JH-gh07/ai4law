@@ -60,6 +60,7 @@ export type PersistedModuleRun = {
   errorCode?: string;
   asyncTaskId?: string;
   asyncState?: string;
+  statusCheckedAt?: string;
 };
 
 export type PersistedEvidenceHit = {
@@ -204,6 +205,7 @@ export function toPersistedState(state: {
       errorCode: r.errorCode,
       asyncTaskId: r.asyncTaskId,
       asyncState: r.asyncState,
+      statusCheckedAt: r.statusCheckedAt,
     }),
   );
 
@@ -299,6 +301,7 @@ export function persistedToAppState(p: PersistedAppStateV2): {
     errorCode: r.errorCode,
     asyncTaskId: r.asyncTaskId,
     asyncState: r.asyncState,
+    statusCheckedAt: r.statusCheckedAt,
   }));
 
   const runSessions: RunSession[] = p.runSessions.map((s) => ({

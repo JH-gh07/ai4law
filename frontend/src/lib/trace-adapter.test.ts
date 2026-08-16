@@ -40,4 +40,33 @@ describe("adaptEvents", () => {
     expect(nodes[0].rawEventIds).toEqual(["start-a", "result-a"]);
     expect(nodes[1].rawEventIds).toEqual(["start-b", "result-b"]);
   });
+
+  it("maps control gate raw events to a review node", () => {
+    const nodes = adaptEvents(
+      [{
+        event_id: "control-1",
+        task_id: "task-1",
+        seq: 5,
+        event_type: "warning",
+        correlation_id: null,
+        timestamp: "2026-08-16T00:00:05Z",
+        summary: "引用有效性门需要人工复核",
+        detail: {
+          raw_name: "control.citation_validity",
+          gate: "CITATION_VALIDITY",
+          outcome: "ESCALATE",
+        },
+        level: "audit",
+      }],
+      "zh",
+    );
+
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]).toMatchObject({
+      stage: "Review",
+      action: "执行控制门判定 · CITATION_VALIDITY · ESCALATE",
+      badge: "CONTROL",
+      status: "error",
+    });
+  });
 });

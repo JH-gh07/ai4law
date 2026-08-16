@@ -7,6 +7,7 @@ import type { ModuleRun } from "./domain";
 const TERMINAL_ASYNC_STATES = new Set(["succeeded", "completed", "failed", "cancelled", "canceled"]);
 const SUCCESS_ASYNC_STATES = new Set(["succeeded", "completed"]);
 const FAILED_ASYNC_STATES = new Set(["failed", "cancelled", "canceled"]);
+const RECONCILIABLE_ERRORS = new Set(["async task timeout", "review generation failed"]);
 
 export type RunLifecycleState = "idle" | "running" | "success" | "failed";
 export type ExtendedRunLifecycleState = "idle" | "running" | "success" | "failed" | "unreachable";
@@ -110,7 +111,12 @@ export function selectRunningModuleRuns(runs: ModuleRun[]): ModuleRun[] {
   return runs.filter((run) => {
     if (!run.asyncTaskId) return false;
     const asyncState = normalizeAsyncState(run.asyncState);
-    if (asyncState && TERMINAL_ASYNC_STATES.has(asyncState)) return false;
+    if (asyncState && TERMINAL_ASYNC_STATES.has(asyncState)) {
+      // A client timeout or the Review endpoint's generic error can race with
+      // the real backend task. Reconcile each such terminal record once.
+      if (run.statusCheckedAt) return false;
+      return RECONCILIABLE_ERRORS.has((run.error ?? "").trim().toLowerCase());
+    }
     // If finishedAt is already set, we've already finalized it
     if (run.finishedAt) return false;
     return true;

@@ -945,12 +945,20 @@ export const splitCsv = (value: string): string[] =>
 export const hasText = (value: string, minLength = 2): boolean => value.trim().length >= minLength;
 
 const UI_LANG_KEY = "ai4law_ui_lang";
-const currentUiLang = (): "zh" | "en" => (globalThis.localStorage?.getItem(UI_LANG_KEY) === "zh" ? "zh" : "en");
+const currentUiLang = (): "zh" | "en" => {
+  const stored = globalThis.localStorage?.getItem(UI_LANG_KEY);
+  if (stored === "zh" || stored === "en") return stored;
+  return globalThis.navigator?.language?.toLowerCase().startsWith("zh") ? "zh" : "en";
+};
 const replaceAllText = (source: string, from: string, to: string): string => source.split(from).join(to);
 
 const toEnglishValidation = (message: string): string => {
   let text = message;
   const replacements: Array<[string, string]> = [
+    [
+      "请提供隐私政策URL或上传隐私政策文件。",
+      "Please provide a privacy policy URL or upload a privacy policy file."
+    ],
     ["请填写", "Please provide "],
     ["请至少填写一类", "Please provide at least one "],
     ["请上传至少1份", "Please upload at least one "],

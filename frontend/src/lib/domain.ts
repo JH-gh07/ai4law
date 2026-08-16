@@ -55,6 +55,8 @@ export type ModuleRun = {
   errorCode?: string;
   asyncTaskId?: string;
   asyncState?: string;
+  /** Set after a stale local terminal record has been reconciled with the backend. */
+  statusCheckedAt?: string;
 };
 
 export type OutputArtifact = {

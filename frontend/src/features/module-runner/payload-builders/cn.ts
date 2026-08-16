@@ -106,6 +106,7 @@ export function buildDiagnosisPayload(values: DiagnosisFormValues): ModuleReques
 
   return {
     company_name: companyName,
+    control: true,
     answers: {
       q1_is_ciio: "unknown",
       q2_has_important_data: importantDataFlag === "yes" ? "yes" : importantDataFlag === "no" ? "no" : "unknown",
@@ -187,6 +188,7 @@ export function buildAssessmentPayload(
   ].filter((item) => item.length > 0).join("；");
   return {
     company_name: trimOr(values.company_name, "待确认企业"),
+    control: true,
     industry: trimOr([values.industry, values.company_nature].filter((item) => item.trim()).join(" / "), "未说明行业"),
     is_ciio: values.is_ciio,
     contains_important_data: values.contains_important_data,

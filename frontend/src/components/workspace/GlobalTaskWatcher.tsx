@@ -52,9 +52,9 @@ export function GlobalTaskWatcher() {
         inFlightRef.current.add(taskId);
         try {
           const status = await fetchModuleTaskStatus(moduleDefinition, taskId);
+          const checkedAt = new Date().toISOString();
 
           if (isFinalAsyncState(status.state)) {
-            const now = new Date().toISOString();
             dispatch({
               type: "append_run",
               payload: {
@@ -63,19 +63,43 @@ export function GlobalTaskWatcher() {
                 module: run.module,
                 runMode: "async",
                 startedAt: run.startedAt,
-                finishedAt: now,
+                finishedAt: checkedAt,
                 success: isSuccessAsyncState(status.state),
                 request: run.request,
                 response: status.result ?? run.response,
-                error: status.error ?? run.error,
+                error: status.error ?? "",
                 asyncTaskId: taskId,
                 asyncState: status.state,
+                statusCheckedAt: checkedAt,
+              },
+            });
+          } else {
+            // The local run may have been marked failed by a client timeout
+            // while the backend continued processing. Restore the authoritative
+            // non-terminal state and let the watcher continue polling it.
+            dispatch({
+              type: "append_run",
+              payload: {
+                id: run.id,
+                taskSpaceId: run.taskSpaceId,
+                module: run.module,
+                runMode: "async",
+                startedAt: run.startedAt,
+                finishedAt: "",
+                success: false,
+                request: run.request,
+                response: run.response,
+                error: "",
+                errorCode: run.errorCode,
+                asyncTaskId: taskId,
+                asyncState: status.state,
+                statusCheckedAt: checkedAt,
               },
             });
           }
         } catch (error) {
           if (error instanceof AsyncTaskNotFoundError) {
-            const now = new Date().toISOString();
+            const checkedAt = new Date().toISOString();
             dispatch({
               type: "append_run",
               payload: {
@@ -84,7 +108,7 @@ export function GlobalTaskWatcher() {
                 module: run.module,
                 runMode: "async",
                 startedAt: run.startedAt,
-                finishedAt: now,
+                finishedAt: checkedAt,
                 success: false,
                 request: run.request,
                 response: run.response,
@@ -92,6 +116,7 @@ export function GlobalTaskWatcher() {
                 errorCode: "async_task_not_found",
                 asyncTaskId: taskId,
                 asyncState: "failed",
+                statusCheckedAt: checkedAt,
               },
             });
           }

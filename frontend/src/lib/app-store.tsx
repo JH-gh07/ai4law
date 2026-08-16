@@ -669,6 +669,7 @@ function reducer(state: AppState, action: Action): AppState {
             error: action.payload.error ?? existing.error,
             errorCode: action.payload.errorCode ?? existing.errorCode,
             asyncState: action.payload.asyncState ?? existing.asyncState,
+            statusCheckedAt: action.payload.statusCheckedAt ?? existing.statusCheckedAt,
             // success 仅当服务端返回明确终态时才覆盖
             success: action.payload.finishedAt ? action.payload.success : existing.success,
           };
