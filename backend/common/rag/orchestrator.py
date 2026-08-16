@@ -612,20 +612,51 @@ class RetrievalOrchestrator:
                 return False
         return True
 
-    def _legal_by_reference_ids(self, chunks: Iterable[KnowledgeChunkV2]) -> list[KnowledgeChunkV2]:
-        return self._legal_by_reference_ids_for_index(chunks, "legal_index_cn")
+    def _legal_by_reference_ids(
+        self,
+        chunks: Iterable[KnowledgeChunkV2],
+        *,
+        source_cap: int = 3,
+        total_cap: int = 24,
+    ) -> list[KnowledgeChunkV2]:
+        return self._legal_by_reference_ids_for_index(
+            chunks,
+            "legal_index_cn",
+            source_cap=source_cap,
+            total_cap=total_cap,
+        )
 
-    def _legal_by_reference_ids_for_index(self, chunks: Iterable[KnowledgeChunkV2], index_name: str) -> list[KnowledgeChunkV2]:
+    def _legal_by_reference_ids_for_index(
+        self,
+        chunks: Iterable[KnowledgeChunkV2],
+        index_name: str,
+        *,
+        source_cap: int = 3,
+        total_cap: int = 24,
+    ) -> list[KnowledgeChunkV2]:
         ref_ids = {ref for chunk in chunks for ref in chunk.reference_ids}
         if not ref_ids:
             return []
         entries = self._load_entries(index_name)
-        results: list[KnowledgeChunkV2] = []
+        # Split exact chunk-level references from whole-source references. A
+        # workflow rule may cite a source_id (e.g. "CN-LAW-003" = the whole PIPL);
+        # without a cap that single reference used to expand every article of the
+        # source (74 chunks) into legal_grounding, defeating top_k / source_cap.
+        # Exact chunk_id references are kept in full; whole-source references are
+        # capped per source so a rule can still ground itself without dumping an
+        # entire statute.
+        exact: list[KnowledgeChunkV2] = []
+        by_source: dict[str, list[KnowledgeChunkV2]] = {}
         for entry in entries:
             chunk = _payload_to_chunk(entry.payload)
-            if chunk.source_id in ref_ids or chunk.chunk_id in ref_ids:
-                results.append(chunk)
-        return self._dedupe_chunks(results)
+            if chunk.chunk_id in ref_ids:
+                exact.append(chunk)
+            elif chunk.source_id in ref_ids:
+                by_source.setdefault(chunk.source_id, []).append(chunk)
+        results = self._dedupe_chunks(exact)
+        for source_id in sorted(by_source):
+            results.extend(by_source[source_id][:source_cap])
+        return self._dedupe_chunks(results)[:total_cap]
 
     @staticmethod
     def _dedupe_chunks(chunks: list[KnowledgeChunkV2]) -> list[KnowledgeChunkV2]:

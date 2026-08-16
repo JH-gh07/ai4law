@@ -30,10 +30,27 @@ if TYPE_CHECKING:
     from backend.domains.cn.document_review.specialized_reviewers.base_reviewer import BaseSpecializedReviewer
 
 logger = logging.getLogger(__name__)
-_SOURCE_TITLE_TO_IDS = {
-    entry.title.replace("《", "").replace("》", ""): entry.source_id
-    for entry in ensure_source_registry()
-}
+
+# Canonical source title/id maps for citation name normalization. The rulebook
+# uses short names ("个人信息保护法") while the RAG hits carry full registered
+# names ("中华人民共和国个人信息保护法"); without a shared map both spellings
+# end up side by side in a report. We also keep source_kind so templates and
+# court cases can be rejected before they reach the "法规依据" field.
+_SOURCE_TITLE_TO_IDS: dict[str, str] = {}
+_SOURCE_CANONICAL_TITLES: dict[str, str] = {}
+_SOURCE_ID_TO_ENTRY = {entry.source_id: entry for entry in ensure_source_registry()}
+for _entry in _SOURCE_ID_TO_ENTRY.values():
+    _clean = _entry.title.replace("《", "").replace("》", "").strip()
+    _variants = [_clean]
+    if _clean.startswith("中华人民共和国"):
+        _variants.append(_clean[len("中华人民共和国"):])
+    for _variant in _variants:
+        _SOURCE_TITLE_TO_IDS.setdefault(_variant, _entry.source_id)
+    _SOURCE_CANONICAL_TITLES[_entry.source_id] = _clean
+
+# source_kind values that are never legal citations ("法规依据").
+_NON_CITATION_KINDS = frozenset({"case", "case_reference", "template_slot", "official_template", "example_template"})
+_MAX_CITATIONS_PER_ISSUE = 8
 
 _REVIEW_SYSTEM_PROMPT = (
     "你是一名专注于中国个人信息保护合规的资深律师，深度掌握《个人信息保护法》"
@@ -137,11 +154,14 @@ class ClauseReviewer:
             # No LLM → rule‑based
             issues.extend(self._review_with_rules(clause, config))
 
-        # 4. Enrich all issues with structured citations
+        # 4. Enrich issues that lack citations with the clause-type's precise
+        #    rulebook citations + RAG top-k hits (deduped, template/case-free,
+        #    capped). Never blind-attach a whole-source citation dump.
         for issue in issues:
             if not issue.structured_citations:
                 issue.structured_citations = self._build_structured_citations(
-                    config.get("citations", [])
+                    config.get("citations", []),
+                    config.get("structured_citations", []),
                 )
             # Sync citation_sources for backward compatibility
             if not issue.citation_sources:
@@ -512,35 +532,53 @@ class ClauseReviewer:
         structured_seed: list[dict] | None = None,
         standard_clause: KnowledgeChunkV2 | None = None,
     ) -> list[StructuredCitation]:
-        """Convert raw citation strings into StructuredCitation objects."""
+        """Build citable legal citations, dropping templates/cases and capping.
+
+        Only statute/regulation/standard/guideline sources may enter
+        ``structured_citations`` (and therefore "法规依据"). Court cases and
+        templates are excluded; per-issue cardinality is capped so a single issue
+        never carries an entire statute.
+        """
         result: list[StructuredCitation] = []
         seen: set[str] = set()
+
+        def _append(citation: StructuredCitation) -> None:
+            if len(result) >= _MAX_CITATIONS_PER_ISSUE:
+                return
+            if not self._is_citable_source(citation.source_id):
+                return
+            key = f"{citation.source_title}::{citation.article}"
+            if key in seen:
+                return
+            seen.add(key)
+            result.append(citation)
+
         if standard_clause is not None:
-            standard_citation = StructuredCitation(
+            _append(StructuredCitation(
                 source_id=standard_clause.source_id,
                 source_title=standard_clause.title,
                 article=standard_clause.citation_anchor or standard_clause.article_no,
                 snippet=standard_clause.content[:200],
                 source_type=str(standard_clause.source_kind or "standard_clause"),
-            )
-            key = f"{standard_citation.source_title}::{standard_citation.article}"
-            seen.add(key)
-            result.append(standard_citation)
+            ))
+
         for item in structured_seed or []:
-            citation = StructuredCitation(
-                source_id=str(item.get("source_id", "")),
-                source_title=str(item.get("source_title", "")),
+            source_id = str(item.get("source_id", ""))
+            _, canonical_title = self._resolve_source(
+                str(item.get("source_title", "")), source_id
+            )
+            _append(StructuredCitation(
+                source_id=source_id,
+                source_title=canonical_title,
                 article=str(item.get("article", "")),
                 snippet=str(item.get("snippet", "")),
                 source_type=str(item.get("source_type", "statute")),
-            )
-            key = f"{citation.source_title}::{citation.article}"
-            if key in seen:
-                continue
-            seen.add(key)
-            result.append(citation)
+            ))
+
         for raw in raw_citations:
-            if not raw or raw in seen:
+            if not raw:
+                continue
+            if self._looks_like_case(raw):
                 continue
 
             # Parse "《source》article" format
@@ -553,14 +591,10 @@ class ClauseReviewer:
             else:
                 source_title = raw[:80]
 
-            key = f"{source_title}::{article}"
-            if key in seen:
-                continue
-            seen.add(key)
-
-            result.append(StructuredCitation(
-                source_id=self._canonical_source_id(source_title, raw),
-                source_title=source_title,
+            source_id, canonical_title = self._resolve_source(source_title, raw)
+            _append(StructuredCitation(
+                source_id=source_id,
+                source_title=canonical_title,
                 article=article,
                 snippet=raw[:200],
                 source_type="statute",
@@ -568,11 +602,41 @@ class ClauseReviewer:
         return result
 
     @staticmethod
-    def _canonical_source_id(source_title: str, raw: str) -> str:
-        clean_title = source_title.replace("《", "").replace("》", "").strip()
-        if clean_title in _SOURCE_TITLE_TO_IDS:
-            return _SOURCE_TITLE_TO_IDS[clean_title]
-        return f"cite-{hash(raw) & 0xFFFFFFFF:08x}"
+    def _resolve_source(source_title: str, raw: str = "") -> tuple[str, str]:
+        """Return (source_id, canonical_title) for a citation source name.
+
+        Maps short names ("个人信息保护法") to the canonical registered title
+        ("中华人民共和国个人信息保护法") so one statute never renders under two
+        spellings in the same report.
+        """
+        clean = (source_title or "").replace("《", "").replace("》", "").strip()
+        source_id = _SOURCE_TITLE_TO_IDS.get(clean)
+        if source_id:
+            return source_id, _SOURCE_CANONICAL_TITLES.get(source_id, clean)
+        return f"cite-{hash(raw or clean) & 0xFFFFFFFF:08x}", clean
+
+    @staticmethod
+    def _is_citable_source(source_id: str) -> bool:
+        entry = _SOURCE_ID_TO_ENTRY.get(source_id)
+        if entry is None:
+            # Synthetic standard_clause chunks and unresolved fallbacks are
+            # acceptable; real templates/cases are always in the registry and
+            # rejected by the checks below.
+            return True
+        return entry.source_kind not in _NON_CITATION_KINDS and entry.layer != "L4_template"
+
+    @staticmethod
+    def _looks_like_case(raw: str) -> bool:
+        """Heuristic for court-case strings leaked into citations.
+
+        DeliLegal cases were historically formatted as ``"{court}: {title}"``
+        (e.g. "大理白族自治州中级人民法院: 赵某；董某…判决书") with no 《》 marks.
+        They are never a legal citation; treat that shape as a case and drop it.
+        """
+        text = raw.strip()
+        if text.startswith("《") or "》" in text:
+            return False
+        return "法院" in text and any(token in text for token in ("判决", "裁定", "诉"))
 
     @staticmethod
     def _severity_for(clause_type: ClauseType) -> ReviewSeverity:

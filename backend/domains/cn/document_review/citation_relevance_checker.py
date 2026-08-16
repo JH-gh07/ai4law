@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import re
+
 from backend.schemas.review import ReviewIssue, StructuredCitation
+
+# Corrupted locators that leaked from scripts/fix_cn_law_001_duplicates.py into
+# ``article_ref`` ("处罚-17-1", "第X条-处罚-1", "第X条-ext-1"). They are never a
+# legal article number and must fail relevance / be surfaced as a defect.
+_INVALID_ARTICLE_PATTERN = re.compile(r"(处罚\s*[-—])|(-处罚)|(-ext-)")
 
 
 class CitationRelevanceChecker:
@@ -65,11 +72,28 @@ class CitationRelevanceChecker:
             result["issues"].append("缺少法规引用")
             return result
 
+        # Format gate: a corrupted locator ("处罚-17-1" / "-ext-1") is always a
+        # defect, regardless of keyword relevance. Never let it pass silently.
+        for sc in issue.structured_citations:
+            if self._is_corrupted_article(sc.article):
+                result["relevant"] = False
+                result["relevance_score"] = min(result["relevance_score"], 0.0)
+                result["issues"].append(
+                    f"引用「{sc.source_title}」包含非法条号「{sc.article}」"
+                )
+        for raw in issue.citation_sources:
+            if self._is_corrupted_article(raw):
+                result["relevant"] = False
+                result["relevance_score"] = min(result["relevance_score"], 0.0)
+                result["issues"].append(f"引用包含非法条号「{raw}」")
+
         ct = issue.clause_type.value if issue.clause_type else "OTHER"
         expected = self._RELEVANCE_MAP.get(ct, [])
         scores: list[float] = []
 
         for sc in issue.structured_citations:
+            if self._is_corrupted_article(sc.article):
+                continue
             score = self._score_citation(sc, expected, issue)
             scores.append(score)
 
@@ -91,7 +115,23 @@ class CitationRelevanceChecker:
         if result["relevance_score"] < 0.4:
             result["relevant"] = False
 
+        # Empty-gap fix: ``relevant=False`` must always carry a human-readable
+        # reason. The old code could set relevant=False with issues=[] (when every
+        # citation scored >= 0.3 individually but the average dropped below 0.4),
+        # which rendered a blank "引用相关性警告：".
+        if not result["relevant"] and not result["issues"]:
+            result["issues"].append(
+                f"引用与问题类型({ct})整体相关性不足（平均 {result['relevance_score']}）"
+            )
+
         return result
+
+    @staticmethod
+    def _is_corrupted_article(text: str) -> bool:
+        """True if *text* carries a corrupted article locator suffix."""
+        if not text:
+            return False
+        return bool(_INVALID_ARTICLE_PATTERN.search(text))
 
     def _score_citation(
         self, sc: StructuredCitation, expected: list[str], issue: ReviewIssue,

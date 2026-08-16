@@ -41,6 +41,22 @@ from backend.services.knowledge_index import _normalize_article_lookup_key, reso
 # Chinese numeral set for detection
 _CHINESE_NUMERALS = set("一二三四五六七八九十百千万零〇两")
 
+
+def _is_corrupted_article_ref(ref: object) -> bool:
+    """True if ``article_ref`` carries a disambiguation suffix that leaked into
+    the locator instead of a separate field.
+
+    ``scripts/fix_cn_law_001_duplicates.py`` historically wrote ``-处罚-N`` /
+    ``-ext-N`` (and an even older version ``处罚-N-M``) straight into
+    ``article_ref``. Downstream treated the result as a real article anchor and
+    rendered it verbatim into review reports ("处罚-17-1"). Such values are never
+    a legal article number and must fail the integrity gate.
+    """
+    value = (str(ref or "")).strip()
+    if not value:
+        return False
+    return value.startswith("处罚") or "-处罚" in value or "-ext-" in value
+
 # Source type labels (jurisdiction prefix)
 _JURISDICTION_LABELS = {
     "CN": "中国大陆", "EU": "欧盟", "US": "美国",
@@ -267,6 +283,11 @@ def run_checks(rows: list[dict]) -> dict:
         if not _looks_valid_article(r.get("article_ref", ""))
     ]
 
+    corrupted_ref = [
+        i for i, r in enumerate(rows)
+        if _is_corrupted_article_ref(r.get("article_ref", ""))
+    ]
+
     classification = _classify_articles(rows)
     url_coverage = _url_coverage_by_source(rows)
     effective_url_coverage = _effective_url_coverage_by_source(rows, sources_csv)
@@ -291,6 +312,13 @@ def run_checks(rows: list[dict]) -> dict:
         "missing_source_url_count": len(missing_url),           # raw (article-level only)
         "missing_effective_url_count": len(missing_effective_url),  # with sources.csv fallback
         "invalid_article_number_count": len(invalid_num),
+        "invalid_article_ref_count": len(corrupted_ref),
+        "_corrupted_ref_sample": [
+            {"source_id": rows[i].get("source_id", "?"),
+             "article_ref": rows[i].get("article_ref", ""),
+             "row": i}
+            for i in corrupted_ref[:10]
+        ],
         # Classification (Phase 4 task 7)
         "article_classification": classification,
         # URL coverage (raw = article-level only)
@@ -329,6 +357,8 @@ def main() -> None:
          "Duplicate (source_id, article_no) pairs — must be 0"),
         ("missing_article_ref_count", 0,
          "Rows with empty article_ref — must be 0"),
+        ("invalid_article_ref_count", 0,
+         "Rows with corrupted article_ref (处罚- / -ext- suffix) — must be 0"),
     ]
 
     passed = True
@@ -356,6 +386,8 @@ def main() -> None:
         print(f"missing_effective_url_count:    {result['missing_effective_url_count']}"
               f"  (with sources.csv fallback)")
         print(f"invalid_article_number_count:   {result['invalid_article_number_count']}")
+        print(f"invalid_article_ref_count:      {result['invalid_article_ref_count']}"
+              f"  (处罚- / -ext- corruption)")
         print()
         print("── Article resolution classification ──")
         print(f"article_missing (empty ref):    {ac['article_missing_count']}")

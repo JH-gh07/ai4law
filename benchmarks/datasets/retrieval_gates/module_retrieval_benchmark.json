@@ -123,9 +123,11 @@
         {
           "query": "数据出境 审查 标准合同 条款 个人信息处理者",
           "must_include_sources": [
+            "CN-LAW-003"
+          ],
+          "must_exclude_sources": [
             "CN-TPL-016"
           ],
-          "must_exclude_sources": [],
           "top_k": 8
         }
       ]

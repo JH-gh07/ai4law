@@ -821,8 +821,8 @@
       "modules": [
         "cn_review"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -831,12 +831,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "review",
         "module": "cn-review",
@@ -863,8 +862,8 @@
       "modules": [
         "cn_review"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -873,12 +872,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "review",
         "module": "cn-review",
@@ -905,8 +903,8 @@
       "modules": [
         "cn_review"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -915,12 +913,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "review",
         "module": "cn-review",
@@ -947,8 +944,8 @@
       "modules": [
         "cn_assessment"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -957,12 +954,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "assessment",
         "module": "cn-assessment",
@@ -989,8 +985,8 @@
       "modules": [
         "cn_pipia"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -999,12 +995,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "assessment",
         "module": "cn-pipia",
@@ -1031,8 +1026,8 @@
       "modules": [
         "cn_diagnosis"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -1041,12 +1036,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "all",
         "module": "cn-diagnosis",
@@ -1325,8 +1319,8 @@
       "modules": [
         "cn_review"
       ],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -1335,12 +1329,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "review",
         "module": "cn-review",
@@ -2125,8 +2118,8 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -2135,12 +2128,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "reference",
         "module": "",
@@ -2165,8 +2157,8 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -2175,12 +2167,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "reference",
         "module": "",
@@ -2205,8 +2196,8 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -2215,12 +2206,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "reference",
         "module": "",
@@ -2245,8 +2235,8 @@
       "aliases": [],
       "jurisdiction": "eu",
       "modules": [],
-      "layer": "L1_regulatory_evidence",
-      "source_kind": "standard_clause",
+      "layer": "L4_template",
+      "source_kind": "template_slot",
       "authority_level": "medium",
       "binding_force": "reference",
       "status": "reference",
@@ -2255,12 +2245,11 @@
       "superseded_by": [],
       "review_status": "published",
       "allowed_usage": [
-        "legal_grounding",
-        "external_report",
+        "structure_control",
         "internal_review"
       ],
-      "can_be_cited": true,
-      "can_enter_external_report": true,
+      "can_be_cited": false,
+      "can_enter_external_report": false,
       "metadata": {
         "path": "reference",
         "module": "",

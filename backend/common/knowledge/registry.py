@@ -127,6 +127,11 @@ def _source_kind_from_row(row: dict[str, str]) -> str:
     title = (row.get("title") or "").replace("《", "").replace("》", "")
     doc_type = (row.get("doc_type") or "").lower()
     category = (row.get("category") or "").lower()
+    # Templates are structure/format scaffolding, never a citable legal article or
+    # a standard clause. Map them to template_slot (the SourceKind paired with
+    # L4_template) so they never share a kind with real standard clauses.
+    if doc_type == "template":
+        return "template_slot"
     # ``doc_type`` is a free-form metadata string; map the newer, finer-grained
     # values (policy, technical_standard) onto the stable SourceKind vocabulary so
     # retrieval/citation policy and Evidence Center labels keep working without a
@@ -172,6 +177,21 @@ def _authority_level_from_row(row: dict[str, str]) -> str:
     return "low"
 
 
+def _layer_from_row(row: dict[str, str]) -> str:
+    """Derive the knowledge layer for a source row.
+
+    Templates live in ``L4_template`` (structure/format scaffolding, never a
+    citable legal basis); everything else in this catalog is a regulatory/legal
+    source and belongs in ``L1_regulatory_evidence``. The CSV ``layer`` column uses
+    a different vocabulary (``template_assets`` / ``legal_rules`` /
+    ``supplemental_assets`` / ...) so we derive from ``doc_type``, the stable
+    discriminator, rather than that free-form column.
+    """
+    if (row.get("doc_type") or "").strip().lower() == "template":
+        return "L4_template"
+    return "L1_regulatory_evidence"
+
+
 def _citation_policy_for_row(row: dict[str, str]) -> tuple[bool, bool, list[str]]:
     """Return (can_be_cited, can_enter_external_report, allowed_usage) for a row.
 
@@ -184,6 +204,8 @@ def _citation_policy_for_row(row: dict[str, str]) -> tuple[bool, bool, list[str]
     review_status = (row.get("review_status") or "").strip().lower()
     if review_status == "metadata_review_required":
         return (False, False, ["internal_review"])
+    if (row.get("doc_type") or "").strip().lower() == "template":
+        return (False, False, ["structure_control", "internal_review"])
     return (True, True, ["legal_grounding", "external_report", "internal_review"])
 
 
@@ -256,7 +278,7 @@ def build_source_registry_from_sources_csv() -> list[SourceRegistryEntry]:
                     aliases=[],
                     jurisdiction=jurisdiction,
                     modules=modules,
-                    layer="L1_regulatory_evidence",
+                    layer=_layer_from_row(row),
                     source_kind=_source_kind_from_row(row),
                     authority_level=_authority_level_from_row(row),
                     binding_force=_binding_force_from_row(row),

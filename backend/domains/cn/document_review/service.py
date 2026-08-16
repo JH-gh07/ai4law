@@ -401,6 +401,17 @@ class ReviewService:
                         f" ｜ 引用相关性警告：{'; '.join(relevance.get('issues', []))}"
                     )
 
+            # Fail-closed integrity gate: block a report that would carry a
+            # corrupted article number, a template/case in "法规依据", or an
+            # over-cap citation list.
+            citation_diagnostics = self._validate_citation_integrity(issues)
+            if citation_diagnostics:
+                self._update_task(db, task, ReviewTaskStatus.RENDERING, 96)
+                raise ValueError(
+                    "引用完整性终检失败，已阻止产出错误报告："
+                    + "；".join(citation_diagnostics[:5])
+                )
+
             self._update_task(db, task, ReviewTaskStatus.REVIEWING, 80)
 
             # ── Stage 5: CROSS_DOC_CHECK (80‑85%) [NEW] ──
@@ -833,6 +844,37 @@ class ReviewService:
         if persist:
             self.repository.save_task(db, task)
         self._publish_progress(task.id, status.value, progress)
+
+    @staticmethod
+    def _validate_citation_integrity(issues) -> list[str]:
+        """Fail-closed citation gate run before report rendering.
+
+        Detects, per issue: corrupted article locators (处罚- / -ext-), template or
+        court-case sources leaking into "法规依据", and per-issue citation counts
+        exceeding the cap. Returns human-readable diagnostics (empty = pass).
+        """
+        invalid_pattern = re.compile(r"(处罚\s*[-—])|(-处罚)|(-ext-)")
+        non_citation_types = {
+            "case", "case_reference", "template_slot",
+            "official_template", "example_template",
+        }
+        diagnostics: list[str] = []
+        for issue in issues:
+            scs = list(issue.structured_citations or [])
+            if len(scs) > 8:
+                diagnostics.append(
+                    f"{issue.issue_id}: 引用条数 {len(scs)} 超过上限 8"
+                )
+            for sc in scs:
+                label = f"「{sc.source_title}」{sc.article}".strip()
+                if invalid_pattern.search(sc.article or "") or invalid_pattern.search(sc.source_title or ""):
+                    diagnostics.append(f"{issue.issue_id}: 非法条号 {label}")
+                if (sc.source_type or "").lower() in non_citation_types:
+                    diagnostics.append(f"{issue.issue_id}: 模板/案例来源 {label} 误入法规依据")
+            for raw in issue.citation_sources or []:
+                if invalid_pattern.search(raw):
+                    diagnostics.append(f"{issue.issue_id}: 非法引用「{raw}」")
+        return diagnostics
 
     def _invoke_reviewer(
         self,

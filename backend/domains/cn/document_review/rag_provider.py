@@ -1,10 +1,46 @@
 import json
+import re
 
 from backend.common.knowledge.v2 import RetrievalRequest
+from backend.common.knowledge.registry import ensure_source_registry
 from backend.common.rag.service import LegalRetrievalService
 from backend.schemas.review import ClauseType
 from backend.integrations.delilegal import DeliLegalService
 from backend.core.resource_paths import rule_resource_path
+
+
+def _build_canonical_title_map() -> dict[str, str]:
+    """Map short/full source titles to the canonical registered title.
+
+    The rulebook cites "个人信息保护法" while RAG hits carry the full registered
+    name "中华人民共和国个人信息保护法". Normalizing here keeps the LLM prompt
+    (and any downstream raw-citation consumer) from emitting both spellings.
+    """
+    mapping: dict[str, str] = {}
+    for entry in ensure_source_registry():
+        clean = entry.title.replace("《", "").replace("》", "").strip()
+        if not clean:
+            continue
+        mapping[clean] = clean
+        if clean.startswith("中华人民共和国"):
+            mapping[clean[len("中华人民共和国"):]] = clean
+    return mapping
+
+
+_CANONICAL_TITLE_MAP = _build_canonical_title_map()
+
+
+def _normalize_citation(raw: str) -> str:
+    """Rewrite a "《source》article" string to the canonical source title."""
+    if not raw:
+        return raw
+    m = re.match(r"《(.+?)》(.*)", raw)
+    if not m:
+        return raw
+    title = m.group(1).replace("《", "").replace("》", "").strip()
+    article = m.group(2).strip()
+    canonical = _CANONICAL_TITLE_MAP.get(title, title)
+    return f"《{canonical}》{article}".strip()
 
 
 class LocalRegulationKnowledgeBase:
@@ -112,26 +148,33 @@ class LocalRegulationKnowledgeBase:
         if rag_citations:
             citations = list(dict.fromkeys([*citations, *rag_citations]))
 
+        # DeliLegal court-case search is reference material, NOT a legal citation.
+        # Keep it in a separate field so the renderer can show it as "参考案例"
+        # instead of dumping judgment titles into the "法规依据" column.
+        reference_cases: list[dict] = []
         if self.legal_api_service and self.legal_api_service.enabled and should_enrich:
             hits = self.legal_api_service.search_cases(clause_text[:80], size=2)
             if hits:
-                external_citations = [
-                    f"{item['source']}: {item['title']}"
+                reference_cases = [
+                    {
+                        "source": str(item.get("source", "")),
+                        "title": str(item.get("title", "")),
+                        "summary": str(item.get("summary", "")),
+                    }
                     for item in hits
                 ]
-                citations = list(dict.fromkeys([*citations, *external_citations]))
             elif self.legal_api_service.last_error:
-                citations = list(
-                    dict.fromkeys(
-                        [
-                            *citations,
-                            f"DeliLegal API failed: {self.legal_api_service.last_error}",
-                        ]
-                    )
-                )
+                reference_cases = [
+                    {
+                        "source": "DeliLegal",
+                        "title": "案例检索失败",
+                        "summary": self.legal_api_service.last_error,
+                    }
+                ]
 
-        config["citations"] = citations
+        config["citations"] = list(dict.fromkeys(_normalize_citation(c) for c in citations))
         config["structured_citations"] = structured_citations
+        config["reference_cases"] = reference_cases
         config["workflow_rules"] = workflow_rules
         config["standard_clause_candidates"] = standard_clause_candidates
         config["usage_policy_debug"] = {

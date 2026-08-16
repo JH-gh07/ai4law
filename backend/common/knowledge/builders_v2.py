@@ -141,6 +141,14 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
     for row in merged_rows:
         source_id = str(row.get("source_id") or "")
         registry_entry = registry.get(source_id)
+        # Templates are structure/format scaffolding (L4_template / template_slot),
+        # not a citable legal basis. They must not enter legal_index_cn; template
+        # chunks are produced exclusively by build_template_chunks_cn().
+        if registry_entry is not None and registry_entry.layer == "L4_template":
+            continue
+        if (row.get("doc_type") or "").strip().lower() == "template":
+            continue
+
         title = str(row.get("law_name") or (registry_entry.title if registry_entry else ""))
         path = str(row.get("path") or (registry_entry.metadata.get("path", "all") if registry_entry else "all"))
         modules = []
@@ -154,6 +162,7 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
             modules.append("cn_diagnosis")
 
         source_kind = registry_entry.source_kind if registry_entry is not None else "law_article"
+        layer = registry_entry.layer if registry_entry is not None else "L1_regulatory_evidence"
         allowed_usage = list(registry_entry.allowed_usage) if registry_entry is not None else ["legal_grounding", "external_report", "internal_review"]
         for module in modules:
             chunks.append(
@@ -162,7 +171,7 @@ def build_legal_chunks_cn() -> list[KnowledgeChunkV2]:
                     source_id=source_id,
                     title=title,
                     content=str(row.get("content") or ""),
-                    layer="L1_regulatory_evidence",
+                    layer=layer,
                     template_type="none",
                     source_kind=str(source_kind),
                     module=module,
