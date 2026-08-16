@@ -21,7 +21,13 @@ from backend.common.knowledge.paths import regulation_articles_jsonl_path, sourc
 SOURCES_CSV = sources_csv_path()
 OUTPUT_JSONL = regulation_articles_jsonl_path()
 
-ARTICLE_PATTERN = re.compile(r"(第[一二三四五六七八九十百千万零〇0-9]{1,10}条)")
+# Anchor the article heading to the start of a line so that in-sentence
+# cross-references ("违反本法第二十三条规定…") are NOT mistaken for a new
+# article. The un-anchored form produced duplicate/false fragments that later
+# had to be renamed into invalid anchors like "处罚-23-1".
+ARTICLE_PATTERN = re.compile(
+    r"(?m)^[ \t]*(第[一二三四五六七八九十百千万零〇0-9]{1,10}条)"
+)
 ENGLISH_ARTICLE_HEADING_PATTERN = re.compile(
     r"(?im)^[ \t]*(?:#{1,6}[ \t]+)?Article[ \t]+([0-9]+(?:\.[0-9]+)*)\b[^\n]*"
 )
@@ -29,6 +35,11 @@ MARKDOWN_STEP_HEADING_PATTERN = re.compile(
     r"(?im)^[ \t]*#{1,6}[ \t]+Step[ \t]+([0-9]+(?:\.[0-9]+)*)\b[^\n]*"
 )
 WHITESPACE_PATTERN = re.compile(r"[ \t\x0b\x0c\r]+")
+# Bidi/zero-width format characters that survive HTML unescaping in official
+# CAC markdown snapshots. They sit between a newline and an article heading
+# (e.g. "…组成部分。\n‏第一条 定义"), which silently defeats a
+# line-anchored heading regex. Strip them; normalize NBSP to a real space.
+_INVISIBLE_PATTERN = re.compile(r"[‎‏​­﻿]")
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_PATTERN = re.compile(r"<script[^>]*>.*?</script>", flags=re.IGNORECASE | re.DOTALL)
 STYLE_PATTERN = re.compile(r"<style[^>]*>.*?</style>", flags=re.IGNORECASE | re.DOTALL)
@@ -49,6 +60,8 @@ def _html_to_text(raw: str) -> str:
     text = TAG_PATTERN.sub(" ", text)
     text = html.unescape(text)
     text = text.replace("\u3000", " ")
+    text = _INVISIBLE_PATTERN.sub("", text)
+    text = text.replace("\u00a0", " ")
     return _normalize_space(text)
 
 

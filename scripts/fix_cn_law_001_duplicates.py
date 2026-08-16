@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Deduplicate regulation_articles.jsonl for CN-LAW-001.
+"""Mark duplicate regulation_articles.jsonl rows without corrupting article_ref.
 
-CN-LAW-001 contains both primary articles (e.g. "第二十三条 国家实行...")
-and penalty/enforcement provisions that reference the same article numbers
-(e.g. "第二十三条的规定外..."). The latter get a unique suffix so
-(source_id, normalized_article_no) is unique.
+Legacy behavior appended ``-处罚-N``/``-ext-N`` onto ``article_ref`` to make
+``(source_id, normalized_article_no)`` unique. That suffix leaked downstream as
+an invalid article locator ("处罚-23-1") and rendered verbatim into reports.
+
+With the article splitter now anchoring on line-start headings, cross-reference
+fragments are no longer emitted as separate rows, so duplicates are no longer
+expected. If duplicates still appear, this script marks the non-primary row with
+``structured_payload.role="penalty_extension"`` and a ``disambiguation`` ordinal,
+leaving ``article_ref`` as the real article number.
 
 Usage
 -----
@@ -56,7 +61,7 @@ def main() -> None:
         return
 
     print(f"Found {len(dups)} duplicate (source_id, article_no) keys.")
-    changes: list[tuple[int, str, str]] = []  # (row_idx, old_ref, new_ref)
+    marked = 0
 
     for (sid, art_no), indices in sorted(dups.items()):
         primary_idx = None
@@ -75,27 +80,23 @@ def main() -> None:
 
         for ext_n, idx in enumerate(others, start=1):
             old_ref = str(rows[idx].get("article_ref", ""))
-            new_ref = f"{old_ref}-处罚-{ext_n}" if ext_n == 1 else f"{old_ref}-ext-{ext_n}"
-            changes.append((idx, old_ref, new_ref))
-            print(f"  {sid} row {idx+1}: {old_ref!r} → {new_ref!r}")
+            # Never rewrite article_ref into an invalid anchor. The old code
+            # produced "处罚-23-1"/"第X条-处罚-1" which downstream treated as a
+            # real article locator and rendered verbatim into reports. Keep the
+            # real article number and record disambiguation in structured_payload.
+            payload = dict(rows[idx].get("structured_payload") or {})
+            payload["role"] = "penalty_extension"
+            payload["disambiguation"] = ext_n
+            rows[idx]["structured_payload"] = payload
+            marked += 1
+            print(f"  {sid} row {idx+1}: {old_ref!r} (role=penalty_extension, disambiguation={ext_n})")
             print(f"    content[:50]: {str(rows[idx].get('content',''))[:50]!r}")
 
-    print(f"\nTotal rows to rename: {len(changes)}")
+    print(f"\nTotal rows marked (article_ref unchanged): {marked}")
 
     if args.dry_run:
         print("(dry-run: no file written)")
         return
-
-    # Apply
-    for idx, old_ref, new_ref in changes:
-        rows[idx]["article_ref"] = new_ref
-        # Update article_id if present
-        old_id = str(rows[idx].get("article_id", ""))
-        if old_id:
-            rows[idx]["article_id"] = old_id.replace(
-                _normalize_article_lookup_key(old_ref),
-                _normalize_article_lookup_key(new_ref),
-            )
 
     new_content = "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n"
     path.write_text(new_content, encoding="utf-8")
