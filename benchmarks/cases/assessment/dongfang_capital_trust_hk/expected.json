@@ -14,8 +14,12 @@
     },
     "min_counts": {
       "chapters": 8,
-      "regulations": 20,
+      "regulations": 6,
       "output_files": 23
+    },
+    "unique_counts": {
+      "regulations[].source_id": 5,
+      "regulations[].article": 6
     },
     "output_roles_contains": [
       "markdown",

@@ -50,6 +50,13 @@
       "incident_response_sla_hours": 24,
       "escalation_path": "原始测试案例未提供，需补充跨境事件处置和监管上报流程"
     },
+    "path_evidence": {
+      "certification_body_china_recognized": false,
+      "certification_legal_obligation_citation_provided": false,
+      "contract_governing_law": "德国法律",
+      "contract_exclusive_jurisdiction": "柏林地区法院",
+      "china_data_subject_rights_terms_present": false
+    },
     "attachments": [
       {
         "file_role": "certification_material",

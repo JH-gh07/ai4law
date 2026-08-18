@@ -276,6 +276,37 @@ def _op_fields_present(actual: dict[str, Any], payload: Any) -> list[tuple[bool,
     ]
 
 
+def _op_unique_counts(actual: dict[str, Any], payload: Any) -> list[tuple[bool, str]]:
+    """Assert a projected list has at least N *unique* values.
+
+    ``unique_counts`` guards against retrieval contracts that pad a count with
+    duplicate chunks or whole-statute expansion.  It resolves a projection such
+    as ``regulations[].source_id``, dedupes, and asserts a floor on distinct
+    values — the unit that actually matters for citation diversity.
+
+    payload: ``{path: minimum}`` where ``path`` must project a list field.
+    """
+    checks: list[tuple[bool, str]] = []
+    for path, minimum in _require_mapping("unique_counts", payload).items():
+        value = resolve_path(actual, path)
+        if value is _MISSING:
+            checks.append((False, f"unique_counts[{path}]: path absent from result"))
+            continue
+        if not isinstance(value, list):
+            checks.append(
+                (False, f"unique_counts[{path}]: {_describe(value)} is not a list")
+            )
+            continue
+        unique = {str(item) for item in value if item not in (None, "", [], {})}
+        checks.append(
+            (
+                len(unique) >= minimum,
+                f"unique_counts[{path}]: expected >= {minimum} unique, got {len(unique)}",
+            )
+        )
+    return checks
+
+
 Operator = Callable[[dict[str, Any], Any], list[tuple[bool, str]]]
 
 ASSERTION_OPERATORS: dict[str, Operator] = {
@@ -283,6 +314,7 @@ ASSERTION_OPERATORS: dict[str, Operator] = {
     "fields_equal": _op_fields_equal,
     "fields_present": _op_fields_present,
     "min_counts": _op_min_counts,
+    "unique_counts": _op_unique_counts,
     "max_counts": _op_max_counts,
     "list_contains": _op_list_contains,
     "list_excludes": _op_list_excludes,

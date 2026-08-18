@@ -50,7 +50,11 @@ def test_ciio_issue_produces_evidence_with_ciio_fact_ref() -> None:
     ciio_fact = next(fact for fact in facts if fact.field_path == "request.is_ciio")
     assert any(ciio_fact.fact_id in evidence.fact_refs for evidence in evidence_chain)
     assert any("CIIO" in evidence.claim for evidence in evidence_chain)
-    assert all(evidence.fact_refs for evidence in evidence_chain)
+    # task081 T081-03: 无 fact_refs 的 evidence 必须显式标记 UNSUPPORTED，
+    # 不得静默跳过。
+    for evidence in evidence_chain:
+        if not evidence.fact_refs:
+            assert evidence.usage_constraint.startswith("UNSUPPORTED")
 
     evidence_ids = {evidence.evidence_id for evidence in evidence_chain}
     for issue in updated_issues:
@@ -79,6 +83,10 @@ def test_regulatory_evidence_has_rule_refs_material_evidence_can_omit_them() -> 
     _, evidence_chain = build_assessment_evidence(facts, issues, _regulations(), diagnosis)
 
     for evidence in evidence_chain:
+        if not evidence.fact_refs:
+            # 无 fact_refs 的材料类 evidence 为 UNSUPPORTED，可省略 rule_refs
+            assert evidence.usage_constraint.startswith("UNSUPPORTED")
+            continue
         if evidence.evidence_id == "EVIDENCE-missing-attachments":
             assert evidence.rule_refs == []
         else:

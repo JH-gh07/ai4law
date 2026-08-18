@@ -50,6 +50,11 @@
       "incident_response_sla_hours": 72,
       "escalation_path": "原始测试案例未提供，待企业补充"
     },
+    "path_evidence": {
+      "recipient_notice_complete": false,
+      "sensitive_information_classification_confirmed": false,
+      "consent_evidence_complete": false
+    },
     "attachments": [
       {
         "file_role": "supporting_evidence",

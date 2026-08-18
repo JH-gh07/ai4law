@@ -71,7 +71,9 @@ export function TaskSpacesPage({ onStart, onQuickCreate }: TaskSpacesPageProps) 
     const map = new Map<string, { state: "idle" | "running" | "success" | "failed" | "unreachable"; module: string; at: string; error?: string }>();
     for (const run of state.moduleRuns) {
       const prev = map.get(run.taskSpaceId);
-      const at = run.finishedAt ?? run.startedAt;
+      // finishedAt may be refreshed when an old terminal run is reconciled;
+      // attempt order is determined by when the run actually started.
+      const at = run.startedAt;
       if (!prev || at > prev.at) {
         map.set(run.taskSpaceId, { state: getRunLifecycleState(run), module: run.module, at, error: run.error });
       }

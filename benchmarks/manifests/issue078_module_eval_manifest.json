@@ -1,0 +1,836 @@
+{
+  "manifest_version": "issue078-v0.2",
+  "status": "ARCHITECTURE_FROZEN_DESIGN_GATE",
+  "benchmark_background": "status/view/数据通BenchmarkV1.0.md",
+  "source_fact": "status/issue/issue078_DataComplyFlow_Benchmark_Module_FACT.md",
+  "prompt_catalog": "status/issue/issue078_Chapter_Prompt_CATALOG.md",
+  "architecture_title_policy": {
+    "general_rule": "Document titles and core chapter titles are normally deterministic; LLM output may add intra-chapter headings. Score the final selected artifact, not prompt constants alone.",
+    "heading_normalizer": "backend/common/llm/postprocess.py::normalize_legal_markdown_structure",
+    "artifact_selection_required": [
+      "assessment: internal 8 chapters vs official 3-section report",
+      "bcr: legacy 4 chapters vs schema-first 8 sections",
+      "us_14117: chapter view 4 chapters vs formal report 9 sections"
+    ],
+    "task_rules": {
+      "T01": "renderer-fixed document title and 8 level-two sections",
+      "T02": "fixed chapter dictionary; final tree depends on internal/official template",
+      "T03": "PIPIA_CHAPTERS fixed seven chapter titles; model may add subheadings",
+      "T04": "schema_first.py fixed ten SectionIR sections",
+      "T05": "EU_SCC_CHAPTERS fixed four chapter titles; findings may produce lower headings",
+      "T06": "legacy fixed four chapters; schema-first fixed eight sections",
+      "T07": "chapter ID mapping plus deterministic necessity and appendix sections",
+      "T08": "TIA_CHAPTERS fixed six titles; deterministic fallback or model supplies body subheadings",
+      "T09": "four chapter objects; formal report has nine fixed sections",
+      "T10": "CPRAChapter titles plus deterministic citation/input appendix sections",
+      "cn_flow": "four chapter instruction keys; final renderer hierarchy NOT VERIFIED"
+    },
+    "artifact_selection": {
+      "assessment": {
+        "primary": "official_markdown",
+        "secondary": [
+          "internal_markdown"
+        ]
+      },
+      "bcr": {
+        "primary": "schema_first_markdown",
+        "secondary": [
+          "legacy_markdown"
+        ]
+      },
+      "us_14117": {
+        "primary": "legacy_markdown",
+        "secondary": [
+          "schema_first_markdown"
+        ]
+      },
+      "pipia": {
+        "primary": "schema_first_markdown",
+        "secondary": [
+          "legacy_markdown"
+        ]
+      },
+      "eu_scc": {
+        "primary": "schema_first_markdown",
+        "secondary": [
+          "legacy_markdown"
+        ]
+      },
+      "dpia": {
+        "primary": "schema_first_markdown",
+        "secondary": [
+          "legacy_markdown"
+        ]
+      },
+      "cn_flow": {
+        "primary": "OUT_OF_SCOPE",
+        "secondary": []
+      }
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "T01",
+      "task_name": "合规路径诊断",
+      "runtime_module": "diagnosis",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/cn/transfer_diagnosis/service.py::DiagnosisService.evaluate",
+      "input_schema": "backend/domains/cn/transfer_diagnosis/schema.py::DiagnosisAnswers",
+      "output_schema": "backend/domains/cn/transfer_diagnosis/schema.py::DiagnosisResult",
+      "workflow": [
+        "fact_normalization",
+        "validation",
+        "conditional_agents",
+        "rule_tree",
+        "result"
+      ],
+      "rule_paths": [
+        "backend/domains/cn/transfer_diagnosis/rule_engine.py",
+        "backend/domains/cn/transfer_diagnosis/service.py"
+      ],
+      "agent_paths": [
+        "backend/domains/cn/transfer_diagnosis/agents"
+      ],
+      "prompt_paths": [
+        "backend/domains/cn/transfer_diagnosis/agents/__init__.py"
+      ],
+      "chapter_prompts": [],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task01_*.input.json",
+        "benchmarks/source-materials/cn/legacy-docx/“合规路径诊断”测试案例及预期输出.docx"
+      ],
+      "notes": "clarification agent is registered but not called by evaluate; model calls are conditional",
+      "architecture": {
+        "artifact_role_for_architecture": "legacy_markdown",
+        "template_version": "N/A",
+        "expected_core_tree": [
+          "diag.s1",
+          "diag.s2",
+          "diag.s3",
+          "diag.s4",
+          "diag.s5",
+          "diag.s6",
+          "diag.s7",
+          "diag.s8"
+        ],
+        "allowed_display_variations": "fixed（renderer 硬编码，display=canonical）",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "diag.s1",
+          "diag.s2",
+          "diag.s3",
+          "diag.s4",
+          "diag.s5",
+          "diag.s6",
+          "diag.s7",
+          "diag.s8"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "8 个 H2 集合/顺序一致",
+        "note": "当前无程序化 section_id；diag.sN 为建议引入稳定 ID，作为待改造项"
+      }
+    },
+    {
+      "task_id": "T02",
+      "task_name": "安全评估路径",
+      "runtime_module": "assessment",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/cn/security_assessment/service.py::AssessmentService.generate_report",
+      "input_schema": "backend/domains/cn/security_assessment/schema.py::AssessmentRequest",
+      "output_schema": "backend/domains/cn/security_assessment/schema.py::AssessmentResult",
+      "workflow": [
+        "WorkflowPipeline",
+        "profile",
+        "diagnosis",
+        "facts",
+        "retrieval",
+        "issues",
+        "evidence",
+        "per_issue_rag",
+        "context_pack",
+        "chapters",
+        "consistency",
+        "repair",
+        "control",
+        "render"
+      ],
+      "generator": "backend/domains/cn/security_assessment/chapter_generator.py::AssessmentChapterGenerator",
+      "prompt_paths": [
+        "backend/domains/cn/security_assessment/chapter_generator.py"
+      ],
+      "chapter_prompts": [
+        "出境活动概述",
+        "数据类型与规模",
+        "出境必要性与合法性基础",
+        "境外接收方保障能力",
+        "个人信息权益影响分析",
+        "安全措施与传输机制",
+        "剩余风险与整改建议",
+        "综合评估结论"
+      ],
+      "output_templates": [
+        "backend/domains/cn/security_assessment/report_renderer.py",
+        "backend/domains/cn/security_assessment/schema_first.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task02_*.input.json",
+        "backend/domains/cn/security_assessment/tests/fixtures/assessment_document_ir.golden.json"
+      ],
+      "notes": "per_issue_rag and Legal Control are conditional pipeline hooks",
+      "architecture": {
+        "artifact_role_for_architecture": "official_markdown",
+        "template_version": "assessment-v0",
+        "expected_core_tree": [
+          "1",
+          "2",
+          "2.1",
+          "2.2",
+          "2.3",
+          "2.4",
+          "2.5",
+          "2.6",
+          "3"
+        ],
+        "allowed_display_variations": "official 全部 fixed；internal 二级 controlled_rewrite",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "1",
+          "2",
+          "2.1",
+          "2.2",
+          "2.3",
+          "2.4",
+          "2.5",
+          "2.6",
+          "3"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "official 3-section 集合/顺序/层级一致；internal 8 章为 secondary 角色",
+        "secondary_core_tree": [
+          "assessment.chapter.1",
+          "assessment.chapter.2",
+          "assessment.chapter.3",
+          "assessment.chapter.4",
+          "assessment.chapter.5",
+          "assessment.chapter.6",
+          "assessment.chapter.7",
+          "assessment.chapter.8"
+        ]
+      }
+    },
+    {
+      "task_id": "T03",
+      "task_name": "认证/标准合同路径",
+      "runtime_module": "pipia",
+      "benchmark_status": "IN_SCOPE_MAPPING_REVIEW",
+      "entrypoint": "backend/domains/cn/pipia/service.py::PIPIAService.generate_report",
+      "input_schema": "backend/domains/cn/pipia/schema.py::PIPIARequest",
+      "output_schema": "backend/domains/cn/pipia/schema.py::PIPIAResult",
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py"
+      ],
+      "chapter_prompts": [
+        "处理者与出境活动基础信息",
+        "个人信息出境处理活动说明",
+        "境外接收方信息与保护能力",
+        "个人信息主体权益影响评估",
+        "技术与组织措施有效性评估",
+        "事件响应与整改计划",
+        "PIPIA 结论与备案建议"
+      ],
+      "output_templates": [
+        "backend/domains/cn/pipia/service.py::TEMPLATE_PATH",
+        "backend/domains/cn/pipia/service.py::TEMPLATE_MD",
+        "backend/domains/cn/pipia/report_renderer.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task03_*.input.json",
+        "benchmarks/source-materials/cn/legacy-docx/“认证_标准合同路径”测试案例及预期输出.docx"
+      ],
+      "notes": "task-to-pipia mapping requires final confirmation",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "pipia-v0",
+        "expected_core_tree": [
+          "pipia.chapter.1",
+          "pipia.chapter.2",
+          "pipia.chapter.3",
+          "pipia.chapter.4",
+          "pipia.chapter.5",
+          "pipia.chapter.6",
+          "pipia.chapter.7"
+        ],
+        "allowed_display_variations": "二级 controlled_rewrite",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "pipia.chapter.1",
+          "pipia.chapter.2",
+          "pipia.chapter.3",
+          "pipia.chapter.4",
+          "pipia.chapter.5",
+          "pipia.chapter.6",
+          "pipia.chapter.7"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "7 章集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "T04",
+      "task_name": "文档专项审查",
+      "runtime_module": "review",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/cn/document_review/service.py",
+      "input_schema": "backend/domains/cn/document_review/input_manifest.py plus review request models (exact unified request NOT VERIFIED)",
+      "output_schema": "backend/domains/cn/document_review/schema_first.py::DocumentIR",
+      "workflow": [
+        "parse",
+        "profile",
+        "classify",
+        "missing_check",
+        "specialized_review",
+        "cross_document",
+        "aggregate",
+        "render"
+      ],
+      "agent_paths": [
+        "backend/domains/cn/document_review/document_classifier.py",
+        "backend/domains/cn/document_review/clause_classifier.py",
+        "backend/domains/cn/document_review/clause_reviewer.py",
+        "backend/domains/cn/document_review/consistency_checker.py",
+        "backend/domains/cn/document_review/specialized_reviewers"
+      ],
+      "prompt_paths": [
+        "backend/domains/cn/document_review"
+      ],
+      "chapter_prompts": [],
+      "output_templates": [
+        "backend/domains/cn/document_review/schema_first.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task04_*.input.json",
+        "benchmarks/source-materials/cn/review/fixtures",
+        "backend/domains/cn/document_review/tests/fixtures"
+      ],
+      "notes": "review is reviewer/issue oriented, not a shared chapter-generator module",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "review-v0",
+        "expected_core_tree": [
+          "review.s1",
+          "review.s2",
+          "review.s3",
+          "review.s4",
+          "review.s5",
+          "review.s6",
+          "review.s7",
+          "review.s8",
+          "review.s9",
+          "review.s10"
+        ],
+        "allowed_display_variations": "fixed（十个 SectionIR）",
+        "allowed_dynamic_depth": 2,
+        "expected_required_sections": [
+          "review.s1",
+          "review.s2",
+          "review.s3",
+          "review.s4",
+          "review.s5",
+          "review.s6",
+          "review.s7",
+          "review.s8",
+          "review.s9",
+          "review.s10"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "10 个 section 集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "T05",
+      "task_name": "SCC审查",
+      "runtime_module": "eu_scc",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/eu/scc_review/service.py::EU_SCCService",
+      "input_schema": "backend/domains/eu/scc_review/schema.py::SCCReviewRequest",
+      "output_schema": "backend/domains/eu/scc_review/schema.py::SCCReviewResult",
+      "workflow": [
+        "parse",
+        "transfer_chain",
+        "rule_engine",
+        "agents",
+        "facts",
+        "issues",
+        "evidence",
+        "context_pack",
+        "chapters",
+        "consistency",
+        "render"
+      ],
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/eu/scc_review/agents"
+      ],
+      "chapter_prompts": [
+        "文件概要",
+        "总体合规评级",
+        "条款级审查发现",
+        "法规依据与修改建议"
+      ],
+      "output_templates": [
+        "backend/domains/eu/scc_review/service.py",
+        "backend/domains/eu/scc_review/schema_first.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task05_*.input.json",
+        "benchmarks/cases/eu_scc",
+        "backend/domains/eu/scc_review/tests/fixtures/scc_document_ir.golden.json"
+      ],
+      "notes": "historical live Trace exists; current provider usage must be separated",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "scc-v0",
+        "expected_core_tree": [
+          "scc.chapter.1",
+          "scc.chapter.2",
+          "scc.chapter.3",
+          "scc.chapter.4"
+        ],
+        "allowed_display_variations": "二级 controlled_rewrite",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "scc.chapter.1",
+          "scc.chapter.2",
+          "scc.chapter.3",
+          "scc.chapter.4"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "4 章集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "T06",
+      "task_name": "BCR审查",
+      "runtime_module": "bcr",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/eu/bcr_review/service.py::BCRService",
+      "input_schema": "backend/domains/eu/bcr_review/schema.py::BCRRequest",
+      "output_schema": "backend/domains/eu/bcr_review/schema.py::BCRResult",
+      "workflow": [
+        "mode_detection",
+        "agents",
+        "facts",
+        "issues",
+        "chapters",
+        "render"
+      ],
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/eu/bcr_review/agents"
+      ],
+      "chapter_prompts": [
+        "报告摘要",
+        "合规评级",
+        "详细审查结果",
+        "风险优先级与整改建议"
+      ],
+      "output_templates": [
+        "backend/domains/eu/bcr_review/service.py",
+        "backend/domains/eu/bcr_review/schema_first.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task06_*.input.json",
+        "benchmarks/cases/bcr",
+        "backend/domains/eu/bcr_review/tests/fixtures/bcr_document_ir.golden.json"
+      ],
+      "notes": "DeliLegal adapter exists in bcr_legal_retriever; actual call NOT VERIFIED",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "bcr-v0",
+        "expected_core_tree": [
+          "bcr.s1",
+          "bcr.s2",
+          "bcr.s3",
+          "bcr.s4",
+          "bcr.s5",
+          "bcr.s6",
+          "bcr.s7",
+          "bcr.s8"
+        ],
+        "allowed_display_variations": "schema-first fixed；legacy 二级 controlled_rewrite",
+        "allowed_dynamic_depth": 2,
+        "expected_required_sections": [
+          "bcr.s1",
+          "bcr.s2",
+          "bcr.s3",
+          "bcr.s4",
+          "bcr.s5",
+          "bcr.s6",
+          "bcr.s7",
+          "bcr.s8"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "schema-first 8 section 集合/顺序/层级一致；legacy 4 章为 secondary"
+      }
+    },
+    {
+      "task_id": "T07",
+      "task_name": "DPIA草案生成",
+      "runtime_module": "dpia",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/eu/dpia/service.py::DPIAService",
+      "input_schema": "backend/domains/eu/dpia/schema.py::DPIARequest",
+      "output_schema": "backend/domains/eu/dpia/schema.py::DPIAResult",
+      "workflow": [
+        "profile",
+        "need_assessment",
+        "processing_activity",
+        "necessity",
+        "risk",
+        "mitigation",
+        "DPO/internal_review",
+        "repair",
+        "render"
+      ],
+      "generator": "backend/domains/eu/dpia/chapter_generator.py plus module_generator",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/eu/dpia/agents"
+      ],
+      "chapter_prompts": [
+        "DPIA 项目背景与范围",
+        "数据处理活动描述",
+        "目的必要性与合法性评估",
+        "风险识别与影响分析",
+        "控制措施与缓解方案",
+        "剩余风险与可接受性判断",
+        "DPO 复核与后续行动"
+      ],
+      "output_templates": [
+        "backend/domains/eu/dpia/service.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task07_*.input.json",
+        "benchmarks/cases/dpia"
+      ],
+      "notes": "cases with correction marker stay out of authoritative denominator until reviewed",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "dpia-v0",
+        "expected_core_tree": [
+          "dpia.necessity",
+          "dpia.chapter.1",
+          "dpia.chapter.2",
+          "dpia.chapter.3",
+          "dpia.chapter.4",
+          "dpia.chapter.5",
+          "dpia.chapter.6",
+          "dpia.chapter.7",
+          "dpia.appendix.citations",
+          "dpia.appendix.inputs"
+        ],
+        "allowed_display_variations": "二级 controlled_rewrite；必要性预判/附录 fixed",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "dpia.chapter.1",
+          "dpia.chapter.2",
+          "dpia.chapter.3",
+          "dpia.chapter.4",
+          "dpia.chapter.5",
+          "dpia.chapter.6",
+          "dpia.chapter.7",
+          "dpia.appendix.citations"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "7 章 + 必要性 + 附录 集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "T08",
+      "task_name": "TIA草案生成",
+      "runtime_module": "tia",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/eu/tia/service.py::TIAService",
+      "input_schema": "backend/domains/eu/tia/schema.py::TIARequest / TIAStructuredInput",
+      "output_schema": "backend/domains/eu/tia/schema.py::TIAResult",
+      "workflow": [
+        "structured_input",
+        "route",
+        "country_risk",
+        "measure_assessment",
+        "agents",
+        "chapters",
+        "render"
+      ],
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/eu/tia/agents"
+      ],
+      "chapter_prompts": [
+        "跨境传输场景与角色识别",
+        "传输工具适用性判断",
+        "第三国法律与实践评估",
+        "补充措施可执行性评估",
+        "剩余风险与合规结论",
+        "持续复审与行动计划"
+      ],
+      "output_templates": [
+        "backend/domains/eu/tia/service.py",
+        "resources/legal/sources/eu/references/TIA - Template.docx"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task08_*.input.json",
+        "benchmarks/cases/tia"
+      ],
+      "notes": "country/legal assessment inputs and attachments are distinct from prompt output",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "tia-v0",
+        "expected_core_tree": [
+          "tia.chapter.1",
+          "tia.chapter.2",
+          "tia.chapter.3",
+          "tia.chapter.4",
+          "tia.chapter.5",
+          "tia.chapter.6"
+        ],
+        "allowed_display_variations": "二级 controlled_rewrite",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "tia.chapter.1",
+          "tia.chapter.2",
+          "tia.chapter.3",
+          "tia.chapter.4",
+          "tia.chapter.5",
+          "tia.chapter.6"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "6 章集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "T09",
+      "task_name": "14117行政令合规",
+      "runtime_module": "us_14117",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/us/eo14117/service.py::US14117Service",
+      "input_schema": "backend/domains/us/eo14117/schema.py::US14117Request",
+      "output_schema": "backend/domains/us/eo14117/schema.py::US14117Result",
+      "workflow": [
+        "rule_engine",
+        "classification",
+        "security_gap",
+        "traffic_light",
+        "risk_matrix",
+        "agents",
+        "chapters",
+        "render"
+      ],
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/us/eo14117/agents"
+      ],
+      "chapter_prompts": [
+        "总体结论与传输可行性",
+        "风险详情与分析",
+        "合规措施建议与行动清单",
+        "附件与持续监控"
+      ],
+      "output_templates": [
+        "backend/domains/us/eo14117/service.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task09_*.input.json",
+        "benchmarks/cases/us_14117"
+      ],
+      "notes": "rule-first; agents do not replace EO rule engine",
+      "architecture": {
+        "artifact_role_for_architecture": "legacy_markdown",
+        "template_version": "eo14117-v0",
+        "expected_core_tree": [
+          "us14117.formal.1",
+          "us14117.formal.2",
+          "us14117.formal.3",
+          "us14117.formal.4",
+          "us14117.formal.5",
+          "us14117.formal.6",
+          "us14117.formal.7",
+          "us14117.formal.8",
+          "us14117.formal.9"
+        ],
+        "allowed_display_variations": "formal fixed；chapter view fixed",
+        "allowed_dynamic_depth": 2,
+        "expected_required_sections": [
+          "us14117.formal.1",
+          "us14117.formal.2",
+          "us14117.formal.3",
+          "us14117.formal.4",
+          "us14117.formal.5",
+          "us14117.formal.6",
+          "us14117.formal.7",
+          "us14117.formal.8",
+          "us14117.formal.9"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "formal 9 section 集合/顺序/层级一致；chapter view 4 章为 secondary",
+        "secondary_core_tree": [
+          "eo14117.chapter.1",
+          "eo14117.chapter.2",
+          "eo14117.chapter.3",
+          "eo14117.chapter.4",
+          "eo14117.appendix.citations",
+          "eo14117.appendix.inputs"
+        ]
+      }
+    },
+    {
+      "task_id": "T10",
+      "task_name": "CPRA合规",
+      "runtime_module": "cpra",
+      "benchmark_status": "IN_SCOPE",
+      "entrypoint": "backend/domains/us/cpra/service.py::CPRAService",
+      "input_schema": "backend/domains/us/cpra/schema.py::CPRARequest",
+      "output_schema": "backend/domains/us/cpra/schema.py::CPRAResult",
+      "workflow": [
+        "fact_extraction",
+        "applicability",
+        "data/vendor/rights_analysis",
+        "gaps",
+        "agents",
+        "chapters",
+        "consistency",
+        "render"
+      ],
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py",
+        "backend/domains/us/cpra/agents"
+      ],
+      "chapter_prompts": [
+        "执行摘要",
+        "企业适用性与范围",
+        "数据处理活动合规分析",
+        "消费者权利保障评估",
+        "敏感信息与第三方管理",
+        "行动清单与优先级"
+      ],
+      "output_templates": [
+        "backend/domains/us/cpra/service.py"
+      ],
+      "golden_assets": [
+        "benchmarks/datasets/seed-cases-v1/inputs/task10_*.input.json",
+        "benchmarks/cases/cpra"
+      ],
+      "notes": "citation refs and gap items are separate output structures",
+      "architecture": {
+        "artifact_role_for_architecture": "schema_first_markdown",
+        "template_version": "cpra-v0",
+        "expected_core_tree": [
+          "cpra.chapter.1",
+          "cpra.chapter.2",
+          "cpra.chapter.3",
+          "cpra.chapter.4",
+          "cpra.chapter.5",
+          "cpra.chapter.6",
+          "cpra.appendix.citations",
+          "cpra.appendix.inputs"
+        ],
+        "allowed_display_variations": "二级 controlled_rewrite；附录 fixed",
+        "allowed_dynamic_depth": 3,
+        "expected_required_sections": [
+          "cpra.chapter.1",
+          "cpra.chapter.2",
+          "cpra.chapter.3",
+          "cpra.chapter.4",
+          "cpra.chapter.5",
+          "cpra.chapter.6",
+          "cpra.appendix.citations"
+        ],
+        "forbidden_sections": [],
+        "cross_format_policy": "6 章 + 附录 集合/顺序/层级一致"
+      }
+    },
+    {
+      "task_id": "NOT_BENCHMARKED",
+      "task_name": "Cross-cutting CN flow",
+      "runtime_module": "cn_flow",
+      "benchmark_status": "CROSS_CUTTING_NOT_IN_SCORE",
+      "entrypoint": "backend/domains/us/eo14117_flow_review/service.py",
+      "input_schema": "backend/domains/us/eo14117_flow_review/schema.py::CNFlowRequest",
+      "output_schema": "backend/domains/us/eo14117_flow_review/schema.py::CNFlowResult",
+      "generator": "backend/common/llm/module_generator.py::generate_chapter",
+      "prompt_paths": [
+        "backend/common/llm/module_generator.py"
+      ],
+      "chapter_prompts": [
+        "场景定义与适用范围",
+        "数据类型与实体结构分析",
+        "限制条件命中分析",
+        "风险分级与处置建议"
+      ],
+      "golden_assets": [],
+      "notes": "requires separate decision before becoming a scored task",
+      "architecture": {
+        "artifact_role_for_architecture": "OUT_OF_SCOPE",
+        "template_version": "N/A",
+        "expected_core_tree": [],
+        "allowed_display_variations": "OUT_OF_SCOPE（运行时委托 us_14117）",
+        "allowed_dynamic_depth": 0,
+        "expected_required_sections": [],
+        "forbidden_sections": [],
+        "cross_format_policy": "不进入 T01-T10 评分",
+        "note": "cn_flow CHAPTER_INSTRUCTIONS 4 key 为死代码；实际输出=us_14117 输出"
+      }
+    }
+  ],
+  "baseline_id": "task080-baseline-20260818",
+  "title_policy_matrix": "status/check/task080/title_policy_matrix.md",
+  "section_catalog": "status/check/task080/section_catalog.md",
+  "title_plan_schema": "status/check/task080/title_plan.schema.json",
+  "architecture_score": {
+    "A1": {
+      "score": "section/chapter ID 集合",
+      "exact_text": true
+    },
+    "A2": {
+      "score": "parent-child 关系",
+      "exact_text": true
+    },
+    "A3": {
+      "score": "level/order/required",
+      "exact_text": true
+    },
+    "A4": {
+      "score": "semantic purpose 覆盖",
+      "exact_text": false,
+      "rule": "语义等价即可"
+    },
+    "A5": {
+      "score": "display title 质量",
+      "exact_text": false,
+      "rule": "按策略评分"
+    },
+    "A6": {
+      "score": "动态子标题边界",
+      "exact_text": false,
+      "rule": "不超过策略上限"
+    },
+    "A7": {
+      "score": "跨格式结构一致性",
+      "exact_text": true
+    },
+    "note": "核心验收不得用 A5 替代 A1-A3；模型只改 display title 时 A1-A3 不得下降，改 ID/父子关系必须失败。"
+  },
+  "stale_module_keys": {
+    "us_privacy_review": {
+      "status": "STALE",
+      "def": "DEF-007",
+      "action": "re-map to us.cpra or mark OUT_OF_SCOPE before scoring"
+    }
+  }
+}

@@ -97,6 +97,59 @@ ASSESSMENT_CHAPTER_KEYS: dict[str, str] = {
     "综合评估结论": "conclusion",
 }
 
+# task081 T081-04: 每章必须至少把这些全局事实带入实际 Prompt，不能因为
+# 它们未被任何 Issue 引用就从 Prompt 中消失（历史缺陷：company_name/industry
+# 等核心字段从未进入任何章节 Prompt；data_scope/rights_impact 在全局有值时
+# 仍输出「本章节无确认事实」）。
+_CHAPTER_NATURAL_FIELDS: dict[str, tuple[str, ...]] = {
+    "overview": (
+        "request.company_name",
+        "request.industry",
+        "request.is_ciio",
+        "request.contains_important_data",
+        "request.pii_count",
+        "request.spi_count",
+        "request.transfer_purpose",
+        "request.receiver_country",
+    ),
+    "data_scope": (
+        "request.data_inventory_items",
+        "request.pii_count",
+        "request.spi_count",
+        "request.contains_important_data",
+    ),
+    "necessity_legal_basis": (
+        "request.transfer_purpose",
+        "request.receiver_country",
+        "request.legal_document_review",
+    ),
+    "recipient_capability": (
+        "request.recipient_info",
+        "request.security_capability",
+        "request.downstream_processors",
+    ),
+    "rights_impact": (
+        "request.personal_info_protection",
+        "request.data_inventory_items",
+        "request.spi_count",
+    ),
+    "security_measures": (
+        "request.security_capability",
+        "request.system_link",
+        "request.compliance_history",
+    ),
+    "risk_remediation": (
+        "request.company_name",
+        "request.is_ciio",
+        "request.contains_important_data",
+    ),
+    "conclusion": (
+        "request.company_name",
+        "request.is_ciio",
+        "request.contains_important_data",
+    ),
+}
+
 
 def _build_context_block(profile: CompanyProfile, hits: list[RegulationHit], level: str) -> str:
     reg_snippet = "\n".join(
@@ -129,6 +182,37 @@ def _format_fact_value(value: object) -> str:
     return str(value)
 
 
+def _natural_context_facts(
+    context_pack: GenerationContextPack, chapter_id: str
+) -> list[dict[str, object]]:
+    """Pull chapter-natural global facts into the prompt fact block.
+
+    task081 T081-04: 每个章节都需要的一组全局事实，即使没有任何 Issue 引用
+    它们也必须进入实际 Prompt（历史缺陷：company_name/industry 等核心字段从未
+    进入任何章节 Prompt）。值优先取 ``normalized_value``。
+    """
+    wanted = _CHAPTER_NATURAL_FIELDS.get(chapter_id, ())
+    if not wanted:
+        return []
+    by_path = {fact.field_path: fact for fact in context_pack.facts}
+    facts: list[dict[str, object]] = []
+    for field_path in wanted:
+        fact = by_path.get(field_path)
+        if fact is None:
+            continue
+        facts.append(
+            {
+                "field_path": field_path,
+                "value": (
+                    fact.normalized_value
+                    if fact.normalized_value is not None
+                    else fact.value
+                ),
+            }
+        )
+    return facts
+
+
 def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_id: str) -> str:
     # Try to use per-section pack from generation_basis_pack first
     section_pack = None
@@ -142,10 +226,23 @@ def build_context_block_from_pack(context_pack: GenerationContextPack, chapter_i
     diagnosis = context_pack.diagnosis_result or {}
 
     if section_pack:
-        # Use per-section filtered data from generation_basis_pack
+        # Use per-section filtered data from generation_basis_pack, merged with
+        # chapter-natural global facts so核心字段不会因未被 Issue 引用而丢失
+        # (task081 T081-04)。
+        confirmed = list(section_pack.get("confirmed_facts", []))
+        seen = {
+            fact.get("field_path")
+            for fact in confirmed
+            if fact.get("field_path")
+        }
+        merged_facts = [
+            fact
+            for fact in _natural_context_facts(context_pack, chapter_id)
+            if fact["field_path"] not in seen
+        ] + confirmed
         fact_lines = [
             f"- {fact.get('field_path', fact.get('fact_id', ''))}：{_format_fact_value(fact.get('value'))}"
-            for fact in section_pack.get("confirmed_facts", [])
+            for fact in merged_facts
         ] or ["- 本章节无确认事实"]
         regulation_lines = [
             "- {rule_id} | {title}{article}：{snippet}".format(

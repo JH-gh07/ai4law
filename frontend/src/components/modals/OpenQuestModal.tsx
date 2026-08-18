@@ -42,8 +42,10 @@ export function OpenQuestModal({
     const map = new Map<string, ModuleRun>();
     for (const run of runs) {
       const prev = map.get(run.taskSpaceId);
-      const at = run.finishedAt ?? run.startedAt;
-      const prevAt = prev ? prev.finishedAt ?? prev.startedAt : "";
+      // Reconciliation may update an old run's finishedAt at page load.
+      // Keep the latest attempt based on its immutable start time.
+      const at = run.startedAt;
+      const prevAt = prev?.startedAt ?? "";
       if (!prev || at > prevAt) {
         map.set(run.taskSpaceId, run);
       }

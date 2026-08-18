@@ -185,21 +185,45 @@ def build_assessment_evidence(
 
     for issue in issues:
         fact_refs = [fact_ref for fact_ref in issue.fact_refs if fact_ref in fact_ids]
-        if not fact_refs:
-            updated_issues.append(issue)
-            continue
-
         evidence_id = _evidence_id(issue.issue_id)
         claim, conclusion = _EVIDENCE_WORDING.get(
             issue.issue_id,
             (issue.title, issue.recommended_action),
         )
         rule_refs = _rule_refs_for_issue(issue, regulations, diagnosis_result)
+
+        if not fact_refs:
+            # task081 T081-03: 无 fact_refs 的 Issue 不得跳过 Evidence。
+            # 生成 UNSUPPORTED Evidence，明确记录需补充的材料，供 Evidence Gate
+            # 和下游 ContextPack 区分"有材料支撑"与"待补料"。
+            evidence = EvidenceItem(
+                evidence_id=evidence_id,
+                claim=claim,
+                fact_refs=[],
+                rule_refs=rule_refs,
+                issue_refs=[issue.issue_id],
+                conclusion=conclusion,
+                confidence=0.3,
+                usage_constraint=(
+                    "UNSUPPORTED：未绑定明确材料/控制事实，"
+                    "需补充材料后方可支撑结论。"
+                ),
+                used_by=[issue.issue_id, *issue.affects_outputs],
+                legal_basis=build_citation_bindings(regulations),
+                document_refs=[],
+                rag_query_used=f"assessment:{issue.issue_id}",
+                rag_hits_count=len(regulations),
+            )
+            evidence_chain.append(evidence)
+            updated_issues.append(issue.model_copy(update={"evidence_refs": [evidence_id]}))
+            continue
+
         evidence = EvidenceItem(
             evidence_id=evidence_id,
             claim=claim,
             fact_refs=fact_refs,
             rule_refs=rule_refs,
+            issue_refs=[issue.issue_id],
             conclusion=conclusion,
             confidence=_confidence(issue.severity, bool(rule_refs)),
             used_by=[issue.issue_id, *issue.affects_outputs],

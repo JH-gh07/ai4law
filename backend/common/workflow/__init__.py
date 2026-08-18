@@ -61,6 +61,16 @@ from backend.common.workflow.issues import (
     IssueItem,
     IssueSeverity,
 )
+from backend.common.workflow.missing import (
+    MissingItem,
+    MissingManifest,
+    MissingRootCause,
+    MissingStatus,
+    MissingType,
+    validate_missing_item,
+    validate_missing_manifest,
+    validate_missing_source_paths,
+)
 from backend.common.workflow.pipeline import WorkflowPipeline
 from backend.common.workflow.trace import (
     TraceEvent,
@@ -81,6 +91,15 @@ __all__ = [
     "IssueCertainty",
     "IssueItem",
     "IssueSeverity",
+    # missing (task081)
+    "MissingItem",
+    "MissingManifest",
+    "MissingRootCause",
+    "MissingStatus",
+    "MissingType",
+    "validate_missing_item",
+    "validate_missing_manifest",
+    "validate_missing_source_paths",
     # input manifest (task068 run-input traceability)
     "ParserStatus",
     "RunInputEntry",

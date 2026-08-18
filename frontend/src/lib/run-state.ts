@@ -156,7 +156,9 @@ export function mergeRunResults(local: ModuleRun, server: ModuleRun): ModuleRun 
 }
 
 function readRunTimestamp(run: ModuleRun): number {
-  const candidate = run.finishedAt ?? run.startedAt;
+  // A reconciliation can refresh finishedAt long after an attempt ended.
+  // Use the attempt start time to keep historical runs in their true order.
+  const candidate = run.startedAt;
   const value = new Date(candidate).getTime();
   return Number.isFinite(value) ? value : 0;
 }

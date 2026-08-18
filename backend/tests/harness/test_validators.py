@@ -76,6 +76,51 @@ def test_min_counts_rejects_shortfall_and_uncountable_values() -> None:
     assert any("is not countable" in message for message in outcome.failed)
 
 
+def test_unique_counts_dedupes_projected_values() -> None:
+    # 14 条法规命中，但只有 6 个不同 source_id、8 个不同 (source,article)
+    actual = {
+        "regulations": [
+            {"source_id": "CN-LAW-001", "article": "第八十一条"},
+            {"source_id": "CN-LAW-001", "article": "第八十一条"},
+            {"source_id": "CN-LAW-003", "article": "第七十四条"},
+            {"source_id": "CN-LAW-003", "article": "第七十四条"},
+            {"source_id": "CN-LAW-002", "article": "第五十五条"},
+            {"source_id": "CN-LAW-002", "article": "第五十五条"},
+            {"source_id": "CN-REG-008", "article": "第六十四条"},
+            {"source_id": "CN-QA-012", "article": "第六十二条"},
+            {"source_id": "CN-LAW-003", "article": "第一条, 第二条"},
+            {"source_id": "CN-LAW-003", "article": "第一条, 第二条"},
+            {"source_id": "CN-LAW-003", "article": "第一条, 第二条"},
+            {"source_id": "CN-REG-004", "article": "第一条, 第二条"},
+            {"source_id": "CN-REG-004", "article": "第一条, 第二条"},
+            {"source_id": "CN-REG-004", "article": "第三条"},
+        ]
+    }
+
+    outcome = validate_expected(
+        actual,
+        {
+            "unique_counts": {
+                "regulations[].source_id": 6,
+                "regulations[].article": 7,
+            }
+        },
+        no_llm=True,
+    )
+    assert outcome.ok
+
+
+def test_unique_counts_rejects_duplicate_padding() -> None:
+    # 大量重复 chunk 不能凑出 citation 多样性
+    actual = {"regulations": [{"source_id": "A"}, {"source_id": "A"}, {"source_id": "A"}]}
+
+    outcome = validate_expected(
+        actual, {"unique_counts": {"regulations[].source_id": 2}}, no_llm=True
+    )
+    assert not outcome.ok
+    assert any("expected >= 2 unique, got 1" in message for message in outcome.failed)
+
+
 def test_max_counts_bounds_issue_lists() -> None:
     passing = validate_expected(
         {"consistency_issues": []}, {"max_counts": {"consistency_issues": 0}}, no_llm=True

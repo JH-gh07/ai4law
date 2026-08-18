@@ -56,3 +56,7 @@ Thumbs.db
 # User uploads and scratch artifacts (never commit user-sensitive content)
 tmp/User attachment*.png
 /report.pdf
+
+# Generated manual release artifacts (regenerate from docs/DataComplyFlow_用户手册_20260816.md + docs/assets/)
+docs/DataComplyFlow_用户手册_20260816_含截图.zip
+docs/DataComplyFlow_用户手册_20260816_自包含.html
